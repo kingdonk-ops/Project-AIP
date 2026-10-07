@@ -32,3 +32,16 @@
 - **Portal access scope at first release**: Read-only plus hold-point witness and counter-sign
 - **Asset tag import master and edit rules**: Platform as master
 - **Reporting read-model mechanism**: Snapshot tables with tenant_id and RLS
+
+## Errata (2026-10-07)
+<!-- errata: keep on regeneration -->
+
+The owner lines above are kept as issued. Where an ADR changes or reconciles one, the ADR wins (see
+[`docs/adr/`](../adr/README.md)); this block records which.
+
+- **Continue AIP FastAPI or rebuild in TypeScript** ("TypeScript rebuild") → superseded by [ADR 0001](../adr/0001-greenfield-python-backend.md): greenfield build, Python backend (FastAPI), TypeScript frontends; AIP code, schema and data not used (owner, 2026-10-07).
+- **Background job runner** ("Redis queue (arq or Celery)") → superseded by [ADR 0003](../adr/0003-jobs-outbox-and-sidecar.md): Procrastinate on Postgres (owner answered "Postgres-based", 2026-10-07; accepted).
+- **Frontend framework** ("Next.js") → superseded by [ADR 0004](../adr/0004-repository-layout.md): Vite for all three apps (web, field PWA, portal) (owner, 2026-10-07; accepted).
+- **Tenant-set and encryption key scheme** ("Shared key with tenant prefixes") → [ADR 0006](../adr/0006-per-tenant-envelope-keys.md) proposes one AWS KMS key per tenant (proposed; owner to confirm).
+- **Identity provider** ("Keycloak self-hosted") plus **Local authentication** ("Build in-app on libraries") → reconciled by [ADR 0005](../adr/0005-identity-architecture.md) rev 2: Keycloak handles all staff sign-in (SSO, password, MFA); the backend issues sessions and builds field PIN, portal links and SCIM (owner, 2026-10-07; accepted).
+- **Orm and migration approach** ("Keep Alembic raw SQL with templates") → consistent with [ADR 0002](../adr/0002-data-access-and-migrations.md): forward-only Alembic raw-SQL revisions with SQLAlchemy Core on asyncpg (accepted).
