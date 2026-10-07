@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "eslint .",
+    "lint": "eslint . && eslint --config node_modules/@aip/config-eslint/index.js .",
     "typecheck": "tsc -b",
     "test": "vitest run"
   },
@@ -19,6 +19,7 @@
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@aip/config-eslint": "workspace:*",
     "@aip/config-ts": "workspace:*",
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.4",
