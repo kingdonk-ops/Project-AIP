@@ -1,6 +1,5 @@
-# IDENTITY-04 — Invite/accept, local Argon2id password + TOTP/WebAuthn MFA
-
-<!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
+# IDENTITY-04 — Invite/accept via Keycloak admin API; MFA enforcement and step-up
+<!-- hand-edited: converted to Python backend per ADR 0001 (2026-10-07); identity per ADR 0005 rev 2 -->
 
 | Field | Value |
 |---|---|
@@ -14,56 +13,113 @@
 
 1. [`docs/blueprint/07-task-conventions.md`](../../docs/blueprint/07-task-conventions.md)
 2. [`docs/blueprint/modules/identity/README.md`](../../docs/blueprint/modules/identity/README.md) (ignore every WorkOS reference: ADR 0005)
-3. ADRs: [0005](../../docs/adr/0005-identity-architecture.md) (library list), [0002](../../docs/adr/0002-data-access-and-migrations.md)
-4. Only if the step needs it: [`data-model.md`](../../docs/blueprint/modules/identity/data-model.md) (tables `user_invite`, `mfa_credential`), [`docs/reviews/02-identity-login.md`](../../docs/reviews/02-identity-login.md) (library table)
+3. ADRs: [0001](../../docs/adr/0001-greenfield-python-backend.md), [0005](../../docs/adr/0005-identity-architecture.md) rev 2 (Keycloak holds staff passwords and MFA; the app invites through the admin API and checks acr/amr), [0003](../../docs/adr/0003-jobs-outbox-and-sidecar.md) (atomic job enqueue), [0002](../../docs/adr/0002-data-access-and-migrations.md)
+4. Only if the step needs it: [`data-model.md`](../../docs/blueprint/modules/identity/data-model.md) (table `user_invite`; ignore `mfa_credential`, which Keycloak now holds), the `python-keycloak` docs (`create_user`, `send_update_account`), and Keycloak 26 docs on ACR / step-up
 
 ## Spec
 
-Let non-SSO customers join by invitation and sign in with an Argon2id password plus mandatory TOTP or WebAuthn, with enumeration-safe responses and lockout.
+Let tenant admins invite staff who do not sign in through company SSO. The backend creates the Keycloak user through the admin API with required actions (verify email, set password, configure OTP), and Keycloak sends the email. The app keeps `app_user`, `tenant_membership` and `user_invite`. The backend also enforces MFA: it checks `acr`/`amr` on every ID token and requires a fresh second factor (step-up) for critical actions. The backend stores no password, TOTP secret or WebAuthn credential, and imports no `argon2-cffi`, `pyotp` or `webauthn` for staff.
 
 - **files**:
-  - db/migrations/<timestamp>_identity_invites_mfa.sql
-  - apps/api/src/modules/identity/invites/invites.service.ts
-  - apps/api/src/modules/identity/invites/invites.controller.ts
-  - apps/api/src/modules/identity/invites/invite-mailer.ts
-  - apps/api/src/modules/identity/local/password.service.ts
-  - apps/api/src/modules/identity/local/password-login.controller.ts
-  - apps/api/src/modules/identity/mfa/totp.service.ts
-  - apps/api/src/modules/identity/mfa/webauthn.service.ts
-  - apps/api/src/modules/identity/mfa/recovery-codes.ts
-  - apps/api/src/modules/identity/mfa/mfa.controller.ts
-  - apps/web/src/features/identity/AcceptInvitePage.tsx
-  - apps/web/src/features/identity/PasswordSignIn.tsx
-  - apps/web/src/features/identity/MfaChallengePage.tsx
-  - apps/web/src/features/identity/MfaEnrolPage.tsx
-  - apps/api/src/modules/identity/tests/local/
+  - apps/api/migrations/versions/<rev>_identity_invites.py
+  - apps/api/aip/modules/identity/tables.py
+  - apps/api/aip/modules/identity/invites.py
+  - apps/api/aip/modules/identity/keycloak_admin.py
+  - apps/api/aip/modules/identity/jobs.py
+  - apps/api/aip/modules/identity/step_up.py
+  - apps/api/aip/modules/identity/jit.py
+  - apps/api/aip/modules/identity/routes.py
+  - apps/api/aip/modules/identity/schemas.py
+  - apps/api/aip/modules/identity/api.py
+  - apps/api/aip/modules/identity/manifest.toml
+  - apps/api/aip/modules/identity/tests/
+  - infra/keycloak/realm-aip.json (IdP mapper for upstream `amr`; `forwardParameters` on the IdPs)
+  - infra/keycloak/realm-mock-idp.json (hard-coded `amr` claim per mock client)
+  - infra/keycloak/themes/aip/email/ (theme.properties, messages for the execute-actions email)
+  - apps/web/src/features/identity/step-up.ts
+  - config/terms/en-AU/identity.json
 - **steps**:
-  - 1. Migration (tenant template, FORCE RLS). Table `user_invite`: id, tenant_id, email citext, user_class, organisation_id NULL, invited_by, token_hash bytea UNIQUE, expires_at (7 days), accepted_at, revoked_at, created_at. Table `mfa_credential`: id, tenant_id, user_id, kind (`totp`|`webauthn`|`recovery_code`), secret_enc bytea (TOTP secret, AES-256-GCM with `MFA_SECRET_KEY` until the per-tenant keys of ADR 0006 exist), last_used_step bigint, credential_id bytea, public_key bytea, sign_count bigint, transports text[], code_hash text, used_at, label, created_at, deleted_at. Add `password_changed_at` to `app_user`.
-  - 2. Invites. `POST /api/v1/identity/invites {email, userClass, organisationId?}` requires `@Requires('identity.user.manage')` (ACCESS-01). It creates an `invited` `app_user` and membership, a 32-byte random token stored as SHA-256, and sends `${APP_ORIGIN}/invite/<token>` through the `InviteMailer` port (SMTP adapter selected by the STACK-02 capability factory; in-memory adapter in tests, readable at `GET /api/v1/_test/mailbox` only when `NODE_ENV=test`). Re-inviting revokes the previous pending invite. For an email in a domain with `sso_enforced`, the user is created `sso_managed=true` and the email says to sign in with the company account.
-  - 3. Accept. `GET /api/v1/auth/invites/:token` returns `{tenantName, email, method:'password'|'sso'}`, or 404 `INVITE_INVALID` if the invite is expired, used or revoked. `POST /api/v1/auth/invites/:token/accept {password}`: the password must be 12 to 128 characters and not in HIBP (k-anonymity range API, 2 s timeout; on failure, accept and record `auth_event.detail.hibp='unavailable'`). Hash with `@node-rs/argon2` Argon2id (m=19456 KiB, t=2, p=1). Mark the invite accepted, set the user active, and issue an `aal=1` session flagged `mfa_enrolment_required`. While the flag is set, every route except `/me`, the MFA enrolment endpoints and logout returns 403 `MFA_ENROLMENT_REQUIRED`.
-  - 4. MFA enrolment. TOTP uses `otplib` (SHA-1, 30 s, 6 digits, window ±1), with the secret encrypted and an otpauth URI for a QR code; it is confirmed with a code. WebAuthn uses `@simplewebauthn/server` (rpID = the APP_ORIGIN host, challenge held server-side for 5 minutes). After the first factor is enrolled, generate 10 recovery codes (shown once, Argon2id-hashed, single use), then `rotateSession` to `aal=2`.
-  - 5. Password login. `POST /api/v1/auth/password {email, password, tenantSlug?}`. Find candidate tenants through `identity_resolve_login('email', ...)` and verify the password per tenant. Unknown email, wrong password, an `sso_managed` user and a deactivated user all return the same 401 `INVALID_CREDENTIALS`; the unknown path runs a dummy Argon2 verify to equalise timing, and `auth_event` records the real reason. Lockout with `rate-limiter-flexible` in Redis: 5 failures per identifier per 15 minutes, also for nonexistent identifiers, and 50 per IP per 15 minutes, giving 429 `TOO_MANY_ATTEMPTS`. If the stored hash uses old parameters, rehash on success. If the password is valid in more than one tenant, return 200 `{chooseTenant:[{slug,name}]}` and the client resubmits with `tenantSlug`. On success, set a sealed 5-minute `__Host-aip_mfa` cookie but no session.
-  - 6. `POST /api/v1/auth/mfa/verify {totp | webauthnAssertion | recoveryCode}` checks the `__Host-aip_mfa` cookie, verifies the factor and issues the session with `aal=2` and `amr` `['pwd','otp'|'hwk'|'rec']`. A TOTP step at or below `last_used_step` is rejected as a replay.
-  - 7. Web pages: `/invite/[token]`; the password branch of the `/login` email-first form (`login/start` returned `method:'password'`); `/login/mfa`; and `/settings/profile/security` for enrolment and regenerating recovery codes. Password reset and admin MFA reset are out of scope (follow-up tasks).
+  - 1. Alembic revision (raw SQL via `op.execute`, tenant template, FORCE RLS).
+    - Table `user_invite`: id, tenant_id, user_id, email citext, user_class, organisation_id NULL, invited_by, method (`local`|`sso`), keycloak_user_id uuid NULL, status (`pending`|`sent`|`accepted`|`revoked`|`failed`), last_error NULL, expires_at (7 days), sent_at, accepted_at, revoked_at, created_at.
+    - Add `mfa_enrolled_at timestamptz NULL` to `app_user`. It is set the first time a session with `aal=2` is issued for the user, and ACCESS-05 shows it.
+  - 2. Keycloak adapter. Extend `keycloak_admin.py` (IDENTITY-03), through the `aip-admin` service account, with these methods:
+    - `create_user(email, *, first_name, last_name, required_actions, attributes) -> UUID`: `create_user({username: email, email, enabled: True, emailVerified: False, requiredActions, attributes:{aip_user_id:[...]}}, exist_ok=False)`. On 409, look the user up with `get_users({'email': email, 'exact': True})` and return the existing id.
+    - `send_actions_email(user_id, actions, *, lifespan_s, redirect_uri)`: `send_update_account(..., client_id='aip-api')`.
+    - `enable_user(user_id)` and `disable_user(user_id)`.
+    - `reset_mfa(user_id)`: delete the user's `otp` and `webauthn` credentials and add the required action `CONFIGURE_TOTP`.
+    - Errors become `KeycloakUnavailable` (5xx or timeout) or `KeycloakRejected` (4xx, with the message).
+  - 3. Invite. `POST /api/v1/identity/invites {email, userClass:'staff', organisationId?, firstName, lastName}` requires `requires('identity.user.manage')` (ACCESS-01) and `step_up()` (step 6). In one `with_tenant` transaction it does all of the following:
+    - Create an `invited` `app_user` and a `member` membership. When the email domain maps to an IdP in `login_directory`, the user is `sso_managed=true` with `method='sso'`. Otherwise the user is local, `identity_register_email` (IDENTITY-02) runs, and `EMAIL_IN_OTHER_TENANT` gives 409.
+    - Insert `user_invite` with status `pending`.
+    - For `method='local'`, atomically enqueue the Procrastinate job `identity.send_invite` with `{tenant_id, invite_id}`.
+    - Write `auth_event` `invite.created`.
+    - Return 201 `{inviteId, userId, method}`.
+    - For `method='sso'` no Keycloak call or email is made. The brokered Keycloak user appears at first SSO sign-in, and IDENTITY-02's JIT links the invited row. An app-sent notification for SSO invites is a follow-up for the notifications module.
+    - Re-inviting the same email revokes the previous pending or sent invite and creates a new one.
+    - `create_invite(conn, *, email, user_class, ...)` is exported from `api.py` without the step-up, for TENANCY-05's admin invite.
+  - 4. `identity.send_invite` job (idempotent; handler re-enters `with_tenant`):
+    - It skips anything that is not `pending` or `sent`.
+    - It calls `create_user` with required actions `['VERIFY_EMAIL','UPDATE_PASSWORD','CONFIGURE_TOTP']` and stores `keycloak_user_id` on both `user_invite` and `app_user`.
+    - It calls `send_actions_email(..., lifespan_s=604800, redirect_uri=f'{APP_ORIGIN}/login?invited=1')`, so Keycloak sends the email with the `aip` email theme. It then sets status `sent` and `sent_at`.
+    - `KeycloakUnavailable` re-raises so Procrastinate retries with backoff (max 5). `KeycloakRejected` sets status `failed` with `last_error` and writes `auth_event` `invite.failed`.
+    - Other endpoints, all requiring `identity.user.manage` and `step_up()`:
+      - `POST /api/v1/identity/invites/{id}/resend` re-enqueues the job.
+      - `DELETE /api/v1/identity/invites/{id}` revokes. It sets status `revoked` and, for a user still `invited`, enqueues `identity.disable_keycloak_user`.
+      - `GET /api/v1/identity/invites?status=` lists invites (`identity.user.read`).
+  - 5. Accept. The user follows Keycloak's email link, verifies the email, sets a password (Keycloak password policy, IDENTITY-01) and configures TOTP. Keycloak then sends them to `/login?invited=1`, and they sign in through the normal flow. In JIT (IDENTITY-02 rule (a)), when the matched user is `invited` and has a `user_invite` row:
+    - Require an invite for them with status `sent` and `expires_at > now()`, otherwise refuse with `INVITE_INVALID`.
+    - Set the invite `accepted` and the user `active`, and write `auth_event` `invite.accepted`.
+    - A revoked or expired invite stays refused even if the Keycloak account still works.
+  - 6. MFA enforcement and step-up in `step_up.py`.
+    - **Every login.** After the IDENTITY-01 checks, the session `aal` comes from `derive_aal` (IDENTITY-03).
+      - For local accounts the realm flow guarantees `acr='aal2'`.
+      - For brokered accounts the upstream IdP's `amr` is imported by an IdP "Attribute Importer" mapper (`sync mode FORCE`) into user attribute `upstream_amr` and emitted by a client mapper as the ID-token claim `upstream_amr`. `derive_aal` treats `mfa`, `otp`, `hwk`, `swk` or `fido` in `upstream_amr` as aal 2, otherwise 1.
+      - An aal-1 SSO session may do ordinary work but never a critical action. In `realm-mock-idp.json`, the client behind `kaefer-oidc` adds a hard-coded claim `amr=["pwd","mfa"]` (a customer IdP that enforces MFA) and the client behind `acme-oidc` adds `amr=["pwd"]` (one that does not), so both paths are testable.
+    - **`step_up(max_age_min=None)`**, a FastAPI dependency exported from `api.py`. It passes when the session has `aal == 2` and `now - authenticated_at <= max_age_min` (default: the tenant's `tenant_auth_policy.step_up_max_age_min`, 10). Otherwise it returns 401 `{code:'STEP_UP_REQUIRED', stepUpUrl:'/api/v1/auth/step-up/start?returnTo=<path>'}`.
+    - **`GET /api/v1/auth/step-up/start?returnTo=`** (authenticated) builds a Keycloak authorize URL like `login/start`, plus:
+      - `prompt=login`, `max_age=0`, `acr_values=aal2` and `login_hint`;
+      - `kc_idp_hint=<alias>` for SSO users, with the IdPs' `forwardParameters` set to `prompt,max_age` so the customer IdP re-authenticates.
+      - The pre-auth cookie records `purpose='step_up'`, the current `session_id` and `started_at`.
+    - **The callback**, for `purpose='step_up'`, requires all of the following and then calls `rotate_session(..., aal=2, amr, authenticated_at=auth_time)` (IDENTITY-03) and redirects to `returnTo`:
+      - the ID token `sub` equals the session user's `keycloak_user_id`, otherwise 403 `STEP_UP_SUBJECT_MISMATCH`;
+      - `auth_time >= started_at`, otherwise 403 `STEP_UP_STALE`;
+      - `derive_aal(...) == 2`, otherwise 403 `MFA_NOT_SATISFIED`, and the session is unchanged.
+    - **Critical actions** in this task: invite create, resend and revoke, and MFA reset. IDENTITY-05 (SCIM tokens, user deactivation) and IDENTITY-06 (API clients) apply `step_up()` to their admin routes.
+  - 7. MFA reset by an admin: `POST /api/v1/identity/users/{id}/reset-mfa` requires `identity.user.manage` and `step_up()`. In one transaction it:
+    - enqueues `identity.reset_keycloak_mfa`, which calls `reset_mfa`;
+    - calls `revoke_all_for_user(conn, user_id, 'mfa_reset')`;
+    - clears `mfa_enrolled_at`;
+    - writes `auth_event` `mfa.reset`.
+    - An SSO user gets 409 `MFA_MANAGED_BY_IDP`.
+  - 8. Web. `step-up.ts` handles 401 `STEP_UP_REQUIRED` from any mutation: it stores the pending form state in `sessionStorage`, then `window.location.assign(stepUpUrl)`. After returning, the page offers to retry the action. The Keycloak pages do all credential entry. `apps/web` has no password, TOTP or WebAuthn UI. Invite-management screens are ACCESS-05's.
 - **acceptance**:
-  - An invited local user can accept, set a password, enrol TOTP or a passkey and sign in. No session exists before the second factor passes.
-  - SSO-managed users can never sign in with a password.
-  - Unknown email and wrong password are indistinguishable by status, body and timing class.
-  - Secrets, tokens and recovery codes are stored only hashed or encrypted.
-- **tests**:
+  - An admin invites `carol@client.test`. Keycloak sends one email. After she verifies her email, sets a password and configures TOTP, her first sign-in activates her `app_user` and gives a session with `aal=2`.
+  - No password hash, TOTP secret, recovery code or WebAuthn credential is stored in the app database. `aip/modules/identity` imports none of `argon2`, `pyotp`, `webauthn`.
+  - A critical action is refused with `STEP_UP_REQUIRED` unless the session has `aal=2` and authenticated within the last 10 minutes. After step-up it succeeds, and the session id has rotated.
+  - A revoked or expired invite cannot be used to sign in, even if the Keycloak account exists.
+  - Invite creation and job enqueue commit together or not at all.
+- **tests** (pytest; integration uses testcontainers-python Postgres, Redis and Keycloak with IDENTITY-01's realm, and Mailpit for mail):
   - **unit**:
-    - `hashPassword('correct horse battery staple')` starts with `$argon2id$v=19$m=19456,t=2,p=1$`.
-    - `validatePassword('short')` returns `TOO_SHORT`. `validatePassword('P@ssw0rd1234')` with a HIBP stub count of 5 returns `BREACHED`. With the HIBP stub timing out, it returns ok with `hibpUnavailable: true`.
-    - TOTP verification for step s when `last_used_step = s` returns `REPLAY`. Step s+1 is ok. Step s-2 is invalid.
-    - `needsRehash('$argon2id$v=19$m=4096,t=3,p=1$...')` returns true.
+    - `invite_method('carol@client.test', directory={'kaefer.test': 'kaefer-oidc'})` returns `local`. `invite_method('dan@kaefer.test', ...)` returns `sso`.
+    - `step_up` check: `aal=2` with `authenticated_at` 5 minutes ago passes. 11 minutes ago gives `STEP_UP_REQUIRED`. `aal=1` 1 minute ago gives `STEP_UP_REQUIRED`.
+    - `derive_aal(acr=None, amr=['pwd'], upstream_amr=['pwd','mfa'])` returns 2. `derive_aal(None, [], upstream_amr=['pwd'])` returns 1.
+    - `build_step_up_url(user_with_idp('kaefer-oidc'))` contains `prompt=login`, `max_age=0`, `acr_values=aal2` and `kc_idp_hint=kaefer-oidc`.
+    - Step-up callback checks: `sub` mismatch gives `STEP_UP_SUBJECT_MISMATCH`. `auth_time` 1 s before `started_at` gives `STEP_UP_STALE`.
+    - The `send_invite` handler with a fake adapter raising `KeycloakRejected('User exists with same username')` sets status `failed` with that `last_error`. Raising `KeycloakUnavailable` re-raises.
   - **integration**:
-    - Invite `carol@client.test`. Expected: an `invited` app_user, and `token_hash` equals SHA-256 of the token in the captured mail. Accept with a valid password. Expected: status `active`. Accept again. Expected: 404 `INVITE_INVALID`.
-    - An invite with `expires_at` in the past. Expected: 404 `INVITE_INVALID`.
-    - Six wrong passwords for carol. Expected: the 6th returns 429. An unknown email also returns 429 after 5 attempts.
-    - Unknown email versus wrong password, 20 tries each. Expected: identical status and body, and a p50 latency difference under 50 ms.
-    - Password login for SSO-managed alice. Expected: 401 `INVALID_CREDENTIALS` and an `auth_event` with reason `sso_managed`.
-    - A correct password without MFA verification, then `GET /api/v1/me`. Expected: 401.
-    - After accepting with no factor enrolled: `GET /api/v1/projects` returns 403 `MFA_ENROLMENT_REQUIRED` and `GET /me` returns 200.
-    - WebAuthn with a software authenticator: register, then authenticate. Expected: a session with `aal=2` and `amr` containing `hwk`.
+    - Invite `carol@client.test` with a fresh step-up session. Expected:
+      - 201, an `invited` `app_user`, a `pending` invite and 1 queued job.
+      - Run the job: the Keycloak user exists with `requiredActions` equal to `['VERIFY_EMAIL','UPDATE_PASSWORD','CONFIGURE_TOTP']` and attribute `aip_user_id`, the invite is `sent`, and Mailpit has 1 message to carol.
+      - Running the job again creates no second Keycloak user.
+    - Invite in a transaction that then raises. Expected: no `app_user`, no invite and no job.
+    - Invite `dan@kaefer.test`. Expected: `method='sso'`, no job, and no Keycloak user.
+    - Follow carol's Mailpit link headlessly: verify the email, set password `Correct-Horse-42!`, configure TOTP, then sign in. Expected: `app_user.status='active'`, the invite is `accepted`, the session has `aal=2` and `mfa_enrolled_at` is set.
+    - Revoke an invite after it was sent, then sign in with that Keycloak account. Expected: 403 `INVITE_INVALID` and no session. The disable job leaves the Keycloak user with `enabled=false`.
+    - `POST /api/v1/identity/invites` with a session authenticated 11 minutes ago. Expected: 401 `STEP_UP_REQUIRED` with `stepUpUrl`.
+    - Run step-up headlessly for carol (password + TOTP). Expected: the session id changes, `authenticated_at` is updated, and the retried invite returns 201.
+    - Step-up for bob (`acme-oidc`, upstream `amr=['pwd']`). Expected: 403 `MFA_NOT_SATISFIED`, and his session id and `aal=1` are unchanged.
+    - Reset carol's MFA. Expected: Keycloak `get_credentials(carol)` has no `otp` credential, `requiredActions` contains `CONFIGURE_TOTP`, and her sessions are revoked. Resetting alice's MFA gives 409 `MFA_MANAGED_BY_IDP`.
+    - Invite `carol@client.test` in `tenant-b` while she is local in `kaefer-demo`. Expected: 409 `EMAIL_IN_OTHER_TENANT`.
   - **e2e**:
-    - Playwright: a tenant admin invites `dave@local.test`. Open the link from the test mailbox, set a password, enrol TOTP (the test computes the code from the manual-entry secret shown on the page) and save the recovery codes. Expected: land on home. Sign out, then sign in with password + TOTP. Expected: home. Sign in with a recovery code. Expected: it works once and fails on second use.
+    - Playwright on compose: alice (tenant admin, SSO) invites `erin@client.test`. Open the Keycloak email from Mailpit, set a password and configure TOTP (the test computes the code from the manual-entry secret on the themed page). Expected: erin lands on home, and the header shows her email.
+    - Alice signs in, waits until her session is older than the step-up window (fake clock via `AIP_TEST_CLOCK_OFFSET`), and tries to invite again. Expected: she is sent to the mock IdP, which re-prompts (`prompt=login`). On return, the invite succeeds after the retry prompt.

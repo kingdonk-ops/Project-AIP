@@ -32,3 +32,5 @@ Nothing blocks M0 now.
     witness and counter-sign". Trim the matrix?
 9. Retention periods per record type, and who is the named security owner?
 10. Team size: solo or hiring? (Sets agent parallelism and realistic dates.)
+11. **SSO users whose company IdP doesn't assert MFA:** should Keycloak add its own OTP step for them (so they can
+    release hold points and sign), or must the customer turn on MFA in their IdP? (ADR 0005, IDENTITY-04)

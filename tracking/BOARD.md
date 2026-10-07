@@ -93,7 +93,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
 | [ACCESS-02](tasks/ACCESS-02.md) | Roles, default role seed, tenant/project role assignment API | access | M | ACCESS-01, PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting  |
-| [IDENTITY-03](tasks/IDENTITY-03.md) | Server-side sessions (__Host- cookie, user_session), rotation, revocation | identity | M | DESIGN-02, IDENTITY-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [IDENTITY-03](tasks/IDENTITY-03.md) | Server-side sessions (__Host- cookie, user_session), rotation, revocation | identity | M | DESIGN-02, IDENTITY-02 | todo |  |
 | [TENANCY-03](tasks/TENANCY-03.md) | Organisations and project-scoped role assignment | tenancy | M | PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [APPROVALS-01](tasks/APPROVALS-01.md) | Versioned workflow definitions/instances + pure state-machine evaluator | approvals | M | ARCH-02, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
@@ -111,7 +111,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [ACCESS-03](tasks/ACCESS-03.md) | Scope tables and RLS project predicates; policy/RLS parity tests | access | M | ACCESS-02, PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [ACCESS-04](tasks/ACCESS-04.md) | Teams, membership, cache-invalidation event | access | M | ACCESS-02, ARCH-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [PROJECTS-03](tasks/PROJECTS-03.md) | Project membership, header switcher, X-Project-Id enforcement | projects | M | ACCESS-02, ARCH-04 | todo | convert to Python backend per ADR 0001 before starting  |
-| [IDENTITY-04](tasks/IDENTITY-04.md) | Invite/accept, local Argon2id password + TOTP/WebAuthn MFA | identity | M | ACCESS-01, IDENTITY-03, STACK-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [IDENTITY-04](tasks/IDENTITY-04.md) | Invite/accept via Keycloak admin API; MFA enforcement and step-up | identity | M | ACCESS-01, IDENTITY-03, STACK-02 | todo |  |
 | [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-02](tasks/UPLOADS-02.md) | Scan worker: ClamAV, magic bytes, caps, fail-closed release | uploads | M | ARCH-05, OPS-02, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-03](tasks/UPLOADS-03.md) | Resumable S3 multipart uploads | uploads | M | UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
@@ -132,12 +132,12 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [APPROVALS-05](tasks/APPROVALS-05.md) | Inspection lifecycle preset + golden tests (needs AIP lifecycle spec) | approvals | M | APPROVALS-02, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-04](tasks/UPLOADS-04.md) | EXIF/GPS policy + thumbnails in sandboxed worker | uploads | M | UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-05](tasks/UPLOADS-05.md) | Per-file-type policy table + storage quota counters | uploads | S | UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting  |
-| [IDENTITY-05](tasks/IDENTITY-05.md) | SCIM 2.0 server; deprovision revokes everything in one transaction | identity | M | ACCESS-01, ARCH-05, IDENTITY-03 | todo | convert to Python backend per ADR 0001 before starting  |
-| [ACCESS-05](tasks/ACCESS-05.md) | Users & Roles UI, permission matrix page and export | access | M | ACCESS-02, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting  |
+| [IDENTITY-05](tasks/IDENTITY-05.md) | SCIM 2.0 server; deprovision revokes everything in one transaction | identity | M | ACCESS-01, ARCH-05, IDENTITY-03 | todo |  |
+| [ACCESS-05](tasks/ACCESS-05.md) | Users & Roles UI, permission matrix page and export | access | M | ACCESS-02, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting; step-up is now a full redirect to Keycloak (`stepUpUrl`); map `mfaEnrolled` to `app_user.mfa_enrolled_at` (ADR 0005 rev 2) |
 | [PROJECTS-04](tasks/PROJECTS-04.md) | Work-type classification + project settings overrides | projects | M | PROJECTS-01, TERMS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [AUDIT-03](tasks/AUDIT-03.md) | Chain verifier CLI + S3 Object Lock anchoring job | audit | M | AUDIT-01, OPS-02, OPS-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [AUDIT-04](tasks/AUDIT-04.md) | Activity/timeline API + project activity tab | audit | M | ACCESS-01, AUDIT-02, DESIGN-04 | todo | convert to Python backend per ADR 0001 before starting  |
-| [TENANCY-05](tasks/TENANCY-05.md) | Tenant settings, modules and provisioning | tenancy | M | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting |
+| [TENANCY-05](tasks/TENANCY-05.md) | Tenant settings, modules and provisioning | tenancy | M | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting; invite the first admin via IDENTITY-04 `create_invite` (ADR 0005 rev 2) |
 | [DESIGN-05](tasks/DESIGN-05.md) | Tenant accent theme + visual regression | design | S | DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting  |
 
 ### Wave 9: P0-core exit
@@ -146,9 +146,9 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 |---|---|---|---|---|---|---|
 | [APPROVALS-06](tasks/APPROVALS-06.md) | Approvals inbox API + page | approvals | M | APPROVALS-04, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-06](tasks/UPLOADS-06.md) | Upload tray + scan status chip | uploads | M | DESIGN-03, UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting  |
-| [IDENTITY-06](tasks/IDENTITY-06.md) | OAuth2 client-credentials API clients (ES256, scoped, expiring) | identity | S | ACCESS-01, IDENTITY-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [IDENTITY-06](tasks/IDENTITY-06.md) | OAuth2 client-credentials API clients (ES256, scoped, expiring) | identity | S | ACCESS-01, IDENTITY-02 | todo |  |
 | [AUDIT-05](tasks/AUDIT-05.md) | Legal hold + recycle bin (replaces DATABASE-06) | audit | M | AUDIT-01, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
-| [SECURITY-07](tasks/SECURITY-07.md) | Tenant IP allow-list and session policy | security | M | IDENTITY-03 | todo | convert to Python backend per ADR 0001 before starting |
+| [SECURITY-07](tasks/SECURITY-07.md) | Tenant IP allow-list and session policy | security | M | IDENTITY-03 | todo |  |
 | [OPS-08](tasks/OPS-08.md) | Backup and restore-test harness with recorded evidence | ops | M | OPS-07 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-08](tasks/TESTING-08.md) | CI gates, k6 load script and mobile smoke job | testing | M | TESTING-02, TESTING-04, TESTING-05, TESTING-06 | todo | convert to Python backend per ADR 0001 before starting |
 

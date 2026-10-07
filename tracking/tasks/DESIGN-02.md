@@ -1,5 +1,5 @@
 # DESIGN-02 — App shell (header, nav rail, scope bar) + login/logout
-<!-- hand-edited: converted to Python backend per ADR 0001 (2026-10-07) -->
+<!-- hand-edited: converted to Python backend per ADR 0001 (2026-10-07); identity per ADR 0005 rev 2 -->
 
 | Field | Value |
 |---|---|
@@ -13,7 +13,7 @@
 
 1. [`docs/blueprint/07-task-conventions.md`](../../docs/blueprint/07-task-conventions.md)
 2. [`docs/blueprint/modules/design/README.md`](../../docs/blueprint/modules/design/README.md)
-3. ADRs: [0004](../../docs/adr/0004-repository-layout.md) (apps/web is Vite + React + TanStack Router, served from S3/CloudFront with `/api/*` routed to the API on the same origin), [0005](../../docs/adr/0005-identity-architecture.md) (the FastAPI backend issues opaque `__Host-` session cookies, Keycloak only brokers SSO, browsers never hold JWTs), [0001](../../docs/adr/0001-greenfield-python-backend.md), [0007](../../docs/adr/0007-mvp-scope-and-strangler.md) (M0 shell)
+3. ADRs: [0004](../../docs/adr/0004-repository-layout.md) (apps/web is Vite + React + TanStack Router, served from S3/CloudFront with `/api/*` routed to the API on the same origin), [0005](../../docs/adr/0005-identity-architecture.md) rev 2 (Keycloak handles every staff sign-in step: SSO, password, MFA and passkeys on its themed pages; the FastAPI backend issues opaque `__Host-` session cookies; browsers never hold JWTs), [0001](../../docs/adr/0001-greenfield-python-backend.md), [0007](../../docs/adr/0007-mvp-scope-and-strangler.md) (M0 shell)
 4. Only if the step needs it: [`docs/blueprint/03-site-hierarchy.md`](../../docs/blueprint/03-site-hierarchy.md) for nav sections, and the auth routes in IDENTITY-01's merged `routes.py`
 
 ## Spec
@@ -44,8 +44,8 @@ Build the constant frame of the desktop web app (56px header, 56px nav rail, sco
   - 2. In t.ts, add `t(key, params?)` reading `config/terms/en-AU/*.json` at build time (`import.meta.glob(..., { eager: true })`), unless `packages/terms` (TERMS-08) is already merged, in which case re-export its `t`. A missing key renders a visible `⟦key⟧` marker and logs a warning; it never renders an empty string. TERMS-08 replaces the source without changing call sites.
   - 3. In session.ts, add a TanStack Query `sessionQuery` that calls `GET /api/v1/me` (IDENTITY-02) through `packages/api-client` with `credentials: 'same-origin'`, plus `GET /api/v1/access/me/abilities` (ACCESS-01) when merged. It resolves to `{user:{id, name, email}, tenant:{slug, name}, permissions[]}` or `null` on 401. Until those endpoints are merged, tests use MSW handlers with the same shapes.
   - 4. Route guard. `_app.tsx` has `beforeLoad` that runs `queryClient.ensureQueryData(sessionQuery)` and, when it is `null`, throws `redirect({ to: '/login', search: { next: location.href } })`. `safe-next.ts` accepts `next` only if it is a same-origin relative path (starts with a single `/`, no `//`, no scheme); otherwise `/`. A 401 from any later API call clears the session query and redirects the same way (expired session).
-  - 5. Build the login route at `/login`: an email (or tenant slug) field posts via the generated client to IDENTITY-01's `POST /api/v1/auth/login/start` with the validated `next` as `returnTo`, then `window.location.assign(redirectUrl)` to Keycloak. Show the error states the API returns (unknown domain, tenant suspended) with term keys and enumeration-safe wording. Show no password field until IDENTITY-04 lands.
-  - 6. Logout is a POST (a form button, never a GET link) to `POST /api/v1/auth/logout`, which IDENTITY-03 implements (it revokes the session, clears the cookie and returns Keycloak's end-session URL). The client follows that URL if present, then lands on `/login?signed_out=1` and clears the query cache.
+  - 5. Build the login route at `/login`: an email (or tenant slug) field posts via the generated client to IDENTITY-01's `POST /api/v1/auth/login/start` with the validated `next` as `returnTo`, then `window.location.assign(redirectUrl)` to Keycloak. Show the error states the API returns (unknown domain, tenant suspended) with term keys and enumeration-safe wording. The SPA never shows a password, OTP or passkey field: for both `method:'sso'` and `method:'password'` it redirects to Keycloak, whose `aip`-themed pages (IDENTITY-01) collect credentials and MFA. Show `?invited=1` as a short term-key notice ("Sign in to finish setting up your account").
+  - 6. Logout is a POST (a form button, never a GET link) to `POST /api/v1/auth/logout`, which IDENTITY-03 implements (it revokes the app session, clears the cookies, revokes the Keycloak SSO session server-side through the admin API, and returns 204). There is no browser redirect through Keycloak. The client clears the query cache and lands on `/login?signed_out=1`.
   - 7. Build AppShell. The header has the tenant name and logo slot, a project switcher slot (empty until PROJECTS-03), a search placeholder slot, and a user menu with name, email and Sign out. The nav rail has icons with tooltips and labels, built from `nav-registry.ts`, where features register `{id, section, to, icon, termKey, permission}`. Sections follow 03-site-hierarchy. Items whose permission the principal lacks are not rendered. The scope bar shows a tenant chip and a project chip (when selected) and leaves room for the asset-subtree chip later. Add skip-to-content, landmark roles (`banner`, `navigation`, `main`) and keyboard navigation of the rail. Add a placeholder `_app/index.tsx` Home ("My Work" comes later).
   - 8. Responsive behaviour: at widths under 768px, the rail collapses into a menu button. Density comes from `data-density` on `<html>` (compact by default).
 - **acceptance**:
@@ -60,10 +60,11 @@ Build the constant frame of the desktop web app (56px header, 56px nav rail, sco
     - The `_app` `beforeLoad` with `/me` answering 401 on `/projects?status=active` throws a redirect to `/login?next=%2Fprojects%3Fstatus%3Dactive`. `safeNext('https://evil.example')` and `safeNext('//evil.example')` return `/`.
     - `t('shell.nav.projects')` returns "Projects". `t('missing.key')` returns `⟦missing.key⟧`.
     - The Sign out control is a `<button type="submit">` inside a `<form method="post">`, not a link.
+    - The `/login` route renders no `input[type=password]` for either `method` answer, and on `{method:'password', redirectUrl}` calls `window.location.assign` with that URL.
   - **integration**:
     - With the API (compose) running and no cookie, `sessionQuery` resolves to `null`. With a cookie from a completed login (requires IDENTITY-03; skipped with a reason until it merges). Expected: the tenant slug is `kaefer-demo`.
     - `vite preview` response headers on `/login` include a CSP whose `script-src` is `'self'` with no `unsafe-inline`, `frame-ancestors 'none'`, and `Referrer-Policy: strict-origin-when-cross-origin`.
   - **e2e** (Playwright, project `web`; the session-dependent cases are tagged `@needs-identity-03` and skipped until IDENTITY-03 issues sessions):
-    - Go to `/projects`, get redirected to `/login`, enter `admin@kaefer-demo.test`, complete the Keycloak form, and land on `/projects`. The header shows tenant "Kaefer Demo" and the user menu shows the email.
+    - Go to `/projects`, get redirected to `/login`, enter `alice@kaefer.test`, complete the Keycloak form, and land on `/projects`. The header shows tenant "Kaefer Demo" and the user menu shows the email.
     - Click Sign out. Expected: `/login?signed_out=1`. Visiting `/` again redirects to `/login`.
     - In the signed-in page, `await page.evaluate(() => document.cookie)` does not contain `__Host-`.
