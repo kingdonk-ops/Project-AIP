@@ -72,6 +72,6 @@ jobs:
           for d in backend frontend services; do
             if [ -e "$d" ]; then echo "forbidden path: $d/"; exit 1; fi
           done
-          if git ls-files 'apps/api/**/*.ts' 'apps/api/**/*.tsx' | grep -q .; then
+          if git ls-files 'apps/api' | grep -qE '\.(ts|tsx|mts|cts)$'; then
             echo "TypeScript under apps/api"; exit 1
           fi

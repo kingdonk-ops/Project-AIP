@@ -75,6 +75,13 @@ def test_rejects_invalid_names(name: str) -> None:
     assert "invalid module name" in result.stderr
 
 
+@pytest.mark.parametrize("name", ["class", "import", "tests", "platform", "shared"])
+def test_rejects_keywords_and_reserved_names(name: str) -> None:
+    result = run_scaffolder(ROOT, name)
+    assert result.returncode != 0
+    assert "reserved" in result.stderr
+
+
 def test_requires_exactly_one_argument() -> None:
     result = run_scaffolder(ROOT)
     assert result.returncode != 0
@@ -205,6 +212,8 @@ def test_no_forbidden_top_level_paths() -> None:
 def test_no_typescript_under_api() -> None:
     api = ROOT / "apps" / "api"
     offenders = [
-        p for p in api.rglob("*") if p.suffix in {".ts", ".tsx"} and ".venv" not in p.parts
+        p
+        for p in api.rglob("*")
+        if p.suffix in {".ts", ".tsx", ".mts", ".cts"} and ".venv" not in p.parts
     ]
     assert offenders == []

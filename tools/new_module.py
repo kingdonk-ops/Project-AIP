@@ -11,6 +11,7 @@ never touches anything that existed before.
 
 from __future__ import annotations
 
+import keyword
 import os
 import re
 import shutil
@@ -25,6 +26,8 @@ MODULES_DIR = API_DIR / "aip" / "modules"
 TEMPLATE_DIR = MODULES_DIR / "_template"
 PLACEHOLDER = "__module__"
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+# Names that would shadow package internals or test discovery.
+RESERVED_NAMES = frozenset({"tests", "platform", "shared", "modules", "main", "worker"})
 _REEXEC_ENV = "AIP_NEW_MODULE_REEXEC"
 
 
@@ -37,6 +40,8 @@ def validate_name(name: str) -> None:
         raise ScaffoldError(
             f"invalid module name {name!r}: use snake_case matching {NAME_RE.pattern}"
         )
+    if keyword.iskeyword(name) or name in RESERVED_NAMES:
+        raise ScaffoldError(f"module name {name!r} is reserved; choose another name")
 
 
 def _load_manifest_class() -> type:
@@ -57,7 +62,8 @@ def ensure_dependencies() -> None:
                 "pydantic is not installed; run `uv sync --all-packages --frozen` first"
             ) from None
         env = {**os.environ, _REEXEC_ENV: "1"}
-        cmd = [uv, "run", "--frozen", "--project", str(ROOT), "python", *sys.argv]
+        script = str(Path(__file__).resolve())
+        cmd = [uv, "run", "--frozen", "--project", str(ROOT), "python", script, *sys.argv[1:]]
         sys.exit(subprocess.call(cmd, env=env))
 
 
