@@ -27,7 +27,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [DATABASE-08](tasks/DATABASE-08.md) | Raw-SQL migration runner (node-pg-migrate), migrator role, baseline + extensions | database | M | ARCH-01 | todo |  |
+| [DATABASE-08](tasks/DATABASE-08.md) | Alembic env, migrator role, baseline revision + extensions | database | M | ARCH-01 | todo |  |
 | [ARCH-02](tasks/ARCH-02.md) | Module registry and dependency check | arch | S | ARCH-01 | todo |  |
 | [ARCH-03](tasks/ARCH-03.md) | Import-boundary lint and manifest CI check | arch | S | ARCH-01 | todo |  |
 | [ARCH-04](tasks/ARCH-04.md) | Request context carrying tenant, project, actor and asset scope | arch | S | ARCH-01 | todo |  |
