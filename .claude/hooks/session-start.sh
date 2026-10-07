@@ -14,11 +14,14 @@ cd "${CLAUDE_PROJECT_DIR:-$(pwd)}"
 
 # --- Postgres 16 + extensions -------------------------------------------------
 if ! dpkg -s postgresql-16-pgvector >/dev/null 2>&1; then
-  apt-get update -q >/dev/null
-  DEBIAN_FRONTEND=noninteractive apt-get install -y -q postgresql-16-pgvector >/dev/null
+  if ! { apt-get update -q >/dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y -q postgresql-16-pgvector >/dev/null; }; then
+    echo "warn: pgvector install failed; continuing without the vector extension" >&2
+  fi
 fi
 
-if ! pg_lsclusters -h | awk '$1==16 && $2=="main" {print $4}' | grep -q online; then
+command -v pg_lsclusters >/dev/null || { echo "error: PostgreSQL 16 is not installed in this image" >&2; exit 1; }
+status=$(pg_lsclusters -h | awk '$1==16 && $2=="main" {print $4}')
+if [[ "$status" != *online* ]]; then
   pg_ctlcluster 16 main start
 fi
 
@@ -26,10 +29,11 @@ for _ in $(seq 1 30); do
   pg_isready -q -h localhost -p 5432 && break
   sleep 1
 done
+pg_isready -q -h localhost -p 5432 || { echo "error: Postgres did not become ready on localhost:5432" >&2; exit 1; }
 
 # Test superuser + database. Superuser is needed so test fixtures can create the
 # app roles (aip_owner, aip_app, aip_jobs, aip_readonly) and extensions per ADR 0002.
-su postgres -c "psql -q -v ON_ERROR_STOP=1" <<'SQL'
+su postgres -c "cd /tmp && psql -q -v ON_ERROR_STOP=1" <<'SQL'
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'aip_test') THEN
@@ -38,22 +42,26 @@ BEGIN
 END
 $$;
 SQL
-if ! su postgres -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='aip_test'\"" | grep -q 1; then
-  su postgres -c "createdb -O aip_test aip_test"
+exists=$(su postgres -c "cd /tmp && psql -tAc \"SELECT 1 FROM pg_database WHERE datname='aip_test'\"")
+if [[ "$exists" != "1" ]]; then
+  su postgres -c "cd /tmp && createdb -O aip_test aip_test"
 fi
-su postgres -c "PGOPTIONS=--client-min-messages=warning psql -q -d aip_test -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS ltree; CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS pgcrypto; CREATE EXTENSION IF NOT EXISTS vector;'"
+su postgres -c "cd /tmp && PGOPTIONS=--client-min-messages=warning psql -q -d aip_test -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS ltree; CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS pgcrypto;'"
+if dpkg -s postgresql-16-pgvector >/dev/null 2>&1; then
+  su postgres -c "cd /tmp && PGOPTIONS=--client-min-messages=warning psql -q -d aip_test -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS vector;'"
+fi
 
-if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+if [ -n "${CLAUDE_ENV_FILE:-}" ] && ! grep -qs AIP_TEST_DATABASE_URL "$CLAUDE_ENV_FILE"; then
   # Local dev-only credentials for a throwaway test database; not a secret.
   echo 'export AIP_TEST_DATABASE_URL="postgresql://aip_test:aip_test@localhost:5432/aip_test"' >> "$CLAUDE_ENV_FILE"
 fi
 
 # --- Python (uv) ----------------------------------------------------------------
-if [ -f uv.lock ]; then
-  uv sync --all-packages --frozen
+if [ -f uv.lock ] && command -v uv >/dev/null; then
+  uv sync --all-packages --frozen >&2
 fi
 
 # --- TypeScript (pnpm) ------------------------------------------------------------
-if [ -f pnpm-lock.yaml ]; then
-  pnpm install --frozen-lockfile
+if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null; then
+  pnpm install --frozen-lockfile >&2
 fi
