@@ -11,4 +11,9 @@ describe("web shell", () => {
     const router = createAppRouter();
     expect(Object.keys(router.routesByPath)).toContain("/");
   });
+
+  it("registers the dev-only UI fixture route outside production", () => {
+    const router = createAppRouter();
+    expect(Object.keys(router.routesByPath)).toContain("/__fixtures/ui");
+  });
 });
