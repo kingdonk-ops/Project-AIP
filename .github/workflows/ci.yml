@@ -1,0 +1,77 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python ${{ matrix.python }} (ruff, pyright, pytest)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
+    env:
+      UV_PYTHON: ${{ matrix.python }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install
+        run: uv sync --all-packages --frozen
+      - name: Ruff lint
+        run: uv run ruff check
+      - name: Ruff format
+        run: uv run ruff format --check
+      - name: Pyright
+        run: uv run pyright
+      - name: Pytest
+        run: uv run pytest -q
+
+  typescript:
+    name: TypeScript (lint, typecheck, build, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm -r lint
+      - name: Typecheck
+        run: pnpm -r typecheck
+      - name: Build
+        run: pnpm -r build
+      - name: Test
+        run: pnpm -r test
+      - name: Web build output exists
+        run: test -f apps/web/dist/index.html
+
+  layout:
+    name: Repository layout (ADR 0004)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No backend/, frontend/, services/ and no TypeScript under apps/api
+        run: |
+          set -e
+          for d in backend frontend services; do
+            if [ -e "$d" ]; then echo "forbidden path: $d/"; exit 1; fi
+          done
+          if git ls-files 'apps/api/**/*.ts' 'apps/api/**/*.tsx' | grep -q .; then
+            echo "TypeScript under apps/api"; exit 1
+          fi

@@ -1,0 +1,6 @@
+{
+  "name": "@aip/field",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Field PWA (Vite + React, offline-first). Placeholder: no build yet."
+}

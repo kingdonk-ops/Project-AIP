@@ -1,0 +1,5 @@
+packages:
+  - apps/web
+  - apps/field
+  - apps/portal
+  - packages/*

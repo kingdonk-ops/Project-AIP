@@ -4,3 +4,12 @@ node_modules/
 .env
 .env.*
 !.env.example
+.venv/
+.pytest_cache/
+*.pyc
+*.egg-info/
+dist/
+build/
+*.tsbuildinfo
+coverage/
+.vite/
