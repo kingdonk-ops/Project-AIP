@@ -4,8 +4,12 @@ from aip.platform.context.context import (
     SAFE_REQUEST_ID,
     ContextMissingError,
     RequestContext,
+    current_request_id,
     get_context,
+    new_request_id,
+    reset_request_id,
     run_with_context,
+    set_request_id,
     use_context,
 )
 from aip.platform.context.middleware import RequestContextMiddleware
@@ -27,7 +31,11 @@ __all__ = [
     "ProjectMembershipResolver",
     "RequestContext",
     "RequestContextMiddleware",
+    "current_request_id",
     "get_context",
+    "new_request_id",
+    "reset_request_id",
     "run_with_context",
+    "set_request_id",
     "use_context",
 ]

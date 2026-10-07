@@ -9,7 +9,10 @@ current context when work is scheduled).
 
 from __future__ import annotations
 
+import os
 import re
+import time
+import uuid
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
@@ -20,8 +23,11 @@ __all__ = [
     "SAFE_REQUEST_ID",
     "ContextMissingError",
     "RequestContext",
+    "current_request_id",
     "get_context",
+    "new_request_id",
     "run_with_context",
+    "set_request_id",
     "use_context",
 ]
 
@@ -63,6 +69,37 @@ class RequestContext:
 
 
 _current: ContextVar[RequestContext] = ContextVar("aip_request_context")
+
+# The request id of the current HTTP request, set by the outermost middleware (OPS-04) before any
+# principal is known, so unauthenticated requests and log lines carry it too.
+_request_id: ContextVar[str | None] = ContextVar("aip_request_id", default=None)
+
+
+def new_request_id() -> str:
+    """A new UUIDv7 (RFC 9562): 48-bit Unix ms timestamp, then random bits; sorts by time."""
+    ms = time.time_ns() // 1_000_000
+    rand = int.from_bytes(os.urandom(10), "big")
+    value = (ms & 0xFFFF_FFFF_FFFF) << 80 | rand
+    value = (value & ~(0xF << 76)) | (0x7 << 76)  # version 7
+    value = (value & ~(0x3 << 62)) | (0x2 << 62)  # RFC 4122 variant
+    return str(uuid.UUID(int=value))
+
+
+def current_request_id() -> str | None:
+    """The current request id: the request context's, else the HTTP request's, else ``None``."""
+    ctx = _current.get(None)
+    if ctx is not None:
+        return ctx.request_id
+    return _request_id.get()
+
+
+def set_request_id(request_id: str | None) -> Token[str | None]:
+    """Set the request id for the current task; reset with ``reset_request_id(token)``."""
+    return _request_id.set(request_id)
+
+
+def reset_request_id(token: Token[str | None]) -> None:
+    _request_id.reset(token)
 
 
 def get_context() -> RequestContext:
