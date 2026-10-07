@@ -112,7 +112,8 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [ACCESS-04](tasks/ACCESS-04.md) | Teams, membership, cache-invalidation event | access | M | ACCESS-02, ARCH-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [PROJECTS-03](tasks/PROJECTS-03.md) | Project membership, header switcher, X-Project-Id enforcement | projects | M | ACCESS-02, ARCH-04 | todo | convert to Python backend per ADR 0001 before starting  |
 | [IDENTITY-04](tasks/IDENTITY-04.md) | Invite/accept via Keycloak admin API; MFA enforcement and step-up | identity | M | ACCESS-01, IDENTITY-03, STACK-02 | todo |  |
-| [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01 | todo | convert to Python backend per ADR 0001 before starting  |
+| [IDENTITY-07](tasks/IDENTITY-07.md) | Sign-off assurance: per-tenant minimum, method recording, step-up and countersign decision | identity | M | IDENTITY-04 | todo | ADR 0010 |
+| [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01, IDENTITY-07 | todo | convert to Python backend per ADR 0001 before starting; calls check_signoff_assurance (ADR 0010) |
 | [UPLOADS-02](tasks/UPLOADS-02.md) | Scan worker: ClamAV, magic bytes, caps, fail-closed release | uploads | M | ARCH-05, OPS-02, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-03](tasks/UPLOADS-03.md) | Resumable S3 multipart uploads | uploads | M | UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [TESTING-03](tasks/TESTING-03.md) | Isolation tests for Redis, queues, S3 prefixes and search | testing | M | OPS-02, TENANCY-02, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting |
