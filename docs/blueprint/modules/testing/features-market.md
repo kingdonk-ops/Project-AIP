@@ -1,0 +1,37 @@
+# Testing & quality engineering — Feature scout
+
+
+- **abilities seen in market**:
+  - Contract tests for public APIs and webhooks
+  - Automated accessibility and performance budgets in CI
+  - Load tests simulating peak concurrent users and sync storms
+  - Test data factories and anonymised production-shaped datasets
+  - Mutation or property-based testing on critical rules
+  - Visual regression and cross-device matrix testing
+  - Chaos and restore drills as scheduled tests
+  - Test evidence retained as compliance artefacts
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Permission-matrix test generated from the permissions catalogue, asserting allow and deny per role, project and asset subtree
+    - **why**: Proves deny-by-default across the existing catalogue and catches regressions as roles evolve.
+  -
+    - **effort**: M
+    - **feature**: Offline sync property tests: random interleavings of edits, retries and conflicts must converge
+    - **why**: Offline reliability is a top risk, and example-based tests miss ordering bugs.
+  -
+    - **effort**: M
+    - **feature**: Load test of 5,000 users with a morning-sync burst and a large report-pack run
+    - **why**: Validates the pooled-stack sizing and queue limits before a large customer onboards.
+  -
+    - **effort**: S
+    - **feature**: Golden-file tests for rendered inspection reports and certificates
+    - **why**: Detects layout or data drift in published records that clients rely on.
+  -
+    - **effort**: M
+    - **feature**: Hold-point and completion-gate scenario suite using realistic CUI remediation data
+    - **why**: Encodes domain rules as executable examples that double as customer acceptance tests.
+  -
+    - **effort**: M
+    - **feature**: Frontend smoke suite on real mid-range Android and iPad browsers for the field journeys
+    - **why**: The current absence of frontend tests leaves field UI regressions undetected.

@@ -1,0 +1,320 @@
+# Content types, item types & attributes — Feature filler
+
+
+- **detail sections**:
+  - Definition (name, content type, category, parent)
+  - Attribute schema (own and inherited, ordered)
+  - Conditional and calculated attributes
+  - Units and tolerances
+  - Component settings
+  - Auto-create ITP/inspection templates
+  - Status set mapping
+  - Version history and migration preview
+  - Assets using this type
+  - Terminology/rename
+- **notifications**:
+  - Schema version published (to admins)
+  - Migration preview found conflicts
+  - Type deprecated while assets still use it
+  - Starter pack updated
+  - Attribute merge suggestion
+- **settings**:
+  - Allowed field types
+  - Expression language function allow-list
+  - Inheritance policy (add-only vs override)
+  - Neutral lifecycle state list
+  - Starter pack source (shipped vs tenant-curated)
+  - Schema publishing approval required
+  - Attribute auto-merge behaviour
+  - Terminology for type names
+- **tables**:
+  -
+    - **bulk actions**:
+      - Show/hide in navigation
+    - **columns**:
+      - Name
+      - Icon
+      - Sort order
+      - Nav entry
+      - Item types count
+      - Assets count
+    - **create form**:
+      -
+        - **field**: Name (terminology key)
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Icon
+        - **required**: false
+        - **type**: icon picker
+      -
+        - **field**: Sort order
+        - **required**: false
+        - **type**: number
+      -
+        - **field**: Show in navigation
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Default attribute schema
+        - **required**: false
+        - **type**: schema picker
+    - **empty state**: No content types. Import a starter pack or create a content type to generate a register page.
+    - **filters**:
+      - Nav entry visible
+      - System/custom
+    - **name**: Content types
+    - **row actions**:
+      - Open
+      - Edit
+      - Reorder
+      - Delete (if unused)
+    - **search**: Name
+    - **sort**:
+      - Sort order
+      - Name
+  -
+    - **bulk actions**:
+      - Delete unused
+    - **columns**:
+      - Name
+      - Content type
+      - Applicable for (Any/Item/Module)
+      - Item types
+      - Updated
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Content type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Applicable for
+        - **required**: true
+        - **type**: dropdown (Any/Item/Module)
+    - **empty state**: No categories yet. Add one to group item types.
+    - **filters**:
+      - Content type
+      - Applicable for
+    - **name**: Item categories
+    - **row actions**:
+      - Edit
+      - Delete
+    - **search**: Name
+    - **sort**:
+      - Name
+      - Updated
+  -
+    - **bulk actions**:
+      - Export definitions
+      - Assign status set
+      - Deprecate
+    - **columns**:
+      - Name
+      - Content type
+      - Category
+      - Parent type
+      - Schema version
+      - Component
+      - Allows components
+      - Auto-create ITP
+      - Status set
+      - Assets using
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Content type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Category
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Parent type
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Is component
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Allows components
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Auto-create ITP / inspection
+        - **required**: false
+        - **type**: boolean + template picker
+      -
+        - **field**: Status set
+        - **required**: false
+        - **type**: dropdown
+    - **empty state**: No item types. Create one or import a starter pack (NDT/CUI, welding, insulation, coating).
+    - **filters**:
+      - Content type
+      - Category
+      - Is component
+      - Allows components
+      - Has parent
+      - Auto-create ITP/inspection
+    - **name**: Item types
+    - **row actions**:
+      - Edit schema
+      - Version history
+      - Migration preview
+      - Duplicate
+      - Extend (child type)
+      - Deprecate
+    - **search**: Name, category
+    - **sort**:
+      - Name
+      - Schema version
+      - Assets using
+  -
+    - **bulk actions**:
+      - Merge duplicates (same label + type)
+    - **columns**:
+      - Label
+      - Field type
+      - Required default
+      - Expiry flag
+      - Unit
+      - Reference scope
+      - Used in types
+    - **create form**:
+      -
+        - **field**: Label
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Field type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Unit
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Tolerance (min/max)
+        - **required**: false
+        - **type**: number pair
+      -
+        - **field**: Expiry date flag
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Reference scope
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Expression (conditional/calculated)
+        - **required**: false
+        - **type**: expression editor
+    - **empty state**: No shared attributes. Attributes are added here when you build item types or import a pack.
+    - **filters**:
+      - Field type
+      - Expiry flag
+      - Has unit
+      - Used/unused
+    - **name**: Attributes registry
+    - **row actions**:
+      - Edit
+      - View usage
+      - Merge
+      - Delete if unused
+    - **search**: Label
+    - **sort**:
+      - Label
+      - Used in types
+  -
+    - **columns**:
+      - Set name
+      - Statuses
+      - Mapped neutral states
+      - Item types using
+      - Updated
+    - **create form**:
+      -
+        - **field**: Set name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Statuses
+        - **required**: true
+        - **type**: ordered list (label, colour)
+      -
+        - **field**: Neutral state mapping
+        - **required**: true
+        - **type**: dropdown per status
+    - **empty state**: No custom status sets. Item types use the default neutral states.
+    - **filters**:
+      - In use
+    - **name**: Status sets
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Delete if unused
+    - **search**: Set name
+    - **sort**:
+      - Name
+  -
+    - **columns**:
+      - Item type
+      - Version
+      - Changed by
+      - Date
+      - Change summary
+      - Assets affected
+      - State (draft/published)
+    - **empty state**: No schema changes recorded.
+    - **filters**:
+      - Item type
+      - State
+    - **name**: Schema versions
+    - **row actions**:
+      - View diff
+      - Migration preview
+      - Publish
+      - Revert to draft
+    - **search**: Item type
+    - **sort**:
+      - Date
+  -
+    - **columns**:
+      - Pack
+      - Domain
+      - Item types
+      - Attributes
+      - Version
+      - Imported?
+    - **empty state**: No starter packs available.
+    - **filters**:
+      - Domain
+      - Imported
+    - **name**: Starter packs
+    - **row actions**:
+      - Preview
+      - Import
+      - Update
+    - **search**: Pack name
+    - **sort**:
+      - Name
+- **walkthrough**:
+  - Admin opens Content types and either imports a starter pack or creates a new content type.
+  - Creates an item category and sets Applicable For.
+  - Creates an item type, optionally extending a parent type.
+  - Adds attributes from the registry or defines new ones with type, required flag, unit, tolerance and expiry flag.
+  - Adds conditional or calculated attributes using the sandboxed expression editor, with test values.
+  - Sets component flags and default ITP/inspection templates for auto-creation.
+  - Defines a status set and maps each status to a neutral lifecycle state.
+  - Saves as a draft schema version; the migration preview shows impacts on existing assets and completed inspections.
+  - Publishes; existing records keep their version while new assets use the new schema.
+  - The register page and asset forms update automatically from the configuration.
+  - Out-of-range measurements flag and feed the rules engine.

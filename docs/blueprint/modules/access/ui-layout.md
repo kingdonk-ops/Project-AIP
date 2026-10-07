@@ -1,0 +1,144 @@
+# Roles, permissions & teams — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Tenant admin with role-management permission.
+    - **actions**:
+      - Create
+      - Edit
+      - Duplicate
+      - Delete
+      - View users
+      - Export matrix
+      - Submit for approval
+    - **layout**: Register with role editor blade and catalogue multi-select grouped by module.
+    - **name**: Roles
+    - **purpose**: Create and manage roles from the permission catalogue.
+    - **route**: /settings/access/roles
+    - **sections**:
+      - Roles table
+      - Permission picker
+      - Users with role
+  -
+    - **access**: Tenant admin, project admin and auditors (read).
+    - **actions**:
+      - Export
+      - Compare projects
+      - Open role
+    - **layout**: Wide matrix grid with project selector and sticky headers.
+    - **name**: Permission matrix
+    - **purpose**: Per-project matrix of roles against catalogue abilities.
+    - **route**: /settings/access/matrix
+    - **sections**:
+      - Matrix grid
+      - Project selector
+      - Diff vs default
+  -
+    - **access**: Project admin for own projects; tenant admin.
+    - **actions**:
+      - Assign
+      - Edit
+      - Remove
+      - Explain access
+      - Bulk assign
+    - **layout**: Register with assignment blade and tree picker.
+    - **name**: Role assignments
+    - **purpose**: Assign roles with project, team or asset-subtree scope and end dates.
+    - **route**: /settings/access/assignments
+    - **sections**:
+      - Assignments table
+      - Asset subtree picker with exclusions
+      - Per-user overrides
+  -
+    - **access**: Tenant admin and project admin.
+    - **actions**:
+      - Create team
+      - Add members
+      - Remove
+      - Edit rules
+      - Link SCIM group
+      - Delete
+    - **layout**: Split pane: team list left, members and rules right.
+    - **name**: Teams
+    - **purpose**: Manage teams, members and visibility rules.
+    - **route**: /settings/access/teams
+    - **sections**:
+      - Team list
+      - Members
+      - Visibility rules (modules, subtrees, exclusions)
+      - Field masks
+  -
+    - **access**: Tenant admin and project admin.
+    - **actions**:
+      - Add rule
+      - Apply mask
+      - Preview
+      - Save
+      - Submit for approval
+    - **layout**: Builder on the left, live preview on the right.
+    - **name**: Visibility rule builder
+    - **purpose**: Build team visibility rules with a preview of what the team sees.
+    - **route**: /settings/access/teams/:id/rules
+    - **sections**:
+      - Module/entity picker
+      - Asset subtree tree picker with exclusions
+      - Field mask templates
+      - Preview as team
+  -
+    - **access**: Tenant admin, project admin and auditors.
+    - **actions**:
+      - Explain
+      - Open role or rule
+      - Export
+    - **layout**: Query form on top, result trace below.
+    - **name**: Effective-access explorer
+    - **purpose**: Explain why a user can or cannot act on a record.
+    - **route**: /settings/access/explorer
+    - **sections**:
+      - User and record picker
+      - Decision with reasons (role, team, subtree, discipline)
+      - Masks applied
+  -
+    - **access**: Users for their own delegation; admins to view all.
+    - **actions**:
+      - Create
+      - End early
+      - Approve
+    - **layout**: Register with create blade.
+    - **name**: Delegations
+    - **purpose**: Time-boxed acting-in-role.
+    - **route**: /settings/access/delegations
+    - **sections**:
+      - Delegations table
+      - Active and upcoming
+  -
+    - **access**: Quality or competency admin.
+    - **actions**:
+      - Grant
+      - Revoke
+      - Open certificate
+    - **layout**: Register with competency status.
+    - **name**: Discipline and method grants
+    - **purpose**: Grant sign-off by discipline and method linked to competency.
+    - **route**: /settings/access/discipline-grants
+    - **sections**:
+      - Grants table
+      - Linked certificates
+      - Expiry
+  -
+    - **access**: Designated approver and auditors.
+    - **actions**:
+      - Attest
+      - Revoke
+      - Approve
+      - Reject
+      - Export
+    - **layout**: Review queue with attest controls and export.
+    - **name**: Access reviews and approvals
+    - **purpose**: Run periodic access reviews and approve custom role or override changes.
+    - **route**: /settings/access/reviews
+    - **sections**:
+      - Review campaigns
+      - Pending approvals
+      - Privilege change history

@@ -1,0 +1,811 @@
+# Service & maintenance — Data model & schema
+
+
+- **notes**: Asset history timeline is a read view (union over inspections, work_orders, handover baseline) with no table. Pause reasons and auto-WO thresholds are config tables, answering the open questions as configurable. Meter PM, failure codes and service entitlements are deferred, though a failure_code text column can be added later. Offline WO completion is supported through sync_version.
+- **reuses existing**:
+  - assets
+  - entity_types
+  - inspections
+  - inspection_responses
+  - issues
+  - documents
+  - certificates
+  - disciplines
+  - tasks
+  - consumable_issuances
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: client_company_id
+        - **notes**: contacts companies
+        - **type**: uuid
+      -
+        - **name**: contract_no
+        - **notes**: unique per tenant
+        - **type**: text
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: term_start
+        - **type**: date
+      -
+        - **name**: term_end
+        - **type**: date
+      -
+        - **name**: scope_root_asset_id
+        - **notes**: assets subtree root
+        - **type**: uuid
+      -
+        - **name**: scope_description
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: draft/active/expired/closed
+        - **type**: text
+      -
+        - **name**: label_overrides
+        - **notes**: terminology overrides
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, contract_no) unique
+      - (tenant_id, status)
+      - (scope_root_asset_id)
+    - **name**: service_contracts
+    - **purpose**: Service contract with client, term and scope
+    - **relations**:
+      - assets
+      - companies (contacts)
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: contract_id
+        - **notes**: FK service_contracts
+        - **type**: uuid
+      -
+        - **name**: priority
+        - **notes**: config key
+        - **type**: text
+      -
+        - **name**: response_minutes
+        - **type**: int
+      -
+        - **name**: resolution_minutes
+        - **type**: int
+      -
+        - **name**: business_calendar
+        - **notes**: hours and holidays
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (contract_id, priority) unique
+    - **name**: sla_targets
+    - **purpose**: SLA response and resolution targets per contract and priority
+    - **relations**:
+      - service_contracts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: label_key
+        - **notes**: terminology key
+        - **type**: text
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, code) unique
+    - **name**: sla_pause_reasons
+    - **purpose**: Configurable pause reason list per tenant
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: contract_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: required
+        - **type**: uuid
+      -
+        - **name**: ticket_no
+        - **type**: text
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: priority
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: workflow state
+        - **type**: text
+      -
+        - **name**: raised_by
+        - **notes**: user
+        - **type**: uuid
+      -
+        - **name**: raised_at
+        - **notes**: SLA start
+        - **type**: timestamptz
+      -
+        - **name**: response_due_at
+        - **notes**: recomputed on pause
+        - **type**: timestamptz
+      -
+        - **name**: resolution_due_at
+        - **type**: timestamptz
+      -
+        - **name**: first_response_at
+        - **type**: timestamptz
+      -
+        - **name**: resolved_at
+        - **type**: timestamptz
+      -
+        - **name**: breached_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **notes**: offline
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status, resolution_due_at)
+      - (asset_id)
+      - (tenant_id, ticket_no) unique
+    - **name**: tickets
+    - **purpose**: Service ticket against an asset with SLA clock
+    - **relations**:
+      - assets
+      - service_contracts
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: ticket_id
+        - **type**: uuid
+      -
+        - **name**: reason_id
+        - **notes**: FK sla_pause_reasons
+        - **type**: uuid
+      -
+        - **name**: note
+        - **type**: text
+      -
+        - **name**: paused_at
+        - **type**: timestamptz
+      -
+        - **name**: resumed_at
+        - **notes**: null while paused
+        - **type**: timestamptz
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (ticket_id, paused_at)
+      - partial (ticket_id) where resumed_at is null
+    - **name**: sla_pause_intervals
+    - **purpose**: Append-only pause intervals with reasons
+    - **relations**:
+      - tickets
+      - sla_pause_reasons
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: ticket_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: campaign_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: campaign_stage_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: wo_no
+        - **type**: text
+      -
+        - **name**: source_type
+        - **notes**: ticket/inspection_finding/defect/schedule/campaign
+        - **type**: text
+      -
+        - **name**: source_id
+        - **notes**: polymorphic ref
+        - **type**: uuid
+      -
+        - **name**: source_inspection_response_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: recommended_repair
+        - **type**: text
+      -
+        - **name**: location
+        - **notes**: point
+        - **type**: geography
+      -
+        - **name**: photo_document_ids
+        - **notes**: documents refs
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: priority
+        - **type**: text
+      -
+        - **name**: form_inspection_id
+        - **notes**: inspections, form completion
+        - **type**: uuid
+      -
+        - **name**: signed_off_by
+        - **type**: uuid
+      -
+        - **name**: signed_off_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status)
+      - (asset_id)
+      - (source_type, source_id) unique where source_type='inspection_finding' to stop duplicates
+      - (tenant_id, wo_no) unique
+    - **name**: work_orders
+    - **purpose**: Work order with source tracking
+    - **relations**:
+      - assets
+      - tickets
+      - campaigns
+      - inspections
+      - inspection_responses
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: work_order_id
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: existing tasks
+        - **type**: uuid
+      -
+        - **name**: sequence
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (work_order_id, sequence)
+    - **name**: work_order_tasks
+    - **purpose**: Tasks within a work order, reusing tasks
+    - **relations**:
+      - work_orders
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: work_order_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: discipline_id
+        - **type**: uuid
+      -
+        - **name**: hours
+        - **type**: numeric
+      -
+        - **name**: work_date
+        - **type**: date
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (work_order_id)
+      - (user_id, work_date)
+    - **name**: work_order_labour
+    - **purpose**: Labour hours booked to work order
+    - **relations**:
+      - work_orders
+      - users
+      - disciplines
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: work_order_id
+        - **type**: uuid
+      -
+        - **name**: consumable_issuance_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: quantity
+        - **type**: numeric
+      -
+        - **name**: unit
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (work_order_id)
+    - **name**: work_order_materials
+    - **purpose**: Materials used, linked to consumables ledger
+    - **relations**:
+      - work_orders
+      - consumable_issuances
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: work_order_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: required_discipline_id
+        - **type**: uuid
+      -
+        - **name**: eligibility_result
+        - **notes**: certificates checked, snapshot
+        - **type**: jsonb
+      -
+        - **name**: assigned_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (work_order_id, user_id) unique
+      - (user_id)
+    - **name**: work_order_assignments
+    - **purpose**: Technician assignment with eligibility result
+    - **relations**:
+      - work_orders
+      - users
+      - certificates
+      - disciplines
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: work_order_id
+        - **type**: uuid
+      -
+        - **name**: equipment_id
+        - **notes**: equipment module
+        - **type**: uuid
+      -
+        - **name**: hours
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (work_order_id)
+    - **name**: work_order_equipment
+    - **purpose**: Plant used on work order
+    - **relations**:
+      - work_orders
+      - equipment
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, xor entity_type_id
+        - **type**: uuid
+      -
+        - **name**: entity_type_id
+        - **notes**: asset class
+        - **type**: uuid
+      -
+        - **name**: subtree_root_asset_id
+        - **notes**: optional
+        - **type**: uuid
+      -
+        - **name**: inspection_programme_id
+        - **notes**: E4-S1 programme
+        - **type**: uuid
+      -
+        - **name**: action_type
+        - **notes**: inspection or work_order
+        - **type**: text
+      -
+        - **name**: frequency_days
+        - **notes**: base interval
+        - **type**: int
+      -
+        - **name**: interval_rules
+        - **notes**: JSONLogic: condition/severity to interval
+        - **type**: jsonb
+      -
+        - **name**: last_done_at
+        - **type**: timestamptz
+      -
+        - **name**: last_finding_severity
+        - **type**: text
+      -
+        - **name**: next_due_at
+        - **notes**: recalculated
+        - **type**: date
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, next_due_at) where active
+      - (asset_id)
+      - (entity_type_id)
+    - **name**: preventive_schedules
+    - **purpose**: PM and risk-based interval schedules by asset or asset class
+    - **relations**:
+      - assets
+      - entity_types
+      - inspections
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: contract_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: entity_type_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: min_severity
+        - **type**: text
+      -
+        - **name**: condition
+        - **notes**: JSONLogic
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, contract_id, entity_type_id)
+    - **name**: auto_wo_rules
+    - **purpose**: Configurable severity threshold for auto-created work orders
+    - **relations**:
+      - service_contracts
+      - entity_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: entity_type_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: itp_template_id
+        - **notes**: ITP binding
+        - **type**: uuid
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, name, version) unique
+    - **name**: campaign_templates
+    - **purpose**: Recurring campaign template
+    - **relations**:
+      - entity_types
+      - inspections (ITP template)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **type**: uuid
+      -
+        - **name**: sequence
+        - **type**: int
+      -
+        - **name**: stage_key
+        - **notes**: strip/inspect/repair/reinsulate/recoat, terms key
+        - **type**: text
+      -
+        - **name**: gate_rule
+        - **notes**: JSONLogic
+        - **type**: jsonb
+      -
+        - **name**: required_discipline_id
+        - **type**: uuid
+      -
+        - **name**: hold_point
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (template_id, sequence) unique
+    - **name**: campaign_stages
+    - **purpose**: Ordered stages with gates
+    - **relations**:
+      - campaign_templates
+      - disciplines
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: contract_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **notes**: bound ITP instance
+        - **type**: uuid
+      -
+        - **name**: current_stage_id
+        - **type**: uuid
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: started_at
+        - **type**: timestamptz
+      -
+        - **name**: completed_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (asset_id)
+      - (tenant_id, status)
+    - **name**: campaigns
+    - **purpose**: Campaign instance on an asset
+    - **relations**:
+      - campaign_templates
+      - assets
+      - inspections

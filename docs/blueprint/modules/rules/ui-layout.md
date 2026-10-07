@@ -1,0 +1,128 @@
+# Rules & validation engine — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: rules.view for read. rules.author to create or edit. rules.publish to activate.
+    - **actions**:
+      - Create rule
+      - Edit
+      - Test
+      - Duplicate
+      - View versions
+      - Activate or deactivate
+      - Delete draft
+      - Move to rule set
+      - Export JSON
+    - **layout**: DataTable with a filter bar and bulk action bar.
+    - **name**: Rules register
+    - **purpose**: List and manage rules by target record, use, severity and rule set.
+    - **route**: /settings/rules
+    - **sections**:
+      - Filters (target type, use, severity, status, rule set, project)
+      - Table (rule key, name, target, use, severity, rule set, version, status, last evaluated, 30-day fail count)
+      - Bulk action bar
+      - Empty state
+  -
+    - **access**: rules.author. Publish needs rules.publish. Expression errors are shown inline.
+    - **actions**:
+      - Save draft
+      - Run test
+      - Save test case
+      - Publish (requires passing tests if enabled)
+      - Rollback to version
+      - Duplicate
+    - **layout**: Two-pane editor with the definition form on the left and the test panel on the right.
+    - **name**: Rule editor
+    - **purpose**: Define a rule's expression, message and severity, test it, and see where it is used.
+    - **route**: /settings/rules/:ruleId
+    - **sections**:
+      - Definition (target, expression, message, severity)
+      - Expression editor with field and context-provider picker
+      - Test panel with sample records and expected result
+      - Version history and diff
+      - Where used (forms, transitions, report pre-flight)
+      - Evaluation results and trends
+      - Waivers
+      - Audit trail
+  -
+    - **access**: rules.publish. Project-level sets can be managed by project admins when delegated.
+    - **actions**:
+      - Create rule set
+      - Publish new version
+      - Rollback
+      - Assign to project or workflow transition
+      - Export
+    - **layout**: List with a detail drawer showing members and assignments.
+    - **name**: Rule sets
+    - **purpose**: Manage versioned rule sets at tenant and project level, and their assignment.
+    - **route**: /settings/rule-sets
+    - **sections**:
+      - Rule set list (name, level, version, status)
+      - Members
+      - Assignments to record types, projects and transitions
+      - Version history
+  -
+    - **access**: rules.author
+    - **actions**:
+      - Add requirement
+      - Link to source document clause
+      - Convert to rule
+      - Mark as not enforceable
+      - Import list
+    - **layout**: DataTable with a source document preview in a side panel.
+    - **name**: Requirements register
+    - **purpose**: Hold entity, attribute and constraint triplets extracted from specs and contracts and convert them to rules.
+    - **route**: /settings/rules/requirements
+    - **sections**:
+      - Requirements table (source, entity, attribute, constraint, status)
+      - Source document preview
+      - Conversion status
+  -
+    - **access**: rules.view. Waive needs rules.waive, restricted by the configured waiver roles.
+    - **actions**:
+      - Run bulk validation
+      - Open record
+      - Record waiver with reason
+      - Export findings
+    - **layout**: Master-detail page with runs on the left and grouped findings on the right.
+    - **name**: Validation runs and findings
+    - **purpose**: Review run results grouped by severity, jump to the failing record and record waivers.
+    - **route**: /rules/results
+    - **sections**:
+      - Run list (trigger, scope, time, result)
+      - Findings grouped by block and warn
+      - Failing record link
+      - Waiver panel
+  -
+    - **access**: Tenant admin
+    - **actions**:
+      - Edit and save
+    - **layout**: Settings form page.
+    - **name**: Rules settings
+    - **purpose**: Configure language, allowed targets, limits, waiver policy and retention.
+    - **route**: /settings/rules/config
+    - **sections**:
+      - Expression language
+      - Allowed target record types and fields
+      - Waiver roles and reason requirement
+      - Default rule set assignment
+      - Evaluation timeout and limits
+      - Log retention
+      - Require test cases before publish
+      - Message terminology keys
+  -
+    - **access**: Any user performing the guarded action. Results are evaluated server-side.
+    - **actions**:
+      - Fix and recheck
+      - Acknowledge warnings
+      - Request waiver
+      - Cancel
+    - **layout**: Modal dialog launched from the WorkflowBar, forms and the publish dialog. It is not a routed page.
+    - **name**: Rule check dialog
+    - **purpose**: Show block and warn results when a user submits, approves or publishes, so they know what to fix.
+    - **route**: Embedded: pre-submit and transition dialogs
+    - **sections**:
+      - Blocking failures with jump-to-field
+      - Warnings with acknowledge
+      - Waiver request (where permitted)

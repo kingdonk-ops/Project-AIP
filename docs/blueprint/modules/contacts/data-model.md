@@ -1,0 +1,228 @@
+# Contacts & companies — Data model & schema
+
+
+- **notes**: Organisation type drives portal and commercial visibility. Merging uses a registry of referencing tables that each module registers. Personal data follows retention and erasure rules, and erasure is blocked under legal hold. CSV import uses the shared mapping.
+- **reuses existing**:
+  - certificates (subject = organisation for insurance/accreditation expiry)
+  - documents
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: name_normalised
+        - **notes**: for dedupe
+        - **type**: text
+      -
+        - **name**: org_type
+        - **notes**: client, contractor, subcontractor, supplier, consultant, authority; drives visibility
+        - **type**: text
+      -
+        - **name**: tax_id
+        - **notes**: ABN or equivalent
+        - **type**: text
+      -
+        - **name**: address
+        - **type**: jsonb
+      -
+        - **name**: phone
+        - **type**: text
+      -
+        - **name**: website
+        - **type**: text
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: merged_into_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, tax_id)
+      - (tenant_id, name_normalised)
+      - trigram GIN on name_normalised
+    - **name**: organisations
+    - **purpose**: Tenant-level party master.
+    - **relations**:
+      - self (merged_into_id)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: organisation_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: optional linked user
+        - **type**: uuid
+      -
+        - **name**: full_name
+        - **notes**: personal data
+        - **type**: text
+      -
+        - **name**: job_title
+        - **type**: text
+      -
+        - **name**: email
+        - **type**: text
+      -
+        - **name**: phone
+        - **type**: text
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: erased_at
+        - **notes**: privacy erasure, legal-hold aware
+        - **type**: timestamptz
+      -
+        - **name**: merged_into_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, lower(email))
+      - (tenant_id, organisation_id)
+      - unique(tenant_id, user_id) where user_id is not null
+    - **name**: people
+    - **purpose**: Individuals at organisations.
+    - **relations**:
+      - organisations
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: organisation_id
+        - **type**: uuid
+      -
+        - **name**: person_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: role_key
+        - **notes**: config-driven
+        - **type**: text
+      -
+        - **name**: distribution
+        - **notes**: on default distribution lists
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, role_key)
+      - (tenant_id, organisation_id)
+    - **name**: project_role_assignments
+    - **purpose**: Roles of organisations and people per project.
+    - **relations**:
+      - projects
+      - organisations
+      - people
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: organisation_id
+        - **type**: uuid
+      -
+        - **name**: tag
+        - **type**: text
+    - **indexes**:
+      - unique(organisation_id, tag)
+    - **name**: org_tags
+    - **purpose**: Free tags on organisations.
+    - **relations**:
+      - organisations
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: entity_type
+        - **notes**: organisation or person
+        - **type**: text
+      -
+        - **name**: survivor_id
+        - **type**: uuid
+      -
+        - **name**: merged_id
+        - **type**: uuid
+      -
+        - **name**: repointed
+        - **notes**: table to row counts, from registry of referencing tables
+        - **type**: jsonb
+      -
+        - **name**: merged_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, survivor_id)
+    - **name**: contact_merge_history
+    - **purpose**: Append-only record of merges.
+    - **relations**:
+      - organisations
+      - people

@@ -1,0 +1,37 @@
+# Architecture & module boundaries — Feature scout
+
+
+- **abilities seen in market**:
+  - Modular monolith with enforced module boundaries and published service interfaces
+  - Configuration-over-code layer: custom fields, statuses, workflows and terminology held as tenant data
+  - Event backbone with outbox feeding notifications, search, timeline and integrations
+  - Versioned public API and webhook contracts separate from internal models
+  - Per-tenant feature and module entitlements, with usage metering
+  - Cross-cutting record services (comments, attachments, links, tags) attachable to any record type
+  - Idempotent command handling and optimistic concurrency across all writes
+  - Config promotion between sandbox and production environments
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Universal record-link service (record_type, record_id, asset_id) so any record can be related to any other and to an asset
+    - **why**: Gives CUI remediation a traceable chain from defect to NCR to repair to re-inspection without building bespoke joins per module.
+  -
+    - **effort**: M
+    - **feature**: Domain-event catalogue with versioned schemas, replay and dead-letter view
+    - **why**: Lets timeline, search, deadlines and claims evidence be rebuilt after a bug and gives integrators a stable contract.
+  -
+    - **effort**: L
+    - **feature**: Tenant configuration bundle: export, diff and import of templates, types, workflows, terms and rules as one versioned package
+    - **why**: Lets a Kaefer-built setup be cloned into a new market or customer, and promoted from sandbox to production, without manual rebuild.
+  -
+    - **effort**: M
+    - **feature**: Workflow definition versioning with in-flight pinning
+    - **why**: Changing an approval flow must not alter records already mid-review, which matters for audit defensibility.
+  -
+    - **effort**: S
+    - **feature**: Module capability manifest (permissions, events, settings, terms keys) per module, checked in CI
+    - **why**: Keeps the permissions catalogue, terminology keys and event list consistent as modules multiply.
+  -
+    - **effort**: M
+    - **feature**: Asset-scoped rollup service computing counts and status per ltree node, cached and invalidated by events
+    - **why**: Powers tree badges and dashboards at scale on large LNG or mine asset hierarchies without per-screen aggregate queries.

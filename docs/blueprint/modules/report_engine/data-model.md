@@ -1,0 +1,430 @@
+# Report engine & published records — Data model & schema
+
+
+- **notes**: Seals and signer attestations are stored by the signing module; manifest here references them. Data book compiler output is a document plus a manifest, and a table for data book definitions can be added in the handover module. Sealed PDFs should go to S3 Object Lock (compliance mode) on AWS. In Coolify use MinIO with object lock, or hash-and-manifest only.
+- **reuses existing**:
+  - documents
+  - inspections
+  - assets
+  - certificates
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: key
+        - **notes**: stable across versions
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: record_type
+        - **notes**: inspection/diary/meeting
+        - **type**: text
+      -
+        - **name**: variant
+        - **notes**: internal/client/certificate
+        - **type**: text
+      -
+        - **name**: orientation
+        - **notes**: portrait/landscape
+        - **type**: text
+      -
+        - **name**: definition
+        - **notes**: sections, field mapping, styling; validated against report-template-schema.json
+        - **type**: jsonb
+      -
+        - **name**: client_company_id
+        - **notes**: nullable branding/client
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: draft/published; published immutable
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, key, version) unique
+      - (tenant_id, record_type, variant, status)
+    - **name**: report_templates
+    - **purpose**: Versioned report template as data.
+    - **relations**:
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: template_key
+        - **type**: text
+      -
+        - **name**: signer_roles
+        - **type**: jsonb
+      -
+        - **name**: recipient_list
+        - **notes**: user/contact ids validated against project directory
+        - **type**: jsonb
+      -
+        - **name**: auto_generate_on_approval
+        - **type**: boolean
+      -
+        - **name**: preflight_rule_set_key
+        - **notes**: rules engine
+        - **type**: text
+      -
+        - **name**: numbering_sequence_id
+        - **notes**: FK report_numbering_sequences
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, record_type)
+    - **name**: publishing_profiles
+    - **purpose**: Per record type: template, recipients, signer roles, auto-generate flag.
+    - **relations**:
+      - projects
+      - report_numbering_sequences
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: pattern
+        - **notes**: e.g. {project}-{type}-{seq:04}
+        - **type**: text
+      -
+        - **name**: next_value
+        - **notes**: incremented with row lock in same transaction
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, pattern) unique
+    - **name**: report_numbering_sequences
+    - **purpose**: Client-specific numbering pattern and counter.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: record_version
+        - **type**: int
+      -
+        - **name**: data
+        - **notes**: resolved data and labels
+        - **type**: jsonb
+      -
+        - **name**: data_hash
+        - **notes**: SHA-256
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, record_type, record_id, record_version)
+      - (tenant_id, data_hash)
+    - **name**: report_data_snapshots
+    - **purpose**: Frozen source data and terminology used for a render (append-only).
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, history follows asset
+        - **type**: uuid
+      -
+        - **name**: source_record_type
+        - **type**: text
+      -
+        - **name**: source_record_id
+        - **type**: uuid
+      -
+        - **name**: source_record_version
+        - **type**: int
+      -
+        - **name**: template_id
+        - **notes**: FK report_templates (pinned version)
+        - **type**: uuid
+      -
+        - **name**: snapshot_id
+        - **notes**: FK report_data_snapshots
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: FK documents (PDF)
+        - **type**: uuid
+      -
+        - **name**: pdf_sha256
+        - **type**: text
+      -
+        - **name**: manifest
+        - **notes**: hashes, signer attestations, seal reference
+        - **type**: jsonb
+      -
+        - **name**: client_report_number
+        - **type**: text
+      -
+        - **name**: revision
+        - **type**: int
+      -
+        - **name**: supersedes_id
+        - **notes**: nullable self FK
+        - **type**: uuid
+      -
+        - **name**: published_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: published_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: no updated_at; REVOKE UPDATE/DELETE
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, client_report_number, revision) unique
+      - (tenant_id, source_record_type, source_record_id)
+      - (tenant_id, asset_id, published_at desc)
+      - (tenant_id, supersedes_id)
+    - **name**: published_records
+    - **purpose**: Issued, sealed reports (append-only; corrections supersede).
+    - **relations**:
+      - report_templates
+      - report_data_snapshots
+      - documents
+      - assets
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: published_record_id
+        - **notes**: FK published_records
+        - **type**: uuid
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: search_vector
+        - **notes**: GIN
+        - **type**: tsvector
+      -
+        - **name**: metadata
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - GIN (search_vector)
+      - (tenant_id, published_record_id) unique
+    - **name**: report_register_entries
+    - **purpose**: Searchable register metadata; superseded status derived, not edited in place.
+    - **relations**:
+      - published_records
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: source_record_type
+        - **type**: text
+      -
+        - **name**: source_record_id
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: queued/running/failed/done
+        - **type**: text
+      -
+        - **name**: error
+        - **type**: text
+      -
+        - **name**: output_document_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: requested_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status, created_at)
+    - **name**: report_render_jobs
+    - **purpose**: Async render job status (drafts and publish renders).
+    - **relations**:
+      - report_templates
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: published_record_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: recipient_user_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: recipient_contact_id
+        - **notes**: nullable; external via portal
+        - **type**: uuid
+      -
+        - **name**: token_hash
+        - **notes**: hashed, never store raw link token
+        - **type**: text
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: first_accessed_at
+        - **type**: timestamptz
+      -
+        - **name**: access_count
+        - **type**: int
+      -
+        - **name**: delivery_status
+        - **notes**: sent/bounced/opened
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, published_record_id)
+      - (token_hash) unique
+    - **name**: delivery_receipts
+    - **purpose**: Per-recipient expiring link and access log.
+    - **relations**:
+      - published_records
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: receipt_id
+        - **notes**: FK delivery_receipts
+        - **type**: uuid
+      -
+        - **name**: accessed_at
+        - **type**: timestamptz
+      -
+        - **name**: ip_address
+        - **notes**: consider retention under Privacy Act
+        - **type**: text
+      -
+        - **name**: user_agent
+        - **type**: text
+    - **indexes**:
+      - (tenant_id, receipt_id, accessed_at)
+    - **name**: delivery_access_log
+    - **purpose**: Append-only access events for receipts.
+    - **relations**:
+      - delivery_receipts

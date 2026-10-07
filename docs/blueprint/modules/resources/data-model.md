@@ -1,0 +1,220 @@
+# Resources & crews (basic) — Data model & schema
+
+
+- **notes**: Basic by owner decision. Skills and tickets are not stored here: skillmatch queries certificates/competency through the eligibility service, so the unused users.competencies column should be dropped or migrated into the competency register. Conflicts are computed at query time, not stored. Equipment is not assigned here; equipment keeps its own register.
+- **reuses existing**:
+  - disciplines
+  - tasks
+  - inspections
+  - certificates
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable for company-wide crews
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: discipline_id
+        - **notes**: FK disciplines
+        - **type**: uuid
+      -
+        - **name**: leader_user_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+      - (tenant_id, discipline_id)
+    - **name**: crews
+    - **purpose**: Named crew of people
+    - **relations**:
+      - disciplines
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: crew_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK users/staff
+        - **type**: uuid
+      -
+        - **name**: role_label
+        - **notes**: config
+        - **type**: text
+      -
+        - **name**: from_date
+        - **type**: date
+      -
+        - **name**: to_date
+        - **type**: date
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, crew_id)
+      - (tenant_id, user_id, from_date)
+    - **name**: crew_members
+    - **purpose**: Crew membership with date range
+    - **relations**:
+      - crews
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: person; xor crew_id
+        - **type**: uuid
+      -
+        - **name**: crew_id
+        - **type**: uuid
+      -
+        - **name**: target_type
+        - **notes**: scope|task|inspection
+        - **type**: text
+      -
+        - **name**: target_id
+        - **notes**: FK by type (tasks, inspections, scope)
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: optional
+        - **type**: uuid
+      -
+        - **name**: start_at
+        - **type**: timestamptz
+      -
+        - **name**: end_at
+        - **type**: timestamptz
+      -
+        - **name**: allocation_pct
+        - **notes**: default 100
+        - **type**: int
+      -
+        - **name**: status
+        - **notes**: planned|active|completed|cancelled
+        - **type**: text
+      -
+        - **name**: credential_warning
+        - **notes**: cached eligibility result, warn or block per policy
+        - **type**: jsonb
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id, start_at, end_at)
+      - (tenant_id, crew_id, start_at)
+      - (tenant_id, target_type, target_id)
+      - GIST on (tenant_id, user_id, tstzrange(start_at,end_at)) for overlap checks
+      - check (user_id is null) <> (crew_id is null)
+    - **name**: resource_assignments
+    - **purpose**: Assignment of a person or crew to a scope, task or inspection
+    - **relations**:
+      - users
+      - crews
+      - tasks
+      - inspections
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: start_at
+        - **type**: timestamptz
+      -
+        - **name**: end_at
+        - **type**: timestamptz
+      -
+        - **name**: reason_code
+        - **notes**: config
+        - **type**: text
+      -
+        - **name**: is_available
+        - **notes**: false = blocked
+        - **type**: boolean
+      -
+        - **name**: note
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id, start_at, end_at)
+    - **name**: availability_windows
+    - **purpose**: Leave, rostered-off or unavailable periods
+    - **relations**:
+      - users

@@ -1,0 +1,124 @@
+# Report engine & published records — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/report_engine/__init__.py
+    - **purpose**: Registration and exported render/publish interface
+  -
+    - **path**: backend/app/modules/report_engine/models.py
+    - **purpose**: report_template (versioned), publishing_profile, published_record (append-only), report_register_entry, delivery_receipt, numbering_sequence
+  -
+    - **path**: backend/app/modules/report_engine/schemas.py
+    - **purpose**: Template schema (validates report-template-schema.json) and API models
+  -
+    - **path**: backend/app/modules/report_engine/router.py
+    - **purpose**: Template, render, publish, register and receipt endpoints
+  -
+    - **path**: backend/app/modules/report_engine/template_compiler.py
+    - **purpose**: Resolves sections and field mapping to sanitised HTML using data snapshot and terminology labels
+  -
+    - **path**: backend/app/modules/report_engine/data_snapshot.py
+    - **purpose**: Freezes source record version and data used, to enable exact re-render
+  -
+    - **path**: backend/app/modules/report_engine/blocks/
+    - **purpose**: Domain blocks: thickness map, CUI condition, DFT chart, signature block, repeating tables
+  -
+    - **path**: backend/app/modules/report_engine/renderer_client.py
+    - **purpose**: Calls the network-isolated render worker (Gotenberg) and returns PDF bytes
+  -
+    - **path**: backend/app/modules/report_engine/jobs.py
+    - **purpose**: Async render and distribution jobs
+  -
+    - **path**: backend/app/modules/report_engine/publishing.py
+    - **purpose**: Pre-flight via rules, numbering, call to signing for seal, store as document, supersession, distribution
+  -
+    - **path**: backend/app/modules/report_engine/delivery.py
+    - **purpose**: Expiring authenticated links, receipts and access log; external recipients through portal
+  -
+    - **path**: backend/app/modules/report_engine/databook.py
+    - **purpose**: Data book compiler with bookmarks, cover sheets and per-asset ordering
+  -
+    - **path**: backend/app/modules/report_engine/handlers.py
+    - **purpose**: Auto-generate on approval
+  -
+    - **path**: backend/alembic/versions/report_engine_0001_init.py
+    - **purpose**: Migration with RLS; REVOKE UPDATE/DELETE on published_record for app role
+  -
+    - **path**: backend/tests/modules/report_engine/
+    - **purpose**: Reproducibility, supersession, template sanitisation and isolation tests
+- **change isolation**: New report types and client formats are template and numbering config; new charts are one block file in blocks/. Rendering engine choice changes only renderer_client.py.
+- **config not code**:
+  - report templates (sections, mappings, styling, orientation)
+  - variant definitions (internal/client/certificate)
+  - publishing profiles and signer roles
+  - client numbering and revision patterns
+  - auto-generate on approval toggles
+  - branding per tenant/client
+  - link expiry and retention periods
+  - pre-flight rule set
+- **events consumed**:
+  - inspection.approved
+  - diary.approved
+  - meeting.minutes.approved
+  - signing.completed
+  - validation.passed
+  - validation.failed
+  - handover.databook.requested
+- **events emitted**:
+  - report.rendered
+  - report.render_failed
+  - record.published
+  - record.superseded
+  - report.delivered
+  - report.link_accessed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/report_engine/index.ts
+    - **purpose**: Route registration
+  -
+    - **path**: frontend/src/modules/report_engine/pages/TemplateDesigner.tsx
+    - **purpose**: Template designer with live-data preview
+  -
+    - **path**: frontend/src/modules/report_engine/pages/ReportRegister.tsx
+    - **purpose**: Searchable register
+  -
+    - **path**: frontend/src/modules/report_engine/pages/PublishedHistory.tsx
+    - **purpose**: Versions, supersession and delivery receipts
+  -
+    - **path**: frontend/src/modules/report_engine/pages/DataBookCompiler.tsx
+    - **purpose**: Data book assembly
+  -
+    - **path**: frontend/src/modules/report_engine/components/PublishDialog.tsx
+    - **purpose**: Preview, recipients from project directory, signer roles
+  -
+    - **path**: frontend/src/modules/report_engine/components/RecipientPicker.tsx
+    - **purpose**: Directory-validated recipients
+  -
+    - **path**: frontend/src/modules/report_engine/api/
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - render(record_type, record_id, template_id, variant) -> job (in-process interface)
+  - POST /reports/templates and GET/PUT /reports/templates/{id}
+  - POST /reports/templates/{id}/preview
+  - POST /reports/render
+  - POST /reports/publish
+  - POST /reports/published/{id}/supersede
+  - GET /reports/register
+  - GET /reports/published/{id}
+  - GET /reports/published/{id}/receipts
+  - POST /reports/databooks
+  - GET /reports/download/{token}
+- **reuses shared**:
+  - rules engine (pre-flight)
+  - signing module (seal and manifest)
+  - document library (PDF storage)
+  - job queue
+  - terminology dictionary
+  - portal (external delivery)
+  - contacts and project directory
+  - audit trail
+  - notifications
+  - approvals engine
+  - uploads pipeline for stored output
+  - handover module

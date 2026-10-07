@@ -1,0 +1,195 @@
+# Temporary works register — Feature filler
+
+
+- **detail sections**:
+  - Summary and stage chips
+  - Design brief
+  - Design and calculations
+  - Independent check
+  - Permit to load
+  - Inspections in use
+  - Permit to strike
+  - Linked scopes and ITP holds
+  - Competency status
+  - Documents
+  - Audit trail
+- **notifications**:
+  - Design check requested
+  - Permit to load issued
+  - Inspection due
+  - Inspection overdue
+  - Inspection failed
+  - Permit to strike requested
+  - Competency expired for designer or checker
+- **settings**:
+  - Categories and risk classes
+  - Required competencies per role
+  - Designer/checker separation rule
+  - Permit workflows
+  - Inspection frequencies
+  - Hold-release behaviour
+  - Notification recipients
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export
+      - Assign coordinator
+    - **columns**:
+      - TW no.
+      - Description
+      - Category
+      - Risk class
+      - Asset
+      - Designer
+      - Checker
+      - Stage
+      - Status
+      - Next inspection
+    - **create form**:
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Category
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Risk class
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Location
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Designer
+        - **required**: true
+        - **type**: user picker (competency checked)
+      -
+        - **field**: Independent checker
+        - **required**: true
+        - **type**: user picker (must differ from designer)
+      -
+        - **field**: TW Coordinator
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Linked scopes
+        - **required**: false
+        - **type**: multi scope picker
+    - **empty state**: No temporary works registered.
+    - **filters**:
+      - Category
+      - Risk class
+      - Stage
+      - Status
+      - Site
+      - Overdue inspection
+    - **name**: Temporary works register
+    - **row actions**:
+      - Open
+      - Submit design
+      - Request check
+      - Issue permit to load
+      - Record inspection
+      - Request permit to strike
+    - **search**: TW no., description, asset
+    - **sort**:
+      - Next inspection
+      - Risk class
+      - Stage
+      - TW no.
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Permit no.
+      - Type (load/strike)
+      - TW item
+      - Issued by
+      - Date
+      - Status
+    - **create form**:
+      -
+        - **field**: TW item
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Permit type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Conditions
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Checklist
+        - **required**: true
+        - **type**: form
+    - **empty state**: No permits.
+    - **filters**:
+      - Type
+      - Status
+      - Date range
+    - **name**: Permits
+    - **row actions**:
+      - Open
+      - Approve
+      - Reject
+      - Revoke
+    - **search**: Permit no., TW no.
+    - **sort**:
+      - Date
+      - Status
+  -
+    - **bulk actions**:
+      - Assign inspector
+    - **columns**:
+      - TW no.
+      - Inspection type
+      - Frequency
+      - Last done
+      - Due
+      - Result
+      - Tag status
+    - **create form**:
+      -
+        - **field**: TW item
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Inspection template
+        - **required**: true
+        - **type**: template picker
+      -
+        - **field**: Frequency
+        - **required**: true
+        - **type**: select
+    - **empty state**: No scheduled inspections.
+    - **filters**:
+      - Due status
+      - Result
+      - Site
+    - **name**: Inspection schedule
+    - **row actions**:
+      - Start inspection
+      - Reschedule
+    - **search**: TW no.
+    - **sort**:
+      - Due
+- **walkthrough**:
+  - The Temporary Works Coordinator registers an item with category, risk class and asset.
+  - Issues the design brief and assigns designer and checker.
+  - The system enforces that they differ and holds valid competencies.
+  - Designer uploads the design and calculations.
+  - The checker reviews and approves or rejects.
+  - The coordinator issues the permit to load; linked holds are released.
+  - Periodic inspections run, such as weekly scaffold tags.
+  - Failed inspections flag the item and notify supervisors.
+  - On completion, a permit to strike is requested and signed off.
+  - The item is closed and the record retained.

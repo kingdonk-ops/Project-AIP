@@ -1,0 +1,535 @@
+# Safety & HSE — Data model & schema
+
+
+- **notes**: HSE audits reuse qms_audits with audit_type = hse rather than a new table. Sensitive tables get a stricter RLS/permission check (HSE-sensitive read) and masked API schemas. Observation and incident rows should be retained per Privacy Act and legal-hold rules. Advanced tables are only reachable when the site flag is on.
+- **reuses existing**:
+  - assets
+  - issues
+  - tasks
+  - certificates
+  - documents
+  - consumable_issuances
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: site/project
+        - **type**: uuid
+      -
+        - **name**: advanced_pack_enabled
+        - **notes**: default false
+        - **type**: boolean
+      -
+        - **name**: risk_matrix
+        - **notes**: scales and labels
+        - **type**: jsonb
+      -
+        - **name**: notification_rules
+        - **notes**: regulator timelines
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id) unique
+    - **name**: hse_site_settings
+    - **purpose**: Per-site flags for basic and advanced packs, and risk matrix reference.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: report_kind
+        - **notes**: incident/near_miss/observation
+        - **type**: text
+      -
+        - **name**: incident_type
+        - **notes**: configured
+        - **type**: text
+      -
+        - **name**: severity
+        - **notes**: configured
+        - **type**: text
+      -
+        - **name**: occurred_at
+        - **type**: timestamptz
+      -
+        - **name**: location
+        - **notes**: Point, nullable
+        - **type**: geography
+      -
+        - **name**: location_text
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: damage_details
+        - **type**: text
+      -
+        - **name**: likelihood
+        - **type**: int
+      -
+        - **name**: consequence
+        - **type**: int
+      -
+        - **name**: risk_score
+        - **notes**: computed from matrix
+        - **type**: int
+      -
+        - **name**: is_regulator_notifiable
+        - **type**: boolean
+      -
+        - **name**: status
+        - **notes**: workflow
+        - **type**: text
+      -
+        - **name**: reported_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: diary_entry_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: client_uuid
+        - **notes**: idempotency key from offline client
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: retention_until
+        - **notes**: Privacy Act / legal hold
+        - **type**: date
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, occurred_at desc)
+      - (tenant_id, asset_id)
+      - (tenant_id, client_uuid) unique
+      - GIST (location)
+      - (tenant_id, is_regulator_notifiable, status)
+    - **name**: hse_incidents
+    - **purpose**: Incidents, near misses and observations.
+    - **relations**:
+      - projects
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: incident_id
+        - **notes**: FK hse_incidents unique
+        - **type**: uuid
+      -
+        - **name**: injury_details
+        - **notes**: encrypted at application level
+        - **type**: text
+      -
+        - **name**: body_part
+        - **type**: text
+      -
+        - **name**: treatment
+        - **type**: text
+      -
+        - **name**: lost_time_days
+        - **notes**: for LTIFR
+        - **type**: int
+      -
+        - **name**: medical_attention
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, incident_id) unique
+    - **name**: hse_incident_sensitive
+    - **purpose**: Injury and health details, separated for field masking and stricter RLS/permission.
+    - **relations**:
+      - hse_incidents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: incident_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: contact_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: involvement
+        - **notes**: injured/witness/reporter
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, incident_id)
+    - **name**: hse_incident_people
+    - **purpose**: People involved with role; masked for non-HSE roles.
+    - **relations**:
+      - hse_incidents
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: incident_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: issue_id
+        - **notes**: nullable FK issues
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: nullable FK tasks
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, incident_id)
+      - (tenant_id, issue_id)
+    - **name**: hse_incident_actions
+    - **purpose**: Links incidents to corrective actions held in issues/tasks.
+    - **relations**:
+      - hse_incidents
+      - issues
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: incident_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: regulator
+        - **notes**: e.g. WorkSafe/DMIRS
+        - **type**: text
+      -
+        - **name**: due_at
+        - **type**: timestamptz
+      -
+        - **name**: notified_at
+        - **type**: timestamptz
+      -
+        - **name**: reference
+        - **type**: text
+      -
+        - **name**: document_id
+        - **notes**: nullable FK documents
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, incident_id)
+      - (tenant_id, due_at) WHERE notified_at IS NULL
+    - **name**: hse_regulator_notifications
+    - **purpose**: Regulator notification timeline (append-only entries).
+    - **relations**:
+      - hse_incidents
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: period_start
+        - **type**: date
+      -
+        - **name**: hours
+        - **type**: numeric
+      -
+        - **name**: source
+        - **notes**: manual/import/resources
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, period_start) unique
+    - **name**: hse_hours_worked
+    - **purpose**: Hours worked source for TRIR/LTIFR.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: permit_type
+        - **notes**: hot work, confined space etc; config
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: nullable FK tasks
+        - **type**: uuid
+      -
+        - **name**: holder_user_id
+        - **notes**: checked against certificates
+        - **type**: uuid
+      -
+        - **name**: valid_from
+        - **type**: timestamptz
+      -
+        - **name**: valid_to
+        - **type**: timestamptz
+      -
+        - **name**: form_data
+        - **notes**: template response
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: workflow
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, status)
+      - (tenant_id, asset_id)
+      - (tenant_id, valid_to)
+    - **name**: hse_permits
+    - **purpose**: Advanced: permit to work.
+    - **relations**:
+      - assets
+      - tasks
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: steps
+        - **notes**: hazards, controls, residual risk
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+      - (tenant_id, task_id)
+    - **name**: hse_jsas
+    - **purpose**: Advanced: JSA/JHA records.
+    - **relations**:
+      - tasks
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: held_at
+        - **type**: timestamptz
+      -
+        - **name**: topic
+        - **type**: text
+      -
+        - **name**: presenter_id
+        - **type**: uuid
+      -
+        - **name**: attendance
+        - **notes**: user ids and signatures; consider child table if reported on heavily
+        - **type**: jsonb
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, held_at desc)
+    - **name**: hse_toolbox_talks
+    - **purpose**: Advanced: toolbox talks with attendance.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: recipient
+        - **type**: uuid
+      -
+        - **name**: ppe_type
+        - **type**: text
+      -
+        - **name**: consumable_issuance_id
+        - **notes**: nullable FK consumable_issuances
+        - **type**: uuid
+      -
+        - **name**: issued_at
+        - **type**: timestamptz
+      -
+        - **name**: expires_on
+        - **type**: date
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id)
+      - (tenant_id, expires_on)
+    - **name**: hse_ppe_issues
+    - **purpose**: Advanced: PPE issue register.
+    - **relations**:
+      - consumable_issuances
+      - users

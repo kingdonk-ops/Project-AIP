@@ -1,0 +1,515 @@
+# Upload & file processing pipeline — Data model & schema
+
+
+- **notes**: The tus versus S3 multipart choice is hidden in upload_sessions.mode and s3_upload_id, so either can be used without a schema change. OCR text sits in stored_files as a tsvector, so Textract versus Tesseract needs no change. The app role has no UPDATE or DELETE on scan_results. Documents should reference stored_files.id rather than duplicating storage keys. Reuse signals are advisory and never block a release.
+- **reuses existing**:
+  - documents
+  - assets
+  - users
+  - projects
+  - inspection_responses (attachments reference stored_files)
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK, unguessable
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects
+        - **type**: uuid
+      -
+        - **name**: requested_by
+        - **notes**: FK users, user-bound
+        - **type**: uuid
+      -
+        - **name**: declared_filename
+        - **notes**: display only, never trusted for type
+        - **type**: text
+      -
+        - **name**: declared_mime
+        - **type**: text
+      -
+        - **name**: declared_size_bytes
+        - **notes**: bigint-range; checked against policy
+        - **type**: numeric
+      -
+        - **name**: mode
+        - **notes**: single | multipart
+        - **type**: text
+      -
+        - **name**: s3_upload_id
+        - **notes**: multipart id, nullable
+        - **type**: text
+      -
+        - **name**: quarantine_key
+        - **notes**: tenant-prefixed key in quarantine bucket
+        - **type**: text
+      -
+        - **name**: chunk_size
+        - **type**: int
+      -
+        - **name**: parts_received
+        - **notes**: part number, etag, size
+        - **type**: jsonb
+      -
+        - **name**: client_file_hash
+        - **notes**: optional declared sha256
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: requested|uploading|uploaded|scanning|validating|released|rejected|expired|aborted
+        - **type**: text
+      -
+        - **name**: reject_reason
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: priority
+        - **notes**: offline queue priority
+        - **type**: int
+      -
+        - **name**: client_request_id
+        - **notes**: idempotency key from offline queue
+        - **type**: uuid
+      -
+        - **name**: expires_at
+        - **notes**: session TTL
+        - **type**: timestamptz
+      -
+        - **name**: file_id
+        - **notes**: FK stored_files after release, nullable
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **notes**: offline queue state edited on device
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status, expires_at) for cleanup
+      - unique (tenant_id, client_request_id)
+      - (tenant_id, requested_by, created_at desc)
+    - **name**: upload_sessions
+    - **purpose**: One row per requested upload. Covers ordinary presigned uploads and resumable multipart uploads.
+    - **relations**:
+      - projects
+      - users
+      - stored_files
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, FK assets, so history follows the asset
+        - **type**: uuid
+      -
+        - **name**: content_hash_id
+        - **notes**: FK content_hashes
+        - **type**: uuid
+      -
+        - **name**: storage_key
+        - **notes**: tenant prefix, KMS key per tenant
+        - **type**: text
+      -
+        - **name**: detected_mime
+        - **notes**: from magic bytes
+        - **type**: text
+      -
+        - **name**: size_bytes
+        - **type**: numeric
+      -
+        - **name**: scan_status
+        - **notes**: quarantined|clean|failed
+        - **type**: text
+      -
+        - **name**: preview_status
+        - **notes**: pending|ready|none|failed
+        - **type**: text
+      -
+        - **name**: thumbnail_key
+        - **type**: text
+      -
+        - **name**: preview_key
+        - **type**: text
+      -
+        - **name**: ocr_text_tsv
+        - **notes**: stored as tsvector column; full-text search
+        - **type**: text
+      -
+        - **name**: policy_id
+        - **notes**: FK file_type_policies applied at release
+        - **type**: uuid
+      -
+        - **name**: uploaded_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: legal_hold
+        - **notes**: blocks deletion
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, content_hash_id)
+      - (tenant_id, asset_id)
+      - (tenant_id, scan_status)
+      - GIN on ocr_text_tsv
+    - **name**: stored_files
+    - **purpose**: Sanitised, released file in tenant storage. Documents, forms, inspections, diary and NCR attach to this row.
+    - **relations**:
+      - content_hashes
+      - file_type_policies
+      - assets
+      - documents (document revisions reference file_id)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: upload_session_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: file_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: stage
+        - **notes**: clamav|magic_bytes|size_cap|ratio_cap|rescan
+        - **type**: text
+      -
+        - **name**: outcome
+        - **notes**: pass|fail|error (error fails closed)
+        - **type**: text
+      -
+        - **name**: signature_db_version
+        - **notes**: for rescan targeting
+        - **type**: text
+      -
+        - **name**: detail
+        - **notes**: threat name, ratio, detected type
+        - **type**: jsonb
+      -
+        - **name**: scanned_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only: no UPDATE or DELETE grants for app role
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, file_id, scanned_at desc)
+      - (tenant_id, outcome, stage)
+      - (signature_db_version)
+    - **name**: scan_results
+    - **purpose**: Append-only scan and validation history, including rescans.
+    - **relations**:
+      - upload_sessions
+      - stored_files
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: file_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: upload_session_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: trigger
+        - **notes**: scan_fail|rescan_hit|policy_violation
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: open|deleted|released_false_positive
+        - **type**: text
+      -
+        - **name**: decided_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: decision_note
+        - **type**: text
+      -
+        - **name**: decided_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status, created_at)
+    - **name**: quarantine_reviews
+    - **purpose**: Review list for failed or newly flagged files, with the admin decision.
+    - **relations**:
+      - stored_files
+      - upload_sessions
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: file_id
+        - **notes**: unique FK stored_files (sanitised copy)
+        - **type**: uuid
+      -
+        - **name**: device_captured_at
+        - **notes**: original device timestamp
+        - **type**: timestamptz
+      -
+        - **name**: gps
+        - **notes**: Point 4326; only stored where project policy permits
+        - **type**: geography
+      -
+        - **name**: capture_hash
+        - **notes**: sha256 of original bytes
+        - **type**: text
+      -
+        - **name**: device_info
+        - **type**: jsonb
+      -
+        - **name**: private_key
+        - **notes**: restricted-prefix key of original, nullable
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: immutable once written
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (file_id)
+      - (tenant_id, capture_hash)
+      - GIST on gps
+    - **name**: file_capture_metadata
+    - **purpose**: Private original capture data, kept separate from the sanitised shared copy.
+    - **relations**:
+      - stored_files
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: sha256
+        - **type**: text
+      -
+        - **name**: size_bytes
+        - **type**: numeric
+      -
+        - **name**: ref_count
+        - **notes**: updated transactionally
+        - **type**: int
+      -
+        - **name**: first_file_id
+        - **notes**: FK stored_files
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, sha256)
+    - **name**: content_hashes
+    - **purpose**: Per-tenant dedupe and reference counting.
+    - **relations**:
+      - stored_files
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: content_hash_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **notes**: inspection_response, issue, certificate and so on
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: first_record_type
+        - **type**: text
+      -
+        - **name**: first_record_id
+        - **type**: uuid
+      -
+        - **name**: reviewed_status
+        - **notes**: open|accepted|disputed
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, content_hash_id)
+      - (tenant_id, reviewed_status)
+      - (tenant_id, record_type, record_id)
+    - **name**: file_reuse_signals
+    - **purpose**: Integrity flag when the same photo or certificate is reused across different records.
+    - **relations**:
+      - content_hashes
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: nullable for platform default rows; RLS permits reading them
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: detected_mime
+        - **type**: text
+      -
+        - **name**: extensions
+        - **notes**: advisory only
+        - **type**: jsonb
+      -
+        - **name**: allowed
+        - **type**: boolean
+      -
+        - **name**: max_size_bytes
+        - **notes**: capped by platform limit
+        - **type**: numeric
+      -
+        - **name**: max_decompression_ratio
+        - **type**: numeric
+      -
+        - **name**: scan_depth
+        - **notes**: standard|deep
+        - **type**: text
+      -
+        - **name**: preview_mode
+        - **notes**: none|thumbnail|pdf|ndt_image|pointcloud|spreadsheet
+        - **type**: text
+      -
+        - **name**: strip_exif_gps
+        - **notes**: shared copy; original GPS kept private
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id, detected_mime) where deleted_at is null
+    - **name**: file_type_policies
+    - **purpose**: Per-type policy rows. Tenant rows override platform defaults within platform limits.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable means tenant-wide
+        - **type**: uuid
+      -
+        - **name**: limit_bytes
+        - **type**: numeric
+      -
+        - **name**: used_bytes
+        - **notes**: maintained on release and delete
+        - **type**: numeric
+      -
+        - **name**: reserved_bytes
+        - **notes**: in-flight sessions
+        - **type**: numeric
+      -
+        - **name**: warn_threshold_pct
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id)
+    - **name**: storage_quotas
+    - **purpose**: Quota limits and usage per tenant or project.
+    - **relations**:
+      - projects

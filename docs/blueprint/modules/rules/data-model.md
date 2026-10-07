@@ -1,0 +1,364 @@
+# Rules & validation engine — Data model & schema
+
+
+- **notes**: Evaluator is server-side and sandboxed; publishing a rule set freezes its version so runs can be reproduced. Context providers read existing tables (certificates, issues) rather than copying data. Rule edits are admin-only and logged to the audit trail. Block-severity waivers need a separate permission.
+- **reuses existing**:
+  - entity_types
+  - documents
+  - certificates
+  - issues
+  - assets
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable; null = tenant-wide
+        - **type**: uuid
+      -
+        - **name**: key
+        - **notes**: stable identifier across versions
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: draft/published/retired
+        - **type**: text
+      -
+        - **name**: published_at
+        - **type**: timestamptz
+      -
+        - **name**: published_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **notes**: published versions immutable by trigger
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, key, version) unique
+      - (tenant_id, project_id, status)
+    - **name**: rule_sets
+    - **purpose**: Versioned rule set per tenant or project.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: rule_set_id
+        - **notes**: FK rule_sets
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: target_record_type
+        - **notes**: e.g. inspection, certificate
+        - **type**: text
+      -
+        - **name**: entity_type_id
+        - **notes**: nullable FK entity_types
+        - **type**: uuid
+      -
+        - **name**: trigger
+        - **notes**: field_validation/workflow_guard/pre_publish/bulk
+        - **type**: text
+      -
+        - **name**: workflow_transition_key
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: expression_lang
+        - **notes**: jsonlogic/cel
+        - **type**: text
+      -
+        - **name**: expression
+        - **notes**: validated against whitelist on save
+        - **type**: jsonb
+      -
+        - **name**: message_term_key
+        - **notes**: terminology key or literal
+        - **type**: text
+      -
+        - **name**: message
+        - **type**: text
+      -
+        - **name**: severity
+        - **notes**: block/warn
+        - **type**: text
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, rule_set_id)
+      - (tenant_id, target_record_type, trigger) WHERE is_active
+      - (tenant_id, workflow_transition_key)
+    - **name**: rules
+    - **purpose**: Individual rule: target type, expression, message, severity.
+    - **relations**:
+      - rule_sets
+      - entity_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: rule_id
+        - **notes**: FK rules
+        - **type**: uuid
+      -
+        - **name**: sample
+        - **type**: jsonb
+      -
+        - **name**: expected_pass
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, rule_id)
+    - **name**: rule_tests
+    - **purpose**: Saved sample records and expected results for the test panel.
+    - **relations**:
+      - rules
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: entity_type_id
+        - **notes**: nullable FK entity_types
+        - **type**: uuid
+      -
+        - **name**: attribute
+        - **type**: text
+      -
+        - **name**: constraint
+        - **notes**: operator and value
+        - **type**: jsonb
+      -
+        - **name**: source_document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: source_clause
+        - **notes**: clause/page reference
+        - **type**: text
+      -
+        - **name**: extraction_method
+        - **notes**: manual/ai_suggested
+        - **type**: text
+      -
+        - **name**: review_status
+        - **notes**: proposed/accepted/rejected; AI output needs human acceptance
+        - **type**: text
+      -
+        - **name**: compiled_rule_id
+        - **notes**: nullable FK rules
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, review_status)
+      - (tenant_id, entity_type_id, attribute)
+    - **name**: rule_requirements
+    - **purpose**: Requirements register: entity-attribute-constraint triplets from specs/contracts.
+    - **relations**:
+      - documents
+      - entity_types
+      - rules
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: rule_set_id
+        - **notes**: FK rule_sets (pinned version)
+        - **type**: uuid
+      -
+        - **name**: trigger
+        - **type**: text
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: outcome
+        - **notes**: pass/warn/block
+        - **type**: text
+      -
+        - **name**: requested_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: duration_ms
+        - **type**: int
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, record_type, record_id, created_at desc)
+      - (tenant_id, rule_set_id)
+    - **name**: validation_runs
+    - **purpose**: Record of each rule set evaluation (append-only).
+    - **relations**:
+      - rule_sets
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: run_id
+        - **notes**: FK validation_runs
+        - **type**: uuid
+      -
+        - **name**: rule_id
+        - **notes**: FK rules
+        - **type**: uuid
+      -
+        - **name**: field_path
+        - **type**: text
+      -
+        - **name**: severity
+        - **type**: text
+      -
+        - **name**: message
+        - **notes**: rendered message
+        - **type**: text
+      -
+        - **name**: context
+        - **notes**: values evaluated
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, run_id)
+      - (tenant_id, rule_id)
+    - **name**: validation_findings
+    - **purpose**: Per-rule failures from a run (append-only).
+    - **relations**:
+      - validation_runs
+      - rules
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: rule_id
+        - **notes**: FK rules
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: reason
+        - **notes**: required
+        - **type**: text
+      -
+        - **name**: waived_by
+        - **notes**: FK users, needs waive permission
+        - **type**: uuid
+      -
+        - **name**: expires_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: revokes_waiver_id
+        - **notes**: nullable self FK
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, record_type, record_id)
+      - (tenant_id, rule_id)
+    - **name**: validation_waivers
+    - **purpose**: Waiver of a warn (or authorised block) with reason; append-only, revoked via new row.
+    - **relations**:
+      - rules
+      - users

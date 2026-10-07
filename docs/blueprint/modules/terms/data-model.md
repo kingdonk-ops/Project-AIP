@@ -1,0 +1,392 @@
+# Terminology dictionary & localisation — Data model & schema
+
+
+- **notes**: Resolution order is platform default, market pack, tenant, client, project and is cached with invalidation on terms.pack.activated. Internal status codes are never stored as display text. Content and item type names stay in entity_types as tenant data; terms only holds UI keys. Measurements elsewhere are stored in canonical SI and converted using unit_definition.
+- **reuses existing**:
+  - entity_types
+  - documents
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: platform tenant for global rows; RLS permits read of platform rows
+        - **type**: uuid
+      -
+        - **name**: key
+        - **notes**: e.g. inspection.status.approved
+        - **type**: text
+      -
+        - **name**: module_id
+        - **notes**: owning module
+        - **type**: text
+      -
+        - **name**: default_locale
+        - **notes**: en-AU
+        - **type**: text
+      -
+        - **name**: default_text
+        - **notes**: ICU message
+        - **type**: text
+      -
+        - **name**: description
+        - **notes**: translator context
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (key)
+      - (module_id)
+    - **name**: term_key
+    - **purpose**: Catalogue of dictionary keys with platform default text.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS; platform tenant for built-in packs
+        - **type**: uuid
+      -
+        - **name**: code
+        - **notes**: au-mining, nz, uk, asia
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: active_version_id
+        - **notes**: FK term_pack_version
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code)
+    - **name**: term_pack
+    - **purpose**: A market or client terminology pack.
+    - **relations**:
+      - term_pack_version.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: pack_id
+        - **notes**: FK term_pack
+        - **type**: uuid
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: contents
+        - **notes**: key to locale to text
+        - **type**: jsonb
+      -
+        - **name**: contents_sha256
+        - **type**: text
+      -
+        - **name**: change_summary
+        - **notes**: diff vs previous
+        - **type**: jsonb
+      -
+        - **name**: created_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only; rollback activates an older version
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (pack_id, version)
+    - **name**: term_pack_version
+    - **purpose**: Immutable pack version for diff, dry-run and rollback.
+    - **relations**:
+      - term_pack.id
+      - users.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: pack_id
+        - **notes**: FK term_pack
+        - **type**: uuid
+      -
+        - **name**: pinned_version_id
+        - **notes**: nullable, FK term_pack_version
+        - **type**: uuid
+      -
+        - **name**: activated_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, pack_id) where deleted_at is null
+    - **name**: tenant_pack_activation
+    - **purpose**: Which packs a tenant has activated and in which order.
+    - **relations**:
+      - term_pack.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: level
+        - **notes**: tenant|client|project
+        - **type**: text
+      -
+        - **name**: client_org_id
+        - **notes**: nullable, FK contacts company
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable, FK projects
+        - **type**: uuid
+      -
+        - **name**: key
+        - **notes**: references term_key.key
+        - **type**: text
+      -
+        - **name**: locale
+        - **type**: text
+      -
+        - **name**: text
+        - **notes**: ICU message
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, level, coalesce(client_org_id,project_id), key, locale) where deleted_at is null
+      - (tenant_id, key)
+    - **name**: term_override
+    - **purpose**: Override of a key at tenant, client or project level (market-pack level lives in pack versions).
+    - **relations**:
+      - term_key.key
+      - projects.id
+      - companies (contacts module)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: term
+        - **type**: text
+      -
+        - **name**: abbreviation
+        - **type**: text
+      -
+        - **name**: definition
+        - **type**: text
+      -
+        - **name**: neutral_concept_code
+        - **notes**: maps market equivalents, e.g. hold point vs inspection stop
+        - **type**: text
+      -
+        - **name**: locale
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, abbreviation)
+      - (tenant_id, neutral_concept_code)
+    - **name**: glossary_entry
+    - **purpose**: Tenant glossary of standards and abbreviations shown as tooltips.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: alias
+        - **notes**: lower-cased
+        - **type**: text
+      -
+        - **name**: target_type
+        - **notes**: entity_type|field|status
+        - **type**: text
+      -
+        - **name**: target_code
+        - **notes**: neutral internal code
+        - **type**: text
+      -
+        - **name**: locale
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, alias, target_type, locale) where deleted_at is null
+      - trigram index on alias
+    - **name**: term_alias
+    - **purpose**: Alias term to neutral term or field for search and import header mapping.
+    - **relations**:
+      - entity_types (when target_type=entity_type)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable; null means tenant default
+        - **type**: uuid
+      -
+        - **name**: locale
+        - **notes**: en-AU
+        - **type**: text
+      -
+        - **name**: date_format
+        - **type**: text
+      -
+        - **name**: number_format
+        - **type**: text
+      -
+        - **name**: unit_system
+        - **notes**: metric|imperial
+        - **type**: text
+      -
+        - **name**: unit_overrides
+        - **notes**: quantity to display unit, e.g. length:in, pressure:psi
+        - **type**: jsonb
+      -
+        - **name**: timezone
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, coalesce(project_id, '00000000-0000-0000-0000-000000000000'))
+    - **name**: locale_settings
+    - **purpose**: Locale, formats and display units at tenant or project level.
+    - **relations**:
+      - projects.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: platform tenant; RLS read-all for reference rows
+        - **type**: uuid
+      -
+        - **name**: quantity
+        - **notes**: length, pressure, temperature
+        - **type**: text
+      -
+        - **name**: unit_code
+        - **notes**: mm, in, bar, psi, C, F
+        - **type**: text
+      -
+        - **name**: si_factor
+        - **notes**: multiplier to SI
+        - **type**: numeric
+      -
+        - **name**: si_offset
+        - **notes**: for temperature
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (quantity, unit_code)
+    - **name**: unit_definition
+    - **purpose**: Reference list of quantities and units with conversion to canonical SI.

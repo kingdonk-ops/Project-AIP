@@ -1,0 +1,652 @@
+# Users, sign-in & SSO — Data model & schema
+
+
+- **notes**: Competencies stay in certificates and the eligibility gate; the profile only links to them. The hash-chained audit store belongs to the audit module and auth_event feeds it. Deprovision revokes user_session, api_key, magic_link_token and portal access in one transaction and emits user.deactivated. Replaces the HS256 single JWT. Session timeouts and the SCIM time target are open and held as policy data, not code.
+- **reuses existing**:
+  - documents
+  - certificates
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: organisation_id
+        - **notes**: FK contacts company/organisation
+        - **type**: uuid
+      -
+        - **name**: user_class
+        - **notes**: staff|local|field_external|integration
+        - **type**: text
+      -
+        - **name**: email
+        - **notes**: lower-cased
+        - **type**: citext
+      -
+        - **name**: display_name
+        - **type**: text
+      -
+        - **name**: phone
+        - **type**: text
+      -
+        - **name**: workos_user_id
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: auth_method
+        - **notes**: sso|password|magic_link
+        - **type**: text
+      -
+        - **name**: password_hash
+        - **notes**: Argon2id; null for SSO users
+        - **type**: text
+      -
+        - **name**: sso_managed
+        - **notes**: blocks password login
+        - **type**: boolean
+      -
+        - **name**: scim_status
+        - **notes**: none|active|suspended
+        - **type**: text
+      -
+        - **name**: mfa_required
+        - **type**: boolean
+      -
+        - **name**: signature_document_id
+        - **notes**: FK documents; image captured at profile
+        - **type**: uuid
+      -
+        - **name**: notification_prefs
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: invited|active|deactivated
+        - **type**: text
+      -
+        - **name**: deactivated_at
+        - **type**: timestamptz
+      -
+        - **name**: last_login_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, email) where deleted_at is null
+      - unique (workos_user_id) where not null
+      - (tenant_id, organisation_id)
+      - (tenant_id, status)
+    - **name**: app_user
+    - **purpose**: Platform user profile; one row per person per tenant.
+    - **relations**:
+      - organisations (tenancy)
+      - documents.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: organisation_id
+        - **type**: uuid
+      -
+        - **name**: membership_type
+        - **notes**: member|client|subcontractor|guest
+        - **type**: text
+      -
+        - **name**: valid_from
+        - **type**: date
+      -
+        - **name**: valid_to
+        - **notes**: nullable
+        - **type**: date
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, user_id, organisation_id) where deleted_at is null
+    - **name**: tenant_membership
+    - **purpose**: Links a user to a tenant and organisation at tenant level, separate from project membership.
+    - **relations**:
+      - app_user.id
+      - organisations
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS; unique
+        - **type**: uuid
+      -
+        - **name**: claimed_domains
+        - **type**: text[]
+      -
+        - **name**: sso_enforced
+        - **type**: boolean
+      -
+        - **name**: workos_organization_id
+        - **type**: text
+      -
+        - **name**: session_policy
+        - **notes**: idle and absolute timeouts per user class
+        - **type**: jsonb
+      -
+        - **name**: mfa_policy
+        - **notes**: privileged roles enforced under SSO
+        - **type**: jsonb
+      -
+        - **name**: scim_deprovision_target_minutes
+        - **notes**: target to be set by owner
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id)
+      - GIN (claimed_domains)
+    - **name**: tenant_auth_policy
+    - **purpose**: Per-tenant SSO enforcement, domain claims and session/MFA policy by user class.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: refresh_token_hash
+        - **notes**: rotating; sha256
+        - **type**: text
+      -
+        - **name**: previous_token_hash
+        - **notes**: reuse detection
+        - **type**: text
+      -
+        - **name**: device_id
+        - **type**: text
+      -
+        - **name**: user_agent
+        - **type**: text
+      -
+        - **name**: ip
+        - **type**: inet
+      -
+        - **name**: auth_strength
+        - **notes**: password|mfa|sso|pin|magic_link
+        - **type**: text
+      -
+        - **name**: issued_at
+        - **type**: timestamptz
+      -
+        - **name**: last_seen_at
+        - **type**: timestamptz
+      -
+        - **name**: expires_at
+        - **notes**: 30 days
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_reason
+        - **notes**: deprovision|logout|reuse|admin
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id) where revoked_at is null
+      - unique (refresh_token_hash)
+      - (expires_at)
+    - **name**: user_session
+    - **purpose**: Server-side revocable session with rotating refresh token.
+    - **relations**:
+      - app_user.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: kind
+        - **notes**: totp|webauthn|recovery
+        - **type**: text
+      -
+        - **name**: secret_enc
+        - **notes**: encrypted (KMS); for TOTP
+        - **type**: bytea
+      -
+        - **name**: webauthn_credential_id
+        - **type**: text
+      -
+        - **name**: public_key
+        - **type**: bytea
+      -
+        - **name**: sign_count
+        - **type**: int
+      -
+        - **name**: recovery_hash
+        - **notes**: Argon2id for recovery codes
+        - **type**: text
+      -
+        - **name**: label
+        - **type**: text
+      -
+        - **name**: used_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id, kind)
+      - unique (webauthn_credential_id) where not null
+    - **name**: mfa_credential
+    - **purpose**: TOTP, WebAuthn and recovery code credentials.
+    - **relations**:
+      - app_user.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: kind
+        - **notes**: link|pin
+        - **type**: text
+      -
+        - **name**: token_hash
+        - **notes**: never store raw
+        - **type**: text
+      -
+        - **name**: scope_project_ids
+        - **notes**: named projects
+        - **type**: uuid[]
+      -
+        - **name**: scope_modules
+        - **notes**: named modules
+        - **type**: text[]
+      -
+        - **name**: device_binding_hash
+        - **type**: text
+      -
+        - **name**: failed_attempts
+        - **notes**: lock at 5
+        - **type**: int
+      -
+        - **name**: expires_at
+        - **notes**: 15 minutes
+        - **type**: timestamptz
+      -
+        - **name**: consumed_at
+        - **notes**: set on POST confirm
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (token_hash)
+      - (tenant_id, user_id, expires_at)
+    - **name**: magic_link_token
+    - **purpose**: Single-use hashed magic link or PIN for field and external users.
+    - **relations**:
+      - app_user.id
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: device_id
+        - **type**: text
+      -
+        - **name**: pin_hash
+        - **notes**: Argon2id
+        - **type**: text
+      -
+        - **name**: failed_attempts
+        - **type**: int
+      -
+        - **name**: locked_until
+        - **type**: timestamptz
+      -
+        - **name**: offline_key_wrapped
+        - **notes**: wrapped key for per-user offline encryption
+        - **type**: bytea
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, user_id, device_id) where deleted_at is null
+    - **name**: field_device_pin
+    - **purpose**: Per-user PIN for shared-device quick switch with auto-lock.
+    - **relations**:
+      - app_user.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: key_prefix
+        - **notes**: for identification
+        - **type**: text
+      -
+        - **name**: key_hash
+        - **type**: text
+      -
+        - **name**: client_id
+        - **notes**: OAuth client credentials
+        - **type**: text
+      -
+        - **name**: scopes
+        - **notes**: permission catalogue abilities
+        - **type**: text[]
+      -
+        - **name**: project_ids
+        - **notes**: nullable
+        - **type**: uuid[]
+      -
+        - **name**: created_by
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: last_used_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (key_hash)
+      - unique (tenant_id, client_id) where not null
+      - (tenant_id, expires_at)
+    - **name**: api_key
+    - **purpose**: Scoped, hashed, expiring keys and OAuth client credentials for integrations.
+    - **relations**:
+      - app_user.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: external_user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: sponsor_user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: expires_on
+        - **type**: date
+      -
+        - **name**: reconfirm_every_days
+        - **type**: int
+      -
+        - **name**: last_confirmed_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, external_user_id)
+      - (tenant_id, sponsor_user_id)
+      - (expires_on)
+    - **name**: external_sponsor
+    - **purpose**: Named internal sponsor, expiry and re-confirmation for external accounts.
+    - **relations**:
+      - app_user.id (both)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: email
+        - **type**: citext
+      -
+        - **name**: invited_by
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: organisation_id
+        - **type**: uuid
+      -
+        - **name**: initial_role_id
+        - **notes**: FK access role; cannot be tenant admin via invite without approval
+        - **type**: uuid
+      -
+        - **name**: token_hash
+        - **type**: text
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: accepted_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (token_hash)
+      - (tenant_id, email)
+    - **name**: user_invite
+    - **purpose**: Invitations to join a tenant.
+    - **relations**:
+      - app_user.id
+      - role
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: requested_by
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: approved_by_1
+        - **type**: uuid
+      -
+        - **name**: approved_by_2
+        - **type**: uuid
+      -
+        - **name**: target_user_id
+        - **notes**: nullable; for login-as
+        - **type**: uuid
+      -
+        - **name**: elevated_role_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: starts_at
+        - **type**: timestamptz
+      -
+        - **name**: ends_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: insert-only except revoked_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, ends_at)
+      - (tenant_id, requested_by)
+    - **name**: break_glass_grant
+    - **purpose**: Time-boxed elevation and login-as with dual approval; append-only audit of grants.
+    - **relations**:
+      - app_user.id
+      - role
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: event_type
+        - **type**: text
+      -
+        - **name**: ip
+        - **type**: inet
+      -
+        - **name**: user_agent
+        - **type**: text
+      -
+        - **name**: detail
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **notes**: append-only; UPDATE/DELETE revoked for app role
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id, created_at desc)
+      - (tenant_id, event_type, created_at)
+    - **name**: auth_event
+    - **purpose**: Append-only record of sign-ins, failures, MFA and privilege events, mirrored to the audit hash chain.
+    - **relations**:
+      - app_user.id
+      - audit module hash chain

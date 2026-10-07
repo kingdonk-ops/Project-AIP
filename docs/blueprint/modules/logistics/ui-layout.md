@@ -1,0 +1,174 @@
+# Site logistics & mobilisation — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: logistics.view; edit needs logistics.manage; owners update their own items.
+    - **actions**:
+      - Add item
+      - Apply template
+      - Mark ready with evidence
+      - Assign owner
+      - Change due date
+      - Export checklist
+      - Edit target start
+    - **layout**: Dashboard header with a readiness ring and a blockers panel above grouped checklists.
+    - **name**: Mobilisation plan
+    - **purpose**: Show readiness against target start and what blocks it.
+    - **route**: /projects/:projectId/mobilisation
+    - **sections**:
+      - Header (project, target start, readiness %)
+      - Blockers roll-up
+      - Readiness items by area
+      - Template applied
+      - Eligibility checks (inductions, permits)
+  -
+    - **access**: Item owner or logistics.manage.
+    - **actions**:
+      - Mark ready
+      - Attach evidence
+      - Reassign
+      - Delete
+    - **layout**: Two-column detail page.
+    - **name**: Readiness item detail
+    - **purpose**: Manage one item, its evidence and linked credential requirement.
+    - **route**: /projects/:projectId/mobilisation/items/:itemId
+    - **sections**:
+      - Item summary and status
+      - Blocks start flag
+      - Linked permit or induction
+      - Evidence files
+      - Activity
+  -
+    - **access**: logistics.view; approve needs logistics.approve_booking; gate security gets a read and arrive-only view.
+    - **actions**:
+      - New booking
+      - Approve
+      - Reschedule
+      - Reject
+      - Mark arrived
+      - Create goods receipt
+      - Export
+    - **layout**: Calendar and board toggle with gate lanes and a pending-requests rail.
+    - **name**: Delivery booking board
+    - **purpose**: Schedule and manage deliveries by gate and slot.
+    - **route**: /projects/:projectId/logistics/bookings
+    - **sections**:
+      - Day or week calendar by gate
+      - Slot capacity indicators
+      - Status board (requested, approved, arrived, received, rejected)
+      - Pending requests
+  -
+    - **access**: logistics.manage, or suppliers through the restricted link.
+    - **actions**:
+      - Submit
+      - Save draft
+      - Cancel
+    - **layout**: Form with live slot availability.
+    - **name**: Create booking
+    - **purpose**: Book a delivery against a PO.
+    - **route**: /projects/:projectId/logistics/bookings/new
+    - **sections**:
+      - Supplier, PO and PO lines
+      - Vehicle and driver
+      - Gate, date and slot
+      - Materials and expected docket
+      - Required documents on arrival
+  -
+    - **access**: logistics.view; actions per permission.
+    - **actions**:
+      - Approve
+      - Reschedule
+      - Reject
+      - Record arrival
+      - Receive goods
+      - Flag missing certificate
+    - **layout**: Header with state bar and a tabbed body.
+    - **name**: Booking detail
+    - **purpose**: Track a delivery through arrival and receipt.
+    - **route**: /projects/:projectId/logistics/bookings/:id
+    - **sections**:
+      - Booking summary
+      - PO lines and docket
+      - Arrival and checks (certificates, docket)
+      - Goods receipt and stock link
+      - Activity
+  -
+    - **access**: logistics.configure.
+    - **actions**:
+      - Add gate
+      - Edit hours
+      - Add exception
+      - Deactivate
+    - **layout**: List with a weekly hours editor.
+    - **name**: Gates and hours
+    - **purpose**: Configure gates, opening hours and slot capacity.
+    - **route**: /projects/:projectId/logistics/gates
+    - **sections**:
+      - Gate list
+      - Weekly hours grid
+      - Holiday exceptions
+      - Slot length and capacity
+      - Notification recipients
+  -
+    - **access**: logistics.view; edit needs logistics.manage.
+    - **actions**:
+      - Add zone
+      - Edit zone
+      - Assign delivery to zone
+      - Switch to list
+    - **layout**: Map or plan canvas with a zone list side panel.
+    - **name**: Laydown zones
+    - **purpose**: See zones, capacity and contents on a site plan.
+    - **route**: /projects/:projectId/logistics/laydown
+    - **sections**:
+      - Site plan with zone polygons
+      - Zone list (capacity, utilisation, linked area or asset)
+      - Zone contents
+  -
+    - **access**: logistics.configure.
+    - **actions**:
+      - Save
+      - Import template
+    - **layout**: Tabbed settings.
+    - **name**: Logistics settings
+    - **purpose**: Templates, areas, booking rules and goods-receipt behaviour.
+    - **route**: /projects/:projectId/logistics/settings
+    - **sections**:
+      - Mobilisation templates
+      - Readiness areas and item types
+      - Booking lead time and cancellation
+      - Supplier link settings
+      - Required documents
+      - Auto goods receipt
+      - Terminology keys
+  -
+    - **access**: Supplier portal users or magic-link principals scoped to named POs.
+    - **actions**:
+      - Request booking
+      - Amend request
+      - Cancel within window
+      - Upload docket
+    - **layout**: Minimal portal page on the separate portal origin.
+    - **name**: Supplier booking portal
+    - **purpose**: Let suppliers request and track slots without commercial data.
+    - **route**: /supplier/bookings
+    - **sections**:
+      - My bookings
+      - Request slot form
+      - Slot availability
+      - Required documents
+  -
+    - **access**: Gate and security roles with logistics.arrive.
+    - **actions**:
+      - Mark arrived
+      - Flag missing document
+      - Reject at gate
+    - **layout**: Mobile list of today's expected deliveries with a large arrive button.
+    - **name**: Mobile gate check-in
+    - **purpose**: Record arrivals at the gate.
+    - **route**: /m/logistics/gate
+    - **sections**:
+      - Today's bookings
+      - Docket and certificate checklist
+      - Photo capture

@@ -1,0 +1,274 @@
+# Site logistics & mobilisation — Feature filler
+
+
+- **detail sections**:
+  - Mobilisation plan header: project, target start, readiness percentage
+  - Blockers roll-up
+  - Readiness items by area
+  - Gates and hours
+  - Delivery booking detail with PO lines and docket
+  - Goods receipt and stock link
+  - Laydown zone map and contents
+  - Eligibility checks (inductions, permits)
+  - Activity and audit
+- **notifications**:
+  - Readiness item due soon or overdue
+  - Readiness blocker added or cleared
+  - Target start at risk
+  - Booking requested
+  - Booking approved, rescheduled or rejected
+  - Supplier arrival at gate
+  - Gate over capacity
+  - Delivery missing certificates or docket
+  - Laydown zone over capacity
+- **settings**:
+  - Mobilisation templates
+  - Readiness areas and item types
+  - Gate hours, holiday exceptions and slot rules
+  - Booking lead time and cancellation window
+  - Supplier booking link settings and expiry
+  - Required documents on arrival
+  - Auto-create goods receipt on arrival
+  - Notification recipients per gate
+  - Terminology keys
+- **tables**:
+  -
+    - **bulk actions**:
+      - Assign owner
+      - Change due date
+      - Mark complete with evidence
+      - Export checklist
+    - **columns**:
+      - Area
+      - Item
+      - Owner
+      - Due date
+      - Status
+      - Blocks start
+      - Evidence
+      - Linked permit or induction
+    - **create form**:
+      -
+        - **field**: Area (permits, inductions, establishment, utilities, access)
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Item
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Owner
+        - **required**: true
+        - **type**: person picker
+      -
+        - **field**: Due date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Blocks start
+        - **required**: false
+        - **type**: checkbox
+      -
+        - **field**: Linked credential requirement
+        - **required**: false
+        - **type**: credential type picker
+    - **empty state**: No readiness items. Add items or apply a mobilisation template to see what blocks the start date.
+    - **filters**:
+      - Area
+      - Status
+      - Owner
+      - Blocks start
+      - Overdue
+    - **name**: Readiness items
+    - **row actions**:
+      - Open
+      - Mark ready
+      - Attach evidence
+      - Reassign
+      - Delete
+    - **search**: Item name, owner and area
+    - **sort**:
+      - Due date
+      - Area
+      - Status
+  -
+    - **bulk actions**:
+      - Approve selected
+      - Reschedule selected
+      - Cancel selected
+      - Notify suppliers
+    - **columns**:
+      - Booking ref
+      - Supplier
+      - PO and line
+      - Gate
+      - Slot start
+      - Slot end
+      - Vehicle
+      - Materials
+      - Status
+      - Docket received
+    - **create form**:
+      -
+        - **field**: Supplier
+        - **required**: true
+        - **type**: company picker
+      -
+        - **field**: Purchase order and lines
+        - **required**: false
+        - **type**: PO line picker
+      -
+        - **field**: Gate
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Slot
+        - **required**: true
+        - **type**: datetime range
+      -
+        - **field**: Vehicle registration
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Driver name and contact
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Laydown zone
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Materials description
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Certificates to arrive with goods
+        - **required**: false
+        - **type**: checkbox
+    - **empty state**: No deliveries booked. Suppliers can request a slot through a booking link, or add one here.
+    - **filters**:
+      - Date
+      - Gate
+      - Supplier
+      - Status
+      - PO
+      - Laydown zone
+    - **name**: Delivery bookings
+    - **row actions**:
+      - Open
+      - Approve
+      - Reject
+      - Reschedule
+      - Mark arrived
+      - Create goods receipt
+      - Cancel
+    - **search**: Booking ref, supplier, PO number or vehicle registration
+    - **sort**:
+      - Slot start
+      - Supplier
+      - Status
+  -
+    - **bulk actions**:
+      - Deactivate selected
+    - **columns**:
+      - Name
+      - Site
+      - Operating hours
+      - Slot length
+      - Slot capacity
+      - Status
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Site
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Operating hours by weekday
+        - **required**: true
+        - **type**: schedule
+      -
+        - **field**: Slot length (minutes)
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Vehicles per slot
+        - **required**: true
+        - **type**: number
+    - **empty state**: No gates defined. Add a gate with hours and slot capacity to open delivery booking.
+    - **filters**:
+      - Site
+      - Status
+    - **name**: Gates
+    - **row actions**:
+      - Edit
+      - Set exceptions
+      - Deactivate
+    - **search**: Gate name
+    - **sort**:
+      - Name
+      - Site
+  -
+    - **bulk actions**:
+      - Deactivate selected
+    - **columns**:
+      - Name
+      - Site
+      - Area or asset
+      - Capacity
+      - Current use
+      - Restrictions
+      - Status
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Site
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Linked asset or area
+        - **required**: false
+        - **type**: asset picker
+      -
+        - **field**: Capacity
+        - **required**: false
+        - **type**: number with unit
+      -
+        - **field**: Restrictions
+        - **required**: false
+        - **type**: long text
+      -
+        - **field**: Plan geometry
+        - **required**: false
+        - **type**: polygon on plan
+    - **empty state**: No laydown zones. Draw a zone on the site plan or add one from the list.
+    - **filters**:
+      - Site
+      - Status
+      - Over capacity
+    - **name**: Laydown zones
+    - **row actions**:
+      - Edit
+      - View contents
+      - Show on plan
+    - **search**: Zone name or area
+    - **sort**:
+      - Name
+      - Current use
+- **walkthrough**:
+  - Project manager sets the target commencement date and applies a mobilisation template.
+  - Items are grouped by area and assigned to owners with due dates.
+  - Owners attach evidence; permit and induction items check the credential register automatically.
+  - The roll-up lists unresolved blocking items and days to target start.
+  - Logistics coordinator defines gates, hours and slot capacity, and laydown zones on the site plan.
+  - Supplier requests a slot through a booking link, choosing a PO and lines without seeing prices.
+  - Coordinator approves or reschedules; the supplier and site security are notified.
+  - On arrival, security marks the booking arrived and records the docket and vehicle.
+  - Receiving creates a goods receipt against the PO and a stock movement into the chosen laydown zone.
+  - Delivery appears in that day's diary and congestion data goes to reporting.

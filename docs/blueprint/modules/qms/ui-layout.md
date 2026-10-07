@@ -1,0 +1,205 @@
+# Quality roll-up & audits — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Users with quality.view on the project. Inspector-level FTPR is limited to quality managers and above. Portal users see only the tiles shared with them.
+    - **actions**:
+      - Change filters
+      - Drill into source register
+      - Export tile as CSV or image
+      - Save view
+      - Schedule quality report
+      - Customise tile layout (permitted roles)
+    - **layout**: Dashboard grid of KPI tiles from the reporting layer. A filter bar sits on top with project, discipline, contractor and period. Tiles drill into source registers.
+    - **name**: Quality dashboard
+    - **purpose**: Read-only roll-up of ITP completion, open NCRs, punch ageing, first-time pass rate, cost of poor quality and audit status, with no copied data.
+    - **route**: /projects/:projectId/quality
+    - **sections**:
+      - Filter bar (project, site, discipline, subcontractor, period)
+      - KPI tiles: ITP completion, open NCRs, punch ageing, FTPR, COPQ
+      - FTPR breakdown by discipline, inspector and subcontractor
+      - Audit status summary
+      - Trend charts
+      - Last refreshed and data-definition note
+  -
+    - **access**: quality.copq.view (quality managers, project managers, commercial). Cost rates are hidden from users without cost visibility.
+    - **actions**:
+      - Filter
+      - Open source issue
+      - Export CSV
+      - Schedule report
+      - Print or PDF via the report engine
+    - **layout**: Report page with a filter header, summary cards, a stacked chart and a detail table.
+    - **name**: Cost of poor quality report
+    - **purpose**: Show rework hours and cost from issues, grouped by COPQ category, discipline, subcontractor and period.
+    - **route**: /quality/copq
+    - **sections**:
+      - Filters
+      - Summary cards (total cost, hours, count)
+      - Cost by category chart
+      - Cost over time
+      - Detail table linking to issues
+      - Cost source and rate basis note
+  -
+    - **access**: quality.view. The inspector dimension needs quality.inspector_metrics.
+    - **actions**:
+      - Switch dimension
+      - Drill to inspections
+      - Export CSV
+    - **layout**: Split layout with a ranked chart on the left and a drill-down table on the right.
+    - **name**: First-time pass rate analysis
+    - **purpose**: Analyse pass rates by discipline, inspector and subcontractor using the tenant's FTPR definition.
+    - **route**: /quality/ftpr
+    - **sections**:
+      - Dimension selector
+      - Ranked bar chart
+      - Trend line
+      - Failed inspections table
+      - FTPR definition panel
+  -
+    - **access**: quality.audit.view. Create and edit need quality.audit.manage. Auditee contacts see only audits where they are the auditee.
+    - **actions**:
+      - Create audit
+      - Open audit
+      - Reassign lead auditor
+      - Reschedule
+      - Cancel planned audits
+      - Export CSV
+      - Switch to planner
+    - **layout**: Standard register: DataTable with a filter bar, a bulk action bar and a Calendar toggle.
+    - **name**: Audit register
+    - **purpose**: List, filter and plan internal, external and supplier audits.
+    - **route**: /quality/audits
+    - **sections**:
+      - Filters (type, standard, status, lead auditor, date)
+      - Table (audit no., title, type, scope, standard, lead, auditee, planned date, status, findings, open findings)
+      - Bulk action bar
+      - Empty state
+  -
+    - **access**: quality.audit.manage
+    - **actions**:
+      - Drag to reschedule
+      - Create audit from date
+      - Filter by auditor or type
+    - **layout**: Calendar with month and year views and a side panel of unscheduled audits.
+    - **name**: Audit planner
+    - **purpose**: See and schedule audits over the year against the audit programme.
+    - **route**: /quality/audits/planner
+    - **sections**:
+      - Calendar
+      - Unscheduled audits panel
+      - Filters
+      - Auditor workload strip
+  -
+    - **access**: quality.audit.manage. Edit is locked once the audit is closed.
+    - **actions**:
+      - Save draft
+      - Save and schedule
+      - Cancel
+    - **layout**: Single-column form in a page with a sticky save bar.
+    - **name**: Create or edit audit
+    - **purpose**: Capture the audit plan, scope, clauses, team and checklist.
+    - **route**: /quality/audits/new
+    - **sections**:
+      - Title, type and standard
+      - Clauses in scope
+      - Project, site and auditee
+      - Lead auditor and team
+      - Planned date
+      - Scope notes
+      - Checklist template
+  -
+    - **access**: Lead auditor, audit team and quality managers. The auditee gets a read-only view of findings and responses once the audit is issued.
+    - **actions**:
+      - Advance workflow
+      - Complete checklist items
+      - Add finding
+      - Raise issue or NCR from finding
+      - Verify closure
+      - Close audit
+      - Generate audit report
+      - Add attachment
+    - **layout**: Header with the WorkflowBar and tabbed body. The right rail shows the team and key dates.
+    - **name**: Audit detail
+    - **purpose**: Run an audit from planning through checklist, findings and closure.
+    - **route**: /quality/audits/:auditId
+    - **sections**:
+      - Audit summary and status
+      - Scope and clauses
+      - Audit team and auditee
+      - Checklist and evidence
+      - Findings and linked issues
+      - Closure and verification
+      - Attachments
+      - Activity and audit trail
+      - Dashboard snapshot
+  -
+    - **access**: quality.audit.view. Verify closure is limited to auditors.
+    - **actions**:
+      - Open finding
+      - Raise issue
+      - Reassign
+      - Verify closure
+      - Export CSV
+    - **layout**: DataTable with a status board toggle (kanban by status).
+    - **name**: Finding tracker
+    - **purpose**: Track findings across all audits with links to their issues and corrective actions.
+    - **route**: /quality/findings
+    - **sections**:
+      - Filters (classification, status, owner, overdue, clause)
+      - Findings table
+      - Board view
+      - Linked issue status column
+  -
+    - **access**: quality.manage
+    - **actions**:
+      - Create review
+      - Add objective
+      - Link KPI
+      - Attach minutes
+      - Export evidence pack
+    - **layout**: Two tabs, each a list with a detail drawer.
+    - **name**: Management reviews and objectives
+    - **purpose**: Record management reviews and quality objectives with the evidence behind them.
+    - **route**: /quality/management-reviews
+    - **sections**:
+      - Management review list
+      - Quality objectives list with current KPI value
+      - Review detail drawer with inputs, outputs and actions
+  -
+    - **access**: Tenant admin or quality.settings.manage
+    - **actions**:
+      - Edit and save
+      - Import clause library
+      - Preview FTPR on sample data
+    - **layout**: Settings page with a left sub-navigation and one form per section.
+    - **name**: Quality settings
+    - **purpose**: Configure audit types, clause library, COPQ categories and rates, FTPR definition and defaults.
+    - **route**: /settings/quality
+    - **sections**:
+      - Audit types and standards
+      - ISO clause library
+      - COPQ categories and cost rates
+      - Cost source selection
+      - FTPR definition
+      - Finding classification and due-date defaults
+      - Dashboard tile defaults
+      - Scheduled report recipients
+      - Audit numbering
+  -
+    - **access**: Audit team members assigned to the audit
+    - **actions**:
+      - Answer item
+      - Capture photo
+      - Add finding
+      - Submit checklist
+    - **layout**: Single-column mobile screen with a stepper and a bottom action bar.
+    - **name**: Mobile audit checklist
+    - **purpose**: Let auditors run a checklist and log findings on site, including offline.
+    - **route**: /m/quality/audits/:auditId
+    - **sections**:
+      - Checklist items with pass, fail and N/A
+      - Evidence photo capture
+      - Quick finding form
+      - Sync status

@@ -1,0 +1,322 @@
+# Site diary & field reports — Feature filler
+
+
+- **detail sections**:
+  - Header: date, project, site, status, seal state
+  - Weather (auto-fetched with manual override and source)
+  - Labour on site
+  - Plant on site
+  - Events
+  - Instructions received
+  - Delays
+  - Deliveries (from logistics)
+  - Photos, video and drone captures
+  - Linked RSWs, inspections and incidents of the day
+  - Contributors and sign-offs
+  - Seal and verification (hash, timestamp, signer, PDF)
+  - Amendments (superseding entries)
+  - Daily field report preview
+  - Activity and audit
+- **notifications**:
+  - Diary not started by cut-off time
+  - Diary not submitted at day end
+  - Day sealed (to project team)
+  - Amendment added to a sealed day
+  - Field access link issued, used or expiring
+  - Daily field report sent
+  - Incident linked to the day
+  - Offline entries synced with conflicts
+- **settings**:
+  - Diary cut-off and auto-seal time per project
+  - Required sections before seal
+  - Weather provider and override rules
+  - Entry categories and delay cause list
+  - Field access defaults: expiry, modules, PIN length, device binding
+  - Seal signer roles and countersign requirement
+  - Daily report template and distribution list
+  - Retention and legal hold rules
+  - Pre-fill sources (resources, equipment, deliveries)
+  - Terminology keys for diary labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export selected sealed days as PDF bundle
+      - Send daily field report to distribution list
+      - Remind contributors to submit
+    - **columns**:
+      - Date
+      - Project
+      - Site
+      - Status (open, submitted, sealed)
+      - Weather summary
+      - Workforce count
+      - Plant count
+      - Delays (hours)
+      - Events count
+      - Amendments count
+      - Sealed at
+      - Sealed by
+    - **create form**:
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Site
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Shift
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Copy labour and plant from previous day
+        - **required**: false
+        - **type**: checkbox
+    - **empty state**: No diary days for this project yet. Create today's diary to start recording weather, labour, plant, events and photos.
+    - **filters**:
+      - Project
+      - Site
+      - Date range
+      - Status
+      - Has delays
+      - Has incident link
+      - Has amendments
+      - Contributor
+    - **name**: Diary days
+    - **row actions**:
+      - Open
+      - Submit for seal
+      - Seal day
+      - Add amendment
+      - Download sealed PDF
+      - Verify seal
+      - View timeline
+    - **search**: Free text across event descriptions, instructions, delay notes and contributor names, scoped to the selected project
+    - **sort**:
+      - Date (default newest first)
+      - Status
+      - Delay hours
+      - Workforce count
+  -
+    - **bulk actions**:
+      - Link to RSW
+      - Link to inspection
+      - Export selected
+    - **columns**:
+      - Time
+      - Category (event, instruction, delay, delivery, note)
+      - Description
+      - Author
+      - Source (user, PIN link, voice draft)
+      - Linked RSW
+      - Linked inspection
+      - Linked incident
+      - Attachments count
+      - Superseded by
+    - **create form**:
+      -
+        - **field**: Category
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Time
+        - **required**: true
+        - **type**: time
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Instruction given by (company/person)
+        - **required**: false
+        - **type**: contact select
+      -
+        - **field**: Delay cause
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Delay duration (hours)
+        - **required**: false
+        - **type**: number
+      -
+        - **field**: Linked RSW, inspection or incident
+        - **required**: false
+        - **type**: multi record picker
+      -
+        - **field**: Attachments
+        - **required**: false
+        - **type**: file upload
+    - **empty state**: No entries on this day. Add an event, instruction or delay, or wait for field contributions.
+    - **filters**:
+      - Category
+      - Author
+      - Source
+      - Linked record type
+      - Has attachments
+      - Superseded or current
+    - **name**: Diary entries
+    - **row actions**:
+      - Edit (before seal only)
+      - Supersede (after seal)
+      - Link record
+      - View attachments
+      - View history
+    - **search**: Free text on description, author and linked record reference
+    - **sort**:
+      - Time
+      - Category
+      - Author
+  -
+    - **bulk actions**:
+      - Remove selected
+      - Set hours for selected
+    - **columns**:
+      - Person or crew
+      - Company
+      - Role
+      - Hours
+      - Area or asset
+      - Source (resources pre-fill, manual)
+    - **create form**:
+      -
+        - **field**: Person or crew
+        - **required**: true
+        - **type**: resource picker or free text
+      -
+        - **field**: Company
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Role
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Hours
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Area or asset
+        - **required**: false
+        - **type**: asset picker
+    - **empty state**: No labour recorded. Pre-fill from today's assignments or add people manually.
+    - **filters**:
+      - Company
+      - Role
+      - Source
+    - **name**: Labour on site
+    - **row actions**:
+      - Edit
+      - Remove
+    - **search**: Name or company
+    - **sort**:
+      - Name
+      - Company
+      - Hours
+  -
+    - **bulk actions**:
+      - Remove selected
+      - Set status for selected
+    - **columns**:
+      - Equipment
+      - Owner or hire
+      - Status (working, standby, broken down)
+      - Hours
+      - Operator
+    - **create form**:
+      -
+        - **field**: Equipment
+        - **required**: true
+        - **type**: equipment picker or free text
+      -
+        - **field**: Status
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Hours
+        - **required**: false
+        - **type**: number
+      -
+        - **field**: Operator
+        - **required**: false
+        - **type**: person picker
+    - **empty state**: No plant recorded for this day.
+    - **filters**:
+      - Status
+      - Owner or hire
+    - **name**: Plant on site
+    - **row actions**:
+      - Edit
+      - Remove
+    - **search**: Equipment name or registration
+    - **sort**:
+      - Equipment
+      - Hours
+  -
+    - **bulk actions**:
+      - Revoke selected
+      - Extend expiry
+    - **columns**:
+      - Person
+      - Delivery (PIN or magic link)
+      - Projects
+      - Modules
+      - Expires
+      - Last used
+      - Status
+    - **create form**:
+      -
+        - **field**: Person name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Email or mobile
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Method
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Projects
+        - **required**: true
+        - **type**: multi select
+      -
+        - **field**: Modules
+        - **required**: true
+        - **type**: multi select (diary contribution only by default)
+      -
+        - **field**: Expiry
+        - **required**: true
+        - **type**: date
+    - **empty state**: No field contributors have access. Invite a foreman by PIN or magic link.
+    - **filters**:
+      - Method
+      - Project
+      - Status
+    - **name**: Field access grants
+    - **row actions**:
+      - Revoke
+      - Reissue
+      - View usage
+    - **search**: Name or email
+    - **sort**:
+      - Expires
+      - Last used
+      - Name
+- **walkthrough**:
+  - Supervisor opens the project and creates today's diary day, or the system auto-creates it at shift start.
+  - Weather is fetched automatically for the site location and the supervisor confirms or overrides it.
+  - Labour and plant are pre-filled from today's resource assignments and equipment bookings, then adjusted.
+  - Foremen without accounts open a magic link or enter a PIN and add events, instructions and photos, with entries marked by source.
+  - Supervisor records instructions received, delays with cause and duration, and links the day's RSWs, inspections and incidents.
+  - Photos, video and drone files upload (queued if offline) and pass quarantine and malware scanning before showing.
+  - Supervisor reviews the day, resolves any open flags and submits for seal.
+  - Seal runs: content is canonicalised, hashed into the chain, rendered to PDF, signed, timestamped and stored immutably.
+  - Later corrections are added as amendments that supersede the original entry; the original stays visible.
+  - The daily field report is generated and distributed to the client list.
+  - Anyone with permission can verify the seal from the day page.

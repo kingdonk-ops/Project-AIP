@@ -1,0 +1,38 @@
+# Inspections, ITPs & hold points — Feature scout
+
+
+- **abilities seen in market**:
+  - Inspection booking with notice periods, client acknowledgement and waiver if the witness does not attend
+  - Hold and witness point status boards by asset, discipline or contractor
+  - Bulk assignment and approval with competency-aware suggestions
+  - Recurring programmes with due, overdue and forecast views and workload levelling
+  - Mobile execution with step-by-step flow, photos and signatures
+  - Digital witness sign-off by external parties through a limited-access link
+  - Failed step handling with automatic NCR and re-inspection linkage
+  - Inspection readiness and release-to-proceed certificates
+  - Inspection coverage metrics such as percentage of required inspections completed
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Point-type-aware hold, witness and surveillance behaviour
+    - **why**: Holds block, witness points notify with a notice period and waiver rule, surveillance is sampled. Deferred in AIP, but it is the defining ITP behaviour customers expect.
+  -
+    - **effort**: M
+    - **feature**: Inspection notice and waiver workflow
+    - **why**: Contracts require notice (for example 24 or 48 hours) and allow proceeding if the client does not attend. Timers, reminders and a recorded waiver protect the contractor.
+  -
+    - **effort**: M
+    - **feature**: Competency-aware assignment suggestions
+    - **why**: Suggesting only inspectors with valid qualifications and availability reduces failed sign-offs and uses the eligibility data already held.
+  -
+    - **effort**: S
+    - **feature**: Release-to-proceed record for holds
+    - **why**: A formal release document, signed and sealed, tied to the hold and downstream tasks gives clients clear audit evidence.
+  -
+    - **effort**: S
+    - **feature**: Review queue with next/previous and bulk actions
+    - **why**: Reviewers process many inspections daily. A queue with keyboard flow and bulk approval is a major productivity gain.
+  -
+    - **effort**: S
+    - **feature**: Inspection coverage and backlog dashboard
+    - **why**: Percentage of required inspections done per RSW, area or discipline shows readiness and bottlenecks to managers and clients.

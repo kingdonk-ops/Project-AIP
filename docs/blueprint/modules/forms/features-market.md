@@ -1,0 +1,38 @@
+# Form & template designer — Feature scout
+
+
+- **abilities seen in market**:
+  - Conditional logic, calculations and cross-field validation with a visual builder
+  - Reusable question libraries and section blocks shared across templates
+  - Instrument-linked fields that capture the gauge serial and check calibration
+  - Auto-populated fields from asset, project, task or user context
+  - Template preview and test-fill mode with sample data before publishing
+  - Template import from spreadsheets or PDFs and bulk upload of questions
+  - Revision comparison and impact view showing what open inspections use a revision
+  - Layout controls for print-accurate PDF output matching legacy paper forms
+  - Localised labels and units with unit conversion
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Reusable section and question library
+    - **why**: Standard blocks such as DFT readings, environmental conditions and weld details are reused across dozens of templates. It keeps them consistent and editable in one place with versioning.
+  -
+    - **effort**: M
+    - **feature**: Instrument-reference field with calibration check
+    - **why**: Ties forms to the eligibility gate directly, so a reading cannot be recorded with an out-of-calibration gauge, and the instrument appears in the traceability chain.
+  -
+    - **effort**: S
+    - **feature**: Context auto-fill and prefilled fields
+    - **why**: Pulling asset tag, RSW number, location and procedure into new inspections cuts typing and transcription errors in the field.
+  -
+    - **effort**: S
+    - **feature**: Test-fill and publish checks
+    - **why**: A preview that runs the formulas and rules on sample answers, and flags broken references before publishing, prevents faulty templates reaching the field.
+  -
+    - **effort**: M
+    - **feature**: Print-accurate report layout mapping
+    - **why**: Clients want output that resembles their existing ITR forms. Mapping fields to a designed PDF layout avoids rework with each customer.
+  -
+    - **effort**: L
+    - **feature**: Spreadsheet or PDF template import assistant
+    - **why**: Onboarding customers means converting dozens of existing checklists. Import with AI-assisted field detection and human review speeds adoption.

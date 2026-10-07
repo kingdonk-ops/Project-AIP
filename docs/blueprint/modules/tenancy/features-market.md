@@ -1,0 +1,37 @@
+# Tenancy, organisations & data residency — Feature scout
+
+
+- **abilities seen in market**:
+  - Hierarchical account model with parent company, business units and client-visible projects
+  - Tenant-level branding, terminology, module entitlements and retention policies
+  - Data residency selection with region-pinned storage and processing
+  - Per-tenant encryption keys with documented key rotation and revocation
+  - Cross-company collaboration where each party sees only its own commercial data
+  - Tenant lifecycle: provisioning, suspension, export and verified deletion
+  - Support access with time-boxed, customer-approved impersonation and logging
+  - Tenant-scoped rate limits and usage quotas
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Tenant provisioning wizard and script: region, template pack, terminology set, admin invite, sample data
+    - **why**: Cuts onboarding of the second and third customer from days to hours and makes each setup repeatable.
+  -
+    - **effort**: M
+    - **feature**: Offboarding workflow: full export, legal-hold check, crypto-shred, and a signed deletion certificate
+    - **why**: Mining and government clients ask for this in security reviews, and it exercises the per-tenant KMS design.
+  -
+    - **effort**: S
+    - **feature**: Customer-approved, time-boxed support access with banner and audit entries
+    - **why**: Lets the owner support Kaefer without standing access, which security reviewers expect.
+  -
+    - **effort**: L
+    - **feature**: Shared asset record with party-scoped field visibility (Rio Tinto sees status and evidence, not Kaefer rates)
+    - **why**: Implements the client-organisation model for remediation work where the asset owner and contractor share one record.
+  -
+    - **effort**: M
+    - **feature**: Activate project-scoped roles (user_roles.project_id) and replace application-level org joins with RLS
+    - **why**: Project scoping exists but is unused, and moving isolation to the database makes it structural.
+  -
+    - **effort**: S
+    - **feature**: Per-tenant quotas and noisy-neighbour limits on jobs, storage and API calls
+    - **why**: Protects a pooled stack of 500-5,000 users from one tenant's bulk import or report run.

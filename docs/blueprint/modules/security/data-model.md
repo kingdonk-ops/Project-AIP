@@ -1,0 +1,454 @@
+# Security & compliance programme — Data model & schema
+
+
+- **notes**: Security records are operator-level but still carry tenant_id (the operator tenant, or the customer tenant in a siloed stack). Append-only tables (evidence_items, restore_test_records, provenance_entries) have REVOKE UPDATE/DELETE for the app role. Hash chaining and S3 Object Lock anchoring belong to audit and signing, awaiting the owner's decision. Production-strip test and CI workflows are files, not tables. Tenant IP allow-list and session policy are stored in tenant_settings.
+- **reuses existing**:
+  - users
+  - roles
+  - user_roles
+  - documents
+  - audit_log
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: platform operator tenant; or per tenant for siloed
+        - **type**: uuid
+      -
+        - **name**: control_key
+        - **type**: text
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: framework_mappings
+        - **notes**: soc2, iso27001, ism, app references
+        - **type**: jsonb
+      -
+        - **name**: owner_user_id
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: specified, implemented, proven
+        - **type**: text
+      -
+        - **name**: evidence_source
+        - **notes**: test, CI job, screenshot
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, control_key)
+      - btree (tenant_id, status)
+    - **name**: control_records
+    - **purpose**: Control catalogue mapped to SOC 2, ISO 27001, IRAP (ISM) and APP, with status.
+    - **relations**:
+      - evidence_items.control_id
+      - users.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: control_id
+        - **notes**: FK control_records
+        - **type**: uuid
+      -
+        - **name**: evidence_type
+        - **notes**: ci_artefact, screenshot, report, sign_off
+        - **type**: text
+      -
+        - **name**: document_id
+        - **notes**: nullable FK documents
+        - **type**: uuid
+      -
+        - **name**: storage_key
+        - **type**: text
+      -
+        - **name**: content_hash
+        - **type**: text
+      -
+        - **name**: collected_at
+        - **type**: timestamptz
+      -
+        - **name**: period_start
+        - **type**: date
+      -
+        - **name**: period_end
+        - **type**: date
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, control_id, collected_at desc)
+    - **name**: evidence_items
+    - **purpose**: Evidence artefacts collected against controls.
+    - **relations**:
+      - control_records.id
+      - documents.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: quarter
+        - **notes**: e.g. 2025-Q3
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: open, in_review, signed_off
+        - **type**: text
+      -
+        - **name**: snapshot
+        - **notes**: users, roles, teams at generation
+        - **type**: jsonb
+      -
+        - **name**: decisions
+        - **notes**: keep, revoke, change per user
+        - **type**: jsonb
+      -
+        - **name**: signed_off_by
+        - **type**: uuid
+      -
+        - **name**: signed_off_at
+        - **notes**: after sign-off row is locked (trigger)
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, quarter)
+    - **name**: access_reviews
+    - **purpose**: Quarterly access review with sign-off.
+    - **relations**:
+      - users.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: environment
+        - **type**: text
+      -
+        - **name**: backup_taken_at
+        - **type**: timestamptz
+      -
+        - **name**: restore_started_at
+        - **type**: timestamptz
+      -
+        - **name**: restore_completed_at
+        - **type**: timestamptz
+      -
+        - **name**: rpo_achieved_seconds
+        - **type**: int
+      -
+        - **name**: rto_achieved_seconds
+        - **type**: int
+      -
+        - **name**: result
+        - **notes**: pass, fail
+        - **type**: text
+      -
+        - **name**: evidence_item_id
+        - **type**: uuid
+      -
+        - **name**: performed_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, created_at desc)
+    - **name**: restore_test_records
+    - **purpose**: Quarterly restore test evidence.
+    - **relations**:
+      - evidence_items.id
+      - users.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: data_category
+        - **type**: text
+      -
+        - **name**: classification
+        - **notes**: public, internal, sensitive, health
+        - **type**: text
+      -
+        - **name**: system_location
+        - **type**: text
+      -
+        - **name**: region
+        - **type**: text
+      -
+        - **name**: purpose
+        - **type**: text
+      -
+        - **name**: retention_rule
+        - **type**: text
+      -
+        - **name**: sub_processor
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, classification)
+    - **name**: data_map_entries
+    - **purpose**: Privacy Act/APP data map: data category, location, purpose, retention, classification.
+    - **relations**:
+      - referenced by ai_gov data-flow register
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: target_type
+        - **notes**: table.column, form_field, attachment_type
+        - **type**: text
+      -
+        - **name**: target_key
+        - **type**: text
+      -
+        - **name**: classification
+        - **type**: text
+      -
+        - **name**: mask_policy
+        - **notes**: none, redact, role_gated
+        - **type**: text
+      -
+        - **name**: ai_may_leave_region
+        - **notes**: default false for sensitive/health
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, target_type, target_key)
+    - **name**: data_classification_tags
+    - **purpose**: Classification tag per field and attachment, driving masking and AI region rules.
+    - **relations**:
+      - item_types attributes and forms fields by target_key
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: detected_at
+        - **type**: timestamptz
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: data_categories
+        - **type**: jsonb
+      -
+        - **name**: individuals_affected
+        - **type**: int
+      -
+        - **name**: serious_harm_likely
+        - **notes**: nullable until assessed
+        - **type**: boolean
+      -
+        - **name**: assessment_due_at
+        - **notes**: detected + 30 days
+        - **type**: timestamptz
+      -
+        - **name**: oaic_notified_at
+        - **type**: timestamptz
+      -
+        - **name**: individuals_notified_at
+        - **type**: timestamptz
+      -
+        - **name**: status
+        - **notes**: open, assessing, notified, closed
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, status)
+      - btree (assessment_due_at) WHERE status IN ('open','assessing')
+    - **name**: breach_incidents
+    - **purpose**: Breach register with NDB assessment and notification clock.
+    - **relations**:
+      - users.id (assessor)
+      - evidence_items
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: operator tenant
+        - **type**: uuid
+      -
+        - **name**: feature
+        - **type**: text
+      -
+        - **name**: reference_source
+        - **notes**: what was observed
+        - **type**: text
+      -
+        - **name**: own_spec_path
+        - **notes**: own spec or schema written from the brief
+        - **type**: text
+      -
+        - **name**: author
+        - **type**: text
+      -
+        - **name**: legal_review_ref
+        - **type**: text
+      -
+        - **name**: recorded_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, recorded_at desc)
+    - **name**: provenance_entries
+    - **purpose**: AGPL clean-room provenance log for OpenConstructionERP functional references.
+    - **relations**:
+      - none
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: severity
+        - **notes**: critical, high, medium, low
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: open, fixed, accepted, retested
+        - **type**: text
+      -
+        - **name**: due_date
+        - **notes**: severity SLA
+        - **type**: date
+      -
+        - **name**: exception_reason
+        - **notes**: tracked exceptions
+        - **type**: text
+      -
+        - **name**: evidence_item_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - partial btree (severity) WHERE status = 'open'
+    - **name**: pentest_findings
+    - **purpose**: Pen-test findings tracker with release block on open highs.
+    - **relations**:
+      - evidence_items.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: alert_type
+        - **notes**: bulk_export, anomalous_access, ip_blocked
+        - **type**: text
+      -
+        - **name**: user_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: detail
+        - **type**: jsonb
+      -
+        - **name**: acknowledged_by
+        - **type**: uuid
+      -
+        - **name**: acknowledged_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, created_at desc)
+      - partial btree (tenant_id) WHERE acknowledged_at IS NULL
+    - **name**: security_alerts
+    - **purpose**: Bulk-export and anomalous-access alerts surfaced to tenant admins.
+    - **relations**:
+      - users.id
+      - audit_log

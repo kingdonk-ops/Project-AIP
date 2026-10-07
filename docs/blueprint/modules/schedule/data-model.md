@@ -1,0 +1,281 @@
+# Schedule & look-ahead (basic) — Data model & schema
+
+
+- **notes**: Calendar is a read projection; no Constraint, PPC or Baseline tables (deferred until a customer asks). Permissions schedule.view/plan/export are checked per source module so hidden items never leak. Feed tokens are bearer credentials: hashed, expiring, revocable.
+- **reuses existing**:
+  - assets
+  - inspections
+  - tasks
+  - certificates
+  - disciplines
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects
+        - **type**: uuid
+      -
+        - **name**: week_start
+        - **notes**: Honours tenant week-start config
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: draft|committed|closed
+        - **type**: text
+      -
+        - **name**: notes
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: created_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **notes**: Edited offline
+        - **type**: int
+      -
+        - **name**: deleted_at
+        - **notes**: Soft delete
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id, week_start) where deleted_at is null
+    - **name**: schedule_weekly_plans
+    - **purpose**: Optional weekly work plan per project and week (basic, not full Last Planner).
+    - **relations**:
+      - projects
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: weekly_plan_id
+        - **notes**: FK schedule_weekly_plans
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: Denormalised for RLS and filters
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: FK tasks, nullable
+        - **type**: uuid
+      -
+        - **name**: scope_id
+        - **notes**: FK RSW scope, nullable
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **notes**: FK inspections, nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets, nullable; history follows asset
+        - **type**: uuid
+      -
+        - **name**: crew_id
+        - **notes**: FK resources crews, nullable
+        - **type**: uuid
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: planned_date
+        - **type**: date
+      -
+        - **name**: done
+        - **notes**: default false
+        - **type**: boolean
+      -
+        - **name**: done_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: miss_reason_code
+        - **notes**: Tenant-configured code, nullable
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, weekly_plan_id)
+      - (tenant_id, asset_id)
+      - (tenant_id, crew_id, planned_date)
+    - **name**: schedule_commitments
+    - **purpose**: Commitments within a weekly plan, linked to a task, crew, asset or scope.
+    - **relations**:
+      - schedule_weekly_plans
+      - tasks
+      - inspections
+      - assets
+      - resources crews
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: source_type
+        - **notes**: inspection|scope|certificate|task
+        - **type**: text
+      -
+        - **name**: lead_days
+        - **notes**: Default from tenant config
+        - **type**: int
+      -
+        - **name**: channel
+        - **notes**: in_app|email|push
+        - **type**: text
+      -
+        - **name**: enabled
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, user_id, project_id, source_type, channel) where deleted_at is null
+    - **name**: schedule_reminder_subscriptions
+    - **purpose**: Per-user reminder preferences by source type and lead time.
+    - **relations**:
+      - users
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: token_hash
+        - **notes**: Store hash only
+        - **type**: text
+      -
+        - **name**: scope
+        - **notes**: Projects and filters
+        - **type**: jsonb
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: last_used_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (token_hash)
+      - (tenant_id, user_id)
+    - **name**: schedule_feed_tokens
+    - **purpose**: Signed per-user iCal feed tokens (hashed, revocable).
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: source_type
+        - **notes**: inspection|scope|certificate|task|commitment
+        - **type**: text
+      -
+        - **name**: source_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: due_date
+        - **type**: date
+      -
+        - **name**: title
+        - **notes**: Label key resolved via terms
+        - **type**: text
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: assignee_ids
+        - **notes**: Optional, for filters
+        - **type**: uuid[]
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, source_type, source_id)
+      - (tenant_id, project_id, due_date)
+      - (tenant_id, asset_id)
+    - **name**: schedule_calendar_entries
+    - **purpose**: Optional materialised projection of due items refreshed by events; rebuildable, not source of truth.
+    - **relations**:
+      - inspections
+      - tasks
+      - certificates
+      - assets

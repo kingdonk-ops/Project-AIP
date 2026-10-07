@@ -1,0 +1,304 @@
+# Regional reference data packs — Data model & schema
+
+
+- **notes**: Global shipped rows have tenant_id null with RLS read-all and write-never from app role. Licensed content is tenant-owned and flagged, never shared. Consumers store reference_item_id plus pinned version, and priced records stamp fx_rate, source and date. Cost-reference depth in P4 is undecided, so reference_items.rate is nullable. Upgrade preview is computed, not stored.
+- **reuses existing**:
+  - projects
+  - entity_types (checklist items resolved via templates)
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: null for shipped global packs; RLS allows read of global, write only own
+        - **type**: uuid
+      -
+        - **name**: code
+        - **notes**: e.g. au_wa
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: kind
+        - **notes**: standards, currency, jurisdiction, vocabulary, cost_reference
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: text
+      -
+        - **name**: source
+        - **type**: text
+      -
+        - **name**: is_licensed
+        - **notes**: customer-loaded licensed content, never shared
+        - **type**: boolean
+      -
+        - **name**: licence_note
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, code, version)
+      - (kind)
+    - **name**: reference_libraries
+    - **purpose**: Pack header, global (shipped) or tenant-owned.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: mirrors library
+        - **type**: uuid
+      -
+        - **name**: library_id
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: unit
+        - **type**: text
+      -
+        - **name**: rate
+        - **notes**: nullable
+        - **type**: numeric
+      -
+        - **name**: region
+        - **type**: text
+      -
+        - **name**: attrs
+        - **type**: jsonb
+      -
+        - **name**: superseded_by
+        - **notes**: nullable
+        - **type**: uuid
+    - **indexes**:
+      - unique(library_id, code)
+      - (tenant_id, library_id)
+      - trigram GIN on description
+    - **name**: reference_items
+    - **purpose**: Items within a library version.
+    - **relations**:
+      - reference_libraries
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: null for global seed
+        - **type**: uuid
+      -
+        - **name**: code
+        - **notes**: ISO 4217
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: minor_units
+        - **type**: int
+    - **indexes**:
+      - unique(tenant_id, code)
+    - **name**: currencies
+    - **purpose**: Currency list for tenant use.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: from_currency
+        - **type**: text
+      -
+        - **name**: to_currency
+        - **type**: text
+      -
+        - **name**: rate
+        - **type**: numeric
+      -
+        - **name**: rate_date
+        - **type**: date
+      -
+        - **name**: source
+        - **notes**: RBA, manual, etc.
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: rows are immutable; corrections are new rows
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, from_currency, to_currency, rate_date, source)
+    - **name**: exchange_rates
+    - **purpose**: Dated rates with source.
+    - **relations**:
+      - currencies
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: reference_item_id
+        - **notes**: clause
+        - **type**: uuid
+      -
+        - **name**: target_type
+        - **notes**: template_item, acceptance_criterion, requirement
+        - **type**: text
+      -
+        - **name**: target_id
+        - **notes**: polymorphic ref into forms/inspections templates
+        - **type**: uuid
+      -
+        - **name**: clause_text_override
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, target_type, target_id)
+      - (reference_item_id)
+    - **name**: standards_maps
+    - **purpose**: Link standard clauses to checklist items and acceptance criteria.
+    - **relations**:
+      - reference_items
+      - forms/inspection template items
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: library_code
+        - **type**: text
+      -
+        - **name**: enabled_version_id
+        - **notes**: FK reference_libraries
+        - **type**: uuid
+      -
+        - **name**: enabled_by
+        - **type**: uuid
+      -
+        - **name**: enabled_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, library_code)
+    - **name**: tenant_pack_enablements
+    - **purpose**: Packs enabled per tenant.
+    - **relations**:
+      - reference_libraries
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: library_code
+        - **type**: text
+      -
+        - **name**: pinned_version_id
+        - **type**: uuid
+      -
+        - **name**: pinned_at
+        - **type**: timestamptz
+      -
+        - **name**: pinned_by
+        - **type**: uuid
+    - **indexes**:
+      - unique(project_id, library_code)
+    - **name**: project_pack_pins
+    - **purpose**: Version pinned per project.
+    - **relations**:
+      - projects
+      - reference_libraries
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: null for shipped
+        - **type**: uuid
+      -
+        - **name**: code
+        - **notes**: e.g. AU-WA
+        - **type**: text
+      -
+        - **name**: tax_rates
+        - **type**: jsonb
+      -
+        - **name**: public_holidays
+        - **type**: jsonb
+      -
+        - **name**: date_format
+        - **type**: text
+      -
+        - **name**: number_format
+        - **type**: text
+      -
+        - **name**: default_currency
+        - **type**: text
+      -
+        - **name**: terminology_pack_key
+        - **notes**: ref to terms dictionary pack
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, code)
+    - **name**: jurisdiction_settings
+    - **purpose**: Tax, holidays, formats, terminology bundle.
+    - **relations**:
+      - terms dictionary

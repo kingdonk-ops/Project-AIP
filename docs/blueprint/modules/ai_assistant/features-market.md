@@ -1,0 +1,37 @@
+# AI assistant & agents — Feature scout
+
+
+- **abilities seen in market**:
+  - Natural-language questions over project data with cited records
+  - Summaries of long threads, reports and meeting transcripts
+  - Drafting of RFIs, NCRs and inspection comments for human edit
+  - Photo and document classification with suggested tags
+  - Agents running read-only multi-step analysis
+  - Per-tenant enablement, model choice and usage reporting
+  - Prompt and tool-call logging for review
+  - Extraction of data from scanned certificates and datasheets
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Certificate and MTR extraction with human verification
+    - **why**: Reading heat numbers, grades and expiry dates from scanned certificates saves data entry and feeds traceability and eligibility checks.
+  -
+    - **effort**: M
+    - **feature**: NCR and corrective action drafting from inspection findings and photos
+    - **why**: Turns a failed inspection into a draft NCR with asset, clause and evidence, which the inspector approves.
+  -
+    - **effort**: S
+    - **feature**: Answer cards showing filters, record counts and time range used
+    - **why**: Prevents misleading numbers and lets users confirm the question was interpreted correctly.
+  -
+    - **effort**: M
+    - **feature**: Prompt-injection screening for retrieved document and email content
+    - **why**: Imported correspondence and PDFs are untrusted. Treating them as data stops them steering tool use or exposing information.
+  -
+    - **effort**: M
+    - **feature**: Evaluation set of domain questions run on every model or prompt change
+    - **why**: Regression-tests accuracy on ITP, hold point and asset queries so upgrades don't silently degrade answers.
+  -
+    - **effort**: S
+    - **feature**: Per-tenant AI usage and data-flow dashboard
+    - **why**: Customers such as miners need to show what data went to which model and region, supporting governance reviews.

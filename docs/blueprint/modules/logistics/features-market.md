@@ -1,0 +1,37 @@
+# Site logistics & mobilisation — Feature scout
+
+
+- **abilities seen in market**:
+  - Delivery booking with gate, time slot and capacity limits, plus supplier self-service request links
+  - Laydown zone management with capacity and zone allocation on a site plan
+  - Mobilisation readiness checklists with owners, due dates and evidence, rolled up to a go/no-go status
+  - Delivery status tracking from requested through arrived to received or rejected, with docket capture
+  - Driver and vehicle details, including induction status checks at the gate
+  - Automatic notifications to gate staff, site team and suppliers on booking changes
+  - Congestion views showing slot utilisation by gate and day
+  - Hazardous goods and oversize load flags with special handling requirements
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Permit-to-enter and induction check at booking and gate arrival
+    - **why**: Remediation sites on client-controlled land require current inductions and permits. Tying drivers and visitors to the eligibility gate makes this a differentiator and reduces gate disputes.
+  -
+    - **effort**: M
+    - **feature**: Material certificate check on arrival
+    - **why**: Coatings, insulation and consumables should only be received if the mill cert, batch number and expiry are captured. This feeds traceability from the first moment the goods are on site.
+  -
+    - **effort**: S
+    - **feature**: Laydown zones linked to asset hierarchy nodes
+    - **why**: Shutdown and remediation work is organised by asset area. Allocating laydown to an area shows what material is staged near which work.
+  -
+    - **effort**: M
+    - **feature**: Readiness items as gate-linked requirements with a hard block on start
+    - **why**: Reuses the existing completion-gate pattern. Mobilisation status then shows exactly which unmet permit, induction or utility item blocks the start date.
+  -
+    - **effort**: M
+    - **feature**: Supplier booking via magic link with no commercial data exposed
+    - **why**: Suppliers and carriers need to book slots without PO prices. Scoped single-use links also match the security advisor's guidance on bearer credentials.
+  -
+    - **effort**: S
+    - **feature**: Receipt-to-stock handoff with rejected or quarantined goods status
+    - **why**: Damaged or uncertified goods need a defined path into inventory as unavailable, which preserves the use-by suppression logic already built.

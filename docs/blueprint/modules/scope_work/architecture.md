@@ -1,0 +1,108 @@
+# Scopes of work (RSW), disciplines & tasks — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/scope_work/models.py
+    - **purpose**: Rsw, Discipline, ScopeTask (component_asset_id, requirement flags), DelayRecord, commercial fields
+  -
+    - **path**: backend/app/modules/scope_work/schemas.py
+    - **purpose**: Pydantic models for RSW, tasks and progress
+  -
+    - **path**: backend/app/modules/scope_work/router.py
+    - **purpose**: RSW, discipline, task, hours and cross-RSW report endpoints
+  -
+    - **path**: backend/app/modules/scope_work/service.py
+    - **purpose**: RSW lifecycle, task ordering, task requirement spawning
+  -
+    - **path**: backend/app/modules/scope_work/gate.py
+    - **purpose**: Completion gate evaluating requirement acceptance (inspection, ITP, RFI, consumables); blocks completion
+  -
+    - **path**: backend/app/modules/scope_work/progress.py
+    - **purpose**: Percent of requirements accepted roll-up
+  -
+    - **path**: backend/app/modules/scope_work/hours.py
+    - **purpose**: Planned versus earned, actual and delay hours with reasons
+  -
+    - **path**: backend/app/modules/scope_work/reporting.py
+    - **purpose**: Cross-RSW queries such as tasks still needing an ITP
+  -
+    - **path**: backend/app/modules/scope_work/events.py
+    - **purpose**: Event payloads and handlers
+  -
+    - **path**: backend/app/modules/scope_work/seeds/vocab.json
+    - **purpose**: Default delay reasons, access methods, techniques, priorities
+  -
+    - **path**: backend/migrations/versions/xxxx_scope_work.py
+    - **purpose**: Schema and RLS
+  -
+    - **path**: backend/tests/modules/scope_work/
+    - **purpose**: Gate, hold-point uniqueness and roll-up tests
+- **change isolation**: New disciplines, delay reasons or vocabularies are configuration. Gate logic lives only in gate.py and reads other modules' states through events and service interfaces, so inspection changes do not touch scope code.
+- **config not code**:
+  - delay reasons
+  - access methods and inspection techniques
+  - priority levels and computed deadlines
+  - discipline definitions and default task chains
+  - task requirement defaults per discipline
+  - RSW numbering
+  - terminology labels
+  - gate requirement set
+- **events consumed**:
+  - inspection.approved or rejected
+  - hold_point.state_changed
+  - rfi.closed
+  - stock.issued
+  - project.scope_changed
+  - asset.merged
+  - terminology.changed
+- **events emitted**:
+  - rsw.created
+  - rsw.status_changed
+  - rsw.completed
+  - rsw.completion_blocked
+  - scope_task.created
+  - scope_task.completed
+  - scope_task.requirement_spawned
+  - rsw.hours_updated
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/scope_work/pages/ScopePortal.tsx
+    - **purpose**: Unified WBS grid with slide-over blade
+  -
+    - **path**: frontend/src/modules/scope_work/pages/RswDetail.tsx
+    - **purpose**: RSW fields, disciplines and ordered tasks
+  -
+    - **path**: frontend/src/modules/scope_work/TaskChain.tsx
+    - **purpose**: Ordered task editor with requirement toggles
+  -
+    - **path**: frontend/src/modules/scope_work/HoursPanel.tsx
+    - **purpose**: PV/EV and delay steppers
+  -
+    - **path**: frontend/src/modules/scope_work/KpiStrip.tsx
+    - **purpose**: Active scopes, earned hours, QA/QC backlog, pending client review
+  -
+    - **path**: frontend/src/modules/scope_work/pages/CrossRswReport.tsx
+    - **purpose**: Cross-RSW task report
+  -
+    - **path**: frontend/src/modules/scope_work/api.ts
+    - **purpose**: Generated client wrappers
+- **public api**:
+  - GET/POST/PATCH /rsws and GET /rsws/{id}
+  - POST /rsws/{id}/complete (gate enforced)
+  - GET /rsws/{id}/progress
+  - GET/POST/PATCH /rsws/{id}/disciplines and /tasks
+  - POST /tasks/{id}/hours
+  - GET /reports/tasks?missing=itp
+  - Python service: rsw_gate_status(rsw_id)
+- **reuses shared**:
+  - state-machine engine for RSW and task states
+  - inspections module for spawning ITPs and inspections (via interface)
+  - rfi_submittals
+  - inventory consumable issuance
+  - rules engine for gate requirements
+  - central policy service
+  - numbering service
+  - reporting widget registry
+  - cost_items code mapping
+  - audit trail

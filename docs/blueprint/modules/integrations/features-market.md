@@ -1,0 +1,37 @@
+# Integrations & webhooks — Feature scout
+
+
+- **abilities seen in market**:
+  - Versioned public REST API with OAuth client credentials, scopes and rate limits
+  - Webhooks with HMAC signing, retries, replay and delivery logs
+  - Prebuilt connectors for ERP and EAM work orders and asset sync
+  - Teams and Slack notifications with admin approval
+  - iCal and calendar feeds
+  - Field mapping and transformation tools for connectors
+  - Bulk and incremental sync with conflict handling
+  - Integration health monitoring and alerts
+- **suggestions**:
+  -
+    - **effort**: L
+    - **feature**: Asset and work order sync with field mapping and conflict rules for SAP PM and Maximo
+    - **why**: Client asset registers are the master for tag numbers. Mapping and conflict handling prevent duplicates and drift.
+  -
+    - **effort**: L
+    - **feature**: Push inspection results and findings back to client EAM as notifications or measurement documents
+    - **why**: Closes the loop so clients see CUI findings against their own equipment records without manual re-entry.
+  -
+    - **effort**: S
+    - **feature**: Scoped API keys per project and module with usage logs
+    - **why**: Limits blast radius for subcontractor or client integrations and supports access reviews.
+  -
+    - **effort**: S
+    - **feature**: Webhook payload redaction profiles by audience
+    - **why**: Chat and external endpoints receive summaries without commercial or sensitive fields.
+  -
+    - **effort**: S
+    - **feature**: Integration health page with failed delivery queue and replay
+    - **why**: Shows admins what failed and lets them recover without developer involvement.
+  -
+    - **effort**: M
+    - **feature**: Outbound destination approval workflow and allowlist with SSRF checks
+    - **why**: Stops project data going to unapproved workspaces and meets customer security reviews.

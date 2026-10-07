@@ -1,0 +1,425 @@
+# Workflow & approvals engine — Data model & schema
+
+
+- **notes**: Stamp templates live in markup (stamp_templates); approvals references them by id. Decision history and definition audit are append-only with REVOKE UPDATE/DELETE. Authority-matrix visibility for commercial instances is enforced via visibility_scope in policy. The owner has not defined critical transitions beyond hold point release and final sign-off; the transitions.critical flag keeps this configurable.
+- **reuses existing**:
+  - inspections (existing review lifecycle mapped to presets, status column retained as a mirror)
+  - issues
+  - documents
+  - certificates (qualification guard via eligibility API)
+  - tasks
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **notes**: inspection|issue|document|po|variation|invoice|submittal
+        - **type**: text
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: key
+        - **notes**: Stable id across versions
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: status
+        - **notes**: draft|active|retired
+        - **type**: text
+      -
+        - **name**: states
+        - **notes**: Labels via terms keys
+        - **type**: jsonb
+      -
+        - **name**: transitions
+        - **notes**: from,to,action,required_role,guard,side_effects,critical
+        - **type**: jsonb
+      -
+        - **name**: is_preset
+        - **type**: boolean
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, key, version)
+      - (tenant_id, record_type, project_id, status)
+    - **name**: workflow_definitions
+    - **purpose**: Versioned data-driven state machines per record type and optional project.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: definition_id
+        - **notes**: Pinned version
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **notes**: Polymorphic host record
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: current_state
+        - **type**: text
+      -
+        - **name**: route_template_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: current_step_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: record_value
+        - **notes**: For threshold bands, nullable
+        - **type**: numeric
+      -
+        - **name**: currency
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: visibility_scope
+        - **notes**: Parties allowed for commercial items
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, record_type, record_id) where deleted_at is null
+      - (tenant_id, current_state)
+      - (tenant_id, current_step_id)
+    - **name**: workflow_instances
+    - **purpose**: Running state per host record, pinned to a definition version.
+    - **relations**:
+      - workflow_definitions
+      - assets
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: conditions
+        - **type**: jsonb
+      -
+        - **name**: threshold_bands
+        - **type**: jsonb
+      -
+        - **name**: escalation_hours
+        - **notes**: nullable
+        - **type**: int
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, record_type)
+    - **name**: approval_route_templates
+    - **purpose**: Route templates with conditions and threshold bands.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: route_template_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: instance_id
+        - **notes**: nullable; materialised step
+        - **type**: uuid
+      -
+        - **name**: step_order
+        - **type**: int
+      -
+        - **name**: mode
+        - **notes**: serial|parallel
+        - **type**: text
+      -
+        - **name**: approver_type
+        - **notes**: user|role|team
+        - **type**: text
+      -
+        - **name**: approver_ref
+        - **type**: uuid
+      -
+        - **name**: required_discipline_id
+        - **notes**: Qualification guard, nullable
+        - **type**: uuid
+      -
+        - **name**: due_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: status
+        - **notes**: pending|approved|rejected|skipped|escalated
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, instance_id, step_order)
+      - (tenant_id, approver_type, approver_ref, status)
+      - (tenant_id, due_at) where status = 'pending'
+    - **name**: approval_steps
+    - **purpose**: Ordered steps for a route template or instance.
+    - **relations**:
+      - approval_route_templates
+      - workflow_instances
+      - disciplines
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: instance_id
+        - **type**: uuid
+      -
+        - **name**: step_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: seq
+        - **notes**: Per-instance sequence
+        - **type**: int
+      -
+        - **name**: from_state
+        - **type**: text
+      -
+        - **name**: to_state
+        - **type**: text
+      -
+        - **name**: action
+        - **type**: text
+      -
+        - **name**: actor_id
+        - **type**: uuid
+      -
+        - **name**: on_behalf_of
+        - **notes**: Delegation, nullable
+        - **type**: uuid
+      -
+        - **name**: comment
+        - **type**: text
+      -
+        - **name**: auth_strength
+        - **notes**: password|mfa|pin|stepup
+        - **type**: text
+      -
+        - **name**: ip_address
+        - **type**: text
+      -
+        - **name**: guard_result
+        - **notes**: Rules outcome snapshot
+        - **type**: jsonb
+      -
+        - **name**: supersedes_id
+        - **notes**: Correction entry, nullable
+        - **type**: uuid
+      -
+        - **name**: prev_hash
+        - **type**: text
+      -
+        - **name**: entry_hash
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (instance_id, seq)
+      - (tenant_id, actor_id, created_at)
+    - **name**: workflow_decision_history
+    - **purpose**: Append-only, hash-chained transition and decision log.
+    - **relations**:
+      - workflow_instances
+      - delegations
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: role_id
+        - **notes**: FK roles
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: limit_amount
+        - **type**: numeric
+      -
+        - **name**: currency
+        - **type**: text
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, record_type, role_id)
+    - **name**: authority_matrix
+    - **purpose**: Role, entity and financial limit per currency.
+    - **relations**:
+      - roles
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: from_user_id
+        - **type**: uuid
+      -
+        - **name**: to_user_id
+        - **type**: uuid
+      -
+        - **name**: starts_on
+        - **type**: date
+      -
+        - **name**: ends_on
+        - **type**: date
+      -
+        - **name**: scope
+        - **notes**: Record types, projects
+        - **type**: jsonb
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **notes**: nullable
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, to_user_id, starts_on, ends_on)
+      - (tenant_id, from_user_id)
+    - **name**: delegations
+    - **purpose**: Dated delegation of approval authority.
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: definition_id
+        - **type**: uuid
+      -
+        - **name**: actor_id
+        - **type**: uuid
+      -
+        - **name**: change
+        - **notes**: Before/after diff
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, definition_id, created_at)
+    - **name**: workflow_definition_audit
+    - **purpose**: Append-only log of edits to definitions, guards and routes.
+    - **relations**:
+      - workflow_definitions

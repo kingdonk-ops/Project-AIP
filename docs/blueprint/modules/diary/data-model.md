@@ -1,0 +1,361 @@
+# Site diary & field reports — Data model & schema
+
+
+- **notes**: Single diary model with two access modes. PIN and magic-link contributors authenticate through identity module principals plus per-project module grants (owned by identity/access; diary only stores principal ids). REVOKE UPDATE/DELETE on diary_entries, diary_entry_links, diary_seals for the app role; diary_days update only through the service for status/seal pointer, with a trigger blocking changes to date and project. Trigger rejects non-addendum inserts when the day is sealed. Weather stored as an entry with source and fetch time. Offline: entries use client UUIDs for idempotent push.
+- **reuses existing**:
+  - assets
+  - documents
+  - inspections
+  - issues
+  - tasks
+  - users
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS, FORCE
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects
+        - **type**: uuid
+      -
+        - **name**: diary_date
+        - **notes**: unique per project
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: open|sealing|sealed (config labels)
+        - **type**: text
+      -
+        - **name**: timezone
+        - **notes**: IANA site timezone; defines day boundary
+        - **type**: text
+      -
+        - **name**: opened_by
+        - **notes**: FK users, null if principal is PIN/magic link
+        - **type**: uuid
+      -
+        - **name**: opened_by_principal_id
+        - **notes**: field access principal if applicable
+        - **type**: uuid
+      -
+        - **name**: current_seal_id
+        - **notes**: FK diary_seals, latest seal
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **notes**: offline
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete only while open and empty
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id, diary_date) where deleted_at is null
+      - (tenant_id, status)
+    - **name**: diary_days
+    - **purpose**: One diary per project per date; header and seal state. Only status and seal pointers change, via the service.
+    - **relations**:
+      - projects
+      - diary_entries
+      - diary_seals
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK; client-generated for offline idempotency
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: denormalised for RLS and grants
+        - **type**: uuid
+      -
+        - **name**: diary_day_id
+        - **notes**: FK diary_days
+        - **type**: uuid
+      -
+        - **name**: entry_type
+        - **notes**: key from seed config
+        - **type**: text
+      -
+        - **name**: section
+        - **notes**: config
+        - **type**: text
+      -
+        - **name**: payload
+        - **notes**: validated by config schema per type
+        - **type**: jsonb
+      -
+        - **name**: occurred_at
+        - **notes**: event time
+        - **type**: timestamptz
+      -
+        - **name**: supersedes_entry_id
+        - **notes**: FK self; null for originals
+        - **type**: uuid
+      -
+        - **name**: supersede_reason
+        - **notes**: required when superseding
+        - **type**: text
+      -
+        - **name**: is_addendum
+        - **notes**: true when created after seal
+        - **type**: boolean
+      -
+        - **name**: source
+        - **notes**: manual|weather_api|prefill|voice|field_link
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: optional FK assets
+        - **type**: uuid
+      -
+        - **name**: author_user_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: author_principal_id
+        - **notes**: PIN/magic-link principal
+        - **type**: uuid
+      -
+        - **name**: author_name
+        - **notes**: captured name for field contributors
+        - **type**: text
+      -
+        - **name**: content_hash
+        - **notes**: sha256 of canonical payload
+        - **type**: text
+      -
+        - **name**: client_created_at
+        - **notes**: device time, offline
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: server time
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, diary_day_id, entry_type)
+      - (supersedes_entry_id)
+      - (tenant_id, asset_id) where asset_id is not null
+      - unique (supersedes_entry_id) so each entry is superseded once
+    - **name**: diary_entries
+    - **purpose**: Typed, append-only entries (weather, labour, plant, event, instruction, delay, note). Corrections are new rows superseding old ones.
+    - **relations**:
+      - diary_days
+      - assets
+      - users
+      - self supersede chain
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: diary_day_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: diary_entry_id
+        - **notes**: nullable FK
+        - **type**: uuid
+      -
+        - **name**: target_type
+        - **notes**: rsw|inspection|issue|incident|task|delivery|variation
+        - **type**: text
+      -
+        - **name**: target_id
+        - **notes**: polymorphic id; validated in service via module APIs
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, diary_day_id)
+      - (tenant_id, target_type, target_id)
+    - **name**: diary_entry_links
+    - **purpose**: Links an entry or day to RSWs, inspections, issues/incidents and tasks of the day (append-only).
+    - **relations**:
+      - inspections
+      - issues
+      - tasks
+      - safety incidents (via public API)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: diary_day_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: diary_entry_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: FK documents/files, only after scan release
+        - **type**: uuid
+      -
+        - **name**: kind
+        - **notes**: photo|video|drone|capture
+        - **type**: text
+      -
+        - **name**: captured_at
+        - **notes**: from EXIF, kept as metadata
+        - **type**: timestamptz
+      -
+        - **name**: location
+        - **notes**: Point; optional, privacy-controlled
+        - **type**: geography
+      -
+        - **name**: file_sha256
+        - **notes**: included in seal
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, diary_entry_id)
+      - gist(location)
+    - **name**: diary_attachments
+    - **purpose**: Photos, video, drone and reality-capture files attached to entries, via released uploads.
+    - **relations**:
+      - documents
+      - diary_entries
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: diary_day_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: seal_sequence
+        - **notes**: 1 = day-end, 2+ = addenda
+        - **type**: int
+      -
+        - **name**: payload_hash
+        - **notes**: hash of canonical entries and attachment hashes
+        - **type**: text
+      -
+        - **name**: prev_seal_hash
+        - **notes**: chain link, per project
+        - **type**: text
+      -
+        - **name**: seal_hash
+        - **notes**: hash(payload_hash+prev)
+        - **type**: text
+      -
+        - **name**: entry_ids
+        - **notes**: entries covered
+        - **type**: jsonb
+      -
+        - **name**: document_id
+        - **notes**: signed PAdES PDF in documents
+        - **type**: uuid
+      -
+        - **name**: signature_record_id
+        - **notes**: FK signing module record
+        - **type**: uuid
+      -
+        - **name**: tsa_token_ref
+        - **notes**: RFC 3161 token location
+        - **type**: text
+      -
+        - **name**: object_lock_uri
+        - **notes**: S3 Object Lock copy
+        - **type**: text
+      -
+        - **name**: sealed_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: sealed_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (diary_day_id, seal_sequence)
+      - unique (tenant_id, project_id, seal_hash)
+    - **name**: diary_seals
+    - **purpose**: Append-only day-end seals: hash chain, signed PDF, trusted timestamp. Addenda produce new seals.
+    - **relations**:
+      - diary_days
+      - signing records
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: diary_day_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: summary
+        - **notes**: workforce, delays, safety, approvals snapshot
+        - **type**: jsonb
+      -
+        - **name**: published_record_id
+        - **notes**: FK report engine published record
+        - **type**: uuid
+      -
+        - **name**: distributed_to
+        - **notes**: recipient contact ids
+        - **type**: jsonb
+      -
+        - **name**: distributed_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, diary_day_id)
+    - **name**: field_daily_reports
+    - **purpose**: Structured daily client report generated from a diary day; each distribution is a published record.
+    - **relations**:
+      - diary_days
+      - report engine

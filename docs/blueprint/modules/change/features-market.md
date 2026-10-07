@@ -1,0 +1,33 @@
+# Change orders, variations & MOC (basic) — Feature scout
+
+
+- **abilities seen in market**:
+  - Change event capture feeding priced change orders
+  - Multi-tier change orders (client to head contractor to subcontractor)
+  - Time-impact and extension-of-time notes with notice deadlines
+  - Daywork sheets with labour, plant and material signed by the client rep
+  - Contractual notice clocks and time-bar warnings
+  - Management of change workflow with risk assessment and multi-discipline review
+  - Change impact view on schedule and budget
+  - Evidence pack generation for claims
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Contractual notice-clock tracker with time-bar warnings tied to each change record
+    - **why**: Missing notice windows forfeits entitlement; tasks and escalation can use the same clock.
+  -
+    - **effort**: M
+    - **feature**: Daywork sheet from field records: pull crew, hours, consumables and plant used from diary, resources and consumables ledger, then capture client signature
+    - **why**: Uses data AIP already holds to produce defensible variation evidence quickly.
+  -
+    - **effort**: S
+    - **feature**: Verbal instruction capture that creates a draft change record with confirmation letter template
+    - **why**: Remediation scopes often grow by verbal direction on site; confirming in writing protects the contractor.
+  -
+    - **effort**: S
+    - **feature**: Discovered-condition change type raised directly from an inspection finding, with photos and asset link
+    - **why**: Unexpected CUI or corrosion found under insulation is the main variation source in this work.
+  -
+    - **effort**: M
+    - **feature**: MOC checklist templates per discipline (engineering, integrity, HSE) with required reviewer roles and open-action gate before close-out
+    - **why**: Gives process-industry clients a recognisable MOC without a heavy module.

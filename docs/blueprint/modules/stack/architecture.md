@@ -1,0 +1,63 @@
+# Tech stack — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: docs/adr/0002-stack-decision.md
+    - **purpose**: ADR recording continue-AIP over TS rebuild, with consequences and revisit triggers
+  -
+    - **path**: docs/adr/0003-capability-library-choices.md
+    - **purpose**: One chosen library per capability (PDF, sealing, viewer, OCR, offline, form logic, identity)
+  -
+    - **path**: docs/adr/0004-agpl-clean-room.md
+    - **purpose**: Policy: OpenConstructionERP as feature reference only, no copied code or schema; legal review recorded
+  -
+    - **path**: services/api/pyproject.toml
+    - **purpose**: uv-managed pinned dependencies: FastAPI, SQLAlchemy 2, Pydantic v2, ruff, pytest, authlib/PyJWT, pyHanko
+  -
+    - **path**: services/api/uv.lock
+    - **purpose**: Locked dependency set for reproducible builds and SBOM
+  -
+    - **path**: services/api/app/platform/capabilities/__init__.py
+    - **purpose**: Capability interfaces (PdfRenderer, Sealer, Ocr, ObjectStore, IdentityProvider) so libraries can be swapped
+  -
+    - **path**: services/api/app/platform/capabilities/adapters/
+    - **purpose**: Concrete adapters: weasyprint/gotenberg, pyhanko_kms, textract/tesseract, s3/minio, workos
+  -
+    - **path**: tools/sbom.sh
+    - **purpose**: CycloneDX SBOM and licence check (flags AGPL/GPL) in CI
+  -
+    - **path**: docker-compose.yml
+    - **purpose**: Local stack: api, worker, sidecar, postgres/postgis, redis, minio
+- **change isolation**: Swapping a library (for example WeasyPrint to Gotenberg or MinIO to S3) changes one adapter file and an environment setting, not calling modules. Stack decisions change by adding an ADR and a lockfile update.
+- **config not code**:
+  - Selected adapter per capability via environment settings
+  - Dependency pins and lockfile
+  - Approved licence allowlist
+  - Per-environment service endpoints (Coolify vs AWS)
+  - Form-logic expression dialect (JSONLogic or CEL) as a setting
+- **events consumed**:
+  - security.sbom.policy_violation (blocks release)
+- **events emitted**:
+  - platform.release.deployed
+  - platform.dependency.vulnerability_flagged
+- **frontend files**:
+  -
+    - **path**: frontend/package.json
+    - **purpose**: Pinned React, Vite, TanStack, shadcn/Radix, Tailwind, dnd-kit, Dexie
+  -
+    - **path**: frontend/orval.config.ts
+    - **purpose**: Generates TypeScript types and client from FastAPI OpenAPI for end-to-end type safety
+  -
+    - **path**: frontend/src/api/generated/
+    - **purpose**: Generated client output (never hand-edited, CI checks it is up to date)
+- **public api**:
+  - Capability interfaces consumed by other modules (PdfRenderer.render, Sealer.seal, Ocr.extract, ObjectStore.put/get/sign_url)
+  - GET /openapi.json (contract source for generated client)
+  - GET /api/v1/platform/version (build, commit, dependency versions)
+  - ADR index and SBOM artefact per release
+- **reuses shared**:
+  - Capability adapter layer
+  - CI pipeline and SBOM tooling from security/ops
+  - Object store abstraction from the file pipeline
+  - Identity provider adapter from the identity module

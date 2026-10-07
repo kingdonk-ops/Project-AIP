@@ -1,0 +1,647 @@
+# Document library & control — Data model & schema
+
+
+- **notes**: Folder entity is omitted per asset-first stance (smart views and asset links only); add later if needed. ISO 19650 stays as columns and config on documents. Purge job must check legal_hold and retention_until. REVOKE UPDATE/DELETE on state_transitions and download_log. Enforce asset, team and external-share scope on every download. Existing AIP document tables should be migrated, preserving ids.
+- **reuses existing**:
+  - documents (extend existing documents/attachments and revision tables rather than duplicate)
+  - assets
+  - disciplines
+  - inspections
+  - issues
+  - tasks
+  - certificates
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: document_group_id
+        - **notes**: Revision chain key
+        - **type**: uuid
+      -
+        - **name**: document_type_id
+        - **notes**: FK document_types
+        - **type**: uuid
+      -
+        - **name**: discipline_id
+        - **notes**: FK disciplines, nullable
+        - **type**: uuid
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: doc_number
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: Workflow state
+        - **type**: text
+      -
+        - **name**: current_version_id
+        - **notes**: FK document_versions
+        - **type**: uuid
+      -
+        - **name**: custom_fields
+        - **type**: jsonb
+      -
+        - **name**: iso_state
+        - **notes**: WIP|Shared|Published|Archived, nullable
+        - **type**: text
+      -
+        - **name**: suitability_code
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: originator
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: legal_hold
+        - **notes**: Blocks purge
+        - **type**: boolean
+      -
+        - **name**: retention_until
+        - **notes**: nullable
+        - **type**: date
+      -
+        - **name**: search_tsv
+        - **notes**: Title, tags, OCR text
+        - **type**: tsvector
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: deleted_at
+        - **notes**: Recycle bin
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+      - (tenant_id, document_group_id)
+      - GIN (search_tsv)
+      - (tenant_id, status)
+      - (tenant_id, deleted_at)
+    - **name**: documents
+    - **purpose**: Single logical document (revision group) with asset-first links.
+    - **relations**:
+      - projects
+      - disciplines
+      - document_versions
+      - document_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: version_number
+        - **type**: int
+      -
+        - **name**: revision_label
+        - **notes**: e.g. A, B, 0, 1
+        - **type**: text
+      -
+        - **name**: storage_key
+        - **notes**: S3 per-tenant prefix, KMS
+        - **type**: text
+      -
+        - **name**: file_name
+        - **type**: text
+      -
+        - **name**: mime_type
+        - **type**: text
+      -
+        - **name**: size_bytes
+        - **type**: numeric
+      -
+        - **name**: sha256
+        - **notes**: Duplicate detection
+        - **type**: text
+      -
+        - **name**: scan_status
+        - **notes**: From upload pipeline
+        - **type**: text
+      -
+        - **name**: ocr_status
+        - **type**: text
+      -
+        - **name**: ocr_text
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: is_current
+        - **type**: boolean
+      -
+        - **name**: comment
+        - **type**: text
+      -
+        - **name**: uploaded_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (document_id, version_number)
+      - unique (document_id) where is_current
+      - (tenant_id, sha256)
+    - **name**: document_versions
+    - **purpose**: File versions; one current per document group.
+    - **relations**:
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (document_id, asset_id) where deleted_at is null
+      - (tenant_id, asset_id)
+    - **name**: document_asset_links
+    - **purpose**: Many-to-many link of documents to assets so history follows the asset.
+    - **relations**:
+      - documents
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: document_version_id
+        - **notes**: nullable; pin to a version
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **notes**: inspection|issue|rfi|task|submittal|project
+        - **type**: text
+      -
+        - **name**: record_id
+        - **notes**: Polymorphic
+        - **type**: uuid
+      -
+        - **name**: link_kind
+        - **notes**: attachment|reference|evidence
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, record_type, record_id)
+      - (tenant_id, document_id)
+    - **name**: document_record_links
+    - **purpose**: Cross-references from documents to inspections, issues, RFIs, tasks, submittals.
+    - **relations**:
+      - documents
+      - inspections
+      - issues
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: label_key
+        - **notes**: Terminology key
+        - **type**: text
+      -
+        - **name**: custom_field_schema
+        - **type**: jsonb
+      -
+        - **name**: naming_pattern
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: default_tags
+        - **type**: uuid[]
+      -
+        - **name**: retention_days
+        - **notes**: nullable
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+    - **name**: document_types
+    - **purpose**: Tenant-configurable types/categories with custom field definitions and naming pattern.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: discipline_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, lower(name)) where deleted_at is null
+    - **name**: document_tags
+    - **purpose**: Tag definitions and assignments.
+    - **relations**:
+      - disciplines
+  -
+    - **fields**:
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: tag_id
+        - **type**: uuid
+    - **indexes**:
+      - PK (document_id, tag_id)
+      - (tenant_id, tag_id)
+    - **name**: document_tag_assignments
+    - **purpose**: Join between documents and tags.
+    - **relations**:
+      - documents
+      - document_tags
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: members
+        - **notes**: Users, roles, contacts
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+    - **name**: document_distribution_lists
+    - **purpose**: Distribution lists and subscriptions for new-revision notifications.
+    - **relations**:
+      - projects
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: document_group_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: distribution_list_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id)
+      - (tenant_id, asset_id)
+    - **name**: document_subscriptions
+    - **purpose**: User/list subscriptions to a document, asset or type.
+    - **relations**:
+      - users
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: owner_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: filter
+        - **type**: jsonb
+      -
+        - **name**: is_shared
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, owner_id)
+    - **name**: document_saved_views
+    - **purpose**: Personal and shared smart views.
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: flag
+        - **notes**: favourite|pin
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - PK (user_id, document_id, flag)
+    - **name**: document_user_flags
+    - **purpose**: Favourites and pins per user.
+    - **relations**:
+      - documents
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: scope_id
+        - **notes**: FK RSW scope, nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: document_type_id
+        - **type**: uuid
+      -
+        - **name**: description
+        - **notes**: Permit, survey, geotech, procedure
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: required|received|waived
+        - **type**: text
+      -
+        - **name**: document_id
+        - **notes**: Satisfying document, nullable
+        - **type**: uuid
+      -
+        - **name**: received_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, scope_id, status)
+      - (tenant_id, project_id)
+    - **name**: required_documents
+    - **purpose**: Required source-documents register with status; feeds scope start gate.
+    - **relations**:
+      - projects
+      - documents
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: from_state
+        - **type**: text
+      -
+        - **name**: to_state
+        - **type**: text
+      -
+        - **name**: suitability_code
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: actor_id
+        - **type**: uuid
+      -
+        - **name**: attestation_id
+        - **notes**: FK signing attestations, nullable
+        - **type**: uuid
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, document_id, created_at)
+    - **name**: document_state_transitions
+    - **purpose**: Append-only CDE state transition log.
+    - **relations**:
+      - documents
+      - signing_attestations
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: document_version_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: download|print|preview
+        - **type**: text
+      -
+        - **name**: stamped
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, document_version_id)
+      - (tenant_id, user_id, created_at)
+    - **name**: document_download_log
+    - **purpose**: Append-only log of downloads/prints with controlled-copy stamp details.
+    - **relations**:
+      - document_versions
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: client_contact_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: columns
+        - **type**: jsonb
+      -
+        - **name**: format
+        - **notes**: csv|xlsx|pdf
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, name)
+    - **name**: register_export_templates
+    - **purpose**: Client-configurable register export columns and formats.
+    - **relations**:
+      - contacts

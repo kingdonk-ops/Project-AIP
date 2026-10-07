@@ -1,0 +1,143 @@
+# Commissioning — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: commissioning.view. Create and edit need commissioning.manage.
+    - **actions**:
+      - Create system
+      - Open
+      - Run checklists
+      - Log issue
+      - Request commission
+      - Apply checklist templates
+      - Assign owner
+      - Export
+    - **layout**: Split view with a system tree and readiness rings on the left and a table on the right. A toggle switches to table only.
+    - **name**: Systems register
+    - **purpose**: List commissioning systems with readiness, checklist status, open issues and blocking NCRs.
+    - **route**: /projects/:projectId/commissioning
+    - **sections**:
+      - Filters (status, readiness range, blocking items, discipline)
+      - System tree with readiness rings
+      - Systems table
+      - Bulk action bar
+  -
+    - **access**: commissioning.manage
+    - **actions**:
+      - Save
+      - Save and generate checklists
+      - Cancel
+    - **layout**: Form with an asset tree picker beside it.
+    - **name**: Create or edit system
+    - **purpose**: Group asset nodes into a system and assign checklists and a lead.
+    - **route**: /projects/:projectId/commissioning/systems/new
+    - **sections**:
+      - System no. and name
+      - Asset nodes (asset tree picker)
+      - Parent system
+      - Responsible lead
+      - Checklist templates
+  -
+    - **access**: commissioning.view. Commission action is limited to credentialled sign-off roles. The gate is enforced server-side.
+    - **actions**:
+      - Open checklist
+      - Assign checklist
+      - Log issue
+      - Request sign-off
+      - Request commission
+      - Commission system
+      - View gate failures
+    - **layout**: Header with the readiness ring and status. Tabs sit below with the gate panel pinned on the right.
+    - **name**: System detail
+    - **purpose**: Manage one system's checklists, issues, gate requirements and commission action.
+    - **route**: /projects/:projectId/commissioning/systems/:systemId
+    - **sections**:
+      - System summary and readiness ring
+      - Asset nodes and subsystems
+      - Checklists (pre-functional and functional)
+      - Issue log
+      - Gate requirements and outstanding items
+      - Linked documents and certificates
+      - Sign-offs
+      - Commission action and history
+      - Activity
+  -
+    - **access**: commissioning.view. Run needs inspection.execute.
+    - **actions**:
+      - Assign
+      - Open checklist
+      - Export
+    - **layout**: DataTable with filters.
+    - **name**: Checklists
+    - **purpose**: Track checklist execution across systems.
+    - **route**: /projects/:projectId/commissioning/checklists
+    - **sections**:
+      - Filters (system, phase, assignee, result)
+      - Table (system, checklist, phase, assignee, progress, result, completed date)
+  -
+    - **access**: commissioning.view. Close follows the issues module rules.
+    - **actions**:
+      - Log issue
+      - Open issue
+      - Assign
+      - Close
+      - Export
+    - **layout**: Table with board toggle.
+    - **name**: Commissioning issue log
+    - **purpose**: Show issues raised against systems, including blocking ones.
+    - **route**: /projects/:projectId/commissioning/issues
+    - **sections**:
+      - Filters (system, severity, blocking, status)
+      - Issues table
+      - Board view
+  -
+    - **access**: commissioning.view. Commission needs commissioning.commission.
+    - **actions**:
+      - Open blocker
+      - Request sign-off
+      - Recheck gate
+      - Commission when clear
+    - **layout**: Checklist-style page with pass and fail rows and links to the blocking items.
+    - **name**: Commission gate
+    - **purpose**: Show exactly what stops a system from being commissioned and who must act.
+    - **route**: /projects/:projectId/commissioning/gate/:systemId
+    - **sections**:
+      - Gate rule results
+      - Outstanding checks
+      - Open blocking NCRs and issues
+      - Missing sign-offs and competency problems
+      - Gate history
+  -
+    - **access**: Tenant admin or commissioning.settings.manage
+    - **actions**:
+      - Edit and save
+      - Preview readiness on a system
+    - **layout**: Settings page with sections.
+    - **name**: Commissioning settings
+    - **purpose**: Configure templates per phase, readiness weighting, gate rules and sign-off roles.
+    - **route**: /settings/commissioning
+    - **sections**:
+      - Checklist templates per phase
+      - Readiness weighting
+      - Gate rule set
+      - Required sign-off roles and competencies
+      - Issue severities
+      - System numbering
+      - Handover status mapping
+  -
+    - **access**: Assigned inspectors with the required competencies
+    - **actions**:
+      - Run checklist
+      - Capture photo
+      - Log issue
+      - Submit checklist
+    - **layout**: Mobile single-column list of checklists with a progress header and a bottom bar.
+    - **name**: Mobile checklist execution
+    - **purpose**: Run pre-functional and functional checks in the field, offline-capable.
+    - **route**: /m/commissioning/systems/:systemId
+    - **sections**:
+      - System header with readiness
+      - Checklist list
+      - Check items with result and photo
+      - Quick log issue

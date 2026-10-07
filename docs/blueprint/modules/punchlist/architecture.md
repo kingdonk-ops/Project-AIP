@@ -1,0 +1,103 @@
+# Punch list & defects liability — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/punchlist/router.py
+    - **purpose**: Punch item and defect endpoints, verification, export, DLP and retention queries
+  -
+    - **path**: backend/app/modules/punchlist/models.py
+    - **purpose**: punch_items, verifications, dlp_periods, retention_links; tenant_id with RLS
+  -
+    - **path**: backend/app/modules/punchlist/schemas.py
+    - **purpose**: Pydantic models
+  -
+    - **path**: backend/app/modules/punchlist/service_items.py
+    - **purpose**: Create, assign, verify-before-close (verifier not assignee), reopen
+  -
+    - **path**: backend/app/modules/punchlist/service_dlp.py
+    - **purpose**: Defects-liability periods, post-handover conversion to defect records on same asset
+  -
+    - **path**: backend/app/modules/punchlist/service_retention.py
+    - **purpose**: Retention release eligibility based on verified closure
+  -
+    - **path**: backend/app/modules/punchlist/service_export.py
+    - **purpose**: Per-area export via report engine and transmittals
+  -
+    - **path**: backend/app/modules/punchlist/workflow_def.py
+    - **purpose**: open > fixed > verified > closed with reopen
+  -
+    - **path**: backend/app/modules/punchlist/handlers_offline.py
+    - **purpose**: Walkdown capture sync handler
+  -
+    - **path**: backend/app/modules/punchlist/events.py
+    - **purpose**: Event definitions
+  -
+    - **path**: backend/app/modules/punchlist/tests/
+    - **purpose**: Verification rule, DLP and retention tests
+- **change isolation**: Terminology and categories are dictionary and configuration changes. Retention and DLP commercial rules stay in service_retention and service_dlp without touching punch item lifecycle.
+- **config not code**:
+  - Terminology per tenant (Punch vs Defect vs Deficiency)
+  - Categories, priorities and due-date defaults
+  - DLP length by contract
+  - Retention release rule and percentage
+  - Verification rule (verifier must differ from assignee)
+  - Export layouts per area
+- **events consumed**:
+  - inspection.minor_defect (create item)
+  - handover.completed (start DLP, convert items)
+  - commissioning.issue_raised
+  - issue.closed (linked NCR)
+  - upload.released
+  - markup.pin_created
+- **events emitted**:
+  - punch.created
+  - punch.assigned
+  - punch.verified
+  - punch.closed
+  - punch.reopened
+  - punch.escalated
+  - dlp.started
+  - dlp.ended
+  - retention.release_eligible
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/punchlist/pages/PunchRegister.tsx
+    - **purpose**: Grouped by asset, area or contractor; list/drawing toggle
+  -
+    - **path**: frontend/src/modules/punchlist/pages/VerificationQueue.tsx
+    - **purpose**: Verify and close queue
+  -
+    - **path**: frontend/src/modules/punchlist/pages/DlpDashboard.tsx
+    - **purpose**: DLP periods, defects, retention status
+  -
+    - **path**: frontend/src/modules/punchlist/mobile/WalkdownMode.tsx
+    - **purpose**: Fast offline capture with photo and pin
+  -
+    - **path**: frontend/src/modules/punchlist/components/PunchDetail.tsx
+    - **purpose**: Detail with verification workflow bar
+  -
+    - **path**: frontend/src/modules/punchlist/components/PinPicker.tsx
+    - **purpose**: Drawing pin via markup viewer component
+  -
+    - **path**: frontend/src/modules/punchlist/index.ts
+    - **purpose**: Public exports
+- **public api**:
+  - GET/POST /api/v1/punch-items
+  - GET/PATCH /api/v1/punch-items/{id}
+  - POST /api/v1/punch-items/{id}/transitions
+  - POST /api/v1/punch-items/{id}/escalate-to-ncr
+  - GET/POST /api/v1/dlp-periods
+  - GET /api/v1/dlp-periods/{id}/retention-status
+  - POST /api/v1/punch-items/export
+  - GET /api/v1/assets/{id}/punch-items (read model)
+- **reuses shared**:
+  - Workflow engine
+  - Markup and viewer (pins)
+  - Uploads pipeline
+  - Report engine and transmittals for export
+  - Tasks and notifications
+  - Permission service and portal scoping
+  - Offline handler registry
+  - Terms dictionary (Punch, Defect, Deficiency)
+  - Audit writer

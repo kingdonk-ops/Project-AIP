@@ -1,0 +1,37 @@
+# Roles, permissions & teams — Feature scout
+
+
+- **abilities seen in market**:
+  - Role templates with a per-project permission matrix
+  - Organisation-level visibility so contractors see only their own and shared records
+  - Field-level permissions and masking, for example hiding commercial values
+  - Team-based and discipline-based access to records
+  - Permission simulation: 'view as user' or 'what can this user see'
+  - Periodic access reviews with attestation and exportable evidence
+  - Delegation of authority with start/end dates for approvals
+  - Policy checks applied uniformly to UI, API, search, exports and AI
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Effective-access explorer showing why a user can or cannot act on a record (role, team, subtree, discipline)
+    - **why**: Faster support and audit answers, and builds trust that deny-by-default is working.
+  -
+    - **effort**: M
+    - **feature**: Discipline-and-method qualified sign-off permissions tied to competency (for example only UT-qualified staff sign UT inspections)
+    - **why**: This is the core of NDT/CUI quality; it links the access layer to the certificate gate rather than relying on role names.
+  -
+    - **effort**: M
+    - **feature**: Asset-subtree scope inheritance rules with explicit exclusions
+    - **why**: Gives crews access to a unit but not a sensitive system within it, matching how remediation packages are carved up.
+  -
+    - **effort**: S
+    - **feature**: Time-boxed delegation and acting-in-role with audit
+    - **why**: Hold-point approvers go on leave or rotate; formal delegation avoids shared credentials.
+  -
+    - **effort**: S
+    - **feature**: Permission-matrix export and automated tests generated from the catalogue
+    - **why**: Supports quarterly access reviews and stops regressions as modules are added.
+  -
+    - **effort**: M
+    - **feature**: Field masking policies per party (hide rates, internal NCR notes, personal data from client or subcontractor teams)
+    - **why**: Needed for portal sharing where some fields on a record must stay internal.

@@ -1,0 +1,37 @@
+# Tasks, deadlines & my work — Feature scout
+
+
+- **abilities seen in market**:
+  - Unified inbox aggregating approvals, assignments, mentions and due items with bulk actions
+  - Recurring tasks with templates and auto-generation rules
+  - Plan or drawing pinned tasks with mobile quick capture
+  - Delegation and out-of-office reassignment of approvals and tasks
+  - Multi-stage escalation ladders with business-calendar-aware due dates
+  - Saved filters, board, list and calendar views with workload balancing
+  - Digest emails and push notifications with quiet hours
+  - SLA clocks and ageing analytics by assignee or team
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Auto-task rules engine: raise tasks from hold-point reached, NCR opened, certificate expiring, calibration due, rejected inspection
+    - **why**: Removes manual chasing and makes My Work the single queue across AIP's existing modules.
+  -
+    - **effort**: S
+    - **feature**: Delegation and out-of-office routing for approvals and sign-offs with date range and audit record
+    - **why**: Hold points stall projects when an inspector or superintendent is off-site or on roster break (FIFO/DIDO).
+  -
+    - **effort**: M
+    - **feature**: Roster- and calendar-aware deadlines (project calendar, public holidays by region, shutdown periods)
+    - **why**: Grace periods and escalations are meaningless if they ignore FIFO rosters and WA/regional holidays.
+  -
+    - **effort**: M
+    - **feature**: Asset-subtree task board and recurring task templates (e.g. weekly CUI strip-and-inspect checks per area)
+    - **why**: Fits asset-centric model and repeat remediation campaigns; managers see load per asset branch.
+  -
+    - **effort**: M
+    - **feature**: Offline task capture and completion with sync, including photo attachment and queued actions
+    - **why**: Field crews on LNG and mining sites lose connectivity; tasks must be completable without signal.
+  -
+    - **effort**: S
+    - **feature**: Overdue and ageing analytics by source module, team and escalation level, exportable
+    - **why**: Gives managers and clients evidence of responsiveness and highlights bottleneck approvers.

@@ -1,0 +1,239 @@
+# Tech stack — Feature filler
+
+
+- **detail sections**:
+  - Decision summary
+  - Option A vs Option B comparison
+  - Capability interfaces and adapters
+  - Licence and AGPL clean-room record
+  - Runtime versions
+  - Storage and queue conformance test results
+  - Generated client status
+- **notifications**:
+  - Release deployed (engineering)
+  - Dependency vulnerability flagged (security owner)
+  - SBOM policy violation blocking release (engineering lead)
+  - Licence exception about to expire (approver)
+  - Generated client drift detected in CI (developers)
+- **settings**:
+  - Licence allow-list and deny-list
+  - Vulnerability severity SLAs
+  - SBOM format and retention
+  - Exception approver role
+  - Pinned runtime versions
+  - Adapter selection per environment
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export as PDF pack
+    - **columns**:
+      - ADR no.
+      - Title
+      - Status
+      - Decided date
+      - Decided by
+      - Supersedes
+      - Revisit trigger
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Context
+        - **required**: true
+        - **type**: textarea
+      -
+        - **field**: Decision
+        - **required**: true
+        - **type**: textarea
+      -
+        - **field**: Consequences
+        - **required**: true
+        - **type**: textarea
+      -
+        - **field**: Revisit trigger
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Status
+        - **required**: true
+        - **type**: select
+    - **empty state**: No ADRs recorded. Start with the decision to continue AIP.
+    - **filters**:
+      - Status (proposed/accepted/superseded)
+      - Decided date
+      - Topic
+    - **name**: Architecture decision records
+    - **row actions**:
+      - View
+      - Supersede
+      - Edit
+      - Link to risk
+    - **search**: Title, ADR number, text
+    - **sort**:
+      - ADR no.
+      - Decided date
+      - Status
+  -
+    - **bulk actions**:
+      - Export to SBOM notes
+    - **columns**:
+      - Capability
+      - Chosen library/service
+      - Alternatives considered
+      - Licence
+      - Adapter interface
+      - Status
+      - Owner
+    - **create form**:
+      -
+        - **field**: Capability
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Chosen library
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Alternatives
+        - **required**: false
+        - **type**: textarea
+      -
+        - **field**: Licence
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Rationale
+        - **required**: true
+        - **type**: textarea
+    - **empty state**: No capabilities recorded. Add the first choice (for example PDF rendering).
+    - **filters**:
+      - Status (decided/open)
+      - Licence type
+      - Capability area
+    - **name**: Capability choices
+    - **row actions**:
+      - View decision
+      - Change choice
+      - Open ADR
+    - **search**: Capability, library name
+    - **sort**:
+      - Capability
+      - Status
+  -
+    - **bulk actions**:
+      - Export CycloneDX
+      - Raise exception for selected
+    - **columns**:
+      - Package
+      - Version
+      - Ecosystem (Python/JS)
+      - Licence
+      - Allow-list status
+      - Vulnerabilities
+      - Shipped in image
+      - Last scanned
+    - **create form**:
+      -
+        - **field**: Package
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Exception reason
+        - **required**: true
+        - **type**: textarea
+      -
+        - **field**: Approver
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Expiry date
+        - **required**: true
+        - **type**: date
+    - **empty state**: No dependency data. Run the SBOM job to populate it.
+    - **filters**:
+      - Ecosystem
+      - Licence
+      - Allow-list status
+      - Has vulnerabilities
+    - **name**: Dependency and licence register
+    - **row actions**:
+      - View advisories
+      - Request exception
+      - Pin version
+    - **search**: Package name, licence
+    - **sort**:
+      - Package
+      - Vulnerabilities (desc)
+      - Last scanned
+  -
+    - **columns**:
+      - Release
+      - Commit
+      - Built
+      - Components
+      - Policy result
+      - Image digest
+      - Signed
+    - **empty state**: No releases built yet.
+    - **filters**:
+      - Policy result
+      - Date range
+    - **name**: Release SBOMs
+    - **row actions**:
+      - Download SBOM
+      - View violations
+      - View deployment
+    - **search**: Release version, commit
+    - **sort**:
+      - Built (desc)
+  -
+    - **columns**:
+      - Question
+      - Options
+      - Recommended
+      - Due
+      - Owner
+      - Status
+    - **create form**:
+      -
+        - **field**: Question
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Options
+        - **required**: true
+        - **type**: textarea
+      -
+        - **field**: Owner
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Due date
+        - **required**: false
+        - **type**: date
+    - **empty state**: No open questions.
+    - **filters**:
+      - Status
+      - Owner
+    - **name**: Open stack questions
+    - **row actions**:
+      - Record decision
+      - Edit
+      - Link ADR
+    - **search**: Question text
+    - **sort**:
+      - Due
+      - Status
+- **walkthrough**:
+  - Owner opens Stack and reads the continue-AIP decision.
+  - Owner creates or edits ADR 0002 and sets status to accepted.
+  - Owner records the capability choice for each open question (PDF, OCR, viewer, expression language and so on).
+  - For each choice the adapter interface and licence are recorded.
+  - CI builds the release and generates the CycloneDX SBOM.
+  - The allow-list check runs; a GPL/AGPL package blocks the release.
+  - Engineer raises a time-boxed exception with approver if needed.
+  - The generated OpenAPI client is rebuilt and the frontend build verified.
+  - Platform version endpoint shows build, commit and dependency versions.
+  - Auditor downloads the SBOM and ADR pack as evidence.

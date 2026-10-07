@@ -1,0 +1,137 @@
+# Security & compliance programme — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Security lead and compliance admin; auditors read-only
+    - **actions**:
+      - Filter by framework
+      - Export control matrix
+      - Open control
+    - **layout**: KPI cards above control and framework views
+    - **name**: Compliance dashboard
+    - **purpose**: Control status and evidence overview, showing proven vs specified.
+    - **route**: /security/compliance
+    - **sections**:
+      - Framework coverage (SOC 2, ISO 27001, ISM, APP)
+      - Evidence overdue
+      - Proven vs specified
+      - Programme timeline
+  -
+    - **access**: Security lead edit; others read-only
+    - **actions**:
+      - Create control
+      - Assign owner
+      - Add evidence
+      - Edit mapping
+      - Mark not applicable
+    - **layout**: DataTable with detail drawer
+    - **name**: Controls
+    - **purpose**: Control catalogue with framework mappings and evidence.
+    - **route**: /security/controls
+    - **sections**:
+      - Controls table
+      - Mapping editor
+      - Evidence history
+  -
+    - **access**: Security lead and control owners
+    - **actions**:
+      - Add evidence
+      - Download
+      - Mark reviewed
+    - **layout**: DataTable with filters
+    - **name**: Evidence
+    - **purpose**: Collected evidence items per control and period.
+    - **route**: /security/evidence
+    - **sections**:
+      - Evidence table (source, collected, period, status)
+      - Upload evidence form
+  -
+    - **access**: Designated reviewers; tenant admin
+    - **actions**:
+      - Start review
+      - Keep
+      - Revoke
+      - Sign off
+      - Export
+    - **layout**: Review list and per-review checklist
+    - **name**: Access reviews
+    - **purpose**: Quarterly review of users, roles and teams with sign-off.
+    - **route**: /security/access-reviews
+    - **sections**:
+      - Review cycles
+      - User, role and team rows with keep or revoke
+      - Sign-off panel
+  -
+    - **access**: Security lead and privacy officer
+    - **actions**:
+      - Log incident
+      - Assess
+      - Mark notified
+      - Close
+    - **layout**: Register plus incident detail with timeline
+    - **name**: Breach register
+    - **purpose**: Log incidents and track NDB assessment and notification clock.
+    - **route**: /security/breaches
+    - **sections**:
+      - Incident table
+      - NDB assessment form
+      - Notification clock
+      - Contacts
+  -
+    - **access**: Security lead and privacy officer
+    - **actions**:
+      - Add entry
+      - Edit tag
+      - Edit masking rule
+    - **layout**: DataTable with tag editor
+    - **name**: Data map and classification
+    - **purpose**: Privacy data map and classification tags driving masking and AI residency.
+    - **route**: /security/data-map
+    - **sections**:
+      - Data map entries
+      - Classification tags (public, internal, sensitive, health)
+      - Masking rules
+  -
+    - **access**: Security lead; release manager read-only
+    - **actions**:
+      - Add finding
+      - Change status
+      - Record restore test
+      - Attach evidence
+    - **layout**: Two tabs of tables
+    - **name**: Pen-test findings and restore tests
+    - **purpose**: Track findings (release block on open highs) and restore test records.
+    - **route**: /security/pentests
+    - **sections**:
+      - Findings tracker
+      - Restore test records
+      - Vulnerability exceptions
+  -
+    - **access**: Security lead and legal reviewer
+    - **actions**:
+      - Upload
+      - Publish
+      - Review provenance entry
+    - **layout**: Document list with detail
+    - **name**: Trust pack and provenance
+    - **purpose**: Publish whitepaper, sub-processors, data-flow diagram and AGPL provenance log.
+    - **route**: /security/trust-pack
+    - **sections**:
+      - Trust documents
+      - Sub-processor list
+      - Provenance entries pending review
+  -
+    - **access**: Tenant admin
+    - **actions**:
+      - Save
+      - Add IP range
+      - Acknowledge alert
+    - **layout**: Settings form with alerts tab
+    - **name**: Tenant security settings
+    - **purpose**: Tenant IP allow-list, session and MFA policy, alert views.
+    - **route**: /settings/security
+    - **sections**:
+      - IP allow-list
+      - Session timeout and MFA policy
+      - Bulk-export and anomalous-access alerts

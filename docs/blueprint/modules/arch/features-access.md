@@ -1,0 +1,343 @@
+# Architecture & module boundaries — Feature filler
+
+
+- **detail sections**:
+  - Module overview and bounded context
+  - Published interface and events
+  - Permissions and settings from manifest
+  - Terminology keys
+  - Dependencies and import-lint status
+  - Event subscribers and health
+  - Recent changes and ADR references
+- **notifications**:
+  - Event dead-lettered above threshold (admin)
+  - Replay job completed or failed (requester)
+  - Workflow version published (workflow owners)
+  - Configuration bundle import completed with change summary (admin)
+  - Feature flag changed for a tenant (tenant admin)
+  - Import-boundary or manifest CI failure (developers, via CI)
+- **settings**:
+  - Outbox dispatcher poll interval and batch size
+  - Retry count and backoff schedule
+  - Dead-letter alert threshold
+  - Event retention period
+  - Feature flags per tenant
+  - Bundle import approval required
+  - Rollup cache TTL and invalidation mode
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export catalogue CSV
+      - Mark deprecated
+    - **columns**:
+      - Event name
+      - Version
+      - Owning module
+      - Payload schema
+      - Subscribers
+      - Published 24h
+      - Failed 24h
+      - Status
+    - **create form**:
+      -
+        - **field**: Event name (module.entity.action)
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Version
+        - **required**: true
+        - **type**: integer
+      -
+        - **field**: Owning module
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Payload schema (Pydantic ref)
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Description
+        - **required**: false
+        - **type**: textarea
+    - **empty state**: No events registered. Events appear here once modules declare them in their manifests.
+    - **filters**:
+      - Module
+      - Status (active/deprecated)
+      - Has failures
+      - Version
+    - **name**: Domain event catalogue
+    - **row actions**:
+      - View schema
+      - View recent events
+      - Replay range
+      - Deprecate
+    - **search**: Event name, module, subscriber name
+    - **sort**:
+      - Event name
+      - Module
+      - Failed 24h (desc)
+      - Last published
+  -
+    - **bulk actions**:
+      - Retry selected
+      - Discard selected with reason
+      - Export
+    - **columns**:
+      - Event ID
+      - Event name
+      - Subscriber
+      - Attempts
+      - Last error
+      - First failed
+      - Tenant
+      - Status
+    - **empty state**: The dead-letter queue is empty. All subscribers are processing events normally.
+    - **filters**:
+      - Subscriber
+      - Event name
+      - Status (dead/retrying/resolved)
+      - Date range
+    - **name**: Dead-letter queue
+    - **row actions**:
+      - View payload
+      - Retry
+      - Discard
+      - Open correlation trace
+    - **search**: Event ID, subscriber, error text
+    - **sort**:
+      - First failed
+      - Attempts
+      - Subscriber
+  -
+    - **bulk actions**:
+      - Cancel selected
+    - **columns**:
+      - Job ID
+      - Subscriber/projection
+      - Event range
+      - Requested by
+      - Status
+      - Events replayed
+      - Started
+      - Finished
+    - **create form**:
+      -
+        - **field**: Projection (timeline, search, deadlines, claims evidence, rollups)
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: From date/event
+        - **required**: true
+        - **type**: datetime
+      -
+        - **field**: To date/event
+        - **required**: false
+        - **type**: datetime
+      -
+        - **field**: Tenant scope
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Dry run
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No replays have been run.
+    - **filters**:
+      - Projection
+      - Status
+      - Requester
+    - **name**: Replay jobs
+    - **row actions**:
+      - View progress
+      - Cancel
+      - Re-run
+    - **search**: Job ID, projection name, requester
+    - **sort**:
+      - Started
+      - Status
+  -
+    - **bulk actions**:
+      - Export to bundle
+      - Retire selected
+    - **columns**:
+      - Name
+      - Record type
+      - Version
+      - States
+      - In-flight records
+      - Status
+      - Updated
+      - Updated by
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Record type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: States and transitions
+        - **required**: true
+        - **type**: workflow designer
+      -
+        - **field**: Guard rules
+        - **required**: false
+        - **type**: rule picker
+      -
+        - **field**: Approver roles
+        - **required**: false
+        - **type**: role multi-select
+    - **empty state**: No workflow definitions yet. Seed the default review lifecycle or create one.
+    - **filters**:
+      - Record type
+      - Status (draft/published/retired)
+    - **name**: Workflow definitions
+    - **row actions**:
+      - Edit as new version
+      - Publish
+      - Compare versions
+      - View in-flight records
+      - Retire
+    - **search**: Name, record type
+    - **sort**:
+      - Name
+      - Updated
+      - In-flight records
+  -
+    - **bulk actions**:
+      - Delete selected
+    - **columns**:
+      - Bundle name
+      - Version
+      - Source tenant/environment
+      - Contents (templates, types, workflows, terms, rules)
+      - Created by
+      - Created
+      - Last imported
+    - **create form**:
+      -
+        - **field**: Bundle name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Version label
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Include: templates, item types, workflows, terms, rules
+        - **required**: true
+        - **type**: checkbox group
+      -
+        - **field**: Release notes
+        - **required**: false
+        - **type**: textarea
+    - **empty state**: No bundles exported. Export your current setup to clone it into a new market or promote sandbox to production.
+    - **filters**:
+      - Source environment
+      - Content type included
+      - Created date
+    - **name**: Configuration bundles
+    - **row actions**:
+      - Download
+      - Diff against current tenant
+      - Import (dry run)
+      - Import
+      - Delete
+    - **search**: Bundle name, creator
+    - **sort**:
+      - Created
+      - Name
+      - Version
+  -
+    - **bulk actions**:
+      - Enable for selected tenants
+      - Disable for selected tenants
+    - **columns**:
+      - Flag
+      - Module
+      - Description
+      - Default
+      - Tenants enabled
+      - Updated
+    - **create form**:
+      -
+        - **field**: Flag key
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Module
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Default state
+        - **required**: true
+        - **type**: boolean
+      -
+        - **field**: Description
+        - **required**: false
+        - **type**: textarea
+    - **empty state**: No feature flags defined. Deferred modules such as BIM and AI register flags here.
+    - **filters**:
+      - Module
+      - Enabled for tenant
+    - **name**: Feature flags
+    - **row actions**:
+      - Toggle for tenant
+      - View audit
+    - **search**: Flag key, module
+    - **sort**:
+      - Flag
+      - Module
+  -
+    - **bulk actions**:
+      - Delete selected links
+    - **columns**:
+      - Source type
+      - Source ID
+      - Target type
+      - Target ID
+      - Asset
+      - Link type
+      - Created by
+      - Created
+    - **create form**:
+      -
+        - **field**: Source record
+        - **required**: true
+        - **type**: record picker
+      -
+        - **field**: Target record
+        - **required**: true
+        - **type**: record picker
+      -
+        - **field**: Link type (caused by, repaired by, re-inspected by, related)
+        - **required**: true
+        - **type**: select
+    - **empty state**: No links. Link a defect to an NCR, repair and re-inspection to build a traceable chain.
+    - **filters**:
+      - Source type
+      - Target type
+      - Asset
+      - Link type
+    - **name**: Record links
+    - **row actions**:
+      - Open source
+      - Open target
+      - Delete link
+    - **search**: Record ID, reference number
+    - **sort**:
+      - Created
+      - Source type
+- **walkthrough**:
+  - Admin opens Architecture > Event catalogue and reviews event volumes and failures.
+  - A timeline bug is found; admin opens the Dead-letter queue and inspects the failed payload.
+  - Admin fixes the subscriber code and deploys, then retries the dead-lettered events.
+  - To rebuild a projection, admin creates a Replay job choosing timeline, date range and tenant.
+  - Admin runs it as a dry run and checks the counts.
+  - Admin re-runs the job live and monitors progress in the jobs panel.
+  - Admin edits a workflow to create a new version; in-flight records stay pinned to the old version.
+  - Admin publishes the new version and confirms the in-flight count by version.
+  - Admin exports a configuration bundle from sandbox.
+  - In the production tenant, admin runs Diff, reviews changes and imports the bundle.

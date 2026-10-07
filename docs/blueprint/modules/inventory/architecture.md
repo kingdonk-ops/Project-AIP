@@ -1,0 +1,101 @@
+# Stock, consumables & materials — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/inventory/models.py
+    - **purpose**: StockItem, StockLocation, StockMovement (append-only), Batch, ReorderPoint, CountSession
+  -
+    - **path**: backend/app/modules/inventory/schemas.py
+    - **purpose**: Schemas for items, movements, counts
+  -
+    - **path**: backend/app/modules/inventory/ledger.py
+    - **purpose**: Movement posting, balance projection per location, negative stock rules, correction via reversing movement
+  -
+    - **path**: backend/app/modules/inventory/issuance.py
+    - **purpose**: Issue to scope task with batch, adapter over the existing consumable issuance
+  -
+    - **path**: backend/app/modules/inventory/usebyrules.py
+    - **purpose**: Use-by reminder suppression by stock status
+  -
+    - **path**: backend/app/modules/inventory/reconcile.py
+    - **purpose**: Count variance and adjustment movements
+  -
+    - **path**: backend/app/modules/inventory/router.py
+    - **purpose**: REST endpoints
+  -
+    - **path**: backend/app/modules/inventory/handlers.py
+    - **purpose**: Goods receipt and delivery handlers
+  -
+    - **path**: backend/app/modules/inventory/permissions.py
+    - **purpose**: inventory.* permissions
+  -
+    - **path**: backend/migrations/inventory/
+    - **purpose**: Module migrations, including backfill of existing consumables ledger
+  -
+    - **path**: backend/tests/inventory/
+    - **purpose**: Ledger invariants, RSW gate satisfaction, reversal and RLS tests
+- **change isolation**: Movement types, units and reminder rules are configuration. The RSW gate keeps reading issuances through the public query, so ledger internals can change without touching scope_work.
+- **config not code**:
+  - Units of measure and conversions
+  - Reorder points per item or category
+  - Use-by reminder lead times and suppression statuses
+  - Movement types and reason codes
+  - Negative stock policy
+  - Location types
+- **events consumed**:
+  - logistics.delivery_arrived
+  - procurement.goods_received
+  - scope.task_created
+  - scope.task_cancelled
+  - eligibility.usebydate_changed
+  - forms.consumption_recorded
+- **events emitted**:
+  - inventory.movement_posted
+  - inventory.movement_reversed
+  - inventory.consumable_issued
+  - inventory.stock_low
+  - inventory.stock_status_changed
+  - inventory.batch_expiring
+  - inventory.count_posted
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/inventory/pages/StockByLocationPage.tsx
+    - **purpose**: Live stock levels and reorder flags
+  -
+    - **path**: frontend/src/modules/inventory/pages/MovementEntryPage.tsx
+    - **purpose**: Mobile-friendly receipt, issue, waste, transfer entry with scan
+  -
+    - **path**: frontend/src/modules/inventory/pages/ReconciliationPage.tsx
+    - **purpose**: Count and variance report
+  -
+    - **path**: frontend/src/modules/inventory/components/
+    - **purpose**: BatchPicker, MovementTable, UseByBadge
+  -
+    - **path**: frontend/src/modules/inventory/offline/movementQueue.ts
+    - **purpose**: Offline movements via shared sync engine with idempotency keys
+  -
+    - **path**: frontend/src/modules/inventory/api.ts
+    - **purpose**: Generated client hooks
+- **public api**:
+  - GET /projects/{id}/stock?location=
+  - POST /stock/movements (receipt, issue, waste, transfer, adjustment)
+  - POST /stock/movements/{id}/reverse
+  - POST /scope-tasks/{id}/consumable-issuances
+  - GET /stock/items/{id}/batches
+  - POST /stock/counts and POST /stock/counts/{id}/post
+  - GET /stock/variance?period=
+  - Python interface: IssuanceQuery.for_task(task_id) used by the RSW completion gate; BatchQuery for traceability
+- **reuses shared**:
+  - Register and content-type engine (Consumables type)
+  - Traceability graph (batch and heat links)
+  - Tasks and deadlines engine for reminders
+  - Eligibility engine for use-by rules
+  - Requisition creation via procurement public API
+  - Notifications
+  - Event bus and outbox
+  - Policy service
+  - Audit trail
+  - Terminology service
+  - Offline sync engine
+  - Data import engine

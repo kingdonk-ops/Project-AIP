@@ -1,0 +1,151 @@
+# Schedule & look-ahead (basic) — Feature filler
+
+
+- **detail sections**:
+  - Summary and dates
+  - Source record link (inspection, scope or certificate)
+  - Asset and location
+  - Assigned crew and people
+  - Reminders
+  - Commitment history and reasons not done
+  - Activity
+- **notifications**:
+  - Reminder before inspection due date
+  - Reminder before scope mandated date
+  - Certificate expiring within the configured window
+  - Item overdue
+  - Commitment assigned to crew
+  - Weekly plan published
+- **settings**:
+  - Default look-ahead length (2-6 weeks)
+  - Reminder lead times per type
+  - Enable weekly work plan and commitments
+  - Reason-code list for not done
+  - iCal feed on/off and token rotation
+  - Working days and week start
+  - Items shown by default per type
+  - Terminology labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Add to weekly plan
+      - Assign crew
+      - Export selected to iCal
+      - Set reminder
+    - **columns**:
+      - Date
+      - Type (inspection, scope mandate, certificate expiry, commitment)
+      - Title
+      - Asset
+      - Scope/RSW
+      - Assigned crew/person
+      - Status
+      - Overdue flag
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Asset
+        - **required**: false
+        - **type**: asset picker
+      -
+        - **field**: Scope
+        - **required**: false
+        - **type**: scope picker
+      -
+        - **field**: Notes
+        - **required**: false
+        - **type**: textarea
+    - **empty state**: Nothing is scheduled in this window. Widen the look-ahead, change filters, or create inspections and scopes with due dates to see them here.
+    - **filters**:
+      - Date range / 2-6 week window
+      - Type
+      - Project
+      - Asset subtree
+      - Discipline
+      - Crew
+      - Status
+      - Overdue only
+    - **name**: Look-ahead items
+    - **row actions**:
+      - Open source record
+      - Add commitment
+      - Assign crew
+      - Set reminder
+      - Reschedule (where source allows)
+    - **search**: Title, asset code or name, scope number
+    - **sort**:
+      - Date (default)
+      - Type
+      - Asset
+      - Status
+  -
+    - **bulk actions**:
+      - Mark done
+      - Roll forward to next week
+      - Remove commitment
+    - **columns**:
+      - Week starting
+      - Task/scope
+      - Asset
+      - Crew
+      - Committed by
+      - Done
+      - Reason not done
+    - **create form**:
+      -
+        - **field**: Week starting
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Task or scope
+        - **required**: true
+        - **type**: record picker
+      -
+        - **field**: Crew
+        - **required**: true
+        - **type**: crew picker
+      -
+        - **field**: Asset
+        - **required**: false
+        - **type**: asset picker
+      -
+        - **field**: Planned date
+        - **required**: false
+        - **type**: date
+    - **empty state**: No commitments for this week. Weekly work plans are optional; add commitments from the look-ahead.
+    - **filters**:
+      - Week
+      - Crew
+      - Project
+      - Done/not done
+      - Discipline
+    - **name**: Weekly work plan commitments
+    - **row actions**:
+      - Edit
+      - Tick done
+      - Record reason
+      - Create task
+      - Remove
+    - **search**: Task, asset, crew
+    - **sort**:
+      - Week
+      - Crew
+      - Done
+- **walkthrough**:
+  - Open Field operations > Schedule and pick the project.
+  - Choose the calendar or look-ahead view and set 2, 4 or 6 weeks.
+  - Apply filters for discipline, asset subtree or crew.
+  - Review due inspections, mandated scope dates and expiring certificates, with overdue items flagged.
+  - Open an item to see the source record and assigned crew.
+  - Optionally enable the weekly plan and add commitments from the look-ahead items.
+  - Set reminders on key items.
+  - Subscribe to or download the iCal feed.
+  - During the week, tick commitments done and record a reason for any not done.
+  - Roll unfinished items to next week.

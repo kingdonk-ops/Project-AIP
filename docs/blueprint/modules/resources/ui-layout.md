@@ -1,0 +1,136 @@
+# Resources & crews (basic) — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: resources.view; edit needs resources.manage. Rates are visible only with resources.rates.
+    - **actions**:
+      - Add resource
+      - Open
+      - Assign
+      - Set availability
+      - View credentials
+      - Import from staff register
+      - Export
+    - **layout**: DataTable with filters and a detail drawer.
+    - **name**: Resource register
+    - **purpose**: List people and crews with skills and credential status.
+    - **route**: /resources
+    - **sections**:
+      - Filters (type, company, skill, credential status, project, availability)
+      - Register table (name, type, company, role, skills, credential status, home project, availability today, next 7 days)
+  -
+    - **access**: resources.manage.
+    - **actions**:
+      - Save
+      - Cancel
+    - **layout**: Form.
+    - **name**: Add resource
+    - **purpose**: Create a person or crew.
+    - **route**: /resources/new
+    - **sections**:
+      - Type
+      - User or name
+      - Company and role
+      - Skills from competency register
+      - Crew members
+      - Optional rate
+  -
+    - **access**: resources.view; people can see their own.
+    - **actions**:
+      - Edit
+      - Assign
+      - Set availability
+      - Add to crew
+      - Open credential
+    - **layout**: Header with credential badge and tabbed body.
+    - **name**: Resource detail
+    - **purpose**: Profile, credentials and assignments.
+    - **route**: /resources/:id
+    - **sections**:
+      - Profile and company
+      - Skills
+      - Credentials and expiry
+      - Crew membership
+      - Assignments calendar
+      - Availability
+      - Conflicts
+      - Activity and audit
+  -
+    - **access**: resources.manage.
+    - **actions**:
+      - Add member
+      - Remove member
+      - Assign crew
+      - Edit
+    - **layout**: Header with a member list and calendar.
+    - **name**: Crew detail
+    - **purpose**: Manage crew members and assignments.
+    - **route**: /resources/crews/:id
+    - **sections**:
+      - Crew summary
+      - Members and roles
+      - Combined credential status
+      - Assignments
+  -
+    - **access**: resources.view; assign needs resources.assign.
+    - **actions**:
+      - Create assignment
+      - Drag to move
+      - Resolve conflict
+      - Override expired credential with reason
+      - Shift dates
+    - **layout**: Resource-by-day grid with conflict flags and a filter bar.
+    - **name**: Assignment calendar
+    - **purpose**: See who is assigned where and spot conflicts.
+    - **route**: /resources/assignments
+    - **sections**:
+      - Resource rows by date
+      - Conflict and skill-mismatch flags
+      - Unassigned work rail
+  -
+    - **access**: resources.assign.
+    - **actions**:
+      - Assign
+      - Assign with override
+      - Cancel
+    - **layout**: Modal with a live skill-match panel.
+    - **name**: Create assignment
+    - **purpose**: Assign a resource to an RSW, task or inspection.
+    - **route**: /resources/assignments/new
+    - **sections**:
+      - Resource picker
+      - Target (RSW, task, inspection)
+      - Dates and hours per day
+      - Skill match and credential check
+      - Conflict preview
+  -
+    - **access**: resources.configure.
+    - **actions**:
+      - Save
+    - **layout**: Tabbed settings.
+    - **name**: Resource settings
+    - **purpose**: Configure types, skills and conflict rules.
+    - **route**: /resources/settings
+    - **sections**:
+      - Resource types and roles
+      - Skill mapping
+      - Warn or block on expired credentials
+      - Double-booking threshold
+      - Rate visibility
+      - Roster patterns
+      - Terminology keys
+  -
+    - **access**: Any signed-in user, own data only.
+    - **actions**:
+      - Open assignment
+      - Set unavailable
+      - Acknowledge
+    - **layout**: Mobile list by day.
+    - **name**: Mobile my assignments
+    - **purpose**: Show a worker their upcoming work.
+    - **route**: /m/resources/my-week
+    - **sections**:
+      - This week's assignments
+      - Credential expiry warnings
+      - Availability toggle

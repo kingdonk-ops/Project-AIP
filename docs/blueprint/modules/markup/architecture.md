@@ -1,0 +1,110 @@
+# Markup, viewer & plan room — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: modules/markup/router.py
+    - **purpose**: Routes for annotations, sheets, pins, stamps, calibration, overlays
+  -
+    - **path**: modules/markup/service.py
+    - **purpose**: Annotation CRUD against file versions, pin carry-forward on revision
+  -
+    - **path**: modules/markup/models.py
+    - **purpose**: Annotation (JSONB geometry), MarkupLayer, StampTemplate, ScaleCalibration, DrawingSheet, OverlayItem, PhotoNotePin
+  -
+    - **path**: modules/markup/schemas.py
+    - **purpose**: Pydantic models including geometry schema
+  -
+    - **path**: modules/markup/overlay.py
+    - **purpose**: Aggregates pins from defect, inspection, NCR, photo sources with per-source permission checks
+  -
+    - **path**: modules/markup/flatten.py
+    - **purpose**: Requests sealed flattened copy from the PDF service on approval/publication
+  -
+    - **path**: modules/markup/tiles.py
+    - **purpose**: Requests tile generation for large drawings from the conversion pipeline
+  -
+    - **path**: modules/markup/subscribers.py
+    - **purpose**: Handles document.version_added, approval.completed, comment events
+  -
+    - **path**: modules/markup/migrations/
+    - **purpose**: Alembic migrations, RLS
+  -
+    - **path**: modules/markup/tests/
+    - **purpose**: Geometry, leak-prevention and tenant tests
+  -
+    - **path**: modules/markup/module.yaml
+    - **purpose**: Manifest
+- **change isolation**: Annotation format and rendering live in markup/canvas and models only, so changing library or storage format stays inside this module. New pin sources are a registration entry in overlay.py and module.yaml.
+- **config not code**:
+  - Stamp templates and library
+  - Pin types, icons, severity colours
+  - Layer definitions and default visibility
+  - Which record types can have pins
+  - Photo metadata stripping policy
+  - Which workflow states trigger flattening
+- **events consumed**:
+  - document.version_added
+  - approval.completed
+  - comment.created
+  - defect.created
+  - inspection.finding_created
+  - ncr.created
+  - asset.moved
+  - sync.annotation_pushed
+- **events emitted**:
+  - markup.created
+  - markup.resolved
+  - markup.pin_placed
+  - markup.flattened
+  - markup.pins_need_review
+- **frontend files**:
+  -
+    - **path**: features/markup/pages/ViewerPage.tsx
+    - **purpose**: Three-pane viewer
+  -
+    - **path**: features/markup/pages/PlanRoom.tsx
+    - **purpose**: Full-screen drawing with layer panel and pin drawer
+  -
+    - **path**: features/markup/pages/StampLibraryAdmin.tsx
+    - **purpose**: Stamp admin
+  -
+    - **path**: features/markup/canvas/PdfCanvas.tsx
+    - **purpose**: PDF.js render with Konva annotation layer
+  -
+    - **path**: features/markup/canvas/ImageCanvas.tsx
+    - **purpose**: Photo markup incl. before/after pairing
+  -
+    - **path**: features/markup/canvas/tools/
+    - **purpose**: Cloud, arrow, text, dimension, freehand, stamp tools
+  -
+    - **path**: features/markup/components/LayerPanel.tsx
+    - **purpose**: Layer toggles and area filter
+  -
+    - **path**: features/markup/components/RevisionOverlay.tsx
+    - **purpose**: Revision comparison
+  -
+    - **path**: features/markup/offline/drawingCache.ts
+    - **purpose**: Per-scope offline drawing sets using the shared sync client
+  -
+    - **path**: features/markup/api.ts
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - GET/POST/PATCH/DELETE /markup/files/{version_id}/annotations
+  - GET/POST /markup/sheets and PATCH /markup/sheets/{id}/calibration
+  - GET /markup/plan-room/{sheet_id}/overlay?layers&from&to&status
+  - POST /markup/pins (asset_id, sheet, coordinates)
+  - POST /markup/annotations/{id}/resolve
+  - POST /markup/files/{version_id}/flatten
+  - GET/POST /markup/stamps
+  - GET /markup/compare?from_version&to_version
+- **reuses shared**:
+  - Document library file and version store
+  - Comments and notifications engine (threads on pins)
+  - PDF stamping and sealing service
+  - Conversion pipeline for tiles and thumbnails
+  - Offline sync protocol and Dexie client
+  - Permission/policy service per source module
+  - Asset tree picker
+  - Terminology dictionary
+  - Audit trail

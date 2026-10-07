@@ -1,0 +1,356 @@
+# Client & subcontractor portal — Feature filler
+
+
+- **detail sections**:
+  - External user profile and status
+  - Company and certificate onboarding gate
+  - Grants
+  - Sessions and devices
+  - Audit trail
+  - Pending actions
+  - Share pack contents and access log
+  - Branding preview
+- **notifications**:
+  - Invitation to external user (magic link)
+  - Invitation approval request to internal owner
+  - Approved/rejected invitation outcome
+  - Action required: counter-sign, response or upload
+  - Witness point scheduled and notice period ending
+  - Waive recorded (to internal team)
+  - Subcontractor response submitted
+  - Grant expiring or revoked
+  - Share pack shared and expiring
+  - Subcontractor certificate expiring (onboarding gate)
+  - PIN lockout alert to admin
+- **settings**:
+  - Portal on/off per tenant
+  - Separate origin and domain
+  - Session lifetime and idle timeout
+  - Magic link TTL and single-use rules
+  - PIN length and lockout threshold
+  - Rate limits and WAF profile
+  - Default download policy and watermark text
+  - Witness waive notice period (per client or per ITP, default)
+  - Invitation approval required and approver rules
+  - Auto-expiry on project close
+  - Per-client branding and terminology
+  - Enterprise SSO connection per client (if adopted)
+  - Visible modules for external parties; commercial modules hidden
+- **tables**:
+  -
+    - **bulk actions**:
+      - Approve invitations
+      - Revoke access
+      - Extend expiry
+      - Resend invite
+      - Export
+    - **columns**:
+      - Name
+      - Email
+      - Company
+      - Party role
+      - Invited by
+      - Approved by
+      - Status
+      - Last sign-in
+      - Grants
+    - **create form**:
+      -
+        - **field**: Email
+        - **required**: true
+        - **type**: email
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Company
+        - **required**: true
+        - **type**: company/contact picker
+      -
+        - **field**: Party role
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Project(s)
+        - **required**: true
+        - **type**: multi-picker
+      -
+        - **field**: Internal owner (approver)
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Access expiry
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Grants
+        - **required**: true
+        - **type**: grant builder
+    - **empty state**: No external users. Invite a client or subcontractor contact; a named internal owner must approve before access starts. Portal is off until enabled in settings.
+    - **filters**:
+      - Status (invited, pending approval, active, locked, revoked, expired)
+      - Company
+      - Party role
+      - Project
+      - Onboarding gate status
+    - **name**: External users
+    - **row actions**:
+      - Approve
+      - Edit grants
+      - Reset PIN / lock
+      - Revoke
+      - View audit trail
+    - **search**: Name, email, company
+    - **sort**:
+      - Name
+      - Last sign-in
+      - Status
+      - Invited date
+  -
+    - **bulk actions**:
+      - Revoke
+      - Extend
+      - Change download policy
+    - **columns**:
+      - User
+      - Project
+      - Asset subtree
+      - Module
+      - Actions allowed
+      - Download policy
+      - Expires
+      - Created by
+    - **create form**:
+      -
+        - **field**: User
+        - **required**: true
+        - **type**: external user picker
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: project picker
+      -
+        - **field**: Asset subtree
+        - **required**: true
+        - **type**: tree picker
+      -
+        - **field**: Module
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Actions
+        - **required**: true
+        - **type**: multi-select (view, comment, counter-sign, respond, upload, confirm/waive)
+      -
+        - **field**: Download policy
+        - **required**: true
+        - **type**: dropdown (view-only, watermarked, allowed)
+      -
+        - **field**: Expiry
+        - **required**: false
+        - **type**: date
+    - **empty state**: No grants. Sharing is explicit: nothing is visible to external users until you grant it.
+    - **filters**:
+      - Project
+      - Module
+      - Download policy
+      - Expiring in 30 days
+      - Company
+    - **name**: Portal grants
+    - **row actions**:
+      - Edit
+      - Revoke
+      - Preview as this user (read-only)
+    - **search**: User, asset tag, module
+    - **sort**:
+      - User
+      - Expires
+      - Project
+  -
+    - **bulk actions**:
+      - Revoke
+      - Extend expiry
+    - **columns**:
+      - Pack name
+      - Scope (asset/RSW)
+      - Contents count
+      - Recipients
+      - Created by
+      - Expires
+      - Views
+      - Status
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Asset or scope
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Reports and certificates
+        - **required**: true
+        - **type**: multi-picker
+      -
+        - **field**: Recipient emails
+        - **required**: true
+        - **type**: email list
+      -
+        - **field**: Expiry
+        - **required**: true
+        - **type**: date-time
+      -
+        - **field**: Watermark
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Allow download
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No share packs. Create a time-limited read-only bundle of reports and certificates for someone without a portal account.
+    - **filters**:
+      - Status (active, expired, revoked)
+      - Project
+      - Created by
+      - Expiring soon
+    - **name**: Share packs
+    - **row actions**:
+      - Open
+      - Copy link
+      - Revoke
+      - View access log
+    - **search**: Pack name, asset tag
+    - **sort**:
+      - Created
+      - Expires
+      - Views
+  -
+    - **bulk actions**:
+      - Export CSV
+    - **columns**:
+      - Time
+      - User
+      - Company
+      - Action (view/download/respond/sign)
+      - Record
+      - IP
+      - Result
+    - **empty state**: No external activity recorded yet.
+    - **filters**:
+      - Action
+      - User
+      - Company
+      - Project
+      - Date range
+      - Result
+    - **name**: Portal audit events
+    - **row actions**:
+      - Open record
+      - View session
+    - **search**: User, record reference
+    - **sort**:
+      - Time (default newest)
+      - User
+  -
+    - **bulk actions**:
+      - Waive selected witness points (with notice rules)
+    - **columns**:
+      - Type
+      - Record
+      - Project
+      - Asset
+      - Due / notice date
+      - Requested by
+    - **empty state**: Nothing needs your action right now.
+    - **filters**:
+      - Type (counter-sign, witness, NCR response, upload request)
+      - Project
+      - Overdue
+    - **name**: Needs my action (portal inbox)
+    - **row actions**:
+      - Open
+      - Counter-sign
+      - Respond
+      - Confirm attendance
+      - Waive
+    - **search**: Record number, asset tag
+    - **sort**:
+      - Due date
+      - Project
+  -
+    - **bulk actions**:
+      - Confirm attendance
+    - **columns**:
+      - Hold/witness ref
+      - ITP
+      - Asset
+      - Scheduled date
+      - Notice period ends
+      - Status
+      - My response
+    - **empty state**: No upcoming hold or witness points in your scope.
+    - **filters**:
+      - Status
+      - Project
+      - Date range
+    - **name**: Witness and hold points (portal)
+    - **row actions**:
+      - Confirm attendance
+      - Waive with notice
+      - View ITP step
+    - **search**: Reference, asset tag
+    - **sort**:
+      - Scheduled date
+      - Notice period ends
+  -
+    - **columns**:
+      - Client
+      - Logo
+      - Terminology pack
+      - Email theme
+      - Projects
+      - Updated
+    - **create form**:
+      -
+        - **field**: Client organisation
+        - **required**: true
+        - **type**: company picker
+      -
+        - **field**: Logo
+        - **required**: false
+        - **type**: image upload (scanned)
+      -
+        - **field**: Terminology overrides
+        - **required**: false
+        - **type**: key/value
+      -
+        - **field**: Email sender name
+        - **required**: false
+        - **type**: text
+    - **empty state**: No branding profiles. Portal uses tenant defaults.
+    - **filters**:
+      - Client
+    - **name**: Client branding profiles (internal admin)
+    - **row actions**:
+      - Edit
+      - Preview portal
+      - Preview email
+    - **search**: Client name
+    - **sort**:
+      - Client
+      - Updated
+- **walkthrough**:
+  - Tenant admin enables the portal (off by default) and sets session, PIN lockout and rate-limit policy.
+  - Internal user invites a client contact with a party role, project, grants and a named internal owner.
+  - Owner receives approval request and approves or rejects.
+  - Invitee receives a magic link to the separate portal origin; the click lands on a confirmation page and a POST confirms to defeat mail scanners.
+  - Optional PIN is set; the session starts with its own short timeout.
+  - Portal home shows Needs my action and the asset tree limited to granted subtrees.
+  - Client opens an inspection awaiting client review, reads the record and attachments, and counter-signs or returns with comment.
+  - Client sees upcoming hold/witness points and confirms attendance or waives within the notice period.
+  - Subcontractor (certificates valid) opens an NCR, enters a response and uploads evidence through the quarantine pipeline.
+  - Internal user creates a share pack for a recipient without an account.
+  - Every view, download and action is written to the audit log.
+  - On project close or grant revocation, access expires automatically and sessions are terminated.

@@ -1,0 +1,37 @@
+# Service & maintenance — Feature scout
+
+
+- **abilities seen in market**:
+  - Work orders with task lists, labour, parts and sign-off
+  - Preventive maintenance by calendar, meter or condition
+  - SLA clocks with breach alerts
+  - Asset-linked ticket history and failure codes
+  - Technician scheduling with skills matching
+  - Inspection-driven work order generation
+  - Service contract and entitlement management
+  - Mobile offline work order completion
+- **suggestions**:
+  -
+    - **effort**: L
+    - **feature**: Risk-based inspection interval scheduling per asset class and condition (next due recalculated from last finding)
+    - **why**: CUI and integrity programmes use condition-driven intervals rather than fixed calendars.
+  -
+    - **effort**: M
+    - **feature**: Auto-create work orders from inspection findings above a severity threshold, carrying photos, location and recommended repair
+    - **why**: Closes the loop from NDT/CUI finding to repair without re-entry.
+  -
+    - **effort**: M
+    - **feature**: Recurring campaign templates (strip, inspect, repair, reinsulate, recoat) with stage gates and ITP binding
+    - **why**: Matches how remediation is delivered repeatedly across assets and sites.
+  -
+    - **effort**: S
+    - **feature**: Skills and certificate matching on technician assignment using the eligibility gate
+    - **why**: Only qualified NDT, coating or rope-access personnel should be assignable.
+  -
+    - **effort**: M
+    - **feature**: Asset history timeline merging construction ITPs, handover baseline, inspections and work orders
+    - **why**: Differentiates from operations-only tools by showing full lifecycle evidence.
+  -
+    - **effort**: S
+    - **feature**: SLA clocks that pause on client hold or access restrictions with reason capture
+    - **why**: Fair SLA reporting where access or permits outside the contractor's control cause delay.

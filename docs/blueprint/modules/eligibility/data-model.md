@@ -1,0 +1,340 @@
+# Certificates, competency & calibration gate — Data model & schema
+
+
+- **notes**: Migrate existing certificates by adding certificate_type_id, owner_kind, owner_id, superseded_by rather than creating a new table. Suppression reads an availability flag from inventory/equipment via event cache at send time. Status RAG computed in query, not stored. Other modules call the check service only.
+- **reuses existing**:
+  - certificates
+  - documents
+  - disciplines
+  - assets
+  - consumable_issuances
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: name
+        - **notes**: renamable (Ticket, Licence)
+        - **type**: text
+      -
+        - **name**: owner_kind
+        - **notes**: person|company|equipment|material_batch|project|asset
+        - **type**: text
+      -
+        - **name**: requires_expiry
+        - **type**: boolean
+      -
+        - **name**: amber_days
+        - **notes**: default 30
+        - **type**: int
+      -
+        - **name**: reminder_offsets
+        - **notes**: days list
+        - **type**: jsonb
+      -
+        - **name**: required_fields
+        - **type**: jsonb
+      -
+        - **name**: suppress_when_unavailable
+        - **notes**: owner rule
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+    - **name**: certificate_types
+    - **purpose**: Configurable certificate/credential types.
+    - **relations**:
+      - certificates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: certificate_type_id
+        - **type**: uuid
+      -
+        - **name**: owner_kind
+        - **type**: text
+      -
+        - **name**: owner_id
+        - **notes**: person/company/equipment/batch/project
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, history follows asset
+        - **type**: uuid
+      -
+        - **name**: number
+        - **type**: text
+      -
+        - **name**: issued_on
+        - **type**: date
+      -
+        - **name**: expires_on
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: valid|expired|superseded|revoked (stored); RAG computed
+        - **type**: text
+      -
+        - **name**: superseded_by
+        - **notes**: FK certificates
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: issuer
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, owner_kind, owner_id)
+      - (tenant_id, expires_on) where status='valid'
+      - (tenant_id, asset_id)
+    - **name**: certificates
+    - **purpose**: Per-owner list of certificates; extends existing AIP table with polymorphic owner.
+    - **relations**:
+      - certificate_types
+      - documents
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: subject_kind
+        - **notes**: template|inspection_category|discipline|itp_step
+        - **type**: text
+      -
+        - **name**: subject_id
+        - **type**: uuid
+      -
+        - **name**: applies_to
+        - **notes**: signer|instrument|material
+        - **type**: text
+      -
+        - **name**: certificate_type_id
+        - **type**: uuid
+      -
+        - **name**: mandatory
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, subject_kind, subject_id)
+    - **name**: competency_requirements
+    - **purpose**: Which certificate types are required for a template, category or discipline.
+    - **relations**:
+      - certificate_types
+      - form_templates
+      - disciplines
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: certificate_id
+        - **type**: uuid
+      -
+        - **name**: context_kind
+        - **notes**: inspection_step|task|use
+        - **type**: text
+      -
+        - **name**: context_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: requested_by
+        - **type**: uuid
+      -
+        - **name**: approved_by
+        - **type**: uuid
+      -
+        - **name**: valid_until
+        - **notes**: max duration by policy
+        - **type**: timestamptz
+      -
+        - **name**: approval_id
+        - **notes**: approvals engine ref
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, certificate_id)
+      - (tenant_id, context_kind, context_id)
+    - **name**: eligibility_overrides
+    - **purpose**: Audited override requests, append-only decisions.
+    - **relations**:
+      - certificates
+      - approvals
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: subject_kind
+        - **type**: text
+      -
+        - **name**: subject_id
+        - **type**: uuid
+      -
+        - **name**: context_kind
+        - **type**: text
+      -
+        - **name**: context_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: result
+        - **notes**: valid|blocked|overridden
+        - **type**: text
+      -
+        - **name**: reasons
+        - **type**: jsonb
+      -
+        - **name**: checked_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, context_kind, context_id)
+      - (tenant_id, subject_kind, subject_id, checked_at)
+    - **name**: eligibility_checks
+    - **purpose**: Append-only snapshot of check results at point of use (validity at time of use).
+    - **relations**:
+      - certificates
+      - inspection_signoffs
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: certificate_id
+        - **type**: uuid
+      -
+        - **name**: offset_days
+        - **type**: int
+      -
+        - **name**: outcome
+        - **notes**: sent|suppressed_unavailable|suppressed_superseded
+        - **type**: text
+      -
+        - **name**: recipient_user_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (certificate_id, offset_days, recipient_user_id)
+    - **name**: certificate_reminder_log
+    - **purpose**: Reminders sent or suppressed, evaluated at send time.
+    - **relations**:
+      - certificates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: inspection_category
+        - **notes**: existing AIP categories
+        - **type**: text
+      -
+        - **name**: discipline_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, inspection_category, discipline_id) where deleted_at is null
+    - **name**: discipline_gates
+    - **purpose**: Which disciplines/roles may perform which inspection category.
+    - **relations**:
+      - disciplines

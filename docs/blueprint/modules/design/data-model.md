@@ -1,0 +1,265 @@
+# Design system & app shell — Data model & schema
+
+
+- **notes**: Purged recents and prefs on identity.user.deactivated are hard deletes of non-record UI data. Saved view visibility is checked through the access policy service, not duplicated here. Open question on v1 vs v2 Scopes screen is a UI matter and needs no schema.
+- **reuses existing**:
+  - assets
+  - documents
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS; unique
+        - **type**: uuid
+      -
+        - **name**: accent_hex
+        - **notes**: default #0f766e; validated hex
+        - **type**: text
+      -
+        - **name**: default_density
+        - **notes**: compact|comfortable
+        - **type**: text
+      -
+        - **name**: contrast_theme
+        - **notes**: standard|high_contrast_outdoor
+        - **type**: text
+      -
+        - **name**: logo_document_id
+        - **notes**: FK documents.id, nullable
+        - **type**: uuid
+      -
+        - **name**: login_brand
+        - **notes**: e.g. Kaefer red #da291c login accent
+        - **type**: jsonb
+      -
+        - **name**: field_mode_default
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id)
+    - **name**: tenant_theme
+    - **purpose**: One row per tenant holding accent, density and contrast theme tokens.
+    - **relations**:
+      - tenant (module tenancy)
+      - documents.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects
+        - **type**: uuid
+      -
+        - **name**: field_mode_enabled
+        - **type**: boolean
+      -
+        - **name**: nav_config
+        - **notes**: nav items and order per role/market
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id) where deleted_at is null
+    - **name**: project_ui_setting
+    - **purpose**: Per-project UI configuration such as field mode enablement and nav rail items.
+    - **relations**:
+      - projects.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: owner_user_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: name
+        - **notes**: user-entered; not a terms key
+        - **type**: text
+      -
+        - **name**: register_key
+        - **notes**: which register/entity type the view applies to
+        - **type**: text
+      -
+        - **name**: scope
+        - **notes**: personal|team|project|role_default
+        - **type**: text
+      -
+        - **name**: team_id
+        - **notes**: nullable, FK access team
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable, FK projects
+        - **type**: uuid
+      -
+        - **name**: role_id
+        - **notes**: nullable, for role default
+        - **type**: uuid
+      -
+        - **name**: is_default
+        - **type**: boolean
+      -
+        - **name**: filter_def
+        - **notes**: filters, sort, columns; schema versioned
+        - **type**: jsonb
+      -
+        - **name**: asset_scope_id
+        - **notes**: nullable, FK assets; subtree scope
+        - **type**: uuid
+      -
+        - **name**: is_kpi_tile
+        - **notes**: tile definition for dashboards
+        - **type**: boolean
+      -
+        - **name**: url_slug
+        - **notes**: stable short id for links in reports
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **notes**: optimistic concurrency
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, register_key, scope)
+      - (tenant_id, owner_user_id)
+      - unique (tenant_id, url_slug)
+      - unique (tenant_id, register_key, role_id) where scope='role_default' and deleted_at is null
+    - **name**: saved_view
+    - **purpose**: Shareable register, dashboard or KPI-tile filter definitions addressable by URL.
+    - **relations**:
+      - users.id
+      - teams.id
+      - projects.id
+      - roles.id
+      - assets.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: entity_type
+        - **notes**: neutral internal code
+        - **type**: text
+      -
+        - **name**: entity_id
+        - **notes**: polymorphic, no FK
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, FK assets
+        - **type**: uuid
+      -
+        - **name**: last_opened_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, user_id, entity_type, entity_id)
+      - (tenant_id, user_id, last_opened_at desc)
+    - **name**: recent_item
+    - **purpose**: Per-user recent records for the command palette, trimmed to a cap.
+    - **relations**:
+      - users.id
+      - assets.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: density
+        - **notes**: nullable override
+        - **type**: text
+      -
+        - **name**: contrast_theme
+        - **notes**: nullable override
+        - **type**: text
+      -
+        - **name**: column_prefs
+        - **notes**: keyed by register_key
+        - **type**: jsonb
+      -
+        - **name**: sync_version
+        - **notes**: edited offline
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, user_id)
+    - **name**: user_ui_pref
+    - **purpose**: Per-user column, density and mode preferences.
+    - **relations**:
+      - users.id

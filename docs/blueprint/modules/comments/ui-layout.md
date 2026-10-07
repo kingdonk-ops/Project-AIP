@@ -1,0 +1,112 @@
+# Comments, mentions & notifications — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Per parent record permission; external parties see only threads their visibility class allows
+    - **actions**:
+      - Comment
+      - Mention
+      - Resolve or reopen
+      - Convert to task, issue or corrective action
+      - Change visibility
+      - View history
+      - Carry forward to new file version
+    - **layout**: Right-hand drawer, bottom sheet on mobile.
+    - **name**: Comment side panel
+    - **purpose**: Threaded discussion on any record, file or viewer page.
+    - **route**: Embedded: CommentPanel
+    - **sections**:
+      - Thread list with resolve filters
+      - Composer with @mentions and visibility selector
+      - Visibility badges
+      - Edit history
+  -
+    - **access**: Authenticated user
+    - **actions**:
+      - Open record
+      - Reply
+      - Resolve
+      - Mark read
+    - **layout**: List with open and resolved filters and a thread preview.
+    - **name**: Mentions of me
+    - **purpose**: Show threads where the user was mentioned.
+    - **route**: /inbox/mentions
+    - **sections**:
+      - Mention list
+      - Thread preview
+  -
+    - **access**: Comment permission on the file
+    - **actions**:
+      - Add pin
+      - Link asset or defect
+      - Save viewpoint
+      - Resolve
+    - **layout**: Overlay on the markup viewer with a pin list sidebar.
+    - **name**: Pin and viewpoint capture
+    - **purpose**: Place comments on PDF pages and photos.
+    - **route**: Embedded: viewer pin layer
+    - **sections**:
+      - Pins by page
+      - Resolve filters
+      - Viewpoint capture
+  -
+    - **access**: Asset view permission; items filtered by visibility class
+    - **actions**:
+      - Open source record
+      - Comment
+      - Filter
+    - **layout**: Tab on the asset node with a timeline thread view.
+    - **name**: Asset discussion history
+    - **purpose**: Roll up comments from the asset subtree's inspections, NCRs and RFIs.
+    - **route**: /assets/:id/discussion
+    - **sections**:
+      - Combined thread
+      - Filters by source record, status and visibility
+      - Subtree toggle
+  -
+    - **access**: Authenticated user
+    - **actions**:
+      - Mark read
+      - Snooze
+      - Mute thread
+      - Open record
+    - **layout**: Bell dropdown plus a full-page list.
+    - **name**: Notification inbox
+    - **purpose**: Notification centre with a bell in the header.
+    - **route**: /notifications
+    - **sections**:
+      - Unread counts
+      - Notification list
+      - Snoozed and muted items
+  -
+    - **access**: Each user for themselves
+    - **actions**:
+      - Toggle channel
+      - Set digest
+      - Set quiet hours
+    - **layout**: Matrix of event types by channel, with a quiet hours panel.
+    - **name**: Preference matrix
+    - **purpose**: Set channel, digest and quiet hours per event type.
+    - **route**: /settings/notifications
+    - **sections**:
+      - Channel matrix
+      - Digest frequency
+      - Quiet hours
+      - Mandatory notices (locked)
+  -
+    - **access**: notifications.admin
+    - **actions**:
+      - Edit wording
+      - Create rule
+      - Test rule
+      - Enable or disable
+    - **layout**: Tabs: Templates, Wording overrides, Rules, Escalation and shifts.
+    - **name**: Templates, wording and rules
+    - **purpose**: Manage message templates, tenant wording overrides and notification rules.
+    - **route**: /admin/notifications
+    - **sections**:
+      - Message keys with preview
+      - Rule builder (asset subtree, discipline, severity, recipients)
+      - Quiet hours and shift calendars
+      - Mandatory notice list

@@ -1,0 +1,92 @@
+# Testing & quality engineering — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/tests/conftest.py
+    - **purpose**: Testcontainers PostGIS fixture, non-owner non-BYPASSRLS role, per-test tenant setting
+  -
+    - **path**: backend/tests/tenancy/test_schema_guard.py
+    - **purpose**: Fails CI if any table lacks tenant_id and an RLS policy
+  -
+    - **path**: backend/tests/tenancy/test_isolation_infra.py
+    - **purpose**: Cross-tenant checks for Redis keys, queues, S3 prefixes, search indexes, embeddings
+  -
+    - **path**: backend/tests/access/test_permission_matrix.py
+    - **purpose**: Generated from the permissions catalogue: allow/deny per role, project, subtree
+  -
+    - **path**: backend/tests/access/test_idor.py
+    - **purpose**: Generated from the OpenAPI route list for every ID-addressed endpoint
+  -
+    - **path**: backend/tests/workflow/
+    - **purpose**: Workflow transition, eligibility gate and hold-point/completion-gate scenario suite
+  -
+    - **path**: backend/tests/audit/test_hash_chain.py
+    - **purpose**: Hash-chain verification scenarios
+  -
+    - **path**: backend/tests/migrations/test_up_down_up.py
+    - **purpose**: Up-down-up on every PR; snapshot-scale run before release
+  -
+    - **path**: backend/tests/contract/test_sidecar_contract.py
+    - **purpose**: API-to-Python-sidecar contract tests
+  -
+    - **path**: backend/tests/sync/test_convergence_property.py
+    - **purpose**: Hypothesis property tests for offline sync interleavings
+  -
+    - **path**: backend/tests/golden/
+    - **purpose**: Golden-file tests for reports and certificates
+  -
+    - **path**: backend/tests/fixtures/malicious/
+    - **purpose**: Fuzz and malicious-file fixtures for uploads
+  -
+    - **path**: backend/tests/fixtures/prompt_injection/
+    - **purpose**: Injection fixtures consumed by ai_gov red-team suite
+  -
+    - **path**: backend/tests/scenarios/cui_remediation/
+    - **purpose**: Realistic CUI scenario data, reused as customer acceptance tests
+  -
+    - **path**: backend/scripts/seed_demo.py
+    - **purpose**: Re-runnable realistic demo seed
+  -
+    - **path**: load/k6/
+    - **purpose**: 5,000-user morning-sync burst and report-pack load scripts
+  -
+    - **path**: .github/workflows/ci.yml
+    - **purpose**: Gates: coverage on domain/policy code, scenario suites, migration tests; blocks promotion
+- **change isolation**: New modules are covered automatically through generated tests, so adding one needs only a scenario data file and registration of its abilities. Changes to test tooling stay inside tests/, e2e/ and CI config and never touch production code.
+- **config not code**:
+  - Coverage thresholds per package
+  - List of tenant-exempt tables (global reference data) with justification
+  - Scenario data files (JSON/YAML) for CUI remediation
+  - Load profile parameters
+  - Device matrix for mobile smoke tests
+- **events consumed**:
+  - Route and permission catalogue changes (regenerates matrix and IDOR tests at collection time)
+  - Workflow definition changes (regenerates transition scenarios)
+- **events emitted**:
+  - ci.gate.passed / ci.gate.failed (to ops pipeline)
+  - testing.evidence.published (report artefact for security programme)
+- **frontend files**:
+  -
+    - **path**: frontend/e2e/journeys/
+    - **purpose**: 10-15 Playwright journeys: raise ITP, sign hold point, field PIN login, offline capture and sync, approve inspection
+  -
+    - **path**: frontend/e2e/mobile/
+    - **purpose**: Smoke suite for real mid-range Android and iPad browsers
+  -
+    - **path**: frontend/vitest.config.ts
+    - **purpose**: Vitest + Testing Library setup with getByLabel accessibility assertions
+  -
+    - **path**: frontend/src/test-utils/
+    - **purpose**: Render helpers with dictionary, scope and policy providers
+- **public api**:
+  - No end-user API
+  - CI contract: required checks list consumed by ops promotion gate
+  - Test report artefacts (JUnit, coverage, matrix reports) exported as evidence
+  - Shared pytest fixtures: tenant_ctx, as_user(role, scope), seeded_scenario(name)
+- **reuses shared**:
+  - Permissions catalogue as test source
+  - OpenAPI schema for IDOR generation
+  - Policy service under test, never reimplemented
+  - Audit chain verifier
+  - Seed and scenario data shared with acceptance testing

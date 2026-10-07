@@ -1,0 +1,436 @@
+# Dashboards & KPI reporting — Data model & schema
+
+
+- **notes**: Materialised views over asset, inspection, issue and certificate data are defined in SQL, not as tables. They carry tenant_id, project_id and asset ltree path plus ACL columns, and are queried only through permission-filtered functions so RLS is not bypassed (views owned by a non-bypass role, security_invoker where possible). Saved views live in the search module. The readiness weights table answers the undefined-formula question as configurable.
+- **reuses existing**:
+  - assets
+  - inspections
+  - issues
+  - documents
+  - certificates
+  - tasks
+  - disciplines
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: snapshot_date
+        - **type**: date
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: scope_asset_id
+        - **notes**: subtree root, nullable
+        - **type**: uuid
+      -
+        - **name**: metric_key
+        - **type**: text
+      -
+        - **name**: value
+        - **type**: numeric
+      -
+        - **name**: dimensions
+        - **notes**: severity, system, area
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, metric_key, snapshot_date) unique incl. scope
+      - (scope_asset_id, snapshot_date)
+    - **name**: kpi_snapshots
+    - **purpose**: Nightly KPI values for trends
+    - **relations**:
+      - projects
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: weights
+        - **notes**: itp, ncr, certs, docs
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+    - **name**: readiness_weights
+    - **purpose**: Configurable handover readiness score weights
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: owner_user_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: role_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable, null means portfolio
+        - **type**: uuid
+      -
+        - **name**: layout
+        - **notes**: grid
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, owner_user_id)
+      - (tenant_id, project_id)
+    - **name**: dashboards
+    - **purpose**: Dashboard per user, role or project
+    - **relations**:
+      - projects
+      - roles
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: dashboard_id
+        - **type**: uuid
+      -
+        - **name**: saved_view_id
+        - **notes**: search saved_views
+        - **type**: uuid
+      -
+        - **name**: kpi_key
+        - **notes**: alt source
+        - **type**: text
+      -
+        - **name**: tile_type
+        - **type**: text
+      -
+        - **name**: position
+        - **notes**: x,y,w,h
+        - **type**: jsonb
+      -
+        - **name**: options
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (dashboard_id)
+    - **name**: dashboard_tiles
+    - **purpose**: Tile bound to a saved view or KPI
+    - **relations**:
+      - dashboards
+      - saved_views
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: key
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: parameter_schema
+        - **type**: jsonb
+      -
+        - **name**: layout
+        - **notes**: branding, sections
+        - **type**: jsonb
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, key, version) unique
+    - **name**: report_templates
+    - **purpose**: Parameterised report templates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **type**: uuid
+      -
+        - **name**: template_version
+        - **type**: int
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: subtree root
+        - **type**: uuid
+      -
+        - **name**: parameters
+        - **type**: jsonb
+      -
+        - **name**: document_id
+        - **notes**: stored in documents
+        - **type**: uuid
+      -
+        - **name**: content_hash
+        - **notes**: sha256
+        - **type**: text
+      -
+        - **name**: generated_by
+        - **type**: uuid
+      -
+        - **name**: signoff_workflow_id
+        - **notes**: approvals
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only, REVOKE UPDATE/DELETE
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, template_id, created_at)
+      - (content_hash)
+      - (asset_id)
+    - **name**: generated_reports
+    - **purpose**: Immutable generated output
+    - **relations**:
+      - report_templates
+      - documents
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **type**: uuid
+      -
+        - **name**: parameters
+        - **type**: jsonb
+      -
+        - **name**: cron
+        - **type**: text
+      -
+        - **name**: format
+        - **notes**: pdf/xlsx/email
+        - **type**: text
+      -
+        - **name**: recipients
+        - **notes**: users, roles, contacts
+        - **type**: jsonb
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: next_run_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (active, next_run_at)
+    - **name**: report_schedules
+    - **purpose**: Scheduled report or digest distribution
+    - **relations**:
+      - report_templates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: schedule_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: generated_report_id
+        - **type**: uuid
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: error
+        - **type**: text
+      -
+        - **name**: delivered_to
+        - **type**: jsonb
+      -
+        - **name**: started_at
+        - **type**: timestamptz
+      -
+        - **name**: finished_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (schedule_id, started_at)
+    - **name**: report_runs
+    - **purpose**: Run history, append-only
+    - **relations**:
+      - report_schedules
+      - generated_reports
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: kpi_key
+        - **type**: text
+      -
+        - **name**: scope_asset_id
+        - **type**: uuid
+      -
+        - **name**: condition
+        - **notes**: JSONLogic
+        - **type**: jsonb
+      -
+        - **name**: role_id
+        - **notes**: recipient role
+        - **type**: uuid
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, active)
+    - **name**: alert_rules
+    - **purpose**: Threshold alerts
+    - **relations**:
+      - assets
+      - roles
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: alert_rule_id
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **notes**: alt target
+        - **type**: uuid
+      -
+        - **name**: frequency
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (user_id)
+      - (alert_rule_id)
+    - **name**: report_subscriptions
+    - **purpose**: User digest subscriptions
+    - **relations**:
+      - users
+      - alert_rules
+      - report_templates

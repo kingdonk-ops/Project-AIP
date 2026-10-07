@@ -1,0 +1,33 @@
+# Tech stack — Feature scout
+
+
+- **abilities seen in market**:
+  - Documented architecture decision records for major technology choices
+  - Generated typed API clients from the OpenAPI schema
+  - Dependency, licence and SBOM tracking with allow-lists
+  - Pluggable storage, queue and identity adapters so hosting can change
+  - Reproducible builds and lockfile discipline
+  - Technology-radar style review of third-party components
+  - Separate rendering service for PDF and heavy file work
+  - Pluggable expression language for rules, sandboxed and bounded
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: ADR folder with a licence-decision record covering AGPL reference-only status and clean-room rules
+    - **why**: Gives due-diligence reviewers and the owner a single place showing no copied code, which supports commercial sale.
+  -
+    - **effort**: S
+    - **feature**: Licence allow-list check in CI that blocks GPL/AGPL dependencies in the shipped image
+    - **why**: Prevents accidental copyleft contamination of a proprietary SaaS and hybrid deployment.
+  -
+    - **effort**: M
+    - **feature**: Storage and queue adapter interfaces with RustFS/MinIO and S3 conformance tests
+    - **why**: Same code must pass on Coolify and AWS, so adapter parity should be proven rather than assumed.
+  -
+    - **effort**: M
+    - **feature**: Single expression language (CEL or JSONLogic) with a shared evaluator and test harness for forms, rules and workflows
+    - **why**: Avoids three divergent logic dialects and keeps user-authored logic safe and testable.
+  -
+    - **effort**: S
+    - **feature**: Generated OpenAPI TypeScript client with CI check that the frontend builds against the current schema
+    - **why**: Gives end-to-end type safety after the decision to keep FastAPI.

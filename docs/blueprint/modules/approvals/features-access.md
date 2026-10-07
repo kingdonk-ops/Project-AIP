@@ -1,0 +1,247 @@
+# Workflow & approvals engine — Feature filler
+
+
+- **detail sections**:
+  - Record summary and preview
+  - Route visualisation
+  - Current step and approvers
+  - Decision history
+  - Guards and qualification checks
+  - Delegation
+  - Stamp preview
+  - Audit
+- **notifications**:
+  - Approval requested
+  - Reminder before step due
+  - Step overdue/escalated
+  - Approved or rejected
+  - Delegation started or ended
+  - Recalled or reassigned
+  - Definition changed
+- **settings**:
+  - Preset gallery
+  - Critical transitions needing re-authentication
+  - Escalation timings
+  - Delegation rules
+  - Authority matrix
+  - Who can edit definitions
+  - Stamp templates
+  - Parallel/sequential defaults
+  - Terminology labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Approve
+      - Reject
+      - Delegate
+    - **columns**:
+      - Record
+      - Type
+      - Requested by
+      - Step
+      - Due
+      - Value
+      - Age
+    - **empty state**: Nothing is waiting for you.
+    - **filters**:
+      - Record type
+      - Due
+      - Delegated to me
+      - Overdue
+      - Project
+      - Value band
+    - **name**: Approvals inbox
+    - **row actions**:
+      - Open
+      - Approve
+      - Reject
+      - Delegate
+      - Preview
+    - **search**: Record number or title, requester
+    - **sort**:
+      - Due
+      - Age
+      - Value
+  -
+    - **bulk actions**:
+      - Archive
+    - **columns**:
+      - Name
+      - Record type
+      - Project
+      - Version
+      - Status
+      - Updated by
+      - Instances in flight
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Record type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Project (optional)
+        - **required**: false
+        - **type**: project picker
+      -
+        - **field**: States
+        - **required**: true
+        - **type**: list
+      -
+        - **field**: Transitions
+        - **required**: true
+        - **type**: designer
+      -
+        - **field**: Guards
+        - **required**: false
+        - **type**: rule picker
+      -
+        - **field**: Side effects
+        - **required**: false
+        - **type**: list
+    - **empty state**: No definitions. Start from a preset.
+    - **filters**:
+      - Record type
+      - Project
+      - Status
+    - **name**: Workflow definitions
+    - **row actions**:
+      - Edit as new version
+      - Simulate
+      - Activate
+      - Duplicate
+      - View history
+    - **search**: Name
+    - **sort**:
+      - Name
+      - Updated
+  -
+    - **bulk actions**:
+      - Activate
+      - Deactivate
+    - **columns**:
+      - Name
+      - Entity
+      - Steps
+      - Threshold bands
+      - Active
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Entity type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Steps
+        - **required**: true
+        - **type**: ordered list
+      -
+        - **field**: Conditions/thresholds
+        - **required**: false
+        - **type**: rule builder
+    - **empty state**: No routes. Choose a preset or create one.
+    - **filters**:
+      - Entity
+      - Active
+    - **name**: Route templates
+    - **row actions**:
+      - Edit
+      - Simulate
+      - Duplicate
+    - **search**: Name
+    - **sort**:
+      - Name
+  -
+    - **bulk actions**:
+      - Delete
+    - **columns**:
+      - Role
+      - Entity
+      - Limit
+      - Currency
+    - **create form**:
+      -
+        - **field**: Role
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Entity
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Limit
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Currency
+        - **required**: true
+        - **type**: select
+    - **empty state**: No limits defined; commercial approvals will not route by value.
+    - **filters**:
+      - Entity
+      - Currency
+    - **name**: Authority matrix
+    - **row actions**:
+      - Edit
+      - Delete
+    - **search**: Role
+    - **sort**:
+      - Role
+      - Limit
+  -
+    - **bulk actions**:
+      - End now
+    - **columns**:
+      - From
+      - To
+      - Start
+      - End
+      - Scope
+      - Status
+    - **create form**:
+      -
+        - **field**: Delegate to
+        - **required**: true
+        - **type**: user
+      -
+        - **field**: Start
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: End
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Scope
+        - **required**: false
+        - **type**: select
+    - **empty state**: No delegations.
+    - **filters**:
+      - Active
+      - Scope
+    - **name**: Delegations
+    - **row actions**:
+      - Edit
+      - End now
+    - **search**: User
+    - **sort**:
+      - Start
+- **walkthrough**:
+  - Admin opens Workflow settings and selects a preset.
+  - Edit states, transitions, roles and guards.
+  - Add approval steps with approver, due time and thresholds.
+  - Run the dry-run simulator against sample records.
+  - Activate; this creates a new version.
+  - A user submits a record, which pins the instance to the active version.
+  - Guards are checked server-side.
+  - Approver gets the item in the inbox and reviews it.
+  - Critical transitions need re-authentication or PIN.
+  - Approver approves or rejects with a comment.
+  - Overdue steps escalate.
+  - The decision is written back to the host record and the history is hash-chained.

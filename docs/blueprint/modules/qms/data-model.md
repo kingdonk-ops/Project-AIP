@@ -1,0 +1,359 @@
+# Quality roll-up & audits — Data model & schema
+
+
+- **notes**: First-time pass rate, ITP completion, open NCRs and punch ageing are read-only SQL views (e.g. qms_v_first_time_pass by discipline, inspector and subcontractor) over inspections and issues; no data copied. Views must be created security_invoker so RLS applies. Add supporting indexes on inspections (tenant_id, discipline_id, inspector_id, status) in the owning module's migration. Dashboard tile layout lives in the reporting module.
+- **reuses existing**:
+  - assets
+  - inspections
+  - inspection_responses
+  - issues
+  - documents
+  - disciplines
+  - tasks
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable, FK projects
+        - **type**: uuid
+      -
+        - **name**: audit_type
+        - **notes**: internal/external/supplier; config-driven
+        - **type**: text
+      -
+        - **name**: reference
+        - **notes**: unique per tenant
+        - **type**: text
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: scope
+        - **type**: text
+      -
+        - **name**: iso_clause_refs
+        - **notes**: clause mapping list
+        - **type**: jsonb
+      -
+        - **name**: lead_auditor_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: auditee_company_id
+        - **notes**: FK contacts/companies, nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, FK assets
+        - **type**: uuid
+      -
+        - **name**: planned_date
+        - **type**: date
+      -
+        - **name**: conducted_date
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: workflow state
+        - **type**: text
+      -
+        - **name**: checklist_document_id
+        - **notes**: nullable, FK documents (completed checklist)
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **notes**: offline edit
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, reference) unique
+      - (tenant_id, project_id, status)
+      - (tenant_id, planned_date)
+    - **name**: qms_audits
+    - **purpose**: Internal, external and supplier audit register (ISO 9001).
+    - **relations**:
+      - projects
+      - assets
+      - documents
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: audit_id
+        - **notes**: FK qms_audits
+        - **type**: uuid
+      -
+        - **name**: finding_no
+        - **notes**: per audit
+        - **type**: int
+      -
+        - **name**: severity
+        - **notes**: configured scale (major/minor/OFI)
+        - **type**: text
+      -
+        - **name**: iso_clause
+        - **type**: text
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: evidence
+        - **notes**: document ids, notes
+        - **type**: jsonb
+      -
+        - **name**: issue_id
+        - **notes**: nullable, FK issues (NCR/CAPA raised)
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: mirrors issue closure via event handler
+        - **type**: text
+      -
+        - **name**: due_date
+        - **type**: date
+      -
+        - **name**: closed_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, audit_id)
+      - (tenant_id, issue_id)
+      - (tenant_id, status, due_date)
+    - **name**: qms_audit_findings
+    - **purpose**: Findings from audits, linked to issues for corrective action.
+    - **relations**:
+      - qms_audits
+      - issues
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: review_date
+        - **type**: date
+      -
+        - **name**: attendees
+        - **notes**: user ids
+        - **type**: jsonb
+      -
+        - **name**: inputs
+        - **notes**: KPI snapshot references
+        - **type**: jsonb
+      -
+        - **name**: decisions
+        - **type**: jsonb
+      -
+        - **name**: minutes_document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, review_date)
+    - **name**: qms_management_reviews
+    - **purpose**: Periodic management review records.
+    - **relations**:
+      - documents
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: kpi_key
+        - **notes**: reporting layer KPI provider key
+        - **type**: text
+      -
+        - **name**: target_value
+        - **type**: numeric
+      -
+        - **name**: threshold_warn
+        - **type**: numeric
+      -
+        - **name**: period_start
+        - **type**: date
+      -
+        - **name**: period_end
+        - **type**: date
+      -
+        - **name**: owner_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, period_end)
+    - **name**: qms_objectives
+    - **purpose**: Quality objectives with targets linked to KPI definitions.
+    - **relations**:
+      - users
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: code
+        - **notes**: unique per tenant
+        - **type**: text
+      -
+        - **name**: label_term_key
+        - **notes**: terminology key
+        - **type**: text
+      -
+        - **name**: cost_class
+        - **notes**: internal failure/external failure/appraisal/prevention
+        - **type**: text
+      -
+        - **name**: hourly_rate
+        - **notes**: default rework rate
+        - **type**: numeric
+      -
+        - **name**: currency
+        - **notes**: ISO 4217
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, code) unique
+    - **name**: qms_copq_categories
+    - **purpose**: Configurable COPQ categories and rework rates.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: issue_id
+        - **notes**: FK issues
+        - **type**: uuid
+      -
+        - **name**: category_id
+        - **notes**: FK qms_copq_categories
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: denormalised from issue for history
+        - **type**: uuid
+      -
+        - **name**: rework_hours
+        - **notes**: nullable override
+        - **type**: numeric
+      -
+        - **name**: cost_override
+        - **notes**: nullable
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, issue_id) unique
+      - (tenant_id, category_id)
+      - (tenant_id, asset_id)
+    - **name**: qms_copq_entries
+    - **purpose**: Categorisation of an issue's rework hours/cost into a COPQ category. Costs stay on issues; this stores only the mapping and override.
+    - **relations**:
+      - issues
+      - qms_copq_categories
+      - assets

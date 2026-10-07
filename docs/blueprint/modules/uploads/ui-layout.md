@@ -1,0 +1,90 @@
+# Upload & file processing pipeline — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Any authenticated user for their own uploads; project permission checked per chunk
+    - **actions**:
+      - Pause
+      - Resume
+      - Retry
+      - Cancel
+      - Reprioritise
+    - **layout**: Docked panel on desktop, full-screen sheet on mobile; reachable from the app shell.
+    - **name**: Upload tray
+    - **purpose**: Global panel showing every upload with state and controls, including offline-queued files.
+    - **route**: /uploads (tray)
+    - **sections**:
+      - Per-file rows with progress and scan chip
+      - Priority and Wi-Fi-only rules
+      - Recovery prompt after reconnecting
+  -
+    - **access**: Authenticated field users
+    - **actions**:
+      - Upload now
+      - Hold video for Wi-Fi
+      - Retry
+      - Remove
+    - **layout**: Single-column list with large touch targets and a storage and connection banner.
+    - **name**: Mobile upload queue
+    - **purpose**: Manage deferred field uploads on a phone.
+    - **route**: /m/uploads
+    - **sections**:
+      - Queued, uploading and failed groups
+      - Connection and bandwidth status
+  -
+    - **access**: Tenant admin (uploads.policy.manage)
+    - **actions**:
+      - Add or edit row
+      - Reset to default
+      - Set project GPS policy
+    - **layout**: Editable DataTable with platform limits shown inline.
+    - **name**: File-type policy table
+    - **purpose**: Edit allowed types, size limits, scan depth and preview behaviour within platform limits.
+    - **route**: /admin/files/policies
+    - **sections**:
+      - Policy rows
+      - Platform limit indicators
+      - EXIF GPS policy per project
+  -
+    - **access**: uploads.quarantine.review (security or tenant admin); no preview of unreleased content
+    - **actions**:
+      - Keep quarantined
+      - Delete
+      - Request rescan
+      - Notify uploader
+    - **layout**: List with a detail drawer showing scan history.
+    - **name**: Quarantine review
+    - **purpose**: Review failed or newly flagged files after rescan.
+    - **route**: /admin/files/quarantine
+    - **sections**:
+      - Failed and flagged items
+      - Scan results and rescan history
+      - Where used (references)
+  -
+    - **access**: Tenant admin; project managers read their own project
+    - **actions**:
+      - Edit quota
+      - Export usage
+    - **layout**: Dashboard with usage bars and a project table.
+    - **name**: Storage quota view
+    - **purpose**: Show usage and quotas per tenant and project.
+    - **route**: /admin/files/storage
+    - **sections**:
+      - Tenant usage
+      - Per-project usage and limits
+      - Dedupe savings
+      - Reused-file integrity signals
+  -
+    - **access**: Anyone who can see the parent record; files served only when clean
+    - **actions**:
+      - View scan details
+      - Retry upload
+    - **layout**: Inline chip with tooltip and a detail popover.
+    - **name**: Attachment scan chip
+    - **purpose**: Show quarantined, clean or failed on every attachment.
+    - **route**: Embedded: scan status chip and attachment component
+    - **sections**:
+      - Status
+      - Scan time
+      - Reuse flag

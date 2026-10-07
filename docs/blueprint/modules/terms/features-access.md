@@ -1,0 +1,221 @@
+# Terminology dictionary & localisation — Feature filler
+
+
+- **detail sections**:
+  - Key details with fallback chain
+  - Override history
+  - Where used
+  - Pack contents and diff
+  - Locale, date, number and units settings
+  - Glossary and aliases
+- **notifications**:
+  - Pack applied or rolled back
+  - New untranslated keys detected after release
+  - Hard-coded string report has new findings
+  - Override conflicts with a newer pack version
+- **settings**:
+  - Default locale and fallback chain
+  - Date and number formats
+  - Display units per tenant and project
+  - Allowed override levels
+  - Pack approval required before apply
+  - Glossary tooltips on/off
+  - Alias matching in search and import
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export selected
+      - Reset to default
+      - Import overrides
+    - **columns**:
+      - Key
+      - Default text
+      - Effective text
+      - Override level
+      - Locale
+      - Used in (UI/email/PDF/export)
+      - Last changed
+    - **create form**:
+      -
+        - **field**: Key
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Default text (ICU)
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Level
+        - **required**: true
+        - **type**: select (market pack/tenant/client/project)
+      -
+        - **field**: Client or project
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Locale
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Override text
+        - **required**: true
+        - **type**: text
+    - **empty state**: No overrides yet. Platform defaults apply. Search a key to override it.
+    - **filters**:
+      - Override level
+      - Locale
+      - Module
+      - Surface
+      - Overridden only
+      - Untranslated
+    - **name**: Dictionary keys
+    - **row actions**:
+      - Override
+      - Preview
+      - View where used
+      - Reset
+      - History
+    - **search**: Key, default text and effective text, including aliases
+    - **sort**:
+      - Key
+      - Module
+      - Last changed
+  -
+    - **columns**:
+      - Pack
+      - Market
+      - Version
+      - Status
+      - Keys changed
+      - Imported by
+      - Date
+    - **create form**:
+      -
+        - **field**: Pack file (JSON)
+        - **required**: true
+        - **type**: file
+      -
+        - **field**: Market
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Version label
+        - **required**: true
+        - **type**: text
+    - **empty state**: No packs imported. Import a pack to set up a new market.
+    - **filters**:
+      - Market
+      - Status
+    - **name**: Terminology packs
+    - **row actions**:
+      - Diff
+      - Dry run
+      - Apply
+      - Export
+      - Roll back
+    - **search**: Pack name
+    - **sort**:
+      - Date
+      - Version
+  -
+    - **bulk actions**:
+      - Export
+      - Delete
+    - **columns**:
+      - Term
+      - Abbreviation
+      - Definition
+      - Market equivalent
+      - Updated
+    - **create form**:
+      -
+        - **field**: Term
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Abbreviation
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Definition
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Market equivalent
+        - **required**: false
+        - **type**: text
+    - **empty state**: No glossary entries. Add standards and abbreviations such as CUI, ITP and WPS.
+    - **filters**:
+      - Has market equivalent
+    - **name**: Glossary
+    - **row actions**:
+      - Edit
+      - Delete
+    - **search**: Term, abbreviation and definition
+    - **sort**:
+      - Term
+      - Updated
+  -
+    - **bulk actions**:
+      - Delete
+      - Import CSV
+    - **columns**:
+      - Alias
+      - Maps to (term or field)
+      - Applies to (search/import)
+      - Created
+    - **create form**:
+      -
+        - **field**: Alias
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Neutral term or field
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Applies to
+        - **required**: true
+        - **type**: multi-select
+    - **empty state**: No aliases defined. Add aliases so 'punch' finds 'defect' records.
+    - **filters**:
+      - Applies to
+    - **name**: Aliases
+    - **row actions**:
+      - Edit
+      - Delete
+    - **search**: Alias
+    - **sort**:
+      - Alias
+  -
+    - **bulk actions**:
+      - Mark accepted
+      - Create key
+    - **columns**:
+      - String
+      - File or template
+      - Surface
+      - First seen
+      - Status
+    - **empty state**: No raw strings found.
+    - **filters**:
+      - Surface
+      - Status
+    - **name**: Hard-coded string report
+    - **row actions**:
+      - Create key
+      - Ignore
+    - **search**: String and file
+    - **sort**:
+      - First seen
+- **walkthrough**:
+  - Admin opens Settings > Terminology and searches for the key for hold point.
+  - Admin selects the client level for Rio Tinto and enters the client's term.
+  - Preview shows the UI, email and PDF surfaces that change.
+  - Admin saves; the override applies only to that client's records.
+  - Admin imports a market pack for New Zealand as a dry run.
+  - The diff lists keys that change and where they appear.
+  - Admin applies the pack, creating a new version.
+  - Admin sets project display units, such as mm and bar.
+  - Admin reviews the hard-coded string report and converts findings to keys.
+  - If wording is wrong, admin rolls back to the previous version.

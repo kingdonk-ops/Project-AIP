@@ -1,0 +1,119 @@
+# Meetings & AI minutes — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: app/modules/meetings/router.py
+    - **purpose**: Meeting, agenda, attendee, recording, minutes, action endpoints
+  -
+    - **path**: app/modules/meetings/models.py
+    - **purpose**: Meeting, AgendaItem, Attendee, Recording, Transcript, Minutes, Decision, Action, VocabularyHint
+  -
+    - **path**: app/modules/meetings/schemas.py
+    - **purpose**: API schemas
+  -
+    - **path**: app/modules/meetings/service.py
+    - **purpose**: Planning, series, carry-forward of open actions, toolbox mode
+  -
+    - **path**: app/modules/meetings/consent.py
+    - **purpose**: Consent notice and per-attendee state; block or pause recording
+  -
+    - **path**: app/modules/meetings/transcribe.py
+    - **purpose**: Calls shared voice pipeline (provider adapter) with vocabulary hints
+  -
+    - **path**: app/modules/meetings/draft.py
+    - **purpose**: LLM draft of minutes, decisions and actions via ai_gov gateway; transcript treated as untrusted; source segment links
+  -
+    - **path**: app/modules/meetings/agenda_builder.py
+    - **purpose**: Pulls open RFIs, interfaces, NCRs and previous actions
+  -
+    - **path**: app/modules/meetings/publish.py
+    - **purpose**: Human confirm, hand-off to report engine and signing, distribution
+  -
+    - **path**: app/modules/meetings/toolbox.py
+    - **purpose**: PIN/QR sign-on and single attendance record
+  -
+    - **path**: app/modules/meetings/retention.py
+    - **purpose**: Audio deletion after approval with legal-hold override
+  -
+    - **path**: app/modules/meetings/jobs.py
+    - **purpose**: Transcription, drafting, retention jobs
+  -
+    - **path**: app/modules/meetings/module.yaml
+    - **purpose**: Manifest, opt-in flag, permissions, events
+  -
+    - **path**: alembic/versions/xxxx_meetings.py
+    - **purpose**: Tables and RLS
+- **change isolation**: Provider swaps (Transcribe vs Whisper) sit in transcribe.py behind the voice pipeline adapter; minutes layout changes are report templates. Task, signing and approval behaviour stays in shared engines.
+- **config not code**:
+  - Tenant recording and AI opt-in
+  - Transcription provider and region
+  - Agenda templates and recurring series
+  - Vocabulary hints per project
+  - Audio retention period
+  - Consent wording
+  - Toolbox templates
+  - Minutes template and distribution list
+  - Prompt templates held in ai_gov register
+- **events consumed**:
+  - upload.completed
+  - upload.rejected
+  - interface.escalated
+  - rfi.overdue
+  - issue.ncr_opened
+  - legal_hold.applied
+  - ai.provider_changed
+  - task.completed
+- **events emitted**:
+  - meeting.scheduled
+  - meeting.recording_started
+  - meeting.consent_declined
+  - meeting.transcript_ready
+  - meeting.draft_ready
+  - minutes.published
+  - action.created
+  - toolbox.attendance_signed
+- **frontend files**:
+  -
+    - **path**: web/src/modules/meetings/MeetingList.tsx
+    - **purpose**: List and planner
+  -
+    - **path**: web/src/modules/meetings/MeetingDetail.tsx
+    - **purpose**: Agenda, record/upload, draft, actions
+  -
+    - **path**: web/src/modules/meetings/LiveCapture.tsx
+    - **purpose**: MediaRecorder capture with quick notes, offline
+  -
+    - **path**: web/src/modules/meetings/ConsentBanner.tsx
+    - **purpose**: Recording notice and consent state
+  -
+    - **path**: web/src/modules/meetings/MinutesReview.tsx
+    - **purpose**: Transcript beside suggestions with source highlights
+  -
+    - **path**: web/src/modules/meetings/ToolboxSignOn.tsx
+    - **purpose**: PIN/QR sign-on screen
+  -
+    - **path**: web/src/modules/meetings/AssetTagPicker.tsx
+    - **purpose**: Tag minutes to assets, NCRs, RFIs
+- **public api**:
+  - CRUD /meetings and /meetings/{id}/agenda | attendees
+  - POST /meetings/{id}/consent
+  - POST /meetings/{id}/recordings (via uploads)
+  - POST /meetings/{id}/transcribe | draft
+  - PATCH /meetings/{id}/minutes
+  - POST /meetings/{id}/minutes/publish
+  - POST /meetings/{id}/actions/{id}/to-task
+  - POST /meetings/toolbox/{id}/signon
+- **reuses shared**:
+  - uploads pipeline
+  - voice_phone shared audio pipeline
+  - ai_gov gateway, opt-in and provider/region controls
+  - approvals engine for minutes confirmation
+  - signing engine
+  - report_engine for published minutes
+  - tasks service
+  - notifications
+  - transmittals for distribution
+  - contacts and users
+  - retention/legal-hold service
+  - terms dictionary

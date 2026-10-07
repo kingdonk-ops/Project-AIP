@@ -1,0 +1,119 @@
+# Contacts & companies — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Users with contacts.view. External users see only what organisation-type visibility rules allow.
+    - **actions**:
+      - Create
+      - Open
+      - Import CSV
+      - Export
+      - Bulk tag
+    - **layout**: Tabs for Organisations and People. Search bar, tag filters and a DataTable.
+    - **name**: Directory
+    - **purpose**: Tenant-level directory of organisations and people.
+    - **route**: /contacts
+    - **sections**:
+      - Tabs
+      - Search and tag filters
+      - Organisation or people table
+      - Type chips (client, contractor, subcontractor, supplier, consultant, authority)
+  -
+    - **access**: contacts.view to read, contacts.edit to change
+    - **actions**:
+      - Edit
+      - Add person
+      - Assign project role
+      - Deactivate
+      - Merge
+    - **layout**: Header with tabs: Overview, People, Projects and roles, Credentials, History.
+    - **name**: Organisation Detail
+    - **purpose**: View an organisation with its people, projects and certificates.
+    - **route**: /contacts/organisations/:id
+    - **sections**:
+      - Profile (type, ABN or equivalent)
+      - People list
+      - Project role assignments
+      - Credential and insurance expiry links
+      - Change history
+  -
+    - **access**: contacts.edit. Invite requires identity.invite. Erasure requires contacts.privacy_admin.
+    - **actions**:
+      - Edit
+      - Invite as user
+      - Deactivate
+      - Request erasure (legal-hold aware)
+    - **layout**: Single detail page with side panel.
+    - **name**: Person Detail
+    - **purpose**: View a person with their organisation, roles and linked user.
+    - **route**: /contacts/people/:id
+    - **sections**:
+      - Contact details
+      - Organisation
+      - Project roles
+      - Linked user account
+      - Privacy and retention status
+  -
+    - **access**: contacts.create
+    - **actions**:
+      - Save
+      - Save and add person
+      - Cancel
+    - **layout**: FormRenderer page with live duplicate warning.
+    - **name**: Create or Edit Organisation or Person
+    - **purpose**: Create and edit directory records.
+    - **route**: /contacts/new
+    - **sections**:
+      - Type and core fields
+      - Contact details
+      - Tags
+      - Duplicate suggestions panel
+  -
+    - **access**: contacts.import
+    - **actions**:
+      - Upload
+      - Map columns
+      - Confirm import
+      - Roll back
+    - **layout**: Wizard: upload, map, validate, confirm.
+    - **name**: CSV Import
+    - **purpose**: Import contacts using shared import mapping.
+    - **route**: /contacts/import
+    - **sections**:
+      - File upload
+      - Mapping template
+      - Validation report
+      - Duplicate matches
+  -
+    - **access**: contacts.merge for admins
+    - **actions**:
+      - Choose surviving record
+      - Merge
+      - Dismiss
+      - Undo where supported
+    - **layout**: Queue list on the left with a side-by-side compare panel on the right.
+    - **name**: Duplicates and Merge
+    - **purpose**: Review duplicate candidates and merge.
+    - **route**: /contacts/duplicates
+    - **sections**:
+      - Candidate queue with confidence
+      - Side-by-side field compare
+      - Reference impact summary
+      - Merge history
+  -
+    - **access**: Tenant admins with contacts.admin
+    - **actions**:
+      - Add or rename type
+      - Edit thresholds
+      - Edit retention rule
+    - **layout**: Settings tabs.
+    - **name**: Directory Settings
+    - **purpose**: Configure organisation types, project role names, match rules, tags and retention.
+    - **route**: /settings/contacts
+    - **sections**:
+      - Organisation types
+      - Project roles
+      - Duplicate match rules and thresholds
+      - Tags
+      - Retention and erasure rules

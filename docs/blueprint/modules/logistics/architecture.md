@@ -1,0 +1,105 @@
+# Site logistics & mobilisation — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/logistics/models.py
+    - **purpose**: ReadinessPlan, ReadinessItem, Gate, GateHours, LaydownZone, DeliveryBooking
+  -
+    - **path**: backend/app/modules/logistics/schemas.py
+    - **purpose**: Schemas for plans, items, gates, zones, bookings
+  -
+    - **path**: backend/app/modules/logistics/readiness.py
+    - **purpose**: Roll-up of blocking items against target start date
+  -
+    - **path**: backend/app/modules/logistics/booking.py
+    - **purpose**: Slot capacity check, booking state machine, PO line link
+  -
+    - **path**: backend/app/modules/logistics/router.py
+    - **purpose**: REST endpoints
+  -
+    - **path**: backend/app/modules/logistics/supplier_router.py
+    - **purpose**: Restricted booking endpoints for supplier portal or magic link, no commercial data
+  -
+    - **path**: backend/app/modules/logistics/handlers.py
+    - **purpose**: Eligibility, PO and project event handlers
+  -
+    - **path**: backend/app/modules/logistics/permissions.py
+    - **purpose**: logistics.* permissions
+  -
+    - **path**: backend/app/modules/logistics/seed/readiness_templates.json
+    - **purpose**: Default readiness areas and items (config)
+  -
+    - **path**: backend/migrations/logistics/
+    - **purpose**: Module migrations
+  -
+    - **path**: backend/tests/logistics/
+    - **purpose**: Capacity, roll-up, supplier scope and RLS tests
+- **change isolation**: New readiness items, gates or statuses are configuration. Goods-receipt behaviour lives in procurement and inventory, which react to the arrival event.
+- **config not code**:
+  - Readiness template items and areas per project type
+  - Gate hours, slot length and capacity
+  - Delivery statuses and labels
+  - Required docket fields
+  - Which readiness items are hard blockers
+  - Notification recipients for arrivals
+- **events consumed**:
+  - eligibility.credential_status_changed
+  - procurement.po_issued
+  - procurement.po_changed
+  - project.start_date_changed
+  - documents.permit_approved
+  - uploads.file_released
+- **events emitted**:
+  - logistics.readiness_changed
+  - logistics.start_blocked
+  - logistics.start_ready
+  - logistics.delivery_booked
+  - logistics.delivery_arrived
+  - logistics.delivery_rejected
+  - logistics.slot_capacity_exceeded
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/logistics/pages/ReadinessPage.tsx
+    - **purpose**: Readiness items by area with blockers roll-up
+  -
+    - **path**: frontend/src/modules/logistics/pages/BookingBoardPage.tsx
+    - **purpose**: Calendar board of delivery slots
+  -
+    - **path**: frontend/src/modules/logistics/pages/GatesPage.tsx
+    - **purpose**: Gate hours and capacity editor
+  -
+    - **path**: frontend/src/modules/logistics/pages/LaydownPage.tsx
+    - **purpose**: Laydown zones on site plan or list
+  -
+    - **path**: frontend/src/modules/logistics/pages/SupplierBookingPage.tsx
+    - **purpose**: External booking request form
+  -
+    - **path**: frontend/src/modules/logistics/components/
+    - **purpose**: SlotGrid, ReadinessRollup, ZoneOverlay
+  -
+    - **path**: frontend/src/modules/logistics/api.ts
+    - **purpose**: Generated client hooks
+- **public api**:
+  - GET/PUT /projects/{id}/readiness-plan
+  - POST /projects/{id}/readiness-items
+  - PATCH /readiness-items/{id}
+  - GET /projects/{id}/readiness/blockers
+  - GET/POST /projects/{id}/gates
+  - GET /gates/{id}/slots?date=
+  - POST /projects/{id}/laydown-zones
+  - POST /projects/{id}/deliveries
+  - PATCH /deliveries/{id}/status
+  - POST /supplier/deliveries (scoped external principal)
+  - Python interface: DeliveryQuery.for_day(project_id, date) for diary
+- **reuses shared**:
+  - Eligibility gate (inductions and permits as required credentials)
+  - Scoped external credential service and portal
+  - Approvals engine for readiness sign-off
+  - Tasks engine for item owners and due dates
+  - Notifications
+  - Markup viewer for laydown on site plan
+  - Event bus and outbox
+  - Policy service
+  - Audit trail
+  - Terminology service

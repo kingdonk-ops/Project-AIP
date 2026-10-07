@@ -1,0 +1,229 @@
+# Meetings & AI minutes — Feature filler
+
+
+- **detail sections**:
+  - Status header and workflow
+  - Agenda items with linked RFIs, interfaces and NCRs
+  - Attendees, apologies and consent
+  - Recording and upload
+  - Transcript
+  - AI-drafted minutes
+  - Decisions
+  - Actions and carried-forward items
+  - Distribution and acknowledgement
+  - Retention and legal hold
+  - Activity
+- **notifications**:
+  - Meeting invitation and reminder
+  - Consent required
+  - Draft minutes ready for review
+  - Minutes published, acknowledgement requested
+  - Action assigned
+  - Action due or overdue
+  - Open actions carried forward
+  - Recording retention deletion pending
+- **settings**:
+  - Enable recording per tenant
+  - Transcription provider and region
+  - AI summary enable and provider
+  - Consent notice wording
+  - Audio retention period
+  - Keep audio after approval
+  - Agenda templates
+  - Vocabulary hints per project
+  - Toolbox-talk sign-on method (PIN or QR)
+  - Minutes distribution list defaults
+- **tables**:
+  -
+    - **bulk actions**:
+      - Cancel
+      - Export
+    - **columns**:
+      - Title
+      - Type
+      - Series
+      - Date and time
+      - Chair
+      - Project
+      - Package or asset
+      - Status
+      - Open actions
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Type (toolbox, progress, HSE, client)
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Date and time
+        - **required**: true
+        - **type**: datetime
+      -
+        - **field**: Chair
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Attendees
+        - **required**: true
+        - **type**: user or contact multiselect
+      -
+        - **field**: Agenda template
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Recurrence
+        - **required**: false
+        - **type**: rule
+      -
+        - **field**: Package or asset links
+        - **required**: false
+        - **type**: picker
+      -
+        - **field**: Recording planned
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No meetings yet. Plan one or start from an agenda template.
+    - **filters**:
+      - Type
+      - Project
+      - Package
+      - Status
+      - Date range
+    - **name**: Meetings
+    - **row actions**:
+      - Open
+      - Duplicate
+      - Cancel
+      - Open minutes
+    - **search**: Title, chair, attendee
+    - **sort**:
+      - Date
+      - Title
+      - Status
+  -
+    - **bulk actions**:
+      - Create tasks
+      - Reassign
+      - Carry forward
+    - **columns**:
+      - Action
+      - Owner
+      - Due date
+      - Linked asset
+      - Meeting
+      - Status
+    - **create form**:
+      -
+        - **field**: Action
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Owner
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Due date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Linked asset
+        - **required**: false
+        - **type**: asset picker
+    - **empty state**: No actions recorded.
+    - **filters**:
+      - Owner
+      - Status
+      - Overdue
+      - Project
+    - **name**: Actions
+    - **row actions**:
+      - Open task
+      - Edit
+      - Carry forward
+      - Close
+    - **search**: Action text, owner
+    - **sort**:
+      - Due date
+      - Owner
+  -
+    - **bulk actions**:
+      - Delete
+    - **columns**:
+      - Name
+      - Meeting type
+      - Items
+      - Last used
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Meeting type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Items
+        - **required**: true
+        - **type**: ordered list
+    - **empty state**: No agenda templates. Create one for toolbox or progress meetings.
+    - **filters**:
+      - Meeting type
+    - **name**: Agenda templates
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Delete
+    - **search**: Name
+    - **sort**:
+      - Name
+      - Last used
+  -
+    - **bulk actions**:
+      - Mark present
+      - Send reminder
+    - **columns**:
+      - Name
+      - Organisation
+      - Attendance
+      - Apology
+      - Consent
+      - Signed on
+    - **create form**:
+      -
+        - **field**: User or contact
+        - **required**: true
+        - **type**: picker
+    - **empty state**: No attendees added.
+    - **filters**:
+      - Attendance
+      - Consent state
+    - **name**: Attendees
+    - **row actions**:
+      - Record consent
+      - Mark apology
+      - Correct contribution
+      - Remove
+    - **search**: Name
+    - **sort**:
+      - Name
+- **walkthrough**:
+  - Secretary creates a meeting from an agenda template and invites attendees.
+  - Open RFIs, interfaces, NCRs and carried-forward actions are pulled into the agenda.
+  - At the meeting, the chair opens live capture and the consent notice is shown.
+  - Each attendee's consent is recorded. Recording is blocked or paused if anyone declines.
+  - Chair records audio, or dictates or uploads a recording, and takes quick notes tied to agenda items. Offline capture is queued.
+  - Audio is uploaded through the quarantine pipeline and transcribed using project vocabulary hints.
+  - The AI drafts minutes, decisions and actions, treating the transcript as untrusted input.
+  - The chair reviews in the split editor, plays source segments, corrects items and links assets, NCRs and RFIs.
+  - Attendee contributions are corrected where needed.
+  - The chair publishes and signs the minutes.
+  - Actions become tasks with owner and due date. Minutes are distributed for acknowledgement.
+  - Audio is deleted per retention policy unless a legal hold applies.

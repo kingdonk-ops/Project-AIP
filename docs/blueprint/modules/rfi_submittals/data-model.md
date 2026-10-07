@@ -1,0 +1,539 @@
+# RFIs & submittals — Data model & schema
+
+
+- **notes**: The gate is evaluated by reading submittals.is_accepted joined to submittal_gate_rules for the inspection or task target, consistent with the existing certificate gate. Status changes should also write to the audit trail. RFI label and the disambiguating prefix versus Request for Inspection are terminology keys, not columns. Overdue reminders write to the shared deadlines table in the tasks module. Bulk import and multi-reviewer consolidation are not modelled because the owner has not decided them.
+- **reuses existing**:
+  - assets
+  - disciplines
+  - documents
+  - entity_types
+  - inspections
+  - tasks
+  - users
+  - projects
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: number
+        - **notes**: from shared tenant numbering
+        - **type**: text
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: question
+        - **type**: text
+      -
+        - **name**: discipline_id
+        - **notes**: FK disciplines
+        - **type**: uuid
+      -
+        - **name**: package_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: primary_asset_id
+        - **notes**: FK assets, nullable
+        - **type**: uuid
+      -
+        - **name**: raised_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: ball_in_court_user_id
+        - **type**: uuid
+      -
+        - **name**: ball_in_court_company_id
+        - **notes**: FK contacts/companies
+        - **type**: uuid
+      -
+        - **name**: due_date
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: draft|raised|assigned|responded|accepted|rejected|closed
+        - **type**: text
+      -
+        - **name**: cost_impact
+        - **type**: boolean
+      -
+        - **name**: schedule_impact
+        - **type**: boolean
+      -
+        - **name**: closed_at
+        - **type**: timestamptz
+      -
+        - **name**: variation_candidate_id
+        - **notes**: FK change module, nullable
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **notes**: photo markup captured offline
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id, number)
+      - (tenant_id, status, due_date)
+      - (tenant_id, primary_asset_id)
+      - (tenant_id, ball_in_court_user_id)
+    - **name**: rfis
+    - **purpose**: Request for Information. The label is renamable per market. Distinct from the Request for Inspection hold point.
+    - **relations**:
+      - projects
+      - disciplines
+      - assets
+      - users
+      - change records
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: rfi_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (rfi_id, asset_id) where deleted_at is null
+      - (tenant_id, asset_id)
+    - **name**: rfi_assets
+    - **purpose**: Additional assets linked to an RFI, so it appears in each asset's history.
+    - **relations**:
+      - rfis
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: rfi_id
+        - **type**: uuid
+      -
+        - **name**: responder_id
+        - **type**: uuid
+      -
+        - **name**: responder_company_id
+        - **type**: uuid
+      -
+        - **name**: body
+        - **type**: text
+      -
+        - **name**: is_official
+        - **notes**: the formal response
+        - **type**: boolean
+      -
+        - **name**: responded_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (rfi_id, responded_at)
+    - **name**: rfi_responses
+    - **purpose**: Responses in the thread. Append-only.
+    - **relations**:
+      - rfis
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: rfi_id
+        - **type**: uuid
+      -
+        - **name**: cost_estimate
+        - **notes**: currency below
+        - **type**: numeric
+      -
+        - **name**: currency
+        - **notes**: ISO 4217
+        - **type**: text
+      -
+        - **name**: schedule_days
+        - **type**: int
+      -
+        - **name**: notes
+        - **type**: text
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (rfi_id)
+    - **name**: rfi_impact_estimates
+    - **purpose**: Cost and schedule impact notes.
+    - **relations**:
+      - rfis
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: label_key
+        - **notes**: terminology key
+        - **type**: text
+      -
+        - **name**: category
+        - **notes**: shop_drawing|method_statement|weld_procedure|ndt_procedure|personnel_qualification|calibration|itp_approval|other
+        - **type**: text
+      -
+        - **name**: approval_route_id
+        - **notes**: FK approvals, nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+    - **name**: submittal_types
+    - **purpose**: Configurable submittal types, including inspection paperwork.
+    - **relations**:
+      - approval routes
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: label_key
+        - **type**: text
+      -
+        - **name**: is_accepted
+        - **notes**: counts toward gate
+        - **type**: boolean
+      -
+        - **name**: requires_resubmission
+        - **type**: boolean
+      -
+        - **name**: sort_order
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+    - **name**: review_codes
+    - **purpose**: Tenant-configurable review outcome codes.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: number
+        - **type**: text
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: submittal_type_id
+        - **type**: uuid
+      -
+        - **name**: spec_reference
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: package_id
+        - **type**: uuid
+      -
+        - **name**: current_revision
+        - **type**: int
+      -
+        - **name**: required_by
+        - **type**: date
+      -
+        - **name**: submitted_by
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: draft|submitted|in_review|returned|resubmit|closed
+        - **type**: text
+      -
+        - **name**: current_review_code_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: is_accepted
+        - **notes**: denormalised for gate lookups
+        - **type**: boolean
+      -
+        - **name**: document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id, number)
+      - (tenant_id, asset_id, is_accepted)
+      - (tenant_id, status, required_by)
+    - **name**: submittals
+    - **purpose**: Submittal register.
+    - **relations**:
+      - submittal_types
+      - assets
+      - documents
+      - review_codes
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: submittal_id
+        - **type**: uuid
+      -
+        - **name**: revision_no
+        - **type**: int
+      -
+        - **name**: document_revision_id
+        - **notes**: FK document revisions
+        - **type**: uuid
+      -
+        - **name**: submitted_at
+        - **type**: timestamptz
+      -
+        - **name**: submitted_by
+        - **type**: uuid
+      -
+        - **name**: final_review_code_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (submittal_id, revision_no)
+    - **name**: submittal_revisions
+    - **purpose**: Resubmission history. Append-only.
+    - **relations**:
+      - submittals
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: submittal_revision_id
+        - **type**: uuid
+      -
+        - **name**: step_no
+        - **type**: int
+      -
+        - **name**: reviewer_id
+        - **type**: uuid
+      -
+        - **name**: review_code_id
+        - **type**: uuid
+      -
+        - **name**: comments
+        - **type**: text
+      -
+        - **name**: reviewed_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (submittal_revision_id, step_no)
+      - (tenant_id, reviewer_id, reviewed_at)
+    - **name**: submittal_review_steps
+    - **purpose**: Per-reviewer outcome on each revision. Append-only.
+    - **relations**:
+      - submittal_revisions
+      - review_codes
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: submittal_type_id
+        - **type**: uuid
+      -
+        - **name**: blocks_target_type
+        - **notes**: inspection|scope_task
+        - **type**: text
+      -
+        - **name**: blocks_target_kind
+        - **notes**: entity or inspection kind code
+        - **type**: text
+      -
+        - **name**: entity_type_id
+        - **notes**: FK entity_types, nullable
+        - **type**: uuid
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, blocks_target_type, blocks_target_kind) where active
+    - **name**: submittal_gate_rules
+    - **purpose**: Data for the gate rule: which submittal types block which inspection or task kinds.
+    - **relations**:
+      - submittal_types
+      - entity_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: parent_type
+        - **notes**: rfi|submittal
+        - **type**: text
+      -
+        - **name**: parent_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: document_revision_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: markup_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: file_id
+        - **notes**: stored_files, nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, parent_type, parent_id)
+      - (tenant_id, document_id)
+    - **name**: rfi_submittal_doc_refs
+    - **purpose**: Drawing, document and markup references for RFIs and submittals.
+    - **relations**:
+      - documents
+      - stored_files

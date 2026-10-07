@@ -1,0 +1,102 @@
+# Issues, NCRs & corrective actions — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/issues/router.py
+    - **purpose**: Issue, NCR and corrective action endpoints, kanban and register queries
+  -
+    - **path**: backend/app/modules/issues/models.py
+    - **purpose**: issues, ncr_details, root_causes, corrective_actions, issue_types, severities
+  -
+    - **path**: backend/app/modules/issues/schemas.py
+    - **purpose**: Pydantic models
+  -
+    - **path**: backend/app/modules/issues/service_issue.py
+    - **purpose**: Create, assess, assign, verify, close using workflow definition
+  -
+    - **path**: backend/app/modules/issues/service_ncr.py
+    - **purpose**: Classification, root cause, disposition, CAPA, hold flag on ITP step
+  -
+    - **path**: backend/app/modules/issues/service_auto_raise.py
+    - **purpose**: Maps failed answers to issues via configurable raise rules
+  -
+    - **path**: backend/app/modules/issues/jobs.py
+    - **purpose**: Overdue CAPA detection and notification events
+  -
+    - **path**: backend/app/modules/issues/workflow_def.py
+    - **purpose**: open > assessed > action assigned > in progress > ready for verification > verified > closed
+  -
+    - **path**: backend/app/modules/issues/events.py
+    - **purpose**: Event definitions
+  -
+    - **path**: backend/app/modules/issues/tests/
+    - **purpose**: Workflow, auto-raise, scoping and overdue tests
+- **change isolation**: New issue types, severities and raise rules are configuration only. Root-cause method changes (5-why, fishbone) stay in service_ncr and NcrPanel.
+- **config not code**:
+  - Issue types, severities and SLA due-date defaults
+  - Auto-raise rules per template field (answer to severity)
+  - Workflow states and verifier rules
+  - NCR categories and disposition list
+  - Overdue reminder schedule
+  - Terminology (Issue, NCR, Defect)
+- **events consumed**:
+  - inspection.answer_failed (auto-raise)
+  - punch.escalated
+  - task.completed (linked CAPA)
+  - upload.released (attachments)
+  - portal.response_submitted
+  - asset.returned_to_backlog
+- **events emitted**:
+  - issue.raised
+  - issue.assigned
+  - issue.verified
+  - issue.closed
+  - ncr.dispositioned
+  - capa.created
+  - capa.overdue
+  - issue.hold_raised
+  - issue.escalated_to_change
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/issues/pages/IssueRegister.tsx
+    - **purpose**: List with filters and status pipeline
+  -
+    - **path**: frontend/src/modules/issues/pages/IssueKanban.tsx
+    - **purpose**: Kanban by status
+  -
+    - **path**: frontend/src/modules/issues/pages/IssueDetail.tsx
+    - **purpose**: Detail with tabs: overview, root cause, CAPA, evidence, history
+  -
+    - **path**: frontend/src/modules/issues/components/NcrPanel.tsx
+    - **purpose**: Type, root cause, disposition
+  -
+    - **path**: frontend/src/modules/issues/components/CapaTable.tsx
+    - **purpose**: Corrective actions with owner and due
+  -
+    - **path**: frontend/src/modules/issues/components/RaiseIssueDialog.tsx
+    - **purpose**: Manual and from-inspection raise
+  -
+    - **path**: frontend/src/modules/issues/admin/TypesSeveritiesAdmin.tsx
+    - **purpose**: Configure types, severities, raise rules
+  -
+    - **path**: frontend/src/modules/issues/index.ts
+    - **purpose**: Public exports
+- **public api**:
+  - GET/POST /api/v1/issues
+  - GET/PATCH /api/v1/issues/{id}
+  - POST /api/v1/issues/{id}/transitions
+  - GET/POST /api/v1/issues/{id}/corrective-actions
+  - PATCH /api/v1/corrective-actions/{id}
+  - PUT /api/v1/issues/{id}/ncr
+  - GET/PUT /api/v1/issue-types and /api/v1/issue-severities
+  - GET /api/v1/assets/{id}/issues (read model)
+- **reuses shared**:
+  - Workflow engine
+  - Comments and notifications
+  - Uploads pipeline and photo markup
+  - Tasks module for CAPA tasks
+  - Permission service with portal scoping
+  - Rules engine for auto-raise conditions
+  - Audit writer
+  - Terms dictionary

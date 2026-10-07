@@ -1,0 +1,266 @@
+# Operations, hosting & deployment — Feature filler
+
+
+- **detail sections**:
+  - Job detail (parameters, events, result, error)
+  - Environment health and versions
+  - Deployment pipeline status
+  - Backup and restore evidence
+  - Storage lifecycle JSON preview
+  - SLOs and alerts
+  - Recovery targets (RPO/RTO)
+- **notifications**:
+  - Job completed (requester)
+  - Job failed with correlation ID (requester and admin)
+  - Queue depth or latency SLO breach (on-call)
+  - Backup failed or restore test overdue (platform admin)
+  - Deployment completed or rolled back (engineering)
+  - Lifecycle change applied (super-admin)
+  - Status page incident posted (customers)
+- **settings**:
+  - Job types, time and memory limits
+  - Retry policy per job type
+  - Tenant queue quotas
+  - Log level and PII scrubbing rules
+  - Client error rate limits and size caps
+  - Backup schedule and retention
+  - Storage lifecycle defaults and project overrides
+  - SLO and alert thresholds
+  - Recovery targets (RPO/RTO)
+  - Sandbox reset schedule
+- **tables**:
+  -
+    - **bulk actions**:
+      - Retry selected
+      - Cancel selected
+    - **columns**:
+      - Job ID
+      - Type
+      - Tenant
+      - Project
+      - Requester
+      - Status
+      - Progress
+      - Started
+      - Duration
+      - Correlation ID
+    - **empty state**: No jobs have run. Imports, exports, OCR and report packs will appear here.
+    - **filters**:
+      - Type
+      - Status
+      - Tenant
+      - Requester
+      - Date range
+    - **name**: Jobs
+    - **row actions**:
+      - View detail
+      - Retry
+      - Cancel
+      - Download result
+      - Copy correlation ID
+    - **search**: Job ID, type, correlation ID, requester
+    - **sort**:
+      - Started (desc)
+      - Duration
+      - Status
+  -
+    - **bulk actions**:
+      - Clear completed
+    - **columns**:
+      - Type
+      - Status
+      - Progress
+      - Started
+      - Result
+    - **empty state**: You have no running or recent jobs.
+    - **filters**:
+      - Running
+      - Completed
+      - Failed
+    - **name**: My jobs (drawer)
+    - **row actions**:
+      - Open result
+      - Cancel
+      - Retry
+    - **search**: None; short list
+    - **sort**:
+      - Started (desc)
+  -
+    - **columns**:
+      - Environment
+      - Hosting (Coolify/AWS)
+      - Region
+      - Version
+      - Commit
+      - Deployed
+      - Health
+      - Data class
+    - **empty state**: No environments registered.
+    - **filters**:
+      - Hosting
+      - Health
+    - **name**: Environments and deployments
+    - **row actions**:
+      - View release
+      - Roll back
+      - View health
+    - **search**: Environment, version
+    - **sort**:
+      - Environment
+      - Deployed
+  -
+    - **columns**:
+      - Backup
+      - System
+      - Taken
+      - Encrypted
+      - Region copies
+      - Retention
+      - Last restore test
+      - Result
+    - **create form**:
+      -
+        - **field**: System
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Backup point
+        - **required**: true
+        - **type**: datetime
+      -
+        - **field**: Target environment
+        - **required**: true
+        - **type**: select
+    - **empty state**: No backups recorded. Back up the Kaefer AIP Postgres first.
+    - **filters**:
+      - System
+      - Result
+    - **name**: Backups and restore tests
+    - **row actions**:
+      - Run restore test
+      - View evidence
+    - **search**: System
+    - **sort**:
+      - Taken (desc)
+  -
+    - **columns**:
+      - Scope (default/project)
+      - Rule
+      - Transition after
+      - Target class
+      - Expiration
+      - Updated by
+    - **create form**:
+      -
+        - **field**: Scope
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Transition to Standard-IA (days)
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Transition to Glacier Instant (years)
+        - **required**: true
+        - **type**: number
+    - **empty state**: Default lifecycle applies: Standard, IA after 365 days, Glacier Instant after 7 years. No expiry.
+    - **filters**:
+      - Scope
+      - Target class
+    - **name**: Storage lifecycle policies
+    - **row actions**:
+      - Edit
+      - Preview JSON
+      - Apply
+    - **search**: Project name
+    - **sort**:
+      - Scope
+  -
+    - **bulk actions**:
+      - Mark triaged
+    - **columns**:
+      - Release
+      - Route
+      - Error
+      - Count
+      - First seen
+      - Last seen
+      - Tenant hash
+    - **empty state**: No client errors reported.
+    - **filters**:
+      - Release
+      - Route
+      - Date range
+    - **name**: Client error reports
+    - **row actions**:
+      - View stack
+      - Link to issue
+    - **search**: Route, error message
+    - **sort**:
+      - Count (desc)
+      - Last seen
+  -
+    - **bulk actions**:
+      - Export CSV
+    - **columns**:
+      - Tenant
+      - Storage
+      - Job minutes
+      - AI calls
+      - Estimated cost
+      - Period
+    - **empty state**: No usage data for this period.
+    - **filters**:
+      - Period
+      - Tenant
+    - **name**: Tenant cost and usage
+    - **row actions**:
+      - View breakdown
+    - **search**: Tenant
+    - **sort**:
+      - Estimated cost (desc)
+  -
+    - **columns**:
+      - Sandbox
+      - Customer
+      - Seeded from bundle
+      - Created
+      - Last reset
+      - Status
+    - **create form**:
+      -
+        - **field**: Customer
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Config bundle
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Sample data
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No sandboxes. Create one to let a customer test safely.
+    - **filters**:
+      - Status
+    - **name**: UAT sandboxes
+    - **row actions**:
+      - Reset
+      - Delete
+      - Open
+    - **search**: Sandbox, customer
+    - **sort**:
+      - Created
+- **walkthrough**:
+  - Developer merges a change; the pipeline builds one image.
+  - The image is scanned and signed, then promoted to staging.
+  - The migration pre-flight runs against a production-size snapshot.
+  - Required CI gates pass and the image is promoted to production.
+  - Health checks fail and automated rollback restores the previous version.
+  - A user starts an export; a job appears in My jobs with progress.
+  - The job fails; the user opens the failure detail and copies the correlation ID.
+  - Admin finds the job in the Admin queue and retries it.
+  - Admin reviews the backup list and runs the quarterly restore test.
+  - Result and evidence are saved for audit.
+  - Admin previews the storage lifecycle JSON and confirms no expiration rule on evidence.
+  - Admin resets the customer UAT sandbox from the bundle.

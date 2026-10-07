@@ -1,0 +1,88 @@
+# Terminology dictionary & localisation — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Tenant admin and terminology admin; project level overrides for project admins.
+    - **actions**:
+      - Override
+      - Preview
+      - View where used
+      - Reset
+      - History
+      - Export selected
+      - Import overrides
+    - **layout**: Register with filter bar, split-pane preview showing surface (UI/email/PDF/export), blade for override.
+    - **name**: Dictionary keys
+    - **purpose**: Search keys, preview and override labels across the fallback chain.
+    - **route**: /settings/terms/dictionary
+    - **sections**:
+      - Keys table (Key, Default, Effective, Level, Locale, Used in, Last changed)
+      - Override blade
+      - Where-used panel
+      - Override history
+  -
+    - **access**: Tenant admin; platform admin for built-in market packs.
+    - **actions**:
+      - Import pack
+      - Dry-run
+      - Apply
+      - Roll back
+      - Export pack
+      - Approve (if required)
+    - **layout**: Register of packs; import wizard blade with diff view.
+    - **name**: Terminology packs
+    - **purpose**: Import, diff, dry-run, apply and roll back packs.
+    - **route**: /settings/terms/packs
+    - **sections**:
+      - Packs table (Pack, Market, Version, Status, Keys changed, Imported by, Date)
+      - Import wizard
+      - Diff and dry-run preview
+      - Version history
+  -
+    - **access**: Tenant admin and platform engineers.
+    - **actions**:
+      - Open source location
+      - Create key
+      - Mark accepted
+      - Export
+    - **layout**: Report table with source filters and detail blade.
+    - **name**: Untranslated and hard-coded string report
+    - **purpose**: Show keys missing in a locale and hard-coded strings found by the linter.
+    - **route**: /settings/terms/coverage
+    - **sections**:
+      - Findings table
+      - Surface filter (UI/email/PDF/export)
+      - Trend since last release
+  -
+    - **access**: Tenant admin and terminology admin; read for all users via tooltips.
+    - **actions**:
+      - Add
+      - Edit
+      - Delete
+      - Import
+      - Export
+    - **layout**: Two tabs, each a register with blade editing.
+    - **name**: Glossary and aliases
+    - **purpose**: Manage definitions, abbreviations and alias mappings for search and import.
+    - **route**: /settings/terms/glossary
+    - **sections**:
+      - Glossary entries (term, abbreviation, definition)
+      - Aliases (alias to neutral term or field)
+      - Tooltip preview
+  -
+    - **access**: Tenant admin; project admin for own project.
+    - **actions**:
+      - Save
+      - Add project override
+      - Reset
+    - **layout**: Settings form with tenant defaults and a project overrides table.
+    - **name**: Locale, formats and units
+    - **purpose**: Set locale, date/number formats and display units at tenant and project level.
+    - **route**: /settings/terms/locale
+    - **sections**:
+      - Default locale and fallback chain
+      - Date and number formats
+      - Display units (mm/in, bar/psi, C/F)
+      - Project overrides
+      - Sample preview

@@ -1,0 +1,36 @@
+# Terminology dictionary & localisation — Feature scout
+
+
+- **abilities seen in market**:
+  - Key-based label dictionaries with tenant, client and project-level overrides and fallback chains
+  - Translation workflows with missing-key reports and machine-translation drafts for review
+  - Terminology packs per industry or region installed at tenant onboarding
+  - Status, record-type and role names configurable while workflow logic uses stable internal codes
+  - Locale-aware dates, numbers, units, currency and time zones applied to UI, PDFs and exports
+  - Template placeholders in emails, notifications and reports that resolve to tenant terms
+  - Version history and approval for dictionary changes
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Override precedence chain: platform default, market pack, tenant, client, project
+    - **why**: Kaefer on Rio Tinto work may need client-specific wording (for example Rio's term for a hold point) without changing Kaefer's own default vocabulary elsewhere.
+  -
+    - **effort**: M
+    - **feature**: Dictionary coverage linter in CI and an admin 'untranslated or hard-coded string' report
+    - **why**: Prevents raw labels such as 'ITP' or 'NCR' leaking from the AIP code base into renamed markets, and protects emails and PDFs, which are the places hard-coding usually hides.
+  -
+    - **effort**: S
+    - **feature**: Tenant-scoped glossary of standards and abbreviations (CUI, ITP, MDR, WPS, hold/witness/review) with definitions shown as tooltips
+    - **why**: Helps new customers and external parties in NZ, UK and Asia read domain terms, and lets each market map equivalent concepts, for example hold point vs inspection stop.
+  -
+    - **effort**: M
+    - **feature**: Terminology pack versioning with diff, dry-run preview and rollback
+    - **why**: Importing a pack for a new market should show which keys change and where they appear before going live, and be reversible.
+  -
+    - **effort**: M
+    - **feature**: Term alias mapping in search and import
+    - **why**: Users searching 'punch' should find 'defect' records, and spreadsheet imports with market-specific column headers should map automatically to neutral fields.
+  -
+    - **effort**: M
+    - **feature**: Unit conversion layer for measurement fields (mm/in, bar/psi, °C/°F) storing canonical SI with display units per project
+    - **why**: NDT thickness, temperature and pressure readings need to stay exact across metric and imperial customers while reports show the preferred unit.

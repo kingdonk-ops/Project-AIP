@@ -1,0 +1,125 @@
+# Document library & control — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: modules/documents/router.py
+    - **purpose**: Routes for documents, versions, tags, views, bin, register, CDE states
+  -
+    - **path**: modules/documents/service.py
+    - **purpose**: Create/revise/promote/restore, asset and record linking, duplicate detection
+  -
+    - **path**: modules/documents/models.py
+    - **purpose**: Document, FileVersion, Tag, CrossRef, DistributionList, RequiredDocument, StateTransition (append-only)
+  -
+    - **path**: modules/documents/schemas.py
+    - **purpose**: Pydantic models
+  -
+    - **path**: modules/documents/naming.py
+    - **purpose**: Filename parsing and ISO 19650 validation driven by tenant patterns
+  -
+    - **path**: modules/documents/gate.py
+    - **purpose**: Required-documents gate registered with the shared completion-gate pattern
+  -
+    - **path**: modules/documents/retention.py
+    - **purpose**: Recycle-bin purge honouring retention and legal hold
+  -
+    - **path**: modules/documents/download.py
+    - **purpose**: Scope-checked signed URLs and controlled-copy stamp request
+  -
+    - **path**: modules/documents/register_export.py
+    - **purpose**: Client-configurable register export
+  -
+    - **path**: modules/documents/subscribers.py
+    - **purpose**: Handles upload.released, ocr.completed, approval.completed
+  -
+    - **path**: modules/documents/migrations/
+    - **purpose**: Alembic migrations, RLS, FTS indexes
+  -
+    - **path**: modules/documents/tests/
+    - **purpose**: Unit, IDOR, legal-hold and tenant tests
+  -
+    - **path**: modules/documents/module.yaml
+    - **purpose**: Manifest: permissions, events, nav, default terms
+- **change isolation**: Storage, scanning and OCR sit behind the pipeline and storage services, so swapping them never touches document logic. A new CDE or naming scheme is a configuration pack, not code.
+- **config not code**:
+  - Document types, categories, tags and custom fields
+  - Naming conventions and ISO 19650 patterns, states, suitability codes
+  - Retention windows and legal-hold rules
+  - Required-document sets per scope type
+  - Register export column and format templates
+  - Distribution lists
+  - State and label names
+- **events consumed**:
+  - upload.released
+  - ocr.completed
+  - approval.completed
+  - approval.rejected
+  - signing.completed
+  - asset.moved
+  - legal_hold.changed
+  - project.archived
+- **events emitted**:
+  - document.created
+  - document.updated
+  - document.deleted
+  - document.version_added
+  - cde.state_changed
+  - document.required_received
+- **frontend files**:
+  -
+    - **path**: features/documents/pages/DocumentLibrary.tsx
+    - **purpose**: Smart-view tree, file table, preview pane, asset facet
+  -
+    - **path**: features/documents/pages/DocumentDetail.tsx
+    - **purpose**: Preview, history, links
+  -
+    - **path**: features/documents/pages/RequiredDocuments.tsx
+    - **purpose**: Required-documents register
+  -
+    - **path**: features/documents/pages/CdeContainers.tsx
+    - **purpose**: State columns and transition menu
+  -
+    - **path**: features/documents/pages/RegisterExportConfig.tsx
+    - **purpose**: Column/format config
+  -
+    - **path**: features/documents/components/UploadDialog.tsx
+    - **purpose**: Drag-drop with metadata and bulk filename parsing
+  -
+    - **path**: features/documents/components/VersionDrawer.tsx
+    - **purpose**: Compare, download, restore
+  -
+    - **path**: features/documents/components/AssetDocumentsTab.tsx
+    - **purpose**: Inherited subtree documents tab for the asset page
+  -
+    - **path**: features/documents/components/PhotoGallery.tsx
+    - **purpose**: Per asset/inspection gallery
+  -
+    - **path**: features/documents/api.ts
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - POST /documents (initiates upload via pipeline)
+  - GET /documents?asset_id&include_children&type&tag&q
+  - GET/PATCH/DELETE /documents/{id}
+  - POST /documents/{id}/versions
+  - POST /documents/{id}/versions/{v}/promote
+  - POST /documents/{id}/restore
+  - GET /documents/{id}/download
+  - POST/GET /documents/{id}/links
+  - GET/POST /documents/required
+  - POST /documents/{id}/cde-transition
+  - GET /documents/bin and POST /documents/bin/{id}/recover
+  - GET /documents/register/export
+  - CRUD tags, distribution lists, saved views
+- **reuses shared**:
+  - Upload and file processing pipeline (quarantine, ClamAV, OCR)
+  - Workflow and approvals engine for document approval and ISO gates
+  - Completion-gate pattern
+  - Rules and validation engine for naming checks
+  - Search index service
+  - Notifications and distribution
+  - Audit trail
+  - PDF stamping service (controlled copy watermark)
+  - Storage service (S3, KMS, signed URLs)
+  - Terminology dictionary
+  - Permission/policy service

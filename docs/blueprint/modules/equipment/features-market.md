@@ -1,0 +1,37 @@
+# Equipment & fleet — Feature scout
+
+
+- **abilities seen in market**:
+  - Unified plant, vehicle and tool register with ownership, hire status and location
+  - Preventive maintenance by hours, distance or calendar interval with auto-generated work orders
+  - Mobile pre-start checks with failure triggers that take equipment out of service
+  - Calibration and certification tracking with expiry alerts and certificate storage
+  - Internal hire rates and charge statements per project, billed by day, week or usage
+  - Equipment check-in and check-out with custody history
+  - Telematics ingestion for hours, location and fault codes
+  - Defect reporting from the field that creates a maintenance request
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Instrument usage log linked to each inspection reading
+    - **why**: Recording which UT gauge, DFT gauge or holiday detector took a measurement lets you trace affected readings if a calibration later fails. Few products do this.
+  -
+    - **effort**: M
+    - **feature**: Calibration-failure impact report
+    - **why**: When an instrument is found out of tolerance after use, list every inspection record it touched so they can be reviewed or re-done.
+  -
+    - **effort**: M
+    - **feature**: Calibration check standards and verification records
+    - **why**: NDT practice involves on-site verification against reference blocks or standards before use. A per-shift verification record can also be a gate condition.
+  -
+    - **effort**: S
+    - **feature**: Equipment kits and instrument sets
+    - **why**: A UT inspector's kit of gauge, probes, cables and couplant is assigned as a unit, and one invalid component blocks the kit.
+  -
+    - **effort**: S
+    - **feature**: Pre-start failure raising tasks and removing availability
+    - **why**: Closes the loop between the form template and the register, so a failed check immediately blocks use and creates a corrective task.
+  -
+    - **effort**: S
+    - **feature**: Hire charge statement export by project
+    - **why**: Internal charging is only useful if finance can export a clear statement. A basic CSV and PDF is enough for v1.

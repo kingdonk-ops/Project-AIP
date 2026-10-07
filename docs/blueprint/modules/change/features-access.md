@@ -1,0 +1,273 @@
+# Change orders, variations & MOC (basic) — Feature filler
+
+
+- **detail sections**:
+  - Header with workflow bar and notice clock badge
+  - Overview
+  - Change lines
+  - Daywork
+  - MOC checklist and review stages
+  - Links (correspondence, diary, phone log, RFIs)
+  - Attachments
+  - Timeline
+  - Approval trail
+- **notifications**:
+  - Change submitted
+  - Change approved or rejected
+  - Notice clock warning
+  - Time-bar imminent
+  - Daywork awaiting signature
+  - MOC review assigned
+  - MOC open actions block close-out
+  - Confirmation letter generated
+- **settings**:
+  - Type labels through terminology
+  - Workflow routes per type
+  - Notice periods per contract
+  - Warning thresholds
+  - MOC checklist templates and reviewer roles
+  - Numbering
+  - Commercial value visibility
+  - Confirmation letter template
+  - Contract form templates (undecided)
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export
+      - Save view
+    - **columns**:
+      - Number
+      - Type (tenant label)
+      - Description
+      - Source
+      - Asset
+      - Cost impact
+      - Time impact
+      - Stage
+      - Notice clock
+      - Status
+    - **create form**:
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Source (notice, instruction, RFI, inspection finding, phone log)
+        - **required**: true
+        - **type**: select with link
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: rich text
+      -
+        - **field**: Asset
+        - **required**: false
+        - **type**: asset tree picker
+      -
+        - **field**: Cost impact
+        - **required**: false
+        - **type**: currency
+      -
+        - **field**: Time impact (days)
+        - **required**: false
+        - **type**: number
+      -
+        - **field**: Contract reference
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Notice start event and date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Photos and attachments
+        - **required**: false
+        - **type**: file
+    - **empty state**: No changes raised. Create one or raise it from an inspection finding.
+    - **filters**:
+      - Type
+      - Status
+      - Stage
+      - Asset subtree
+      - Notice clock state
+      - Source
+    - **name**: Change register
+    - **row actions**:
+      - Open
+      - Submit
+      - Advance stage
+      - Generate confirmation letter
+    - **search**: Number, description, asset, contract reference
+    - **sort**:
+      - Number
+      - Notice deadline
+      - Cost impact
+      - Updated
+  -
+    - **bulk actions**:
+      - Delete lines
+    - **columns**:
+      - Line
+      - Description
+      - Cost code (text)
+      - Qty
+      - UoM
+      - Rate
+      - Amount
+    - **create form**:
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Cost code
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Quantity
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Unit
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Rate
+        - **required**: true
+        - **type**: currency
+    - **empty state**: No lines. Add a line to price this change.
+    - **filters**:
+      - Cost code
+    - **name**: Change lines
+    - **row actions**:
+      - Edit
+      - Delete
+    - **search**: Description, cost code
+    - **sort**:
+      - Line
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Sheet
+      - Change
+      - Date
+      - Labour hours
+      - Plant
+      - Materials
+      - Signed by client
+      - Status
+    - **create form**:
+      -
+        - **field**: Change
+        - **required**: true
+        - **type**: change picker
+      -
+        - **field**: Date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Labour (from diary and resources)
+        - **required**: false
+        - **type**: pulled lines
+      -
+        - **field**: Plant
+        - **required**: false
+        - **type**: pulled lines
+      -
+        - **field**: Consumables (from ledger)
+        - **required**: false
+        - **type**: pulled lines
+      -
+        - **field**: Client signature
+        - **required**: false
+        - **type**: signature
+    - **empty state**: No daywork sheets.
+    - **filters**:
+      - Status
+      - Date
+      - Signed
+    - **name**: Daywork sheets
+    - **row actions**:
+      - Open
+      - Edit
+      - Capture signature
+      - Submit
+    - **search**: Sheet number, change number
+    - **sort**:
+      - Date
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - MOC
+      - Discipline
+      - Reviewer role
+      - Stage
+      - Open actions
+      - Decision
+    - **create form**:
+      -
+        - **field**: Proposal
+        - **required**: true
+        - **type**: rich text
+      -
+        - **field**: Checklist template
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Reviewer roles
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Asset
+        - **required**: false
+        - **type**: asset tree picker
+    - **empty state**: No MOC records.
+    - **filters**:
+      - Stage
+      - Discipline
+      - Open actions
+    - **name**: MOC reviews
+    - **row actions**:
+      - Open
+      - Review
+      - Add action
+      - Close out
+    - **search**: MOC number, title
+    - **sort**:
+      - Stage
+      - Updated
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Change
+      - Contract
+      - Start event
+      - Period
+      - Deadline
+      - State
+    - **empty state**: No running notice clocks.
+    - **filters**:
+      - State (running, warning, time-barred, met)
+      - Contract
+    - **name**: Notice clocks
+    - **row actions**:
+      - Open change
+      - Create task
+    - **search**: Change number, contract
+    - **sort**:
+      - Deadline
+- **walkthrough**:
+  - An inspector finds unexpected CUI and raises a discovered-condition change from the finding, with photos and asset.
+  - The record is prefilled with source and asset.
+  - The contract reference and notice start event are set, which starts the notice clock.
+  - A verbal instruction logged in the phone log creates a draft change and a confirmation letter.
+  - The supervisor adds lines with cost-code text.
+  - They build a daywork sheet by pulling crew, hours, plant and consumables.
+  - The client signs on the device.
+  - The change is submitted and routed through the workflow engine.
+  - Approvers approve or reject, and commercial values are redacted without permission.
+  - The change moves through order and measured to final account.
+  - For MOC, reviewers complete the discipline checklist and the open-action gate allows close-out.

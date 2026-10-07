@@ -1,0 +1,82 @@
+# Resources & crews (basic) — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/resources/models.py
+    - **purpose**: Crew, CrewMember, Assignment (person or crew, target, dates), Availability window; people reference users/staff and skills reference the competency register
+  -
+    - **path**: backend/app/modules/resources/schemas.py
+    - **purpose**: Schemas for crews, assignments, availability
+  -
+    - **path**: backend/app/modules/resources/conflicts.py
+    - **purpose**: Double-booking detection and warning list
+  -
+    - **path**: backend/app/modules/resources/skillmatch.py
+    - **purpose**: Asks eligibility service whether person holds required, valid credentials
+  -
+    - **path**: backend/app/modules/resources/router.py
+    - **purpose**: REST endpoints
+  -
+    - **path**: backend/app/modules/resources/handlers.py
+    - **purpose**: Credential and schedule event handlers
+  -
+    - **path**: backend/app/modules/resources/permissions.py
+    - **purpose**: resources.* permissions
+  -
+    - **path**: backend/migrations/resources/
+    - **purpose**: Module migrations
+  -
+    - **path**: backend/tests/resources/
+    - **purpose**: Conflict, expired-credential warning and RLS tests
+- **change isolation**: Kept basic: registers, assignments and conflict checks only. Qualification rules live in the eligibility engine, and scheduling features live in schedule, so this module stays small.
+- **config not code**:
+  - Skill and ticket requirements per task or inspection type
+  - Conflict rules (overlap threshold, working calendar)
+  - Crew role labels
+  - Whether expired credentials warn or block, set by the eligibility policy
+  - Availability reason codes
+- **events consumed**:
+  - eligibility.credential_status_changed
+  - users.deactivated
+  - schedule.activity_moved
+  - scope.task_created
+  - inspection.assigned
+  - equipment.availability_changed
+- **events emitted**:
+  - resources.assignment_created
+  - resources.assignment_changed
+  - resources.conflict_detected
+  - resources.credential_warning_raised
+  - resources.assignment_started
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/resources/pages/ResourceRegisterPage.tsx
+    - **purpose**: People and crews with skills
+  -
+    - **path**: frontend/src/modules/resources/pages/AssignmentCalendarPage.tsx
+    - **purpose**: Calendar with conflict flags
+  -
+    - **path**: frontend/src/modules/resources/components/
+    - **purpose**: SkillMatchPanel, ConflictBanner, CrewEditor
+  -
+    - **path**: frontend/src/modules/resources/api.ts
+    - **purpose**: Generated client hooks
+- **public api**:
+  - GET /resources/people?skill=&available_on=
+  - GET/POST /projects/{id}/crews
+  - POST /assignments (person or crew, target type and id, dates)
+  - GET /assignments/conflicts?from=&to=
+  - PUT /people/{id}/availability
+  - GET /assignments/{id}/skill-check
+  - Python interface: ResourceQuery.on_site(project_id, date) for diary labour prefill
+- **reuses shared**:
+  - Eligibility and competency register (skills and tickets, no separate skills store)
+  - Identity directory for people
+  - Schedule engine for calendar rendering
+  - Notifications
+  - Event bus and outbox
+  - Policy service
+  - Audit trail
+  - Terminology service
+  - Tasks engine

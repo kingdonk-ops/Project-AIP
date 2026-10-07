@@ -1,0 +1,410 @@
+# Audit trail, activity & timeline — Data model & schema
+
+
+- **notes**: audit_log, security_audit_events, audit_anchors, legal_hold_events and audit_export_manifests have REVOKE UPDATE, DELETE for the app role and are written by a separate writer role. Corrections are new events pointing at the original: the superseded_by_id column is set at insert on the correcting row, so the original is never edited (or model it as a supersedes_id on the new row to keep strictly append-only). Chain per tenant is serialised by locking audit_chain_heads. The legal_holds row may update status only, and every change is recorded in legal_hold_events. Soft delete flags on business tables are the recycle bin source. Audit read is a separate permission, and RLS applies on top.
+- **reuses existing**:
+  - assets
+  - documents
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: seq
+        - **notes**: per-tenant chain sequence
+        - **type**: bigint
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: history follows asset
+        - **type**: uuid
+      -
+        - **name**: asset_path
+        - **notes**: snapshot for subtree rollup
+        - **type**: ltree
+      -
+        - **name**: actor_id
+        - **type**: uuid
+      -
+        - **name**: on_behalf_of_id
+        - **type**: uuid
+      -
+        - **name**: auth_strength
+        - **type**: text
+      -
+        - **name**: source_module
+        - **type**: text
+      -
+        - **name**: record_table
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: event_type
+        - **type**: text
+      -
+        - **name**: summary_key
+        - **notes**: terminology key
+        - **type**: text
+      -
+        - **name**: payload
+        - **notes**: before/after
+        - **type**: jsonb
+      -
+        - **name**: reason_for_change
+        - **type**: text
+      -
+        - **name**: flags
+        - **notes**: on_behalf_of, force_unlock, override
+        - **type**: text[]
+      -
+        - **name**: source_ip
+        - **type**: inet
+      -
+        - **name**: device
+        - **type**: text
+      -
+        - **name**: superseded_by_id
+        - **notes**: correction link, set via new event only
+        - **type**: uuid
+      -
+        - **name**: prev_hash
+        - **type**: bytea
+      -
+        - **name**: hash
+        - **type**: bytea
+      -
+        - **name**: occurred_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, seq) unique
+      - (tenant_id, asset_path) GiST
+      - (tenant_id, project_id, occurred_at desc)
+      - (record_table, record_id, occurred_at)
+      - (tenant_id, actor_id, occurred_at)
+      - partial GIN on flags where flags <> '{}'
+    - **name**: audit_log
+    - **purpose**: Append-only hash-chained event log
+    - **relations**:
+      - assets
+      - projects
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: tenant_id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: last_seq
+        - **type**: bigint
+      -
+        - **name**: last_hash
+        - **type**: bytea
+      -
+        - **name**: updated_at
+        - **notes**: writer role only
+        - **type**: timestamptz
+    - **indexes**:
+      - PK tenant_id
+    - **name**: audit_chain_heads
+    - **purpose**: Current head per tenant chain
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: seq
+        - **type**: bigint
+      -
+        - **name**: actor_id
+        - **type**: uuid
+      -
+        - **name**: event_type
+        - **notes**: auth, permission change, export, sensitive read
+        - **type**: text
+      -
+        - **name**: target_ref
+        - **type**: jsonb
+      -
+        - **name**: auth_strength
+        - **type**: text
+      -
+        - **name**: source_ip
+        - **type**: inet
+      -
+        - **name**: device
+        - **type**: text
+      -
+        - **name**: detail
+        - **type**: jsonb
+      -
+        - **name**: prev_hash
+        - **type**: bytea
+      -
+        - **name**: hash
+        - **type**: bytea
+      -
+        - **name**: siem_forwarded_at
+        - **notes**: only mutable column, via separate role or side table
+        - **type**: timestamptz
+      -
+        - **name**: occurred_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, seq) unique
+      - (tenant_id, event_type, occurred_at)
+      - (tenant_id, actor_id, occurred_at)
+    - **name**: security_audit_events
+    - **purpose**: Separate append-only security stream
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: stream
+        - **notes**: audit or security
+        - **type**: text
+      -
+        - **name**: through_seq
+        - **type**: bigint
+      -
+        - **name**: head_hash
+        - **type**: bytea
+      -
+        - **name**: s3_bucket
+        - **type**: text
+      -
+        - **name**: s3_key
+        - **type**: text
+      -
+        - **name**: s3_version_id
+        - **type**: text
+      -
+        - **name**: anchored_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, stream, through_seq)
+    - **name**: audit_anchors
+    - **purpose**: Chain-head anchors to S3 Object Lock
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: subtree root, nullable
+        - **type**: uuid
+      -
+        - **name**: scope_filter
+        - **notes**: record types, dates
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: active/released
+        - **type**: text
+      -
+        - **name**: placed_by
+        - **type**: uuid
+      -
+        - **name**: placed_at
+        - **type**: timestamptz
+      -
+        - **name**: released_by
+        - **type**: uuid
+      -
+        - **name**: released_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **notes**: status fields only; never deleted
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status)
+      - (asset_id)
+    - **name**: legal_holds
+    - **purpose**: Legal hold definition
+    - **relations**:
+      - projects
+      - assets
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: hold_id
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: placed/amended/released
+        - **type**: text
+      -
+        - **name**: actor_id
+        - **type**: uuid
+      -
+        - **name**: note
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (hold_id, created_at)
+    - **name**: legal_hold_events
+    - **purpose**: Append-only hold register (place, release, amend)
+    - **relations**:
+      - legal_holds
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: record_table
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: deleted_by
+        - **type**: uuid
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+      -
+        - **name**: purge_after
+        - **type**: timestamptz
+      -
+        - **name**: held
+        - **notes**: computed by hold job
+        - **type**: boolean
+      -
+        - **name**: restored_at
+        - **type**: timestamptz
+      -
+        - **name**: purged_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (record_table, record_id) unique
+      - (purge_after) where purged_at is null and not held
+    - **name**: recycle_purge_schedule
+    - **purpose**: Purge date per soft-deleted record, with hold check
+    - **relations**:
+      - assets
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: requested_by
+        - **type**: uuid
+      -
+        - **name**: filter
+        - **type**: jsonb
+      -
+        - **name**: from_seq
+        - **type**: bigint
+      -
+        - **name**: to_seq
+        - **type**: bigint
+      -
+        - **name**: record_count
+        - **type**: int
+      -
+        - **name**: file_hash
+        - **type**: text
+      -
+        - **name**: signature
+        - **type**: text
+      -
+        - **name**: signing_key_id
+        - **notes**: KMS key id
+        - **type**: text
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, created_at)
+    - **name**: audit_export_manifests
+    - **purpose**: Signed export manifest
+    - **relations**:
+      - documents
+      - users

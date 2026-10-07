@@ -1,0 +1,121 @@
+# Data import, export & backup — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Users with import permission on the target register, subject to the same row-level scope as manual entry.
+    - **actions**:
+      - Download template
+      - Upload file
+      - Map columns
+      - Run dry run
+      - Download error report
+      - Fix and re-upload
+      - Commit as async job
+    - **layout**: Stepper page: template, upload, mapping, dry run, errors, commit.
+    - **name**: Import wizard
+    - **purpose**: Bulk create or update records from Excel or CSV with validation and dry-run before commit.
+    - **route**: /p/:projectId/import
+    - **sections**:
+      - Template download per register
+      - File upload with size limit
+      - Column mapping
+      - Mode selector (create or update-by-key)
+      - Dry-run summary
+      - Row-level error report
+      - Commit confirmation
+  -
+    - **access**: Asset managers with asset create/update permission.
+    - **actions**:
+      - Adjust code rules
+      - Resolve orphan
+      - Resolve duplicate
+      - Commit
+      - Cancel
+    - **layout**: Split view: source rows on the left, resulting tree preview on the right with issues panel.
+    - **name**: Asset tree import preview
+    - **purpose**: Preview the resulting asset hierarchy and catch orphans and duplicate tags before commit.
+    - **route**: /p/:projectId/assets/import
+    - **sections**:
+      - Parent resolution settings and code rules
+      - Tree preview with new, changed and unchanged markers
+      - Orphan and duplicate tag list
+      - Summary counts
+  -
+    - **access**: Importer and project admins; rollback is blocked when records are under legal hold.
+    - **actions**:
+      - View detail
+      - Download original file and error report
+      - Roll back batch
+      - Re-run
+    - **layout**: Table with a batch detail drawer.
+    - **name**: Import history and batches
+    - **purpose**: Review past imports and roll back a whole batch.
+    - **route**: /p/:projectId/import/history
+    - **sections**:
+      - Batch table (file, mode, user, counts, status)
+      - Batch detail (records created or changed)
+      - Rollback state and legal hold flag
+  -
+    - **access**: Users with export permission per register; output honours permissions and masking.
+    - **actions**:
+      - Start export
+      - Download when ready
+      - Cancel
+    - **layout**: Single form with scope picker and recent exports list.
+    - **name**: Export
+    - **purpose**: Export a register or project data as Excel, CSV or JSON.
+    - **route**: /p/:projectId/export
+    - **sections**:
+      - Scope picker (register, project, asset subtree)
+      - Format choice
+      - Column and masking preview
+      - Recent exports with expiry
+  -
+    - **access**: Tenant admins only; requester cannot approve their own request; every action is audited and rate-limited.
+    - **actions**:
+      - Request export
+      - Approve or reject
+      - Download
+      - Verify manifest
+      - Cancel request
+    - **layout**: Request list with a detail page showing approval progress.
+    - **name**: Tenant export requests
+    - **purpose**: Request and approve full tenant exports with strong controls.
+    - **route**: /admin/data/tenant-export
+    - **sections**:
+      - Request form (scope, reason)
+      - Step-up MFA prompt
+      - Approval status (single or dual, configurable)
+      - Encryption key reference
+      - Download with visible expiry
+      - Manifest and checksum verification
+  -
+    - **access**: Users with handover export permission on the subtree, such as project managers and document controllers.
+    - **actions**:
+      - Select modules
+      - Start export
+      - Download
+      - Verify manifest
+    - **layout**: Wizard in a side sheet launched from the asset tree.
+    - **name**: Handover data book export
+    - **purpose**: Export an asset subtree's structured data and linked files as a handover package.
+    - **route**: /p/:projectId/assets/:assetId/handover-export
+    - **sections**:
+      - Subtree summary
+      - Included modules and files
+      - Manifest preview
+      - Progress and download
+  -
+    - **access**: Tenant admin, auditors and project admins (read-only).
+    - **actions**:
+      - Download schema
+      - Download sample manifest
+    - **layout**: Master-detail documentation view.
+    - **name**: Export schemas and manifests
+    - **purpose**: Show the documented schema for each module's export for customers and auditors.
+    - **route**: /admin/data/schemas
+    - **sections**:
+      - Module list
+      - Schema per module
+      - Sample manifest

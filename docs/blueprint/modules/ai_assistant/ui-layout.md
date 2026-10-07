@@ -1,0 +1,175 @@
+# AI assistant & agents — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Users with the ai.use permission in a tenant that has opted in; results limited to the caller's own permissions.
+    - **actions**:
+      - Ask question
+      - Open cited record
+      - Edit filters and re-run
+      - Copy answer
+      - Flag answer as wrong
+      - Start new chat
+      - Open proposed change
+    - **layout**: Docked right-side panel expandable to full page; message thread with composer at the bottom, history rail on the left when expanded.
+    - **name**: Assistant chat
+    - **purpose**: Ask plain-language questions over project data and receive cited, permission-scoped answers.
+    - **route**: /p/:projectId/assistant
+    - **sections**:
+      - Message thread
+      - Answer card (filters, record counts, time range)
+      - Citations and source links
+      - Proposed-change cards inline
+      - Composer with scope chip (project/asset subtree)
+      - AI disabled or kill-switch banner
+  -
+    - **access**: Users see their own history; tenant AI admins and auditors can see all, with audit logging.
+    - **actions**:
+      - Reopen chat
+      - Delete own chat (subject to legal hold)
+      - Open run console
+      - Export transcript
+    - **layout**: Filterable table with a preview drawer.
+    - **name**: Chats and runs history
+    - **purpose**: Find and reopen prior chats and agent runs.
+    - **route**: /p/:projectId/assistant/history
+    - **sections**:
+      - Filter bar (type, date, user, status)
+      - History table
+      - Preview drawer with transcript and citations
+  -
+    - **access**: The requesting user, and only if they hold write permission on the target record; applying runs under their identity.
+    - **actions**:
+      - Approve and apply via module API
+      - Edit before applying
+      - Discard
+      - Open target record
+    - **layout**: Single card page: target record header, diff view, evidence side panel, confirm bar.
+    - **name**: Proposed change review
+    - **purpose**: Review an AI-proposed change and apply or discard it under the user's identity.
+    - **route**: /p/:projectId/assistant/proposals/:proposalId
+    - **sections**:
+      - Target record summary and link
+      - Before/after diff
+      - Evidence and citations
+      - Status timeline
+      - Confirm bar
+  -
+    - **access**: Users with the ai.agents.run permission; read-only tools by default; the feature is shown only if agents are enabled for the tenant.
+    - **actions**:
+      - Start run
+      - Stop run
+      - Open cited record
+      - Send output to verification
+      - Download run log
+    - **layout**: Two-pane: agent picker and parameters on the left, live step trace with tool calls and outputs on the right, limits bar on top.
+    - **name**: Agent run console
+    - **purpose**: Start, watch and stop bounded agent runs with a full step trace.
+    - **route**: /p/:projectId/assistant/runs/:runId
+    - **sections**:
+      - Agent selector and parameters
+      - Step limit, token and spend meters
+      - Step trace (reason, tool call, observation)
+      - Outputs and drafts
+      - Proposed changes produced
+  -
+    - **access**: Inspectors, QA and document controllers with create permission on the target record type; output stays unverified until approved.
+    - **actions**:
+      - Edit field
+      - Verify and save
+      - Reject
+      - Send NCR draft to inspector approval
+      - Re-run extraction
+    - **layout**: Split view: source scan or photo viewer on the left, editable extracted fields or draft form on the right, with confidence flags.
+    - **name**: Extraction and draft verification
+    - **purpose**: Human verification of extracted certificate/MTR fields and AI-drafted NCRs before they enter records.
+    - **route**: /p/:projectId/assistant/verify/:extractionId
+    - **sections**:
+      - Source viewer with highlighted regions
+      - Extracted fields (heat number, grade, expiry) with confidence
+      - NCR draft (asset, clause, evidence, description)
+      - Validation warnings (e.g. expired or mismatched)
+      - Verification status bar
+  -
+    - **access**: Tenant AI admin; write tools can be enabled only with an explicit confirmation step.
+    - **actions**:
+      - Enable or disable tool
+      - Set scope
+      - Assign roles
+      - Review change history
+    - **layout**: Registry table with detail drawer.
+    - **name**: Tool permission admin
+    - **purpose**: Control which tools exist, whether they read or write, and who may use them.
+    - **route**: /admin/ai/tools
+    - **sections**:
+      - Tool list (read/write, scope, status)
+      - Role and team assignment
+      - Limits per tool
+      - Change history
+  -
+    - **access**: Tenant AI admin, security and compliance roles, and auditors (read-only).
+    - **actions**:
+      - Filter by period and project
+      - Export report
+      - Open prompt log (audited)
+      - Set spend cap
+    - **layout**: Dashboard with KPI tiles, charts and a drill-down table.
+    - **name**: AI usage and data-flow dashboard
+    - **purpose**: Show what data went to which model and region and at what cost, for governance reviews.
+    - **route**: /admin/ai/usage
+    - **sections**:
+      - Usage and spend tiles
+      - Data-flow map (data category, model, region)
+      - Injection-screen hits
+      - Evaluation results trend
+      - Per-user and per-agent table
+  -
+    - **access**: Tenant admin; changes are audited, and the kill switch is also available to the platform operator.
+    - **actions**:
+      - Opt in or out
+      - Set limits
+      - Run evaluation set
+      - Trigger kill switch
+    - **layout**: Settings form with a prominent kill-switch card.
+    - **name**: AI settings and kill switch
+    - **purpose**: Per-tenant opt-in, model routing and emergency disable.
+    - **route**: /admin/ai/settings
+    - **sections**:
+      - Opt-in status
+      - Model and region routing (read-only if not tenant-selectable)
+      - Spend and step limits
+      - Evaluation set status
+      - Kill switch
+  -
+    - **access**: Tenant AI admin and platform AI maintainers.
+    - **actions**:
+      - Add question
+      - Run evaluation
+      - Compare runs
+      - Export results
+    - **layout**: Master-detail: sets on the left, results table and comparison on the right.
+    - **name**: Evaluation sets and results
+    - **purpose**: Maintain domain test questions and view results for each model or prompt change.
+    - **route**: /admin/ai/evals
+    - **sections**:
+      - Question sets
+      - Last-run pass rate
+      - Per-question result with citations check
+      - Run comparison
+  -
+    - **access**: Same as the desktop chat; unavailable offline.
+    - **actions**:
+      - Ask question
+      - Open record
+      - Apply or discard proposal
+      - Verify extraction
+    - **layout**: Full-screen chat with a bottom composer; verification screens are stacked cards.
+    - **name**: Mobile assistant
+    - **purpose**: Ask quick questions and verify extractions on a phone in the field.
+    - **route**: /m/assistant
+    - **sections**:
+      - Chat thread with compact answer cards
+      - Pending proposals list
+      - Pending verifications list
+      - Offline notice (assistant needs a connection)

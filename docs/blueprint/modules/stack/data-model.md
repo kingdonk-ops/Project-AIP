@@ -1,0 +1,119 @@
+# Tech stack — Data model & schema
+
+
+- **notes**: The stack is mostly files (pyproject.toml, uv.lock, ADRs, orval config). These tables are optional and platform-level, so no end-customer tenant data is stored; tenant_id is nullable only on capability_adapter_settings. Add a CI allow-list entry for global tables.
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: adr_number
+        - **notes**: e.g. 2
+        - **type**: int
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: proposed, accepted, superseded
+        - **type**: text
+      -
+        - **name**: supersedes_id
+        - **notes**: self FK, nullable
+        - **type**: uuid
+      -
+        - **name**: file_path
+        - **type**: text
+      -
+        - **name**: decided_at
+        - **type**: date
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (adr_number)
+    - **name**: platform_adr_index
+    - **purpose**: Optional queryable index of ADRs for the ADR index page; files in docs/adr remain the source of truth.
+    - **relations**:
+      - self via supersedes_id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: nullable = deployment default; RLS allows read of null rows
+        - **type**: uuid
+      -
+        - **name**: capability
+        - **notes**: pdf_renderer, sealer, ocr, object_store, identity_provider, expression_language
+        - **type**: text
+      -
+        - **name**: adapter_key
+        - **notes**: weasyprint, gotenberg, textract, s3, minio, workos, cel, jsonlogic
+        - **type**: text
+      -
+        - **name**: config
+        - **notes**: non-secret settings only; secrets in Secrets Manager
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'), capability)
+    - **name**: capability_adapter_settings
+    - **purpose**: Selected adapter per capability (PdfRenderer, Sealer, Ocr, ObjectStore, IdentityProvider) per deployment or tenant override, plus form-logic dialect.
+    - **relations**:
+      - tenants.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: release_version
+        - **type**: text
+      -
+        - **name**: ecosystem
+        - **notes**: pypi, npm, os
+        - **type**: text
+      -
+        - **name**: package
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: text
+      -
+        - **name**: licence
+        - **type**: text
+      -
+        - **name**: licence_allowed
+        - **notes**: result of allow-list check
+        - **type**: boolean
+      -
+        - **name**: vulnerability_ids
+        - **notes**: array of CVE or GHSA ids
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (release_version)
+      - partial btree (release_version) WHERE licence_allowed = false
+    - **name**: dependency_inventory
+    - **purpose**: SBOM component snapshot per release for licence and vulnerability tracking.
+    - **relations**:
+      - links to ops deployment_info by release_version

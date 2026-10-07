@@ -1,0 +1,625 @@
+# Meetings & AI minutes — Data model & schema
+
+
+- **notes**: Toolbox sign-on creates one signed attendance record through the signing module. PIN and QR identity for non-users is held on meeting_attendees.contact_id or display_name until the owner decides on an identity rule. Meeting_minutes versions are never overwritten. Published versions sit under documents with revisions. Actions become rows in the existing tasks table through task_id.
+- **reuses existing**:
+  - tasks
+  - assets
+  - documents
+  - contacts
+  - users
+  - projects
+  - stored_files (uploads)
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: meeting_type
+        - **notes**: toolbox|progress|hse|client, config-driven
+        - **type**: text
+      -
+        - **name**: recurrence_rule
+        - **notes**: RRULE
+        - **type**: text
+      -
+        - **name**: agenda_template_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+    - **name**: meeting_series
+    - **purpose**: Recurring meeting definition.
+    - **relations**:
+      - projects
+      - agenda_templates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: meeting_type
+        - **type**: text
+      -
+        - **name**: items
+        - **notes**: ordered item titles
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, meeting_type)
+    - **name**: agenda_templates
+    - **purpose**: Reusable agenda structures.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: series_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: meeting_type
+        - **type**: text
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: chair_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: package_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: scheduled_at
+        - **type**: timestamptz
+      -
+        - **name**: location
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: planned|in_progress|draft_review|published|cancelled
+        - **type**: text
+      -
+        - **name**: recording_enabled
+        - **notes**: requires tenant opt-in
+        - **type**: boolean
+      -
+        - **name**: is_toolbox
+        - **type**: boolean
+      -
+        - **name**: sync_version
+        - **notes**: offline capture
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, scheduled_at desc)
+      - (tenant_id, asset_id)
+      - (tenant_id, status)
+    - **name**: meetings
+    - **purpose**: A single meeting instance.
+    - **relations**:
+      - meeting_series
+      - users
+      - assets
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: meeting_id
+        - **type**: uuid
+      -
+        - **name**: seq
+        - **type**: int
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: source_type
+        - **notes**: rfi|ncr|interface|action, nullable
+        - **type**: text
+      -
+        - **name**: source_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: notes
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (meeting_id, seq)
+      - (tenant_id, source_type, source_id)
+    - **name**: meeting_agenda_items
+    - **purpose**: Agenda items with optional source-record link.
+    - **relations**:
+      - meetings
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: meeting_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: contact_id
+        - **notes**: nullable FK contacts
+        - **type**: uuid
+      -
+        - **name**: display_name
+        - **notes**: for ad hoc attendees
+        - **type**: text
+      -
+        - **name**: attendance
+        - **notes**: invited|present|apology|absent
+        - **type**: text
+      -
+        - **name**: signon_method
+        - **notes**: user|pin|qr
+        - **type**: text
+      -
+        - **name**: signed_on_at
+        - **type**: timestamptz
+      -
+        - **name**: consent_state
+        - **notes**: pending|granted|declined
+        - **type**: text
+      -
+        - **name**: consent_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (meeting_id)
+      - (tenant_id, user_id)
+      - (tenant_id, contact_id)
+    - **name**: meeting_attendees
+    - **purpose**: Attendance, apologies and consent state. Non-users supported for toolbox talks.
+    - **relations**:
+      - meetings
+      - users
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: meeting_id
+        - **type**: uuid
+      -
+        - **name**: attendee_id
+        - **type**: uuid
+      -
+        - **name**: event
+        - **notes**: notice_shown|granted|declined|recording_paused|recording_resumed
+        - **type**: text
+      -
+        - **name**: notice_text_key
+        - **notes**: terminology key and version
+        - **type**: text
+      -
+        - **name**: occurred_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (meeting_id, occurred_at)
+    - **name**: meeting_consent_events
+    - **purpose**: Append-only consent evidence: notice shown, granted, declined, recording paused.
+    - **relations**:
+      - meetings
+      - meeting_attendees
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: meeting_id
+        - **type**: uuid
+      -
+        - **name**: file_id
+        - **notes**: FK stored_files (uploads module)
+        - **type**: uuid
+      -
+        - **name**: duration_seconds
+        - **type**: int
+      -
+        - **name**: source
+        - **notes**: recorded|uploaded|dictated
+        - **type**: text
+      -
+        - **name**: retention_until
+        - **type**: timestamptz
+      -
+        - **name**: delete_after_approval
+        - **type**: boolean
+      -
+        - **name**: legal_hold
+        - **notes**: overrides deletion
+        - **type**: boolean
+      -
+        - **name**: audio_deleted_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (meeting_id)
+      - (tenant_id, retention_until) where audio_deleted_at is null
+    - **name**: meeting_recordings
+    - **purpose**: Audio recording held in tenant storage with retention rules.
+    - **relations**:
+      - meetings
+      - stored_files
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: meeting_id
+        - **type**: uuid
+      -
+        - **name**: recording_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: provider
+        - **notes**: transcribe|whisper
+        - **type**: text
+      -
+        - **name**: region
+        - **type**: text
+      -
+        - **name**: language
+        - **type**: text
+      -
+        - **name**: segments
+        - **notes**: start_ms, end_ms, speaker, text
+        - **type**: jsonb
+      -
+        - **name**: full_text
+        - **notes**: untrusted input to LLM
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: pending|ready|failed
+        - **type**: text
+      -
+        - **name**: ai_invocation_id
+        - **notes**: ties to ai_gov register, nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (meeting_id)
+      - GIN to_tsvector(full_text)
+    - **name**: meeting_transcripts
+    - **purpose**: Transcript with timestamped segments for source highlighting.
+    - **relations**:
+      - meetings
+      - meeting_recordings
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: meeting_id
+        - **type**: uuid
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: status
+        - **notes**: ai_draft|human_edited|confirmed|published
+        - **type**: text
+      -
+        - **name**: content
+        - **notes**: structured sections with segment links
+        - **type**: jsonb
+      -
+        - **name**: drafted_by_ai
+        - **type**: boolean
+      -
+        - **name**: confirmed_by
+        - **notes**: FK users; required before publish
+        - **type**: uuid
+      -
+        - **name**: confirmed_at
+        - **type**: timestamptz
+      -
+        - **name**: published_document_id
+        - **notes**: FK documents, from report engine
+        - **type**: uuid
+      -
+        - **name**: signature_id
+        - **notes**: nullable, from signing module
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (meeting_id, version)
+      - (tenant_id, status)
+    - **name**: meeting_minutes
+    - **purpose**: Minutes versions: AI draft, human-confirmed, signed.
+    - **relations**:
+      - meetings
+      - documents
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: meeting_id
+        - **type**: uuid
+      -
+        - **name**: agenda_item_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, so history follows the asset
+        - **type**: uuid
+      -
+        - **name**: package_id
+        - **type**: uuid
+      -
+        - **name**: text
+        - **type**: text
+      -
+        - **name**: source_segment
+        - **notes**: transcript start/end
+        - **type**: jsonb
+      -
+        - **name**: linked_record_type
+        - **notes**: ncr|rfi, nullable
+        - **type**: text
+      -
+        - **name**: linked_record_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (meeting_id)
+      - (tenant_id, asset_id)
+    - **name**: meeting_decisions
+    - **purpose**: Decisions recorded against a meeting and tagged to assets.
+    - **relations**:
+      - meetings
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: meeting_id
+        - **type**: uuid
+      -
+        - **name**: agenda_item_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: FK tasks, created on confirm
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: owner_user_id
+        - **type**: uuid
+      -
+        - **name**: due_date
+        - **type**: date
+      -
+        - **name**: carried_from_action_id
+        - **notes**: self FK, nullable
+        - **type**: uuid
+      -
+        - **name**: source_segment
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (meeting_id)
+      - (tenant_id, task_id)
+      - (tenant_id, owner_user_id)
+    - **name**: meeting_actions
+    - **purpose**: Action items linked to the shared tasks table, with carry-forward.
+    - **relations**:
+      - meetings
+      - tasks
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: term
+        - **type**: text
+      -
+        - **name**: category
+        - **notes**: ndt|cui|weld|itp|asset_tag
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id, term) where deleted_at is null
+    - **name**: meeting_vocabulary_hints
+    - **purpose**: Per-project vocabulary hints for transcription.
+    - **relations**:
+      - projects

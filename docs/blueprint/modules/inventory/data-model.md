@@ -1,0 +1,341 @@
+# Stock, consumables & materials — Data model & schema
+
+
+- **notes**: consumable_issuances stays the source the RSW gate reads; each issuance gets a linked stock_movements row via adapter, and the migration backfills the existing ledger as opening receipts/issues. Per-item reorder overrides live on stock_items; category defaults in config. Use-by reminders are suppressed when stock_status is out_of_stock or unavailable.
+- **reuses existing**:
+  - assets
+  - entity_types
+  - consumable_issuances
+  - tasks
+  - certificates
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: location_type
+        - **notes**: config list
+        - **type**: text
+      -
+        - **name**: parent_id
+        - **notes**: self FK
+        - **type**: uuid
+      -
+        - **name**: laydown_zone_id
+        - **notes**: FK logistics, nullable
+        - **type**: uuid
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+      - (tenant_id, parent_id)
+    - **name**: stock_locations
+    - **purpose**: Store, laydown, vehicle or container locations
+    - **relations**:
+      - projects
+      - laydown_zones
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets (Consumables item); history follows asset
+        - **type**: uuid
+      -
+        - **name**: unit
+        - **notes**: base unit
+        - **type**: text
+      -
+        - **name**: stock_status
+        - **notes**: in_stock|out_of_stock|unavailable; controls use-by reminders
+        - **type**: text
+      -
+        - **name**: reorder_point
+        - **type**: numeric
+      -
+        - **name**: reorder_qty
+        - **type**: numeric
+      -
+        - **name**: catalogue_item_id
+        - **notes**: FK supplier catalogue, nullable
+        - **type**: uuid
+      -
+        - **name**: requires_batch
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, asset_id) where deleted_at is null
+      - (tenant_id, stock_status)
+    - **name**: stock_items
+    - **purpose**: Stock item backed by a Consumables content-type item
+    - **relations**:
+      - assets
+      - supplier catalogue
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: stock_item_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: batch_no
+        - **type**: text
+      -
+        - **name**: heat_no
+        - **type**: text
+      -
+        - **name**: manufacture_date
+        - **type**: date
+      -
+        - **name**: use_by_date
+        - **type**: date
+      -
+        - **name**: certificate_id
+        - **notes**: FK certificates; links to traceability graph
+        - **type**: uuid
+      -
+        - **name**: supplier_id
+        - **notes**: FK contacts
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, stock_item_id, batch_no)
+      - (tenant_id, use_by_date)
+      - (tenant_id, certificate_id)
+    - **name**: stock_batches
+    - **purpose**: Batch / heat / lot with use-by and certificate
+    - **relations**:
+      - stock_items
+      - certificates
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: stock_item_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: batch_id
+        - **notes**: FK nullable
+        - **type**: uuid
+      -
+        - **name**: movement_type
+        - **notes**: receipt|issue|waste|transfer_out|transfer_in|adjustment|reversal
+        - **type**: text
+      -
+        - **name**: reason_code
+        - **notes**: config
+        - **type**: text
+      -
+        - **name**: quantity
+        - **notes**: signed; positive in, negative out
+        - **type**: numeric
+      -
+        - **name**: unit
+        - **type**: text
+      -
+        - **name**: from_location_id
+        - **type**: uuid
+      -
+        - **name**: to_location_id
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: FK tasks (RSW task) for issues
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: asset the material was applied to
+        - **type**: uuid
+      -
+        - **name**: consumable_issuance_id
+        - **notes**: FK consumable_issuances adapter link
+        - **type**: uuid
+      -
+        - **name**: delivery_booking_id
+        - **notes**: FK logistics
+        - **type**: uuid
+      -
+        - **name**: goods_receipt_line_id
+        - **notes**: FK procurement
+        - **type**: uuid
+      -
+        - **name**: reverses_id
+        - **notes**: self FK
+        - **type**: uuid
+      -
+        - **name**: count_session_id
+        - **notes**: for adjustments
+        - **type**: uuid
+      -
+        - **name**: posted_by
+        - **type**: uuid
+      -
+        - **name**: posted_at
+        - **type**: timestamptz
+      -
+        - **name**: client_uuid
+        - **notes**: offline idempotency
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: no update/delete grant
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, stock_item_id, posted_at)
+      - (tenant_id, to_location_id, stock_item_id)
+      - (tenant_id, from_location_id, stock_item_id)
+      - (tenant_id, task_id)
+      - (tenant_id, batch_id)
+      - unique (tenant_id, client_uuid)
+      - unique (tenant_id, reverses_id) where reverses_id is not null
+    - **name**: stock_movements
+    - **purpose**: Append-only ledger; corrections are reversing movements
+    - **relations**:
+      - stock_items
+      - stock_batches
+      - tasks
+      - consumable_issuances
+      - stock_locations
+      - logistics
+      - procurement
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: stock_item_id
+        - **type**: uuid
+      -
+        - **name**: batch_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: location_id
+        - **type**: uuid
+      -
+        - **name**: quantity
+        - **notes**: check >= 0 unless negative policy allows
+        - **type**: numeric
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, stock_item_id, coalesce(batch_id, zero uuid), location_id)
+    - **name**: stock_balances
+    - **purpose**: Projection of live stock per item, batch and location, maintained transactionally by ledger posting
+    - **relations**:
+      - stock_items
+      - stock_batches
+      - stock_locations
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: location_id
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: open|submitted|approved
+        - **type**: text
+      -
+        - **name**: counted_by
+        - **type**: uuid
+      -
+        - **name**: counts
+        - **notes**: item, batch, counted vs system
+        - **type**: jsonb
+      -
+        - **name**: approved_by
+        - **type**: uuid
+      -
+        - **name**: approved_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, location_id, status)
+    - **name**: count_sessions
+    - **purpose**: Stocktake sessions and variances
+    - **relations**:
+      - stock_locations
+      - stock_movements adjustments

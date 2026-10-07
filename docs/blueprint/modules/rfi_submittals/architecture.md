@@ -1,0 +1,109 @@
+# RFIs & submittals — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: app/modules/rfi_submittals/router.py
+    - **purpose**: RFI and submittal endpoints
+  -
+    - **path**: app/modules/rfi_submittals/models.py
+    - **purpose**: RFI, Response, DocRef, ImpactEstimate, Submittal, ReviewStep, Resubmission
+  -
+    - **path**: app/modules/rfi_submittals/schemas.py
+    - **purpose**: API schemas
+  -
+    - **path**: app/modules/rfi_submittals/rfi_service.py
+    - **purpose**: Raise, assign, respond, accept, close, convert to variation candidate
+  -
+    - **path**: app/modules/rfi_submittals/submittal_service.py
+    - **purpose**: Submit, review, return, resubmit, close; comparison data
+  -
+    - **path**: app/modules/rfi_submittals/gate.py
+    - **purpose**: Gate provider registering required-submittal checks with inspections and RSW tasks
+  -
+    - **path**: app/modules/rfi_submittals/analytics.py
+    - **purpose**: Response-time and ageing queries
+  -
+    - **path**: app/modules/rfi_submittals/numbering.py
+    - **purpose**: Uses shared numbering with tenant format
+  -
+    - **path**: app/modules/rfi_submittals/seeds.py
+    - **purpose**: Default review codes and submittal types incl. inspection paperwork
+  -
+    - **path**: app/modules/rfi_submittals/module.yaml
+    - **purpose**: Manifest, permissions, events, gate registration
+  -
+    - **path**: alembic/versions/xxxx_rfi_submittals.py
+    - **purpose**: Tables and RLS
+- **change isolation**: New submittal types, review codes and gate rules are data in config and the rules engine. Workflow changes land in the approvals route definition rather than in this module's code.
+- **config not code**:
+  - Label for RFI (RFI, TQ, Query) and numbering format
+  - Review outcome codes and which count as accepted
+  - Submittal types and spec reference lists
+  - Approval route per submittal type
+  - Gate rules: which submittal types block which inspection/task kinds
+  - Overdue thresholds and reminders
+  - Disambiguating prefix versus Request for Inspection
+- **events consumed**:
+  - document.revision_created
+  - approval.step_completed
+  - inspection.scheduled
+  - scope_task.created
+  - deadline.overdue
+  - asset.moved
+- **events emitted**:
+  - rfi.raised
+  - rfi.assigned
+  - rfi.responded
+  - rfi.closed
+  - rfi.overdue
+  - submittal.submitted
+  - submittal.reviewed
+  - submittal.resubmitted
+  - submittal.accepted
+  - variation.candidate_requested
+- **frontend files**:
+  -
+    - **path**: web/src/modules/rfi_submittals/RfiRegister.tsx
+    - **purpose**: Register with ageing and asset subtree filter
+  -
+    - **path**: web/src/modules/rfi_submittals/RfiForm.tsx
+    - **purpose**: Form with attachments and photo markup
+  -
+    - **path**: web/src/modules/rfi_submittals/RfiDetail.tsx
+    - **purpose**: Thread, response and drawing refs
+  -
+    - **path**: web/src/modules/rfi_submittals/SubmittalRegister.tsx
+    - **purpose**: Register with ageing
+  -
+    - **path**: web/src/modules/rfi_submittals/ReviewWorkspace.tsx
+    - **purpose**: Review beside viewer
+  -
+    - **path**: web/src/modules/rfi_submittals/ResubmissionCompare.tsx
+    - **purpose**: Revision comparison
+  -
+    - **path**: web/src/modules/rfi_submittals/AssetPanel.tsx
+    - **purpose**: Open items on asset node and effect on pending inspections
+  -
+    - **path**: web/src/modules/rfi_submittals/Analytics.tsx
+    - **purpose**: Response-time view
+- **public api**:
+  - CRUD /rfis, POST /rfis/{id}/assign | respond | accept | close | convert-to-variation
+  - CRUD /submittals, POST /submittals/{id}/submit | review | return | resubmit | close
+  - GET /assets/{id}/rfis-submittals
+  - GET /rfi-submittals/analytics
+  - Gate: SubmittalGate.check(task_or_inspection) used by inspections and scope_work
+- **reuses shared**:
+  - approvals engine for review routes
+  - rules engine for gate rule
+  - documents and file_versions
+  - markup viewer
+  - comments service
+  - tasks/deadlines
+  - notifications
+  - change module variation intake
+  - contacts
+  - numbering service
+  - terms dictionary
+  - search indexer
+  - audit timeline

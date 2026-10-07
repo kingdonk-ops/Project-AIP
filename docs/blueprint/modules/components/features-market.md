@@ -1,0 +1,37 @@
+# Traceability graph: components, materials & certificates — Feature scout
+
+
+- **abilities seen in market**:
+  - Forward and backward genealogy: heat or batch to every component and asset where used, and the reverse
+  - Material receiving inspection with cert-to-heat matching, PMI and MTR verification
+  - Digital passports with extracted certificate data and flags on mismatched chemistry or mechanical values
+  - Weld maps and joint registers with welder, WPS/PQR, consumable batch, NDT status and repair history per joint
+  - Welder continuity and qualification validity checked at the date of the weld
+  - Recall or quarantine impact analysis: flag a batch and list all affected components instantly
+  - Visual graph exploration with filters by type and depth
+  - Evidence or data-book pack generation per system, asset or spool, with indexed contents
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Batch quarantine and impact analysis
+    - **why**: One action on a heat, rod batch or instrument lists every component, task and inspection affected and raises NCRs. This is the strongest proof of the traceability value.
+  -
+    - **effort**: M
+    - **feature**: Point-in-time validity snapshot on each link
+    - **why**: Store whether the welder, instrument or material was valid at time of use, frozen on the link. Later expiry or supersession then cannot rewrite history, which auditors and clients will test.
+  -
+    - **effort**: M
+    - **feature**: Weld map / joint register view with NDT and repair status
+    - **why**: A tabular and drawing-based joint view with NDT percentage, repair count and rejection rate per welder suits EPC and remediation teams, who expect this.
+  -
+    - **effort**: L
+    - **feature**: Certificate data extraction and cross-check
+    - **why**: Parsing EN 10204 certificates (OCR plus review) and checking heat numbers and grades against the material record cuts data entry and catches wrong or forged certificates.
+  -
+    - **effort**: S
+    - **feature**: Welder performance and repair-rate analytics
+    - **why**: Repair rate by welder, WPS and consumable batch lets QA find root causes. It is possible because the links already exist.
+  -
+    - **effort**: M
+    - **feature**: Indexed evidence pack with sealed manifest
+    - **why**: Export the chain as a bookmarked PDF/ZIP with a hash manifest, so a client can verify nothing changed after issue.

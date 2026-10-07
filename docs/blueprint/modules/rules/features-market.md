@@ -1,0 +1,37 @@
+# Rules & validation engine — Feature scout
+
+
+- **abilities seen in market**:
+  - Rule sets with severity levels (block, warn, info) and clear messages
+  - Pre-submit and pre-approval validation runs with jump-to-record results
+  - Waivers with reason, approver and expiry
+  - Rule testing against sample or historical records before activation
+  - Versioning and effective dating of rule sets
+  - Dependent and cross-record checks (for example calibration valid at test date)
+  - Requirements extracted from specs and linked to the checks that prove them
+  - Bulk re-validation jobs over existing data
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Time-aware rule evaluation (as-at the record's event date)
+    - **why**: A certificate valid on test day but expired today must still pass historical records. This is essential for legal defensibility and the certificate gate.
+  -
+    - **effort**: M
+    - **feature**: Library of inspection-completeness rule packs (NDT readings present, DFT within spec range, hold points signed, instrument calibrated, inspector qualified for method)
+    - **why**: Delivers value immediately, so the engine is not deferred until a requirement appears.
+  -
+    - **effort**: S
+    - **feature**: Waiver workflow reusing the approvals engine with audit trail and expiry
+    - **why**: Waivers are the commonest real-world exception and must be traceable.
+  -
+    - **effort**: S
+    - **feature**: Rule impact preview showing how many existing records would fail on activation
+    - **why**: Prevents new rules from blocking live work unexpectedly.
+  -
+    - **effort**: L
+    - **feature**: Requirement-to-evidence coverage matrix
+    - **why**: Shows which spec clauses have a rule and passing evidence, supporting handover and audits.
+  -
+    - **effort**: M
+    - **feature**: Rule-set inheritance: tenant default, project override, scope override
+    - **why**: Different clients and sites need tighter or looser rules without copying everything.

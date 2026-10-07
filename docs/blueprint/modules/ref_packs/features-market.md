@@ -1,0 +1,33 @@
+# Regional reference data packs — Feature scout
+
+
+- **abilities seen in market**:
+  - Versioned reference libraries with licence and source metadata
+  - Tenant opt-in enablement and pack updates
+  - Currency and exchange rate tables with rate date and source
+  - Standards-to-checklist mapping
+  - Regional tax and jurisdiction defaults
+  - Pick-lists usable across modules
+  - Import of customer-licensed content
+  - Change notification when a pack version updates
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Standards reference pack linking codes (AS/NZS, AS 2885, ISO, API, ASTM NDT and coating standards) to ITP checklist items and acceptance criteria
+    - **why**: Lets inspectors cite the governing clause on forms and reports directly.
+  -
+    - **effort**: M
+    - **feature**: Pack versioning with pinned versions per project and upgrade preview
+    - **why**: Existing records must keep referencing the standard revision in force when work was done.
+  -
+    - **effort**: M
+    - **feature**: Regional vocabulary and jurisdiction pack bundling terminology, tax, public holidays and date/number formats
+    - **why**: Supports the renamable-per-market requirement with one-step market enablement.
+  -
+    - **effort**: S
+    - **feature**: Exchange rate source and effective date capture on each priced record
+    - **why**: Multi-currency work in Asia and UK needs auditable conversion.
+  -
+    - **effort**: S
+    - **feature**: Customer-loaded licensed content import with licence flag and no cross-tenant sharing
+    - **why**: Avoids redistributing licensed rate and spec data.

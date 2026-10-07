@@ -1,0 +1,287 @@
+# Punch list & defects liability — Data model & schema
+
+
+- **notes**: Terminology (Punch/Defect/Deficiency) is a terms key, not a column. Retention eligibility is computed from punch_items status and stored with timestamp when evaluated. Walkdown capture uses client-generated ids and registers an offline handler with last-writer-wins on non-status fields and append-only verification records.
+- **reuses existing**:
+  - assets
+  - issues
+  - documents
+  - tasks
+  - inspections
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK; client-generated for offline
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: history follows asset
+        - **type**: uuid
+      -
+        - **name**: number
+        - **notes**: human ref per project
+        - **type**: text
+      -
+        - **name**: phase
+        - **notes**: punch|dlp
+        - **type**: text
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: category
+        - **notes**: config
+        - **type**: text
+      -
+        - **name**: priority
+        - **notes**: config
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: open|fixed|verified|closed|reopened
+        - **type**: text
+      -
+        - **name**: responsible_company_id
+        - **type**: uuid
+      -
+        - **name**: responsible_user_id
+        - **type**: uuid
+      -
+        - **name**: due_date
+        - **type**: date
+      -
+        - **name**: drawing_document_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: pin
+        - **notes**: x,y,page on drawing
+        - **type**: jsonb
+      -
+        - **name**: location
+        - **notes**: point(4326), nullable
+        - **type**: geography
+      -
+        - **name**: source_inspection_id
+        - **type**: uuid
+      -
+        - **name**: escalated_issue_id
+        - **notes**: FK issues if NCR
+        - **type**: uuid
+      -
+        - **name**: dlp_period_id
+        - **notes**: set post-handover
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, status)
+      - (tenant_id, asset_id)
+      - (tenant_id, responsible_company_id, status)
+      - (tenant_id, due_date) where status in ('open','reopened')
+      - GIST (location)
+    - **name**: punch_items
+    - **purpose**: Snag items at completion and post-handover defects on the same record.
+    - **relations**:
+      - projects
+      - assets
+      - issues
+      - dlp_periods
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: punch_item_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: outcome
+        - **notes**: verified|rejected|reopened
+        - **type**: text
+      -
+        - **name**: verifier_id
+        - **notes**: check <> responsible_user_id in service
+        - **type**: uuid
+      -
+        - **name**: evidence_document_ids
+        - **notes**: photo refs
+        - **type**: jsonb
+      -
+        - **name**: comment
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, punch_item_id, created_at)
+    - **name**: punch_verifications
+    - **purpose**: Append-only verification or reopen records; verifier must differ from assignee.
+    - **relations**:
+      - punch_items
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: punch_item_id
+        - **type**: uuid
+      -
+        - **name**: from_status
+        - **type**: text
+      -
+        - **name**: to_status
+        - **type**: text
+      -
+        - **name**: actor_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, punch_item_id, created_at)
+    - **name**: punch_status_history
+    - **purpose**: Append-only status transitions.
+    - **relations**:
+      - punch_items
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: contract_ref
+        - **type**: text
+      -
+        - **name**: start_date
+        - **notes**: from handover
+        - **type**: date
+      -
+        - **name**: end_date
+        - **type**: date
+      -
+        - **name**: handover_id
+        - **notes**: FK handover module
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: active|expired|closed
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+      - (tenant_id, end_date) where status='active'
+    - **name**: dlp_periods
+    - **purpose**: Defects-liability period per project/contract.
+    - **relations**:
+      - projects
+      - handover
+      - punch_items
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: dlp_period_id
+        - **type**: uuid
+      -
+        - **name**: company_id
+        - **notes**: contractor/subcontractor
+        - **type**: uuid
+      -
+        - **name**: retention_amount
+        - **notes**: numeric(14,2)
+        - **type**: numeric
+      -
+        - **name**: release_percent
+        - **notes**: numeric(5,2)
+        - **type**: numeric
+      -
+        - **name**: eligible
+        - **notes**: all items verified/closed
+        - **type**: boolean
+      -
+        - **name**: released_at
+        - **type**: timestamptz
+      -
+        - **name**: approval_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, dlp_period_id, company_id)
+    - **name**: retention_links
+    - **purpose**: Links retention release to verified closure of items.
+    - **relations**:
+      - dlp_periods
+      - contacts/companies
+      - approvals

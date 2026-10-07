@@ -1,0 +1,37 @@
+# Inbound capture & connectors — Feature scout
+
+
+- **abilities seen in market**:
+  - Per-project email aliases that turn forwarded mail into draft records
+  - Email threading and attachment extraction, including .eml and .msg import
+  - Watched folder and cloud drive connectors with scheduled runs and health status
+  - OCR and auto-classification suggestions for drawings and certificates
+  - Duplicate detection by content hash
+  - Webhook receivers with signature verification and replay protection
+  - Review queue where a person files or rejects inbound items
+  - Run logs with failure reasons and retry
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Filing queue with suggested project, asset, document type and correspondence thread, learned from sender and filename patterns
+    - **why**: Reduces the manual filing burden while keeping a person in the loop, as the design requires.
+  -
+    - **effort**: L
+    - **feature**: Mill-cert and test-report recogniser: OCR extraction of heat number, material grade and standard, proposed as component certificate candidates
+    - **why**: Ties inbound paperwork directly to the traceability graph, a high-value asset-integrity use case.
+  -
+    - **effort**: L
+    - **feature**: Site-laptop and NDT instrument export folder agent with outbound-only connection and allow-listed destinations
+    - **why**: Inspection data (thickness readings, radiographs, UT files) often sits on field laptops; an outbound-only agent avoids opening customer networks.
+  -
+    - **effort**: S
+    - **feature**: Sender trust levels: per-alias allow-lists, domain verification, SPF/DKIM result display and quarantine of unverified senders
+    - **why**: Reduces phishing and spoofed-document risk, which Rio Tinto-type security reviews will probe.
+  -
+    - **effort**: S
+    - **feature**: Per-connector data-minimisation rules (file type allow-list, max size, path filters, retention of source copies)
+    - **why**: Limits what enters the record and supports Privacy Act obligations.
+  -
+    - **effort**: S
+    - **feature**: Ingestion dashboard showing quarantined, failed and unfiled counts with ageing alerts
+    - **why**: Stuck inbound items silently become missing evidence; ageing alerts keep the queue honest.

@@ -1,0 +1,123 @@
+# Comments, mentions & notifications — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: app/modules/comments/router.py
+    - **purpose**: Comment, mention, pin, viewpoint, thread and notification endpoints
+  -
+    - **path**: app/modules/comments/models.py
+    - **purpose**: Comment, Mention, Pin, Viewpoint, Notification, Preference, NotificationRule, Template, WordingOverride
+  -
+    - **path**: app/modules/comments/schemas.py
+    - **purpose**: API schemas
+  -
+    - **path**: app/modules/comments/comment_service.py
+    - **purpose**: Threads, edit/supersede history, resolve/reopen, visibility class filtering, conversion
+  -
+    - **path**: app/modules/comments/mentions.py
+    - **purpose**: Mention parsing and user/team lookup
+  -
+    - **path**: app/modules/comments/notify/dispatcher.py
+    - **purpose**: Consumes outbox events, resolves recipients and rules
+  -
+    - **path**: app/modules/comments/notify/channels.py
+    - **purpose**: In-app (SSE), email (SES), push adapters
+  -
+    - **path**: app/modules/comments/notify/digest.py
+    - **purpose**: Digests, quiet hours, shift awareness, escalation
+  -
+    - **path**: app/modules/comments/notify/dedupe.py
+    - **purpose**: Idempotent delivery keys and storm control
+  -
+    - **path**: app/modules/comments/asset_thread.py
+    - **purpose**: Roll-up of comments over asset subtree (ltree)
+  -
+    - **path**: app/modules/comments/jobs.py
+    - **purpose**: Delivery, digest and escalation jobs
+  -
+    - **path**: app/modules/comments/templates/
+    - **purpose**: Default message keys per event type
+  -
+    - **path**: app/modules/comments/module.yaml
+    - **purpose**: Manifest, permissions, events
+  -
+    - **path**: alembic/versions/xxxx_comments.py
+    - **purpose**: Tables and RLS
+- **change isolation**: Other modules only publish events and embed CommentPanel, so new notification types are a template key plus rule data. Transport changes (SSE, Teams, Slack) land in notify/channels.py.
+- **config not code**:
+  - Message keys and tenant wording overrides
+  - Notification rules by subtree/discipline/severity
+  - Default preferences and digest schedule
+  - Quiet hours and shift calendars
+  - Mandatory-notice event list that bypasses mute
+  - Escalation timings
+  - Visibility class names and per-tenant availability
+  - Channel enablement
+- **events consumed**:
+  - assignment.created
+  - approval.requested
+  - deadline.overdue
+  - certificate.expiring
+  - certificate.expired
+  - inspection.failed
+  - hold_point.waiting
+  - inbound_email.received
+  - connector.failed
+  - connector.run_completed
+  - upload.rejected
+  - minutes.published
+  - interface.escalated
+  - rfi.responded
+- **events emitted**:
+  - comment.created
+  - comment.mentioned
+  - comment.resolved
+  - comment.converted
+  - notification.delivered
+  - notification.escalated
+- **frontend files**:
+  -
+    - **path**: web/src/modules/comments/CommentPanel.tsx
+    - **purpose**: Embeddable side panel for any record
+  -
+    - **path**: web/src/modules/comments/VisibilityBadge.tsx
+    - **purpose**: Internal/client/subcontractor badges
+  -
+    - **path**: web/src/modules/comments/MentionsInbox.tsx
+    - **purpose**: Mentions-of-me inbox
+  -
+    - **path**: web/src/modules/comments/PinLayer.tsx
+    - **purpose**: Pin and viewpoint overlay API for the viewer
+  -
+    - **path**: web/src/modules/comments/AssetDiscussion.tsx
+    - **purpose**: Combined asset-node thread
+  -
+    - **path**: web/src/modules/comments/NotificationBell.tsx
+    - **purpose**: Bell and inbox with SSE
+  -
+    - **path**: web/src/modules/comments/PreferenceMatrix.tsx
+    - **purpose**: User preferences, quiet hours
+  -
+    - **path**: web/src/modules/comments/admin/
+    - **purpose**: Template, wording override and rule screens
+- **public api**:
+  - GET/POST /comments?record_type&record_id
+  - PATCH /comments/{id} (supersede)
+  - POST /comments/{id}/resolve | reopen | convert
+  - GET /assets/{id}/discussion
+  - GET/POST /pins, /viewpoints
+  - GET /notifications, POST /notifications/{id}/read | snooze | mute
+  - GET/PUT /notification-preferences
+  - CRUD /notification-rules, /notification-templates
+  - Python: notify.publish(event) contract via outbox only
+- **reuses shared**:
+  - outbox/event bus
+  - jobs runner
+  - permissions policy service (visibility and record access)
+  - terms dictionary and wording overrides
+  - search indexer
+  - audit timeline
+  - legal-hold service
+  - tasks service for conversion
+  - identity profile and teams

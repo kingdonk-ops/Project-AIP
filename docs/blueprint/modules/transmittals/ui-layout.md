@@ -1,0 +1,188 @@
+# Transmittals & correspondence — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: transmittals.view; compose needs transmittals.issue
+    - **actions**:
+      - Compose
+      - Open
+      - Reissue
+      - Chase
+      - Download cover
+      - Download proof
+      - Export register
+    - **layout**: Table with filter bar and row action menu.
+    - **name**: Transmittal register
+    - **purpose**: List all transmittals with acknowledgement and overdue state.
+    - **route**: /transmittals
+    - **sections**:
+      - Filters (status, purpose, recipient, date, overdue, asset)
+      - Register table (number, date, purpose, recipients, documents, status, response due, acknowledged, superseded by)
+  -
+    - **access**: transmittals.issue; documents limited by user's scope
+    - **actions**:
+      - Save draft
+      - Issue
+      - Cancel
+    - **layout**: Stepper: documents, recipients, details, review.
+    - **name**: Compose transmittal wizard
+    - **purpose**: Select document revisions, recipients and reason, then issue.
+    - **route**: /transmittals/new
+    - **sections**:
+      - Document picker locking revisions
+      - Per-line asset picker
+      - Recipients and groups
+      - Purpose, response due and message
+      - Review with SHA-256 list
+  -
+    - **access**: transmittals.view; issued records immutable
+    - **actions**:
+      - Chase
+      - Reissue
+      - Download cover
+      - Download proof
+      - Record response
+    - **layout**: Header with status, tabs for lines, recipients and chain, and activity panel.
+    - **name**: Transmittal detail
+    - **purpose**: Show an issued transmittal with acknowledgements and supersede chain.
+    - **route**: /transmittals/:id
+    - **sections**:
+      - Header and purpose
+      - Lines (document, revision, asset, hash)
+      - Recipients and acknowledgements
+      - Supersede chain
+      - Proof of delivery
+      - Linked records
+      - Audit
+  -
+    - **access**: Named external recipient via scoped single-use link; POST confirmation
+    - **actions**:
+      - Download files
+      - Acknowledge
+      - Respond
+    - **layout**: Minimal portal page with file list and click-through confirmation.
+    - **name**: Recipient acknowledgement (portal)
+    - **purpose**: Let external recipients view files and confirm receipt without a full licence.
+    - **route**: /t/:token
+    - **sections**:
+      - Transmittal summary
+      - File list with hashes
+      - Acknowledgement text
+      - Response box
+  -
+    - **access**: correspondence.view; commercial items restricted to involved parties
+    - **actions**:
+      - Log item
+      - Assign response
+      - Flag as notice
+      - Export
+    - **layout**: Table with filters and thread view in a right drawer.
+    - **name**: Correspondence register
+    - **purpose**: Log and search letters, emails, notices and memos.
+    - **route**: /correspondence
+    - **sections**:
+      - Filters (type, direction, party, date, notice, status)
+      - Register table (ref, type, direction, subject, parties, date, response by, notice, status)
+      - Thread preview
+  -
+    - **access**: correspondence.create
+    - **actions**:
+      - Save
+      - Send (outbound)
+      - Attach
+      - Cancel
+    - **layout**: Form with attachments and link panel.
+    - **name**: Log correspondence
+    - **purpose**: Create an inbound or outbound item, optionally from a template.
+    - **route**: /correspondence/new
+    - **sections**:
+      - Type, direction, subject, parties, date
+      - Template and merge fields
+      - Attachments from library
+      - Cross-references (RFI, variation, asset, document)
+      - Commercial restriction flag
+  -
+    - **access**: correspondence.view subject to restriction rules
+    - **actions**:
+      - Reply
+      - Assign response
+      - Link record
+      - Flag as contractual notice
+    - **layout**: Main thread column with side panel of links.
+    - **name**: Correspondence detail
+    - **purpose**: Show an item with its thread, links and response status.
+    - **route**: /correspondence/:id
+    - **sections**:
+      - Header
+      - Thread
+      - Attachments
+      - Cross-references
+      - Response assignment
+      - Audit
+  -
+    - **access**: transmittals.notices; commercial restrictions apply
+    - **actions**:
+      - Create task
+      - Assign owner
+      - Mark issued
+      - Open correspondence
+    - **layout**: Table sorted by days remaining with traffic-light state, plus calendar toggle.
+    - **name**: Notice tracker
+    - **purpose**: Track contractual notices and time bars.
+    - **route**: /notices
+    - **sections**:
+      - Notice table (clause, trigger event, due date, days left, owner, status)
+      - Overdue banner
+  -
+    - **access**: transmittals.import
+    - **actions**:
+      - Upload
+      - Map columns
+      - Import
+      - Cancel
+    - **layout**: Upload wizard with column mapping and preview.
+    - **name**: External transmittal import
+    - **purpose**: Import external transmittal references as read-only records.
+    - **route**: /transmittals/import
+    - **sections**:
+      - Upload CSV or forwarded email
+      - Column mapping
+      - Match to local documents
+      - Preview and confirm
+  -
+    - **access**: transmittals.admin
+    - **actions**:
+      - Add clause
+      - Edit template
+      - Save
+      - Test merge
+    - **layout**: Tabbed settings.
+    - **name**: Clause library, templates and settings
+    - **purpose**: Administer clauses, notice templates, numbering, codes and chasers.
+    - **route**: /settings/transmittals
+    - **sections**:
+      - Numbering patterns
+      - Reason codes and statuses
+      - Distribution groups
+      - Chaser schedule
+      - Portal acknowledgement text
+      - Clause library
+      - Notice templates with merge fields
+      - Commercial restriction rules
+      - Inbound email mapping
+      - Terminology labels
+  -
+    - **access**: Recipients and transmittals.view holders
+    - **actions**:
+      - Open
+      - Acknowledge
+      - Respond
+    - **layout**: Mobile list and detail with file preview.
+    - **name**: Mobile transmittals
+    - **purpose**: Check what was sent and acknowledge or respond on a phone.
+    - **route**: /m/transmittals
+    - **sections**:
+      - Received and sent list
+      - Detail with lines
+      - Acknowledge action

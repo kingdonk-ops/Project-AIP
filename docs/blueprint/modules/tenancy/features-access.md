@@ -1,0 +1,329 @@
+# Tenancy, organisations & data residency — Feature filler
+
+
+- **detail sections**:
+  - Tenant profile and region
+  - Branding and terminology
+  - Enabled modules
+  - Organisations and their types
+  - Asset sharing and party visibility
+  - Retention defaults
+  - KMS key and residency
+  - Support access history
+  - Offboarding status
+  - Usage and quotas
+- **notifications**:
+  - Tenant invite (admin)
+  - Asset shared with your organisation (client users)
+  - Share expiring in 7 days (owner)
+  - Support access requested, approved, expired (tenant admin)
+  - Quota at 80% and 100% (tenant admin)
+  - Offboarding step completed and certificate issued (tenant admin)
+  - Cross-tenant test failure in CI (security lead)
+- **settings**:
+  - Branding (logo, colours)
+  - Terminology set
+  - Enabled modules
+  - Retention defaults
+  - Region (set at provisioning)
+  - Visibility profiles for shared assets
+  - Support access policy and maximum duration
+  - Quota defaults
+  - Siloed stack requirement by customer type
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export list
+      - Suspend selected
+    - **columns**:
+      - Tenant
+      - Slug
+      - Deployment (pooled/siloed)
+      - Region
+      - Status
+      - Users
+      - Storage
+      - Created
+    - **create form**:
+      -
+        - **field**: Tenant name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Region
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Deployment type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Template pack
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Terminology set
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Admin email
+        - **required**: true
+        - **type**: email
+      -
+        - **field**: Load sample data
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No tenants. Use the provisioning wizard to create the first one.
+    - **filters**:
+      - Deployment type
+      - Region
+      - Status
+    - **name**: Tenants
+    - **row actions**:
+      - Open
+      - Edit settings
+      - Suspend
+      - Start offboarding
+      - Grant support access
+    - **search**: Tenant name, slug
+    - **sort**:
+      - Name
+      - Created
+      - Users
+      - Storage
+  -
+    - **bulk actions**:
+      - Deactivate selected
+      - Export
+    - **columns**:
+      - Name
+      - Type (owner/client/subcontractor)
+      - ABN/Reg no.
+      - Projects
+      - Users
+      - Shared assets
+      - Status
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Registration number
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Primary contact
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Logo
+        - **required**: false
+        - **type**: file
+    - **empty state**: No organisations. Add your own organisation, then client organisations such as Rio Tinto.
+    - **filters**:
+      - Type
+      - Status
+      - Project
+    - **name**: Organisations
+    - **row actions**:
+      - Open
+      - Edit
+      - Manage asset sharing
+      - Deactivate
+    - **search**: Name, registration number
+    - **sort**:
+      - Name
+      - Type
+      - Projects
+  -
+    - **bulk actions**:
+      - Revoke selected
+      - Extend expiry
+    - **columns**:
+      - Asset or subtree
+      - Shared with organisation
+      - Visible fields
+      - Hidden fields
+      - Access level
+      - Expires
+      - Created by
+    - **create form**:
+      -
+        - **field**: Asset or subtree
+        - **required**: true
+        - **type**: tree picker
+      -
+        - **field**: Organisation
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Visibility profile
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Access level (view/comment/contribute)
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Expiry date
+        - **required**: false
+        - **type**: date
+    - **empty state**: No assets are shared. Share an asset so a client can see status and evidence without seeing commercial data.
+    - **filters**:
+      - Organisation
+      - Access level
+      - Expiring soon
+    - **name**: Asset sharing rules
+    - **row actions**:
+      - Edit visibility
+      - Preview as party
+      - Revoke
+    - **search**: Asset name, organisation
+    - **sort**:
+      - Asset
+      - Organisation
+      - Expires
+  -
+    - **bulk actions**:
+      - Enable selected
+      - Disable selected
+    - **columns**:
+      - Module
+      - Enabled
+      - Enabled by
+      - Date
+      - Dependencies
+    - **empty state**: No modules available.
+    - **filters**:
+      - Enabled
+      - Phase
+    - **name**: Tenant modules
+    - **row actions**:
+      - Toggle
+      - View dependencies
+    - **search**: Module name
+    - **sort**:
+      - Module
+  -
+    - **columns**:
+      - Grant
+      - Requested by
+      - Scope
+      - Reason
+      - Approved by
+      - Starts
+      - Expires
+      - Status
+    - **create form**:
+      -
+        - **field**: Scope
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Reason
+        - **required**: true
+        - **type**: textarea
+      -
+        - **field**: Duration (hours)
+        - **required**: true
+        - **type**: number
+    - **empty state**: No support access requests.
+    - **filters**:
+      - Status
+      - Requester
+    - **name**: Support access grants
+    - **row actions**:
+      - Approve
+      - Deny
+      - Revoke
+      - View audit entries
+    - **search**: Requester, reason
+    - **sort**:
+      - Starts
+      - Expires
+  -
+    - **columns**:
+      - Tenant
+      - Requested
+      - Export status
+      - Legal-hold check
+      - Crypto-shred status
+      - Certificate
+      - Status
+    - **create form**:
+      -
+        - **field**: Tenant
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Reason
+        - **required**: true
+        - **type**: textarea
+      -
+        - **field**: Confirm export delivered
+        - **required**: true
+        - **type**: boolean
+    - **empty state**: No offboarding requests.
+    - **filters**:
+      - Status
+    - **name**: Offboarding requests
+    - **row actions**:
+      - View checklist
+      - Download export
+      - Download deletion certificate
+      - Cancel
+    - **search**: Tenant name
+    - **sort**:
+      - Requested
+  -
+    - **bulk actions**:
+      - Apply default quota
+    - **columns**:
+      - Tenant
+      - Jobs/day
+      - Storage
+      - API calls/min
+      - Usage %
+      - Status
+    - **create form**:
+      -
+        - **field**: Storage limit (GB)
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Jobs per day
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: API calls per minute
+        - **required**: true
+        - **type**: number
+    - **empty state**: No quota usage data.
+    - **filters**:
+      - Over 80%
+      - Over limit
+    - **name**: Quotas
+    - **row actions**:
+      - Edit quota
+      - View usage
+    - **search**: Tenant
+    - **sort**:
+      - Usage %
+- **walkthrough**:
+  - Platform admin starts the provisioning wizard and selects region and deployment type.
+  - Admin chooses a template pack and terminology set (Kaefer/Rio defaults).
+  - Admin enters the tenant admin email; an invite is sent.
+  - Tenant admin signs in and sets branding and enabled modules.
+  - Tenant admin creates the Rio Tinto client organisation.
+  - Admin shares a remediation asset subtree with Rio Tinto using a visibility profile.
+  - Admin previews the view as Rio Tinto to confirm rates are hidden.
+  - Project roles are assigned within scope, enforced by RLS.
+  - Support requests access; tenant admin approves for a set period.
+  - A banner shows while support is active and every action is audited.
+  - At contract end, offboarding exports data, checks legal holds and crypto-shreds the key.
+  - A signed deletion certificate is issued.

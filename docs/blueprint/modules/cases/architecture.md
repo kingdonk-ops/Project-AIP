@@ -1,0 +1,59 @@
+# User-authored playbooks — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/documents/procedures.py
+    - **purpose**: No standalone cases module exists. Controlled procedure document type and Markdown content handling, added inside the documents module
+  -
+    - **path**: backend/app/modules/documents/acknowledgements.py
+    - **purpose**: Acknowledgement of a document revision by a person, status per revision, optional link to a competency record
+  -
+    - **path**: backend/app/modules/documents/models_ack.py
+    - **purpose**: DocumentAcknowledgement (person, revision, timestamp, competency link) and HelpGuideMapping (screen key to document); tenant_id with RLS
+  -
+    - **path**: backend/app/modules/documents/guides.py
+    - **purpose**: Render Markdown with terminology tokens resolved from project settings
+  -
+    - **path**: backend/app/modules/documents/tests/test_procedures_ack.py
+    - **purpose**: Ack status, revision change resets, token rendering and visibility tests
+- **change isolation**: There is no separate module; all changes land in the documents module and the shell help button. Eligibility rules that consume acknowledgements are configuration in the eligibility gate.
+- **config not code**:
+  - Screen-to-guide mapping
+  - Which procedure types require acknowledgement
+  - Which task types check acknowledgement-based competency
+  - Terminology tokens in guide text
+  - Whether procedures need an approval route before becoming current (open)
+- **events consumed**:
+  - document.revision.issued (reset acknowledgement requirement for the new revision)
+  - user.deactivated
+  - term.changed (guide rendering)
+- **events emitted**:
+  - document.procedure.acknowledged
+  - document.procedure.ack_overdue (if enabled)
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/documents/ProcedureView.tsx
+    - **purpose**: Existing document page extended to show procedures and acknowledgement control
+  -
+    - **path**: frontend/src/modules/documents/AcknowledgementStatus.tsx
+    - **purpose**: Who has and has not acknowledged the current revision
+  -
+    - **path**: frontend/src/shell/HelpButton.tsx
+    - **purpose**: Shell component that opens the guide mapped to the current screen
+  -
+    - **path**: frontend/src/shell/GuideDrawer.tsx
+    - **purpose**: Renders the Markdown guide with resolved terms
+- **public api**:
+  - POST /api/v1/documents/{id}/revisions/{rev}/acknowledge
+  - GET /api/v1/documents/{id}/revisions/{rev}/acknowledgements
+  - GET /api/v1/help/guide?screen={key}
+  - PUT /api/v1/help/mappings (admin)
+- **reuses shared**:
+  - Documents module with revisions
+  - Terminology dictionary and token resolver
+  - Policy and authorisation service (project and team visibility)
+  - Eligibility gate and competency records (acknowledgement as evidence)
+  - Approvals engine (only if the owner confirms procedure approval routes)
+  - Audit trail
+  - Search engine for guide lookup

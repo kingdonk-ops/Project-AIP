@@ -1,0 +1,99 @@
+# Interface management — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: interfaces.view; party-scoped visibility applied
+    - **actions**:
+      - Raise
+      - Agree
+      - Deliver
+      - Accept
+      - Escalate
+      - Export
+    - **layout**: DataTable with filters and saved views.
+    - **name**: Interface list
+    - **purpose**: List interface points with ageing and status.
+    - **route**: /interfaces
+    - **sections**:
+      - Filters (package, party, status, asset subtree)
+      - Table with need date and days late
+      - Escalation level
+  -
+    - **access**: interfaces.view
+    - **actions**:
+      - Drill into cell
+      - Change grouping
+      - Export
+    - **layout**: Grid of provider by receiver with counts and drill-down.
+    - **name**: Interface matrix
+    - **purpose**: Show who provides what to whom by package or contractor.
+    - **route**: /interfaces/matrix
+    - **sections**:
+      - Matrix grid
+      - Status colouring
+      - Drill-down list
+  -
+    - **access**: Project managers and interfaces.view
+    - **actions**:
+      - Filter
+      - Open interfaces
+      - Export report
+    - **layout**: Heat-map with a threshold legend and a side list.
+    - **name**: Ageing heat-map
+    - **purpose**: Show overdue and at-risk interfaces by package pair.
+    - **route**: /interfaces/heatmap
+    - **sections**:
+      - Heat-map
+      - Thresholds
+      - At-risk list
+  -
+    - **access**: interfaces.create
+    - **actions**:
+      - Save
+      - Raise
+      - Cancel
+    - **layout**: Form.
+    - **name**: Create or edit interface
+    - **purpose**: Raise an interface point, optionally from a template.
+    - **route**: /interfaces/new
+    - **sections**:
+      - Template picker
+      - Provider, receiver and deliverable
+      - Asset node and scope task
+      - Need date
+      - Blocked-by relations
+  -
+    - **access**: Provider and receiver parties; others read-only per visibility rules
+    - **actions**:
+      - Agree
+      - Deliver
+      - Accept and sign (provider and receiver)
+      - Escalate
+      - Attach evidence
+    - **layout**: Header with status stepper and WorkflowBar, main body, right rail with CommentPanel.
+    - **name**: Interface detail
+    - **purpose**: Manage the lifecycle, evidence and two-party sign-off.
+    - **route**: /interfaces/:id
+    - **sections**:
+      - Agreement
+      - Evidence (photos, certificates, inspection records, documents)
+      - Linked RFIs and submittals
+      - Blocked tasks
+      - Escalation history
+      - Acceptance attestations
+  -
+    - **access**: interfaces.admin
+    - **actions**:
+      - Add or edit template
+      - Edit ladder
+      - Set thresholds
+    - **layout**: Settings tabs.
+    - **name**: Templates and escalation ladder
+    - **purpose**: Configure interface templates, escalation levels and timings.
+    - **route**: /admin/interfaces
+    - **sections**:
+      - Templates with default providers, receivers and lead times
+      - Escalation ladder levels and roles
+      - Heat-map thresholds
+      - Status labels

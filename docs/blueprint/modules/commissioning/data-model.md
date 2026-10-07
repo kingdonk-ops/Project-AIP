@@ -1,0 +1,240 @@
+# Commissioning — Data model & schema
+
+
+- **notes**: Commissioning issues are rows in issues linked via system membership (use the existing issues asset_id), not a new table. Add an optional commissioning_system_id on issues only if the asset-subtree query proves too slow. Readiness is recomputed on events and snapshotted on change.
+- **reuses existing**:
+  - assets
+  - inspections
+  - inspection_responses
+  - issues
+  - certificates
+  - documents
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects
+        - **type**: uuid
+      -
+        - **name**: parent_system_id
+        - **notes**: nullable self FK for subsystems
+        - **type**: uuid
+      -
+        - **name**: root_asset_id
+        - **notes**: FK assets; system anchor
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: classification
+        - **notes**: term-keyed
+        - **type**: text
+      -
+        - **name**: readiness_weights
+        - **notes**: overrides config
+        - **type**: jsonb
+      -
+        - **name**: gate_rule_set_id
+        - **notes**: nullable FK rule_sets
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: workflow state
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, code) unique
+      - (tenant_id, root_asset_id)
+      - (tenant_id, parent_system_id)
+    - **name**: commissioning_systems
+    - **purpose**: A commissionable system or subsystem defined over an asset node/subtree.
+    - **relations**:
+      - projects
+      - assets
+      - rule_sets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: system_id
+        - **notes**: FK commissioning_systems
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets
+        - **type**: uuid
+      -
+        - **name**: membership
+        - **notes**: include/exclude
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, system_id, asset_id) unique
+      - (tenant_id, asset_id)
+    - **name**: commissioning_system_members
+    - **purpose**: Extra asset membership beyond the root subtree (include/exclude).
+    - **relations**:
+      - commissioning_systems
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: system_id
+        - **notes**: FK commissioning_systems
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **notes**: FK inspections
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: asset the check applies to
+        - **type**: uuid
+      -
+        - **name**: checklist_type
+        - **notes**: pre_functional/functional
+        - **type**: text
+      -
+        - **name**: is_required
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, system_id, checklist_type)
+      - (tenant_id, inspection_id) unique
+    - **name**: commissioning_checklists
+    - **purpose**: Links a system to inspections that act as pre-functional/functional checklists. Checklist content stays in inspections.
+    - **relations**:
+      - commissioning_systems
+      - inspections
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: system_id
+        - **notes**: FK commissioning_systems
+        - **type**: uuid
+      -
+        - **name**: score
+        - **notes**: 0-100
+        - **type**: numeric
+      -
+        - **name**: breakdown
+        - **notes**: checks complete, open issues, sign-offs, weights used
+        - **type**: jsonb
+      -
+        - **name**: blocking_items
+        - **notes**: outstanding items
+        - **type**: jsonb
+      -
+        - **name**: computed_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, system_id, computed_at desc)
+    - **name**: commissioning_readiness_snapshots
+    - **purpose**: Point-in-time readiness score (append-only).
+    - **relations**:
+      - commissioning_systems
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: system_id
+        - **notes**: FK commissioning_systems
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: commissioned/reversed
+        - **type**: text
+      -
+        - **name**: readiness_snapshot_id
+        - **notes**: FK snapshot at time of action
+        - **type**: uuid
+      -
+        - **name**: gate_validation_run_id
+        - **notes**: FK validation_runs
+        - **type**: uuid
+      -
+        - **name**: signed_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: signoff_id
+        - **notes**: nullable, signing module record
+        - **type**: uuid
+      -
+        - **name**: remarks
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only; reversal is a new row
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, system_id, created_at desc)
+    - **name**: commission_records
+    - **purpose**: Gated commission action with sign-off (append-only).
+    - **relations**:
+      - commissioning_systems
+      - validation_runs

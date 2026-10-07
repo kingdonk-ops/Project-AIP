@@ -1,0 +1,100 @@
+# Contacts & companies — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/contacts/models.py
+    - **purpose**: Organisation (type, ABN or equivalent), Person (optional linked user_id), ProjectRoleAssignment, OrgTag, merge history; tenant-level, not per project
+  -
+    - **path**: backend/app/modules/contacts/schemas.py
+    - **purpose**: Pydantic schemas
+  -
+    - **path**: backend/app/modules/contacts/router.py
+    - **purpose**: Directory, org detail, person, role assignment, merge, invite endpoints
+  -
+    - **path**: backend/app/modules/contacts/service.py
+    - **purpose**: CRUD, deactivate, project role assignment, invite as user via identity
+  -
+    - **path**: backend/app/modules/contacts/dedupe.py
+    - **purpose**: Duplicate detection by ABN, normalised name, email; merge with reference re-pointing
+  -
+    - **path**: backend/app/modules/contacts/import_service.py
+    - **purpose**: CSV import using shared import mapping
+  -
+    - **path**: backend/app/modules/contacts/privacy.py
+    - **purpose**: Retention and erasure rules for personal data, legal-hold aware
+  -
+    - **path**: backend/app/modules/contacts/visibility.py
+    - **purpose**: Organisation-type-driven visibility helper for portal and commercial data
+  -
+    - **path**: backend/app/modules/contacts/events.py
+    - **purpose**: Emitters and handlers
+  -
+    - **path**: backend/app/modules/contacts/permissions.py
+    - **purpose**: Permission keys
+  -
+    - **path**: backend/app/modules/contacts/seed/defaults.json
+    - **purpose**: Organisation types, project role list, term keys
+  -
+    - **path**: backend/migrations/versions/xxxx_contacts.py
+    - **purpose**: Migration with RLS
+  -
+    - **path**: backend/tests/modules/contacts/
+    - **purpose**: Dedupe, merge integrity, visibility, erasure, isolation tests
+- **change isolation**: Other modules depend only on the party lookup interface and organisation ids, so schema detail changes stay inside this module. Merge re-pointing is driven by a registry of referencing tables that each module registers, so new modules join without editing contacts code.
+- **config not code**:
+  - Organisation types
+  - Project role names
+  - Duplicate match rules and thresholds
+  - Tags
+  - Retention periods for personal data
+  - Term keys (Client, Subcontractor, Supplier)
+- **events consumed**:
+  - user.provisioned (SCIM/SSO link to person)
+  - user.deactivated
+  - certificate.expiry_changed (credential link display)
+  - project.created
+- **events emitted**:
+  - organisation.created
+  - organisation.updated
+  - organisation.merged
+  - person.created
+  - person.deactivated
+  - party_role.assigned
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/contacts/pages/Directory.tsx
+    - **purpose**: Search and tag directory
+  -
+    - **path**: frontend/src/modules/contacts/pages/OrganisationDetail.tsx
+    - **purpose**: Projects, people, credentials
+  -
+    - **path**: frontend/src/modules/contacts/pages/ImportMerge.tsx
+    - **purpose**: CSV import and duplicate merge tool
+  -
+    - **path**: frontend/src/modules/contacts/components/PartyPicker.tsx
+    - **purpose**: Reusable picker for procurement, transmittals, meetings
+  -
+    - **path**: frontend/src/modules/contacts/api.ts
+    - **purpose**: Generated client wrapper
+  -
+    - **path**: frontend/src/modules/contacts/routes.tsx
+    - **purpose**: Route and nav registration
+- **public api**:
+  - GET/POST/PATCH /organisations
+  - GET/POST/PATCH /people
+  - POST /organisations/{id}/merge
+  - POST /people/{id}/invite
+  - GET/PUT /projects/{id}/party-roles
+  - POST /contacts/import
+  - party lookup and distribution list read interface for other modules
+  - organisation type visibility helper
+- **reuses shared**:
+  - Identity service for invites and SCIM-linked users
+  - Import mapping component
+  - Permissions and portal visibility policy
+  - Audit/timeline
+  - Terminology dictionary
+  - Search index
+  - Retention and legal hold service
+  - Eligibility/certificates for insurance and credential links

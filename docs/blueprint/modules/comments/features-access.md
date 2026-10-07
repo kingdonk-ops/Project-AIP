@@ -1,0 +1,205 @@
+# Comments, mentions & notifications — Feature filler
+
+
+- **detail sections**:
+  - Thread with replies, resolve state and visibility badge
+  - Edit history and superseded versions
+  - Pins and viewpoints
+  - Mentions
+  - Converted-to links
+  - Legal hold flag
+  - Preference matrix
+  - Digest settings and quiet hours
+- **notifications**:
+  - comment.mentioned
+  - comment.resolved
+  - Reply on a thread you follow
+  - Assignment from a converted comment
+  - Overdue corrective action
+  - Expiring certificate
+  - Hold point waiting
+  - Daily digest
+  - Escalation of unacknowledged critical item
+- **settings**:
+  - Notification templates and wording overrides
+  - Notification rules
+  - Default preferences per event type
+  - Digest schedule
+  - Quiet hours and site shifts
+  - Mandatory notice list
+  - Escalation timings
+  - Visibility classes and labels
+  - Delivery channels (email, push, Teams or Slack)
+  - Comment retention and legal hold behaviour
+- **tables**:
+  -
+    - **bulk actions**:
+      - Mark read
+      - Resolve
+    - **columns**:
+      - Record
+      - Snippet
+      - Mentioned by
+      - Date
+      - Status
+      - Visibility
+    - **empty state**: No one has mentioned you.
+    - **filters**:
+      - Open or resolved
+      - Project
+      - Date range
+    - **name**: Mentions of me
+    - **row actions**:
+      - Open record
+      - Reply
+      - Resolve
+      - Mark read
+    - **search**: Snippet text, record name
+    - **sort**:
+      - Date
+      - Record
+  -
+    - **bulk actions**:
+      - Mark read
+      - Snooze
+      - Delete
+    - **columns**:
+      - Message
+      - Record
+      - Event type
+      - Received
+      - Read state
+    - **empty state**: You are all caught up.
+    - **filters**:
+      - Unread
+      - Event type
+      - Project
+      - Snoozed
+    - **name**: Notification inbox
+    - **row actions**:
+      - Open record
+      - Mark read
+      - Snooze
+      - Mute thread
+    - **search**: Message text
+    - **sort**:
+      - Received
+      - Event type
+  -
+    - **columns**:
+      - Thread
+      - Source record
+      - Author
+      - Organisation
+      - Status
+      - Visibility
+      - Last activity
+    - **empty state**: No discussion on this asset or its subtree yet.
+    - **filters**:
+      - Source record type
+      - Status
+      - Visibility
+      - Include subtree
+    - **name**: Asset discussion history
+    - **row actions**:
+      - Open source
+      - Comment
+      - Convert to task, issue or corrective action
+    - **search**: Comment text
+    - **sort**:
+      - Last activity
+      - Source record
+  -
+    - **bulk actions**:
+      - Enable
+      - Disable
+      - Delete
+    - **columns**:
+      - Name
+      - Asset subtree
+      - Discipline
+      - Severity
+      - Event
+      - Recipients
+      - Active
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Event type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Asset subtree
+        - **required**: false
+        - **type**: asset picker
+      -
+        - **field**: Discipline
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Minimum severity
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Recipients (users, roles, teams)
+        - **required**: true
+        - **type**: multiselect
+      -
+        - **field**: Escalate if unacknowledged
+        - **required**: false
+        - **type**: duration
+    - **empty state**: No rules yet. Default event notifications still apply.
+    - **filters**:
+      - Active
+      - Discipline
+      - Severity
+    - **name**: Notification rules
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Disable
+      - Delete
+    - **search**: Rule name
+    - **sort**:
+      - Name
+      - Severity
+  -
+    - **columns**:
+      - Message key
+      - Default wording
+      - Tenant override
+      - Channels
+      - Mandatory
+    - **create form**:
+      -
+        - **field**: Override wording
+        - **required**: true
+        - **type**: text with parameters
+    - **empty state**: Using default wording for all messages.
+    - **filters**:
+      - Overridden
+      - Channel
+      - Mandatory
+    - **name**: Templates and wording overrides
+    - **row actions**:
+      - Edit override
+      - Reset to default
+      - Preview
+    - **search**: Key or wording
+    - **sort**:
+      - Key
+- **walkthrough**:
+  - User opens a record and the comment panel.
+  - User writes a comment, @mentions a colleague and picks a visibility class.
+  - The service checks permission and stores the comment against record, asset and file version.
+  - A comment.mentioned event goes to the outbox.
+  - The notification service resolves recipients and applies preferences, quiet hours and rules.
+  - The mentioned user gets an in-app notification and email or push, deduplicated.
+  - The user opens the thread from the bell and replies.
+  - The user converts a comment to a task, issue or corrective action with a back-link.
+  - The thread owner resolves the comment and comment.resolved is emitted.
+  - External parties see only threads in their visibility class.
+  - Critical or mandatory notices bypass mute and escalate if unacknowledged.

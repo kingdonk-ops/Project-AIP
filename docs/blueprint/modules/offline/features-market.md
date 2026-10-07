@@ -1,0 +1,37 @@
+# Offline field app & sync — Feature scout
+
+
+- **abilities seen in market**:
+  - Full offline operation for forms, photos, signatures and lookups with per-record sync status
+  - Selective download by project, area or asset subtree with storage budgeting
+  - Background upload queue with resume, compression and Wi-Fi-only options
+  - Field-level conflict handling and clear surfacing of rejected operations
+  - Remote device wipe, passcode or biometric lock and session expiry offline
+  - Offline-capable barcode, QR and NFC scanning
+  - Offline drawing and PDF viewing with markup
+  - Sync diagnostics screen for support, with a log export
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Offline eligibility snapshot with sync-time revalidation
+    - **why**: Gating must work offline using a downloaded validity snapshot, then recheck on sync and flag sign-offs made on data that has since expired. Otherwise the hard-block is bypassable in the field.
+  -
+    - **effort**: M
+    - **feature**: Offline drawing and document packs per work area
+    - **why**: Inspectors need drawings, procedures and P&IDs on site without signal. Selective pre-download with versions and stale warnings is a daily need.
+  -
+    - **effort**: S
+    - **feature**: Storage budget and media compression controls
+    - **why**: Photo-heavy CUI work fills devices. Showing size, compressing, and prioritising uploads avoids lost evidence and failed syncs.
+  -
+    - **effort**: S
+    - **feature**: Sync diagnostics and support bundle
+    - **why**: With remote sites, a built-in log and queue inspector with a shareable bundle lets support resolve issues without site visits.
+  -
+    - **effort**: M
+    - **feature**: Device management with remote wipe and lost-device flow
+    - **why**: Required for Rio Tinto-style security reviews. It uses the devices table and encrypted store already planned.
+  -
+    - **effort**: M
+    - **feature**: Conflict simulation test harness
+    - **why**: Scripted multi-device, long-offline scenarios built into CI prove no data loss and give evidence to customers and auditors.

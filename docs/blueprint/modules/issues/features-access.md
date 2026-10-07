@@ -1,0 +1,339 @@
+# Issues, NCRs & corrective actions — Feature filler
+
+
+- **detail sections**:
+  - Summary (status, severity, asset, responsible, due, workflow bar)
+  - Source (inspection answer or step with link)
+  - Assessment
+  - Root cause analysis (NCR: 5-why or category)
+  - Disposition (use-as-is, rework, reject)
+  - Corrective and preventive actions
+  - Evidence and attachments with photo markup
+  - Cost impact
+  - Comments and subcontractor responses
+  - Hold on ITP step and related inspections
+  - Asset history for this asset
+  - Audit trail
+- **notifications**:
+  - Issue raised (to responsible party and supervisor)
+  - Assigned (to owner)
+  - Due soon and overdue (to owner and manager)
+  - Overdue CAPA (to owner and quality manager)
+  - Ready for verification (to verifier)
+  - Verification failed or issue reopened (to owner)
+  - Issue closed (to raiser)
+  - NCR raised or hold applied (to inspectors and project manager)
+  - Subcontractor response received (to quality lead)
+- **settings**:
+  - Issue types and severities
+  - Workflow statuses and required fields per transition
+  - Auto-raise rules from inspection answers (severity mapping)
+  - SLA and due date defaults by severity
+  - Overdue reminder schedule and escalation
+  - NCR categories, disposition options and root-cause method
+  - Verifier independence rule
+  - Hold ITP step on NCR default
+  - Attachment limits
+  - Portal visibility for subcontractors
+  - Renamable terms (issue, NCR, CAPA)
+- **tables**:
+  -
+    - **bulk actions**:
+      - Assign selected
+      - Change severity
+      - Change status where permitted
+      - Export selected
+      - Add to NCR
+    - **columns**:
+      - Issue no.
+      - Title
+      - Type
+      - Severity
+      - Asset
+      - Project
+      - Status
+      - Responsible
+      - Due date
+      - Source (inspection/manual)
+      - Open actions
+      - Age
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: dropdown (admin-configured)
+      -
+        - **field**: Severity
+        - **required**: true
+        - **type**: dropdown (admin-configured)
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset reference
+      -
+        - **field**: Description
+        - **required**: false
+        - **type**: long text
+      -
+        - **field**: Responsible person
+        - **required**: false
+        - **type**: user/company reference
+      -
+        - **field**: Due date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Source inspection/step
+        - **required**: false
+        - **type**: reference
+      -
+        - **field**: Attachments and photos
+        - **required**: false
+        - **type**: file multi
+    - **empty state**: No issues. Issues appear when raised manually or when a failed inspection answer creates one.
+    - **filters**:
+      - Status
+      - Type
+      - Severity
+      - Asset subtree
+      - Project
+      - Responsible
+      - Due date range
+      - Overdue
+      - Source
+      - Assigned to my team
+    - **name**: Issues Register
+    - **row actions**:
+      - Open
+      - Assess
+      - Assign
+      - Start work
+      - Ready for verification
+      - Verify
+      - Close
+      - Reopen
+      - Raise NCR
+      - Escalate to change
+    - **search**: Issue number, title, asset or responsible
+    - **sort**:
+      - Severity
+      - Due date
+      - Created
+      - Status
+      - Age
+  -
+    - **columns**:
+      - Open
+      - Assessed
+      - Action assigned
+      - In progress
+      - Ready for verification
+      - Verified
+      - Closed
+    - **empty state**: No cards in this column.
+    - **filters**:
+      - Severity
+      - Type
+      - Responsible
+      - Project
+      - Overdue
+    - **name**: Issues Kanban
+    - **row actions**:
+      - Open card
+      - Drag to next status (permission checked)
+      - Assign
+    - **search**: Title or issue number
+    - **sort**:
+      - Severity
+      - Due date
+  -
+    - **bulk actions**:
+      - Export selected
+      - Assign selected
+      - Notify responsible parties
+    - **columns**:
+      - NCR no.
+      - Title
+      - Category (material/workmanship/design)
+      - Severity
+      - Asset
+      - Batch/installer
+      - Disposition
+      - Root cause
+      - Status
+      - Open CAPAs
+      - Cost impact
+      - Due
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Category
+        - **required**: true
+        - **type**: dropdown (material/workmanship/design)
+      -
+        - **field**: Severity
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset reference
+      -
+        - **field**: Source issue or inspection step
+        - **required**: false
+        - **type**: reference
+      -
+        - **field**: Responsible party
+        - **required**: true
+        - **type**: user/company reference
+      -
+        - **field**: Material batch / installer
+        - **required**: false
+        - **type**: reference
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Hold related ITP step
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No NCRs raised. Raise one from an issue or an inspection for formal non-conformances.
+    - **filters**:
+      - Category
+      - Severity
+      - Status
+      - Disposition
+      - Responsible party
+      - Project
+      - Overdue CAPA
+      - Subcontractor
+    - **name**: NCR Register
+    - **row actions**:
+      - Open
+      - Investigate
+      - Set disposition
+      - Add CAPA
+      - Verify
+      - Close
+      - Reopen
+    - **search**: NCR number, title, asset, batch or installer
+    - **sort**:
+      - Due
+      - Severity
+      - Created
+      - Status
+  -
+    - **bulk actions**:
+      - Reassign selected
+      - Extend due date (with reason)
+      - Export
+    - **columns**:
+      - Action
+      - Parent (issue/NCR)
+      - Type (corrective/preventive)
+      - Owner
+      - Due date
+      - Status
+      - Evidence
+      - Overdue by
+    - **create form**:
+      -
+        - **field**: Action description
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: dropdown (corrective/preventive)
+      -
+        - **field**: Owner
+        - **required**: true
+        - **type**: user reference
+      -
+        - **field**: Due date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Parent issue or NCR
+        - **required**: true
+        - **type**: reference
+    - **empty state**: No actions. Add corrective or preventive actions to an issue or NCR.
+    - **filters**:
+      - Type
+      - Status
+      - Owner
+      - Due date range
+      - Overdue
+      - Project
+    - **name**: Corrective & Preventive Actions
+    - **row actions**:
+      - Open
+      - Mark complete with evidence
+      - Reassign
+      - Extend due date
+      - Create linked task
+    - **search**: Action text or parent number
+    - **sort**:
+      - Due date
+      - Status
+      - Owner
+  -
+    - **bulk actions**:
+      - Deactivate selected
+      - Reorder
+    - **columns**:
+      - Name
+      - Kind (type/severity)
+      - Default SLA
+      - Colour
+      - Active
+      - Used in (count)
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Kind
+        - **required**: true
+        - **type**: dropdown (type/severity)
+      -
+        - **field**: Default due days
+        - **required**: false
+        - **type**: number
+      -
+        - **field**: Colour
+        - **required**: false
+        - **type**: colour
+    - **empty state**: Using defaults. Add your own issue types and severities.
+    - **filters**:
+      - Kind
+      - Active
+    - **name**: Issue Types and Severities (admin)
+    - **row actions**:
+      - Edit
+      - Deactivate
+      - View usage
+    - **search**: Name
+    - **sort**:
+      - Name
+      - Order
+- **walkthrough**:
+  - An inspector answers Fail on a checked item and the system raises a high-severity issue linked to the asset and step.
+  - The quality lead assesses the issue and confirms severity and type.
+  - They assign a responsible person with a due date; the person is notified.
+  - If formal non-conformance is required, they raise an NCR; the related ITP step is held.
+  - The investigator records root cause and the disposition (use as is, rework, reject).
+  - Corrective and preventive actions are added with owners and due dates, optionally linked to tasks.
+  - The owner works the action, attaches evidence photos with markup and marks ready for verification.
+  - A verifier (not the assignee) checks the evidence and marks the issue verified or sends it back.
+  - The issue is closed; the hold on the ITP step lifts and the asset history shows the full record.
+  - Cost impact flows to quality roll-up, and a commercial impact can be escalated to a variation.

@@ -1,0 +1,131 @@
+# Scopes of work (RSW), disciplines & tasks — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: scope.view within project scope.
+    - **actions**:
+      - Create RSW
+      - Open
+      - Change priority
+      - Assign discipline lead
+      - Update planned hours
+      - Add delay reason
+      - Export
+    - **layout**: DataTable with a KPI strip, tree scope chip and slide-over blade.
+    - **name**: RSW register
+    - **purpose**: Portfolio of scopes of work for the project.
+    - **route**: /scopes
+    - **sections**:
+      - KPI strip: active scopes, earned hours, QA/QC backlog, pending client review
+      - Table: RSW no./rev, asset, location, priority, work order, CTR, WBS, progress, hours, mandated completion, status
+      - Filters: priority, status, discipline, WBS
+  -
+    - **access**: scope.create.
+    - **actions**:
+      - Save
+      - Save and add disciplines
+      - Cancel
+    - **layout**: Multi-section form.
+    - **name**: Create or edit RSW
+    - **purpose**: Capture scope details and commercial data.
+    - **route**: /scopes/new
+    - **sections**:
+      - Number and revision
+      - Asset picker
+      - Location, corrosion environment
+      - Observation and remedial works
+      - Notification no.
+      - Priority and mandated date
+      - Commercial fields
+  -
+    - **access**: scope.view; edit and complete need scope.edit and scope.complete.
+    - **actions**:
+      - Add discipline or task
+      - Reorder tasks
+      - Spawn ITP/RFI/inspection
+      - Issue consumables
+      - Log hours and delay
+      - Complete RSW (gate-checked)
+      - Create revision
+    - **layout**: Header with progress and gate status, with tabs.
+    - **name**: RSW detail
+    - **purpose**: Run the scope through disciplines, tasks and the completion gate.
+    - **route**: /scopes/:id
+    - **sections**:
+      - Header: RSW no./rev, asset, priority, status, progress
+      - Scope details
+      - Disciplines and ordered tasks
+      - Requirements and gate status
+      - Linked ITPs, inspections, RFIs, hold points
+      - Consumables issued
+      - Commercial
+      - Hours: planned, earned, actual, delay
+      - Access and technique
+      - Documents and procedures
+      - Revision history
+      - Activity
+  -
+    - **access**: scope.view; edit by permission.
+    - **actions**:
+      - Inline edit
+      - Open blade
+      - Group by WBS or priority
+      - Export
+    - **layout**: Dense grid with a right-hand blade and split-view toggle.
+    - **name**: Scope portal WBS grid
+    - **purpose**: Unified WBS grid with a slide-over blade for planners and supervisors.
+    - **route**: /scopes/portal
+    - **sections**:
+      - WBS grid
+      - Slide-over blade
+      - Inline hours editing in 0.5h steps
+  -
+    - **access**: scope.view; reporting needs reporting.view.
+    - **actions**:
+      - Filter
+      - Bulk create ITP
+      - Save view
+      - Export
+    - **layout**: Filterable report table with saved views.
+    - **name**: Cross-RSW task report
+    - **purpose**: Find tasks across RSWs, for example every task still needing an ITP.
+    - **route**: /scopes/tasks
+    - **sections**:
+      - Filters: requirement type, state, discipline
+      - Task table with RSW link
+  -
+    - **access**: Tenant admin or scope admin.
+    - **actions**:
+      - Edit
+      - Save
+    - **layout**: Sectioned settings form.
+    - **name**: RSW settings
+    - **purpose**: Configure vocabularies, gates and numbering.
+    - **route**: /admin/scopes/settings
+    - **sections**:
+      - Priority definitions and target durations
+      - Disciplines and task templates
+      - Access methods and techniques
+      - Delay reasons
+      - Gate rules
+      - Auto-create behaviour
+      - Numbering and revision
+      - Terminology
+  -
+    - **access**: Assigned field users within synced scope.
+    - **actions**:
+      - Open task
+      - Log hours
+      - Log delay
+      - Start inspection
+      - Capture photo
+    - **layout**: Card list with a task checklist and offline badge.
+    - **name**: Mobile my scopes
+    - **purpose**: Field view of assigned RSWs and tasks.
+    - **route**: /m/scopes
+    - **sections**:
+      - My RSWs
+      - Task chain
+      - Requirement status
+      - Quick hours and delay log

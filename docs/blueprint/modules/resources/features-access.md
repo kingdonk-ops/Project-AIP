@@ -1,0 +1,197 @@
+# Resources & crews (basic) — Feature filler
+
+
+- **detail sections**:
+  - Profile and company
+  - Skills from the competency register
+  - Credentials and expiry
+  - Crew membership
+  - Assignments calendar
+  - Availability
+  - Conflicts
+  - Activity and audit
+- **notifications**:
+  - Assigned to work
+  - Assignment changed or removed
+  - Double-booking conflict
+  - Credential expiring for an assigned resource
+  - Assignment made with expired credential override
+  - Crew membership changed
+- **settings**:
+  - Resource types and roles
+  - Skill list mapping to the competency register
+  - Block or warn on expired credentials
+  - Double-booking hours per day threshold
+  - Whether rates are shown
+  - Roster patterns
+  - Terminology keys
+- **tables**:
+  -
+    - **bulk actions**:
+      - Assign to scope
+      - Add skill
+      - Export register
+    - **columns**:
+      - Name
+      - Type (person, crew)
+      - Company
+      - Role
+      - Skills
+      - Credential status
+      - Home project
+      - Availability today
+      - Assignments next 7 days
+    - **create form**:
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Name or linked user
+        - **required**: true
+        - **type**: user picker or text
+      -
+        - **field**: Company
+        - **required**: false
+        - **type**: company picker
+      -
+        - **field**: Role
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Skills
+        - **required**: false
+        - **type**: multi select from competency register
+      -
+        - **field**: Crew members (if crew)
+        - **required**: false
+        - **type**: multi resource picker
+      -
+        - **field**: Optional rate
+        - **required**: false
+        - **type**: number
+    - **empty state**: No people or crews yet. Add resources or import from the staff register.
+    - **filters**:
+      - Type
+      - Company
+      - Skill
+      - Credential status (valid, expiring, expired)
+      - Project
+      - Availability
+    - **name**: Resource register
+    - **row actions**:
+      - Open
+      - Assign
+      - Set availability
+      - View credentials
+      - Edit
+    - **search**: Name, skill or role
+    - **sort**:
+      - Name
+      - Role
+      - Availability
+      - Credential status
+  -
+    - **bulk actions**:
+      - Remove selected
+      - Shift dates
+    - **columns**:
+      - Resource
+      - Assigned to (RSW, task or inspection)
+      - Project
+      - Start
+      - End
+      - Hours per day
+      - Conflict
+      - Skill match
+    - **create form**:
+      -
+        - **field**: Resource
+        - **required**: true
+        - **type**: resource picker
+      -
+        - **field**: Target (RSW, task or inspection)
+        - **required**: true
+        - **type**: record picker
+      -
+        - **field**: Start date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: End date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Hours per day
+        - **required**: false
+        - **type**: number
+      -
+        - **field**: Override reason (for expired credential)
+        - **required**: false
+        - **type**: text
+    - **empty state**: No assignments. Assign people to scopes or inspections to see the calendar.
+    - **filters**:
+      - Project
+      - Date range
+      - Conflict
+      - Skill match
+      - Resource type
+    - **name**: Assignments
+    - **row actions**:
+      - Edit
+      - Remove
+      - Resolve conflict
+    - **search**: Resource or assigned record
+    - **sort**:
+      - Start
+      - Resource
+      - Conflict
+  -
+    - **bulk actions**:
+      - Delete selected
+    - **columns**:
+      - Resource
+      - From
+      - To
+      - Type (leave, training, unavailable, roster)
+      - Notes
+    - **create form**:
+      -
+        - **field**: Resource
+        - **required**: true
+        - **type**: resource picker
+      -
+        - **field**: From
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: To
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+    - **empty state**: No availability entries; everyone is treated as available.
+    - **filters**:
+      - Type
+      - Date range
+    - **name**: Availability
+    - **row actions**:
+      - Edit
+      - Delete
+    - **search**: Resource
+    - **sort**:
+      - From
+      - Resource
+- **walkthrough**:
+  - Planner adds people and crews, or syncs them from the staff register.
+  - Skills and tickets are read from the competency register; none are typed in by hand.
+  - Planner opens the assignment calendar for the project week.
+  - Planner picks a scope or inspection that needs a skill, such as an NDT level.
+  - The picker lists resources with a skill match and credential status shown.
+  - Planner assigns a person; double-booking raises a conflict flag.
+  - If the credential is expired, the assignment shows a warning and needs an override reason.
+  - Assignments appear on the schedule and pre-fill the diary labour list.
+  - Inspector assignment on an inspection comes from the same data.
+  - Planner resolves conflicts by moving dates or choosing another resource.

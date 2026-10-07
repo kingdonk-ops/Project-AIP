@@ -1,0 +1,124 @@
+# Asset hierarchy & registers — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/assets/models.py
+    - **purpose**: Asset (ltree path, JSONB attributes, CUI fields, GPS), AssetLineage, ImportBatch, AssetTag, RbiSchedule
+  -
+    - **path**: backend/app/modules/assets/schemas.py
+    - **purpose**: Pydantic models for tree nodes, detail and import preview
+  -
+    - **path**: backend/app/modules/assets/router.py
+    - **purpose**: Tree, CRUD, move, bulk add, scan lookup, history and register endpoints
+  -
+    - **path**: backend/app/modules/assets/tree_service.py
+    - **purpose**: Cycle-guarded reparent, ltree recompute, bulk add patterns, open-item counts
+  -
+    - **path**: backend/app/modules/assets/lineage.py
+    - **purpose**: Merge, split and retag with lineage links
+  -
+    - **path**: backend/app/modules/assets/registers.py
+    - **purpose**: Generic flat register listing from content-type configuration, plus 'used in' lookup
+  -
+    - **path**: backend/app/modules/assets/labels.py
+    - **purpose**: QR and barcode label data, delegating PDF rendering to the report engine
+  -
+    - **path**: backend/app/modules/assets/import_jobs.py
+    - **purpose**: Async import and export tasks that call data_io for parsing, validation and rollback
+  -
+    - **path**: backend/app/modules/assets/rbi.py
+    - **purpose**: Risk-based due-date generation per asset class, using the rules engine and schedule
+  -
+    - **path**: backend/app/modules/assets/cui.py
+    - **purpose**: CUI condition fields and corrosion grade scale, defined by an item-type starter pack
+  -
+    - **path**: backend/app/modules/assets/timeline.py
+    - **purpose**: Asset history query over the audit and activity feed
+  -
+    - **path**: backend/app/modules/assets/events.py
+    - **purpose**: Event payloads
+  -
+    - **path**: backend/migrations/versions/xxxx_assets.py
+    - **purpose**: Schema, ltree and GiST indexes, PostGIS, RLS
+  -
+    - **path**: backend/tests/modules/assets/
+    - **purpose**: Cycle, path, tenant isolation, import rollback and lineage tests
+- **change isolation**: New asset kinds or registers are item-type configuration with no code. Changes to tree mechanics or lineage stay in tree_service and lineage, since other modules reference only asset_id.
+- **config not code**:
+  - item types, categories and attribute schemas
+  - register definitions per content type
+  - RBI intervals by asset class
+  - corrosion grade scale
+  - tag format and bulk-add patterns
+  - import column mappings
+  - terminology labels
+  - criticality scale
+- **events consumed**:
+  - inspection.approved (sync template fields back to attributes)
+  - item_type.schema_published (revalidate attributes)
+  - project.scope_changed
+  - issue.opened and issue.closed (counts)
+  - certificate.expired (register badges)
+  - terminology.changed (labels)
+- **events emitted**:
+  - asset.created
+  - asset.updated
+  - asset.moved
+  - asset.merged
+  - asset.split
+  - asset.retagged
+  - asset.status_changed
+  - asset.import_committed
+  - asset.inspection_due
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/assets/AssetTree.tsx
+    - **purpose**: Collapsible tree with counts, drag reparent and context menu
+  -
+    - **path**: frontend/src/modules/assets/ScopeBar.tsx
+    - **purpose**: Tenant, organisation, project and subtree pickers with a clearable scope chip
+  -
+    - **path**: frontend/src/modules/assets/pages/AssetDetail.tsx
+    - **purpose**: Schema-generated attribute form and tabs for timeline, inspections, issues, documents and certificates
+  -
+    - **path**: frontend/src/modules/assets/pages/RegisterPage.tsx
+    - **purpose**: One generic register page per content type
+  -
+    - **path**: frontend/src/modules/assets/pages/ImportPreview.tsx
+    - **purpose**: Validation preview, conflicts and rollback
+  -
+    - **path**: frontend/src/modules/assets/pages/LabelSheets.tsx
+    - **purpose**: Label sheet generation
+  -
+    - **path**: frontend/src/modules/assets/ScanDialog.tsx
+    - **purpose**: Mobile scan to open an asset
+  -
+    - **path**: frontend/src/modules/assets/api.ts
+    - **purpose**: Generated client wrappers and query hooks
+- **public api**:
+  - GET /assets/tree?parent=&project=
+  - GET/POST/PATCH/DELETE /assets/{id}
+  - POST /assets/{id}/move
+  - POST /assets/bulk-add
+  - POST /assets/{id}/merge and /split
+  - GET /assets/by-tag/{code}
+  - GET /assets/{id}/timeline
+  - GET /registers/{content_type}
+  - GET /assets/{id}/used-in
+  - POST /assets/import and GET /assets/import/{batch}, POST /assets/import/{batch}/commit or /rollback
+  - GET /assets/export
+  - POST /assets/labels
+  - Python service: asset_scope_filter(subtree) for the shared query layer
+- **reuses shared**:
+  - central policy service and RLS
+  - item-type schema validator
+  - terminology dictionary
+  - data_io import and export engine
+  - report engine for labels
+  - rules engine for RBI
+  - uploads pipeline
+  - search index
+  - audit trail
+  - shared tree component
+  - schedule for due dates

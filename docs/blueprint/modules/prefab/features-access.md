@@ -1,0 +1,232 @@
+# Prefab & off-site manufacture — Feature filler
+
+
+- **detail sections**:
+  - Unit header and status pipeline
+  - Stages and hold points
+  - BOM and certificates
+  - Shipment
+  - Receipt inspection and damage photos
+  - Installation sign-off
+  - Handover document checklist
+  - Linked NCRs
+  - Activity
+- **notifications**:
+  - Hold point ready for inspection
+  - Dispatch or install gate blocked (with reason)
+  - NCR raised on failed inspection or receipt damage
+  - Shipment status change and ETA change
+  - Receipt check completed
+  - Inspector or welder certificate expiring
+  - Handover checklist incomplete
+  - Unit installed
+- **settings**:
+  - Unit types and stage templates
+  - Hold point rules and gate rules
+  - Release permissions
+  - QR / barcode label format
+  - Receipt check form
+  - Handover checklist per unit type
+  - Witness notification toggle (pending decision)
+  - Terminology labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Bulk import
+      - Generate ITPs
+      - Print QR labels
+      - Export
+    - **columns**:
+      - Mark number
+      - Type
+      - Revision
+      - Destination asset
+      - Current stage
+      - Status
+      - Hold / NCR flag
+      - Design release
+      - Shipment
+      - Installed
+    - **create form**:
+      -
+        - **field**: Unit type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Mark number
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Revision
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Destination asset
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Stage template
+        - **required**: true
+        - **type**: select (defaults from type)
+      -
+        - **field**: Design release status
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: BOM lines (component, heat number)
+        - **required**: false
+        - **type**: table
+      -
+        - **field**: Shop drawings
+        - **required**: false
+        - **type**: files
+    - **empty state**: No units registered. Register a unit or bulk import a unit list to generate stages and ITPs from the stage template.
+    - **filters**:
+      - Type
+      - Stage
+      - Status
+      - Destination subtree
+      - Has open hold
+      - Has open NCR
+      - Design release status
+    - **name**: Prefab Units
+    - **row actions**:
+      - Open
+      - Revise
+      - Release for dispatch
+      - Release for install
+      - Raise NCR
+      - Print QR label
+    - **search**: Mark number, destination asset tag, heat number
+    - **sort**:
+      - Mark number
+      - Stage
+      - Status
+      - Updated
+  -
+    - **bulk actions**:
+      - Retire
+    - **columns**:
+      - Unit type
+      - Stages
+      - Hold points
+      - ITP template
+      - Version
+      - Status
+    - **create form**:
+      -
+        - **field**: Unit type
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Ordered stages with dependencies
+        - **required**: true
+        - **type**: ordered list
+      -
+        - **field**: Hold points per stage
+        - **required**: false
+        - **type**: multi-select
+      -
+        - **field**: ITP template
+        - **required**: true
+        - **type**: select
+    - **empty state**: No stage templates. Create one per unit type so ITPs generate automatically.
+    - **filters**:
+      - Status
+    - **name**: Stage Templates
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Publish version
+    - **search**: Unit type
+    - **sort**:
+      - Unit type
+      - Last edited
+  -
+    - **bulk actions**:
+      - Print labels
+      - Export packing list
+    - **columns**:
+      - Shipment no
+      - Units
+      - Carrier ref
+      - Status
+      - ETA
+      - Receipt status
+      - Destination
+    - **create form**:
+      -
+        - **field**: Units on load
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Carrier and reference
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Packing list
+        - **required**: false
+        - **type**: file or generated
+      -
+        - **field**: ETA
+        - **required**: false
+        - **type**: datetime
+      -
+        - **field**: Destination
+        - **required**: true
+        - **type**: location
+    - **empty state**: No shipments. Create a shipment once units pass the dispatch release.
+    - **filters**:
+      - Status
+      - Carrier
+      - ETA range
+      - Receipt status
+    - **name**: Shipments
+    - **row actions**:
+      - Open
+      - Record status event
+      - Start receipt check
+      - Assign install slot
+    - **search**: Shipment no, carrier ref, mark number
+    - **sort**:
+      - ETA
+      - Status
+      - Shipment no
+  -
+    - **columns**:
+      - Unit
+      - Slot window
+      - Destination asset
+      - Status
+    - **create form**:
+      -
+        - **field**: Unit
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Slot start and end
+        - **required**: true
+        - **type**: datetime range
+    - **empty state**: No install slots assigned.
+    - **filters**:
+      - Date range
+      - Status
+    - **name**: Install Slots
+    - **row actions**:
+      - Assign
+      - Reschedule
+      - Record installation
+    - **search**: Mark number, asset tag
+    - **sort**:
+      - Slot window
+- **walkthrough**:
+  - Engineer registers a unit (type, mark, revision, destination asset) or imports a list.
+  - The stage template generates the ITP and stage register.
+  - Design release is recorded and the unit moves into fabrication.
+  - Factory inspections and hold points are completed and signed.
+  - Dispatch release is blocked until holds, NCRs and certificate checks (inspector, welder) are clear.
+  - Dispatcher creates a shipment, prints QR labels and records transport status events, working offline.
+  - On arrival, receipt inspection is done with photos; damage auto-raises an NCR.
+  - Install release gate is checked and the unit is installed and signed off.
+  - The destination asset is created or updated and fabrication history is carried to it.
+  - Handover check confirms all documents, MDR and files are present, and the delivery inspection report is generated.

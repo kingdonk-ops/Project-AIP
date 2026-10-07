@@ -1,0 +1,117 @@
+# Change orders, variations & MOC (basic) — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/change/models.py
+    - **purpose**: ChangeRecord (single table with type), ChangeLine, DayworkSheet and lines, MocRecord, MocChecklistItem, MocReview, NoticeClock, ContractNoticeConfig
+  -
+    - **path**: backend/app/modules/change/schemas.py
+    - **purpose**: Pydantic schemas; commercial fields flagged for redaction
+  -
+    - **path**: backend/app/modules/change/router.py
+    - **purpose**: Change register, detail, daywork, MOC, clock endpoints
+  -
+    - **path**: backend/app/modules/change/service.py
+    - **purpose**: Create from source (notice, instruction, RFI, inspection finding), lifecycle transitions
+  -
+    - **path**: backend/app/modules/change/daywork.py
+    - **purpose**: Build daywork from diary, resources and consumables ledger; client signature handoff
+  -
+    - **path**: backend/app/modules/change/moc.py
+    - **purpose**: MOC stages, checklist instantiation per discipline, open-action gate before close-out
+  -
+    - **path**: backend/app/modules/change/notice_clock.py
+    - **purpose**: Compute deadline from contract period and start event; register deadline for warnings
+  -
+    - **path**: backend/app/modules/change/verbal.py
+    - **purpose**: Draft change from voice/phone-log record and confirmation letter request
+  -
+    - **path**: backend/app/modules/change/events.py
+    - **purpose**: Emitters and handlers
+  -
+    - **path**: backend/app/modules/change/permissions.py
+    - **purpose**: Permission keys incl. view_commercial_values
+  -
+    - **path**: backend/app/modules/change/seed/defaults.json
+    - **purpose**: Type list, lifecycle workflow definition, MOC checklist templates, term keys
+  -
+    - **path**: backend/migrations/versions/xxxx_change.py
+    - **purpose**: Migration with RLS
+  -
+    - **path**: backend/tests/modules/change/
+    - **purpose**: Lifecycle, clock, MOC gate, redaction, isolation tests
+- **change isolation**: New change types, stages or contract forms are configuration rows, not tables or code. Pricing source changes only in the lines adapter, which uses cost-code references now that cost_items is removed. Daywork pulling is isolated in daywork.py behind read interfaces of diary, resources and inventory.
+- **config not code**:
+  - Change types and their labels
+  - Lifecycle stages per type
+  - Notice periods per contract
+  - MOC checklist templates and reviewer roles
+  - Approval routes and thresholds
+  - Letter templates
+  - Numbering format
+  - Which roles see commercial values
+  - Contract form clause-name sets as optional data presets
+- **events consumed**:
+  - approval.completed
+  - inspection.finding_raised (discovered condition)
+  - voice.verbal_instruction_captured
+  - rfi.change_flagged
+  - signing.completed
+  - transmittal.sent (notice evidence)
+- **events emitted**:
+  - changeorder.submitted
+  - changeorder.approved
+  - changeorder.rejected
+  - change.notice_clock_started
+  - moc.approved
+  - moc.closed
+  - daywork.signed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/change/pages/ChangeRegister.tsx
+    - **purpose**: Register with stage pipeline
+  -
+    - **path**: frontend/src/modules/change/pages/ChangeDetail.tsx
+    - **purpose**: Timeline, lines, attachments, approval trail
+  -
+    - **path**: frontend/src/modules/change/pages/DayworkCapture.tsx
+    - **purpose**: Daywork sheet with client signature
+  -
+    - **path**: frontend/src/modules/change/pages/MocDetail.tsx
+    - **purpose**: Checklist and review stages
+  -
+    - **path**: frontend/src/modules/change/components/NoticeClockBadge.tsx
+    - **purpose**: Time-bar warning display
+  -
+    - **path**: frontend/src/modules/change/components/RaiseChangeButton.tsx
+    - **purpose**: Exported action for inspection findings, RFIs, phone log
+  -
+    - **path**: frontend/src/modules/change/api.ts
+    - **purpose**: Generated client wrapper
+  -
+    - **path**: frontend/src/modules/change/routes.tsx
+    - **purpose**: Route and nav registration, labels from terminology
+- **public api**:
+  - GET/POST/PATCH /changes
+  - POST /changes/{id}/transition
+  - POST /changes/{id}/submit
+  - POST/GET /changes/{id}/lines
+  - POST /daywork-sheets and POST /daywork-sheets/{id}/sign
+  - POST/GET /moc and POST /moc/{id}/checklist/{item}/complete
+  - GET/PUT /contract-notice-configs
+  - POST /changes/from-source (source type, id)
+  - get_change_summary(asset_id) read interface
+- **reuses shared**:
+  - Approvals/state engine for approval and lifecycle
+  - Terminology dictionary for Variation/Change Order/MOC labels
+  - Deadline register in tasks for notice clocks
+  - Signing for client signature
+  - Documents and uploads
+  - Transmittals for notices and letters
+  - Report engine for confirmation letters and daywork PDFs
+  - Comments and notifications
+  - Audit/timeline
+  - Permissions and redaction
+  - Rules engine for MOC reviewer requirements
+  - Voice/phone log, diary, resources, inventory read interfaces

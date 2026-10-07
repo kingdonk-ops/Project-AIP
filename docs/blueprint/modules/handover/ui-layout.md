@@ -1,0 +1,143 @@
+# Handover, data books & submissions — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Project members with handover.view; Kaefer and client roles read-only per portal scope
+    - **actions**:
+      - Filter by subtree/status
+      - Open item detail
+      - Start package build
+      - Export checklist
+    - **layout**: Split view: left asset/system checklist tree, right summary panel; KPI strip above
+    - **name**: Closeout and Handover Overview
+    - **purpose**: Live closeout status by system or area from evidence, entry point to package assembly
+    - **route**: /projects/:pid/handover
+    - **sections**:
+      - KPI strip (percent complete, open punch, open NCRs, expiring certificates)
+      - Checklist tree with live evidence status badges
+      - Percent-complete by system/area chart
+      - Package assembly call to action
+  -
+    - **access**: handover.view; assign requires handover.manage
+    - **actions**:
+      - Group/filter
+      - Drill to subtree
+      - Assign owner
+    - **layout**: Board with columns by status, toggle to grid of progress cards
+    - **name**: Closeout Board
+    - **purpose**: Kanban/percent view of systems or areas by closure state
+    - **route**: /projects/:pid/handover/board
+    - **sections**:
+      - Group-by selector (system/area/discipline)
+      - Cards with progress bars and blockers
+      - Gap count chips
+  -
+    - **access**: handover.view; edit with handover.manage
+    - **actions**:
+      - Link/unlink evidence
+      - Reassign owner
+      - Open source record
+      - Add comment
+    - **layout**: Two-column detail: header and metadata left, evidence panel right
+    - **name**: Closeout Item Detail
+    - **purpose**: Show requirement, linked asset and evidence, and why it is open or closed
+    - **route**: /projects/:pid/handover/items/:itemId
+    - **sections**:
+      - Requirement and asset link
+      - Evidence panel (inspections, NCRs, certificates, documents)
+      - Owner and due date
+      - Activity tab
+  -
+    - **access**: handover.manage
+    - **actions**:
+      - Select subtree
+      - Choose template
+      - Run completeness
+      - Build draft package
+    - **layout**: Three-pane wizard: subtree selector, completeness checklist, gap view
+    - **name**: Package Builder
+    - **purpose**: Select asset subtree and see completeness and gaps before building
+    - **route**: /projects/:pid/handover/builder
+    - **sections**:
+      - Asset tree with checkboxes
+      - Template selector (MDR structure)
+      - Completeness engine results by asset class
+      - Gap list with click-through
+  -
+    - **access**: handover.view; freeze/export with handover.issue
+    - **actions**:
+      - Export CSV/Excel/PDF/JSON/XML
+      - Freeze snapshot
+      - Request signature
+      - Send to submission
+    - **layout**: Preview pane with index navigator left, document viewer right, action bar top
+    - **name**: Package Preview and Export
+    - **purpose**: Review compiled data book with hyperlinked index and export in chosen formats
+    - **route**: /projects/:pid/handover/packages/:packageId
+    - **sections**:
+      - Index tree with document codes
+      - Document/PDF preview
+      - Revision and diff selector
+      - Hash manifest and signer panel
+  -
+    - **access**: handover.manage
+    - **actions**:
+      - Open source record
+      - Re-run validation
+      - Export report
+    - **layout**: Table with severity filters and detail drawer
+    - **name**: Validation Report
+    - **purpose**: List validation failures with click-through to fix the source record
+    - **route**: /projects/:pid/handover/submissions/:submissionId/validation
+    - **sections**:
+      - Summary counts
+      - Results table (rule, record, message)
+      - Source record drawer
+  -
+    - **access**: handover.view; issue/acknowledge with handover.issue; client reviewers via portal
+    - **actions**:
+      - Record issue/channel
+      - Log acknowledgement
+      - Respond to comment
+      - Create new revision
+      - Compare revisions
+    - **layout**: Register table with detail side panel; tabs for Review and Transmission
+    - **name**: Issue and Acknowledgement Tracker
+    - **purpose**: Track submissions, review cycle, comments, responses and transmission log
+    - **route**: /projects/:pid/handover/submissions
+    - **sections**:
+      - Submission register
+      - Review comments and responses thread
+      - Transmission log
+      - Resubmission diff view
+  -
+    - **access**: Tenant admin or handover.configure
+    - **actions**:
+      - Create/clone template
+      - Map fields
+      - Test with sample asset
+      - Publish version
+    - **layout**: Designer with template list left, editor centre, mapping grid and sample preview right
+    - **name**: Template Designer and Field Mapper
+    - **purpose**: Configure closeout, MDR structure and submission templates and mappings
+    - **route**: /settings/handover/templates
+    - **sections**:
+      - Template list and versions
+      - Folder numbering and naming rules
+      - Source-to-target field mapper
+      - Validation rules
+      - Terminology labels
+  -
+    - **access**: handover.view
+    - **actions**:
+      - Attach evidence
+      - Comment
+    - **layout**: Single-column cards with sticky action footer
+    - **name**: Mobile Closeout Item
+    - **purpose**: Field view of an item's status and evidence
+    - **route**: /m/handover/items/:itemId
+    - **sections**:
+      - Status and requirement
+      - Evidence list
+      - Photo attach

@@ -1,0 +1,37 @@
+# Users, sign-in & SSO — Feature scout
+
+
+- **abilities seen in market**:
+  - SAML/OIDC SSO with self-service admin setup and domain verification
+  - SCIM user and group sync with automatic deprovisioning
+  - Enforced MFA, passkeys and conditional policies by role or network
+  - Session management with device list, remote revoke and idle/absolute timeouts
+  - Guest and external user invitations with sponsor approval and expiry
+  - Scoped API keys and OAuth client credentials for integrations
+  - Login history, suspicious-login alerts and impersonation with consent and audit
+  - Just-in-time provisioning with role mapping from IdP claims
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Replace HS256 single JWT with short-lived access plus rotating refresh tokens and a server-side session table
+    - **why**: AIP currently has no refresh or revocation; this is the prerequisite for SCIM deprovision-in-minutes and session lists.
+  -
+    - **effort**: S
+    - **feature**: Domain claim and SSO-enforcement per tenant that disables password login for SSO-managed users
+    - **why**: Stops fallback paths that bypass the customer's IdP and MFA; Kaefer's IT will expect this.
+  -
+    - **effort**: M
+    - **feature**: Sponsor-owned external accounts with automatic expiry and periodic re-confirmation
+    - **why**: Subcontractor and client users rarely get offboarded; a named internal sponsor and expiry limit orphaned access.
+  -
+    - **effort**: M
+    - **feature**: Shared-device field mode with PIN quick-switch, auto-lock and per-user offline data encryption
+    - **why**: Inspectors share tablets on LNG and mining sites; attribution of sign-offs must remain individual.
+  -
+    - **effort**: M
+    - **feature**: Competency and signature capture on profile bound to e-sign step-up (re-authentication at hold-point sign-off)
+    - **why**: Links identity to who is qualified and proves the signer was present at approval time.
+  -
+    - **effort**: M
+    - **feature**: Break-glass admin access with time-boxed elevation and dual approval
+    - **why**: Auditors look for controlled privileged access; login-as should use this pattern.

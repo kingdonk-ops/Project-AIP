@@ -1,0 +1,114 @@
+# Safety & HSE — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/safety/__init__.py
+    - **purpose**: Registration, feature flag declaration (basic and advanced pack)
+  -
+    - **path**: backend/app/modules/safety/models.py
+    - **purpose**: incident, observation, risk_assessment, regulator_notification; advanced: permit, jsa, toolbox_talk, ppe_issue; sensitive columns tagged for masking
+  -
+    - **path**: backend/app/modules/safety/schemas.py
+    - **purpose**: API schemas with masked variants
+  -
+    - **path**: backend/app/modules/safety/router.py
+    - **purpose**: Basic incident and observation endpoints
+  -
+    - **path**: backend/app/modules/safety/advanced_router.py
+    - **purpose**: Advanced pack endpoints, mounted only when site flag enabled
+  -
+    - **path**: backend/app/modules/safety/service.py
+    - **purpose**: Report capture, risk scoring, corrective action creation via issues engine
+  -
+    - **path**: backend/app/modules/safety/risk_matrix.py
+    - **purpose**: Evaluates likelihood x consequence using configured matrix
+  -
+    - **path**: backend/app/modules/safety/masking.py
+    - **purpose**: Field-level masking of injury and health data by HSE permission
+  -
+    - **path**: backend/app/modules/safety/kpis.py
+    - **purpose**: TRIR, LTIFR and observation rate providers for reporting layer; needs hours worked source
+  -
+    - **path**: backend/app/modules/safety/handlers.py
+    - **purpose**: Diary pre-fill and notification triggers
+  -
+    - **path**: backend/app/modules/safety/permissions.py
+    - **purpose**: Permission keys including HSE-sensitive read
+  -
+    - **path**: backend/alembic/versions/safety_0001_init.py
+    - **purpose**: Migration with RLS
+  -
+    - **path**: backend/tests/modules/safety/
+    - **purpose**: Masking, feature flag, offline idempotency and isolation tests
+- **change isolation**: Advanced HSE lives in advanced_router.py and frontend/pages/advanced behind a site flag, so enabling or removing it does not affect the basic register. Regulatory or matrix changes are config.
+- **config not code**:
+  - risk matrix scales and labels
+  - incident types and severities
+  - regulator notification rules and timelines
+  - permit, JSA and toolbox templates
+  - advanced pack enablement per site
+  - KPI formulas and hours-worked basis
+  - masking field list and roles
+  - retention periods
+- **events consumed**:
+  - diary.day.opened
+  - issue.closed
+  - certificate.status.changed
+  - hours_worked.updated
+  - site.feature_flags.changed
+- **events emitted**:
+  - safety.incident.reported
+  - safety.incident.serious
+  - safety.observation.reported
+  - safety.regulator_notifiable.flagged
+  - safety.permit.issued
+  - safety.permit.closed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/safety/index.ts
+    - **purpose**: Route registration gated by site feature flag
+  -
+    - **path**: frontend/src/modules/safety/pages/IncidentRegister.tsx
+    - **purpose**: Register with quick report button
+  -
+    - **path**: frontend/src/modules/safety/pages/IncidentDetail.tsx
+    - **purpose**: Risk score, investigation and corrective actions
+  -
+    - **path**: frontend/src/modules/safety/pages/QuickReport.tsx
+    - **purpose**: Offline-capable mobile quick report
+  -
+    - **path**: frontend/src/modules/safety/pages/advanced/
+    - **purpose**: Permits, JSAs, toolbox talks, PPE, HSE audits (lazy-loaded)
+  -
+    - **path**: frontend/src/modules/safety/components/RiskMatrix.tsx
+    - **purpose**: Matrix input and display
+  -
+    - **path**: frontend/src/modules/safety/components/MaskedField.tsx
+    - **purpose**: Renders masked values
+  -
+    - **path**: frontend/src/modules/safety/offline/
+    - **purpose**: Sync entity registration for the offline layer
+  -
+    - **path**: frontend/src/modules/safety/api/
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - GET/POST /safety/incidents
+  - GET/PATCH /safety/incidents/{id}
+  - POST /safety/incidents/{id}/actions
+  - GET/POST /safety/observations
+  - POST /safety/incidents/{id}/notify-regulator
+  - GET /safety/kpis
+  - advanced (flag-gated): /safety/permits, /safety/jsas, /safety/toolbox-talks, /safety/ppe-issues
+- **reuses shared**:
+  - issues and corrective-action engine
+  - form designer for permits, JSAs and checklists
+  - workflow engine
+  - eligibility gate for permit holders
+  - reporting layer
+  - diary module
+  - notifications
+  - audit trail with legal hold and retention
+  - offline sync layer
+  - uploads pipeline for photos
+  - permissions policy service with field masking

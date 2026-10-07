@@ -1,0 +1,344 @@
+# Scopes of work (RSW), disciplines & tasks — Feature filler
+
+
+- **detail sections**:
+  - Header (RSW no./rev, asset, priority, status, progress)
+  - Scope details (location, corrosion environment, observation, remedial works)
+  - Disciplines and ordered tasks
+  - Requirements and completion gate status
+  - Linked ITPs, inspections, RFIs and hold points
+  - Consumables issued
+  - Commercial (work order, CTR, WBS, tier)
+  - Hours (planned, earned, actual, delay)
+  - Access and technique
+  - Documents and procedure references
+  - Revision history
+  - Activity
+- **notifications**:
+  - RSW created or assigned
+  - Task requirement auto-created
+  - Hold point or inspection ready for review
+  - RSW completion blocked: outstanding requirements
+  - RSW completed
+  - Mandated completion date approaching or overdue
+  - Delay logged against P1/P2 RSW
+  - Consumables issued or shortfall
+- **settings**:
+  - Priority definitions and target durations (P1-P4)
+  - Discipline list
+  - Task templates per discipline
+  - Access method vocabulary
+  - Inspection technique list
+  - Delay reason list
+  - Hour increment (0.5h)
+  - Completion gate rules (which requirements count)
+  - Auto-create behaviour for ITP/RFI/inspection
+  - RSW numbering and revision rules
+  - Terminology (RSW label per market)
+  - Computed deadlines from priority
+- **tables**:
+  -
+    - **bulk actions**:
+      - Change priority
+      - Assign discipline lead
+      - Export
+      - Update planned hours
+      - Add delay reason
+    - **columns**:
+      - RSW no./rev
+      - Asset
+      - Location
+      - Priority
+      - Work order
+      - CTR
+      - WBS
+      - Progress %
+      - Planned hrs
+      - Earned hrs
+      - Delay hrs
+      - Mandated completion
+      - Status
+    - **create form**:
+      -
+        - **field**: RSW number
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Revision
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Location
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Corrosion environment
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Observation
+        - **required**: false
+        - **type**: long text
+      -
+        - **field**: Remedial works
+        - **required**: false
+        - **type**: long text
+      -
+        - **field**: Notification no.
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Priority
+        - **required**: true
+        - **type**: dropdown P1-P4
+      -
+        - **field**: Mandated completion date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Work order / order no.
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: CTR / WBS / tier
+        - **required**: false
+        - **type**: text/dropdown
+      -
+        - **field**: Estimated hours
+        - **required**: false
+        - **type**: decimal
+      -
+        - **field**: Metres to scan
+        - **required**: false
+        - **type**: decimal
+      -
+        - **field**: Access method
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Inspection technique
+        - **required**: false
+        - **type**: dropdown
+    - **empty state**: No RSWs in this project. Create an RSW against an asset or import from the scope list.
+    - **filters**:
+      - Project
+      - Priority P1-P4
+      - Status
+      - Discipline
+      - Tier
+      - Access method
+      - Inspection technique
+      - Overdue
+      - Has delay
+    - **name**: RSW register (Scope Portal grid)
+    - **row actions**:
+      - Open blade
+      - Open detail
+      - Add discipline
+      - Duplicate
+      - Revise (new rev)
+      - Complete (gated)
+    - **search**: RSW no., asset tag, work order, WBS, notification no.
+    - **sort**:
+      - RSW no.
+      - Priority
+      - Mandated completion
+      - Progress %
+      - Earned hrs
+  -
+    - **bulk actions**:
+      - Reorder
+      - Remove
+    - **columns**:
+      - Sequence
+      - Discipline
+      - Lead
+      - Tasks
+      - Accepted requirements
+      - Progress %
+    - **create form**:
+      -
+        - **field**: Discipline
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Lead
+        - **required**: false
+        - **type**: user picker
+      -
+        - **field**: Sequence
+        - **required**: false
+        - **type**: number
+    - **empty state**: No disciplines yet. Add welding, coating, NDT or other disciplines to this RSW.
+    - **filters**:
+      - Discipline
+      - Progress state
+    - **name**: Disciplines (within an RSW)
+    - **row actions**:
+      - Edit
+      - Add task
+      - Reorder
+      - Delete
+    - **search**: Discipline name
+    - **sort**:
+      - Sequence
+  -
+    - **bulk actions**:
+      - Auto-create linked records
+      - Set flags
+      - Mark complete
+    - **columns**:
+      - Seq
+      - Task
+      - Discipline
+      - Requires ITP
+      - Requires inspection
+      - Requires RFI
+      - Requires consumables
+      - Linked hold point
+      - Component
+      - Status
+      - Planned/earned hrs
+    - **create form**:
+      -
+        - **field**: Task name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Discipline
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Sequence
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Component asset
+        - **required**: false
+        - **type**: asset picker
+      -
+        - **field**: Requires ITP
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Requires inspection
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Requires RFI
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Requires consumables
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Cost code
+        - **required**: false
+        - **type**: picker
+    - **empty state**: No tasks. Add the ordered steps (test, measure, blast, weld) for this discipline.
+    - **filters**:
+      - Discipline
+      - Status
+      - Requires ITP/inspection/RFI/consumables
+      - Requirement unmet
+      - Component
+    - **name**: Tasks (ordered chain)
+    - **row actions**:
+      - Open
+      - Create ITP/RFI/inspection
+      - Issue consumables
+      - Link component
+      - Reorder
+      - Delete
+    - **search**: Task name, component tag
+    - **sort**:
+      - Sequence
+      - Status
+  -
+    - **bulk actions**:
+      - Auto-create missing records
+      - Export
+    - **columns**:
+      - RSW
+      - Task
+      - Discipline
+      - Missing requirement
+      - Asset
+      - Priority
+      - Age
+    - **empty state**: No tasks are waiting on requirements.
+    - **filters**:
+      - Missing requirement type (ITP, inspection, RFI, consumable)
+      - Discipline
+      - Priority
+      - Project
+    - **name**: Cross-RSW task report
+    - **row actions**:
+      - Open task
+      - Create requirement
+    - **search**: RSW no., task
+    - **sort**:
+      - Priority
+      - Age
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - RSW
+      - Date
+      - Delay hours
+      - Reason (Weather, Access, Permit, SIMOPS, Equipment)
+      - Recorded by
+      - Notes
+    - **create form**:
+      -
+        - **field**: RSW
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Delay hours
+        - **required**: true
+        - **type**: stepper 0.5
+      -
+        - **field**: Reason
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Notes
+        - **required**: false
+        - **type**: text
+    - **empty state**: No delays recorded.
+    - **filters**:
+      - Reason
+      - Date range
+      - Project
+    - **name**: Delay log
+    - **row actions**:
+      - Edit
+      - Delete
+    - **search**: RSW no., notes
+    - **sort**:
+      - Date
+      - Delay hours
+- **walkthrough**:
+  - Planner opens the Scope Portal grid for the selected project.
+  - Creates an RSW against an asset, entering RSW number, revision, priority, location, corrosion environment and mandated date.
+  - Enters commercial data: work order, CTR, WBS, tier, estimated hours and metres to scan.
+  - Adds disciplines such as NDT, coating and welding in sequence.
+  - Adds ordered tasks per discipline and sets requirement flags (ITP, inspection, RFI, consumables).
+  - System auto-creates linked ITPs, RFIs and inspections, with a unique hold point per task.
+  - Crew executes tasks; consumables are issued and inspections taken through review.
+  - Supervisor records earned hours and delay hours with reasons.
+  - Progress rolls up as the percentage of requirements in an accepted state.
+  - Cross-RSW report is checked for tasks still needing an ITP or other requirement.
+  - When all requirements are accepted, the Complete action is enabled; otherwise the gate lists blockers.
+  - RSW is completed and feeds KPIs and closeout.

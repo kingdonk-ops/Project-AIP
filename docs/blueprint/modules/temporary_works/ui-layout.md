@@ -1,0 +1,146 @@
+# Temporary works register — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: tw.view. Register needs tw.manage. Stage actions are role-gated by the workflow.
+    - **actions**:
+      - Register item
+      - Open
+      - Submit design
+      - Request check
+      - Issue permit to load
+      - Record inspection
+      - Request permit to strike
+      - Assign coordinator
+      - Export
+    - **layout**: DataTable with stage chips on each row, filters and a board toggle by stage.
+    - **name**: Temporary works register
+    - **purpose**: List temporary works items with stage chips for design, check, permit to load, in use and permit to strike.
+    - **route**: /projects/:projectId/temporary-works
+    - **sections**:
+      - Filters (category, risk class, stage, status, site, overdue inspection)
+      - Table (TW no., description, category, risk class, asset, designer, checker, stage, status, next inspection)
+      - Stage board view
+      - Bulk action bar
+  -
+    - **access**: tw.manage. The designer and checker rule is enforced server-side.
+    - **actions**:
+      - Save
+      - Cancel
+    - **layout**: Form with an asset picker, plus an inline competency check beside each person field.
+    - **name**: Register or edit TW item
+    - **purpose**: Create an item, assign a designer, independent checker and coordinator, and link scopes.
+    - **route**: /projects/:projectId/temporary-works/new
+    - **sections**:
+      - Description, category and risk class
+      - Asset and location
+      - Designer (competency checked)
+      - Independent checker (must differ from designer)
+      - TW Coordinator
+      - Linked scopes
+  -
+    - **access**: Designer, checker, coordinator and supervisors by role. Permit issue needs the coordinator competency. Designer and checker cannot be the same person.
+    - **actions**:
+      - Submit design
+      - Request or complete check
+      - Issue permit to load
+      - Record inspection
+      - Request permit to strike
+      - Issue permit to strike
+      - Attach document
+      - Link scope
+    - **layout**: Header with stage chips and the WorkflowBar. The body is tabbed with a competency status rail on the right.
+    - **name**: TW item detail
+    - **purpose**: Run an item through the full BS 5975 style lifecycle with evidence at each stage.
+    - **route**: /projects/:projectId/temporary-works/:twId
+    - **sections**:
+      - Summary and stage chips
+      - Design brief
+      - Design and calculations
+      - Independent check
+      - Permit to load
+      - Inspections in use
+      - Permit to strike
+      - Linked scopes and ITP holds
+      - Competency status
+      - Documents
+      - Audit trail
+  -
+    - **access**: tw.view. Issue needs tw.permit.issue.
+    - **actions**:
+      - Open permit
+      - Create permit
+      - Export
+    - **layout**: DataTable with filters.
+    - **name**: Permits register
+    - **purpose**: List permits to load and permits to strike.
+    - **route**: /projects/:projectId/temporary-works/permits
+    - **sections**:
+      - Filters (type, status, issuer, date)
+      - Permit table (permit no., type, TW item, issued by, date, status)
+  -
+    - **access**: Coordinator and authorised approvers by workflow role
+    - **actions**:
+      - Sign
+      - Issue
+      - Reject
+      - Cancel permit
+    - **layout**: Form page built from a permit template, with a sign-off panel and the hold status.
+    - **name**: Permit form
+    - **purpose**: Complete and sign a permit to load or permit to strike.
+    - **route**: /projects/:projectId/temporary-works/permits/:permitId
+    - **sections**:
+      - Permit details
+      - Conditions checklist
+      - Sign-off panel
+      - Hold flag effect on linked ITP steps and tasks
+  -
+    - **access**: tw.view. Recording needs inspection.execute with the right competency.
+    - **actions**:
+      - Open inspection
+      - Reschedule
+      - Record inspection
+      - Export
+    - **layout**: Calendar and list toggle, with overdue items highlighted.
+    - **name**: Inspection schedule and overdue
+    - **purpose**: See upcoming and overdue periodic inspections, such as weekly scaffold tags.
+    - **route**: /projects/:projectId/temporary-works/inspections
+    - **sections**:
+      - Calendar
+      - Due and overdue list
+      - Failed inspections
+  -
+    - **access**: Tenant admin or tw.settings.manage
+    - **actions**:
+      - Edit and save
+      - Edit workflow
+    - **layout**: Settings page with sections.
+    - **name**: Temporary works settings
+    - **purpose**: Configure categories, risk classes, competencies, separation rule, workflows and frequencies.
+    - **route**: /settings/temporary-works
+    - **sections**:
+      - Categories and risk classes
+      - Required competencies per role
+      - Designer and checker separation rule
+      - Permit workflows
+      - Inspection frequencies
+      - Hold-release behaviour
+      - Notification recipients
+  -
+    - **access**: Assigned inspectors who hold the required competency
+    - **actions**:
+      - Answer checks
+      - Capture photo
+      - Submit inspection
+      - Raise issue
+    - **layout**: Mobile checklist screen with the item header, pass or fail controls and a bottom submit bar.
+    - **name**: Mobile TW inspection
+    - **purpose**: Record a periodic inspection or scaffold tag check on site, offline-capable.
+    - **route**: /m/temporary-works/:twId/inspect
+    - **sections**:
+      - Item header with permit status
+      - Inspection checklist
+      - Photo capture
+      - Competency warning
+      - Sync status

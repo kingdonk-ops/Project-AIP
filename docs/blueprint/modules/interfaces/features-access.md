@@ -1,0 +1,209 @@
+# Interface management — Feature filler
+
+
+- **detail sections**:
+  - Header with status stepper
+  - Agreement
+  - Deliverable evidence (photos, certificates, inspection records, documents)
+  - Linked RFIs and submittals
+  - Blocked tasks
+  - Escalation history
+  - Acceptance and attestations
+  - Comments
+  - Activity
+- **notifications**:
+  - Interface raised to provider and receiver
+  - Interface agreed
+  - Interface delivered, acceptance requested
+  - Interface accepted
+  - Need date approaching
+  - Overdue escalation at each level
+  - Blocked task constraint added or cleared
+  - Escalated item added to meeting agenda
+- **settings**:
+  - Interface templates
+  - Escalation ladder levels, roles and timings
+  - Status stage labels
+  - Heat-map thresholds
+  - Party-scoped visibility rules
+  - External party login policy
+  - Terminology for interface, provider and receiver
+  - Acceptance attestation wording
+- **tables**:
+  -
+    - **bulk actions**:
+      - Escalate
+      - Export
+      - Reassign
+    - **columns**:
+      - Number
+      - Deliverable
+      - Provider
+      - Receiver
+      - Package
+      - Asset
+      - Scope task
+      - Need date
+      - Days late
+      - Status
+      - Escalation level
+    - **create form**:
+      -
+        - **field**: Template
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Deliverable
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Provider party
+        - **required**: true
+        - **type**: company or contact
+      -
+        - **field**: Receiver party
+        - **required**: true
+        - **type**: company or contact
+      -
+        - **field**: Package
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Asset node
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Scope task
+        - **required**: false
+        - **type**: picker
+      -
+        - **field**: Need date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Blocked-by relations
+        - **required**: false
+        - **type**: picker (multi)
+    - **empty state**: No interface points yet. Raise one or start from a template.
+    - **filters**:
+      - Package
+      - Provider
+      - Receiver
+      - Status
+      - Asset subtree
+      - Overdue
+      - Escalation level
+    - **name**: Interface list
+    - **row actions**:
+      - Open
+      - Agree
+      - Deliver
+      - Accept
+      - Escalate
+    - **search**: Number, deliverable, party
+    - **sort**:
+      - Need date
+      - Days late
+      - Status
+      - Escalation level
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Provider (rows)
+      - Receiver (columns)
+      - Count
+      - Overdue count
+    - **empty state**: Nothing to show until interfaces exist.
+    - **filters**:
+      - Group by package or contractor
+      - Status
+      - Project
+    - **name**: Interface matrix
+    - **row actions**:
+      - Drill into cell
+    - **search**: Party or package name
+    - **sort**:
+      - Overdue count
+      - Provider
+  -
+    - **bulk actions**:
+      - Delete
+    - **columns**:
+      - Name
+      - Default provider
+      - Default receiver
+      - Lead time
+      - Used
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Default provider role
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Default receiver role
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Lead time (days)
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Deliverable description
+        - **required**: false
+        - **type**: text
+    - **empty state**: No templates. Add remediation handoffs such as scaffold handover or insulation strip.
+    - **filters**:
+      - Provider
+      - Receiver
+    - **name**: Templates
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Delete
+    - **search**: Name
+    - **sort**:
+      - Name
+      - Used
+  -
+    - **columns**:
+      - Level
+      - Role
+      - Days overdue
+      - Notify
+    - **create form**:
+      -
+        - **field**: Level
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Role
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Days overdue to trigger
+        - **required**: true
+        - **type**: number
+    - **empty state**: No ladder configured. Overdue interfaces will not escalate automatically.
+    - **name**: Escalation ladder
+    - **row actions**:
+      - Edit
+      - Remove
+    - **search**: Role
+    - **sort**:
+      - Level
+- **walkthrough**:
+  - Planner raises an interface from a template, for example scaffold handover.
+  - Provider, receiver, package, asset node, scope task and need date are set.
+  - Blocked-by is linked so the scope task shows a constraint.
+  - Provider and receiver agree the interface, which moves it to agreed.
+  - The provider delivers and attaches evidence such as photos or an inspection record.
+  - The receiver reviews the evidence and either accepts or queries.
+  - Both parties sign the attestation, and the interface is accepted.
+  - The blocked task is released on the look-ahead.
+  - If the need date passes, the ladder escalates through responsible person, package manager and project manager.
+  - Escalated items go into the next meeting agenda and the heat-map and matrix show risk by package pair.

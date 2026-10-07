@@ -1,0 +1,38 @@
+# Markup, viewer & plan room — Feature scout
+
+
+- **abilities seen in market**:
+  - PDF viewing with markup tools such as cloud, arrow, text, dimension and freehand
+  - Scale calibration for on-drawing measurements
+  - Stamp libraries with approved, rejected and custom stamps
+  - Pins on drawings linked to issues, photos and inspections with layer toggles
+  - Markup stored separately from the source and flattened on approval
+  - Version comparison or overlay between drawing revisions
+  - Photo annotation on mobile
+  - Markup threads with status such as open and resolved
+  - Offline viewing of drawing sets on mobile
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Asset pin placement that links a drawing location to a node in the asset tree
+    - **why**: Connects plan-room pins to the core asset hierarchy so a pin on an isometric or P&ID opens the asset and its inspection history.
+  -
+    - **effort**: M
+    - **feature**: Inspection finding pins with severity colouring on drawings
+    - **why**: CUI and coating condition maps need a visual overview of defect severity across a plant area.
+  -
+    - **effort**: L
+    - **feature**: Revision overlay comparison
+    - **why**: Teams need to see what changed between drawing revisions, and pins should carry forward or flag as needing review.
+  -
+    - **effort**: M
+    - **feature**: Offline drawing sets cached per scope
+    - **why**: Sites with poor connectivity need drawings and markup available offline, syncing annotations later through the existing protocol.
+  -
+    - **effort**: S
+    - **feature**: Photo markup with before-and-after pairing
+    - **why**: Remediation records often show condition before and after treatment, and pairing them against the same asset is valuable evidence.
+  -
+    - **effort**: M
+    - **feature**: Hash-stamped flattened export on approval
+    - **why**: Aligns with the immutable-record goals by producing a sealed marked-up copy while the source file stays unchanged.

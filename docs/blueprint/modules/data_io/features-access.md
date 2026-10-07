@@ -1,0 +1,231 @@
+# Data import, export & backup — Feature filler
+
+
+- **detail sections**:
+  - Import job: mapping, dry-run summary, row errors, hierarchy preview
+  - Import batch: records created or changed, rollback state, legal hold flag
+  - Export: scope, manifest with checksums, schema reference per module, encryption key reference
+  - Approval trail: requester, approver(s), step-up MFA result
+  - Download history and expiry
+  - Audit events for imports, exports, approvals, downloads and rollbacks
+- **notifications**:
+  - Import dry run ready (to requester)
+  - Import committed or failed (to requester)
+  - Batch rolled back (to requester and project admins)
+  - Rollback blocked by legal hold (to requester)
+  - Export awaiting approval (to approvers)
+  - Export approved, rejected or ready for download (to requester)
+  - Download link expiring soon (to requester)
+  - Volume anomaly alert on exports (to security and tenant admins)
+- **settings**:
+  - Import file size and row limits
+  - Allowed formats
+  - Template versions per register
+  - Formula-injection handling
+  - Rollback window for batches
+  - Tenant export approval rule (single or dual approval; open question)
+  - Step-up MFA requirement for tenant exports
+  - Download link expiry and rate limits
+  - Export encryption key reference
+  - Export retention period
+  - Anomaly alert thresholds
+  - Project-scoped export on or off (open question)
+  - Restore or import-from-export path (not built; open question)
+- **tables**:
+  -
+    - **bulk actions**:
+      - Cancel selected
+      - Download error reports
+    - **columns**:
+      - File name
+      - Target register
+      - Mode (create or update-by-key)
+      - Status
+      - Rows
+      - Errors
+      - Requested by
+      - Created
+    - **create form**:
+      -
+        - **field**: Target register
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Mode
+        - **required**: true
+        - **type**: select (create or update-by-key)
+      -
+        - **field**: Key field (update-by-key)
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: File (Excel or CSV)
+        - **required**: true
+        - **type**: file upload (quarantine pipeline)
+      -
+        - **field**: Column mapping
+        - **required**: true
+        - **type**: mapping grid
+    - **empty state**: No imports yet. Download a template for the register, fill it in and upload it. Nothing is saved until you review the dry run and commit.
+    - **filters**:
+      - Target register
+      - Mode
+      - Status
+      - Requested by
+      - Date range
+    - **name**: Import jobs
+    - **row actions**:
+      - Open
+      - Download original file
+      - Download error report
+      - Fix and re-upload
+      - Commit
+      - Cancel
+    - **search**: File name and requester
+    - **sort**:
+      - Created (default, newest first)
+      - Status
+      - Errors
+  -
+    - **bulk actions**:
+      - Download as CSV
+    - **columns**:
+      - Row
+      - Column
+      - Value
+      - Error
+      - Suggested fix
+    - **empty state**: No errors found. The dry run passed validation and the file is ready to commit.
+    - **filters**:
+      - Error type
+      - Column
+      - Severity
+    - **name**: Import row errors
+    - **row actions**:
+      - Open source row
+    - **search**: Column name, value, error text
+    - **sort**:
+      - Row (default)
+      - Column
+  -
+    - **bulk actions**:
+      - Exclude selected rows
+    - **columns**:
+      - Row
+      - Tag
+      - Parent
+      - Level
+      - Change marker (new, changed, unchanged)
+      - Issue
+    - **create form**:
+      -
+        - **field**: Parent resolution method
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Code rules
+        - **required**: true
+        - **type**: rule editor
+      -
+        - **field**: Root asset to import under
+        - **required**: true
+        - **type**: asset picker
+    - **empty state**: No rows to preview. Upload a tree file to see the resulting hierarchy before commit.
+    - **filters**:
+      - Change marker
+      - Issue type (orphan, duplicate tag, code rule)
+      - Level
+    - **name**: Asset tree import preview
+    - **row actions**:
+      - Resolve orphan
+      - Resolve duplicate
+      - Edit parent
+    - **search**: Tag or parent
+    - **sort**:
+      - Row (default)
+      - Tag
+      - Issue
+  -
+    - **columns**:
+      - Batch
+      - File
+      - Mode
+      - Records created
+      - Records changed
+      - Committed by
+      - Committed at
+      - Rollback state
+    - **empty state**: No committed batches. Committed imports appear here and can be rolled back as a whole unless records are under legal hold.
+    - **filters**:
+      - Mode
+      - Rollback state
+      - Committed by
+      - Date range
+      - Legal hold
+    - **name**: Import batches
+    - **row actions**:
+      - View detail
+      - Roll back batch
+      - Download original file
+      - Re-run
+    - **search**: File name and batch id
+    - **sort**:
+      - Committed at (default)
+      - Records created
+  -
+    - **bulk actions**:
+      - Cancel selected
+    - **columns**:
+      - Scope (register, project, asset subtree, tenant)
+      - Format
+      - Status
+      - Requested by
+      - Approver(s)
+      - Created
+      - Expires
+      - Size
+    - **create form**:
+      -
+        - **field**: Scope
+        - **required**: true
+        - **type**: picker (register, project, asset subtree or tenant)
+      -
+        - **field**: Format
+        - **required**: true
+        - **type**: select (Excel, CSV, JSON)
+      -
+        - **field**: Include files and audit chain (tenant export)
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Reason
+        - **required**: true
+        - **type**: long text
+    - **empty state**: No exports yet. Choose a register or scope and a format. Tenant exports need step-up MFA and approval.
+    - **filters**:
+      - Scope type
+      - Format
+      - Status
+      - Date range
+    - **name**: Exports
+    - **row actions**:
+      - Download
+      - View manifest
+      - Cancel
+      - Approve or reject (admins)
+    - **search**: Requester and scope name
+    - **sort**:
+      - Created (default)
+      - Expires
+      - Size
+- **walkthrough**:
+  - A user with import permission opens the Import wizard and picks the target register, for example Assets.
+  - The user downloads the template and fills it in.
+  - The user uploads the file. It passes through quarantine, size and schema checks and formula-injection protection.
+  - The user maps columns and chooses create or update-by-key, with the key field such as tag.
+  - The system runs an async dry run. The user reviews counts, orphans and duplicates, and for asset trees the hierarchy preview.
+  - The user downloads the row-level error report, fixes the file and re-uploads until clean.
+  - The user commits. The import runs as a background job and creates an import batch.
+  - The user checks Import history. If the data was wrong, a project admin rolls back the whole batch, which is blocked for records under legal hold.
+  - For an export, the user picks scope and format and starts the job. A tenant export needs a tenant admin, step-up MFA and approval.
+  - When ready, the requester downloads the encrypted file with its manifest and checksums before the link expires.

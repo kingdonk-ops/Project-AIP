@@ -1,0 +1,37 @@
+# Prefab & off-site manufacture — Feature scout
+
+
+- **abilities seen in market**:
+  - Unit registers with mark numbers, types, revisions and design-release status tied to shop drawings
+  - Configurable stage templates per unit type with sequence dependencies and percent-complete rollup
+  - Factory inspection hold points with witness notification to client and third-party inspectors
+  - Bill of materials per unit linked to heat numbers, MTRs and weld maps
+  - Packing lists, load planning, delivery documentation and receipt checks with damage recording
+  - Shipment tracking with status events, carrier references and ETA
+  - Install sequence and slot planning against laydown and crane windows
+  - Release-for-shipment gating that blocks dispatch while NCRs or holds are open
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Stage templates per unit type that instantiate ITPs automatically
+    - **why**: Spools, insulation panels and skids need different stages and hold points. Generating the ITP on unit creation reuses the existing inspection engine and avoids manual setup.
+  -
+    - **effort**: M
+    - **feature**: Release-for-dispatch and release-for-install gates
+    - **why**: Reuses the RSW completion gate and certificate hard-block pattern so a unit cannot ship or be installed with open holds, NCRs, or expired inspector or welder certificates.
+  -
+    - **effort**: M
+    - **feature**: Unit BOM linked to component, material and certificate traceability
+    - **why**: Gives heat-number-to-unit-to-asset traceability, which EPC handover packs and client audits expect for fabricated items.
+  -
+    - **effort**: S
+    - **feature**: Receipt inspection on arrival with damage photos and auto-NCR
+    - **why**: Transit damage is a common dispute. Structured receipt checks with evidence create a clean chain of custody between fabricator, carrier and site.
+  -
+    - **effort**: M
+    - **feature**: Shipment and load records with packing list and QR/barcode labels
+    - **why**: Scanning at dispatch and receipt cuts manual reconciliation. It works offline on the field app and updates unit status.
+  -
+    - **effort**: M
+    - **feature**: On installation, create or update the destination asset and carry the unit's records to it
+    - **why**: The installed asset inherits fabrication history, so handover data books and later CUI inspection see the full lifecycle.

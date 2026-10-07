@@ -1,0 +1,298 @@
+# Report engine & published records — Feature filler
+
+
+- **detail sections**:
+  - Template designer (sections, field mapping, styling, orientation)
+  - Live-data preview
+  - Version history
+  - Pre-flight results (rules engine)
+  - Render jobs and status
+  - Signature blocks and seals
+  - Pinned template and data versions
+  - Distribution and receipts
+  - Supersession chain
+  - Audit trail
+- **notifications**:
+  - Report generation complete
+  - Pre-flight failed
+  - Render failed
+  - Signature requested
+  - Record published
+  - Link opened by recipient
+  - Link expiring
+  - Superseded report issued
+- **settings**:
+  - Numbering and revision rules per client
+  - Default templates per record type
+  - Auto-generate on approval
+  - Link expiry defaults
+  - Branding per tenant/client
+  - Renderer selection
+  - Pre-flight rule set
+  - Retention for published records
+  - Allowed external recipient domains
+- **tables**:
+  -
+    - **bulk actions**:
+      - Archive
+      - Export JSON
+    - **columns**:
+      - Template name
+      - Record type
+      - Variant (internal/client/certificate)
+      - Orientation
+      - Version
+      - Client
+      - Status
+      - Updated
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Record type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Variant
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Orientation
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Client/brand
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Numbering rule
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Base on existing
+        - **required**: false
+        - **type**: template picker
+    - **empty state**: No report templates. Create one to render inspections, diaries or meetings to PDF.
+    - **filters**:
+      - Record type
+      - Variant
+      - Orientation
+      - Client
+      - Status
+    - **name**: Report templates
+    - **row actions**:
+      - Edit
+      - Preview with live data
+      - Duplicate
+      - Publish new version
+      - Archive
+    - **search**: Name, record type, client
+    - **sort**:
+      - Name
+      - Updated
+      - Version
+  -
+    - **bulk actions**:
+      - Download selected
+      - Add to data book
+      - Export register CSV
+    - **columns**:
+      - Report no.
+      - Revision
+      - Title
+      - Source record
+      - Template and version
+      - Client
+      - Generated
+      - Status
+      - Supersedes
+    - **create form**:
+      -
+        - **field**: Source record
+        - **required**: true
+        - **type**: record picker
+      -
+        - **field**: Template
+        - **required**: true
+        - **type**: template picker
+      -
+        - **field**: Variant
+        - **required**: true
+        - **type**: select
+    - **empty state**: No reports yet. Reports generate when records are approved or on demand.
+    - **filters**:
+      - Record type
+      - Client
+      - Variant
+      - Status
+      - Date range
+      - Project
+    - **name**: Report register
+    - **row actions**:
+      - Open PDF
+      - Re-render pinned version
+      - Publish
+      - Supersede
+      - View history
+      - Copy download link
+    - **search**: Report no., title, source record, client
+    - **sort**:
+      - Generated
+      - Report no.
+      - Revision
+  -
+    - **bulk actions**:
+      - Resend links
+      - Export receipts
+    - **columns**:
+      - Record
+      - Revision
+      - Published
+      - Published by
+      - Hash
+      - Recipients
+      - Delivery status
+      - Supersedes
+    - **create form**:
+      -
+        - **field**: Report
+        - **required**: true
+        - **type**: report picker
+      -
+        - **field**: Publishing profile
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Recipients (project directory only)
+        - **required**: true
+        - **type**: multi picker
+      -
+        - **field**: Link expiry
+        - **required**: true
+        - **type**: duration
+      -
+        - **field**: Cover message
+        - **required**: false
+        - **type**: text
+    - **empty state**: Nothing published yet.
+    - **filters**:
+      - Delivery status
+      - Record type
+      - Date range
+      - Recipient
+    - **name**: Published records
+    - **row actions**:
+      - View receipts
+      - Verify hash
+      - Republish as superseding
+      - Revoke link
+    - **search**: Record, recipient, hash
+    - **sort**:
+      - Published
+      - Delivery status
+  -
+    - **bulk actions**:
+      - Delete
+    - **columns**:
+      - Name
+      - Record type
+      - Template
+      - Default recipients
+      - Signer roles
+      - Auto-generate on approval
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Record type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Template
+        - **required**: true
+        - **type**: template picker
+      -
+        - **field**: Recipient set
+        - **required**: false
+        - **type**: multi picker
+      -
+        - **field**: Signer roles
+        - **required**: false
+        - **type**: multi role picker
+      -
+        - **field**: Auto-generate on approval
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No publishing profiles.
+    - **filters**:
+      - Record type
+    - **name**: Publishing profiles
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Delete
+    - **search**: Name
+    - **sort**:
+      - Name
+  -
+    - **bulk actions**:
+      - Delete drafts
+    - **columns**:
+      - Data book
+      - Project
+      - Scope
+      - Sections
+      - Status
+      - Generated
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: project picker
+      -
+        - **field**: Asset scope
+        - **required**: true
+        - **type**: asset tree picker
+      -
+        - **field**: Cover sheet template
+        - **required**: false
+        - **type**: template picker
+      -
+        - **field**: Ordering rule
+        - **required**: true
+        - **type**: select
+    - **empty state**: No data books compiled.
+    - **filters**:
+      - Project
+      - Status
+    - **name**: Data books
+    - **row actions**:
+      - Edit order
+      - Compile
+      - Download
+      - Publish
+    - **search**: Name, project
+    - **sort**:
+      - Generated
+      - Name
+- **walkthrough**:
+  - Admin builds a report template choosing sections and mapping fields to slots.
+  - Previews with live data from a sample inspection, in landscape if needed.
+  - Publishes the template version.
+  - An inspection is approved; auto-generation queues a render.
+  - Pre-flight runs the rules engine and blocks on missing readings or unsigned points.
+  - Fix the data and retry; the worker renders the PDF.
+  - The PDF is stored as a document and listed in the report register with its number and revision.
+  - Signers apply their signature blocks; the document is sealed.
+  - The publisher opens the publish dialog and selects recipients from the project directory.
+  - Recipients receive expiring authenticated links; external ones use the portal.
+  - Delivery receipts and access logs are recorded.
+  - Corrections are published as superseding revisions, never edits.

@@ -1,0 +1,121 @@
+# Punch list & defects liability — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Project members; contractors see items assigned to their company
+    - **actions**:
+      - Create
+      - Assign
+      - Change due date
+      - Verify selected
+      - Export per area
+      - Add to transmittal
+    - **layout**: Table with list/map/drawing toggle and grouping.
+    - **name**: Punch/defects register
+    - **purpose**: All punch items and DLP defects.
+    - **route**: /punch
+    - **sections**:
+      - Filters (phase, area, party, status)
+      - Grouped table with photo thumbs
+      - Bulk bar
+  -
+    - **access**: Project members with raise permission
+    - **actions**:
+      - Save
+      - Add pin
+      - Capture photo
+    - **layout**: Form; mobile quick-capture variant.
+    - **name**: Create punch item
+    - **purpose**: Log a snag with photo and pin.
+    - **route**: /punch/new
+    - **sections**:
+      - Description, asset
+      - Drawing pin
+      - Photos
+      - Category, priority
+      - Responsible party, due
+  -
+    - **access**: Responsible party, independent verifier, managers
+    - **actions**:
+      - Mark fixed
+      - Verify (not assignee)
+      - Reject/reopen
+      - Escalate to NCR
+      - Close
+    - **layout**: Header with workflow bar; tabs.
+    - **name**: Punch item detail
+    - **purpose**: Fix, verify and close.
+    - **route**: /punch/:id
+    - **sections**:
+      - Summary
+      - Photos
+      - Location (tree path and pin)
+      - Verification record
+      - Status history
+      - Escalation to NCR
+      - DLP details
+      - Retention linkage
+      - Comments
+      - Audit trail
+  -
+    - **access**: Verifiers
+    - **actions**:
+      - Verify
+      - Reject
+      - Next
+    - **layout**: Queue with preview.
+    - **name**: Verification queue
+    - **purpose**: Items awaiting verification.
+    - **route**: /punch/verification
+    - **sections**:
+      - Ready-for-verification list
+      - Evidence preview
+  -
+    - **access**: Project and commercial managers
+    - **actions**:
+      - Create DLP
+      - Assign defect
+      - Export
+      - Flag retention release
+    - **layout**: Dashboard plus table.
+    - **name**: Defects liability
+    - **purpose**: DLP periods and post-handover defects.
+    - **route**: /punch/dlp
+    - **sections**:
+      - DLP periods with start/end
+      - Open defects by contractor
+      - Ending-soon alerts
+      - Retention eligibility
+  -
+    - **access**: Inspectors and walkdown participants
+    - **actions**:
+      - Drop pin
+      - Photo
+      - Voice note
+      - Assign later
+      - Finish walkdown
+    - **layout**: Full-screen map/drawing with floating capture button.
+    - **name**: Walkdown mode (mobile)
+    - **purpose**: Rapid offline snag capture while walking an area.
+    - **route**: /m/walkdown
+    - **sections**:
+      - Area plan with pins
+      - Quick capture sheet
+      - Session list
+  -
+    - **access**: Tenant admin
+    - **actions**:
+      - Edit
+      - Save
+    - **layout**: Settings cards.
+    - **name**: Punch settings
+    - **purpose**: Terms, categories and rules.
+    - **route**: /settings/punch
+    - **sections**:
+      - Term labels
+      - Categories and priorities
+      - Verification rule
+      - DLP defaults
+      - Retention gating
+      - Export layouts

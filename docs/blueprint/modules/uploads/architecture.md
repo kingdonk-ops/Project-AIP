@@ -1,0 +1,111 @@
+# Upload & file processing pipeline — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: app/modules/uploads/router.py
+    - **purpose**: Presign, confirm, multipart/tus session, status, quarantine review, quota endpoints
+  -
+    - **path**: app/modules/uploads/models.py
+    - **purpose**: UploadSession, ResumableSession, QuarantineObject, ScanResult, CaptureMetadata, ContentHash, FileTypePolicy, QuotaUsage
+  -
+    - **path**: app/modules/uploads/schemas.py
+    - **purpose**: API schemas
+  -
+    - **path**: app/modules/uploads/service.py
+    - **purpose**: Session creation, policy enforcement, confirm, release to tenant storage
+  -
+    - **path**: app/modules/uploads/storage/
+    - **purpose**: Storage interface with S3 (prod) and local (dev only) drivers, tenant prefixes and KMS keys
+  -
+    - **path**: app/modules/uploads/policy.py
+    - **purpose**: Resolves per-type policy within platform limits
+  -
+    - **path**: app/modules/uploads/pipeline.py
+    - **purpose**: State machine: quarantine, scan, magic bytes, ratio caps, derive, release; fail closed
+  -
+    - **path**: app/modules/uploads/workers/
+    - **purpose**: Sandboxed scan, thumbnail, preview, OCR and specialist preview job entrypoints
+  -
+    - **path**: app/modules/uploads/dedupe.py
+    - **purpose**: Hash dedupe, ref counts, reuse integrity signal
+  -
+    - **path**: app/modules/uploads/capture_meta.py
+    - **purpose**: Private capture metadata and EXIF GPS handling per project
+  -
+    - **path**: app/modules/uploads/rescan.py
+    - **purpose**: Rescan on signature update and auto-quarantine
+  -
+    - **path**: app/modules/uploads/cleanup.py
+    - **purpose**: Orphan part cleanup and session expiry
+  -
+    - **path**: app/modules/uploads/module.yaml
+    - **purpose**: Manifest, permissions, events
+  -
+    - **path**: alembic/versions/xxxx_uploads.py
+    - **purpose**: Tables and RLS
+- **change isolation**: New file types are policy rows plus an optional converter worker; storage backend and OCR engine change inside drivers only. Callers depend solely on the UploadService reference contract.
+- **config not code**:
+  - File-type policy rows (types, max size, scan depth, preview)
+  - Quota limits per tenant/project
+  - EXIF GPS policy per project
+  - Chunk size and session TTL
+  - Bandwidth rules per file class
+  - Choice of tus vs S3 multipart driver and OCR engine (Textract vs Tesseract) via driver setting
+  - Rescan schedule
+- **events consumed**:
+  - project.archived
+  - legal_hold.applied
+  - legal_hold.released
+  - signature_db.updated
+  - tenant.created
+- **events emitted**:
+  - upload.completed
+  - upload.rejected
+  - upload.quarantined
+  - upload.rescan_flagged
+  - upload.quota_exceeded
+- **frontend files**:
+  -
+    - **path**: web/src/modules/uploads/UploadTray.tsx
+    - **purpose**: Per-file progress, pause, resume, retry, recovery prompt
+  -
+    - **path**: web/src/modules/uploads/useUpload.ts
+    - **purpose**: Hook wrapping presign, multipart/tus, confirm
+  -
+    - **path**: web/src/modules/uploads/offlineQueue.ts
+    - **purpose**: Dexie-backed queue with priority and bandwidth rules, consumed by offline module
+  -
+    - **path**: web/src/modules/uploads/ScanChip.tsx
+    - **purpose**: Scan status chip for attachments
+  -
+    - **path**: web/src/modules/uploads/FileTypePolicyAdmin.tsx
+    - **purpose**: Tenant admin policy table
+  -
+    - **path**: web/src/modules/uploads/QuarantineReview.tsx
+    - **purpose**: Failed and flagged items list
+  -
+    - **path**: web/src/modules/uploads/QuotaView.tsx
+    - **purpose**: Storage quota view
+  -
+    - **path**: web/src/modules/uploads/previews/
+    - **purpose**: Specialist previews: radiography, point cloud thumbnail, readings spreadsheet
+- **public api**:
+  - POST /uploads/sessions (presign or multipart init)
+  - POST /uploads/sessions/{id}/parts
+  - POST /uploads/sessions/{id}/confirm
+  - GET /uploads/{id}/status
+  - GET/PUT /uploads/policies
+  - GET /uploads/quarantine
+  - POST /uploads/quarantine/{id}/release | delete
+  - GET /uploads/quota
+  - Python: UploadService.request(), attach(), resolve_ref() for other modules
+- **reuses shared**:
+  - jobs runner
+  - audit outbox
+  - permissions policy service
+  - KMS/secrets wrapper
+  - notifications service
+  - search indexer (OCR text)
+  - retention/legal-hold service
+  - terms keys for UI text

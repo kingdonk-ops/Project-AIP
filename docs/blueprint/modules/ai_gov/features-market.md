@@ -1,0 +1,37 @@
+# AI governance & data controls — Feature scout
+
+
+- **abilities seen in market**:
+  - AI feature registry with provider, model, region, retention and training-use terms per feature
+  - Tenant admin toggles per feature plus a platform kill switch
+  - Regional model endpoints with zero data retention settings recorded as evidence
+  - PII and commercial-rate redaction before prompts leave the platform
+  - Permission-aware retrieval that applies the user's access scope at query time
+  - Full prompt, response and tool-call logging with retention rules
+  - Evaluation sets and human feedback to monitor output quality
+  - Prompt-injection defences, content isolation and output validation
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: AI data-flow register exportable as a customer security pack (PDF/JSON)
+    - **why**: Rio Tinto-type clients and IRAP assessors will ask exactly what leaves the platform; a ready export shortens security reviews.
+  -
+    - **effort**: M
+    - **feature**: Per-feature, per-project and per-client AI restrictions, with 'client prohibits AI' flag inheriting down to documents
+    - **why**: A client may ban AI on their data even when Kaefer has opted in; the flag must follow the data, not only the tenant.
+  -
+    - **effort**: M
+    - **feature**: Confidence and citation requirements: AI answers must link to source records, and unsupported answers are blocked
+    - **why**: Inspection and integrity decisions need verifiable provenance; unsourced AI statements in a QA record create liability.
+  -
+    - **effort**: S
+    - **feature**: AI output labelling and separation from signed records
+    - **why**: AI-drafted text (summaries, minutes, NCR wording) should be tagged and require human acceptance before it enters a published or sealed record.
+  -
+    - **effort**: M
+    - **feature**: Red-team test suite for injection via documents, inspection comments and emails run in CI
+    - **why**: Field-uploaded content is untrusted; automated regression tests keep the defences working as models change.
+  -
+    - **effort**: S
+    - **feature**: Cost and usage metering per tenant with budget caps
+    - **why**: Prevents runaway spend in pooled hosting and gives data for pricing AI as an add-on.

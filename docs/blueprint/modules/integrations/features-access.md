@@ -1,0 +1,336 @@
+# Integrations & webhooks — Feature filler
+
+
+- **detail sections**:
+  - Connector overview: type, project, destination approval, health
+  - Credentials: secrets manager reference, rotation date, rotate action
+  - Field mapping and transformations
+  - Conflict rules (client register is master for tags)
+  - Sync state: cursors, last run, bulk and incremental run controls
+  - Delivery history for this connector
+  - Integration audit log
+- **notifications**:
+  - Destination approval requested (to tenant admins)
+  - Destination approved or rejected (to requester)
+  - Connector sync failed or credentials expiring (to project and integration admins)
+  - Delivery failures above threshold (to integration admins)
+  - Sync conflicts waiting for resolution (to asset managers)
+  - API key about to expire or revoked (to key owner)
+  - Feed token revoked on user deactivation (to the user and admins)
+  - Credential rotation completed (to integration admins)
+- **settings**:
+  - Outbound destination allowlist and SSRF policy, with re-check at send time
+  - Dual-person rule for destination approval
+  - Redaction profiles by audience
+  - Webhook signing secret rotation and retry schedule
+  - Rate limits and idempotency key window for the public API
+  - API key default expiry
+  - Enabled channels (Teams, Slack, email, iCal, webhook); Telegram is excluded pending the owner's decision
+  - Event catalogue available for subscription
+  - Health alert thresholds
+  - Delivery log retention
+  - Terminology labels for integration screens
+- **tables**:
+  -
+    - **bulk actions**:
+      - Pause selected
+      - Resume selected
+    - **columns**:
+      - Name
+      - Type (SAP PM, Maximo, generic EAM, Teams, Slack, email digest, webhook)
+      - Project
+      - Destination approval status
+      - Status
+      - Last sync or delivery
+      - Last error
+    - **create form**:
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: project picker
+      -
+        - **field**: Destination (from approved list or request approval)
+        - **required**: true
+        - **type**: destination picker
+      -
+        - **field**: Credentials reference in secrets manager
+        - **required**: true
+        - **type**: secret reference
+      -
+        - **field**: Scope (modules and asset subtree)
+        - **required**: false
+        - **type**: multi-select
+    - **empty state**: No connectors for this project. Add one to send notifications or sync assets and work orders with a client system.
+    - **filters**:
+      - Type
+      - Project
+      - Approval status
+      - Status (active, paused, failing)
+    - **name**: Connectors
+    - **row actions**:
+      - Open
+      - Test connection
+      - Pause or resume
+      - Rotate credentials
+      - Open mapping
+      - Delete
+    - **search**: Name, type and destination host
+    - **sort**:
+      - Name
+      - Last sync (default)
+      - Status
+  -
+    - **bulk actions**:
+      - Revoke selected
+      - Re-run SSRF check
+    - **columns**:
+      - Kind
+      - Host
+      - URL prefix
+      - Status
+      - Requested by
+      - Approved by
+      - Approved at
+      - SSRF check result
+    - **create form**:
+      -
+        - **field**: Kind
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Host
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: URL prefix
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Project (blank for tenant-wide)
+        - **required**: false
+        - **type**: project picker
+      -
+        - **field**: Reason
+        - **required**: true
+        - **type**: long text
+    - **empty state**: No approved destinations. Nothing can be sent outside the platform until a tenant admin approves a destination. The requester cannot approve their own request.
+    - **filters**:
+      - Kind
+      - Status
+      - Project or tenant-wide
+    - **name**: Approved destinations
+    - **row actions**:
+      - Approve
+      - Reject
+      - Revoke
+      - View SSRF result
+    - **search**: Host and URL prefix
+    - **sort**:
+      - Status (pending first)
+      - Approved at
+      - Host
+  -
+    - **bulk actions**:
+      - Enable selected
+      - Disable selected
+      - Change redaction profile
+    - **columns**:
+      - Event type
+      - Destination
+      - Filters
+      - Redaction profile
+      - Enabled
+      - Last delivery
+    - **create form**:
+      -
+        - **field**: Event types
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Destination
+        - **required**: true
+        - **type**: destination picker
+      -
+        - **field**: Filters (project, asset subtree, discipline)
+        - **required**: false
+        - **type**: filter builder
+      -
+        - **field**: Redaction profile (full, summary-only)
+        - **required**: true
+        - **type**: select
+    - **empty state**: No subscriptions. Choose events such as ncr.raised or inspection.signed_off and a destination to start delivery.
+    - **filters**:
+      - Event type
+      - Destination
+      - Redaction profile
+      - Enabled
+    - **name**: Subscriptions (event matrix)
+    - **row actions**:
+      - Edit
+      - Send test event
+      - Disable
+      - Delete
+    - **search**: Event type and destination name
+    - **sort**:
+      - Event type
+      - Last delivery
+  -
+    - **bulk actions**:
+      - Replay selected
+      - Download selected as CSV
+    - **columns**:
+      - Event
+      - Destination
+      - Attempt count
+      - Status
+      - Response code
+      - Last attempt
+      - Duration
+    - **empty state**: No deliveries yet. Deliveries appear here once a subscription fires.
+    - **filters**:
+      - Status
+      - Destination
+      - Event type
+      - Date range
+    - **name**: Delivery log
+    - **row actions**:
+      - View payload (redacted)
+      - View attempts
+      - Replay
+    - **search**: Event id, destination, response text
+    - **sort**:
+      - Last attempt (default, newest first)
+      - Status
+      - Attempts
+  -
+    - **bulk actions**:
+      - Revoke selected
+    - **columns**:
+      - Client name
+      - Scopes (projects and modules)
+      - Key prefix
+      - Created
+      - Last used
+      - Requests (30 days)
+      - Status
+    - **create form**:
+      -
+        - **field**: Client name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Projects
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Modules
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Read or write
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Rate limit
+        - **required**: false
+        - **type**: integer
+      -
+        - **field**: Expiry date
+        - **required**: false
+        - **type**: date
+    - **empty state**: No API clients. Create one to give another system scoped access to /api/v1 using OAuth2 client credentials.
+    - **filters**:
+      - Project
+      - Module scope
+      - Status
+    - **name**: API clients and keys
+    - **row actions**:
+      - View usage log
+      - Rotate
+      - Revoke
+      - Edit scopes
+    - **search**: Client name and key prefix
+    - **sort**:
+      - Last used
+      - Created
+      - Requests
+  -
+    - **bulk actions**:
+      - Accept client value for selected
+      - Keep AIP value for selected
+    - **columns**:
+      - Asset tag or work order
+      - Field
+      - AIP value
+      - Client system value
+      - Rule applied
+      - Detected
+      - Status
+    - **empty state**: No conflicts. Records from the client system match AIP or were resolved by the rules.
+    - **filters**:
+      - Connector
+      - Status
+      - Field
+      - Date detected
+    - **name**: Sync conflicts
+    - **row actions**:
+      - Resolve
+      - View history
+      - Ignore
+    - **search**: Tag, work order number, field name
+    - **sort**:
+      - Detected (default)
+      - Tag
+  -
+    - **bulk actions**:
+      - Revoke selected
+    - **columns**:
+      - Feed
+      - User
+      - Scope
+      - Created
+      - Last fetched
+      - Revoked
+    - **create form**:
+      -
+        - **field**: Feed type (inspection or shutdown schedule)
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Scope (project or asset subtree)
+        - **required**: true
+        - **type**: picker
+    - **empty state**: No calendar feeds. Create one to see inspection or shutdown dates in your calendar app.
+    - **filters**:
+      - Feed type
+      - Revoked
+      - User
+    - **name**: iCal feed tokens
+    - **row actions**:
+      - Copy URL
+      - Regenerate
+      - Revoke
+    - **search**: User and feed name
+    - **sort**:
+      - Created
+      - Last fetched
+- **walkthrough**:
+  - A project admin opens Connectors and chooses Add connector.
+  - The admin picks the type, for example Maximo, and enters the credentials reference held in the secrets manager.
+  - The admin selects an approved destination or requests a new host.
+  - A different tenant admin reviews the request. The SSRF check results are shown, and the admin approves or rejects.
+  - The project admin runs Test connection. Sending stays blocked until approval is in place.
+  - In the mapping editor the admin maps client fields to AIP fields and adds transformations, with the client register set as master for tag numbers.
+  - The admin runs a dry-run sync and reviews the sample record preview.
+  - The admin starts a bulk sync, then enables incremental sync.
+  - Conflicts appear in the conflict queue and an asset manager resolves them.
+  - The admin creates a subscription so inspection results push back to the client system, choosing a redaction profile.
+  - Failed deliveries show on the health page, where the admin replays them after fixing the cause.

@@ -1,0 +1,128 @@
+# Testing & quality engineering — Feature filler
+
+
+- **detail sections**:
+  - Test strategy and pyramid
+  - CI gates and promotion rules
+  - Tenant isolation suite (tables, Redis, queues, S3, search, vectors)
+  - Permission-matrix and IDOR generation
+  - Migration tests (up-down-up and snapshot)
+  - Playwright journeys
+  - Offline sync property tests
+  - Load test profile and results
+  - Golden-file reports
+  - Evidence retention for control testing
+- **notifications**:
+  - CI gate failed on main
+  - Cross-tenant test failure (critical)
+  - Golden file drift detected
+  - Load test result summary
+  - Weekly coverage summary for domain and policy code
+- **settings**:
+  - Coverage threshold for domain and policy code
+  - Required gate list for promotion
+  - Journey list and target browsers/devices
+  - Load test profile (users, burst size)
+  - Fixture refresh schedule
+  - Test evidence retention period
+  - Flaky test quarantine policy
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export reports
+      - Archive
+    - **columns**:
+      - Run ID
+      - Pipeline
+      - Commit
+      - Suite
+      - Status
+      - Duration
+      - Coverage %
+      - Started
+    - **empty state**: No test runs recorded. Runs appear after the first CI pipeline executes.
+    - **filters**:
+      - Suite
+      - Status
+      - Branch
+      - Date range
+    - **name**: Test run results
+    - **row actions**:
+      - Open report
+      - Re-run
+      - Download artefacts
+    - **search**: Run ID, commit and branch
+    - **sort**:
+      - Started
+      - Duration
+      - Status
+  -
+    - **bulk actions**:
+      - Export matrix
+    - **columns**:
+      - Control area
+      - Scenarios required
+      - Scenarios passing
+      - Gate (100%)
+      - Last verified
+    - **empty state**: No scenarios mapped yet. Generate them from the permissions catalogue and workflow definitions.
+    - **filters**:
+      - Area (isolation, authorisation, workflow, eligibility, audit chain)
+      - Gate status
+    - **name**: Scenario coverage matrix
+    - **row actions**:
+      - View scenarios
+      - Open failing test
+    - **search**: Control area
+    - **sort**:
+      - Control area
+      - Last verified
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Name
+      - Kind (seed, CUI scenario, golden file, malicious file, prompt injection)
+      - Version
+      - Last updated
+      - Used by
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Kind
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Files
+        - **required**: true
+        - **type**: file upload
+      -
+        - **field**: Notes
+        - **required**: false
+        - **type**: text
+    - **empty state**: No fixtures stored. Add seed data and malicious-file samples here.
+    - **filters**:
+      - Kind
+    - **name**: Fixture sets
+    - **row actions**:
+      - View
+      - Update version
+      - Download
+    - **search**: Name
+    - **sort**:
+      - Name
+      - Last updated
+- **walkthrough**:
+  - Developer opens a pull request that adds a new table.
+  - CI starts Testcontainers Postgres/PostGIS and applies migrations up, down, up.
+  - Isolation suite runs as a non-owner role without BYPASSRLS and fails if the table lacks tenant_id or an RLS policy.
+  - Permission-matrix and IDOR tests regenerate from the catalogue and OpenAPI schema and run.
+  - Unit and integration tests run, with domain and policy coverage checked against about 80%.
+  - Sidecar contract tests and workflow transition tests run.
+  - Playwright journeys run, including raising an ITP, signing a hold point, PIN login and offline sync.
+  - Golden-file comparison runs on inspection reports and certificates.
+  - Any failed gate blocks promotion; the report is stored as evidence.
+  - Before a large onboarding, the team runs the 5,000-user load test and the production-size migration test.

@@ -1,0 +1,323 @@
+# Inbound capture & connectors — Feature filler
+
+
+- **detail sections**:
+  - Connector summary and health
+  - Credentials reference (write-only)
+  - Schedule and data-minimisation rules
+  - Run history
+  - Failed and duplicate files
+  - Filing item: original, parsed headers, sender verification, scan result, OCR text
+  - Suggested filing and thread
+  - Certificate candidates from OCR
+  - Audit trail
+- **notifications**:
+  - connector.run_completed to connector owner
+  - connector.failed to ingestion managers
+  - inbound_email.received to document controllers
+  - Unfiled items ageing past threshold
+  - Quarantined or unverified sender item awaiting review
+  - Certificate candidate awaiting confirmation
+- **settings**:
+  - Enable module per tenant
+  - Sender trust policy (SPF/DKIM/DMARC requirements)
+  - Per-alias allow-lists and verified domains
+  - Allowed egress hosts
+  - Rate limits per tenant and alias
+  - Default file allow-list and max size
+  - Source copy retention
+  - Ageing alert thresholds
+  - Email intake provider (SES or Microsoft Graph)
+  - Webhook replay window
+  - Filing suggestion learning on or off
+- **tables**:
+  -
+    - **bulk actions**:
+      - Pause
+      - Resume
+      - Run now
+    - **columns**:
+      - Name
+      - Type
+      - Target
+      - Project
+      - Default category
+      - Schedule
+      - Last run
+      - Health
+      - Status
+    - **create form**:
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Target path or address
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Credentials reference
+        - **required**: true
+        - **type**: secret reference (write-only)
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Default category
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Default asset
+        - **required**: false
+        - **type**: asset picker
+      -
+        - **field**: Schedule
+        - **required**: true
+        - **type**: cron or interval
+      -
+        - **field**: File type allow-list
+        - **required**: true
+        - **type**: multiselect
+      -
+        - **field**: Max file size
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Path filters
+        - **required**: false
+        - **type**: text list
+      -
+        - **field**: Source copy retention
+        - **required**: false
+        - **type**: duration
+    - **empty state**: No connectors yet. Ingestion is off until you add one. Create a connector and test it before enabling.
+    - **filters**:
+      - Type
+      - Project
+      - Health
+      - Status
+    - **name**: Connectors
+    - **row actions**:
+      - Edit
+      - Test connection
+      - Run now
+      - Pause or resume
+      - Open run log
+      - Delete
+    - **search**: Name, target path, project
+    - **sort**:
+      - Name
+      - Last run
+      - Health
+  -
+    - **bulk actions**:
+      - Retry failed
+      - Export log
+    - **columns**:
+      - Run
+      - Started
+      - Duration
+      - Files seen
+      - Imported
+      - Duplicates
+      - Failed
+      - Status
+    - **empty state**: This connector has not run yet. Use Run now or wait for its schedule.
+    - **filters**:
+      - Status
+      - Date range
+      - Has failures
+      - Has duplicates
+    - **name**: Run log
+    - **row actions**:
+      - Open detail
+      - Retry failed
+      - Open imported file
+    - **search**: Run id, file name, error text
+    - **sort**:
+      - Started
+      - Failed count
+  -
+    - **bulk actions**:
+      - Assign to project
+      - Assign to asset
+      - File
+      - Reject with reason
+    - **columns**:
+      - Received
+      - Source channel
+      - Sender
+      - Sender trust
+      - Subject or file name
+      - Scan state
+      - Suggested project
+      - Suggested asset
+      - Suggested type
+      - Age
+    - **create form**:
+      -
+        - **field**: Upload .eml or file
+        - **required**: true
+        - **type**: file
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Asset
+        - **required**: false
+        - **type**: asset picker
+    - **empty state**: Nothing waiting to be filed. Forward an email to a project alias or run a connector to see items here.
+    - **filters**:
+      - Channel
+      - Sender trust
+      - Scan state
+      - Project
+      - Age band
+      - Duplicate flag
+    - **name**: Filing queue
+    - **row actions**:
+      - Review and file
+      - Accept suggestion
+      - Reject
+      - Open original
+      - View headers and SPF/DKIM/DMARC
+      - Create certificate candidate
+    - **search**: Sender, subject, file name, heat number
+    - **sort**:
+      - Received
+      - Age
+      - Sender trust
+  -
+    - **bulk actions**:
+      - Assign to project
+      - Reject
+    - **columns**:
+      - Item
+      - Source
+      - Reason unmatched
+      - Received
+      - Connector
+    - **empty state**: No unmatched items.
+    - **filters**:
+      - Reason
+      - Connector
+      - Date range
+    - **name**: Import queue (unmatched)
+    - **row actions**:
+      - Map
+      - Reject
+      - Open
+    - **search**: Item name, source path
+    - **sort**:
+      - Received
+      - Connector
+  -
+    - **bulk actions**:
+      - Disable
+      - Enable
+    - **columns**:
+      - Address or alias
+      - Project
+      - Allowed senders
+      - Verified domains
+      - Rate limit
+      - Status
+    - **create form**:
+      -
+        - **field**: Alias address
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Allowed senders or domains
+        - **required**: false
+        - **type**: text list
+      -
+        - **field**: Rate limit
+        - **required**: false
+        - **type**: number
+    - **empty state**: No project aliases defined. Add one so forwarded emails reach the right project.
+    - **filters**:
+      - Project
+      - Status
+    - **name**: Mailboxes and aliases
+    - **row actions**:
+      - Edit
+      - Disable
+      - Delete
+    - **search**: Address, project, sender
+    - **sort**:
+      - Address
+      - Project
+  -
+    - **bulk actions**:
+      - Disable
+    - **columns**:
+      - Name
+      - Type (chat, SMS, webhook)
+      - Project
+      - Signature
+      - Rate limit
+      - Last event
+      - Status
+    - **create form**:
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: HMAC secret
+        - **required**: true
+        - **type**: secret (generated)
+      -
+        - **field**: Replay window
+        - **required**: true
+        - **type**: duration
+      -
+        - **field**: Rate limit
+        - **required**: true
+        - **type**: number
+    - **empty state**: No chat, SMS or webhook channels configured.
+    - **filters**:
+      - Type
+      - Project
+      - Status
+    - **name**: Capture channels
+    - **row actions**:
+      - Edit
+      - Rotate secret
+      - Disable
+      - Delete
+    - **search**: Name, project
+    - **sort**:
+      - Name
+      - Last event
+- **walkthrough**:
+  - Admin enables the ingestion module for the tenant.
+  - Admin opens the setup wizard and picks a connector type, such as SharePoint or watched folder.
+  - Admin enters the target and secrets reference, then chooses project, default category and asset.
+  - Admin sets the schedule, file type allow-list, max size, path filters and source retention.
+  - Admin runs Test connection and reviews the result.
+  - Admin enables the connector.
+  - Files enter quarantine, ClamAV scan, magic-byte check and OCR in isolated workers.
+  - Items appear in the filing queue with sender trust and suggested project, asset and type.
+  - A document controller reviews each item, corrects suggestions, and files or rejects it.
+  - Filed files become documents or file versions. Mill certificates produce certificate candidates for confirmation.
+  - The controller watches the ingestion dashboard for ageing items and failed runs.

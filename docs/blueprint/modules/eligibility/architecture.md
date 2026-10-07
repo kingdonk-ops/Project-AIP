@@ -1,0 +1,98 @@
+# Certificates, competency & calibration gate — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/eligibility/router.py
+    - **purpose**: Certificate CRUD, eligibility check, expiring feed, override requests
+  -
+    - **path**: backend/app/modules/eligibility/models.py
+    - **purpose**: certificates (per owner entity), certificate_types, competency_requirements, overrides, reminder_log
+  -
+    - **path**: backend/app/modules/eligibility/schemas.py
+    - **purpose**: Pydantic models for check request/result, feed items
+  -
+    - **path**: backend/app/modules/eligibility/service_check.py
+    - **purpose**: Single query: valid now for person, instrument or material at a point in time, returning reasons
+  -
+    - **path**: backend/app/modules/eligibility/service_status.py
+    - **purpose**: Green/amber/red computation, superseded handling, availability suppression
+  -
+    - **path**: backend/app/modules/eligibility/service_override.py
+    - **purpose**: Audited override request and approval using approvals engine
+  -
+    - **path**: backend/app/modules/eligibility/service_matrix.py
+    - **purpose**: Competency matrix per person and template/category requirement
+  -
+    - **path**: backend/app/modules/eligibility/jobs.py
+    - **purpose**: Scheduled expiry scan; availability evaluated at send time
+  -
+    - **path**: backend/app/modules/eligibility/events.py
+    - **purpose**: Event definitions
+  -
+    - **path**: backend/app/modules/eligibility/tests/
+    - **purpose**: Status boundaries, hard-block, suppression and override tests
+- **change isolation**: Gating rules and windows are tenant configuration, so new rule types extend service_check only. Other modules call the single check interface and never read certificate tables directly.
+- **config not code**:
+  - Certificate types and required fields
+  - Amber/red windows and reminder offsets
+  - Discipline and inspection category gating tables
+  - Competency requirements per template
+  - Availability suppression rule toggle
+  - Override policy: allowed, approver role, max duration
+  - Terminology (Certificate, Ticket, Licence)
+- **events consumed**:
+  - inventory.availability_changed (suppress or reactivate)
+  - equipment.created
+  - user.qualification_changed
+  - document.revised (linked cert document)
+  - terms.updated
+- **events emitted**:
+  - certificate.created
+  - certificate.superseded
+  - certificate.expiring
+  - certificate.expired
+  - eligibility.blocked
+  - eligibility.override_granted
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/eligibility/pages/CertificateRegister.tsx
+    - **purpose**: Register by owner or asset with status filters
+  -
+    - **path**: frontend/src/modules/eligibility/pages/ExpiringFeed.tsx
+    - **purpose**: Grouped expiring-soon feed
+  -
+    - **path**: frontend/src/modules/eligibility/pages/CompetencyMatrix.tsx
+    - **purpose**: Person x requirement grid
+  -
+    - **path**: frontend/src/modules/eligibility/pages/ProjectCredentials.tsx
+    - **purpose**: Licences, insurance, bonds, permits for a delivery
+  -
+    - **path**: frontend/src/modules/eligibility/components/ExpiryBadge.tsx
+    - **purpose**: Green/amber/red badge used across modules
+  -
+    - **path**: frontend/src/modules/eligibility/components/CertificateDrawer.tsx
+    - **purpose**: Detail, linked document, renewal history
+  -
+    - **path**: frontend/src/modules/eligibility/components/OverrideDialog.tsx
+    - **purpose**: Reason capture and approver routing
+  -
+    - **path**: frontend/src/modules/eligibility/index.ts
+    - **purpose**: Exports ExpiryBadge and useEligibility hook
+- **public api**:
+  - POST /api/v1/eligibility/check (subject, purpose, at_time) returns valid/invalid with reasons
+  - GET/POST /api/v1/certificates
+  - PATCH /api/v1/certificates/{id}
+  - GET /api/v1/certificates/expiring
+  - GET /api/v1/competency-matrix
+  - POST /api/v1/eligibility/overrides
+  - check_eligibility(subject, context) (in-process service interface for other modules)
+- **reuses shared**:
+  - Rules engine for expiry and gating rules
+  - Notifications and tasks (my-work feed)
+  - Approvals engine for overrides
+  - BullMQ-equivalent job runner (existing scheduler) for reminders
+  - Item/attribute system (expiry-date flag)
+  - Documents module for linked files
+  - Audit writer
+  - Permission service

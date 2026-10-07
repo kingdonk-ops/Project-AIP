@@ -1,0 +1,102 @@
+# Equipment & fleet — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/equipment/models.py
+    - **purpose**: EquipmentProfile extension on Equipment/Vehicles content-type items, MaintenanceSchedule, ServiceRecord, HireCharge, optional asset link
+  -
+    - **path**: backend/app/modules/equipment/schemas.py
+    - **purpose**: Schemas for equipment, schedules, service history, charges
+  -
+    - **path**: backend/app/modules/equipment/maintenance.py
+    - **purpose**: Next-due calculation and overdue detection
+  -
+    - **path**: backend/app/modules/equipment/hire.py
+    - **purpose**: Internal hire rate lookup and charge generation per project
+  -
+    - **path**: backend/app/modules/equipment/availability.py
+    - **purpose**: Combines calibration status and failed pre-start into availability, delegating the decision to the eligibility gate
+  -
+    - **path**: backend/app/modules/equipment/router.py
+    - **purpose**: REST endpoints
+  -
+    - **path**: backend/app/modules/equipment/handlers.py
+    - **purpose**: Calibration, form submission and project assignment handlers
+  -
+    - **path**: backend/app/modules/equipment/permissions.py
+    - **purpose**: equipment.* permissions
+  -
+    - **path**: backend/app/modules/equipment/seed/
+    - **purpose**: Default instrument categories, pre-start template references, hire rate tables (config)
+  -
+    - **path**: backend/migrations/equipment/
+    - **purpose**: Module migrations
+  -
+    - **path**: backend/tests/equipment/
+    - **purpose**: Calibration block, schedule due, charge calc and RLS tests
+- **change isolation**: New equipment types and checks are content types and form templates, not code. Gating logic changes only in the eligibility engine.
+- **config not code**:
+  - Equipment categories and attributes via content/item types
+  - Maintenance interval rules and reminder lead times
+  - Pre-start templates and pass criteria
+  - Hire rate tables and charging basis
+  - Which categories require calibration
+  - Status labels
+- **events consumed**:
+  - eligibility.calibration_expired
+  - eligibility.calibration_renewed
+  - forms.submission_approved
+  - forms.submission_failed
+  - service.work_order_completed
+  - inspection.measurement_recorded
+  - project.closed
+- **events emitted**:
+  - equipment.registered
+  - equipment.assigned_to_project
+  - equipment.service_due
+  - equipment.service_completed
+  - equipment.availability_changed
+  - equipment.hire_day_recorded
+  - equipment.charge_generated
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/equipment/pages/FleetRegisterPage.tsx
+    - **purpose**: Register view using the shared register component
+  -
+    - **path**: frontend/src/modules/equipment/pages/EquipmentDetailPage.tsx
+    - **purpose**: Detail with calibration, inspections and service history
+  -
+    - **path**: frontend/src/modules/equipment/pages/MaintenanceCalendarPage.tsx
+    - **purpose**: Upcoming and overdue services
+  -
+    - **path**: frontend/src/modules/equipment/pages/ChargeStatementPage.tsx
+    - **purpose**: Hire charges by project and period
+  -
+    - **path**: frontend/src/modules/equipment/components/
+    - **purpose**: CalibrationBadge, AvailabilityChip, ScheduleEditor
+  -
+    - **path**: frontend/src/modules/equipment/api.ts
+    - **purpose**: Generated client hooks
+- **public api**:
+  - GET /equipment?type=&status=
+  - GET /equipment/{id}
+  - PATCH /equipment/{id}/profile
+  - GET/POST /equipment/{id}/maintenance-schedules
+  - POST /equipment/{id}/service-records
+  - POST /equipment/{id}/assign (project, dates)
+  - GET /projects/{id}/equipment/charges?period=
+  - GET /equipment/{id}/availability
+  - Python interface: EquipmentQuery.on_site(project_id, date) for diary; usage lookups for traceability
+- **reuses shared**:
+  - Eligibility gate (calibration validity and hard block)
+  - Form and template designer for pre-start and plant inspections
+  - Register and content-type engine (Equipment and Vehicles types)
+  - Traceability graph for instrument-to-measurement links
+  - Tasks and deadlines engine for service reminders
+  - Notifications
+  - Event bus and outbox
+  - Policy service
+  - Audit trail
+  - Terminology service
+  - Data import engine

@@ -1,0 +1,242 @@
+# Users, sign-in & SSO — Feature filler
+
+
+- **detail sections**:
+  - Profile and contact
+  - Competencies and signature image
+  - Sign-in methods and MFA
+  - Roles and access scope
+  - Sessions and devices
+  - SCIM and SSO linkage
+  - Sponsor and expiry
+  - Audit history
+- **notifications**:
+  - Invitation to join
+  - Magic link or PIN issued
+  - New sign-in from an unrecognised device
+  - MFA reset by admin
+  - External account expiring or needing reconfirmation
+  - API key expiring
+  - SCIM sync error
+  - Break-glass elevation started
+- **settings**:
+  - SSO enforcement per domain
+  - SCIM group-to-role mapping
+  - MFA policy by role and class
+  - Idle and absolute session timeouts per user class
+  - Access token and refresh token lifetimes
+  - Magic link TTL and lockout attempts
+  - Password policy
+  - External account default expiry and reconfirmation interval
+  - API key maximum lifetime
+  - Break-glass approval rules
+- **tables**:
+  -
+    - **bulk actions**:
+      - Invite
+      - Deactivate
+      - Resend invite
+      - Require MFA re-enrol
+      - Export
+    - **columns**:
+      - Name
+      - Email
+      - Organisation
+      - User class
+      - Roles
+      - Teams
+      - MFA status
+      - SCIM status
+      - Last sign-in
+      - Status
+    - **create form**:
+      -
+        - **field**: Email
+        - **required**: true
+        - **type**: email
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Organisation
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: User class
+        - **required**: true
+        - **type**: select (staff/local/field-external/integration)
+      -
+        - **field**: Role and scope
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Sponsor (external)
+        - **required**: false
+        - **type**: user select
+      -
+        - **field**: Expiry date (external)
+        - **required**: false
+        - **type**: date
+    - **empty state**: No users yet. Invite your first user or connect SSO and SCIM.
+    - **filters**:
+      - User class
+      - Organisation
+      - Role
+      - Team
+      - MFA status
+      - SCIM managed
+      - Status
+      - Expiring external
+    - **name**: User directory
+    - **row actions**:
+      - Open drawer
+      - Edit
+      - Deactivate
+      - Revoke sessions
+      - Reset MFA
+      - Resend invite
+    - **search**: Name, email and organisation
+    - **sort**:
+      - Name
+      - Last sign-in
+      - Organisation
+      - Status
+  -
+    - **bulk actions**:
+      - Revoke selected
+    - **columns**:
+      - User
+      - Device
+      - IP
+      - Started
+      - Last active
+      - Expires
+    - **empty state**: No active sessions.
+    - **filters**:
+      - User class
+      - Device
+    - **name**: Sessions
+    - **row actions**:
+      - Revoke
+    - **search**: User
+    - **sort**:
+      - Last active
+  -
+    - **bulk actions**:
+      - Revoke
+    - **columns**:
+      - Name
+      - Prefix
+      - Scopes
+      - Owner
+      - Expires
+      - Last used
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Scopes
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Expiry
+        - **required**: true
+        - **type**: date
+    - **empty state**: No API keys. Create one for an integration.
+    - **filters**:
+      - Expiring
+      - Owner
+    - **name**: API keys
+    - **row actions**:
+      - Revoke
+      - Rotate
+      - View audit
+    - **search**: Name
+    - **sort**:
+      - Expires
+      - Last used
+  -
+    - **bulk actions**:
+      - Extend
+      - Revoke
+    - **columns**:
+      - Name
+      - Sponsor
+      - Projects
+      - Expires
+      - Last reconfirmed
+    - **create form**:
+      -
+        - **field**: Email
+        - **required**: true
+        - **type**: email
+      -
+        - **field**: Sponsor
+        - **required**: true
+        - **type**: user select
+      -
+        - **field**: Projects and modules
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Expiry
+        - **required**: true
+        - **type**: date
+    - **empty state**: No external accounts.
+    - **filters**:
+      - Expiring in 30 days
+      - Sponsor
+    - **name**: External accounts
+    - **row actions**:
+      - Reconfirm
+      - Extend
+      - Revoke
+    - **search**: Name and sponsor
+    - **sort**:
+      - Expires
+  -
+    - **columns**:
+      - Requester
+      - Approver 1
+      - Approver 2
+      - Start
+      - End
+      - Reason
+    - **create form**:
+      -
+        - **field**: Reason
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Duration
+        - **required**: true
+        - **type**: duration
+      -
+        - **field**: Approvers
+        - **required**: true
+        - **type**: user select x2
+    - **empty state**: No break-glass elevations recorded.
+    - **filters**:
+      - Active
+      - Date
+    - **name**: Break-glass elevations
+    - **row actions**:
+      - End now
+      - View audit
+    - **search**: Requester
+    - **sort**:
+      - Start
+- **walkthrough**:
+  - Admin configures SSO via the WorkOS admin portal and claims the customer's domain.
+  - Admin enables SSO enforcement; password login is disabled for SSO-managed users.
+  - SCIM syncs users; groups map to roles and teams with no tenant admin escalation.
+  - New user signs in via SSO and is prompted for MFA if privileged.
+  - User completes profile and captures a signature image.
+  - Field user receives a magic link; the page requires a POST click-through to consume the token.
+  - User binds the device and sets a PIN for quick switching.
+  - At hold-point sign-off the user re-authenticates (step-up).
+  - When SCIM deactivates a user, sessions, API keys, links and portal access are revoked and user.deactivated is emitted.
+  - Admin verifies the revocation and audit events.

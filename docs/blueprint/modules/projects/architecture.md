@@ -1,0 +1,122 @@
+# Projects, sites & classification — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/projects/models.py
+    - **purpose**: Project, Site, ProjectAsset (scope baseline), ProjectMember, Participant, ProjectTemplate, Classification tables; all carry tenant_id with RLS
+  -
+    - **path**: backend/app/modules/projects/schemas.py
+    - **purpose**: Pydantic request/response models feeding the generated OpenAPI TypeScript client
+  -
+    - **path**: backend/app/modules/projects/router.py
+    - **purpose**: Project CRUD, archive, membership, participants, scope and classification endpoints
+  -
+    - **path**: backend/app/modules/projects/service.py
+    - **purpose**: Project lifecycle, tenant-default plus project-override settings resolution, hidden system site creation
+  -
+    - **path**: backend/app/modules/projects/scope_baseline.py
+    - **purpose**: Project-asset links, baseline versus current diff, scope-change history
+  -
+    - **path**: backend/app/modules/projects/classification.py
+    - **purpose**: Evaluates the tenant-configured route to a requirement bundle, impact preview and recalculation trigger
+  -
+    - **path**: backend/app/modules/projects/closeout.py
+    - **purpose**: Closeout checklist assembled from checks registered by other modules; gates archive
+  -
+    - **path**: backend/app/modules/projects/templates.py
+    - **purpose**: Instantiate a project from a work-type template (ITP sets, forms, roles, approval chains)
+  -
+    - **path**: backend/app/modules/projects/events.py
+    - **purpose**: Event names, payload schemas, handlers
+  -
+    - **path**: backend/app/modules/projects/permissions.py
+    - **purpose**: Registers project.* permissions in the central catalogue; no local authorisation logic
+  -
+    - **path**: backend/app/modules/projects/seeds/work_types.json
+    - **purpose**: Default work-type classification starter content, tenant-editable
+  -
+    - **path**: backend/migrations/versions/xxxx_projects.py
+    - **purpose**: Schema, RLS policies, indexes
+  -
+    - **path**: backend/tests/modules/projects/
+    - **purpose**: Scoping, IDOR, closeout gate and baseline history tests
+- **change isolation**: New work types, numbering or checklist items are configuration edits. Structural changes stay inside this module, because other modules only read the project scope and settings through the service interface and events.
+- **config not code**:
+  - work-type classification values, routes and requirement bundles
+  - project templates by work type
+  - numbering schemes and client prefixes
+  - enabled modules per project
+  - terminology overrides
+  - currency, units, calendar and retention overrides
+  - closeout checklist rules
+  - regional presets AU, NZ, UK, Asia
+- **events consumed**:
+  - asset.deleted or merged (update scope links)
+  - issue.opened and issue.closed (closeout counts)
+  - inspection.hold_point_state_changed (closeout counts)
+  - certificate.expired (closeout counts)
+  - tenant.settings_changed (refresh inherited defaults)
+  - scim.user_deprovisioned (drop memberships)
+- **events emitted**:
+  - project.created
+  - project.updated
+  - project.closed
+  - project.scope_changed
+  - project.classification_changed
+  - project.member_added
+  - project.member_removed
+  - settings.changed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/projects/ProjectContext.tsx
+    - **purpose**: Shared selected-project state persisted per user, used by header and tree
+  -
+    - **path**: frontend/src/modules/projects/ProjectSwitcher.tsx
+    - **purpose**: Header switcher with the permitted-role 'all projects' override
+  -
+    - **path**: frontend/src/modules/projects/pages/ProjectList.tsx
+    - **purpose**: Portfolio table with card toggle and setup wizard entry
+  -
+    - **path**: frontend/src/modules/projects/pages/ProjectSettings.tsx
+    - **purpose**: Settings with terminology override editor, numbering, enabled modules, retention
+  -
+    - **path**: frontend/src/modules/projects/pages/ScopePicker.tsx
+    - **purpose**: Asset scope selection using the shared hierarchy tree component
+  -
+    - **path**: frontend/src/modules/projects/pages/ClassificationWizard.tsx
+    - **purpose**: Classification wizard, route designer and required-items checklist
+  -
+    - **path**: frontend/src/modules/projects/pages/ProjectDashboard.tsx
+    - **purpose**: KPI strip and tiles composed from the reporting widget registry
+  -
+    - **path**: frontend/src/modules/projects/pages/Closeout.tsx
+    - **purpose**: Closeout checklist view
+  -
+    - **path**: frontend/src/modules/projects/api.ts
+    - **purpose**: Wrapper over the generated client and TanStack Query hooks
+- **public api**:
+  - GET/POST /projects
+  - GET/PATCH /projects/{id}
+  - POST /projects/{id}/archive (blocked until closeout passes)
+  - GET/POST /projects/{id}/sites
+  - GET/POST/DELETE /projects/{id}/members
+  - GET/POST /projects/{id}/participants
+  - GET/PUT /projects/{id}/assets (scope baseline) and GET /projects/{id}/assets/history
+  - GET/PUT /projects/{id}/settings
+  - POST /projects/{id}/classification/preview and /apply
+  - GET /projects/{id}/closeout
+  - GET/POST /project-templates
+  - Python service: resolve_project_scope(user) used by the shared query layer
+  - Python service: resolve_setting(project_id, key) for tenant default plus override
+- **reuses shared**:
+  - central policy service and RLS tenant context
+  - state-machine engine for project status
+  - terminology dictionary for overrides
+  - numbering service for per-project record numbers
+  - rules engine for closeout checks and requirement bundles
+  - event bus
+  - audit trail
+  - reporting widget registry
+  - ref_packs for region, timezone, currency presets
+  - shared hierarchy tree component

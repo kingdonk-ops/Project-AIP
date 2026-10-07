@@ -1,0 +1,362 @@
+# Traceability graph: components, materials & certificates — Feature filler
+
+
+- **detail sections**:
+  - Passport summary (certificate, heat/batch, supplier, status)
+  - Certificate viewer with OCR extraction and cross-check results
+  - Traceability graph (filters by type and depth)
+  - Forward genealogy (where used)
+  - Backward genealogy (source material)
+  - Validity snapshots per link
+  - Linked inspections, ITPs and NCRs
+  - Documents
+  - Quarantine history
+  - Activity
+- **notifications**:
+  - Passport OCR ready for review
+  - Cross-check mismatch on certificate
+  - Batch quarantined (to affected task owners)
+  - Impact report ready
+  - NCR raised from quarantine
+  - Inspection request assigned or overdue
+  - Certificate or material use-by expiring
+  - Evidence pack ready
+- **settings**:
+  - Entity-link types and allowed relationships
+  - Validity snapshot rules
+  - OCR provider and review requirement
+  - Cross-check tolerances
+  - Certificate types list (EN 10204 3.1/3.2, CE/UKCA)
+  - Quarantine permissions and auto-NCR behaviour
+  - Acceptance criteria templates
+  - Evidence pack format and retention
+  - Search permission scope
+- **tables**:
+  -
+    - **bulk actions**:
+      - Quarantine batch
+      - Export
+      - Request OCR review
+      - Link document
+    - **columns**:
+      - Passport no.
+      - Material/description
+      - Certificate type (e.g. EN 10204 3.1)
+      - Certificate no.
+      - Heat/batch
+      - Supplier
+      - Status
+      - Used count
+      - Valid until
+    - **create form**:
+      -
+        - **field**: Material description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Certificate type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Certificate number
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Heat/batch number
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Supplier
+        - **required**: false
+        - **type**: company picker
+      -
+        - **field**: Standard/grade
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Certificate document
+        - **required**: true
+        - **type**: file upload (scanned)
+      -
+        - **field**: Use-by date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: CE/UKCA marking
+        - **required**: false
+        - **type**: dropdown
+    - **empty state**: No material passports. Upload an EN 10204 certificate to create one; extracted fields are reviewed before saving.
+    - **filters**:
+      - Certificate type
+      - Status (valid, quarantined, superseded, expired)
+      - Supplier
+      - Project
+      - Has linked document
+      - OCR review pending
+    - **name**: Material and certificate passports
+    - **row actions**:
+      - Open passport
+      - View traceability graph
+      - Quarantine
+      - Run impact analysis
+      - Open certificate
+    - **search**: Heat number, batch, certificate number, supplier, description (search-first)
+    - **sort**:
+      - Passport no.
+      - Valid until
+      - Used count
+      - Created
+  -
+    - **bulk actions**:
+      - Export
+      - Request NDT
+      - Create inspection requests
+    - **columns**:
+      - Joint no.
+      - Asset/line
+      - Welder
+      - WPS
+      - Consumable batch
+      - Steel heat
+      - NDT % required
+      - NDT status
+      - Repair count
+      - Result
+    - **create form**:
+      -
+        - **field**: Parent asset/line
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Joint number
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Welder
+        - **required**: true
+        - **type**: staff picker (validity-checked)
+      -
+        - **field**: WPS
+        - **required**: true
+        - **type**: WPS picker
+      -
+        - **field**: Rod/consumable batch
+        - **required**: false
+        - **type**: consumable picker
+      -
+        - **field**: Steel heat
+        - **required**: false
+        - **type**: passport picker
+      -
+        - **field**: NDT percentage
+        - **required**: false
+        - **type**: number
+    - **empty state**: No joints recorded for this scope. Add components under an asset or import a joint list.
+    - **filters**:
+      - Welder
+      - WPS
+      - Consumable batch
+      - NDT status
+      - Repaired
+      - Line/asset
+      - Result
+    - **name**: Weld map / joint register
+    - **row actions**:
+      - Open joint
+      - View graph
+      - Add repair
+      - Open on drawing
+    - **search**: Joint number, welder, WPS, batch
+    - **sort**:
+      - Joint no.
+      - Repair count
+      - NDT status
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Passport
+      - Quantity
+      - Asset
+      - Work package
+      - Task
+      - Used by
+      - Date
+      - Validity snapshot
+    - **create form**:
+      -
+        - **field**: Passport
+        - **required**: true
+        - **type**: passport picker
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Task
+        - **required**: false
+        - **type**: task picker
+      -
+        - **field**: Quantity
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Used by
+        - **required**: false
+        - **type**: staff picker
+    - **empty state**: No usage records. Usage is created when materials are issued to tasks or assets.
+    - **filters**:
+      - Passport
+      - Asset
+      - Task
+      - Date range
+      - Snapshot valid/invalid
+    - **name**: Material usage
+    - **row actions**:
+      - Open
+      - View graph
+    - **search**: Heat/batch, asset tag, task
+    - **sort**:
+      - Date
+      - Passport
+  -
+    - **bulk actions**:
+      - Assign inspector
+      - Schedule
+    - **columns**:
+      - Request no.
+      - Type (MIR, WIR, IR, hidden works)
+      - Asset
+      - Requested by
+      - Required date
+      - Acceptance criteria
+      - Status
+    - **create form**:
+      -
+        - **field**: Request type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Asset/material
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Acceptance criteria
+        - **required**: true
+        - **type**: template picker
+      -
+        - **field**: Required date
+        - **required**: true
+        - **type**: date-time
+      -
+        - **field**: Notes
+        - **required**: false
+        - **type**: text
+    - **empty state**: No open inspection requests.
+    - **filters**:
+      - Type
+      - Status
+      - Required date
+      - Project
+      - Assigned inspector
+    - **name**: Inspection request queue
+    - **row actions**:
+      - Open
+      - Accept
+      - Reject (raise NCR)
+      - Reassign
+    - **search**: Request no., asset tag
+    - **sort**:
+      - Required date
+      - Status
+  -
+    - **bulk actions**:
+      - Raise NCRs for all
+      - Export
+    - **columns**:
+      - Report
+      - Trigger (heat/batch/instrument)
+      - Affected components
+      - Affected tasks
+      - Affected inspections
+      - NCRs raised
+      - Created
+      - Status
+    - **create form**:
+      -
+        - **field**: Trigger record (heat, batch or instrument)
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Reason
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Raise NCRs automatically
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No quarantines. Quarantine a batch or instrument to list every affected component, task and inspection.
+    - **filters**:
+      - Trigger type
+      - Status
+      - Date range
+    - **name**: Quarantine and impact reports
+    - **row actions**:
+      - Open
+      - Export evidence pack
+      - Release quarantine
+    - **search**: Heat/batch/serial, report ref
+    - **sort**:
+      - Created
+      - Affected components
+  -
+    - **columns**:
+      - Pack
+      - Root record
+      - Depth
+      - Records included
+      - Created by
+      - Date
+      - Hash manifest
+    - **create form**:
+      -
+        - **field**: Root record (asset, task, batch)
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Depth
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Include types
+        - **required**: false
+        - **type**: multi-select
+      -
+        - **field**: Format
+        - **required**: true
+        - **type**: dropdown (PDF bookmarked, ZIP)
+    - **empty state**: No evidence packs generated.
+    - **filters**:
+      - Created by
+      - Date range
+    - **name**: Evidence packs
+    - **row actions**:
+      - Download PDF/ZIP
+      - Verify hash
+      - Regenerate
+    - **search**: Pack name, root record
+    - **sort**:
+      - Date
+- **walkthrough**:
+  - Stores user uploads an EN 10204 certificate in Material and Certificate Passports.
+  - OCR extracts certificate number, heat, grade and chemistry; a reviewer corrects and confirms.
+  - Cross-check compares heat and grade against the material record and flags mismatches.
+  - Passport is saved and linked to the supplier and document.
+  - Material is issued to an asset or task; a usage record is created with a frozen validity snapshot of person, instrument and material.
+  - Welder, WPS, rod batch and steel heat are recorded on the weld child asset; invalid or expired welders are blocked by the eligibility gate.
+  - Inspector raises an inspection request; acceptance criteria are applied and the result recorded.
+  - Rejection raises an NCR linked to the component and material.
+  - User searches by heat number, welder or instrument serial and opens the traceability graph.
+  - If a batch or instrument is found faulty, user triggers quarantine; the impact report lists all affected records.
+  - User raises NCRs in bulk and exports an evidence pack with a hash manifest for the client.
+  - Client or auditor verifies the manifest hash against the issued pack.

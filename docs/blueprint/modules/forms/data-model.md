@@ -1,0 +1,214 @@
+# Form & template designer — Data model & schema
+
+
+- **notes**: Immutability: trigger blocks UPDATE of schema once status<>'draft'. Inspections pin template_revision_id. Expressions are JSONLogic/CEL stored in schema JSON, not scripts. Shared fixtures validate TS/Python evaluator parity. Field-type registry shared with item_types.
+- **reuses existing**:
+  - disciplines
+  - entity_types
+  - documents
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: code
+        - **notes**: unique per tenant
+        - **type**: text
+      -
+        - **name**: name
+        - **notes**: label via terms
+        - **type**: text
+      -
+        - **name**: kind
+        - **notes**: inspection|itp|rfi|permit|test_report
+        - **type**: text
+      -
+        - **name**: discipline_id
+        - **notes**: FK disciplines
+        - **type**: uuid
+      -
+        - **name**: entity_type_id
+        - **notes**: FK entity_types, applicable asset type
+        - **type**: uuid
+      -
+        - **name**: default_frequency
+        - **notes**: interval spec
+        - **type**: jsonb
+      -
+        - **name**: required_competency
+        - **notes**: refs to certificate_types / categories
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: draft|approved|retired
+        - **type**: text
+      -
+        - **name**: current_revision_id
+        - **notes**: latest approved
+        - **type**: uuid
+      -
+        - **name**: archived_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **notes**: synced to devices
+        - **type**: int
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: delete/restore
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+      - (tenant_id, kind, status)
+    - **name**: form_templates
+    - **purpose**: Logical template identity; kind inspection, ITP, RFI, permit, report.
+    - **relations**:
+      - disciplines
+      - entity_types
+      - form_revisions
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **notes**: FK form_templates
+        - **type**: uuid
+      -
+        - **name**: revision_no
+        - **notes**: unique per template
+        - **type**: int
+      -
+        - **name**: status
+        - **notes**: draft|approved|retired
+        - **type**: text
+      -
+        - **name**: schema
+        - **notes**: sections, fields, layout, conditions, formulas, validations
+        - **type**: jsonb
+      -
+        - **name**: schema_hash
+        - **notes**: sha256 set at publish
+        - **type**: text
+      -
+        - **name**: evaluator_version
+        - **notes**: shared evaluator compat
+        - **type**: text
+      -
+        - **name**: change_note
+        - **type**: text
+      -
+        - **name**: published_at
+        - **type**: timestamptz
+      -
+        - **name**: published_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **notes**: draft only
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: drafts only
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (template_id, revision_no)
+      - (tenant_id, template_id, status)
+    - **name**: form_revisions
+    - **purpose**: Revisions of a template; draft editable, published frozen.
+    - **relations**:
+      - form_templates
+      - inspections.template_revision_id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: kind
+        - **notes**: options|units
+        - **type**: text
+      -
+        - **name**: items
+        - **notes**: [{value,label_key}]
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+    - **name**: form_option_sets
+    - **purpose**: Reusable dropdown/unit lists referenced by fields.
+    - **relations**:
+      - referenced by form_revisions.schema
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: null = global; RLS allows read
+        - **type**: uuid
+      -
+        - **name**: pack_code
+        - **notes**: e.g. au-lng
+        - **type**: text
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: schema
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (pack_code, code)
+    - **name**: form_template_seeds
+    - **purpose**: Library of market-pack starter templates imported into tenants.
+    - **relations**:
+      - ref_packs

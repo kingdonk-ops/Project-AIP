@@ -1,0 +1,38 @@
+# Document library & control — Feature scout
+
+
+- **abilities seen in market**:
+  - Revision chains with current and superseded states and a clear promote action
+  - Metadata-driven classification with configurable document types and custom fields
+  - Full-text search including OCR of scanned files
+  - Distribution lists with notification on new revisions
+  - Bulk upload with auto-naming from templates and duplicate detection
+  - Controlled-copy and uncontrolled-copy watermarking on download or print
+  - Retention schedules with legal hold
+  - Document review status and transmittal linkage
+  - Document register export in client formats
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Documents tab on the asset detail page with inherited subtree view
+    - **why**: This deferred item delivers the asset-first promise: opening an asset shows its drawings, certificates and reports, optionally including child assets.
+  -
+    - **effort**: M
+    - **feature**: Controlled-copy watermark with download stamp
+    - **why**: Clients on mining and LNG work expect printed or downloaded copies to show they may be superseded. Stamp user, time and revision on export.
+  -
+    - **effort**: M
+    - **feature**: Bulk upload with filename parsing and duplicate hash detection
+    - **why**: Handover and migration involve hundreds of files, and parsing client naming conventions saves large manual effort.
+  -
+    - **effort**: S
+    - **feature**: Photo gallery view per asset and inspection
+    - **why**: This deferred item matters for CUI work where visual evidence is the main record.
+  -
+    - **effort**: M
+    - **feature**: Required-documents gate before scope start
+    - **why**: Reuse the completion-gate pattern so work cannot start without permits, surveys or procedures marked received.
+  -
+    - **effort**: S
+    - **feature**: Client-configurable document register export
+    - **why**: Different clients require specific columns and formats, which supports the renamable-terminology and multi-market goal.

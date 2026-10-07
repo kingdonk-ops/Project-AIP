@@ -1,0 +1,37 @@
+# Asset hierarchy & registers — Feature scout
+
+
+- **abilities seen in market**:
+  - Hierarchical asset registers with import, bulk edit and reparenting
+  - Asset lifecycle states and criticality ranking
+  - Condition and risk scoring with inspection history rollups
+  - Inspection scheduling driven by asset class and risk (interval and due-date generation)
+  - Linking assets to drawings, P&IDs and geolocation
+  - Duplicate detection and merge on import
+  - Asset tag and QR/RFID labelling with printable label sheets
+  - Failure, defect and repair history with trend analysis
+- **suggestions**:
+  -
+    - **effort**: L
+    - **feature**: Risk-based inspection scheduling per asset class generating due dates and overdue alerts
+    - **why**: Moves from recording inspections to managing asset integrity programmes, valued by owners and engineering firms.
+  -
+    - **effort**: M
+    - **feature**: CUI-specific asset fields and condition model (insulation type, jacket, operating temp range, coating system, corrosion severity grade)
+    - **why**: Differentiates for CUI remediation; common severity grades make results comparable across lines and projects.
+  -
+    - **effort**: L
+    - **feature**: Line/circuit and P&ID linkage with clickable tags on drawings opening the asset
+    - **why**: Inspectors navigate by drawing; connecting tags to the tree links field reality to records.
+  -
+    - **effort**: S
+    - **feature**: Printable QR/RFID label sheets and bulk label generation from the tree
+    - **why**: Rollout of tags is a real field task; this completes the scan-to-open workflow.
+  -
+    - **effort**: M
+    - **feature**: Import validation with preview, duplicate and tag-conflict detection, and rollback
+    - **why**: Large client registers arrive messy; safe imports prevent corrupting the aggregate root.
+  -
+    - **effort**: M
+    - **feature**: Asset history merge and split with lineage when equipment is replaced or renumbered
+    - **why**: Plant changes retag equipment; lineage keeps long-term integrity history intact.

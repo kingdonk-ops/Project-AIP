@@ -1,0 +1,37 @@
+# Design system & app shell — Feature scout
+
+
+- **abilities seen in market**:
+  - Design tokens with tenant theming and documented component library
+  - Responsive layouts with distinct field and office modes
+  - Saved views and column configuration per user and per role
+  - Role-based home pages and configurable dashboards
+  - Accessibility testing built into CI
+  - Global command palette and keyboard navigation
+  - Glove-friendly and sunlight-readable modes
+  - In-app guided tours and contextual help driven by configuration
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: Command palette for jump-to asset, record and action with recent items
+    - **why**: Speeds office reviewers working across thousands of assets and inspections.
+  -
+    - **effort**: M
+    - **feature**: Saved views with sharing, default per role and URL-addressable filters
+    - **why**: Inspectors, supervisors and clients each need their own register cuts, and links in reports should reopen the same view.
+  -
+    - **effort**: M
+    - **feature**: Field mode: simplified shell with large next-action card, one-hand navigation and glove-safe controls
+    - **why**: Mobile use on LNG and mining sites differs from desk work and reduces mis-taps and abandoned entries.
+  -
+    - **effort**: S
+    - **feature**: Terminology lint in CI that fails on hard-coded user-facing strings
+    - **why**: Enforces renamable terminology across markets from the start.
+  -
+    - **effort**: M
+    - **feature**: Automated accessibility and visual regression checks on the shared component library
+    - **why**: Protects WCAG 2.2 AA claims required by government buyers.
+  -
+    - **effort**: S
+    - **feature**: Empty-state, loading and error patterns with offline and sync-conflict variants
+    - **why**: Field users need clear feedback when data is stale or pending upload.

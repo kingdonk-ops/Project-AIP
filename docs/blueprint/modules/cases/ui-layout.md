@@ -1,0 +1,95 @@
+# User-authored playbooks — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Project members can view procedures in their scope; document controllers create and issue; approval before issue is configurable and not yet decided.
+    - **actions**:
+      - Open procedure
+      - Create procedure
+      - Issue new revision
+      - Export acknowledgement status
+    - **layout**: Standard document register table with a procedure type filter and status chips.
+    - **name**: Controlled procedures register
+    - **purpose**: List controlled procedures with their current revision and acknowledgement status.
+    - **route**: /p/:projectId/documents/procedures
+    - **sections**:
+      - Filters (type, discipline, status)
+      - Procedure table (revision, owner, acknowledged %)
+      - Overdue acknowledgement indicators
+  -
+    - **access**: Users within project and team visibility; acknowledgement is by the signed-in person only.
+    - **actions**:
+      - Acknowledge current revision
+      - Switch revision
+      - Download PDF
+      - Open edit (controllers)
+    - **layout**: Document reader with revision header and an acknowledgement bar fixed at the bottom.
+    - **name**: Procedure view
+    - **purpose**: Read the Markdown procedure with terminology tokens resolved and acknowledge the current revision.
+    - **route**: /p/:projectId/documents/procedures/:documentId
+    - **sections**:
+      - Revision header and history
+      - Rendered Markdown content
+      - Acknowledgement bar
+      - Linked competency requirement
+  -
+    - **access**: Document controllers and procedure owners.
+    - **actions**:
+      - Insert terminology token
+      - Save draft
+      - Submit for approval or issue
+      - Cancel
+    - **layout**: Split Markdown editor and live preview, with a metadata panel.
+    - **name**: Procedure editor
+    - **purpose**: Write and revise a procedure in Markdown with terminology tokens.
+    - **route**: /p/:projectId/documents/procedures/:documentId/edit
+    - **sections**:
+      - Markdown editor with token picker
+      - Live preview using project terms
+      - Metadata (type, audience, acknowledgement required)
+      - Competency link settings
+  -
+    - **access**: Document controllers, QA managers, supervisors for their own team, and auditors (read-only).
+    - **actions**:
+      - Filter
+      - Export list
+      - Send reminder
+    - **layout**: Table with summary tiles and a filter by team.
+    - **name**: Acknowledgement status
+    - **purpose**: See who has and has not acknowledged the current revision.
+    - **route**: /p/:projectId/documents/procedures/:documentId/acknowledgements
+    - **sections**:
+      - Summary (acknowledged, outstanding, overdue)
+      - Person table with date and time
+      - Team and company filter
+      - Competency record link
+  -
+    - **access**: Tenant admin and document controllers.
+    - **actions**:
+      - Map screen to guide
+      - Remove mapping
+      - Preview guide
+    - **layout**: Simple table with a screen picker and document selector.
+    - **name**: Help guide mapping
+    - **purpose**: Map screens to guides so the help button opens the right Markdown document.
+    - **route**: /admin/help/guides
+    - **sections**:
+      - Screen key list
+      - Mapped guide per screen
+      - Missing mappings
+  -
+    - **access**: All authenticated users, restricted to guides they can see.
+    - **actions**:
+      - Open guide
+      - Open full procedure
+      - Acknowledge
+      - Close
+    - **layout**: Right-side drawer on desktop, bottom sheet on mobile; cached for offline reading.
+    - **name**: Contextual help panel
+    - **purpose**: Open the relevant guide from any screen, including on mobile.
+    - **route**: (shell overlay) help button
+    - **sections**:
+      - Guide content with resolved terms
+      - Link to the full procedure
+      - Acknowledge prompt if required

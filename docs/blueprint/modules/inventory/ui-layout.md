@@ -1,0 +1,157 @@
+# Stock, consumables & materials — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: inventory.view; movements need inventory.post.
+    - **actions**:
+      - Add stock item
+      - Receive
+      - Issue
+      - Transfer
+      - Record waste
+      - Adjust
+      - Create requisition
+      - Start count
+      - Export
+    - **layout**: DataTable with location and status filters and a drawer.
+    - **name**: Stock levels
+    - **purpose**: Show live stock per item and location.
+    - **route**: /inventory
+    - **sections**:
+      - Filters (location, status, below reorder, use-by within, item type, project)
+      - Stock table (item, unit, location, on hand, reserved, reorder point, batch count, earliest use-by, status, reminder state)
+      - Below-reorder banner
+  -
+    - **access**: inventory.manage.
+    - **actions**:
+      - Save
+      - Cancel
+    - **layout**: Form.
+    - **name**: Add stock item
+    - **purpose**: Create a stock item from a consumable or material.
+    - **route**: /inventory/new
+    - **sections**:
+      - Item picker
+      - Unit and location
+      - Reorder point
+      - Use-by tracking
+      - Opening quantity
+  -
+    - **access**: inventory.view; reversal needs inventory.correct.
+    - **actions**:
+      - Receive
+      - Issue
+      - Transfer
+      - Waste
+      - Adjust
+      - Reverse movement
+      - Open batch certificate
+    - **layout**: Header with on-hand summary and tabbed body.
+    - **name**: Stock item detail
+    - **purpose**: See stock, batches and traceability for one item.
+    - **route**: /inventory/items/:id
+    - **sections**:
+      - Item summary and unit
+      - Stock by location
+      - Batches with use-by and certificates
+      - Movement history
+      - Task issuances and application records
+      - Traceability links
+      - Reorder and requisitions
+      - Use-by reminder status
+      - Activity and audit
+  -
+    - **access**: inventory.view.
+    - **actions**:
+      - Export
+      - Open reference
+      - Reverse (creates reversing entry)
+    - **layout**: DataTable with date range and type filters.
+    - **name**: Movement ledger
+    - **purpose**: Append-only record of all movements.
+    - **route**: /inventory/movements
+    - **sections**:
+      - Filters
+      - Movements table (time, type, item, batch, quantity, from, to, task or asset, user, reference)
+  -
+    - **access**: inventory.post; issue to task requires task access.
+    - **actions**:
+      - Post
+      - Cancel
+    - **layout**: Form or modal with scan support.
+    - **name**: Post movement
+    - **purpose**: Record a receipt, issue, transfer or waste.
+    - **route**: /inventory/movements/new
+    - **sections**:
+      - Movement type
+      - Item, batch, quantity, unit
+      - From and to location
+      - Task or asset reference
+      - Reason code
+      - Negative-stock warning
+  -
+    - **access**: inventory.count; approval needs inventory.correct.
+    - **actions**:
+      - Start count
+      - Enter counts
+      - Approve adjustments
+      - Export variance
+    - **layout**: List of sessions with a count sheet and variance view.
+    - **name**: Reconciliation counts
+    - **purpose**: Run counts and approve variances.
+    - **route**: /inventory/counts
+    - **sections**:
+      - Count sessions
+      - Count sheet
+      - Variance report vs tolerance
+  -
+    - **access**: inventory.view.
+    - **actions**:
+      - Open batch
+      - Link certificate
+      - Mark unavailable
+      - Export
+    - **layout**: DataTable with an expiry timeline filter.
+    - **name**: Batches and use-by
+    - **purpose**: Track batch and heat numbers, expiry and certificates.
+    - **route**: /inventory/batches
+    - **sections**:
+      - Batch table (batch, heat, item, certificate, use-by, quantity, status)
+      - Expiring and expired tabs
+  -
+    - **access**: inventory.configure.
+    - **actions**:
+      - Save
+      - Add location
+    - **layout**: Tabbed settings.
+    - **name**: Inventory settings
+    - **purpose**: Configure units, rules and locations.
+    - **route**: /inventory/settings
+    - **sections**:
+      - Units and conversions
+      - Reorder rules
+      - Use-by lead times
+      - Negative stock policy
+      - Variance tolerance
+      - Required certificate on receipt
+      - Locations
+      - Correction permissions
+      - Terminology keys
+  -
+    - **access**: Storepersons and field users with inventory.post.
+    - **actions**:
+      - Scan
+      - Issue
+      - Receive
+      - Record waste
+      - Count
+    - **layout**: Mobile scan-first screens with offline queue.
+    - **name**: Mobile stock
+    - **purpose**: Issue, receive and count in the field.
+    - **route**: /m/inventory
+    - **sections**:
+      - Scan bar
+      - Quick issue to task
+      - Receive from docket
+      - Count sheet

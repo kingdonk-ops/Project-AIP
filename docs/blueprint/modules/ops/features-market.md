@@ -1,0 +1,38 @@
+# Operations, hosting & deployment — Feature scout
+
+
+- **abilities seen in market**:
+  - Infrastructure as code with identical staging and production
+  - Blue/green or rolling deploys with automatic rollback
+  - Tenant-aware observability and per-tenant SLO dashboards
+  - Public status page and incident communication
+  - Documented RPO/RTO with restore drills
+  - Runbooks and on-call rotation tooling
+  - Cost allocation per tenant and environment
+  - Tenant-level data export and backup self-service
+  - Sandbox and preview environments for customer UAT
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: Back up the Kaefer AIP Postgres now with PITR to RustFS or S3 and a documented restore test
+    - **why**: Customer data is currently not backed up, which is an immediate operational risk before any compliance work.
+  -
+    - **effort**: M
+    - **feature**: Customer UAT sandbox tenant seeded from a config bundle and reset on demand
+    - **why**: Lets a new customer trial templates and terminology without touching live data.
+  -
+    - **effort**: S
+    - **feature**: Status page and incident template with RPO/RTO commitments in the contract pack
+    - **why**: Enterprise buyers expect published availability and recovery targets.
+  -
+    - **effort**: M
+    - **feature**: Per-tenant cost and usage reporting (storage, jobs, AI calls)
+    - **why**: Informs pricing for 500-5,000 users and flags heavy tenants early.
+  -
+    - **effort**: M
+    - **feature**: Automated rollback and migration pre-flight check against a production-size snapshot in the pipeline
+    - **why**: Prevents failed releases during client work windows.
+  -
+    - **effort**: L
+    - **feature**: Siloed-stack pipeline template parameterised by customer, region and KMS key
+    - **why**: Delivers the dedicated deployment option for IRAP and mining clients from one codebase.

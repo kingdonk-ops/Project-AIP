@@ -1,0 +1,138 @@
+# Dashboards & KPI reporting — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/reporting/__init__.py
+    - **purpose**: Module registration, router, permissions
+  -
+    - **path**: backend/app/modules/reporting/models.py
+    - **purpose**: KpiSnapshot, ReportTemplate, GeneratedReport, Dashboard, DashboardTile, ReportSchedule, ReportRun, AlertRule, Subscription
+  -
+    - **path**: backend/app/modules/reporting/schemas.py
+    - **purpose**: Pydantic schemas
+  -
+    - **path**: backend/app/modules/reporting/router.py
+    - **purpose**: Endpoints for dashboards, tiles, KPIs, analytics, templates, runs
+  -
+    - **path**: backend/app/modules/reporting/readmodel/views.sql
+    - **purpose**: Materialised view and snapshot definitions with permission columns
+  -
+    - **path**: backend/app/modules/reporting/readmodel/query.py
+    - **purpose**: Permission-filtered read queries applied in SQL for every aggregate
+  -
+    - **path**: backend/app/modules/reporting/service_kpi.py
+    - **purpose**: KPI strip and nightly snapshot computation
+  -
+    - **path**: backend/app/modules/reporting/service_analytics.py
+    - **purpose**: CUI/NDT finding analytics and asset-tree heatmap
+  -
+    - **path**: backend/app/modules/reporting/service_readiness.py
+    - **purpose**: Handover readiness score from configured weights
+  -
+    - **path**: backend/app/modules/reporting/service_dashboards.py
+    - **purpose**: Dashboard and tile config; tiles bound to saved views with restricted state
+  -
+    - **path**: backend/app/modules/reporting/service_reports.py
+    - **purpose**: Template run, immutable output, content hash, store in documents
+  -
+    - **path**: backend/app/modules/reporting/service_export.py
+    - **purpose**: Permission-aware CSV/Excel export with formula-injection neutralisation
+  -
+    - **path**: backend/app/modules/reporting/jobs.py
+    - **purpose**: Materialised view refresh, nightly snapshots, scheduled digests, threshold alerts
+  -
+    - **path**: backend/migrations/versions/xxxx_reporting.py
+    - **purpose**: Tables and views, RLS
+  -
+    - **path**: backend/tests/modules/reporting/
+    - **purpose**: Read-model parity tests per role, export sanitisation, leak tests
+- **change isolation**: New KPIs or tiles are config entries over saved views and the read model. A new data source adds one view definition plus a permission column, without touching dashboard code.
+- **config not code**:
+  - Dashboard and tile layouts per user/role
+  - KPI definitions and thresholds
+  - Readiness score weights and formula parameters
+  - Report templates and branded layouts
+  - Schedules, recipients and digest rules
+  - Alert rules
+  - Terminology labels
+- **events consumed**:
+  - inspection.*
+  - ncr.*
+  - certificate.expiring
+  - scope.progress_updated
+  - punch.*
+  - rfi.* / submittal.*
+  - document.* (for refresh invalidation)
+  - saved_view.changed
+  - permission.changed (invalidate caches)
+- **events emitted**:
+  - report.generated
+  - report.signed_off
+  - report.distributed
+  - alert.threshold_breached
+  - kpi.snapshot_taken
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/reporting/routes.tsx
+    - **purpose**: Routes
+  -
+    - **path**: frontend/src/modules/reporting/pages/Dashboard.tsx
+    - **purpose**: Project and portfolio dashboard: KPI strip, tile grid, heatmap
+  -
+    - **path**: frontend/src/modules/reporting/components/TileGrid.tsx
+    - **purpose**: Drag/resize grid
+  -
+    - **path**: frontend/src/modules/reporting/components/Tile.tsx
+    - **purpose**: Saved-view tile with drill-through and restricted state
+  -
+    - **path**: frontend/src/modules/reporting/components/AssetHeatmap.tsx
+    - **purpose**: Asset hierarchy heatmap
+  -
+    - **path**: frontend/src/modules/reporting/pages/Trends.tsx
+    - **purpose**: Snapshot trend charts
+  -
+    - **path**: frontend/src/modules/reporting/pages/CuiNdtAnalytics.tsx
+    - **purpose**: CUI/NDT analytics
+  -
+    - **path**: frontend/src/modules/reporting/pages/HandoverReadiness.tsx
+    - **purpose**: Readiness by subtree
+  -
+    - **path**: frontend/src/modules/reporting/pages/TemplateLibrary.tsx
+    - **purpose**: Template library
+  -
+    - **path**: frontend/src/modules/reporting/pages/ReportBuilder.tsx
+    - **purpose**: Builder with preview
+  -
+    - **path**: frontend/src/modules/reporting/pages/RunHistory.tsx
+    - **purpose**: Run history and distribution
+  -
+    - **path**: frontend/src/modules/reporting/api.ts
+    - **purpose**: Generated client hooks
+- **public api**:
+  - GET /reporting/kpis?scope=
+  - GET/POST/PATCH /reporting/dashboards
+  - PUT /reporting/dashboards/{id}/tiles
+  - GET /reporting/tiles/{id}/data
+  - GET /reporting/heatmap?asset_id=
+  - GET /reporting/trends?metric=&from=&to=
+  - GET /reporting/analytics/cui-ndt
+  - GET /reporting/readiness?asset_id=
+  - GET/POST /reporting/templates
+  - POST /reporting/reports/generate
+  - GET /reporting/reports/{id} (hash, file)
+  - POST /reporting/schedules
+  - GET /reporting/runs
+  - POST /reporting/exports
+- **reuses shared**:
+  - Search saved views
+  - Permission/policy service and RLS
+  - Read-model refresh jobs (BullMQ-equivalent worker queue)
+  - Report engine (PDF/Excel rendering)
+  - Documents library
+  - Approvals/workflow engine (sign-off)
+  - Signing engine
+  - Notifications and digests
+  - Terminology dictionary
+  - Export utilities
+  - Audit outbox

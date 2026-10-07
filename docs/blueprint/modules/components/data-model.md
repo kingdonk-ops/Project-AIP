@@ -1,0 +1,543 @@
+# Traceability graph: components, materials & certificates — Data model & schema
+
+
+- **notes**: Recommended: typed entity_links for cross-cutting graph and search, with typed tables (weld_records, material_usages) for high-volume weld relationships and analytics, so traversals use recursive CTEs while joint register queries stay on FKs. Validity snapshots are frozen by a trigger blocking updates to snapshot columns. Corrections add a new link and set superseded_by. Phase P1.
+- **reuses existing**:
+  - assets
+  - certificates
+  - documents
+  - inspections
+  - inspection_responses
+  - issues
+  - consumable_issuances
+  - tasks
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: anchor asset, nullable
+        - **type**: uuid
+      -
+        - **name**: from_type
+        - **notes**: asset/person/material/equipment/task/inspection/document/consumable
+        - **type**: text
+      -
+        - **name**: from_id
+        - **type**: uuid
+      -
+        - **name**: to_type
+        - **type**: text
+      -
+        - **name**: to_id
+        - **type**: uuid
+      -
+        - **name**: link_type
+        - **notes**: welded_by, uses_wps, uses_batch, measured_with, inspected_by, evidenced_by
+        - **type**: text
+      -
+        - **name**: used_at
+        - **notes**: time of use
+        - **type**: timestamptz
+      -
+        - **name**: valid_at_use
+        - **notes**: snapshot: valid at use time
+        - **type**: boolean
+      -
+        - **name**: validity_snapshot
+        - **notes**: certificate ids, expiry dates, calibration status at that time; frozen
+        - **type**: jsonb
+      -
+        - **name**: source_inspection_response_id
+        - **notes**: FK inspection_responses, nullable
+        - **type**: uuid
+      -
+        - **name**: superseded_by
+        - **notes**: correction creates a new link, never edits
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **notes**: snapshot columns immutable after insert (trigger)
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, from_type, from_id, link_type)
+      - (tenant_id, to_type, to_id, link_type)
+      - (asset_id)
+      - unique (from_type, from_id, to_type, to_id, link_type, used_at) where deleted_at is null
+    - **name**: entity_links
+    - **purpose**: Typed edge table for the traceability graph (recommended over per-relationship FKs; keep indexed FKs only on high-volume pairs) with frozen validity snapshots.
+    - **relations**:
+      - assets
+      - inspection_responses
+      - tasks
+      - certificates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: certificate_id
+        - **notes**: FK certificates, nullable
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: certificate_type
+        - **notes**: EN 10204 3.1 etc, CE, UKCA
+        - **type**: text
+      -
+        - **name**: certificate_number
+        - **type**: text
+      -
+        - **name**: heat_number
+        - **type**: text
+      -
+        - **name**: batch_number
+        - **type**: text
+      -
+        - **name**: grade
+        - **type**: text
+      -
+        - **name**: supplier_company_id
+        - **notes**: FK companies
+        - **type**: uuid
+      -
+        - **name**: purchase_order_id
+        - **notes**: nullable, procurement
+        - **type**: uuid
+      -
+        - **name**: use_by
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: pending_review/accepted/quarantined/rejected/superseded
+        - **type**: text
+      -
+        - **name**: extraction
+        - **notes**: OCR output and confidence
+        - **type**: jsonb
+      -
+        - **name**: reviewed_by
+        - **type**: uuid
+      -
+        - **name**: reviewed_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, heat_number)
+      - (tenant_id, batch_number)
+      - (tenant_id, certificate_number)
+      - (tenant_id, status)
+    - **name**: material_passports
+    - **purpose**: Digital passport for materials and certificates (EN 10204, CE/UKCA, heat/batch).
+    - **relations**:
+      - certificates
+      - documents
+      - companies
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: passport_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: component asset
+        - **type**: uuid
+      -
+        - **name**: rsw_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: nullable FK scope_tasks
+        - **type**: uuid
+      -
+        - **name**: consumable_issuance_id
+        - **notes**: nullable FK consumable_issuances
+        - **type**: uuid
+      -
+        - **name**: quantity
+        - **type**: numeric
+      -
+        - **name**: unit
+        - **type**: text
+      -
+        - **name**: used_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (passport_id)
+      - (asset_id)
+      - (project_id, task_id)
+    - **name**: material_usages
+    - **purpose**: Material issued to asset, work package and task.
+    - **relations**:
+      - material_passports
+      - assets
+      - scope_tasks
+      - consumable_issuances
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: item_type_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: standard_ref
+        - **type**: text
+      -
+        - **name**: criteria
+        - **notes**: rule-engine compatible
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (item_type_id)
+      - (asset_id)
+    - **name**: acceptance_criteria
+    - **purpose**: Acceptance criteria attached to asset types or assets.
+    - **relations**:
+      - item_types
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: request_type
+        - **notes**: MIR/WIR/IR/hidden_works
+        - **type**: text
+      -
+        - **name**: number
+        - **notes**: from project numbering scheme
+        - **type**: text
+      -
+        - **name**: acceptance_criteria_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **notes**: resulting inspection, nullable
+        - **type**: uuid
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: requested_by
+        - **type**: uuid
+      -
+        - **name**: requested_for
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (project_id, status)
+      - (asset_id)
+      - unique (project_id, number)
+    - **name**: inspection_requests
+    - **purpose**: MIR/WIR/IR/hidden-works request queue.
+    - **relations**:
+      - inspections
+      - acceptance_criteria
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: subject_type
+        - **notes**: passport/consumable_batch/equipment
+        - **type**: text
+      -
+        - **name**: subject_id
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: quarantine/release
+        - **type**: text
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: impact_snapshot
+        - **notes**: affected assets, tasks, inspections at the time
+        - **type**: jsonb
+      -
+        - **name**: actor_user_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: no updates
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, subject_type, subject_id, created_at)
+    - **name**: quarantine_actions
+    - **purpose**: Batch, heat or instrument quarantine events (append-only).
+    - **relations**:
+      - material_passports
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: quarantine_action_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: affected_type
+        - **type**: text
+      -
+        - **name**: affected_id
+        - **type**: uuid
+      -
+        - **name**: issue_id
+        - **notes**: FK issues (NCR)
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (quarantine_action_id)
+      - (asset_id)
+    - **name**: quarantine_impacts
+    - **purpose**: One row per affected record with the NCR raised.
+    - **relations**:
+      - quarantine_actions
+      - issues
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: unique FK, the weld asset
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: welder_asset_id
+        - **notes**: staff register asset
+        - **type**: uuid
+      -
+        - **name**: wps_asset_id
+        - **notes**: WPS register asset
+        - **type**: uuid
+      -
+        - **name**: consumable_batch_passport_id
+        - **type**: uuid
+      -
+        - **name**: ndt_required_pct
+        - **type**: numeric
+      -
+        - **name**: ndt_status
+        - **type**: text
+      -
+        - **name**: repair_count
+        - **type**: int
+      -
+        - **name**: welded_at
+        - **type**: date
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (asset_id)
+      - (welder_asset_id)
+      - (wps_asset_id)
+      - (consumable_batch_passport_id)
+      - (project_id, ndt_status)
+    - **name**: weld_records
+    - **purpose**: Typed joint-register data for weld component assets (extends AIP weld tracking).
+    - **relations**:
+      - assets
+      - material_passports
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: root_type
+        - **notes**: asset/task/batch
+        - **type**: text
+      -
+        - **name**: root_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: generated PDF/ZIP
+        - **type**: uuid
+      -
+        - **name**: manifest
+        - **notes**: file names with SHA-256
+        - **type**: jsonb
+      -
+        - **name**: manifest_hash
+        - **type**: text
+      -
+        - **name**: signature_id
+        - **notes**: signing module record
+        - **type**: uuid
+      -
+        - **name**: issued_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (project_id, created_at)
+      - (asset_id)
+    - **name**: evidence_packs
+    - **purpose**: Issued evidence packs with hash manifest (append-only once issued).
+    - **relations**:
+      - documents
+      - assets

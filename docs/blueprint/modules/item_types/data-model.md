@@ -1,0 +1,382 @@
+# Content types, item types & attributes — Data model & schema
+
+
+- **notes**: Recommend: map existing entity_types to item_types rather than creating a duplicate (rename or extend). Inheritance: add-only by default, with override of required/unit/tolerance, enforced in inheritance.py; a parent version change creates a migration preview, and assets pin item_type_version. Neutral states are a fixed enum in code. Starter packs are product-shipped with global rows and per-tenant owner-curated imports.
+- **reuses existing**:
+  - entity_types
+  - assets
+  - inspections
+  - disciplines
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: key
+        - **notes**: stable; label via terms dictionary
+        - **type**: text
+      -
+        - **name**: name
+        - **notes**: tenant label fallback
+        - **type**: text
+      -
+        - **name**: icon
+        - **type**: text
+      -
+        - **name**: sort_order
+        - **type**: int
+      -
+        - **name**: show_in_nav
+        - **type**: boolean
+      -
+        - **name**: default_attribute_schema
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, key) where deleted_at is null
+    - **name**: content_types
+    - **purpose**: Top-level kinds (Asset, Staff, Vehicles, Equipment, Consumables, RSW) with nav and register generation.
+    - **relations**:
+      - item_categories
+      - item_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: content_type_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: applicable_for
+        - **notes**: any/item/module
+        - **type**: text
+      -
+        - **name**: sort_order
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, content_type_id, sort_order)
+    - **name**: item_categories
+    - **purpose**: Categories beneath content types.
+    - **relations**:
+      - content_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK; align with existing entity_types
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: category_id
+        - **type**: uuid
+      -
+        - **name**: parent_type_id
+        - **notes**: inheritance
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: is_component
+        - **type**: boolean
+      -
+        - **name**: allows_components
+        - **type**: boolean
+      -
+        - **name**: auto_create_itp
+        - **type**: boolean
+      -
+        - **name**: auto_create_inspection
+        - **type**: boolean
+      -
+        - **name**: default_template_ids
+        - **notes**: array
+        - **type**: jsonb
+      -
+        - **name**: status_set_id
+        - **type**: uuid
+      -
+        - **name**: current_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, category_id)
+      - (parent_type_id)
+    - **name**: item_types
+    - **purpose**: Item type definition (may map to existing entity_types), with parent and current version pointer.
+    - **relations**:
+      - item_categories
+      - status_sets
+      - self parent
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: item_type_id
+        - **type**: uuid
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: attribute_schema
+        - **notes**: own attributes only; effective schema resolved via parent chain
+        - **type**: jsonb
+      -
+        - **name**: change_summary
+        - **type**: text
+      -
+        - **name**: migration_preview
+        - **notes**: impact counts
+        - **type**: jsonb
+      -
+        - **name**: published_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (item_type_id, version)
+    - **name**: item_type_versions
+    - **purpose**: Immutable schema versions so existing assets and completed inspections stay valid.
+    - **relations**:
+      - item_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: key
+        - **type**: text
+      -
+        - **name**: label
+        - **type**: text
+      -
+        - **name**: field_type
+        - **notes**: from shared field-type registry
+        - **type**: text
+      -
+        - **name**: required
+        - **notes**: default; overridable per type
+        - **type**: boolean
+      -
+        - **name**: is_expiry_date
+        - **type**: boolean
+      -
+        - **name**: reference_scope
+        - **notes**: scoped reference pickers
+        - **type**: jsonb
+      -
+        - **name**: unit
+        - **type**: text
+      -
+        - **name**: tolerance
+        - **notes**: min/max/target, feeds rules engine
+        - **type**: jsonb
+      -
+        - **name**: expression
+        - **notes**: sandboxed conditional or calculated expression
+        - **type**: text
+      -
+        - **name**: options
+        - **notes**: dropdown values
+        - **type**: jsonb
+      -
+        - **name**: sync_to_asset_on_approval
+        - **notes**: template-field sync back
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, key) where deleted_at is null
+      - (tenant_id, label, field_type)
+    - **name**: attributes
+    - **purpose**: Shared attribute registry, reusable across types.
+    - **relations**:
+      - referenced by key from item_type_versions.attribute_schema
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id)
+    - **name**: status_sets
+    - **purpose**: Custom status sets per item type.
+    - **relations**:
+      - status_set_values
+      - item_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: status_set_id
+        - **type**: uuid
+      -
+        - **name**: key
+        - **type**: text
+      -
+        - **name**: label
+        - **notes**: renamable
+        - **type**: text
+      -
+        - **name**: neutral_state
+        - **notes**: enum e.g. planned/active/on_hold/complete/retired; gates use this
+        - **type**: text
+      -
+        - **name**: sort_order
+        - **type**: int
+    - **indexes**:
+      - unique (status_set_id, key)
+    - **name**: status_set_values
+    - **purpose**: Statuses mapped to a fixed neutral lifecycle enum.
+    - **relations**:
+      - status_sets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: nullable for product-shipped packs; RLS permits global read-only rows
+        - **type**: uuid
+      -
+        - **name**: key
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: text
+      -
+        - **name**: definition
+        - **type**: jsonb
+      -
+        - **name**: source
+        - **notes**: shipped/owner_curated
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, key, version)
+    - **name**: starter_packs
+    - **purpose**: Importable pack definitions (NDT/CUI, welding, insulation, coating).
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: starter_pack_id
+        - **type**: uuid
+      -
+        - **name**: installed_by
+        - **type**: uuid
+      -
+        - **name**: result
+        - **notes**: created type/attribute ids
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, starter_pack_id)
+    - **name**: starter_pack_installs
+    - **purpose**: Record of which packs were applied to a tenant.
+    - **relations**:
+      - starter_packs

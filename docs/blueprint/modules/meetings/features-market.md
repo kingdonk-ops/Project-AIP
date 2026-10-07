@@ -1,0 +1,37 @@
+# Meetings & AI minutes — Feature scout
+
+
+- **abilities seen in market**:
+  - Agenda templates and recurring meeting series
+  - Attendance tracking with apologies
+  - Minutes with decisions and actions recorded per item
+  - Actions that flow into task lists with owners and due dates
+  - Audio recording or dictation with automatic transcription
+  - Draft minutes and action extraction for human review
+  - Carry-forward of open actions into the next meeting
+  - Published minutes distributed to attendees with acknowledgement
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Consent capture workflow: recording notice shown to attendees, per-attendee consent state recorded, recording blocked or paused if someone declines
+    - **why**: Recording laws and the Privacy Act vary by region; evidence of consent protects the customer and the platform.
+  -
+    - **effort**: L
+    - **feature**: Transcript-to-minutes review editor with source highlights (click an AI-suggested action to hear and see the originating segment)
+    - **why**: Lets the chair verify AI output quickly, and keeps humans accountable for what is published.
+  -
+    - **effort**: M
+    - **feature**: Asset and package tagging inside minutes, with suggested links to assets, NCRs and RFIs named in the discussion
+    - **why**: Meeting decisions become part of asset history, which fits the asset-centric model.
+  -
+    - **effort**: S
+    - **feature**: Audio retention policy with automatic deletion after minutes are approved (transcript kept, audio optional) and legal-hold override
+    - **why**: Reduces privacy exposure and storage cost while remaining defensible in disputes.
+  -
+    - **effort**: M
+    - **feature**: Domain vocabulary hints for transcription (NDT, CUI, weld, ITP terms and project asset tags)
+    - **why**: Technical jargon and tag numbers are commonly mis-transcribed; custom vocabulary raises minute quality noticeably.
+  -
+    - **effort**: M
+    - **feature**: Toolbox-talk mode: short templated meeting with quick attendee sign-on by PIN or QR and a single signed attendance record
+    - **why**: Field crews hold daily toolbox talks; a fast, offline-capable flow supports HSE records without full meeting overhead.

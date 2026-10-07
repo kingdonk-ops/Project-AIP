@@ -1,0 +1,185 @@
+# Integrations & webhooks — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Tenant admin and integration admin; project admins see their own project's connectors.
+    - **actions**:
+      - Open connector
+      - Replay failed delivery
+      - Replay selected
+      - Acknowledge alert
+      - Open audit log
+    - **layout**: Dashboard with status tiles and a failed delivery queue below.
+    - **name**: Integrations overview and health
+    - **purpose**: See the status of all connectors, subscriptions and failing deliveries at a glance.
+    - **route**: /admin/integrations
+    - **sections**:
+      - Connector status tiles
+      - Delivery success rate
+      - Failed delivery queue
+      - Health alerts
+      - Recent integration audit entries
+  -
+    - **access**: Project admin with integration permission; new external destinations require tenant admin approval.
+    - **actions**:
+      - Add connector
+      - Test connection
+      - Pause or resume
+      - Rotate credentials
+      - Delete
+    - **layout**: List with a stepped setup wizard in a side sheet.
+    - **name**: Connector list and setup
+    - **purpose**: Configure per-project connectors to EAM/ERP and chat systems.
+    - **route**: /p/:projectId/integrations/connectors
+    - **sections**:
+      - Connector list (type, status, approval, last sync)
+      - Setup wizard (type, credentials reference, scope)
+      - Approval status
+      - Test connection
+  -
+    - **access**: Project admin and integration admin; conflict resolution available to asset managers.
+    - **actions**:
+      - Map field
+      - Add transformation
+      - Set conflict rule
+      - Run dry-run sync
+      - Resolve conflict
+      - Run bulk or incremental sync
+    - **layout**: Two-column mapping editor with a rules panel and a conflict queue tab.
+    - **name**: Field mapping and conflict rules
+    - **purpose**: Define how client EAM fields map to AIP fields and how conflicts resolve.
+    - **route**: /p/:projectId/integrations/connectors/:connectorId/mapping
+    - **sections**:
+      - Source and target field mapping
+      - Transformations
+      - Conflict rules (client register is master for tags)
+      - Sample record preview
+      - Conflict queue
+  -
+    - **access**: Project admin and integration admin.
+    - **actions**:
+      - Start sync
+      - Retry failed records
+      - Reset cursor (confirmed)
+      - Download error report
+    - **layout**: Table of runs with a detail drawer.
+    - **name**: Sync state and history
+    - **purpose**: Monitor sync runs, cursors and errors.
+    - **route**: /p/:projectId/integrations/connectors/:connectorId/sync
+    - **sections**:
+      - Run history
+      - Cursor state
+      - Per-record errors
+      - Counts created, updated, conflicted
+  -
+    - **access**: Tenant admin and integration admin; project admins for project-scoped subscriptions.
+    - **actions**:
+      - Toggle subscription
+      - Set filter
+      - Choose redaction profile
+      - Send test event
+    - **layout**: Matrix grid of events by destination, with a filter side panel.
+    - **name**: Subscription matrix
+    - **purpose**: Choose which events go to which approved destinations and with what redaction.
+    - **route**: /admin/integrations/subscriptions
+    - **sections**:
+      - Event by destination matrix
+      - Filters (project, discipline, team)
+      - Redaction profile per subscription
+      - Payload preview
+  -
+    - **access**: Tenant admin and integration admin; payload view is masked per permission.
+    - **actions**:
+      - Replay
+      - Bulk replay
+      - Copy delivery ID
+      - Export log
+    - **layout**: Filterable table with a payload and response drawer.
+    - **name**: Delivery log
+    - **purpose**: Audit and replay outbound deliveries.
+    - **route**: /admin/integrations/deliveries
+    - **sections**:
+      - Filters (status, destination, event, date)
+      - Delivery table
+      - Attempt history
+      - Signed payload and response viewer
+  -
+    - **access**: Tenant admin approves; integration admins request; auditors read-only.
+    - **actions**:
+      - Approve
+      - Reject
+      - Revoke
+      - Re-run SSRF check
+      - Request new destination
+    - **layout**: Two tabs: pending requests and approved allowlist.
+    - **name**: Destination approval and allowlist
+    - **purpose**: Approve outbound destinations and keep the allowlist.
+    - **route**: /admin/integrations/destinations
+    - **sections**:
+      - Pending requests (requester, host, purpose)
+      - Allowlist (host, approver, date)
+      - SSRF check result
+      - Approval history
+  -
+    - **access**: Tenant admin and integration admin.
+    - **actions**:
+      - Create client
+      - Set scopes
+      - Rotate secret (shown once)
+      - Revoke
+      - Export usage
+    - **layout**: Client list with a detail page showing scopes and usage charts.
+    - **name**: API clients and keys
+    - **purpose**: Manage system-to-system API access and review usage.
+    - **route**: /admin/integrations/api
+    - **sections**:
+      - API clients
+      - Scopes by project and module
+      - Key rotation and expiry
+      - Usage log and rate limits
+  -
+    - **access**: Tenant admin; project admins for project channels (subject to destination approval).
+    - **actions**:
+      - Connect channel
+      - Set redaction
+      - Send test
+      - Disconnect
+    - **layout**: Card per channel with settings drawer.
+    - **name**: Chat and email channels
+    - **purpose**: Set up Teams, Slack and email digests with audience redaction.
+    - **route**: /admin/integrations/channels
+    - **sections**:
+      - Teams and Slack channels
+      - Email digest schedule
+      - Redaction profile (summary-only option)
+      - Test message
+  -
+    - **access**: Any authenticated user for feeds within their own project access; tokens revoke on deactivation.
+    - **actions**:
+      - Create feed
+      - Copy URL
+      - Revoke
+      - Regenerate
+    - **layout**: Simple list with copy-link controls.
+    - **name**: My calendar feeds
+    - **purpose**: Let users subscribe to inspection and shutdown schedules via iCal.
+    - **route**: /me/calendar-feeds
+    - **sections**:
+      - Available feeds
+      - Scope selector (project, discipline)
+      - Feed URL with token
+      - Revoked feeds
+  -
+    - **access**: Tenant admin, security and auditors (read-only).
+    - **actions**:
+      - Filter
+      - Export
+    - **layout**: Filterable audit table with a detail drawer.
+    - **name**: Integration audit log
+    - **purpose**: Review changes to integration configuration and credentials.
+    - **route**: /admin/integrations/audit
+    - **sections**:
+      - Filters
+      - Audit table
+      - Before/after detail

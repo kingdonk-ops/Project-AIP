@@ -1,0 +1,82 @@
+# Tech stack — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Engineering lead and platform admin edit; security and auditors read-only
+    - **actions**:
+      - Create ADR
+      - View
+      - Edit
+      - Supersede
+      - Link to risk
+      - Export PDF pack
+    - **layout**: DataTable with detail page
+    - **name**: Architecture decision records
+    - **purpose**: Index of ADRs including the continue-AIP decision and AGPL clean-room record.
+    - **route**: /admin/platform/adrs
+    - **sections**:
+      - Filter bar (status, date, topic)
+      - ADR table
+      - Supersession links
+  -
+    - **access**: Engineering lead and platform admin edit; others read-only
+    - **actions**:
+      - Edit
+      - Supersede
+      - Link risk
+    - **layout**: Document-style single column with metadata sidebar
+    - **name**: ADR detail
+    - **purpose**: Read one decision with context, decision, consequences and revisit trigger.
+    - **route**: /admin/platform/adrs/:adrNo
+    - **sections**:
+      - Context, decision, consequences
+      - Revisit trigger
+      - Supersedes and superseded-by
+      - Linked risks
+  -
+    - **access**: Engineering lead and platform admin
+    - **actions**:
+      - Add capability
+      - Edit
+      - Export to SBOM notes
+      - Select adapter per environment
+    - **layout**: DataTable with detail drawer and conformance tab
+    - **name**: Capability and library register
+    - **purpose**: One chosen library per capability with licence and adapter status.
+    - **route**: /admin/platform/capabilities
+    - **sections**:
+      - Capability table (chosen library, alternatives, licence, adapter, status, owner)
+      - Storage and queue conformance results
+      - Open questions list
+  -
+    - **access**: Exception approver role; engineering read-only
+    - **actions**:
+      - Edit lists
+      - Request exception
+      - Approve or reject exception
+      - Download CycloneDX SBOM
+    - **layout**: Tabs: Policy, SBOM, Exceptions
+    - **name**: Licence policy and exceptions
+    - **purpose**: Manage allow and deny lists, SBOM results and time-boxed exceptions.
+    - **route**: /admin/platform/licences
+    - **sections**:
+      - Allow and deny list
+      - Latest SBOM violations
+      - Exception requests with expiry
+      - Provenance log link
+  -
+    - **access**: Platform admin and developers
+    - **actions**:
+      - Copy build info
+      - Download SBOM
+      - Open OpenAPI schema
+    - **layout**: Status cards plus dependency table
+    - **name**: Platform version and generated client
+    - **purpose**: Show build, commit, runtime and dependency versions and client drift status.
+    - **route**: /admin/platform/version
+    - **sections**:
+      - Build and commit
+      - Runtime versions
+      - Generated client status
+      - Link to /openapi.json

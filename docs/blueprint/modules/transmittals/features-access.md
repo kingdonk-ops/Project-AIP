@@ -1,0 +1,235 @@
+# Transmittals & correspondence — Feature filler
+
+
+- **detail sections**:
+  - Header and purpose
+  - Lines (document, revision, asset, hash)
+  - Recipients and acknowledgements
+  - Supersede chain
+  - Proof of delivery
+  - Linked records
+  - Audit
+- **notifications**:
+  - Transmittal issued
+  - Acknowledged or responded
+  - Overdue chaser
+  - Superseded by reissue
+  - Correspondence received
+  - Notice due soon
+  - Response assigned
+- **settings**:
+  - Numbering patterns
+  - Reason codes and statuses
+  - Distribution groups
+  - Chaser schedule
+  - Portal acknowledgement text
+  - Clause library
+  - Notice templates with merge fields
+  - Commercial restriction rules
+  - Inbound email mapping
+  - Terminology labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Send chasers
+      - Export register
+    - **columns**:
+      - Number
+      - Date
+      - Purpose
+      - Recipients
+      - Documents
+      - Status
+      - Response due
+      - Acknowledged
+      - Superseded by
+    - **create form**:
+      -
+        - **field**: Purpose/reason
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Recipients
+        - **required**: true
+        - **type**: contact/group multi
+      -
+        - **field**: Documents (revisions)
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Asset per line
+        - **required**: false
+        - **type**: asset picker
+      -
+        - **field**: Response due
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Message
+        - **required**: false
+        - **type**: textarea
+    - **empty state**: No transmittals issued. Compose one by selecting documents and recipients.
+    - **filters**:
+      - Status
+      - Purpose
+      - Recipient/company
+      - Date
+      - Overdue
+      - Asset
+    - **name**: Transmittal register
+    - **row actions**:
+      - Open
+      - Reissue
+      - Chase
+      - Download cover
+      - Download proof
+    - **search**: Number, subject, recipient, document title
+    - **sort**:
+      - Date
+      - Number
+      - Response due
+  -
+    - **bulk actions**:
+      - Assign response
+      - Flag as notice
+      - Export
+    - **columns**:
+      - Ref
+      - Type
+      - Direction
+      - Subject
+      - Parties
+      - Date
+      - Response by
+      - Contractual notice
+      - Status
+    - **create form**:
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Direction
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Subject
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Parties
+        - **required**: true
+        - **type**: contact multi
+      -
+        - **field**: Date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Attachments
+        - **required**: false
+        - **type**: document picker
+      -
+        - **field**: Response required by
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Contract clause
+        - **required**: false
+        - **type**: clause picker
+      -
+        - **field**: Commercial restricted
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No correspondence logged. Add an item or set up inbound email capture.
+    - **filters**:
+      - Type
+      - Direction
+      - Party
+      - Date
+      - Notice flag
+      - Response overdue
+      - Thread
+    - **name**: Correspondence register
+    - **row actions**:
+      - Open
+      - Reply
+      - Link
+      - Assign response
+      - Flag as notice
+    - **search**: Subject, reference, party, body
+    - **sort**:
+      - Date
+      - Response by
+  -
+    - **bulk actions**:
+      - Reassign
+    - **columns**:
+      - Notice
+      - Clause
+      - Trigger date
+      - Time bar days
+      - Due
+      - Status
+      - Owner
+    - **empty state**: No contractual notices being tracked.
+    - **filters**:
+      - Status
+      - Due soon
+      - Owner
+      - Clause
+    - **name**: Notice tracker
+    - **row actions**:
+      - Open
+      - Mark served
+      - Assign
+    - **search**: Notice, clause
+    - **sort**:
+      - Due
+  -
+    - **bulk actions**:
+      - Delete
+    - **columns**:
+      - Clause
+      - Title
+      - Trigger event
+      - Time bar (days)
+    - **create form**:
+      -
+        - **field**: Clause
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Trigger event
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Days
+        - **required**: true
+        - **type**: number
+    - **empty state**: No clauses. Add clauses to create time-bar clocks.
+    - **filters**:
+      - Trigger event
+    - **name**: Clause library
+    - **row actions**:
+      - Edit
+      - Delete
+    - **search**: Clause
+    - **sort**:
+      - Clause
+- **walkthrough**:
+  - Click Compose in the Transmittal register.
+  - Pick the documents; exact revisions are locked.
+  - Link each line to an asset or data-book item if relevant.
+  - Select recipients and groups.
+  - Choose reason, response date and message.
+  - Issue; the number is allocated, the cover PDF is generated with SHA-256 hashes, and the record becomes immutable.
+  - Recipients get an email link and external users confirm through the portal.
+  - Track acknowledgements and responses.
+  - Overdue chasers go to those who have not acknowledged.
+  - If a document changes, reissue, which supersedes the earlier transmittal.
+  - Log inbound and outbound correspondence, flag contractual notices to start time-bar clocks.
+  - Export proof.

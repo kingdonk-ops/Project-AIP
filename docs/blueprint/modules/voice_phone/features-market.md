@@ -1,0 +1,37 @@
+# Voice notes & phone log — Feature scout
+
+
+- **abilities seen in market**:
+  - Voice-to-text capture with structured draft extraction
+  - Confirm and edit step before saving
+  - Phone and verbal instruction log with parties and summary
+  - Verbal instruction flagged for confirmation in writing
+  - Recording consent prompts by jurisdiction
+  - Domain vocabulary tuning for trade terms
+  - Audio retention and deletion schedules
+  - Multilingual transcription
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: Custom vocabulary for NDT, CUI and coating terms plus asset tags
+    - **why**: Generic transcription mangles terms like DFT, UT, CUI and tag IDs, so tuned vocabulary raises draft accuracy.
+  -
+    - **effort**: M
+    - **feature**: Asset and scope suggestion from spoken tag numbers, with user confirmation
+    - **why**: Speeds defect and note entry and keeps the asset-centric link accurate.
+  -
+    - **effort**: M
+    - **feature**: Verbal instruction confirmation email or task that requests written confirmation
+    - **why**: Converts a verbal instruction into a defensible record and prompts change process.
+  -
+    - **effort**: M
+    - **feature**: Side-by-side transcript and audio with edit history
+    - **why**: Reviewers can verify the draft against the source before confirming.
+  -
+    - **effort**: S
+    - **feature**: Per-tenant switch to disable audio retention after transcription
+    - **why**: Reduces privacy exposure while keeping the confirmed text record.
+  -
+    - **effort**: M
+    - **feature**: Offline voice capture queue with deferred transcription
+    - **why**: Remote sites lack connectivity, so recordings must wait and process later.

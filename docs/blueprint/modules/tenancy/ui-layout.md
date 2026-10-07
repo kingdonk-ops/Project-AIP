@@ -1,0 +1,135 @@
+# Tenancy, organisations & data residency — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Platform operator only
+    - **actions**:
+      - Open
+      - Edit settings
+      - Suspend
+      - Start offboarding
+      - Grant support access
+      - Export list
+    - **layout**: DataTable with detail drawer
+    - **name**: Tenants
+    - **purpose**: Operator register of all tenants and their deployment shape.
+    - **route**: /platform/tenants
+    - **sections**:
+      - Filters (deployment, region, status)
+      - Tenant table (slug, pooled/siloed, region, status, users, storage)
+  -
+    - **access**: Platform operator only
+    - **actions**:
+      - Next and back
+      - Provision
+      - Save draft
+    - **layout**: Multi-step wizard with review step
+    - **name**: Tenant provisioning wizard
+    - **purpose**: Create a tenant with region, pack, terminology and admin invite.
+    - **route**: /platform/tenants/new
+    - **sections**:
+      - Tenant name and region
+      - Deployment type
+      - Template pack and terminology set
+      - Admin email
+      - Sample data toggle
+      - Review and confirm
+  -
+    - **access**: Tenant admin
+    - **actions**:
+      - Save
+      - Upload logo
+      - Enable or disable module
+      - Change terminology set
+    - **layout**: Tabbed settings page
+    - **name**: Tenant settings
+    - **purpose**: Tenant branding, terminology, modules and retention defaults.
+    - **route**: /settings/tenant
+    - **sections**:
+      - Profile and region (read-only)
+      - Branding
+      - Terminology set
+      - Enabled modules
+      - Retention defaults
+      - Quotas and usage
+      - KMS key and residency
+      - Support access history
+  -
+    - **access**: Tenant admin; project admins read-only
+    - **actions**:
+      - Create
+      - Deactivate
+      - Export
+      - Open
+    - **layout**: DataTable with filters
+    - **name**: Organisations
+    - **purpose**: List owner, client and subcontractor organisations.
+    - **route**: /settings/organisations
+    - **sections**:
+      - Organisations table (type, ABN, projects, users, shared assets, status)
+      - Filters
+  -
+    - **access**: Tenant admin
+    - **actions**:
+      - Edit
+      - Invite user
+      - Assign visibility profile
+      - Deactivate
+    - **layout**: Header with tabs
+    - **name**: Organisation detail
+    - **purpose**: View one organisation's users, projects and shared assets.
+    - **route**: /settings/organisations/:id
+    - **sections**:
+      - Profile
+      - Users
+      - Projects
+      - Shared assets
+      - Visibility profile
+  -
+    - **access**: Tenant admin and asset owner role
+    - **actions**:
+      - Create share
+      - Edit profile
+      - Set expiry
+      - Revoke
+      - Preview as organisation
+    - **layout**: Rules table with visibility-profile editor and preview
+    - **name**: Asset sharing and party visibility
+    - **purpose**: Define what each party sees on shared assets (for example Rio Tinto sees status and evidence, not rates).
+    - **route**: /settings/asset-sharing
+    - **sections**:
+      - Share rules table (asset subtree, organisation, expiry)
+      - Visibility profile editor (field-level)
+      - Preview as party
+  -
+    - **access**: Tenant admin
+    - **actions**:
+      - Approve with duration
+      - Deny
+      - Revoke
+      - Export log
+    - **layout**: Request list with approval dialog
+    - **name**: Support access approvals
+    - **purpose**: Approve time-boxed vendor support access.
+    - **route**: /settings/support-access
+    - **sections**:
+      - Pending requests
+      - Active grants with banner status
+      - History with audit links
+  -
+    - **access**: Tenant admin with platform operator co-approval
+    - **actions**:
+      - Start
+      - Download export
+      - Confirm shred
+      - Download certificate
+    - **layout**: Stepper with checklist
+    - **name**: Offboarding
+    - **purpose**: Run export, legal-hold check, crypto-shred and certificate issue.
+    - **route**: /settings/offboarding
+    - **sections**:
+      - Export package
+      - Legal-hold check
+      - Crypto-shred schedule
+      - Signed deletion certificate

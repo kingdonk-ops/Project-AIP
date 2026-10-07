@@ -1,0 +1,122 @@
+# Issues, NCRs & corrective actions — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Project members by scope; subcontractors only items scoped to them
+    - **actions**:
+      - Create
+      - Assign
+      - Change severity
+      - Export
+      - Add to NCR
+    - **layout**: Data table with pipeline filter; toggle to board.
+    - **name**: Issue register
+    - **purpose**: List issues and NCRs.
+    - **route**: /issues
+    - **sections**:
+      - Status pipeline filter
+      - Filters (type, severity, asset, responsible)
+      - Table
+  -
+    - **access**: Same as register
+    - **actions**:
+      - Drag to transition (where permitted)
+      - Open card
+      - Filter
+    - **layout**: Kanban columns with swimlane option.
+    - **name**: Issue board
+    - **purpose**: Kanban by workflow status.
+    - **route**: /issues/board
+    - **sections**:
+      - Columns per status
+      - Cards with severity and due
+  -
+    - **access**: Any project member with raise permission
+    - **actions**:
+      - Save
+      - Attach photo
+      - Cancel
+    - **layout**: Form (dialog on mobile).
+    - **name**: Raise issue
+    - **purpose**: Manual issue creation.
+    - **route**: /issues/new
+    - **sections**:
+      - Title, type, severity
+      - Asset
+      - Description
+      - Responsible and due
+      - Attachments with markup
+  -
+    - **access**: Responsible, verifier (independent), managers
+    - **actions**:
+      - Assess
+      - Assign
+      - Start
+      - Mark ready for verification
+      - Verify
+      - Reopen
+      - Close
+      - Escalate to NCR
+    - **layout**: Header with workflow bar; tabs.
+    - **name**: Issue detail
+    - **purpose**: Assess, fix, verify and close.
+    - **route**: /issues/:id
+    - **sections**:
+      - Summary
+      - Source inspection link
+      - Assessment
+      - Corrective actions
+      - Evidence
+      - Comments and subcontractor responses
+      - Asset history
+      - Audit trail
+  -
+    - **access**: Quality managers; assigned owners; subcontractor response via portal
+    - **actions**:
+      - Set disposition
+      - Add CAPA
+      - Apply/lift hold
+      - Verify
+      - Close
+    - **layout**: Detail with NCR panel tabs.
+    - **name**: NCR detail
+    - **purpose**: Root cause, disposition and CAPA.
+    - **route**: /ncrs/:id
+    - **sections**:
+      - Classification
+      - Root cause analysis
+      - Disposition
+      - CAPA
+      - Cost impact
+      - ITP step hold
+      - Related inspections
+  -
+    - **access**: Action owners, quality managers
+    - **actions**:
+      - Update status
+      - Reassign
+      - Add evidence
+    - **layout**: Board/list with overdue highlighting.
+    - **name**: CAPA board
+    - **purpose**: Track corrective and preventive actions.
+    - **route**: /issues/capa
+    - **sections**:
+      - Actions by status
+      - Overdue
+  -
+    - **access**: Tenant admin; quality manager
+    - **actions**:
+      - Edit
+      - Save
+    - **layout**: Settings tabs.
+    - **name**: Issue settings
+    - **purpose**: Types, severities, rules and SLAs.
+    - **route**: /settings/issues
+    - **sections**:
+      - Types and severities
+      - Auto-raise rules
+      - Workflow and required fields
+      - SLA and reminders
+      - NCR categories and dispositions
+      - Terminology

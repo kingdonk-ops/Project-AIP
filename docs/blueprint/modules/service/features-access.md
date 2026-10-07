@@ -1,0 +1,330 @@
+# Service & maintenance — Feature filler
+
+
+- **detail sections**:
+  - Ticket or work order header with SLA clock
+  - Asset and contact
+  - Source finding with photos and recommended repair
+  - Tasks
+  - Labour and materials
+  - Embedded forms
+  - Technician assignment with eligibility check
+  - SLA pause history with reasons
+  - Sign-off
+  - Linked records
+  - Asset history timeline
+  - Activity
+- **notifications**:
+  - Ticket assigned
+  - SLA at risk and SLA breached
+  - SLA paused or resumed
+  - Work order created from finding or defect
+  - Technician blocked by eligibility gate
+  - Work order awaiting sign-off
+  - Preventive schedule coming due or overdue
+  - Contract expiring
+  - Campaign stage gate reached
+- **settings**:
+  - Severity threshold for auto-created work orders (per client or asset class)
+  - SLA pause reason list
+  - Priority levels and default SLA targets
+  - Preventive schedule defaults and condition-based interval rules
+  - Campaign stage library
+  - Eligibility rules per work type
+  - Work order numbering
+  - Terminology labels for contract, SLA and campaign
+  - Default forms per work order type
+- **tables**:
+  -
+    - **bulk actions**:
+      - Assign
+      - Change priority
+      - Pause SLA with reason
+      - Export
+    - **columns**:
+      - Ticket no
+      - Asset
+      - Priority
+      - Status
+      - Contract
+      - SLA target
+      - SLA remaining
+      - Clock state (running, paused)
+      - Assignee
+      - Raised
+    - **create form**:
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Description
+        - **required**: false
+        - **type**: long text
+      -
+        - **field**: Priority
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Service contract
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Contact
+        - **required**: false
+        - **type**: contact picker
+      -
+        - **field**: Photos
+        - **required**: false
+        - **type**: files
+    - **empty state**: No tickets. Raise a ticket against an asset or let defects and inspection findings create them.
+    - **filters**:
+      - Status
+      - Priority
+      - Contract
+      - Asset subtree
+      - Assignee
+      - SLA state (on track, at risk, breached, paused)
+      - Saved views
+    - **name**: Tickets
+    - **row actions**:
+      - Open
+      - Assign
+      - Pause / resume SLA
+      - Convert to work order
+      - Escalate
+      - Close
+    - **search**: Ticket no, asset tag, title
+    - **sort**:
+      - SLA remaining
+      - Priority
+      - Raised
+      - Status
+  -
+    - **bulk actions**:
+      - Assign eligible technician
+      - Reschedule
+      - Export
+    - **columns**:
+      - WO no
+      - Asset
+      - Source (ticket, finding, defect, schedule, campaign)
+      - Status
+      - Priority
+      - Technician
+      - Due
+      - Labour hours
+      - Sign-off
+    - **create form**:
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Source
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Description and recommended repair
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Tasks
+        - **required**: false
+        - **type**: list
+      -
+        - **field**: Technician
+        - **required**: false
+        - **type**: user picker (eligibility checked)
+      -
+        - **field**: Due date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Form template
+        - **required**: false
+        - **type**: select
+    - **empty state**: No work orders. Create one manually or enable auto-creation from inspection findings above the severity threshold.
+    - **filters**:
+      - Source
+      - Status
+      - Asset subtree
+      - Technician
+      - Contract
+      - Due window
+    - **name**: Work Orders
+    - **row actions**:
+      - Open
+      - Assign
+      - Complete form
+      - Sign off
+      - Cancel
+    - **search**: WO no, asset tag, description
+    - **sort**:
+      - Due
+      - Priority
+      - Status
+      - WO no
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Contract
+      - Client
+      - Term start
+      - Term end
+      - Scope
+      - SLA targets
+      - Status
+    - **create form**:
+      -
+        - **field**: Client
+        - **required**: true
+        - **type**: company picker
+      -
+        - **field**: Contract name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Term start and end
+        - **required**: true
+        - **type**: date range
+      -
+        - **field**: Scope (asset subtree or classes)
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: SLA targets by priority (response, resolution)
+        - **required**: true
+        - **type**: table
+      -
+        - **field**: Pause reasons allowed
+        - **required**: false
+        - **type**: multi-select
+    - **empty state**: No service contracts. Add a contract to define SLA targets before raising tickets.
+    - **filters**:
+      - Client
+      - Status
+      - Expiring within
+    - **name**: Service Contracts
+    - **row actions**:
+      - Open
+      - Edit SLA
+      - Renew
+      - Close
+    - **search**: Contract name, client
+    - **sort**:
+      - Term end
+      - Client
+      - Contract
+  -
+    - **bulk actions**:
+      - Reschedule
+      - Pause
+      - Generate inspections / work orders
+    - **columns**:
+      - Schedule
+      - Asset or class
+      - Frequency
+      - Last done
+      - Next due
+      - Basis (fixed, condition-driven)
+      - Linked inspection programme
+      - Status
+    - **create form**:
+      -
+        - **field**: Asset or asset class
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Frequency
+        - **required**: true
+        - **type**: interval
+      -
+        - **field**: Basis
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Inspection programme
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Form template
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Start date
+        - **required**: true
+        - **type**: date
+    - **empty state**: No preventive schedules. Create one for an asset or class, or bind an existing inspection programme.
+    - **filters**:
+      - Asset subtree
+      - Asset class
+      - Basis
+      - Overdue
+      - Status
+    - **name**: Preventive Schedules
+    - **row actions**:
+      - Edit
+      - Generate now
+      - Recalculate from last finding
+      - View history
+    - **search**: Schedule name, asset tag
+    - **sort**:
+      - Next due
+      - Asset
+      - Frequency
+  -
+    - **bulk actions**:
+      - Retire
+    - **columns**:
+      - Name
+      - Stages
+      - ITP binding
+      - Version
+      - Status
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Stages (strip, inspect, repair, reinsulate, recoat)
+        - **required**: true
+        - **type**: ordered list
+      -
+        - **field**: Stage gates
+        - **required**: false
+        - **type**: rule list
+      -
+        - **field**: ITP per stage
+        - **required**: false
+        - **type**: select
+    - **empty state**: No campaign templates. Create a strip-inspect-repair-reinsulate-recoat template to run repeat campaigns.
+    - **filters**:
+      - Status
+    - **name**: Campaign Templates
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Start campaign
+    - **search**: Template name
+    - **sort**:
+      - Name
+      - Last edited
+- **walkthrough**:
+  - Admin sets up a service contract with SLA targets and pause reasons.
+  - Handed-over assets arrive from closeout with a baseline condition snapshot.
+  - A ticket is raised, or an inspection finding above threshold or a defect auto-creates a work order.
+  - Coordinator triages the ticket queue by SLA countdown and priority.
+  - Coordinator converts the ticket to a work order with tasks and the recommended repair.
+  - Coordinator assigns a technician; the eligibility gate blocks anyone with missing or expired certificates.
+  - If the client holds access, the SLA clock is paused with a reason and resumed later.
+  - Technician completes tasks, labour, materials and the embedded form, attaching photos.
+  - Supervisor signs off the work order.
+  - Linked inspection is raised and next due is recalculated from the latest finding.
+  - Asset history timeline shows the full lifecycle from construction through service.

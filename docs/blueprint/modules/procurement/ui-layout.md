@@ -1,0 +1,161 @@
+# Supplier catalogue, requisitions & POs — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Users with procurement.view. Price fields are hidden from subcontractor roles.
+    - **actions**:
+      - Search
+      - Favourite
+      - Add to basket
+      - Add new item
+      - Edit item
+      - Submit requisition
+    - **layout**: Faceted search with filters on the left, results grid or list, and a basket drawer on the right.
+    - **name**: Catalogue Browser
+    - **purpose**: Browse supplier items and add them to the requisition basket.
+    - **route**: /procurement/catalogue
+    - **sections**:
+      - Search and filters (supplier, category, price validity)
+      - Favourites and recently ordered tabs
+      - Item cards or rows
+      - Basket drawer
+      - Add or edit item dialog
+  -
+    - **access**: Requesters see their own. Accounts and procurement see all.
+    - **actions**:
+      - Open
+      - Filter
+      - Export
+    - **layout**: DataTable with status filters and saved views.
+    - **name**: Requisition List
+    - **purpose**: List requisitions with status.
+    - **route**: /procurement/requisitions
+    - **sections**:
+      - Filters
+      - Requisition table
+      - Status chips
+  -
+    - **access**: Requester, accounts and approvers. Approve or reject needs procurement.approve.
+    - **actions**:
+      - Print
+      - Reply
+      - Comment
+      - Approve
+      - Reject
+      - Raise PO
+      - Upload signed or issued PO
+    - **layout**: Two columns: lines and totals on the left, comment thread and approvals on the right, with a WorkflowBar at the top.
+    - **name**: Requisition View
+    - **purpose**: Accounts review, comment, print, reply, approve or reject, and upload the issued PO.
+    - **route**: /procurement/requisitions/:id
+    - **sections**:
+      - Header (project, optional asset, required date)
+      - Lines table
+      - Comment thread with mentions
+      - Approval trail
+      - Linked PO and uploaded PO file
+  -
+    - **access**: procurement.view. Export requires procurement.export.
+    - **actions**:
+      - Open
+      - Filter
+      - Export
+      - Accounting export (Xero, MYOB, CSV)
+    - **layout**: DataTable with status tabs (draft, issued, part-received, received, closed).
+    - **name**: PO List
+    - **purpose**: List purchase orders with an outstanding filter.
+    - **route**: /procurement/orders
+    - **sections**:
+      - Status tabs
+      - Outstanding toggle
+      - PO table
+      - Totals bar
+  -
+    - **access**: Procurement and accounts roles. Subcontractors have no access.
+    - **actions**:
+      - Issue PO (blocked if the eligibility gate fails)
+      - Send to supplier by email
+      - Upload signed PO
+      - Receive goods
+      - Upload invoice
+      - Resolve match exception
+      - Close PO
+    - **layout**: Header with a WorkflowBar, then tabs: Overview, Lines, Receipts, Documents, Match, Audit.
+    - **name**: PO Detail with Three-Way Match
+    - **purpose**: Single record showing PO, delivery docket and invoice together with the match result.
+    - **route**: /procurement/orders/:id
+    - **sections**:
+      - PO header (number, supplier, delivery address, required date, project, asset)
+      - Lines with links to cost code/WBS text, scope tasks and asset nodes
+      - Eligibility gate banner (expired vendor insurance or accreditation)
+      - Three-panel match view (PO, docket, invoice) with tolerance results
+      - Exception queue
+      - Documents
+  -
+    - **access**: Storepersons and site users with procurement.receive
+    - **actions**:
+      - Save receipt
+      - Capture batch or serial
+      - Attach MTR
+      - Flag discrepancy
+    - **layout**: Form with a lines grid. The mobile version is optimised for the loading dock.
+    - **name**: Goods Receipt Entry
+    - **purpose**: Record deliveries against a PO, including partials, batch/serial and material certificates.
+    - **route**: /procurement/orders/:id/receive
+    - **sections**:
+      - Delivery docket upload
+      - Lines receipted vs ordered
+      - Batch and serial capture
+      - Material cert (MTR) attach
+      - Stock destination
+  -
+    - **access**: Procurement admins with procurement.catalogue_admin. Publishing is separate from import.
+    - **actions**:
+      - Upload file
+      - Map columns
+      - Approve line
+      - Reject line
+      - Publish
+      - Roll back
+      - Schedule re-import
+    - **layout**: Wizard for upload and mapping, then a review table of per-line diffs.
+    - **name**: Price-List Import and Review Queue
+    - **purpose**: Import supplier price files and approve diffs before publishing.
+    - **route**: /procurement/imports
+    - **sections**:
+      - Upload or email-ingested files list
+      - Column mapping
+      - Per-line diff with % change flags and effective-from date
+      - Scheduled re-import settings
+      - Import job history
+  -
+    - **access**: procurement.view
+    - **actions**:
+      - Create vendor
+      - Open
+      - Export
+    - **layout**: DataTable with compliance status chips.
+    - **name**: Vendor Master List
+    - **purpose**: Directory of suppliers with compliance status.
+    - **route**: /procurement/vendors
+    - **sections**:
+      - Search and filters
+      - Vendor table (ABN, terms, insurance status)
+  -
+    - **access**: Procurement and accounts. Bank change approval requires two distinct users with procurement.bank_approve.
+    - **actions**:
+      - Edit
+      - Upload certificate
+      - Request bank change
+      - Approve bank change (second approver)
+      - Log call-back
+    - **layout**: Tabs: Profile, Contacts, Certificates, Bank details, Price lists, Orders.
+    - **name**: Vendor Detail
+    - **purpose**: Vendor details, certificates, bank details and change control.
+    - **route**: /procurement/vendors/:id
+    - **sections**:
+      - Profile (ABN, terms)
+      - Insurance and accreditation certificates with expiry
+      - Bank-detail change log with dual approval and call-back verification
+      - Linked price lists

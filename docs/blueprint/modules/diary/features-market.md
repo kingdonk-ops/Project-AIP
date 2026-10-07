@@ -1,0 +1,38 @@
+# Site diary & field reports — Feature scout
+
+
+- **abilities seen in market**:
+  - Daily log with weather, labour, plant, deliveries, visitors and events
+  - Auto-populated labour and equipment from timesheets or crews
+  - Photo, video and drone attachments with timestamps and location
+  - Supervisor sign-off and day lock with amendments as addenda
+  - Delay and instruction logging with cause codes and responsible party
+  - Daily report generation and client distribution
+  - Roll-up of incidents, inspections and approvals for the day
+  - Offline capture with later sync
+  - Contributions from multiple foremen merged into one day record
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Delay event records with cause code, duration, affected scope and notice sent flag
+    - **why**: Structured delays are what claims and extension-of-time notices rely on.
+  -
+    - **effort**: S
+    - **feature**: Auto-summary of the day's inspections, hold point outcomes and NCRs from existing records
+    - **why**: Reduces re-typing and links the diary to inspection evidence.
+  -
+    - **effort**: S
+    - **feature**: Trusted device time and capture time recorded separately from sync time on offline entries
+    - **why**: Offline entries need provable capture time for disputes.
+  -
+    - **effort**: M
+    - **feature**: Foreman contributions merged by area or crew with attribution
+    - **why**: Preserves who said what while producing one coherent sealed day.
+  -
+    - **effort**: S
+    - **feature**: Access and permit status snapshot (scaffold, isolations, permits) in the day record
+    - **why**: Shows the conditions under which work was done, which is useful in disputes.
+  -
+    - **effort**: S
+    - **feature**: Missing-diary alerts and seal-overdue escalation
+    - **why**: Gaps in a legal record are costly and easy to prevent.

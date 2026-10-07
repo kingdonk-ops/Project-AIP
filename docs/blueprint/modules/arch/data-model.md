@@ -1,0 +1,449 @@
+# Architecture & module boundaries — Data model & schema
+
+
+- **notes**: Global reference tables (module_manifests) are the only exception to tenant_id; a CI allow-list documents it. domain_events and deliveries need the app role to INSERT and limited UPDATE only. Outbox transport: the Postgres polling dispatcher with SKIP LOCKED is implemented by these tables, and a BullMQ/SNS adapter could replace it later. Hash chaining of audit tables is left to the audit module. Pin workflow_definition_id and version on each record table in its own module.
+- **reuses existing**:
+  - assets
+  - entity_types
+  - inspections
+  - issues
+  - documents
+  - tasks
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS, FORCE
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, FK assets
+        - **type**: uuid
+      -
+        - **name**: event_name
+        - **notes**: e.g. inspection.signed_off
+        - **type**: text
+      -
+        - **name**: event_version
+        - **notes**: payload schema version
+        - **type**: int
+      -
+        - **name**: aggregate_type
+        - **notes**: record type
+        - **type**: text
+      -
+        - **name**: aggregate_id
+        - **type**: uuid
+      -
+        - **name**: payload
+        - **notes**: validated by Pydantic catalogue
+        - **type**: jsonb
+      -
+        - **name**: actor_id
+        - **notes**: nullable for system events
+        - **type**: uuid
+      -
+        - **name**: occurred_at
+        - **type**: timestamptz
+      -
+        - **name**: published_at
+        - **notes**: null until dispatched
+        - **type**: timestamptz
+      -
+        - **name**: attempts
+        - **notes**: retry count
+        - **type**: int
+      -
+        - **name**: dead_lettered_at
+        - **notes**: null unless dead-lettered
+        - **type**: timestamptz
+      -
+        - **name**: last_error
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only: no UPDATE of payload; dispatcher grant limited to publish/attempt columns
+        - **type**: timestamptz
+    - **indexes**:
+      - partial btree (tenant_id, occurred_at) WHERE published_at IS NULL AND dead_lettered_at IS NULL
+      - btree (tenant_id, aggregate_type, aggregate_id)
+      - btree (tenant_id, asset_id, occurred_at)
+      - btree (tenant_id, event_name, occurred_at)
+      - consider monthly partitioning by occurred_at
+    - **name**: domain_events
+    - **purpose**: Transactional outbox written in the same transaction as the state change; drives notifications, timeline, search, deadlines and claims evidence.
+    - **relations**:
+      - assets.id via asset_id
+      - projects.id via project_id
+      - users.id via actor_id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: event_id
+        - **notes**: FK domain_events
+        - **type**: uuid
+      -
+        - **name**: subscriber
+        - **notes**: registered handler name
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: pending, delivered, failed, dead
+        - **type**: text
+      -
+        - **name**: attempts
+        - **type**: int
+      -
+        - **name**: next_attempt_at
+        - **type**: timestamptz
+      -
+        - **name**: delivered_at
+        - **type**: timestamptz
+      -
+        - **name**: last_error
+        - **type**: text
+      -
+        - **name**: replay_of_id
+        - **notes**: nullable self FK for replays
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (event_id, subscriber) WHERE replay_of_id IS NULL
+      - btree (status, next_attempt_at) WHERE status IN ('pending','failed')
+      - btree (tenant_id, status)
+    - **name**: domain_event_deliveries
+    - **purpose**: Per-subscriber delivery state for fan-out, replay and the dead-letter view.
+    - **relations**:
+      - domain_events.id
+      - self via replay_of_id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: key
+        - **notes**: e.g. inspection.review
+        - **type**: text
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: version
+        - **notes**: immutable once published
+        - **type**: int
+      -
+        - **name**: status
+        - **notes**: draft, published, retired
+        - **type**: text
+      -
+        - **name**: definition
+        - **notes**: states, transitions, role guards, rule refs
+        - **type**: jsonb
+      -
+        - **name**: published_at
+        - **type**: timestamptz
+      -
+        - **name**: published_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **notes**: only while draft
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete for drafts only
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, key, version)
+      - partial unique (tenant_id, key) WHERE status='published'
+      - btree (tenant_id, record_type)
+    - **name**: workflow_definitions
+    - **purpose**: Versioned workflow/approval definitions (states, transitions, guards) shared by all record types; in-flight records pin a version.
+    - **relations**:
+      - inspections, issues and other record tables hold workflow_definition_id (pinned version)
+      - users.id via published_by
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, denormalised
+        - **type**: uuid
+      -
+        - **name**: from_type
+        - **type**: text
+      -
+        - **name**: from_id
+        - **type**: uuid
+      -
+        - **name**: to_type
+        - **type**: text
+      -
+        - **name**: to_id
+        - **type**: uuid
+      -
+        - **name**: link_kind
+        - **notes**: raised_from, repairs, reinspects, references, supersedes
+        - **type**: text
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, from_type, from_id, to_type, to_id, link_kind) WHERE deleted_at IS NULL
+      - btree (tenant_id, to_type, to_id)
+      - btree (tenant_id, asset_id)
+    - **name**: record_links
+    - **purpose**: Universal link between any two records (and asset) for chains such as defect to NCR to repair to re-inspection.
+    - **relations**:
+      - assets.id
+      - polymorphic to any module table (validated in service layer)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: bundle_version
+        - **notes**: semver
+        - **type**: text
+      -
+        - **name**: content_hash
+        - **notes**: sha256 of manifest
+        - **type**: text
+      -
+        - **name**: storage_key
+        - **notes**: object store key
+        - **type**: text
+      -
+        - **name**: manifest
+        - **notes**: item list and counts
+        - **type**: jsonb
+      -
+        - **name**: source_tenant_id
+        - **notes**: nullable for imports
+        - **type**: uuid
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: immutable once created
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, name, bundle_version)
+      - btree (tenant_id, created_at desc)
+    - **name**: tenant_config_bundles
+    - **purpose**: Versioned export of templates, types, workflows, terms and rules for clone, diff and promote.
+    - **relations**:
+      - tenants.id
+      - users.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: bundle_id
+        - **notes**: FK tenant_config_bundles
+        - **type**: uuid
+      -
+        - **name**: mode
+        - **notes**: dry_run, apply
+        - **type**: text
+      -
+        - **name**: diff
+        - **notes**: added, changed, removed per item type
+        - **type**: jsonb
+      -
+        - **name**: result
+        - **notes**: success, partial, failed
+        - **type**: text
+      -
+        - **name**: job_id
+        - **notes**: FK ops jobs
+        - **type**: uuid
+      -
+        - **name**: applied_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, bundle_id, created_at desc)
+    - **name**: tenant_config_bundle_imports
+    - **purpose**: Record of each import or promotion with diff and result, append-only.
+    - **relations**:
+      - tenant_config_bundles.id
+      - jobs.id
+      - users.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: flag_key
+        - **notes**: e.g. bim, ai_assistant
+        - **type**: text
+      -
+        - **name**: enabled
+        - **type**: boolean
+      -
+        - **name**: config
+        - **notes**: optional parameters
+        - **type**: jsonb
+      -
+        - **name**: changed_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, flag_key)
+    - **name**: tenant_feature_flags
+    - **purpose**: Per-tenant flags for deferred modules (BIM, AI) used as router guard.
+    - **relations**:
+      - tenants.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable; null = all projects
+        - **type**: uuid
+      -
+        - **name**: metric_key
+        - **notes**: open_issues, overdue_inspections, hold_points_pending
+        - **type**: text
+      -
+        - **name**: value_int
+        - **type**: int
+      -
+        - **name**: value_json
+        - **notes**: status breakdown
+        - **type**: jsonb
+      -
+        - **name**: computed_at
+        - **type**: timestamptz
+      -
+        - **name**: stale
+        - **notes**: set by event subscriber
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, asset_id, coalesce(project_id, '00000000-0000-0000-0000-000000000000'), metric_key)
+      - partial btree (tenant_id) WHERE stale
+    - **name**: asset_rollups
+    - **purpose**: Cached counts and status per ltree node, invalidated by events.
+    - **relations**:
+      - assets.id (ltree path used for subtree aggregation)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: module_key
+        - **notes**: platform-level (global) reference data; no tenant data, read-only to app role
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: text
+      -
+        - **name**: manifest
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (module_key, version)
+    - **name**: module_manifests
+    - **purpose**: Registered module capability manifests (permissions, events, settings, term keys) for CI drift checks and the module map.
+    - **relations**:
+      - referenced by permissions catalogue and terms keys by module_key

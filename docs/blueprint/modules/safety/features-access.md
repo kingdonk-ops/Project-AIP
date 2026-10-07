@@ -1,0 +1,265 @@
+# Safety & HSE — Feature filler
+
+
+- **detail sections**:
+  - Summary and classification
+  - Risk assessment
+  - Location, asset and diary link
+  - People involved (masked)
+  - Injury/health details (restricted)
+  - Photos and evidence
+  - Investigation
+  - Corrective actions
+  - Regulator notification timeline
+  - Audit trail
+- **notifications**:
+  - Serious incident raised
+  - Notifiable deadline approaching
+  - Corrective action assigned
+  - Action overdue
+  - Permit expiring
+  - Competency invalid for permit holder
+  - Investigation assigned
+- **settings**:
+  - Enable HSE Advanced per site
+  - Risk matrix definition
+  - Incident types and severities
+  - Notifiable criteria and deadlines
+  - Field masking roles
+  - Hours worked source for KPIs
+  - Retention and legal hold
+  - Escalation recipients
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export (masked)
+      - Assign investigator
+      - Close
+    - **columns**:
+      - Report no.
+      - Type (incident/near miss/observation)
+      - Date/time
+      - Site
+      - Asset
+      - Severity
+      - Risk score
+      - Status
+      - Notifiable
+      - Reporter
+    - **create form**:
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Date/time
+        - **required**: true
+        - **type**: datetime
+      -
+        - **field**: Site/location
+        - **required**: true
+        - **type**: site picker
+      -
+        - **field**: Asset
+        - **required**: false
+        - **type**: asset picker
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Photos
+        - **required**: false
+        - **type**: file
+      -
+        - **field**: Likelihood
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Consequence
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: People involved
+        - **required**: false
+        - **type**: person picker (masked)
+      -
+        - **field**: Injury details
+        - **required**: false
+        - **type**: restricted text
+      -
+        - **field**: Immediate actions
+        - **required**: false
+        - **type**: text
+    - **empty state**: No reports yet. Use Quick report to log an incident, near miss or observation.
+    - **filters**:
+      - Type
+      - Severity
+      - Status
+      - Site
+      - Notifiable
+      - Date range
+      - Risk band
+    - **name**: Incident register
+    - **row actions**:
+      - Open
+      - Investigate
+      - Add corrective action
+      - Mark notifiable
+      - Close
+    - **search**: Report no., description, asset, reporter
+    - **sort**:
+      - Date
+      - Severity
+      - Risk score
+      - Status
+  -
+    - **bulk actions**:
+      - Reassign
+      - Close
+    - **columns**:
+      - Action no.
+      - Source report
+      - Description
+      - Owner
+      - Due
+      - Status
+    - **create form**:
+      -
+        - **field**: Source report
+        - **required**: true
+        - **type**: record picker
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Owner
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Due date
+        - **required**: true
+        - **type**: date
+    - **empty state**: No corrective actions.
+    - **filters**:
+      - Status
+      - Owner
+      - Overdue
+      - Site
+    - **name**: Corrective actions
+    - **row actions**:
+      - Open
+      - Complete
+      - Verify
+    - **search**: Action no., description
+    - **sort**:
+      - Due
+      - Status
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Permit no.
+      - Type
+      - Location
+      - Holder
+      - Valid from
+      - Valid to
+      - Status
+    - **create form**:
+      -
+        - **field**: Permit type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Location/asset
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Holder
+        - **required**: true
+        - **type**: user picker (competency checked)
+      -
+        - **field**: Valid from/to
+        - **required**: true
+        - **type**: datetime range
+      -
+        - **field**: Hazards and controls
+        - **required**: true
+        - **type**: form
+    - **empty state**: No permits. Advanced pack is enabled per site.
+    - **filters**:
+      - Type
+      - Status
+      - Site
+      - Expiring
+    - **name**: Permits to work (advanced)
+    - **row actions**:
+      - Open
+      - Approve
+      - Extend
+      - Close out
+    - **search**: Permit no., holder, location
+    - **sort**:
+      - Valid to
+      - Status
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Record no.
+      - Kind
+      - Site
+      - Date
+      - Owner/presenter
+      - Attendance
+      - Status
+    - **create form**:
+      -
+        - **field**: Kind
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Site
+        - **required**: true
+        - **type**: site picker
+      -
+        - **field**: Template
+        - **required**: true
+        - **type**: template picker
+      -
+        - **field**: Date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Attendees
+        - **required**: false
+        - **type**: multi user picker
+    - **empty state**: No advanced HSE records for this site.
+    - **filters**:
+      - Kind
+      - Site
+      - Date range
+      - Status
+    - **name**: JSA/JHA, toolbox talks, PPE and HSE audits (advanced)
+    - **row actions**:
+      - Open
+      - Record attendance
+      - Close
+    - **search**: Record no., title
+    - **sort**:
+      - Date
+      - Kind
+- **walkthrough**:
+  - A worker opens Quick report on mobile, offline if needed.
+  - Selects type, site and asset, adds photos and description.
+  - Scores likelihood and consequence.
+  - Submits; it syncs when online.
+  - Supervisors are notified of serious events.
+  - The HSE officer reviews, restricts sensitive details and assigns an investigator.
+  - Marks regulator-notifiable if applicable and the timeline starts.
+  - Investigator records findings and raises corrective actions.
+  - Owners complete actions; HSE verifies.
+  - The report is closed and appears in the day's diary.
+  - KPIs such as TRIR and LTIFR update on the dashboard.

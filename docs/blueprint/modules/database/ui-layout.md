@@ -1,0 +1,75 @@
+# Database & schema conventions — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Platform admin and security lead; auditors read-only
+    - **actions**:
+      - Re-run checks
+      - Export report
+      - View policy
+      - View exceptions
+    - **layout**: DataTable with summary header and detail drawer
+    - **name**: Table convention coverage
+    - **purpose**: Show RLS and convention compliance per table as audit evidence.
+    - **route**: /admin/platform/schema-coverage
+    - **sections**:
+      - Summary (tables failing, last run)
+      - Coverage table (tenant_id, RLS, FORCE RLS, indexes, append-only grants, sync columns)
+      - Policy and index viewer
+  -
+    - **access**: Project admin for own projects; tenant admin for all; purge needs elevated permission
+    - **actions**:
+      - Restore
+      - View
+      - Purge (blocked under hold)
+      - Bulk restore
+    - **layout**: DataTable with filter bar and bulk toolbar
+    - **name**: Recycle bin
+    - **purpose**: Restore or purge soft-deleted records, respecting legal holds.
+    - **route**: /recycle-bin
+    - **sections**:
+      - Filters (type, project, deleted by, hold, dates)
+      - Deleted records table
+      - Hold warning banner
+  -
+    - **access**: Tenant admin and designated legal or records role
+    - **actions**:
+      - Place hold
+      - Release selected
+      - View affected records
+    - **layout**: DataTable with create dialog
+    - **name**: Legal holds
+    - **purpose**: Place and release holds at record, asset or project level.
+    - **route**: /admin/legal-holds
+    - **sections**:
+      - Holds table (scope, target, reason, placed by, status)
+      - Place hold form with target picker
+      - Affected-records preview
+  -
+    - **access**: Tenant admin for retention; platform admin for partitions and roles
+    - **actions**:
+      - Save
+      - Approve hot attribute
+    - **layout**: Settings form with read-only roles reference
+    - **name**: Data retention settings
+    - **purpose**: Configure soft-delete retention, purge schedule, partitions and hot attributes.
+    - **route**: /admin/database/settings
+    - **sections**:
+      - Soft-delete retention and purge schedule
+      - Partition intervals
+      - Hot-attribute approvals
+      - Database roles reference (read-only)
+  -
+    - **access**: Any user editing the record
+    - **actions**:
+      - Merge selected fields
+      - Reload current
+      - Cancel
+    - **layout**: Modal with side-by-side current vs your changes
+    - **name**: Concurrency conflict dialog
+    - **purpose**: Resolve a 409 sync_version mismatch.
+    - **route**: (modal)/conflict
+    - **sections**:
+      - Field-by-field diff
+      - Current record summary

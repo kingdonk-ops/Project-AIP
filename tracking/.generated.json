@@ -1,0 +1,1062 @@
+{
+ "phases": [
+  {
+   "id": "P0",
+   "name": "Foundations and proof of isolation",
+   "modules": [
+    "arch",
+    "stack",
+    "database",
+    "tenancy",
+    "security",
+    "ops",
+    "testing",
+    "design",
+    "terms",
+    "identity",
+    "access",
+    "projects",
+    "audit",
+    "approvals",
+    "uploads"
+   ]
+  },
+  {
+   "id": "P1",
+   "name": "Core parity for Kaefer on Rio Tinto",
+   "modules": [
+    "assets",
+    "item_types",
+    "rules",
+    "forms",
+    "eligibility",
+    "inspections",
+    "scope_work",
+    "components",
+    "issues",
+    "inventory",
+    "equipment",
+    "documents",
+    "contacts",
+    "comments",
+    "tasks",
+    "data_io"
+   ]
+  },
+  {
+   "id": "P2",
+   "name": "Reports, field capture and external access",
+   "modules": [
+    "report_engine",
+    "signing",
+    "markup",
+    "offline",
+    "diary",
+    "portal",
+    "punchlist",
+    "schedule",
+    "resources",
+    "search",
+    "qms",
+    "handover",
+    "safety",
+    "transmittals"
+   ]
+  },
+  {
+   "id": "P3",
+   "name": "Coordination, commercial and integration",
+   "modules": [
+    "rfi_submittals",
+    "change",
+    "procurement",
+    "logistics",
+    "temporary_works",
+    "reporting",
+    "integrations",
+    "ingestion"
+   ]
+  },
+  {
+   "id": "P4",
+   "name": "AI, lifecycle and market expansion",
+   "modules": [
+    "ai_gov",
+    "voice_phone",
+    "meetings",
+    "ai_assistant",
+    "interfaces",
+    "service",
+    "prefab",
+    "commissioning",
+    "ref_packs"
+   ]
+  }
+ ],
+ "modules": [
+  [
+   "Foundations & architecture",
+   "arch",
+   "Architecture & module boundaries",
+   "P0"
+  ],
+  [
+   "Foundations & architecture",
+   "stack",
+   "Tech stack",
+   "P0"
+  ],
+  [
+   "Foundations & architecture",
+   "database",
+   "Database & schema conventions",
+   "P0"
+  ],
+  [
+   "Foundations & architecture",
+   "tenancy",
+   "Tenancy, organisations & data residency",
+   "P0"
+  ],
+  [
+   "Foundations & architecture",
+   "security",
+   "Security & compliance programme",
+   "P0"
+  ],
+  [
+   "Foundations & architecture",
+   "ops",
+   "Operations, hosting & deployment",
+   "P0"
+  ],
+  [
+   "Foundations & architecture",
+   "design",
+   "Design system & app shell",
+   "P0"
+  ],
+  [
+   "Foundations & architecture",
+   "testing",
+   "Testing & quality engineering",
+   "P0"
+  ],
+  [
+   "Foundations & architecture",
+   "terms",
+   "Terminology dictionary & localisation",
+   "P0"
+  ],
+  [
+   "Foundations & architecture",
+   "ai_gov",
+   "AI governance & data controls",
+   "P4"
+  ],
+  [
+   "Identity, access & tenancy",
+   "identity",
+   "Users, sign-in & SSO",
+   "P0"
+  ],
+  [
+   "Identity, access & tenancy",
+   "access",
+   "Roles, permissions & teams",
+   "P0"
+  ],
+  [
+   "Identity, access & tenancy",
+   "projects",
+   "Projects, sites & classification",
+   "P0"
+  ],
+  [
+   "Identity, access & tenancy",
+   "portal",
+   "Client & subcontractor portal",
+   "P2"
+  ],
+  [
+   "Asset core",
+   "assets",
+   "Asset hierarchy & registers",
+   "P1"
+  ],
+  [
+   "Asset core",
+   "item_types",
+   "Content types, item types & attributes",
+   "P1"
+  ],
+  [
+   "Asset core",
+   "components",
+   "Traceability graph: components, materials & certificates",
+   "P1"
+  ],
+  [
+   "Asset core",
+   "scope_work",
+   "Scopes of work (RSW), disciplines & tasks",
+   "P1"
+  ],
+  [
+   "Asset core",
+   "offline",
+   "Offline field app & sync",
+   "P2"
+  ],
+  [
+   "Inspection & quality",
+   "forms",
+   "Form & template designer",
+   "P1"
+  ],
+  [
+   "Inspection & quality",
+   "inspections",
+   "Inspections, ITPs & hold points",
+   "P1"
+  ],
+  [
+   "Inspection & quality",
+   "eligibility",
+   "Certificates, competency & calibration gate",
+   "P1"
+  ],
+  [
+   "Inspection & quality",
+   "issues",
+   "Issues, NCRs & corrective actions",
+   "P1"
+  ],
+  [
+   "Inspection & quality",
+   "punchlist",
+   "Punch list & defects liability",
+   "P2"
+  ],
+  [
+   "Inspection & quality",
+   "qms",
+   "Quality roll-up & audits",
+   "P2"
+  ],
+  [
+   "Inspection & quality",
+   "rules",
+   "Rules & validation engine",
+   "P1"
+  ],
+  [
+   "Inspection & quality",
+   "commissioning",
+   "Commissioning",
+   "P4"
+  ],
+  [
+   "Inspection & quality",
+   "report_engine",
+   "Report engine & published records",
+   "P2"
+  ],
+  [
+   "Safety & compliance",
+   "safety",
+   "Safety & HSE",
+   "P2"
+  ],
+  [
+   "Safety & compliance",
+   "temporary_works",
+   "Temporary works register",
+   "P3"
+  ],
+  [
+   "Field operations",
+   "diary",
+   "Site diary & field reports",
+   "P2"
+  ],
+  [
+   "Field operations",
+   "voice_phone",
+   "Voice notes & phone log",
+   "P4"
+  ],
+  [
+   "Field operations",
+   "logistics",
+   "Site logistics & mobilisation",
+   "P3"
+  ],
+  [
+   "Field operations",
+   "equipment",
+   "Equipment & fleet",
+   "P1"
+  ],
+  [
+   "Field operations",
+   "inventory",
+   "Stock, consumables & materials",
+   "P1"
+  ],
+  [
+   "Field operations",
+   "resources",
+   "Resources & crews (basic)",
+   "P2"
+  ],
+  [
+   "Field operations",
+   "schedule",
+   "Schedule & look-ahead (basic)",
+   "P2"
+  ],
+  [
+   "Documents & records",
+   "documents",
+   "Document library & control",
+   "P1"
+  ],
+  [
+   "Documents & records",
+   "markup",
+   "Markup, viewer & plan room",
+   "P2"
+  ],
+  [
+   "Documents & records",
+   "approvals",
+   "Workflow & approvals engine",
+   "P0"
+  ],
+  [
+   "Documents & records",
+   "signing",
+   "E-signatures & tamper-evident records",
+   "P2"
+  ],
+  [
+   "Documents & records",
+   "transmittals",
+   "Transmittals & correspondence",
+   "P2"
+  ],
+  [
+   "Documents & records",
+   "ingestion",
+   "Inbound capture & connectors",
+   "P3"
+  ],
+  [
+   "Documents & records",
+   "uploads",
+   "Upload & file processing pipeline",
+   "P0"
+  ],
+  [
+   "Collaboration & coordination",
+   "comments",
+   "Comments, mentions & notifications",
+   "P1"
+  ],
+  [
+   "Collaboration & coordination",
+   "meetings",
+   "Meetings & AI minutes",
+   "P4"
+  ],
+  [
+   "Collaboration & coordination",
+   "rfi_submittals",
+   "RFIs & submittals",
+   "P3"
+  ],
+  [
+   "Collaboration & coordination",
+   "interfaces",
+   "Interface management",
+   "P4"
+  ],
+  [
+   "Collaboration & coordination",
+   "tasks",
+   "Tasks, deadlines & my work",
+   "P1"
+  ],
+  [
+   "Commercial",
+   "procurement",
+   "Supplier catalogue, requisitions & POs",
+   "P3"
+  ],
+  [
+   "Commercial",
+   "cost_items",
+   "Cost items & schedule of rates (thin)",
+   "removed"
+  ],
+  [
+   "Commercial",
+   "change",
+   "Change orders, variations & MOC (basic)",
+   "P3"
+  ],
+  [
+   "Commercial",
+   "contacts",
+   "Contacts & companies",
+   "P1"
+  ],
+  [
+   "Commercial",
+   "ref_packs",
+   "Regional reference data packs",
+   "P4"
+  ],
+  [
+   "Handover & asset lifecycle",
+   "handover",
+   "Handover, data books & submissions",
+   "P2"
+  ],
+  [
+   "Handover & asset lifecycle",
+   "service",
+   "Service & maintenance",
+   "P4"
+  ],
+  [
+   "Handover & asset lifecycle",
+   "prefab",
+   "Prefab & off-site manufacture",
+   "P4"
+  ],
+  [
+   "Reporting, search & AI",
+   "reporting",
+   "Dashboards & KPI reporting",
+   "P3"
+  ],
+  [
+   "Reporting, search & AI",
+   "audit",
+   "Audit trail, activity & timeline",
+   "P0"
+  ],
+  [
+   "Reporting, search & AI",
+   "search",
+   "Search, retrieval & saved views",
+   "P2"
+  ],
+  [
+   "Reporting, search & AI",
+   "ai_assistant",
+   "AI assistant & agents",
+   "P4"
+  ],
+  [
+   "Platform services",
+   "integrations",
+   "Integrations & webhooks",
+   "P3"
+  ],
+  [
+   "Platform services",
+   "data_io",
+   "Data import, export & backup",
+   "P1"
+  ],
+  [
+   "Platform services",
+   "cases",
+   "User-authored playbooks",
+   "removed"
+  ]
+ ],
+ "tasks": [
+  {
+   "id": "ARCH-01",
+   "title": "Monorepo skeleton and module template",
+   "module": "arch",
+   "size": "M",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "ARCH-02",
+   "title": "Module registry and dependency check",
+   "module": "arch",
+   "size": "S",
+   "deps": [
+    "ARCH-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "ARCH-03",
+   "title": "Import-boundary lint and manifest CI check",
+   "module": "arch",
+   "size": "S",
+   "deps": [
+    "ARCH-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "ARCH-04",
+   "title": "Request context carrying tenant, project, actor and asset scope",
+   "module": "arch",
+   "size": "S",
+   "deps": [
+    "ARCH-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "ARCH-05",
+   "title": "domain_events outbox table and writer",
+   "module": "arch",
+   "size": "M",
+   "deps": [
+    "ARCH-04",
+    "DATABASE-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "ARCH-06",
+   "title": "Versioned event registry and catalogue API",
+   "module": "arch",
+   "size": "M",
+   "deps": [
+    "ARCH-02",
+    "ARCH-05"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "ARCH-07",
+   "title": "Outbox dispatcher, retries and dead-letter",
+   "module": "arch",
+   "size": "M",
+   "deps": [
+    "ARCH-06"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "ARCH-08",
+   "title": "Record-link service and per-tenant feature flags",
+   "module": "arch",
+   "size": "M",
+   "deps": [
+    "ARCH-04",
+    "DATABASE-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "STACK-01",
+   "title": "Stack ADRs and reconciliation record",
+   "module": "stack",
+   "size": "S",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "STACK-02",
+   "title": "Capability interfaces and adapter selection",
+   "module": "stack",
+   "size": "M",
+   "deps": [
+    "ARCH-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "STACK-03",
+   "title": "Generated typed API client with drift check",
+   "module": "stack",
+   "size": "M",
+   "deps": [
+    "ARCH-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "STACK-04",
+   "title": "Licence allow-list and CycloneDX SBOM in CI",
+   "module": "stack",
+   "size": "S",
+   "deps": [
+    "ARCH-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "STACK-05",
+   "title": "Platform version endpoint and docker-compose stack",
+   "module": "stack",
+   "size": "M",
+   "deps": [
+    "STACK-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "DATABASE-01",
+   "title": "Audit existing AIP schema against conventions",
+   "module": "database",
+   "size": "S",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "DATABASE-02",
+   "title": "Roles, session helper and fail-closed tenant context",
+   "module": "database",
+   "size": "M",
+   "deps": [
+    "DATABASE-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "DATABASE-03",
+   "title": "tenant_id backfill and RLS on all existing tables",
+   "module": "database",
+   "size": "M",
+   "deps": [
+    "DATABASE-02",
+    "TENANCY-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "DATABASE-04",
+   "title": "Base repository helpers: concurrency, ltree, soft delete, JSONB validation",
+   "module": "database",
+   "size": "M",
+   "deps": [
+    "DATABASE-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "DATABASE-05",
+   "title": "Append-only grants and time partitioning",
+   "module": "database",
+   "size": "M",
+   "deps": [
+    "DATABASE-03"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "DATABASE-06",
+   "title": "Legal hold and recycle bin",
+   "module": "database",
+   "size": "M",
+   "deps": [
+    "DATABASE-04"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "DATABASE-07",
+   "title": "Isolation test generator across all tables and routes",
+   "module": "database",
+   "size": "M",
+   "deps": [
+    "DATABASE-03"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TENANCY-01",
+   "title": "Tenants, regions and tenant resolution",
+   "module": "tenancy",
+   "size": "M",
+   "deps": [
+    "DATABASE-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TENANCY-02",
+   "title": "Tenant-scoped key builders for Redis, queues, S3 and search",
+   "module": "tenancy",
+   "size": "S",
+   "deps": [
+    "TENANCY-01",
+    "ARCH-04"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TENANCY-03",
+   "title": "Organisations and project-scoped role assignment",
+   "module": "tenancy",
+   "size": "M",
+   "deps": [
+    "DATABASE-03",
+    "TENANCY-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TENANCY-04",
+   "title": "Asset sharing with party-scoped visibility profiles",
+   "module": "tenancy",
+   "size": "M",
+   "deps": [
+    "TENANCY-03"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TENANCY-05",
+   "title": "Tenant settings, modules and provisioning",
+   "module": "tenancy",
+   "size": "M",
+   "deps": [
+    "TENANCY-01",
+    "ARCH-08"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TENANCY-06",
+   "title": "Quotas and support-access grants",
+   "module": "tenancy",
+   "size": "M",
+   "deps": [
+    "TENANCY-05",
+    "TENANCY-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TENANCY-07",
+   "title": "Offboarding, crypto-shred and deletion certificate",
+   "module": "tenancy",
+   "size": "M",
+   "deps": [
+    "TENANCY-05",
+    "DATABASE-06"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "SECURITY-01",
+   "title": "Threat model and AGPL provenance log",
+   "module": "security",
+   "size": "XS",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "SECURITY-02",
+   "title": "Security schema with RLS and append-only grants",
+   "module": "security",
+   "size": "M",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "SECURITY-03",
+   "title": "Control catalogue service, baseline seed and admin router",
+   "module": "security",
+   "size": "M",
+   "deps": [
+    "SECURITY-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "SECURITY-04",
+   "title": "Breach register with NDB clock",
+   "module": "security",
+   "size": "S",
+   "deps": [
+    "SECURITY-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "SECURITY-05",
+   "title": "Quarterly access review generator",
+   "module": "security",
+   "size": "M",
+   "deps": [
+    "SECURITY-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "SECURITY-06",
+   "title": "Data classification tags, field masking and EXIF GPS control",
+   "module": "security",
+   "size": "M",
+   "deps": [
+    "SECURITY-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "SECURITY-07",
+   "title": "Tenant IP allow-list and session policy",
+   "module": "security",
+   "size": "M",
+   "deps": [
+    "SECURITY-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "SECURITY-08",
+   "title": "Production strip test and security CI workflow",
+   "module": "security",
+   "size": "M",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "OPS-01",
+   "title": "Job tables and service",
+   "module": "ops",
+   "size": "M",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "OPS-02",
+   "title": "arq runner and handler registry",
+   "module": "ops",
+   "size": "M",
+   "deps": [
+    "OPS-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "OPS-03",
+   "title": "Jobs API: my jobs, admin queue, cancel with permission",
+   "module": "ops",
+   "size": "M",
+   "deps": [
+    "OPS-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "OPS-04",
+   "title": "Health endpoints and structured logging with PII scrubber",
+   "module": "ops",
+   "size": "S",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "OPS-05",
+   "title": "Client error sink",
+   "module": "ops",
+   "size": "M",
+   "deps": [
+    "OPS-04"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "OPS-06",
+   "title": "Storage lifecycle renderer with evidence-expiry guard",
+   "module": "ops",
+   "size": "S",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "OPS-07",
+   "title": "Terraform baseline for staging and the build-promote pipeline",
+   "module": "ops",
+   "size": "M",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "OPS-08",
+   "title": "Backup and restore-test harness with recorded evidence",
+   "module": "ops",
+   "size": "M",
+   "deps": [
+    "OPS-07"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TESTING-01",
+   "title": "Testcontainers Postgres fixture with non-owner RLS role",
+   "module": "testing",
+   "size": "M",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "TESTING-02",
+   "title": "Schema guard: tenant_id and RLS on every table",
+   "module": "testing",
+   "size": "S",
+   "deps": [
+    "TESTING-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TESTING-03",
+   "title": "Isolation tests for Redis, queues, S3 prefixes and search",
+   "module": "testing",
+   "size": "M",
+   "deps": [
+    "TESTING-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TESTING-04",
+   "title": "Generated permission-matrix and IDOR tests",
+   "module": "testing",
+   "size": "M",
+   "deps": [
+    "TESTING-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TESTING-05",
+   "title": "Migration up-down-up test",
+   "module": "testing",
+   "size": "S",
+   "deps": [
+    "TESTING-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TESTING-06",
+   "title": "Hold-point and completion-gate scenarios on CUI data, plus golden report",
+   "module": "testing",
+   "size": "M",
+   "deps": [
+    "TESTING-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TESTING-07",
+   "title": "Offline sync convergence property tests",
+   "module": "testing",
+   "size": "M",
+   "deps": [
+    "TESTING-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TESTING-08",
+   "title": "CI gates, k6 load script and mobile smoke job",
+   "module": "testing",
+   "size": "M",
+   "deps": [
+    "TESTING-02",
+    "TESTING-04",
+    "TESTING-05",
+    "TESTING-06"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TERMS-01",
+   "title": "Terms schema, default en-AU dictionary and loader",
+   "module": "terms",
+   "size": "M",
+   "deps": [],
+   "phase": "P0"
+  },
+  {
+   "id": "TERMS-02",
+   "title": "Resolver with fallback chain and cache invalidation",
+   "module": "terms",
+   "size": "M",
+   "deps": [
+    "TERMS-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TERMS-03",
+   "title": "ICU formatting and unit conversion",
+   "module": "terms",
+   "size": "M",
+   "deps": [
+    "TERMS-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TERMS-04",
+   "title": "Pack import, diff, dry-run, apply and rollback",
+   "module": "terms",
+   "size": "M",
+   "deps": [
+    "TERMS-02"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TERMS-05",
+   "title": "Terms admin API and permissions",
+   "module": "terms",
+   "size": "M",
+   "deps": [
+    "TERMS-04"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TERMS-06",
+   "title": "Glossary and alias mapping for search and import",
+   "module": "terms",
+   "size": "S",
+   "deps": [
+    "TERMS-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TERMS-07",
+   "title": "Hard-coded string linter and coverage report",
+   "module": "terms",
+   "size": "M",
+   "deps": [
+    "TERMS-01"
+   ],
+   "phase": "P0"
+  },
+  {
+   "id": "TERMS-08",
+   "title": "Frontend i18n provider and dictionary admin screen",
+   "module": "terms",
+   "size": "M",
+   "deps": [
+    "TERMS-05"
+   ],
+   "phase": "P0"
+  }
+ ]
+}

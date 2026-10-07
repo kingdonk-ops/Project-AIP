@@ -1,0 +1,909 @@
+# Integrations & webhooks — Data model & schema
+
+
+- **notes**: Reuse existing tables for source data; tasks serve as work orders and RSW scopes link via tasks. Raw outbound payloads are stored only post-redaction. No secrets are stored in the database, only secrets-manager references or hashes. Telegram is excluded: channel kind is a text value so adding it later needs no migration, but it should not be added without the owner's decision. SAP PM and Maximo are modelled as connector types plus mapping data, so per-customer scoping needs no schema change. Delivery tables are append-heavy and should be partitioned by month with a retention policy that honours legal hold. No sync_version is used because these are admin-edited online. Subscription filters use JSONLogic, per the fixed decision.
+- **reuses existing**:
+  - assets
+  - entity_types
+  - tasks
+  - issues
+  - inspections
+  - inspection_responses
+  - documents
+  - disciplines
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS, FK tenants
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable; null = tenant-wide
+        - **type**: uuid
+      -
+        - **name**: kind
+        - **notes**: webhook | teams | slack | email_domain | eam
+        - **type**: text
+      -
+        - **name**: host
+        - **notes**: normalised lowercase host
+        - **type**: text
+      -
+        - **name**: url_prefix
+        - **notes**: optional path restriction
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: pending | approved | rejected | revoked
+        - **type**: text
+      -
+        - **name**: requested_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: approved_by
+        - **notes**: FK users; must differ from requested_by
+        - **type**: uuid
+      -
+        - **name**: approved_at
+        - **type**: timestamptz
+      -
+        - **name**: ssrf_check_result
+        - **notes**: resolved IPs, blocked ranges, checked_at; re-checked at send time
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, kind, host, coalesce(url_prefix,'')) where deleted_at is null
+      - (tenant_id, status)
+    - **name**: integration_approved_destinations
+    - **purpose**: Tenant allowlist of outbound hosts/URLs approved by a tenant admin; required before any webhook, chat or connector can send.
+    - **relations**:
+      - projects
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects
+        - **type**: uuid
+      -
+        - **name**: type
+        - **notes**: sap_pm | maximo | eam_generic | teams | slack | email_digest | webhook
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: destination_id
+        - **notes**: FK integration_approved_destinations; send blocked unless approved
+        - **type**: uuid
+      -
+        - **name**: secret_ref
+        - **notes**: secrets manager ARN/key; never the secret itself
+        - **type**: text
+      -
+        - **name**: secret_rotated_at
+        - **type**: timestamptz
+      -
+        - **name**: config
+        - **notes**: non-secret settings, validated by Zod/Pydantic per type
+        - **type**: jsonb
+      -
+        - **name**: approval_status
+        - **notes**: draft | pending | approved | disabled
+        - **type**: text
+      -
+        - **name**: enabled
+        - **type**: boolean
+      -
+        - **name**: health_status
+        - **notes**: ok | degraded | failing
+        - **type**: text
+      -
+        - **name**: last_success_at
+        - **type**: timestamptz
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, type)
+      - (tenant_id, health_status) where deleted_at is null
+    - **name**: integration_connectors
+    - **purpose**: Configured connection per project to an external system (EAM/ERP, Teams, Slack, email, generic webhook).
+    - **relations**:
+      - projects
+      - integration_approved_destinations
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: name
+        - **notes**: e.g. Summary only, Client EAM
+        - **type**: text
+      -
+        - **name**: audience
+        - **notes**: internal | client | subcontractor | chat | external
+        - **type**: text
+      -
+        - **name**: summary_only
+        - **type**: boolean
+      -
+        - **name**: field_rules
+        - **notes**: per event type allow/deny/mask lists
+        - **type**: jsonb
+      -
+        - **name**: respect_team_visibility
+        - **notes**: filter by team visibility of source record
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, name) where deleted_at is null
+    - **name**: integration_redaction_profiles
+    - **purpose**: Audience redaction profile controlling which payload fields leave the platform.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: connector_id
+        - **notes**: FK integration_connectors
+        - **type**: uuid
+      -
+        - **name**: event_types
+        - **notes**: array e.g. ncr.raised, inspection.signed_off
+        - **type**: jsonb
+      -
+        - **name**: filters
+        - **notes**: JSONLogic over event payload (discipline, asset subtree, severity)
+        - **type**: jsonb
+      -
+        - **name**: asset_subtree
+        - **notes**: optional scope filter
+        - **type**: ltree
+      -
+        - **name**: redaction_profile_id
+        - **notes**: FK; required
+        - **type**: uuid
+      -
+        - **name**: signing_secret_ref
+        - **notes**: HMAC secret in secrets manager
+        - **type**: text
+      -
+        - **name**: payload_version
+        - **notes**: schema version pinned
+        - **type**: text
+      -
+        - **name**: enabled
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, connector_id)
+      - gin (event_types jsonb_path_ops)
+      - gist (asset_subtree)
+    - **name**: integration_subscriptions
+    - **purpose**: Maps event types and filters to a destination/connector with a redaction profile (the subscription matrix).
+    - **relations**:
+      - integration_connectors
+      - integration_redaction_profiles
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: subscription_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: event_id
+        - **notes**: source domain event id
+        - **type**: uuid
+      -
+        - **name**: event_type
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: FK assets, nullable; history follows asset
+        - **type**: uuid
+      -
+        - **name**: payload_redacted
+        - **notes**: post-redaction payload only; unredacted never stored
+        - **type**: jsonb
+      -
+        - **name**: payload_hash
+        - **notes**: sha256
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: pending | delivered | retrying | failed | dead | cancelled
+        - **type**: text
+      -
+        - **name**: attempt_count
+        - **type**: int
+      -
+        - **name**: next_attempt_at
+        - **type**: timestamptz
+      -
+        - **name**: replay_of_id
+        - **notes**: self FK for replays
+        - **type**: uuid
+      -
+        - **name**: idempotency_key
+        - **notes**: sent to receiver
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, subscription_id, event_id) where replay_of_id is null
+      - (tenant_id, status, next_attempt_at)
+      - (tenant_id, asset_id, created_at desc)
+      - (tenant_id, created_at) for retention partitioning
+    - **name**: integration_deliveries
+    - **purpose**: One logical delivery of an event to a subscription; replayable.
+    - **relations**:
+      - integration_subscriptions
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: delivery_id
+        - **notes**: FK integration_deliveries
+        - **type**: uuid
+      -
+        - **name**: attempt_no
+        - **type**: int
+      -
+        - **name**: started_at
+        - **type**: timestamptz
+      -
+        - **name**: duration_ms
+        - **type**: int
+      -
+        - **name**: http_status
+        - **type**: int
+      -
+        - **name**: response_excerpt
+        - **notes**: truncated, scrubbed
+        - **type**: text
+      -
+        - **name**: error_code
+        - **notes**: timeout | ssrf_blocked | dns | tls | 4xx | 5xx
+        - **type**: text
+      -
+        - **name**: resolved_ip
+        - **notes**: for SSRF forensics
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (delivery_id, attempt_no)
+      - (tenant_id, created_at)
+    - **name**: integration_delivery_attempts
+    - **purpose**: Append-only record of each send attempt.
+    - **relations**:
+      - integration_deliveries
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: client_id
+        - **notes**: public identifier, unique
+        - **type**: text
+      -
+        - **name**: secret_hash
+        - **notes**: hashed; shown once at creation
+        - **type**: text
+      -
+        - **name**: rate_limit_per_min
+        - **type**: int
+      -
+        - **name**: status
+        - **notes**: active | suspended | revoked
+        - **type**: text
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: rotated_at
+        - **type**: timestamptz
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (client_id)
+      - (tenant_id, status)
+    - **name**: api_clients
+    - **purpose**: OAuth2 client-credentials identities for system-to-system access.
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: api_client_id
+        - **notes**: FK api_clients
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects; scope
+        - **type**: uuid
+      -
+        - **name**: modules
+        - **notes**: array of module ids
+        - **type**: jsonb
+      -
+        - **name**: permissions
+        - **notes**: permission catalogue keys, read/write
+        - **type**: jsonb
+      -
+        - **name**: key_prefix
+        - **notes**: displayable prefix
+        - **type**: text
+      -
+        - **name**: key_hash
+        - **notes**: hashed
+        - **type**: text
+      -
+        - **name**: last_used_at
+        - **type**: timestamptz
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (key_prefix)
+      - (tenant_id, api_client_id)
+      - (tenant_id, project_id)
+    - **name**: api_keys
+    - **purpose**: Scoped keys/grants per project and module for an API client.
+    - **relations**:
+      - api_clients
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: api_key_id
+        - **type**: uuid
+      -
+        - **name**: method
+        - **type**: text
+      -
+        - **name**: path
+        - **notes**: route template, no query secrets
+        - **type**: text
+      -
+        - **name**: status_code
+        - **type**: int
+      -
+        - **name**: idempotency_key
+        - **type**: text
+      -
+        - **name**: ip
+        - **type**: text
+      -
+        - **name**: latency_ms
+        - **type**: int
+      -
+        - **name**: rate_limited
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **notes**: partition key
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, api_key_id, created_at desc)
+      - (tenant_id, created_at)
+    - **name**: api_usage_logs
+    - **purpose**: Append-only request log for API keys (partition by month).
+    - **relations**:
+      - api_keys
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: api_client_id
+        - **type**: uuid
+      -
+        - **name**: idempotency_key
+        - **type**: text
+      -
+        - **name**: request_hash
+        - **notes**: mismatch returns 422
+        - **type**: text
+      -
+        - **name**: response_status
+        - **type**: int
+      -
+        - **name**: response_body
+        - **type**: jsonb
+      -
+        - **name**: expires_at
+        - **notes**: TTL purge
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, api_client_id, idempotency_key)
+      - (expires_at)
+    - **name**: api_idempotency_records
+    - **purpose**: Stores idempotency key results for POST/PATCH replay safety.
+    - **relations**:
+      - api_clients
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: scope
+        - **notes**: feed type, discipline, asset subtree
+        - **type**: jsonb
+      -
+        - **name**: token_hash
+        - **notes**: hashed; URL token shown once
+        - **type**: text
+      -
+        - **name**: revoked_at
+        - **notes**: set automatically on user.deactivated
+        - **type**: timestamptz
+      -
+        - **name**: revoked_reason
+        - **type**: text
+      -
+        - **name**: last_fetched_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (token_hash)
+      - (tenant_id, user_id) where revoked_at is null
+    - **name**: ical_feed_tokens
+    - **purpose**: Per-user revocable tokens for iCal feeds of inspection and shutdown schedules.
+    - **relations**:
+      - users
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: connector_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: entity
+        - **notes**: asset | work_order | inspection_result | finding
+        - **type**: text
+      -
+        - **name**: direction
+        - **notes**: inbound | outbound
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: mappings
+        - **notes**: source path, target field, transform (JSONLogic), required
+        - **type**: jsonb
+      -
+        - **name**: entity_type_id
+        - **notes**: FK entity_types, nullable
+        - **type**: uuid
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (connector_id, entity, direction, version)
+      - unique (connector_id, entity, direction) where is_active
+    - **name**: integration_field_mapping_sets
+    - **purpose**: Versioned field mapping and transformation per connector and entity.
+    - **relations**:
+      - integration_connectors
+      - entity_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: connector_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: entity
+        - **type**: text
+      -
+        - **name**: rules
+        - **notes**: per field: master (external|aip|newest|manual)
+        - **type**: jsonb
+      -
+        - **name**: default_policy
+        - **notes**: external_wins | aip_wins | queue_manual
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (connector_id, entity) where deleted_at is null
+    - **name**: integration_conflict_rule_sets
+    - **purpose**: Conflict resolution rules per connector and entity; client register is master for tag numbers.
+    - **relations**:
+      - integration_connectors
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: connector_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: entity
+        - **type**: text
+      -
+        - **name**: cursor
+        - **notes**: opaque external cursor/watermark
+        - **type**: text
+      -
+        - **name**: mode
+        - **notes**: bulk | incremental
+        - **type**: text
+      -
+        - **name**: last_run_at
+        - **type**: timestamptz
+      -
+        - **name**: last_status
+        - **type**: text
+      -
+        - **name**: stats
+        - **notes**: created/updated/skipped/conflicts
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (connector_id, entity)
+    - **name**: integration_sync_states
+    - **purpose**: Incremental cursors and last-run state per connector and entity.
+    - **relations**:
+      - integration_connectors
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: connector_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: entity
+        - **notes**: asset | task | scope_of_work
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: FK assets when entity=asset
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: FK tasks when entity is work order
+        - **type**: uuid
+      -
+        - **name**: external_id
+        - **notes**: e.g. SAP functional location, Maximo ASSETNUM or WONUM
+        - **type**: text
+      -
+        - **name**: external_hash
+        - **notes**: change detection
+        - **type**: text
+      -
+        - **name**: last_synced_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (connector_id, entity, external_id) where deleted_at is null
+      - (tenant_id, asset_id)
+      - (tenant_id, task_id)
+    - **name**: integration_external_links
+    - **purpose**: Maps AIP records to external IDs so asset and work order sync is idempotent.
+    - **relations**:
+      - assets
+      - tasks
+      - integration_connectors
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: connector_id
+        - **type**: uuid
+      -
+        - **name**: external_link_id
+        - **notes**: FK integration_external_links
+        - **type**: uuid
+      -
+        - **name**: field
+        - **type**: text
+      -
+        - **name**: aip_value
+        - **type**: jsonb
+      -
+        - **name**: external_value
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: open | resolved_aip | resolved_external | ignored
+        - **type**: text
+      -
+        - **name**: resolved_by
+        - **type**: uuid
+      -
+        - **name**: resolved_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, connector_id, status)
+    - **name**: integration_sync_conflicts
+    - **purpose**: Conflicts queued for manual resolution.
+    - **relations**:
+      - integration_external_links
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: actor_user_id
+        - **notes**: nullable for system
+        - **type**: uuid
+      -
+        - **name**: actor_api_client_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: destination.approved, secret.rotated, replay.requested, feed.revoked, etc.
+        - **type**: text
+      -
+        - **name**: target_type
+        - **type**: text
+      -
+        - **name**: target_id
+        - **type**: uuid
+      -
+        - **name**: detail
+        - **notes**: no secrets
+        - **type**: jsonb
+      -
+        - **name**: prev_hash
+        - **notes**: chain
+        - **type**: text
+      -
+        - **name**: entry_hash
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, created_at desc)
+      - (tenant_id, target_type, target_id)
+    - **name**: integration_audit_entries
+    - **purpose**: Append-only audit of integration configuration and security events (REVOKE UPDATE/DELETE for app role; hash-chained).
+    - **relations**:
+      - users
+      - api_clients

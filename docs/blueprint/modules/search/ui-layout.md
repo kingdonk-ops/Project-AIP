@@ -1,0 +1,102 @@
+# Search, retrieval & saved views — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Authenticated, results filtered by permission
+    - **actions**:
+      - Search
+      - Filter
+      - Save as view
+      - Open record
+    - **layout**: Results list, facet rail, preview pane
+    - **name**: Global Search
+    - **purpose**: Permission-filtered search with facets and preview
+    - **route**: /search
+    - **sections**:
+      - Query bar
+      - Facets (type, subtree, project, NDT method)
+      - Results
+      - Recent searches
+      - Preview
+  -
+    - **access**: Authenticated
+    - **actions**:
+      - Navigate
+      - Run action
+    - **layout**: Modal palette
+    - **name**: Command Bar
+    - **purpose**: Keyboard navigation and actions
+    - **route**: (global) Cmd+K
+    - **sections**:
+      - Input
+      - Results and commands
+      - Recents
+  -
+    - **access**: retrieval.use; party restrictions apply
+    - **actions**:
+      - Run
+      - Add to bundle
+      - Pin to case
+    - **layout**: Filter form with grouped results and timeline toggle
+    - **name**: Structured Finder
+    - **purpose**: Deterministic party, date, reference retrieval
+    - **route**: /retrieval
+    - **sections**:
+      - Filters
+      - Grouped results
+      - Timeline
+  -
+    - **access**: Commercial access roles
+    - **actions**:
+      - Export
+      - Apply hold marker
+    - **layout**: Selection list with manifest preview
+    - **name**: Evidence Bundle Builder
+    - **purpose**: Build exports with index, hashes and chain of custody
+    - **route**: /retrieval/bundles/:id
+    - **sections**:
+      - Selected records
+      - Index
+      - Hash manifest
+      - Legal hold marker
+  -
+    - **access**: Own; team/project sharing needs views.share
+    - **actions**:
+      - Create/edit
+      - Share
+      - Use as tile
+    - **layout**: List with editor drawer
+    - **name**: Saved Views Manager
+    - **purpose**: Manage and share saved views
+    - **route**: /views
+    - **sections**:
+      - My/Team/Project views
+      - Parameters
+      - Display mode
+  -
+    - **access**: Tenant admin
+    - **actions**:
+      - Edit
+      - Reindex
+    - **layout**: Settings page
+    - **name**: Search Settings
+    - **purpose**: Terminology synonyms and indexing status
+    - **route**: /admin/search/synonyms
+    - **sections**:
+      - Synonyms
+      - Index status
+      - Semantic toggle
+  -
+    - **access**: Authenticated
+    - **actions**:
+      - Search
+      - Open asset
+    - **layout**: Search field with results list
+    - **name**: Mobile Search and Scan
+    - **purpose**: Find assets by tag or scan
+    - **route**: /m/search
+    - **sections**:
+      - Query
+      - Recent assets
+      - Results

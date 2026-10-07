@@ -1,0 +1,384 @@
+# Asset hierarchy & registers — Data model & schema
+
+
+- **notes**: Keep ltree; it is already in the repo and fits single-parent trees. Registers (staff, vehicles, equipment, consumables, WPS) are assets of content types, not separate tables, except the existing consumable_issuances ledger. Indexed asset_id exists on every history table (inspections, issues, documents, certificates) so asset history follows the asset across projects. Reparent runs in one transaction updating descendants' paths with a tenant-scoped lock.
+- **reuses existing**:
+  - assets
+  - entity_types
+  - inspections
+  - documents
+  - certificates
+  - issues
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK; existing
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: parent_id
+        - **notes**: self FK
+        - **type**: uuid
+      -
+        - **name**: path
+        - **notes**: recomputed on reparent
+        - **type**: ltree
+      -
+        - **name**: item_type_id
+        - **notes**: FK item_types
+        - **type**: uuid
+      -
+        - **name**: item_type_version
+        - **notes**: schema version in force when last validated
+        - **type**: int
+      -
+        - **name**: category_id
+        - **notes**: FK item_categories
+        - **type**: uuid
+      -
+        - **name**: internal_tag
+        - **notes**: generated, immutable
+        - **type**: text
+      -
+        - **name**: tag_number
+        - **notes**: editable real-world tag
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: criticality
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: custom status key
+        - **type**: text
+      -
+        - **name**: neutral_state
+        - **notes**: mapped lifecycle state
+        - **type**: text
+      -
+        - **name**: location
+        - **notes**: Point
+        - **type**: geography
+      -
+        - **name**: attributes
+        - **notes**: validated against item type schema
+        - **type**: jsonb
+      -
+        - **name**: cui
+        - **notes**: insulation type, jacket, op temp range, coating system, corrosion grade; or typed columns if queried heavily
+        - **type**: jsonb
+      -
+        - **name**: corrosion_grade
+        - **notes**: promoted from cui for cross-project comparison
+        - **type**: int
+      -
+        - **name**: sort_order
+        - **type**: int
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - gist (path)
+      - btree (path)
+      - unique (tenant_id, internal_tag)
+      - (tenant_id, tag_number)
+      - (tenant_id, parent_id, sort_order)
+      - gist (location)
+      - gin (attributes jsonb_path_ops)
+      - (tenant_id, item_type_id)
+    - **name**: assets
+    - **purpose**: Aggregate root of the asset tree, owned by the tenant; ltree path, JSONB attributes. Extends the existing AIP table.
+    - **relations**:
+      - item_types
+      - self parent
+      - project_assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: tag_kind
+        - **notes**: qr/barcode/rfid
+        - **type**: text
+      -
+        - **name**: value
+        - **type**: text
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, tag_kind, value) where active
+      - (asset_id)
+    - **name**: asset_tags
+    - **purpose**: QR, barcode and RFID identifiers per asset, with history.
+    - **relations**:
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: from_asset_id
+        - **type**: uuid
+      -
+        - **name**: to_asset_id
+        - **type**: uuid
+      -
+        - **name**: kind
+        - **notes**: merge/split/retag/replace
+        - **type**: text
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: actor_user_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (from_asset_id)
+      - (to_asset_id)
+    - **name**: asset_lineage
+    - **purpose**: Append-only merge, split and retag links so history follows replaced assets.
+    - **relations**:
+      - assets x2
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: document_revision_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: page
+        - **type**: int
+      -
+        - **name**: geometry
+        - **notes**: normalised bbox/point on page
+        - **type**: jsonb
+      -
+        - **name**: line_circuit_ref
+        - **notes**: line/circuit number
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (asset_id)
+      - (document_id, page)
+      - (tenant_id, line_circuit_ref)
+    - **name**: asset_drawing_links
+    - **purpose**: Tag-to-drawing linkage (P&ID) for clickable tags.
+    - **relations**:
+      - assets
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable if class-level
+        - **type**: uuid
+      -
+        - **name**: item_type_id
+        - **notes**: class-level rule
+        - **type**: uuid
+      -
+        - **name**: inspection_template_id
+        - **notes**: FK form templates
+        - **type**: uuid
+      -
+        - **name**: interval_months
+        - **type**: int
+      -
+        - **name**: risk_basis
+        - **notes**: criticality/corrosion grade inputs
+        - **type**: jsonb
+      -
+        - **name**: last_done_at
+        - **type**: date
+      -
+        - **name**: next_due_at
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: ok/due/overdue
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, next_due_at) where deleted_at is null
+      - (asset_id)
+    - **name**: rbi_schedules
+    - **purpose**: Risk-based inspection interval rules per asset class and instances generating due dates.
+    - **relations**:
+      - assets
+      - item_types
+      - inspections
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: source_file_id
+        - **notes**: FK documents/uploads
+        - **type**: uuid
+      -
+        - **name**: target
+        - **notes**: assets/registers
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: uploaded/previewed/committed/rolled_back/failed
+        - **type**: text
+      -
+        - **name**: preview
+        - **notes**: counts, duplicates, tag conflicts
+        - **type**: jsonb
+      -
+        - **name**: created_asset_ids
+        - **notes**: or use import_batch_rows for large batches
+        - **type**: jsonb
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status, created_at)
+    - **name**: import_batches
+    - **purpose**: Async import with preview and rollback state.
+    - **relations**:
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: batch_id
+        - **type**: uuid
+      -
+        - **name**: row_number
+        - **type**: int
+      -
+        - **name**: asset_id
+        - **notes**: created/updated asset
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: create/update/skip/error
+        - **type**: text
+      -
+        - **name**: errors
+        - **type**: jsonb
+      -
+        - **name**: previous_values
+        - **notes**: enables rollback of updates
+        - **type**: jsonb
+    - **indexes**:
+      - (batch_id, row_number)
+      - (asset_id)
+    - **name**: import_batch_rows
+    - **purpose**: Row-level result for validation and rollback.
+    - **relations**:
+      - import_batches
+      - assets

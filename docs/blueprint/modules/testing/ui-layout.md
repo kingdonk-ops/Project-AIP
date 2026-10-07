@@ -1,0 +1,65 @@
+# Testing & quality engineering — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Platform engineers and security/compliance roles; read-only for tenant admins if exposed.
+    - **actions**:
+      - Open report
+      - Re-run
+      - Download artefacts
+      - Export
+      - Archive
+    - **layout**: Register table with filter bar and detail blade.
+    - **name**: Test run results
+    - **purpose**: View CI pipeline runs and download evidence artefacts.
+    - **route**: /settings/quality/runs
+    - **sections**:
+      - Runs table (Run ID, Pipeline, Commit, Suite, Status, Duration, Coverage, Started)
+      - Run report blade
+      - Artefact list
+  -
+    - **access**: Platform engineers, security and compliance roles.
+    - **actions**:
+      - View scenarios
+      - Open failing test
+      - Export matrix
+    - **layout**: Matrix table with gate status chips and drill-down blade.
+    - **name**: Scenario coverage matrix
+    - **purpose**: Show 100% gated control areas (isolation, authorisation, workflow, eligibility, audit chain) with pass status.
+    - **route**: /settings/quality/scenarios
+    - **sections**:
+      - Control area rows
+      - Required vs passing scenarios
+      - Gate (100%) status
+      - Last verified
+  -
+    - **access**: Platform engineers; customer acceptance reviewers read-only for CUI scenarios.
+    - **actions**:
+      - Add fixture
+      - Update version
+      - Export
+      - Refresh
+    - **layout**: Register table with create blade.
+    - **name**: Fixtures and datasets
+    - **purpose**: Catalogue of seed, CUI scenario, golden-file, malicious-file and prompt-injection fixtures.
+    - **route**: /settings/quality/fixtures
+    - **sections**:
+      - Fixtures table (Name, Kind, Version, Last updated, Used by)
+      - Create/upload form
+  -
+    - **access**: Platform engineers and operations.
+    - **actions**:
+      - Edit thresholds
+      - Trigger run
+      - Download results
+    - **layout**: Summary KPI strip, charts, settings panel.
+    - **name**: Load tests and gates
+    - **purpose**: Show load profile, results and promotion gate list.
+    - **route**: /settings/quality/load
+    - **sections**:
+      - Load profile (users, burst size)
+      - Latest results
+      - Required gate list
+      - Coverage thresholds
+      - Flaky quarantine and evidence retention settings

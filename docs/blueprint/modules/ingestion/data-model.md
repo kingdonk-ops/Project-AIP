@@ -1,0 +1,573 @@
+# Inbound capture & connectors — Data model & schema
+
+
+- **notes**: Feature flag off by default per tenant. Filed documents are written through the shared upload pipeline and file_versions on filename match, so no file storage tables are duplicated here. Unmatched Message-IDs are reconciled per tenant, not globally. The alias_address unique index is deliberately global, so the alias lookup must resolve tenant before RLS context is set (use a narrow security-definer lookup function). .msg support and SES versus Graph are open and affect only connector adapters, not schema. Legal-hold flags should be inherited from the shared retention table rather than stored here.
+- **reuses existing**:
+  - documents
+  - certificates
+  - assets
+  - tasks
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: type
+        - **notes**: watched_folder|s3|sharepoint|email|agent
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: target_path
+        - **notes**: validated against traversal and allow-listed hosts
+        - **type**: text
+      -
+        - **name**: default_category
+        - **notes**: document category
+        - **type**: text
+      -
+        - **name**: default_asset_id
+        - **notes**: FK assets
+        - **type**: uuid
+      -
+        - **name**: schedule_cron
+        - **type**: text
+      -
+        - **name**: credentials_ref
+        - **notes**: secrets manager key only, never the secret
+        - **type**: text
+      -
+        - **name**: rules
+        - **notes**: file type allow-list, max size, path filters, source retention
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: active|paused|error
+        - **type**: text
+      -
+        - **name**: last_run_at
+        - **type**: timestamptz
+      -
+        - **name**: health
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+      - (tenant_id, status, last_run_at)
+    - **name**: ingestion_connectors
+    - **purpose**: Configured inbound connector (folder, S3, SharePoint, email, agent)
+    - **relations**:
+      - projects
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: connector_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: public_key_fingerprint
+        - **notes**: enrolment identity
+        - **type**: text
+      -
+        - **name**: enrol_token_hash
+        - **notes**: hashed, single use
+        - **type**: text
+      -
+        - **name**: allowed_destinations
+        - **type**: jsonb
+      -
+        - **name**: last_seen_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, public_key_fingerprint)
+    - **name**: ingestion_agents
+    - **purpose**: Outbound-only site laptop or instrument-folder agents
+    - **relations**:
+      - ingestion_connectors
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: connector_id
+        - **type**: uuid
+      -
+        - **name**: started_at
+        - **type**: timestamptz
+      -
+        - **name**: finished_at
+        - **type**: timestamptz
+      -
+        - **name**: trigger
+        - **notes**: schedule|manual|retry
+        - **type**: text
+      -
+        - **name**: counts
+        - **notes**: found, new, duplicate, failed
+        - **type**: jsonb
+      -
+        - **name**: errors
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, connector_id, started_at desc)
+    - **name**: ingestion_runs
+    - **purpose**: Connector run log
+    - **relations**:
+      - ingestion_connectors
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: channel_type
+        - **notes**: connector|email|webhook|chat|sms|agent|upload_eml
+        - **type**: text
+      -
+        - **name**: connector_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: capture_channel_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: run_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: raw_message_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: source_path
+        - **type**: text
+      -
+        - **name**: file_name
+        - **type**: text
+      -
+        - **name**: content_hash
+        - **notes**: sha256; duplicate detection
+        - **type**: text
+      -
+        - **name**: size_bytes
+        - **type**: int
+      -
+        - **name**: mime_detected
+        - **notes**: magic-byte result
+        - **type**: text
+      -
+        - **name**: scan_status
+        - **notes**: quarantined|scanning|clean|infected|rejected_type
+        - **type**: text
+      -
+        - **name**: ocr_status
+        - **type**: text
+      -
+        - **name**: ocr_text_ref
+        - **notes**: storage key
+        - **type**: text
+      -
+        - **name**: sender_identity
+        - **type**: text
+      -
+        - **name**: sender_trust
+        - **notes**: verified|unverified|signed
+        - **type**: text
+      -
+        - **name**: filing_status
+        - **notes**: unfiled|filed|rejected|duplicate
+        - **type**: text
+      -
+        - **name**: suggested
+        - **notes**: project, asset, doc type, thread with confidence
+        - **type**: jsonb
+      -
+        - **name**: filed_document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: duplicate_of_id
+        - **notes**: self FK
+        - **type**: uuid
+      -
+        - **name**: actioned_by
+        - **notes**: person who filed or rejected
+        - **type**: uuid
+      -
+        - **name**: actioned_at
+        - **type**: timestamptz
+      -
+        - **name**: reject_reason
+        - **type**: text
+      -
+        - **name**: received_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, content_hash)
+      - (tenant_id, filing_status, received_at)
+      - (tenant_id, scan_status)
+      - (tenant_id, connector_id, received_at)
+    - **name**: ingested_items
+    - **purpose**: Every inbound item: quarantine state, provenance and filing queue entry (covers ImportedFile and draft)
+    - **relations**:
+      - connectors
+      - runs
+      - raw_messages
+      - documents
+      - assets via suggestion
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: alias_address
+        - **notes**: globally unique
+        - **type**: text
+      -
+        - **name**: provider
+        - **notes**: ses|graph
+        - **type**: text
+      -
+        - **name**: allowed_senders
+        - **notes**: addresses and verified domains
+        - **type**: jsonb
+      -
+        - **name**: require_dmarc_pass
+        - **type**: boolean
+      -
+        - **name**: rate_limit_per_hour
+        - **type**: int
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (lower(alias_address)) where deleted_at is null
+    - **name**: ingestion_mailboxes
+    - **purpose**: Project forwarding aliases and sender allow-lists
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: mailbox_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: content_hash
+        - **type**: text
+      -
+        - **name**: storage_key
+        - **notes**: S3 original, quarantined bucket then tenant bucket
+        - **type**: text
+      -
+        - **name**: headers
+        - **type**: jsonb
+      -
+        - **name**: auth_results
+        - **notes**: SPF, DKIM, DMARC
+        - **type**: jsonb
+      -
+        - **name**: received_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, content_hash)
+      - (tenant_id, received_at)
+    - **name**: raw_messages
+    - **purpose**: Immutable original of each inbound message
+    - **relations**:
+      - ingestion_mailboxes
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: raw_message_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: message_id_header
+        - **type**: text
+      -
+        - **name**: in_reply_to
+        - **type**: text
+      -
+        - **name**: references
+        - **type**: text[]
+      -
+        - **name**: thread_key
+        - **notes**: derived
+        - **type**: text
+      -
+        - **name**: subject
+        - **type**: text
+      -
+        - **name**: from_address
+        - **type**: text
+      -
+        - **name**: to_addresses
+        - **type**: jsonb
+      -
+        - **name**: cc_addresses
+        - **type**: jsonb
+      -
+        - **name**: sent_at
+        - **type**: timestamptz
+      -
+        - **name**: body_text
+        - **type**: text
+      -
+        - **name**: body_html_sanitised
+        - **notes**: sanitised only
+        - **type**: text
+      -
+        - **name**: correspondence_id
+        - **notes**: FK correspondence once filed
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, message_id_header)
+      - (tenant_id, thread_key)
+      - (tenant_id, from_address)
+    - **name**: parsed_messages
+    - **purpose**: Parsed email with threading
+    - **relations**:
+      - raw_messages
+      - correspondence
+      - ingested_items attachments
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: type
+        - **notes**: webhook|chat|sms
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: hmac_secret_ref
+        - **notes**: secrets manager reference
+        - **type**: text
+      -
+        - **name**: replay_window_sec
+        - **type**: int
+      -
+        - **name**: rate_limit_per_min
+        - **type**: int
+      -
+        - **name**: settings
+        - **type**: jsonb
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, type)
+    - **name**: capture_channels
+    - **purpose**: Chat, SMS and webhook channels
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: ingested_item_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: heat_no
+        - **type**: text
+      -
+        - **name**: material_grade
+        - **type**: text
+      -
+        - **name**: standard
+        - **type**: text
+      -
+        - **name**: confidence
+        - **type**: numeric
+      -
+        - **name**: extracted
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: proposed|confirmed|rejected
+        - **type**: text
+      -
+        - **name**: certificate_id
+        - **notes**: FK certificates once confirmed
+        - **type**: uuid
+      -
+        - **name**: reviewed_by
+        - **type**: uuid
+      -
+        - **name**: reviewed_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status)
+      - (tenant_id, heat_no)
+    - **name**: certificate_candidates
+    - **purpose**: OCR-proposed mill cert data awaiting human confirmation
+    - **relations**:
+      - ingested_items
+      - certificates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: channel_id
+        - **type**: uuid
+      -
+        - **name**: nonce
+        - **type**: text
+      -
+        - **name**: received_at
+        - **notes**: purge after replay window
+        - **type**: timestamptz
+      -
+        - **name**: signature_valid
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, channel_id, nonce)
+      - (received_at)
+    - **name**: webhook_receipts
+    - **purpose**: Replay protection for signed inbound webhooks
+    - **relations**:
+      - capture_channels

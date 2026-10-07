@@ -1,0 +1,36 @@
+# Projects, sites & classification — Feature scout
+
+
+- **abilities seen in market**:
+  - Project templates that preload roles, document sets, workflows and numbering
+  - Project phases or stages with gating
+  - Multi-project portfolio views with status and health indicators
+  - Project-level settings for calendars, currency, units and enabled modules
+  - Archive and closeout with locked records and retained access for audit
+  - Project directory of participating organisations and their roles
+  - Cloning a project's configuration to start a similar campaign
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Project and campaign templates by work type (remediation, shutdown, new build) carrying ITP sets, forms, roles and approval chains
+    - **why**: Cuts setup time for repeat Rio Tinto-style remediation work and makes classification actually drive behaviour.
+  -
+    - **effort**: M
+    - **feature**: Project-asset scope baseline with scope-change history
+    - **why**: Remediation scope grows as inspection finds defects; a baseline vs current view supports variations and reporting.
+  -
+    - **effort**: M
+    - **feature**: Project closeout checklist that blocks archive until open holds, NCRs and certificates are resolved
+    - **why**: Ensures the data book is complete and enforces the same gate philosophy as RSW completion.
+  -
+    - **effort**: S
+    - **feature**: Project participant directory with party role (client, principal contractor, subcontractor, third-party inspector)
+    - **why**: Drives portal grants, visibility and routing without per-user setup.
+  -
+    - **effort**: S
+    - **feature**: Per-project numbering schemes for records (inspections, NCRs, RFIs) with client prefixes
+    - **why**: Clients often require their own document and record numbering conventions.
+  -
+    - **effort**: M
+    - **feature**: Project-scoped query enforcement as a platform default with a visible 'all projects' override for permitted roles
+    - **why**: AIP defers scoping all queries; leaks between projects undermine trust.

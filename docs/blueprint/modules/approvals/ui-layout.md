@@ -1,0 +1,143 @@
+# Workflow & approvals engine — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Any user with an approval step assigned directly, by role, by team or by delegation; commercial items visible to involved parties only
+    - **actions**:
+      - Approve
+      - Reject
+      - Delegate
+      - Open record
+      - Preview
+      - Batch approve
+    - **layout**: Table with filter bar and a right-hand preview pane.
+    - **name**: Approvals inbox
+    - **purpose**: Everything waiting for the user's decision.
+    - **route**: /approvals
+    - **sections**:
+      - Filters (type, due, delegated to me, overdue, project, value band)
+      - Inbox table (record, type, requested by, step, due, value, age)
+      - Inline preview
+      - Batch action bar
+  -
+    - **access**: Participants and users with approvals.view on the record; reassign and recall need approvals.manage or requester
+    - **actions**:
+      - Approve
+      - Reject
+      - Delegate
+      - Reassign
+      - Recall
+      - Resubmit
+      - Re-authenticate on critical steps
+    - **layout**: Record preview on the left, route visualisation and timeline on the right.
+    - **name**: Approval detail and instance timeline
+    - **purpose**: Show route progress, decision history and guards for one instance.
+    - **route**: /approvals/:instanceId
+    - **sections**:
+      - Record summary and preview
+      - Route visualisation
+      - Current step and approvers
+      - Decision history (hash-chained)
+      - Guards and qualification checks
+      - Delegation
+      - Stamp preview
+      - Audit
+  -
+    - **access**: approvals.design, tightly restricted; edits audited
+    - **actions**:
+      - Create from preset
+      - Edit as new version
+      - Simulate
+      - Activate
+      - Duplicate
+      - View history
+      - Archive
+    - **layout**: Table with status and in-flight counts, plus preset gallery entry.
+    - **name**: Workflow definitions
+    - **purpose**: List versioned definitions per record type and project.
+    - **route**: /settings/workflows
+    - **sections**:
+      - Definitions table (name, record type, project, version, status, updated by, in flight)
+      - Preset gallery
+  -
+    - **access**: approvals.design; activation may need a second approver
+    - **actions**:
+      - Add state or transition
+      - Set guard
+      - Simulate
+      - Save as draft
+      - Activate new version
+    - **layout**: Canvas state diagram in the centre, property panel on the right, simulator drawer at the bottom.
+    - **name**: Workflow template designer
+    - **purpose**: Design states, transitions, guards and side effects, with dry run.
+    - **route**: /settings/workflows/:id/edit
+    - **sections**:
+      - State and transition canvas
+      - Transition properties (role, guard, side effects)
+      - Guard rule picker
+      - Critical transition flags
+      - Dry-run simulator with sample records
+      - Version notes
+  -
+    - **access**: approvals.design
+    - **actions**:
+      - Create
+      - Edit
+      - Activate or deactivate
+      - Simulate
+    - **layout**: Table and step builder form.
+    - **name**: Route templates
+    - **purpose**: Define ordered or parallel approver steps and threshold bands.
+    - **route**: /settings/approval-routes
+    - **sections**:
+      - Route table (name, entity, steps, bands, active)
+      - Step builder (approver user/role/team, order, due, qualification guard)
+      - Escalation settings
+  -
+    - **access**: approvals.admin for matrix; users manage their own delegations
+    - **actions**:
+      - Add limit
+      - Edit
+      - Create delegation
+      - End delegation
+    - **layout**: Two tabs: matrix grid and delegations list.
+    - **name**: Authority matrix and delegation manager
+    - **purpose**: Maintain value limits by role and entity and manage delegations.
+    - **route**: /settings/authority-matrix
+    - **sections**:
+      - Authority matrix (role, entity, limit, currency)
+      - Delegations (from, to, dates, scope)
+      - Out-of-office cover
+  -
+    - **access**: Assigned approvers; device and credential policy applies
+    - **actions**:
+      - Approve
+      - Reject
+      - Delegate
+      - Re-authenticate
+    - **layout**: Mobile card list with detail sheet and PIN or MFA prompt.
+    - **name**: Mobile approvals
+    - **purpose**: Approve or reject from the field with step-up authentication.
+    - **route**: /approvals/mobile
+    - **sections**:
+      - Pending cards
+      - Detail sheet with preview
+      - Step-up prompt
+  -
+    - **access**: Tenant admin with approvals.admin
+    - **actions**:
+      - Save
+      - Reset
+    - **layout**: Settings form.
+    - **name**: Approval settings
+    - **purpose**: Configure critical transitions, escalation, delegation rules and stamps.
+    - **route**: /settings/approvals
+    - **sections**:
+      - Critical transitions needing re-authentication
+      - Escalation timings
+      - Delegation rules
+      - Parallel or sequential defaults
+      - Who can edit definitions
+      - Stamp templates
+      - Terminology labels

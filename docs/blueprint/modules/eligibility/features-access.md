@@ -1,0 +1,261 @@
+# Certificates, competency & calibration gate — Feature filler
+
+
+- **detail sections**:
+  - Certificate summary (type, number, owner, dates, flag)
+  - Linked document and preview
+  - Renewal and supersede history
+  - Reminder schedule and sent history
+  - Items relying on this certificate (inspections, steps)
+  - Availability status and suppression state
+  - Eligibility check result and reasons
+  - Audit trail
+- **notifications**:
+  - Certificate expiring at configured windows (to owner, supervisor and renewal owner)
+  - Certificate expired (to owner and supervisor)
+  - Step blocked by ineligible signer, instrument or material (to inspector and supervisor)
+  - Override used (to quality manager)
+  - Replacement certificate added (to renewal owner)
+  - Item reactivated after stock returns (to owner)
+  - Competency gap detected for assigned inspection (to supervisor)
+  - Digest of expiring items (to project managers)
+- **settings**:
+  - Certificate types and required fields
+  - Amber threshold (default 30 days) and reminder windows
+  - Hard-block behaviour per type
+  - Override permission and mandatory reason
+  - Suppression rule for out-of-stock/unavailable items
+  - Reminder channels and digest schedule
+  - Discipline gating and inspection category requirements
+  - Competency requirements per template
+  - Evaluate-at-send-time behaviour
+  - Grace periods per type
+  - Renamable terms (certificate, ticket, calibration)
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export selected
+      - Send renewal reminder
+      - Mark superseded
+      - Assign renewal owner
+    - **columns**:
+      - Type
+      - Number
+      - Owner (person/equipment/company/batch/asset)
+      - Issued
+      - Expiry
+      - Status (valid/expired/superseded)
+      - Expiry flag (green/amber/red)
+      - Linked document
+      - Issuer
+    - **create form**:
+      -
+        - **field**: Certificate type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Owner
+        - **required**: true
+        - **type**: person/equipment/company/batch/asset reference
+      -
+        - **field**: Certificate number
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Issued date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Expiry date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Issuer
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Document
+        - **required**: false
+        - **type**: file/document reference
+      -
+        - **field**: Reminder windows
+        - **required**: false
+        - **type**: multi-select (days)
+    - **empty state**: No certificates recorded. Add qualifications, calibrations, permits or insurances to start tracking expiry.
+    - **filters**:
+      - Type
+      - Owner type
+      - Owner
+      - Status
+      - Expiry flag
+      - Expiry window
+      - Project
+      - Discipline
+    - **name**: Certificates Register
+    - **row actions**:
+      - Open
+      - Add replacement
+      - View document
+      - Mark superseded
+      - View history
+    - **search**: Certificate number, owner name or type
+    - **sort**:
+      - Expiry (default soonest)
+      - Owner
+      - Type
+      - Status
+  -
+    - **bulk actions**:
+      - Send reminders now
+      - Assign renewal task
+    - **columns**:
+      - Item
+      - Owner
+      - Type
+      - Expires
+      - Days left
+      - Flag
+      - Reminder state
+    - **empty state**: Nothing expiring within the selected window. Items marked out of stock or unavailable are excluded.
+    - **filters**:
+      - Flag (amber/red)
+      - Type
+      - Project
+      - Window (7/30/60/90 days)
+      - Owner
+    - **name**: Expiring Soon Feed
+    - **row actions**:
+      - Open
+      - Create renewal task
+      - Snooze reminder
+    - **search**: Item or owner
+    - **sort**:
+      - Days left
+      - Type
+  -
+    - **bulk actions**:
+      - Export matrix
+      - Notify people with gaps
+    - **columns**:
+      - Person
+      - Discipline/inspection category
+      - Required by template
+      - Qualification held
+      - Expiry
+      - Status
+    - **create form**:
+      -
+        - **field**: Person
+        - **required**: true
+        - **type**: user reference
+      -
+        - **field**: Discipline or template requirement
+        - **required**: true
+        - **type**: reference
+      -
+        - **field**: Qualification certificate
+        - **required**: true
+        - **type**: certificate reference
+    - **empty state**: No competency requirements defined. Set required competencies on templates or inspection categories.
+    - **filters**:
+      - Discipline
+      - Template
+      - Status (competent/gap/expired)
+      - Team
+      - Project
+    - **name**: Competency Matrix
+    - **row actions**:
+      - View person
+      - Add qualification
+      - Assign training task
+    - **search**: Person, category or template
+    - **sort**:
+      - Person
+      - Status
+      - Expiry
+  -
+    - **bulk actions**:
+      - Export
+      - Send reminders
+    - **columns**:
+      - Credential
+      - Type (licence/membership/PI/insurance/bond/permit)
+      - Holder
+      - Project
+      - Expiry
+      - Status
+      - Document
+    - **create form**:
+      -
+        - **field**: Credential type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Holder (company/person)
+        - **required**: true
+        - **type**: reference
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: project reference
+      -
+        - **field**: Expiry date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Document
+        - **required**: false
+        - **type**: document reference
+    - **empty state**: No project credentials recorded. Add the licences, insurances and permits this project relies on.
+    - **filters**:
+      - Type
+      - Project
+      - Holder
+      - Status
+      - Expiry window
+    - **name**: Project Credentials Register
+    - **row actions**:
+      - Open
+      - Renew
+      - View document
+    - **search**: Credential or holder
+    - **sort**:
+      - Expiry
+      - Project
+      - Type
+  -
+    - **bulk actions**:
+      - Export log
+    - **columns**:
+      - When
+      - Subject
+      - Step/inspection
+      - Reason blocked
+      - Result (blocked/overridden)
+      - Overridden by
+      - Override reason
+    - **empty state**: No gate events recorded yet.
+    - **filters**:
+      - Result
+      - Date range
+      - Overridden by
+      - Project
+    - **name**: Gate Overrides and Blocks Log
+    - **row actions**:
+      - Open inspection
+      - View certificate
+    - **search**: Subject or inspection
+    - **sort**:
+      - When
+- **walkthrough**:
+  - Admin defines certificate types, reminder windows and which attribute fields carry an expiry flag.
+  - A user or admin adds a certificate to a person, instrument or batch with number, dates and document.
+  - The system computes Green, Amber (under 30 days) or Red and lists items in the expiring-soon feed.
+  - If a linked product or batch is marked out of stock or unavailable, its expiry is hidden and reminders are suppressed.
+  - When stock returns, the item reactivates and reminders resume.
+  - An inspector opens a step; the eligibility service checks signer credentials, instrument calibration and material use-by.
+  - An invalid reference is hard-blocked with the reason and the certificate link.
+  - A permitted supervisor may override with a reason; the override is audited and notified.
+  - Reminders go out at configured windows; availability is checked at send time.
+  - A replacement certificate is added; the old one becomes superseded and history is preserved.
+  - Managers review the competency matrix for gaps and assign training tasks.

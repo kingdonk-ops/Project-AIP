@@ -1,0 +1,190 @@
+# Upload & file processing pipeline — Feature filler
+
+
+- **detail sections**:
+  - Upload session: declared type, size, requester, status
+  - Resumable parts received and expiry
+  - Scan result and rescan history
+  - Private capture metadata (device time, GPS, capture hash)
+  - Content hash and reference count
+  - Preview and thumbnails
+  - Where used
+- **notifications**:
+  - upload.completed to uploader
+  - upload.rejected to uploader with reason
+  - Newly flagged file after rescan to security reviewers
+  - Quota at 80 and 100 percent to tenant admins
+  - Upload stalled or failed after retries
+- **settings**:
+  - File-type policy table
+  - Per-project EXIF GPS policy
+  - Storage quota per tenant or project
+  - Resumable protocol (tus or S3 multipart)
+  - Chunk size and session expiry
+  - Orphan part cleanup schedule
+  - Wi-Fi-only rules for video
+  - Rescan schedule on signature update
+  - OCR engine
+  - Max decompression ratio
+- **tables**:
+  -
+    - **bulk actions**:
+      - Pause all
+      - Resume all
+      - Retry failed
+      - Cancel selected
+    - **columns**:
+      - File
+      - Record
+      - Size
+      - Progress
+      - State
+      - Scan status
+      - Priority
+      - Wi-Fi only
+    - **create form**:
+      -
+        - **field**: File
+        - **required**: true
+        - **type**: file
+      -
+        - **field**: Record or project
+        - **required**: true
+        - **type**: record picker
+      -
+        - **field**: Priority
+        - **required**: false
+        - **type**: select
+    - **empty state**: No uploads in progress. Files you add will show here, including ones waiting for a connection.
+    - **filters**:
+      - State
+      - Scan status
+      - Project
+    - **name**: Upload tray
+    - **row actions**:
+      - Pause
+      - Resume
+      - Retry
+      - Cancel
+      - Reprioritise
+      - Remove
+    - **search**: File name
+    - **sort**:
+      - Priority
+      - Started
+      - Size
+  -
+    - **bulk actions**:
+      - Reset to default
+    - **columns**:
+      - Type
+      - Allowed
+      - Max size
+      - Scan depth
+      - Preview behaviour
+      - Platform limit
+      - Overridden
+    - **create form**:
+      -
+        - **field**: File type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Allowed
+        - **required**: true
+        - **type**: boolean
+      -
+        - **field**: Max size
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Scan depth
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Preview behaviour
+        - **required**: true
+        - **type**: select
+    - **empty state**: Platform defaults apply. Add a row to tighten a rule within platform limits.
+    - **filters**:
+      - Allowed
+      - Overridden
+    - **name**: File-type policies
+    - **row actions**:
+      - Edit
+      - Reset to default
+    - **search**: File type or extension
+    - **sort**:
+      - Type
+      - Max size
+  -
+    - **bulk actions**:
+      - Delete
+      - Request rescan
+    - **columns**:
+      - File
+      - Uploader
+      - Project
+      - Reason
+      - Detected
+      - Scan history
+      - Referenced by
+    - **empty state**: No quarantined files. Newly flagged items after a rescan will appear here.
+    - **filters**:
+      - Reason
+      - Project
+      - Date range
+    - **name**: Quarantine review
+    - **row actions**:
+      - Keep quarantined
+      - Delete
+      - Request rescan
+      - Notify uploader
+      - View references
+    - **search**: File name, uploader, signature name
+    - **sort**:
+      - Detected
+      - Project
+  -
+    - **bulk actions**:
+      - Export usage
+    - **columns**:
+      - Project
+      - Used
+      - Quota
+      - Percent
+      - Files
+      - Dedupe savings
+    - **create form**:
+      -
+        - **field**: Quota
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Scope (tenant or project)
+        - **required**: true
+        - **type**: select
+    - **empty state**: No usage recorded yet.
+    - **filters**:
+      - Over 80 percent
+      - Project
+    - **name**: Storage usage
+    - **row actions**:
+      - Edit quota
+      - Open files
+    - **search**: Project name
+    - **sort**:
+      - Used
+      - Percent
+- **walkthrough**:
+  - User picks a file or captures a photo in a record.
+  - Client requests a signed URL, which carries tenant prefix, size and type limits.
+  - The file uploads straight to the quarantine bucket, in chunks for large files.
+  - If the connection drops, the tray shows the pause and offers recovery on reconnect.
+  - The client confirms the upload with metadata.
+  - The worker runs ClamAV, magic-byte validation, and size and decompression-ratio checks.
+  - Private capture metadata is stored apart from the sanitised copy.
+  - Thumbnails, previews and OCR run in sandboxed workers.
+  - The file is released to tenant storage, deduplicated by hash, and a reference is returned.
+  - The attachment shows a clean chip and upload.completed is emitted.
+  - If scanning fails, the file stays quarantined, upload.rejected is emitted and the user is told.

@@ -1,0 +1,37 @@
+# Transmittals & correspondence — Feature scout
+
+
+- **abilities seen in market**:
+  - Auto-numbered transmittals with purpose or issue-reason codes (for information, for review, for construction)
+  - Document picker that locks the exact revisions sent
+  - Recipient lists and distribution groups by role, company or package
+  - Acknowledgement and response tracking with overdue chasers
+  - Correspondence register for letters, emails and notices with direction and cross-references
+  - Notice templates with merge fields
+  - Contractual deadline calculation from notice clauses
+  - Portal access for external recipients without full licences
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Asset-linked transmittal lines (each line carries an asset node and the inspection or data-book item it supports)
+    - **why**: Lets users ask what was sent to the client about a given unit or line, which generic document-centric registers cannot answer.
+  -
+    - **effort**: M
+    - **feature**: Hash-evidenced issue receipt: PDF transmittal cover with per-file SHA-256 values and a downloadable proof of delivery and acknowledgement log
+    - **why**: Gives dispute-ready evidence of what was sent and when, backing change and claims notices.
+  -
+    - **effort**: M
+    - **feature**: Contract notice clock: clause library with time bars (days from trigger event) that creates tasks and warns before expiry
+    - **why**: Missing a notice window is costly on EPC contracts; this turns the register into a protective control.
+  -
+    - **effort**: M
+    - **feature**: Import external transmittals (CSV or forwarded email) as read-only records linked to local documents
+    - **why**: Teams still receive client-system transmittals; capturing them keeps one controlled record without competing with the client's platform.
+  -
+    - **effort**: S
+    - **feature**: Tenant-renamable reason codes, numbering patterns and statuses via the terminology dictionary
+    - **why**: Supports the requirement to rebrand and re-term by market and customer.
+  -
+    - **effort**: S
+    - **feature**: Reissue and supersede chain showing which transmittal replaced which, with recipients who have not acknowledged the new revision highlighted
+    - **why**: Prevents work to superseded documents, a recurring site quality failure.

@@ -1,0 +1,107 @@
+# Operations, hosting & deployment — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/ops/__init__.py
+    - **purpose**: Module boundary and public exports
+  -
+    - **path**: backend/app/modules/ops/models.py
+    - **purpose**: Job, JobEvent, ClientErrorReport, StorageLifecyclePolicy, DeploymentInfo
+  -
+    - **path**: backend/app/modules/ops/jobs/runner.py
+    - **purpose**: Job runner (arq recommended in Python) with idempotency keys, time and memory limits, tenant-scoped queues
+  -
+    - **path**: backend/app/modules/ops/jobs/registry.py
+    - **purpose**: Job type registry; other modules register handlers
+  -
+    - **path**: backend/app/modules/ops/jobs/service.py
+    - **purpose**: Create, status, retry and cancel with permission check; state persisted in Postgres
+  -
+    - **path**: backend/app/modules/ops/jobs/router.py
+    - **purpose**: My jobs and admin queue endpoints
+  -
+    - **path**: backend/app/modules/ops/client_errors.py
+    - **purpose**: Anonymised, rate-limited, scrubbed browser error sink
+  -
+    - **path**: backend/app/modules/ops/observability.py
+    - **purpose**: OpenTelemetry setup, JSON logging with tenant_id and request id, PII scrubber
+  -
+    - **path**: backend/app/modules/ops/health.py
+    - **purpose**: Liveness and readiness endpoints
+  -
+    - **path**: backend/app/modules/ops/storage_lifecycle.py
+    - **purpose**: Lifecycle defaults and per-project overrides; renders s3-lifecycle.json; guards against any expiration rule on evidence
+  -
+    - **path**: infrastructure/terraform/
+    - **purpose**: IaC for ECS Fargate, RDS Multi-AZ PITR, ElastiCache, S3/KMS, CloudFront, WAF; pooled and siloed stack modules
+  -
+    - **path**: infrastructure/coolify/
+    - **purpose**: Coolify compose definitions for local, dev and demo
+  -
+    - **path**: .github/workflows/build-promote.yml
+    - **purpose**: Build once, scan, sign and promote images; required CI gates
+  -
+    - **path**: scripts/apply-s3-lifecycle.sh
+    - **purpose**: Existing script, driven from rendered policy
+  -
+    - **path**: scripts/restore-test.sh
+    - **purpose**: Quarterly restore test harness that records evidence
+- **change isolation**: Infrastructure changes land in infrastructure/terraform and the pipeline workflows, never in app code. A new background task registers a handler with the job registry from its own module without touching the runner.
+- **config not code**:
+  - Environment definitions and per-env variables
+  - Terraform variables for region, sizing and silo vs pooled
+  - Job type concurrency, timeouts and retry policy
+  - SLO thresholds and alert routes
+  - Log and error scrub rules
+  - Storage lifecycle tiers and day thresholds
+  - Backup schedule and retention
+  - Error sink rate limits
+- **events consumed**:
+  - tenancy.tenant_created (provision queues, prefixes and lifecycle defaults)
+  - tenancy.tenant_offboarding_started
+  - security.restore_test_recorded
+  - uploads.file_released (lifecycle tagging)
+  - data_io.export_requested
+- **events emitted**:
+  - job.created
+  - job.completed
+  - job.failed
+  - job.cancelled
+  - ops.deploy_promoted
+  - ops.restore_test_completed
+  - ops.slo_breached
+  - storage_lifecycle.changed
+- **frontend files**:
+  -
+    - **path**: frontend/src/features/ops/MyJobsDrawer.tsx
+    - **purpose**: User job progress panel in the notifications style
+  -
+    - **path**: frontend/src/features/ops/AdminQueuePage.tsx
+    - **purpose**: Queue view with retry, cancel and failure detail with correlation id
+  -
+    - **path**: frontend/src/features/ops/StorageLifecyclePage.tsx
+    - **purpose**: Super-admin defaults and project overrides (storage_lifecycle:manage)
+  -
+    - **path**: frontend/src/lib/errorReporter.ts
+    - **purpose**: Client error collector posting to the sink with release version and route
+  -
+    - **path**: frontend/src/features/ops/api.ts
+    - **purpose**: Generated API client
+- **public api**:
+  - GET /jobs/mine and GET /jobs/{id}
+  - POST /jobs/{id}/cancel and POST /jobs/{id}/retry (permissioned)
+  - GET /admin/jobs (queue view)
+  - POST /client-errors (rate-limited)
+  - GET/PUT /storage-lifecycle (defaults and project overrides)
+  - GET /healthz and /readyz
+  - Python: enqueue(job_type, payload, idempotency_key)
+  - Python: register_job_handler(job_type, fn)
+- **reuses shared**:
+  - Event bus
+  - Permissions catalogue and policy service (cancel, retry, lifecycle manage)
+  - Notifications engine: job.completed and job.failed
+  - Audit trail: lifecycle and deployment changes
+  - Tenancy key builders for queues, Redis and S3 prefixes
+  - Storage service
+  - Database conventions (RLS on job tables)

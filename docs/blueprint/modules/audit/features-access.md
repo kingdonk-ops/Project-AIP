@@ -1,0 +1,210 @@
+# Audit trail, activity & timeline — Feature filler
+
+
+- **detail sections**:
+  - Event detail (actor, auth strength, source, IP or device)
+  - Before / after field diff
+  - Reason for change
+  - Superseding and superseded events
+  - Hash and prior hash
+  - Source record link
+  - Asset subtree activity and actor summary
+  - Hold scope and register history
+- **notifications**:
+  - Legal hold placed or released
+  - Export generated
+  - Chain anchor failed or verification mismatch (security alert)
+  - Override or force-unlock event flagged
+  - Recycle bin items nearing purge
+  - Purge blocked by hold
+  - SIEM forwarding failure
+- **settings**:
+  - Recycle bin retention days
+  - Purge schedule
+  - Anchoring interval and S3 Object Lock bucket
+  - SIEM forwarding target
+  - Controlled record types requiring reason for change
+  - Flag types
+  - Audit read, export, hold and security permissions
+  - Retention policy
+  - Export manifest signing key
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export filtered events
+    - **columns**:
+      - Time
+      - Actor
+      - Module
+      - Event
+      - Record
+      - Asset
+      - Auth strength
+      - Flags
+    - **empty state**: No events match these filters.
+    - **filters**:
+      - Module
+      - Person
+      - Asset subtree
+      - Date range
+      - Event type
+      - Flags (on-behalf-of, force-unlock, override)
+    - **name**: Project Timeline
+    - **row actions**:
+      - Open source record
+      - View diff
+      - View reason
+    - **search**: Record reference, summary text, actor name
+    - **sort**:
+      - Time (default newest first)
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Time
+      - Actor
+      - Event (login, permission change, export, sensitive read)
+      - Source IP / device
+      - Auth method
+      - Result
+    - **empty state**: No security events in this period.
+    - **filters**:
+      - Event type
+      - Actor
+      - Date range
+      - Result
+    - **name**: Security Audit Events
+    - **row actions**:
+      - View detail
+    - **search**: Actor, IP
+    - **sort**:
+      - Time
+  -
+    - **columns**:
+      - Hold
+      - Scope (project or subtree)
+      - Reason
+      - Placed by
+      - Placed on
+      - Released by
+      - Released on
+      - Status
+    - **create form**:
+      -
+        - **field**: Hold name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Scope (project or asset subtree)
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Reason
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Effective date
+        - **required**: true
+        - **type**: date
+    - **empty state**: No legal holds. Place a hold to block purge for a project or asset subtree.
+    - **filters**:
+      - Status
+      - Scope
+      - Placed by
+    - **name**: Legal Holds
+    - **row actions**:
+      - View scope
+      - Release hold
+      - View history
+    - **search**: Hold name, reason
+    - **sort**:
+      - Placed on
+      - Status
+  -
+    - **bulk actions**:
+      - Restore
+      - Purge (blocked under hold)
+    - **columns**:
+      - Record
+      - Type
+      - Deleted by
+      - Deleted on
+      - Days remaining
+      - Purge date
+      - Hold flag
+    - **empty state**: The recycle bin is empty.
+    - **filters**:
+      - Type
+      - Deleted by
+      - Hold flag
+      - Days remaining
+    - **name**: Recycle Bin
+    - **row actions**:
+      - Restore
+      - Purge
+      - View record
+    - **search**: Record name or reference
+    - **sort**:
+      - Days remaining
+      - Deleted on
+  -
+    - **columns**:
+      - Export
+      - Scope
+      - Requested by
+      - Date
+      - Manifest
+      - Verification status
+    - **create form**:
+      -
+        - **field**: Scope (project, subtree, date range)
+        - **required**: true
+        - **type**: form
+      -
+        - **field**: Include security stream
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Purpose
+        - **required**: true
+        - **type**: select
+    - **empty state**: No audit exports have been created.
+    - **filters**:
+      - Requested by
+      - Date range
+      - Verification status
+    - **name**: Audit Exports
+    - **row actions**:
+      - Download
+      - Verify
+      - Download verifier
+    - **search**: Export name
+    - **sort**:
+      - Date
+  -
+    - **columns**:
+      - Anchor time
+      - Chain head hash
+      - S3 Object Lock reference
+      - Verification
+    - **empty state**: No anchors yet.
+    - **filters**:
+      - Date range
+    - **name**: Chain Anchors
+    - **row actions**:
+      - Verify
+    - **search**: Hash
+    - **sort**:
+      - Anchor time
+- **walkthrough**:
+  - A user changes a controlled record such as a submitted inspection result.
+  - The universal audit writer records the change with before/after values, actor and hash chain link.
+  - The system requires a reason for change on controlled records.
+  - A manager opens the project timeline and filters by module, person, asset subtree and date.
+  - Manager samples exception flags (override, force-unlock, on-behalf-of) first.
+  - Manager opens an asset and uses 'who touched this asset' with the subtree toggle.
+  - A dispute arises and the legal hold manager places a hold on the relevant subtree.
+  - Purge and recycle bin jobs skip held records.
+  - Auditor opens Audit Export, selects scope and generates an export with signed manifest.
+  - Auditor downloads the offline verifier and verifies the chain without trusting the platform.
+  - Chain heads are anchored periodically to S3 Object Lock and security events forward to the SIEM.
