@@ -6,7 +6,7 @@
 | Module | [`database`](../../docs/blueprint/modules/database/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | DATABASE-03 |
+| Depends on | DATABASE-02 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

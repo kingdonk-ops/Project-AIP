@@ -1,11 +1,13 @@
 # DATABASE-07 — Isolation test generator across all tables and routes
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`database`](../../docs/blueprint/modules/database/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | DATABASE-03 |
+| Depends on | ACCESS-01, STACK-03, TESTING-02 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

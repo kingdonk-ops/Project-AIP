@@ -1,11 +1,13 @@
 # TENANCY-03 — Organisations and project-scoped role assignment
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`tenancy`](../../docs/blueprint/modules/tenancy/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | DATABASE-03, TENANCY-01 |
+| Depends on | PROJECTS-01 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

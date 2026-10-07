@@ -1,11 +1,13 @@
 # SECURITY-08 — Production strip test and security CI workflow
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`security`](../../docs/blueprint/modules/security/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | — |
+| Depends on | ARCH-03, STACK-04 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

@@ -1,5 +1,7 @@
 # TERMS-05 — Terms admin API and permissions
 
+<!-- hand-edited: permission codes use dots (ACCESS-01) -->
+
 | Field | Value |
 |---|---|
 | Module | [`terms`](../../docs/blueprint/modules/terms/README.md) |
@@ -30,7 +32,7 @@ Expose dictionary, override, pack and locale endpoints with catalogue permission
   - 2. PUT/DELETE /terms/overrides with level validation (market pack, tenant, client, project only if allowed by settings).
   - 3. Pack endpoints: import, dry-run, apply, rollback, export.
   - 4. GET/PUT /terms/locale-settings.
-  - 5. Register permissions terms:view and terms:admin in the catalogue.
+  - 5. Register permissions terms.view and terms.admin in the catalogue.
   - 6. Write an audit log entry for each change.
 - **acceptance**:
   - A non-admin cannot override.

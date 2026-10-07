@@ -1,11 +1,13 @@
 # OPS-05 — Client error sink
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`ops`](../../docs/blueprint/modules/ops/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | OPS-04 |
+| Depends on | OPS-04, PLAN-R1 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

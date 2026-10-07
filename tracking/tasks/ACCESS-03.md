@@ -7,7 +7,7 @@
 | Module | [`access`](../../docs/blueprint/modules/access/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | ACCESS-02 |
+| Depends on | ACCESS-02, PROJECTS-01 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

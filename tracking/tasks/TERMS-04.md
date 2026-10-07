@@ -1,11 +1,13 @@
 # TERMS-04 — Pack import, diff, dry-run, apply and rollback
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`terms`](../../docs/blueprint/modules/terms/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | TERMS-02 |
+| Depends on | PLAN-R1, TERMS-02 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

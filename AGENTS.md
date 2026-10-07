@@ -44,6 +44,16 @@ codebase is not used: don't look for it or ask for it. "Port from AIP" means *im
 blueprint describes*, proven by golden tests. If a doc mentions NestJS, Kysely, BullMQ, arq, Celery, Next.js,
 `services/...`, `backend/...` or `frontend/...`, translate it with the table in ADR 0001.
 
+## Shared test fixtures (use these names everywhere)
+
+| Fixture | Tenant slug | Email domain | Keycloak IdP alias | Dev user |
+|---|---|---|---|---|
+| Tenant A (Kaefer demo) | `kaefer-demo` | `kaefer.test` | `kaefer-oidc` | `alice@kaefer.test` |
+| Tenant B | `tenant-b` | `acme.test` | `acme-oidc` | `bob@acme.test` |
+
+Specs that say `kaefer`, `acme`, `tenant-a` or `tenant_a` mean these two tenants. Test-only module: `widgets`,
+event `widget.created` v1. Seeds refuse to run when `AIP_ENV=production`.
+
 ## Status values
 
 `todo` · `in-progress` · `review` · `done` · `blocked` (say why in notes) · `dropped` (say why)

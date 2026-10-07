@@ -1,11 +1,13 @@
 # SECURITY-04 — Breach register with NDB clock
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`security`](../../docs/blueprint/modules/security/README.md) |
 | Phase | P0 |
 | Size | S |
-| Depends on | SECURITY-02 |
+| Depends on | PLAN-R1, SECURITY-02 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

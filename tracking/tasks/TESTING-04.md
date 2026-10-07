@@ -1,11 +1,13 @@
 # TESTING-04 — Generated permission-matrix and IDOR tests
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`testing`](../../docs/blueprint/modules/testing/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | TESTING-01 |
+| Depends on | ACCESS-01, STACK-03 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

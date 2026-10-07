@@ -1,11 +1,13 @@
 # TENANCY-04 — Asset sharing with party-scoped visibility profiles
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`tenancy`](../../docs/blueprint/modules/tenancy/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | TENANCY-03 |
+| Depends on | PLAN-R1, TENANCY-03 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

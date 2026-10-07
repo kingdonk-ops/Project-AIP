@@ -6,7 +6,7 @@
 | Module | [`ops`](../../docs/blueprint/modules/ops/README.md) |
 | Phase | P0 |
 | Size | S |
-| Depends on | — |
+| Depends on | ARCH-01 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

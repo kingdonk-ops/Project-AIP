@@ -7,7 +7,7 @@
 | Module | [`identity`](../../docs/blueprint/modules/identity/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | IDENTITY-03, STACK-02 |
+| Depends on | ACCESS-01, IDENTITY-03, STACK-02 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

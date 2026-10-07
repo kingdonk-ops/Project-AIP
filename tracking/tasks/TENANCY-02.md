@@ -6,7 +6,7 @@
 | Module | [`tenancy`](../../docs/blueprint/modules/tenancy/README.md) |
 | Phase | P0 |
 | Size | S |
-| Depends on | TENANCY-01, ARCH-04 |
+| Depends on | ARCH-04, TENANCY-01 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

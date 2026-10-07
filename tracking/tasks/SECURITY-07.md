@@ -1,11 +1,13 @@
 # SECURITY-07 — Tenant IP allow-list and session policy
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`security`](../../docs/blueprint/modules/security/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | SECURITY-02 |
+| Depends on | IDENTITY-03 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

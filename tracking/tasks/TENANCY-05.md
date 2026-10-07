@@ -1,11 +1,13 @@
 # TENANCY-05 — Tenant settings, modules and provisioning
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`tenancy`](../../docs/blueprint/modules/tenancy/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | TENANCY-01, ARCH-08 |
+| Depends on | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

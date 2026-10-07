@@ -6,7 +6,7 @@
 | Module | [`testing`](../../docs/blueprint/modules/testing/README.md) |
 | Phase | P0 |
 | Size | S |
-| Depends on | TESTING-01 |
+| Depends on | DATABASE-02 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

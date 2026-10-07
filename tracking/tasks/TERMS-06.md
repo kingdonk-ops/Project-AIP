@@ -1,11 +1,13 @@
 # TERMS-06 — Glossary and alias mapping for search and import
 
+<!-- hand-edited: depends-on synced from BOARD.md -->
+
 | Field | Value |
 |---|---|
 | Module | [`terms`](../../docs/blueprint/modules/terms/README.md) |
 | Phase | P0 |
 | Size | S |
-| Depends on | TERMS-01 |
+| Depends on | PLAN-R1, TERMS-01 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
