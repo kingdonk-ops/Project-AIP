@@ -34,3 +34,24 @@ Nothing blocks M0 now.
 9. Retention periods per record type, and who is the named security owner?
 10. Team size: solo or hiring? (Sets agent parallelism and realistic dates.)
 11. **Shared field tablets and PINs:** if workers share a device and a PIN, one could sign off in another's name. Accept this risk, require one device per worker, or require a passkey (fingerprint/face) for critical actions? (threat model, ADR 0010)
+
+### Tablet hand-over signing ([review 09](../docs/reviews/09-tablet-handover-signing.md))
+
+Recommendation: the client picks their name and enters their own PIN on the inspector's tablet. PIN only counts as a
+light check (`aal1`), so it is enough for witness points. To release a **hold point**, the client also taps their own
+security key or scans a QR code with their phone, unless the client has agreed in writing that PIN only is fine. If
+the client isn't set up, the inspector records a witness note and the client confirms later in the portal.
+
+12. Do Rio Tinto client reps carry a phone on the work front, and would they accept a FIDO key on their lanyard if we
+    (or Kaefer) supply it?
+13. For hold points, is PIN-only acceptable if Rio Tinto agrees in writing for a project, or must it always be the
+    client's own key/phone (or later confirmation)?
+14. Offline: may a hold be provisionally released on a PIN-only client signature before sync, or must the crew wait?
+15. Is a photo of the client at signing acceptable (privacy notice, Rio site camera rules)?
+16. Which tablets does Kaefer use (Android with NFC, or iPad), and are they under MDM so we can use kiosk/screen pinning?
+
+## Also waiting on the owner
+
+- Initial the provenance log ([`docs/security/provenance-log.md`](../docs/security/provenance-log.md)) to confirm AIP was not read or copied.
+- Rotate the Coolify API key that was pasted in chat, then store the new one only as GitHub Actions secrets
+  (`COOLIFY_TOKEN`, `COOLIFY_WEBHOOK`). This is needed before OPS-11.
