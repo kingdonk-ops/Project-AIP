@@ -32,10 +32,14 @@ FACTORIES = frozenset(
 )
 RAW_DRIVERS = frozenset({"asyncpg", "psycopg", "psycopg2", "sqlalchemy"})
 
-# The OPS-04 readiness probe opens one short asyncpg connection for `select 1` and the applied
-# Alembic revision. It reads no tenant data, must work while the app engine is unhealthy, and
-# is the only exception.
-ALLOWED = {("modules/ops/health.py", "asyncpg.connect")}
+# Two probes open one short, time-limited asyncpg connection each and read no tenant data, so
+# they must work while the app engine is unhealthy: the OPS-04 readiness probe (`select 1` and
+# the applied Alembic revision) and the STACK-05 version endpoint (`SHOW server_version`).
+# These are the only exceptions.
+ALLOWED = {
+    ("modules/ops/health.py", "asyncpg.connect"),
+    ("platform/version/routes.py", "asyncpg.connect"),
+}
 
 
 def _dotted(node: ast.expr) -> str | None:
