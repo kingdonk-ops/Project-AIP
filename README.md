@@ -39,6 +39,7 @@ IFC/OCR/PDF signing. **Frontends:** TypeScript · Vite + React (web, offline fie
 | App stack | Frontend and offline guidance still applies (Vite PWA, Dexie); backend parts superseded by review 08 | [06](docs/reviews/06-stack-typescript.md) |
 | Development lead | P0 not executable as written; walking skeleton first; 40+ missing P0 tasks | [07](docs/reviews/07-delivery.md) |
 | Stack & architecture | Mostly keep; Python backend + TS frontends; Postgres job queue, Vite SPAs, per-tenant KMS keys (adopted) | [08](docs/reviews/08-stack-decision.md) |
+| Tablet hand-over signing | Client picks name + own PIN on the inspector's tablet; hold points need the client's own key or phone; owner questions 12–16 | [09](docs/reviews/09-tablet-handover-signing.md) |
 
 What we did about it: ADRs 0001–0008 resolve the contradictions, the board is ordered into waves starting
 with an M0 walking skeleton, and owner decisions still needed are listed in OPEN-QUESTIONS.
