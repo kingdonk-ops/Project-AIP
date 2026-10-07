@@ -58,6 +58,9 @@ def check(tasks):
 
 
 def main():
+    if not BOARD.exists():
+        print("WARNING: tracking/BOARD.md does not exist yet; nothing to check or pick.")
+        return
     tasks = parse()
     if "--check" in sys.argv:
         sys.exit(check(tasks))
