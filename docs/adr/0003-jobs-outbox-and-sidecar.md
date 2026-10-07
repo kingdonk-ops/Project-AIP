@@ -1,7 +1,6 @@
 # ADR 0003: Procrastinate (Postgres) for jobs; Postgres outbox; sandboxed Python workers
 
-- **Status:** accepted; **owner to confirm**. The owner's decision text said "Redis queue (arq or Celery)". The stack review recommends a
-  Postgres-backed queue so that jobs are enqueued in the same transaction as the data change.
+- **Status:** accepted (owner, 2026-10-07: "Postgres-based"). Supersedes the original decision text "Redis queue (arq or Celery)".
 - **Date:** 2026-10-07 (revised for the Python backend; the first version chose BullMQ)
 - **Affects:** ops, arch; ARCH-05..07, OPS-01..03, TENANCY-02, STACK-02, STACK-05, UPLOADS-02, AUDIT-03
 

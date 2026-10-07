@@ -11,7 +11,7 @@ recommended a Python backend with TypeScript frontends. The owner then allowed P
 AIP codebase. So this is a **greenfield build**. Even without AIP reuse, Python still wins on three points:
 - **Fit with existing decisions:** "Keep Alembic raw SQL" and the original job-queue choice are Python
   decisions, and much of the blueprint and many generated task specs are already Python-shaped.
-- **Library fit:** PAdES signing (pyHanko), IFC (IfcOpenShell), OCR (OCRmyPDF) and image tooling are best in Python.
+- **Library fit:** PAdES signing (pyHanko), IFC (IfcOpenShell), OCR (Tesseract, ADR 0009) and image tooling are best in Python.
 - **One backend language:** the API, workers and file-processing sandboxes all share it.
 
 ## Decision
