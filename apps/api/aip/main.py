@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
+from aip.platform.capabilities import validate_capability_settings
 from aip.platform.context import (
     ContextMissingError,
     DenyAllMembershipResolver,
@@ -54,6 +55,7 @@ def create_app(
     membership_resolver: ProjectMembershipResolver | None = None,
     env: str | None = None,
 ) -> FastAPI:
+    validate_capability_settings()  # unknown OBJECT_STORE / PDF_RENDERER stops startup (STACK-02)
     modules = load_modules(modules_package, disabled_modules)
     env = os.environ.get("AIP_ENV", "") if env is None else env
 
