@@ -88,6 +88,12 @@ class ClassifierTests(unittest.TestCase):
         gpl = "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
         self.assertEqual(cl.classify(gpl, self.policy), "deny")
 
+    def test_aliases_map_free_text_metadata_names(self) -> None:
+        # Spellings seen in real METADATA License: fields (filled by sbom_fill_licences.py).
+        for name in ["Apache License 2.0", "3-Clause BSD License", "BSD 3-Clause License"]:
+            with self.subTest(name=name):
+                self.assertEqual(cl.classify(name, self.policy), "allow")
+
     def test_component_licence_entries_are_combined_with_and(self) -> None:
         entry = {
             "licenses": [
