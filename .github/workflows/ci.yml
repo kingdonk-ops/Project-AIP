@@ -17,8 +17,25 @@ jobs:
       fail-fast: false
       matrix:
         python: ["3.12", "3.13"]
+    # Real Postgres for the DB tests (DATABASE-08): a service container, reached through
+    # AIP_TEST_DATABASE_URL. Locally the fixture falls back to Testcontainers when Docker runs.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: aip_test
+          POSTGRES_PASSWORD: aip_test
+          POSTGRES_DB: aip_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aip_test -d aip_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     env:
       UV_PYTHON: ${{ matrix.python }}
+      AIP_TEST_DATABASE_URL: postgresql://aip_test:aip_test@localhost:5432/aip_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -37,6 +54,71 @@ jobs:
         run: uv run pyright
       - name: Pytest
         run: uv run pytest -q
+
+  db:
+    name: Database (bootstrap, migrate, snapshot, check-schema, lint, migrator image)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aip
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d aip"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      # Throwaway CI-only credentials for the service container; not secrets.
+      SUPERUSER_URL: postgresql://postgres:postgres@localhost:5432/aip
+      DATABASE_MIGRATOR_URL: postgresql://aip_owner:aip_owner_ci@localhost:5432/aip
+      # psql and pg_dump come from the server's own image, so the client always matches it.
+      PG_DUMP: docker run --rm --network host -e PGPASSWORD pgvector/pgvector:pg16 pg_dump
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # aip-db lint diffs migrations/versions against origin/main
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install
+        run: uv sync --all-packages --frozen
+      - name: Bootstrap the cluster as superuser (db/bootstrap/00_cluster.sql)
+        run: >-
+          docker run --rm -i --network host
+          -e PGOPTIONS="-c aip.owner_password=aip_owner_ci"
+          pgvector/pgvector:pg16
+          psql "$SUPERUSER_URL" -v ON_ERROR_STOP=1 -f - < db/bootstrap/00_cluster.sql
+      - name: aip-db migrate
+        run: uv run aip-db migrate
+      - name: aip-db migrate again applies nothing
+        run: |
+          uv run aip-db migrate 2> second.log
+          cat second.log
+          if grep -q "Running upgrade" second.log; then echo "second migrate applied revisions"; exit 1; fi
+      - name: Schema snapshot is up to date
+        run: |
+          uv run aip-db snapshot
+          git diff --exit-code db/schema.snapshot.sql
+      - name: Migrated schema matches the declared tables
+        run: uv run aip-db check-schema
+      - name: Migration lint
+        run: uv run aip-db lint --base origin/main
+      - name: Build the migrator image
+        run: docker build -f infra/docker/migrator.Dockerfile -t aip-migrator:ci .
+      - name: Migrator image runs as non-root and migrates
+        run: |
+          uid=$(docker run --rm --entrypoint id aip-migrator:ci -u)
+          echo "uid=$uid"
+          test "$uid" != "0"
+          docker run --rm --network host -e DATABASE_MIGRATOR_URL aip-migrator:ci
 
   typescript:
     name: TypeScript (lint, typecheck, build, test)
@@ -74,6 +156,16 @@ jobs:
           done
           if git ls-files 'apps/api' | grep -qE '\.(ts|tsx|mts|cts)$'; then
             echo "TypeScript under apps/api"; exit 1
+          fi
+      - name: Alembic is the only migration path (DATABASE-08)
+        run: |
+          set -e
+          if [ -e db/migrations ]; then echo "forbidden path: db/migrations/"; exit 1; fi
+          if git ls-files | grep -E '(^|/)migrations/.*\.(ts|mts|cts|js|mjs|cjs)$'; then
+            echo "TypeScript/JavaScript migration files"; exit 1
+          fi
+          if git ls-files -- '*package.json' | xargs grep -lE '"(node-pg-migrate|kysely)"'; then
+            echo "node-pg-migrate or Kysely dependency"; exit 1
           fi
 
   docs:

@@ -13,3 +13,4 @@ build/
 *.tsbuildinfo
 coverage/
 .vite/
+.claude/worktrees/
