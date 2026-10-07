@@ -45,7 +45,7 @@ RLS isolation proven in CI, deployed to AWS staging.
 | [DATABASE-02](tasks/DATABASE-02.md) | Roles, session helper and fail-closed tenant context | database | M | DATABASE-08 | todo | rewrite paths/tools to TS per ADR 0001 first |
 | [TESTING-02](tasks/TESTING-02.md) | Schema guard: tenant_id and RLS on every table | testing | S | DATABASE-02 | todo | rewrite paths/tools to TS per ADR 0001 first |
 | [STACK-03](tasks/STACK-03.md) | Generated typed API client with drift check | stack | M | ARCH-01 | todo |  |
-| [OPS-07](tasks/OPS-07.md) | Terraform baseline for staging and the build-promote pipeline | ops | M | STACK-05 | todo | rewrite paths/tools to TS per ADR 0001 first |
+| [OPS-07](tasks/OPS-07.md) | Terraform baseline for staging and the build-promote pipeline | ops | M | STACK-05 | todo | rewrite paths/tools to TS per ADR 0001 first; use infra/terraform (ADR 0004), not infrastructure/ |
 | [DESIGN-02](tasks/DESIGN-02.md) | App shell (header, nav rail, scope bar) + login/logout | design | M | DESIGN-01, IDENTITY-01 | todo |  |
 
 ### Wave 3
