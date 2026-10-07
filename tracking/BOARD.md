@@ -27,16 +27,16 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [DATABASE-08](tasks/DATABASE-08.md) | Alembic env, migrator role, baseline revision + extensions | database | M | ARCH-01 | review | branch claude/festive-cerf-euolrf |
-| [ARCH-02](tasks/ARCH-02.md) | Module registry and dependency check | arch | S | ARCH-01 | todo |  |
+| [DATABASE-08](tasks/DATABASE-08.md) | Alembic env, migrator role, baseline revision + extensions | database | M | ARCH-01 | done | PR #9 |
+| [ARCH-02](tasks/ARCH-02.md) | Module registry and dependency check | arch | S | ARCH-01 | done | PR #8 |
 | [ARCH-03](tasks/ARCH-03.md) | Import-boundary lint and manifest CI check | arch | S | ARCH-01 | todo |  |
-| [ARCH-04](tasks/ARCH-04.md) | Request context carrying tenant, project, actor and asset scope | arch | S | ARCH-01 | todo |  |
+| [ARCH-04](tasks/ARCH-04.md) | Request context carrying tenant, project, actor and asset scope | arch | S | ARCH-01 | review | PR #7 |
 | [STACK-02](tasks/STACK-02.md) | Capability interfaces and adapter selection | stack | M | ARCH-01 | todo |  |
 | [STACK-04](tasks/STACK-04.md) | Licence allow-list and CycloneDX SBOM in CI | stack | S | ARCH-01 | todo |  |
 | [STACK-05](tasks/STACK-05.md) | Platform version endpoint and docker-compose stack | stack | M | STACK-02 | todo | |
 | [OPS-04](tasks/OPS-04.md) | Health endpoints and structured logging with PII scrubber | ops | S | ARCH-01 | todo | |
 | [IDENTITY-01](tasks/IDENTITY-01.md) | Keycloak dev realm in compose + OIDC broker login + login_directory | identity | M | ARCH-01, STACK-05 | todo |  |
-| [DESIGN-01](tasks/DESIGN-01.md) | Design tokens, ui package (Radix/shadcn), axe lint | design | M | ARCH-01 | todo |  |
+| [DESIGN-01](tasks/DESIGN-01.md) | Design tokens, ui package (Radix/shadcn), axe lint | design | M | ARCH-01 | in-progress | branch claude/p0-design-01 |
 
 ### Wave 2
 
