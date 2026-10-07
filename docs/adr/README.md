@@ -14,3 +14,4 @@ ADRs override the blueprint (see precedence in [AGENTS.md](../../AGENTS.md)). Co
 | [0007](0007-mvp-scope-and-strangler.md) | Walking skeleton → trimmed P0 → R1 "Kaefer live" | proposed |
 | [0008](0008-entitlements-and-commercial-model.md) | One entitlement service; sales-led; contract billing at launch | proposed |
 | [0009](0009-ocr-and-licensing.md) | Only permissive open-source or AWS services; OCR = Tesseract + pypdfium2, Textract optional | accepted |
+| [0010](0010-signoff-assurance.md) | Sign-off assurance: one quick check at signing (passkey, device+PIN, TOTP or IdP MFA), per-tenant minimum, countersign fallback | accepted |

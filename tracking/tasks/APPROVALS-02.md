@@ -1,5 +1,7 @@
 # APPROVALS-02 — Transition service: policy check, version pinning, hash-chained decisions, events
 
+<!-- hand-edited: sign-off assurance per ADR 0010 -->
+
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
 | Field | Value |
@@ -19,7 +21,7 @@
 
 ## Spec
 
-Make one server-side transition path. It loads the instance's pinned definition, asks the policy service, enforces step-up on critical transitions, appends a hash-chained decision row and writes the outbox event, all in one transaction (tag: extend).
+Make one server-side transition path. It loads the instance's pinned definition, asks the policy service, applies the sign-off assurance check (ADR 0010) on critical transitions, appends a hash-chained decision row and writes the outbox event, all in one transaction (tag: extend).
 
 - **files**:
   - db/migrations/<timestamp>_approvals_decision_history.sql
@@ -44,7 +46,7 @@ Make one server-side transition path. It loads the instance's pinned definition,
     - (b) Load the definition by `instance.definition_id`, never the active one.
     - (c) Call `evaluator.applyTransition`. If it fails, return 409 `INVALID_TRANSITION`.
     - (d) Call `PolicyService.can(ctx.actor, transition.requiredPermission, {projectId, recordType, recordId})` (ACCESS-01). On deny, return 403 with nothing written.
-    - (e) If `transition.critical` and `ctx.authStrength` is not in `{mfa, stepup}`, return 403 `STEP_UP_REQUIRED`. Read the auth strength from the request context (ARCH-04). Do not build a step-up UI here.
+    - (e) If `transition.critical`, call `identity.api.check_signoff_assurance(ctx, transition.action_code)` (IDENTITY-07, ADR 0010). `step_up_required` → 403 `STEP_UP_REQUIRED` with `stepUpUrl`. `countersign_required` → record the decision with status `pending_countersign`; the transition does NOT take effect until a countersign decision by a different user who passes the check. `allow` → proceed. Store the returned `assurance_level`, `method`, `authenticated_at` and `device_id` on the decision row. Do not build a step-up UI here.
     - (f) Insert a history row with `seq = last + 1`, the chained hash, the client IP from the context, and `guard_result = null` (APPROVALS-03 fills it).
     - (g) Update `current_state` and `sync_version` through DATABASE-04 `updateWithVersion`. A mismatched `expectedSyncVersion` gives 409.
     - (h) Call `emit(tx, 'workflow.transitioned', 1, ...)` (ARCH-05) with payload `{instanceId, recordType, recordId, projectId, from, to, action, actorId, definitionKey, definitionVersion}`.
@@ -67,7 +69,7 @@ Make one server-side transition path. It loads the instance's pinned definition,
   - **unit**:
     - `entryHash` of the same entry with keys in a different order → identical hash. Changing `comment` from `'ok'` to `'ok.'` → a different hash.
     - `verifyChain([e1, e2, e3])` with `e2.comment` altered → `{ok:false, brokenAtSeq: 2}`. An empty chain → `{ok:true}`.
-    - Critical-transition check: `authStrength 'password'` → `STEP_UP_REQUIRED`. `'mfa'` → allowed.
+    - Critical-transition check (with `check_signoff_assurance` stubbed): `step_up_required` → 403 `STEP_UP_REQUIRED`; `countersign_required` → decision `pending_countersign` and the instance state is unchanged; a countersign by the same user → 409 `SELF_COUNTERSIGN`; a countersign by a supervisor returning `allow` → the transition applies and both assurance records are stored; `allow` → applied, with `method` recorded.
   - **integration**:
     - These run with Testcontainers Postgres and the TESTING-01 fixtures `kaefer-demo` and `tenant-b`, using the `demo` definition from APPROVALS-01. A user with `approvals.demo.submit` POSTs `transition {action:'submit'}` → 200 with `current_state: 'submitted'`. History has `seq 1` with `prev_hash = sha256('genesis:'+id)`, and `domain_events` has 1 `workflow.transitioned` row.
     - A viewer without `approvals.demo.submit` → 403. The history and `domain_events` counts are unchanged.

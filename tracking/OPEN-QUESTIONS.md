@@ -13,6 +13,7 @@ becomes an ADR update. **Bold** questions block M0.
 - 2026-10-07 — **OCR licence:** no licensing; open source or AWS only. → ADR 0009 (Tesseract + pypdfium2 + pikepdf; Textract optional).
 - 2026-10-07 — **Frontends:** Vite for all three apps. → ADR 0004.
 - 2026-10-07 — **Sign-in:** Keycloak handles all staff sign-in; backend issues sessions and builds field PIN, portal links, SCIM. → ADR 0005 rev 2.
+- 2026-10-07 — **Sign-off assurance:** one quick check at signing (passkey, company device + PIN, code, or company MFA); per-tenant minimum; supervisor countersign fallback. Field-PIN users can sign on a registered device. → ADR 0010, task IDENTITY-07.
 
 Nothing blocks M0 now.
 
@@ -27,10 +28,8 @@ Nothing blocks M0 now.
 5. Does Rio Tinto (or Kaefer IT) contractually require a siloed deployment, a pen test, per-tenant keys or
     an IdP connection for Rio staff?
 6. Will you buy Vanta/Drata rather than build the control catalogue, breach register and access review in-app?
-7. Can field-PIN users sign hold points? What maximum offline period is acceptable?
+7. What maximum offline period is acceptable for field devices?
 8. Client Reviewer has many `approve` cells in the access matrix, but the portal decision is "read-only plus
     witness and counter-sign". Trim the matrix?
 9. Retention periods per record type, and who is the named security owner?
 10. Team size: solo or hiring? (Sets agent parallelism and realistic dates.)
-11. **SSO users whose company IdP doesn't assert MFA:** should Keycloak add its own OTP step for them (so they can
-    release hold points and sign), or must the customer turn on MFA in their IdP? (ADR 0005, IDENTITY-04)
