@@ -37,6 +37,7 @@ Python sidecar for IFC/CAD/OCR · AWS ECS Fargate Sydney (Coolify for dev/demo) 
 | Data-tier stack | Python-era decisions (Alembic, arq) contradict the TS rebuild; use Kysely + SQL migrations + BullMQ | [05](docs/reviews/05-stack-data.md) |
 | App stack | Sound stack; fix path chaos; offline field PWA should be a Vite app, not Next.js | [06](docs/reviews/06-stack-typescript.md) |
 | Development lead | P0 not executable as written; walking skeleton first; 40+ missing P0 tasks | [07](docs/reviews/07-delivery.md) |
+| Stack & architecture | Mostly keep; audit AIP before committing to the TS rebuild; switch to a Postgres job queue, Vite SPAs, per-tenant KMS keys | [08](docs/reviews/08-stack-decision.md) |
 
 What we did about it: ADRs 0001–0008 resolve the contradictions, the board is ordered into waves starting
 with an M0 walking skeleton, and owner decisions still needed are listed in OPEN-QUESTIONS.

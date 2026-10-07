@@ -5,6 +5,11 @@ becomes an ADR update. **Bold** questions block M0.
 
 ## Blocking M0
 
+0. **TypeScript rebuild or continue the Python AIP backend?** The stack review
+   ([08](../docs/reviews/08-stack-decision.md)) recommends a 5-day audit of the AIP code first, with
+   "continue Python backend + TypeScript frontends" as the default if it passes. Also decide on its other
+   changes: Postgres job queue instead of BullMQ, Vite for all three frontends instead of Next.js, and
+   one KMS key per tenant (ADR 0006 as written can't crypto-shred S3 data).
 1. **Confirm the stack reconciliation:** Kysely + forward-only SQL migrations (ADR 0002) and BullMQ (ADR 0003)
    replace the "Alembic" and "arq/Celery" decision text?
 2. **Identity split (ADR 0005):** Keycloak only brokers SSO, and the app issues every session and builds its
