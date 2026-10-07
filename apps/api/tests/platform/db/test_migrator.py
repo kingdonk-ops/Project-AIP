@@ -21,6 +21,21 @@ if TYPE_CHECKING:  # fixtures come from conftest.py; this import is for type hin
 REPO_ROOT = Path(__file__).resolve().parents[5]
 
 BASELINE = "202610071200"
+
+
+def _code_head() -> str:
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    from aip.platform.db.migrator import alembic_ini
+
+    head = ScriptDirectory.from_config(Config(str(alembic_ini()))).get_current_head()
+    assert head is not None
+    return head
+
+
+# The newest committed revision; later revisions (OPS-01, ...) move it past the baseline.
+HEAD = _code_head()
 EXTENSIONS = {"ltree", "pgcrypto", "pg_trgm", "citext", "btree_gist", "vector"}
 OWNER_ERROR = "migrator must run as aip_owner"
 
@@ -43,7 +58,7 @@ def test_new_renders_a_lint_clean_revision_from_the_template(migrations_copy: Pa
     )
     assert path.name == "202610071300_add_widgets.py"
     text = path.read_text(encoding="utf-8")
-    assert f'down_revision: str | None = "{BASELINE}"' in text
+    assert f'down_revision: str | None = "{HEAD}"' in text
     assert 'raise NotImplementedError("forward-only")' in text
     assert lint.lint_directory(path.parent, git_base=None) == []
 
@@ -112,7 +127,7 @@ def test_bootstrap_then_migrate_an_empty_database(empty_db: FreshDb) -> None:
     empty_db.bootstrap()
     first = empty_db.aip_db("migrate")
     assert first.returncode == 0, first.stderr
-    assert _version(empty_db) == [BASELINE]
+    assert _version(empty_db) == [HEAD]
 
     extensions = {r[0] for r in empty_db.fetch("SELECT extname FROM pg_extension")}
     assert extensions >= EXTENSIONS
@@ -136,7 +151,7 @@ def test_bootstrap_then_migrate_an_empty_database(empty_db: FreshDb) -> None:
     assert second.returncode == 0, second.stderr
     assert "Running upgrade" in first.stderr
     assert "Running upgrade" not in second.stderr
-    assert _version(empty_db) == [BASELINE]
+    assert _version(empty_db) == [HEAD]
 
 
 def test_concurrent_migrations_serialise_on_the_advisory_lock(empty_db: FreshDb) -> None:
@@ -146,7 +161,7 @@ def test_concurrent_migrations_serialise_on_the_advisory_lock(empty_db: FreshDb)
     assert [p.returncode for p in procs] == [0, 0], results
     applied = sum(1 for _, err in results if f"-> {BASELINE}" in err)
     assert applied == 1, results
-    assert _version(empty_db) == [BASELINE]
+    assert _version(empty_db) == [HEAD]
 
 
 def test_failing_revision_rolls_back_and_keeps_the_baseline(
@@ -156,7 +171,7 @@ def test_failing_revision_rolls_back_and_keeps_the_baseline(
     (versions / "202610071300_boom.py").write_text(
         '"""boom"""\n\nfrom alembic import op\n\n'
         'revision: str = "202610071300"\n'
-        f'down_revision: str | None = "{BASELINE}"\n'
+        f'down_revision: str | None = "{HEAD}"\n'
         "branch_labels = None\ndepends_on = None\n\n\n"
         "def upgrade() -> None:\n"
         '    op.execute("""CREATE TABLE t1(id int); SELECT 1/0;""")\n\n\n'
@@ -168,7 +183,7 @@ def test_failing_revision_rolls_back_and_keeps_the_baseline(
     result = empty_db.aip_db("migrate", "--config", str(migrations_copy))
     assert result.returncode != 0
     assert "division by zero" in result.stderr
-    assert _version(empty_db) == [BASELINE]
+    assert _version(empty_db) == [HEAD]
     assert empty_db.fetch("SELECT to_regclass('public.t1') IS NULL") == [(True,)]
 
 

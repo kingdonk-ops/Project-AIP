@@ -57,7 +57,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [ARCH-05](tasks/ARCH-05.md) | domain_events outbox table and writer | arch | M | ARCH-04, DATABASE-02 | todo |  |
 | [DATABASE-04](tasks/DATABASE-04.md) | Base repository helpers: concurrency, ltree, soft delete, JSONB validation | database | M | DATABASE-02 | todo |  |
 | [TERMS-01](tasks/TERMS-01.md) | Terms schema, default en-AU dictionary and loader | terms | M | DATABASE-02 | todo | |
-| [OPS-01](tasks/OPS-01.md) | Job tables and service | ops | M | DATABASE-08 | in-progress | branch claude/p0-ops-01 |
+| [OPS-01](tasks/OPS-01.md) | Job tables and service | ops | M | DATABASE-08 | review | branch claude/p0-ops-01 (PR pending); grants to aip_app/aip_jobs skipped until DATABASE-02 roles exist at migrate time |
 
 ### Wave 4
 

@@ -51,6 +51,18 @@ def client(app: FastAPI) -> httpx.AsyncClient:
     return httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test")
 
 
+def committed_head() -> str:
+    """The newest committed Alembic revision (the head a migrated test database is at)."""
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    from aip.platform.db.migrator import alembic_ini
+
+    head = ScriptDirectory.from_config(Config(str(alembic_ini()))).get_current_head()
+    assert head is not None
+    return head
+
+
 def json_lines(out: str) -> list[dict[str, Any]]:
     lines: list[dict[str, Any]] = []
     for raw in out.splitlines():
@@ -344,7 +356,7 @@ async def test_ready_503_when_database_is_behind_head(
     logged = [ln for ln in json_lines(capsys.readouterr().out) if ln.get("check") == "migrations"]
     assert logged
     assert "209901010000" in logged[0]["code_heads"]
-    assert "202610071200" in logged[0]["db_revisions"]
+    assert committed_head() in logged[0]["db_revisions"]
     assert checks["db"] == "ok"
     assert checks["redis"] == "ok"
 
