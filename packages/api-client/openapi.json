@@ -1,0 +1,100 @@
+{
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "description": "Body of GET /api/v1/health. Changing it changes the generated client (STACK-03).",
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "ModuleInfo": {
+        "description": "A mounted module as reported by the registry.",
+        "properties": {
+          "context": {
+            "title": "Context",
+            "type": "string"
+          },
+          "depends_on": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Depends On",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "context",
+          "depends_on"
+        ],
+        "title": "ModuleInfo",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "AIP API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "platform_health",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/modules": {
+      "get": {
+        "operationId": "platform_list_modules",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModuleInfo"
+                  },
+                  "title": "Response Platform List Modules",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Modules",
+        "tags": [
+          "platform"
+        ]
+      }
+    }
+  }
+}

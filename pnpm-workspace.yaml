@@ -3,3 +3,4 @@ packages:
   - apps/field
   - apps/portal
   - packages/*
+  - e2e
