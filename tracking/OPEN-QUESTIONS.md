@@ -33,3 +33,4 @@ Nothing blocks M0 now.
     witness and counter-sign". Trim the matrix?
 9. Retention periods per record type, and who is the named security owner?
 10. Team size: solo or hiring? (Sets agent parallelism and realistic dates.)
+11. **Shared field tablets and PINs:** if workers share a device and a PIN, one could sign off in another's name. Accept this risk, require one device per worker, or require a passkey (fingerprint/face) for critical actions? (threat model, ADR 0010)

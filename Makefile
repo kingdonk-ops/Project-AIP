@@ -12,6 +12,7 @@ check-py:
 	uv run ruff format --check
 	uv run pyright
 	uv run pytest
+	uv run aip-db lint
 
 check-ts:
 	pnpm -r lint
