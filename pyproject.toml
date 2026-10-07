@@ -27,7 +27,7 @@ known-first-party = ["aip"]
 pythonVersion = "3.12"
 venvPath = "."
 venv = ".venv"
-include = ["apps/api/aip", "apps/api/tests", "tools/new_module.py", "tools/tests", "tools/ci"]
+include = ["apps/api/aip", "apps/api/tests", "tools/new_module.py", "tools/gen_module_map.py", "tools/tests", "tools/ci"]
 exclude = ["**/__pycache__", "**/node_modules", "apps/api/aip/modules/_template"]
 typeCheckingMode = "standard"
 strict = ["apps/api/aip/platform"]
@@ -36,6 +36,8 @@ extraPaths = ["apps/api"]
 [tool.pytest.ini_options]
 testpaths = ["apps/api", "tools/tests"]
 addopts = ["--import-mode=importlib"]
+# Makes `tests.*` (fixture module packages, ARCH-02) importable alongside `aip`.
+pythonpath = ["apps/api"]
 norecursedirs = [".venv", "node_modules", "_template", ".*"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
