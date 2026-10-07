@@ -35,3 +35,5 @@ becomes an ADR update. **Bold** questions block M0.
     witness and counter-sign". Trim the matrix?
 13. Retention periods per record type, and who is the named security owner?
 14. Team size: solo or hiring? (Sets agent parallelism and realistic dates.)
+15. **OCR licence:** OCRmyPDF depends on Ghostscript (AGPL). Accept it in the isolated OCR sandbox image
+    (never linked into the API), buy a commercial Ghostscript licence, or use AWS Textract (Sydney) instead? (STACK-04)
