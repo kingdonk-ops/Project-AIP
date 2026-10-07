@@ -3,6 +3,8 @@
 Normalisation strips comment and version header lines, ``SET`` / ``set_config`` lines and psql
 ``\\restrict`` meta-commands, then sorts objects so the output depends only on the schema. Each
 object keeps a ``-- Name: ...; Type: ...; Schema: ...`` line so normalising is idempotent.
+Lines inside dollar-quoted function bodies are kept verbatim: a ``-- comment`` or ``SET`` there
+is part of the function.
 """
 
 from __future__ import annotations
@@ -17,11 +19,32 @@ from sqlalchemy.engine import make_url
 
 _HEADER_RE = re.compile(r"^-- Name: (?P<name>.*?); Type: (?P<type>.*?); Schema: (?P<schema>[^;]*)")
 _DROP_PREFIXES = ("--", "SET ", "SELECT pg_catalog.set_config(", "\\restrict", "\\unrestrict")
+_DOLLAR_TAG_RE = re.compile(r"\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$")
 
 
 def pg_dump_command() -> list[str]:
     """``pg_dump``, or the command in ``PG_DUMP`` (CI pins the Postgres 16 client)."""
     return shlex.split(os.environ.get("PG_DUMP", "pg_dump"))
+
+
+def _dollar_state(line: str, open_tag: str | None) -> str | None:
+    """The dollar-quote tag still open after ``line`` (``None`` when outside any body).
+
+    pg_dump writes function bodies as ``$$ ... $$`` or ``$_$ ... $_$``; quotes inside a body
+    cannot close it, so only the matching tag is tracked.
+    """
+    pos = 0
+    while True:
+        if open_tag is None:
+            m = _DOLLAR_TAG_RE.search(line, pos)
+            if m is None:
+                return None
+            open_tag, pos = m.group(0), m.end()
+        else:
+            end = line.find(open_tag, pos)
+            if end == -1:
+                return open_tag
+            open_tag, pos = None, end + len(open_tag)
 
 
 def normalise_dump(text: str) -> str:
@@ -39,7 +62,12 @@ def normalise_dump(text: str) -> str:
         if compact or key != ("", "", ""):
             blocks.append((key, compact))
 
+    open_tag: str | None = None  # the dollar-quote tag of a function body we are inside
     for raw in text.splitlines():
+        if open_tag is not None:
+            body.append(raw)  # body lines are kept verbatim, even `-- ...` or `SET ...`
+            open_tag = _dollar_state(raw, open_tag)
+            continue
         header = _HEADER_RE.match(raw)
         if header:
             flush()
@@ -47,6 +75,7 @@ def normalise_dump(text: str) -> str:
             body = []
         elif not raw.startswith(_DROP_PREFIXES):
             body.append(raw)
+            open_tag = _dollar_state(raw, None)
     flush()
 
     out: list[str] = []

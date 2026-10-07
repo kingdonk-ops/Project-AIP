@@ -96,10 +96,143 @@ def test_destructive_change_needs_contract_comment(tmp_path: Path) -> None:
         assert "destructive change needs a contract comment" in found, sql
 
     contracted = revision_source(
-        upgrade='    op.execute("ALTER TABLE t DROP COLUMN c")\n',
-        header="# contract: 202610071200\n",
+        upgrade='    # contract: 202610071200\n    op.execute("ALTER TABLE t DROP COLUMN c")\n',
     )
     assert messages(tmp_path, {"202610071300_x.py": contracted}) == []
+
+
+def test_contract_comment_must_sit_on_or_just_above_the_call(tmp_path: Path) -> None:
+    same_line = revision_source(
+        upgrade='    op.execute("DROP TABLE t")  # contract: 202610071200\n',
+    )
+    assert messages(tmp_path, {"202610071300_x.py": same_line}) == []
+    block_above = revision_source(
+        upgrade=(
+            "    # Contract phase of the widgets split.\n"
+            "    # contract: 202610071200\n"
+            "    # (expand shipped in 202610071200)\n"
+            '    op.execute("DROP TABLE t")\n'
+        ),
+    )
+    assert messages(tmp_path, {"202610071300_x.py": block_above}) == []
+
+    # Anywhere else in the file no longer counts, and one contract covers one call only.
+    in_header = revision_source(
+        upgrade='    op.execute("DROP TABLE t")\n', header="# contract: 202610071200\n"
+    )
+    found = messages(tmp_path, {"202610071300_x.py": in_header})
+    assert "destructive change needs a contract comment" in found
+    second_call = revision_source(
+        upgrade=(
+            "    # contract: 202610071200\n"
+            '    op.execute("DROP TABLE t")\n'
+            '    op.execute("DROP TABLE u")\n'
+        ),
+    )
+    findings = lint.lint_directory(
+        write_versions(tmp_path, {"202610071300_x.py": second_call}), git_base=None
+    )
+    assert [f.message for f in findings] == ["destructive change needs a contract comment"]
+    assert 'op.execute("DROP TABLE u")' in second_call.splitlines()[findings[0].line - 1]
+
+
+def test_destructive_change_inside_a_dollar_quoted_body_is_found(tmp_path: Path) -> None:
+    for body in (
+        "DROP TABLE t;",
+        "EXECUTE 'DROP TABLE ' || quote_ident('t');",
+        "EXECUTE $q$ALTER TABLE t DROP COLUMN c$q$;",
+    ):
+        sql = f"DO $$ BEGIN {body} END $$;"
+        found = messages(
+            tmp_path, {"202610071300_x.py": revision_source(upgrade=f"    op.execute({sql!r})\n")}
+        )
+        assert "destructive change needs a contract comment" in found, body
+
+
+def test_session_set_inside_a_dollar_quoted_body_is_found(tmp_path: Path) -> None:
+    for body in (
+        "SET search_path = x;",
+        "PERFORM 1; SET LOCAL statement_timeout = 0;",
+        "PERFORM set_config('app.tenant_id', 'x', false);",
+    ):
+        sql = f"DO $$ BEGIN {body} END $$;"
+        found = messages(
+            tmp_path, {"202610071300_x.py": revision_source(upgrade=f"    op.execute({sql!r})\n")}
+        )
+        assert "session-level SET is forbidden; use set_config(..., true)" in found, body
+    ok = "DO $$ BEGIN UPDATE t SET a = 1; ALTER ROLE r SET work_mem = '4MB'; END $$;"
+    assert (
+        messages(
+            tmp_path, {"202610071300_x.py": revision_source(upgrade=f"    op.execute({ok!r})\n")}
+        )
+        == []
+    )
+
+
+def test_escape_string_literals_are_parsed(tmp_path: Path) -> None:
+    # One E'' string holding an escaped quote: there is no COMMIT statement here.
+    quoted = "SELECT E'it\\'s; COMMIT'"
+    assert (
+        messages(
+            tmp_path,
+            {"202610071300_x.py": revision_source(upgrade=f"    op.execute({quoted!r})\n")},
+        )
+        == []
+    )
+    # An escaped backslash ends the string, so this COMMIT is real.
+    real = "SELECT E'x\\\\'; COMMIT"
+    found = messages(
+        tmp_path, {"202610071300_x.py": revision_source(upgrade=f"    op.execute({real!r})\n")}
+    )
+    assert "explicit transaction control (BEGIN/COMMIT) is forbidden" in found
+    assert lint.strip_sql("SELECT E'a\\'b', e'c', 'd''e'") == "SELECT '', '', ''"
+
+
+def test_only_known_statements_at_module_level(tmp_path: Path) -> None:
+    for extra in (
+        'print("side effect")\n',
+        "def helper() -> None:\n    pass\n",
+        "if True:\n    x = 1\n",
+    ):
+        found = messages(tmp_path, {"202610071300_x.py": revision_source() + "\n\n" + extra})
+        assert (
+            "only a docstring, imports, assignments, upgrade() and downgrade() may be top-level"
+            in found
+        ), extra
+
+
+def test_autocommit_block_allows_one_statement_per_execute(tmp_path: Path) -> None:
+    two = (
+        "    with op.get_context().autocommit_block():\n"
+        '        op.execute("CREATE INDEX CONCURRENTLY a ON w (id); "\n'
+        '                   "CREATE INDEX CONCURRENTLY b ON w (x)")\n'
+    )
+    found = messages(tmp_path, {"202610071300_x.py": revision_source(upgrade=two)})
+    assert found == ["autocommit_block allows one statement per op.execute"]
+
+
+TEMPLATE_IMPORT = "\nfrom aip.platform.db.templates import render_template\n"
+
+
+def test_render_template_calls_are_rendered_and_linted(tmp_path: Path) -> None:
+    ok = '    op.execute(render_template("tenant_table", table="widgets", columns="name text"))\n'
+    good = revision_source(upgrade=ok, header=TEMPLATE_IMPORT)
+    assert messages(tmp_path, {"202610071300_x.py": good}) == []
+
+    bad = '    op.execute(render_template("tenant_table", table="Widgets", columns="name text"))\n'
+    found = messages(
+        tmp_path, {"202610071300_x.py": revision_source(upgrade=bad, header=TEMPLATE_IMPORT)}
+    )
+    assert any(m.startswith("template render failed:") for m in found), found
+
+    dynamic = (
+        '    cols = "name text"\n'
+        '    op.execute(render_template("tenant_table", table="widgets", columns=cols))\n'
+    )
+    found = messages(
+        tmp_path, {"202610071300_x.py": revision_source(upgrade=dynamic, header=TEMPLATE_IMPORT)}
+    )
+    assert "only op.execute(raw SQL) is allowed" in found
 
 
 def test_alembic_operations_other_than_execute_are_rejected(tmp_path: Path) -> None:

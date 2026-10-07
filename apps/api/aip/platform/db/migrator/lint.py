@@ -3,12 +3,19 @@
 Works on the Python AST and the SQL string literals of each revision. Rules:
 
 - filename ``^\\d{12}_[a-z0-9_]+\\.py$`` and ``revision`` equal to the filename prefix;
+- at module level only a docstring, imports, assignments, ``upgrade()`` and ``downgrade()``;
 - ``downgrade()`` is exactly ``raise NotImplementedError("forward-only")``;
-- ``upgrade()`` holds only ``op.execute(<str>)`` calls, plus
-  ``with op.get_context().autocommit_block():`` around ``CREATE INDEX CONCURRENTLY``;
-- no explicit ``BEGIN``/``COMMIT``, no session-level ``SET`` (only ``set_config(..., true)``);
+- ``upgrade()`` holds only ``op.execute(<str>)`` or ``op.execute(render_template(<literals>))``
+  calls (the template is rendered and its SQL linted), plus
+  ``with op.get_context().autocommit_block():`` around ``CREATE INDEX CONCURRENTLY``, one
+  statement per ``op.execute``;
+- no explicit ``BEGIN``/``COMMIT``, no session-level ``SET`` (only ``set_config(..., true)``),
+  also inside dollar-quoted (``DO $$ ... $$``) bodies;
 - ``CREATE EXTENSION`` only in the baseline (the revision with ``down_revision = None``);
-- ``DROP TABLE``, ``DROP COLUMN`` and ``SET NOT NULL`` need ``# contract: <expand revision id>``;
+- ``DROP TABLE``, ``DROP COLUMN`` and ``SET NOT NULL`` need ``# contract: <expand revision id>``
+  on the ``op.execute`` call's lines or in the comment block just above it. They are found
+  anywhere in the SQL, including dollar-quoted bodies and string literals (``EXECUTE 'DROP ...'``);
+- string literals may be standard (``'...'``), escape (``E'...'``) or dollar-quoted;
 - a single head;
 - no revision modified or deleted relative to ``origin/main`` (merge base).
 """
@@ -16,8 +23,11 @@ Works on the Python AST and the SQL string literals of each revision. Rules:
 from __future__ import annotations
 
 import ast
+import io
 import re
 import subprocess
+import tokenize
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -32,6 +42,9 @@ MSG_TRANSACTION = "explicit transaction control (BEGIN/COMMIT) is forbidden"
 MSG_SET = "session-level SET is forbidden; use set_config(..., true)"
 MSG_EXTENSION = "CREATE EXTENSION is only allowed in the baseline revision"
 MSG_CONTRACT = "destructive change needs a contract comment"
+MSG_AUTOCOMMIT_ONE = "autocommit_block allows one statement per op.execute"
+MSG_MODULE = "only a docstring, imports, assignments, upgrade() and downgrade() may be top-level"
+MSG_TEMPLATE = "template render failed"
 
 _TRANSACTION_WORDS = ("BEGIN", "COMMIT", "ROLLBACK", "END", "ABORT", "START TRANSACTION")
 _DESTRUCTIVE_RE = re.compile(r"\bDROP\s+TABLE\b|\bDROP\s+COLUMN\b|\bSET\s+NOT\s+NULL\b")
@@ -39,6 +52,9 @@ _EXTENSION_RE = re.compile(r"\bCREATE\s+EXTENSION\b")
 _SET_CONFIG_FALSE_RE = re.compile(r"\bSET_CONFIG\s*\([^)]*,\s*FALSE\s*\)")
 _CONCURRENT_INDEX_RE = re.compile(r"^CREATE\s+(UNIQUE\s+)?INDEX\s+CONCURRENTLY\b")
 _DOLLAR_TAG_RE = re.compile(r"\$[A-Za-z_][A-Za-z0-9_]*\$|\$\$")
+_BODY_SET_RE = re.compile(r"^(?:SET|RESET)\s|\b(?:BEGIN|THEN|ELSE|LOOP)\s+(?:SET|RESET)\s")
+_IDENT_CHAR_RE = re.compile(r"[A-Za-z0-9_$]")
+_TEMPLATE_FUNC = "render_template"
 
 
 @dataclass(frozen=True, order=True)
@@ -60,39 +76,73 @@ class _Revision:
     findings: list[Finding] = field(default_factory=list[Finding])
 
 
-def strip_sql(sql: str) -> str:
-    """Blank out comments, dollar-quoted bodies and string literals (keeps ``''`` placeholders)."""
-    out: list[str] = []
-    i, n = 0, len(sql)
+def _segments(sql: str) -> Iterator[tuple[str, str]]:
+    """Split SQL into ``(kind, text)``: ``code``, ``comment``, ``string`` or ``dollar``.
+
+    ``string`` covers ``'...'`` (``''`` escapes a quote) and ``E'...'`` (a backslash escapes the
+    next character too); ``dollar`` is a whole ``$tag$ ... $tag$`` including both tags.
+    """
+    i, n, start = 0, len(sql), 0
     while i < n:
         ch = sql[i]
+        after_ident = i > 0 and bool(_IDENT_CHAR_RE.match(sql[i - 1]))
+        kind, end = "", i
         if sql.startswith("--", i):
             end = sql.find("\n", i)
-            i = n if end == -1 else end
+            kind, end = "comment", (n if end == -1 else end)
         elif sql.startswith("/*", i):
             end = sql.find("*/", i + 2)
-            i = n if end == -1 else end + 2
-            out.append(" ")
-        elif ch == "$" and (m := _DOLLAR_TAG_RE.match(sql, i)):
-            tag = m.group(0)
-            end = sql.find(tag, m.end())
-            i = n if end == -1 else end + len(tag)
-            out.append(" '' ")
-        elif ch == "'":
-            j = i + 1
+            kind, end = "comment", (n if end == -1 else end + 2)
+        elif ch == "$" and not after_ident and (m := _DOLLAR_TAG_RE.match(sql, i)):
+            close = sql.find(m.group(0), m.end())
+            kind, end = "dollar", (n if close == -1 else close + len(m.group(0)))
+        elif ch == "'" or (ch in "eE" and sql.startswith("'", i + 1) and not after_ident):
+            backslash = ch != "'"
+            j = i + (2 if backslash else 1)
             while j < n:
+                if backslash and sql[j] == "\\":
+                    j += 2
+                    continue
                 if sql[j] == "'":
                     if j + 1 < n and sql[j + 1] == "'":
                         j += 2
                         continue
                     break
                 j += 1
-            i = j + 1
-            out.append("''")
-        else:
-            out.append(ch)
+            kind, end = "string", min(j + 1, n)
+        if not kind:
             i += 1
-    return "".join(out)
+            continue
+        if i > start:
+            yield "code", sql[start:i]
+        yield kind, sql[i:end]
+        i = start = end
+    if n > start:
+        yield "code", sql[start:n]
+
+
+def strip_sql(sql: str) -> str:
+    """Blank out comments, dollar-quoted bodies and string literals (keeps ``''`` placeholders)."""
+    blanks = {"comment": " ", "dollar": " '' ", "string": "''"}
+    return "".join(blanks.get(kind, text) for kind, text in _segments(sql))
+
+
+def strip_comments(sql: str) -> str:
+    """Blank out comments only: string literals and dollar-quoted bodies are kept."""
+    return "".join(" " if kind == "comment" else text for kind, text in _segments(sql))
+
+
+def dollar_bodies(sql: str) -> list[str]:
+    """The bodies of the top-level dollar-quoted strings, without their tags."""
+    bodies: list[str] = []
+    for kind, text in _segments(sql):
+        if kind != "dollar":
+            continue
+        tag = _DOLLAR_TAG_RE.match(text)
+        size = len(tag.group(0)) if tag else 0
+        closed = len(text) >= 2 * size and text.endswith(text[:size])
+        bodies.append(text[size : len(text) - size] if closed else text[size:])
+    return bodies
 
 
 def sql_statements(sql: str) -> list[str]:
@@ -101,22 +151,67 @@ def sql_statements(sql: str) -> list[str]:
     return [" ".join(p.split()).upper() for p in parts if p.strip()]
 
 
+def _body_has_session_set(body: str) -> bool:
+    """A ``SET``/``RESET`` statement inside a dollar-quoted (PL/pgSQL) body, at any depth."""
+    if any(_BODY_SET_RE.search(stmt) for stmt in sql_statements(body)):
+        return True
+    return any(_body_has_session_set(inner) for inner in dollar_bodies(body))
+
+
 def _sql_findings(sql: str, *, is_baseline: bool, has_contract: bool) -> list[str]:
     found: list[str] = []
     for stmt in sql_statements(sql):
         if any(stmt == w or stmt.startswith(w + " ") for w in _TRANSACTION_WORDS):
             found.append(MSG_TRANSACTION)
-        if stmt.startswith(("SET ", "RESET ")) or _SET_CONFIG_FALSE_RE.search(stmt):
+        if stmt.startswith(("SET ", "RESET ")):
             found.append(MSG_SET)
-        if _EXTENSION_RE.search(stmt) and not is_baseline:
-            found.append(MSG_EXTENSION)
-        if _DESTRUCTIVE_RE.search(stmt) and not has_contract:
-            found.append(MSG_CONTRACT)
-    return found
+    if any(_body_has_session_set(body) for body in dollar_bodies(sql)):
+        found.append(MSG_SET)
+    # Everything but comments: DO bodies and EXECUTE '...' strings cannot hide these.
+    code = " ".join(strip_comments(sql).split()).upper()
+    if _SET_CONFIG_FALSE_RE.search(code):
+        found.append(MSG_SET)
+    if _EXTENSION_RE.search(code) and not is_baseline:
+        found.append(MSG_EXTENSION)
+    if _DESTRUCTIVE_RE.search(code) and not has_contract:
+        found.append(MSG_CONTRACT)
+    return list(dict.fromkeys(found))
+
+
+class _TemplateFailedError(Exception):
+    pass
+
+
+def _render_call(call: ast.Call) -> str | None:
+    """The SQL of ``render_template("<name>", key="<literal>", ...)``, or None if not literal."""
+    from aip.platform.db.errors import TemplateError
+    from aip.platform.db.templates import render_template
+
+    if not (isinstance(call.func, ast.Name) and call.func.id == _TEMPLATE_FUNC):
+        return None
+    if len(call.args) != 1:
+        return None
+    name = call.args[0]
+    if not (isinstance(name, ast.Constant) and isinstance(name.value, str)):
+        return None
+    variables: dict[str, object] = {}
+    for kw in call.keywords:
+        if kw.arg is None or not isinstance(kw.value, ast.Constant):
+            return None
+        if not isinstance(kw.value.value, str):
+            return None
+        variables[kw.arg] = kw.value.value
+    try:
+        return render_template(name.value, **variables)
+    except TemplateError as exc:
+        raise _TemplateFailedError(str(exc)) from exc
 
 
 def _execute_sql(stmt: ast.stmt) -> str | None:
-    """The SQL of ``op.execute("<literal>")``, or None for anything else."""
+    """The SQL of ``op.execute("<literal>")`` or ``op.execute(render_template(...))``, else None.
+
+    Raises ``_TemplateFailedError`` when a literal ``render_template`` call cannot be rendered.
+    """
     if not isinstance(stmt, ast.Expr) or not isinstance(stmt.value, ast.Call):
         return None
     call = stmt.value
@@ -133,7 +228,55 @@ def _execute_sql(stmt: ast.stmt) -> str | None:
     arg = call.args[0]
     if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
         return arg.value
+    if isinstance(arg, ast.Call):
+        return _render_call(arg)
     return None
+
+
+def _comment_lines(source: str) -> dict[int, str]:
+    """Line number -> Python comment text (from ``tokenize``, so never inside a string)."""
+    comments: dict[int, str] = {}
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            if tok.type == tokenize.COMMENT:
+                comments[tok.start[0]] = tok.string
+    except (tokenize.TokenError, SyntaxError):
+        pass
+    return comments
+
+
+def _has_contract(node: ast.stmt, comments: dict[int, str], lines: list[str]) -> bool:
+    """A ``# contract: <rev>`` on the call's own lines or in the comment block right above it."""
+    end = node.end_lineno or node.lineno
+    if any(CONTRACT_RE.search(comments.get(n, "")) for n in range(node.lineno, end + 1)):
+        return True
+    n = node.lineno - 1
+    while n >= 1 and lines[n - 1].lstrip().startswith("#"):
+        if CONTRACT_RE.search(comments.get(n, "")):
+            return True
+        n -= 1
+    return False
+
+
+_MODULE_STMTS = (ast.Import, ast.ImportFrom, ast.Assign, ast.AnnAssign)
+
+
+def _module_findings(tree: ast.Module) -> list[tuple[int, str]]:
+    found: list[tuple[int, str]] = []
+    for index, stmt in enumerate(tree.body):
+        if isinstance(stmt, _MODULE_STMTS):
+            continue
+        if isinstance(stmt, ast.FunctionDef) and stmt.name in ("upgrade", "downgrade"):
+            continue
+        is_docstring = (
+            index == 0
+            and isinstance(stmt, ast.Expr)
+            and isinstance(stmt.value, ast.Constant)
+            and isinstance(stmt.value.value, str)
+        )
+        if not is_docstring:
+            found.append((stmt.lineno, MSG_MODULE))
+    return found
 
 
 def _is_autocommit_block(stmt: ast.stmt) -> bool:
@@ -255,7 +398,10 @@ def lint_file(path: Path) -> _Revision:
         rev.down_revisions = downs
         rev.is_baseline = ok and not downs
 
-    has_contract = bool(CONTRACT_RE.search(source))
+    for line, message in _module_findings(tree):
+        add(line, message)
+    comments = _comment_lines(source)
+    lines = source.splitlines()
     functions = _functions(tree)
 
     downgrade = functions.get("downgrade")
@@ -270,21 +416,31 @@ def lint_file(path: Path) -> _Revision:
         return rev
 
     def check_sql(stmt: ast.stmt, sql: str) -> None:
-        for message in _sql_findings(sql, is_baseline=rev.is_baseline, has_contract=has_contract):
+        contract = _has_contract(stmt, comments, lines)
+        for message in _sql_findings(sql, is_baseline=rev.is_baseline, has_contract=contract):
             add(stmt.lineno, message)
 
+    def execute_sql(stmt: ast.stmt) -> str | None:
+        try:
+            return _execute_sql(stmt)
+        except _TemplateFailedError as exc:
+            add(stmt.lineno, f"{MSG_TEMPLATE}: {exc}")
+            return ""
+
     for stmt in _without_docstring(upgrade.body):
-        sql = _execute_sql(stmt)
+        sql = execute_sql(stmt)
         if sql is not None:
             check_sql(stmt, sql)
         elif _is_autocommit_block(stmt):
             assert isinstance(stmt, ast.With)
             for inner in stmt.body:
-                inner_sql = _execute_sql(inner)
+                inner_sql = execute_sql(inner)
                 if inner_sql is None:
                     add(inner.lineno, MSG_ONLY_EXECUTE)
                     continue
                 statements = sql_statements(inner_sql)
+                if len(statements) > 1:
+                    add(inner.lineno, MSG_AUTOCOMMIT_ONE)
                 if not statements or not all(_CONCURRENT_INDEX_RE.match(s) for s in statements):
                     add(inner.lineno, MSG_AUTOCOMMIT)
                 check_sql(inner, inner_sql)
