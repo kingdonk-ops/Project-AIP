@@ -55,3 +55,7 @@ the client isn't set up, the inspector records a witness note and the client con
 - Initial the provenance log ([`docs/security/provenance-log.md`](../docs/security/provenance-log.md)) to confirm AIP was not read or copied.
 - Rotate the Coolify API key that was pasted in chat, then store the new one only as GitHub Actions secrets
   (`COOLIFY_TOKEN`, `COOLIFY_WEBHOOK`). This is needed before OPS-11.
+- Confirm ADR 0011 (licence policy details, proposed in STACK-04): the extra permissive licences we already use, and the narrower rule for OS packages inside container images (GPL tools such as bash ship in every Debian base image; only AGPL/SSPL and named packages are denied there).
+- The Everything Claude Code plugin's `config-protection` hook blocks agents from writing `eslint.config.*` files. DESIGN-01 needs `packages/ui/eslint.config.mjs`, and the web app's lint config should extend the shared boundaries config (ARCH-03). Either turn that hook off for this project, or add the file yourself from the drafted config.
+- In GitHub branch protection for `main`, mark the `boundaries` check (ARCH-03) as required.
+
