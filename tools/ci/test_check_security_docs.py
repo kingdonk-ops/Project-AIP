@@ -55,6 +55,16 @@ class HeadingParserTests(unittest.TestCase):
         text = "".join(f"## {area}\n\n{FULL_SECTION}\n" for area in csd.REQUIRED_AREAS)
         self.assertEqual(csd.check_threat_model_text(text), [])
 
+    def test_duplicate_area_heading_is_reported(self) -> None:
+        text = "".join(f"## {area}\n\n{FULL_SECTION}\n" for area in csd.REQUIRED_AREAS)
+        text += "## Portal\n\n" + FULL_SECTION
+        self.assertIn('duplicate section "Portal"', csd.check_threat_model_text(text))
+
+    def test_duplicate_non_area_heading_is_reported(self) -> None:
+        text = "".join(f"## {area}\n\n{FULL_SECTION}\n" for area in csd.REQUIRED_AREAS)
+        text += "## Open items\n\nx\n\n## Open items\n\ny\n"
+        self.assertIn('duplicate section "Open items"', csd.check_threat_model_text(text))
+
 
 class ProvenanceParserTests(unittest.TestCase):
     def test_committed_log_passes(self) -> None:
@@ -127,6 +137,20 @@ class IntegrationTests(unittest.TestCase):
         self.assertLess(len(kept), len(lines))
         self.provenance.write_text("".join(kept), encoding="utf-8")
         self.assert_fails_with("provenance-log.md: missing AIP non-use row")
+
+    def test_duplicate_area_heading_fails(self) -> None:
+        text = self.threat_model.read_text(encoding="utf-8")
+        self.threat_model.write_text(text + "\n## AI\n\n" + FULL_SECTION, encoding="utf-8")
+        self.assert_fails_with('threat-model.md: duplicate section "AI"')
+
+    def test_non_utf8_file_is_a_finding_not_a_traceback(self) -> None:
+        self.threat_model.write_bytes(b"# Threat model\n\n\xff\xfe broken\n")
+        result = self.run_check(self.root)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertIn(
+            "docs/security/threat-model.md is not valid UTF-8", result.stdout.splitlines()
+        )
 
     def test_missing_files(self) -> None:
         self.threat_model.unlink()

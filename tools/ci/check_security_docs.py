@@ -3,7 +3,9 @@
 
 Checks:
 - docs/security/threat-model.md and docs/security/provenance-log.md exist;
-- threat-model.md has the six required `## ` threat areas, each with the four `### ` subsections;
+- threat-model.md has the six required `## ` threat areas, each with the four `### `
+  subsections, and no `## ` heading appears twice;
+- both files are valid UTF-8 (a decode error is reported as a finding, not a traceback);
 - provenance-log.md has the provenance table header and a table row stating AIP was not used.
 
 Prints one line per missing item and exits 1 if there are any.
@@ -59,11 +61,14 @@ def parse_sections(text: str) -> list[Section]:
 
 
 def check_threat_model_text(text: str) -> list[str]:
-    """Return findings like `missing section "AI"` or `AI: missing "Residual risk"`."""
+    """Return findings such as `missing section "AI"`, `AI: missing "Residual risk"`
+    or `duplicate section "AI"`."""
     by_title: dict[str, list[str]] = {}
-    for title, subs in parse_sections(text):
-        by_title.setdefault(title, []).extend(subs)
     findings: list[str] = []
+    for title, subs in parse_sections(text):
+        if title in by_title:
+            findings.append(f'duplicate section "{title}"')
+        by_title.setdefault(title, []).extend(subs)
     for area in REQUIRED_AREAS:
         if area not in by_title:
             findings.append(f'missing section "{area}"')
@@ -111,7 +116,12 @@ def run(root: Path) -> list[str]:
         if not path.is_file():
             findings.append(f"{rel.as_posix()} is missing")
             continue
-        findings.extend(f"{rel.name}: {f}" for f in checker(path.read_text(encoding="utf-8")))
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            findings.append(f"{rel.as_posix()} is not valid UTF-8")
+            continue
+        findings.extend(f"{rel.name}: {f}" for f in checker(text))
     return findings
 
 
