@@ -19,15 +19,15 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
 | [DOCS-01](tasks/DOCS-01.md) | Board, ADRs, agent workflow, conventions fixes | arch | S | — | done | setup PR |
-| [STACK-01](tasks/STACK-01.md) | Stack ADRs and reconciliation record | stack | S | — | review | branch claude/festive-cerf-euolrf |
-| [SECURITY-01](tasks/SECURITY-01.md) | Threat model and AGPL provenance log | security | XS | — | todo | |
+| [STACK-01](tasks/STACK-01.md) | Stack ADRs and reconciliation record | stack | S | — | done | PR #5 |
+| [SECURITY-01](tasks/SECURITY-01.md) | Threat model and AGPL provenance log | security | XS | — | review | branch claude/festive-cerf-euolrf |
 | [ARCH-01](tasks/ARCH-01.md) | Monorepo skeleton and module template | arch | M | — | done | PR #4 |
 
 ### Wave 1
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [DATABASE-08](tasks/DATABASE-08.md) | Raw-SQL migration runner (node-pg-migrate), migrator role, baseline + extensions | database | M | ARCH-01 | todo |  |
+| [DATABASE-08](tasks/DATABASE-08.md) | Alembic env, migrator role, baseline revision + extensions | database | M | ARCH-01 | todo |  |
 | [ARCH-02](tasks/ARCH-02.md) | Module registry and dependency check | arch | S | ARCH-01 | todo |  |
 | [ARCH-03](tasks/ARCH-03.md) | Import-boundary lint and manifest CI check | arch | S | ARCH-01 | todo |  |
 | [ARCH-04](tasks/ARCH-04.md) | Request context carrying tenant, project, actor and asset scope | arch | S | ARCH-01 | todo |  |
