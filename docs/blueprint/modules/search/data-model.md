@@ -1,0 +1,368 @@
+# Search, retrieval & saved views — Data model & schema
+
+
+- **notes**: Permission and tenant predicates are applied inside SQL, via RLS plus acl_tags. Embeddings are deleted by the lifecycle job on source deletion, offboarding or crypto-shred, and legal hold release rules apply. The embedding dimension is set by the provider, still to be confirmed. Terminology synonyms come from the terms dictionary, so no table is needed here. Masked health fields never reach body.
+- **reuses existing**:
+  - assets
+  - documents
+  - inspections
+  - issues
+  - tasks
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: asset_path
+        - **type**: ltree
+      -
+        - **name**: party_id
+        - **notes**: company, for party restrictions
+        - **type**: uuid
+      -
+        - **name**: reference
+        - **notes**: record number
+        - **type**: text
+      -
+        - **name**: record_date
+        - **type**: date
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: body
+        - **notes**: masked health fields excluded
+        - **type**: text
+      -
+        - **name**: tags
+        - **notes**: tags, NDT methods
+        - **type**: text[]
+      -
+        - **name**: tsv
+        - **notes**: generated
+        - **type**: tsvector
+      -
+        - **name**: embedding
+        - **notes**: pgvector, nullable until AI on; dimension depends on provider
+        - **type**: vector(1536)
+      -
+        - **name**: acl_tags
+        - **notes**: permission and party restriction tags
+        - **type**: text[]
+      -
+        - **name**: restricted_party_ids
+        - **type**: uuid[]
+      -
+        - **name**: hold_flag
+        - **type**: boolean
+      -
+        - **name**: source_updated_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, record_type, record_id) unique
+      - GIN (tsv)
+      - GIN (tags)
+      - GIN (acl_tags)
+      - GiST (asset_path)
+      - GIN title+reference gin_trgm_ops
+      - HNSW (embedding vector_cosine_ops) filtered by tenant
+      - (tenant_id, party_id, record_date)
+    - **name**: search_index_entries
+    - **purpose**: Unified index for FTS and vector search with ACL
+    - **relations**:
+      - assets
+      - projects
+      - companies (contacts)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: operation
+        - **notes**: upsert/delete/purge_embedding
+        - **type**: text
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: attempts
+        - **type**: int
+      -
+        - **name**: error
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (status, created_at)
+      - (tenant_id, record_type, record_id)
+    - **name**: search_indexing_jobs
+    - **purpose**: Queued index, reindex and delete jobs
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: kind
+        - **notes**: search/retrieval/export
+        - **type**: text
+      -
+        - **name**: query_text
+        - **type**: text
+      -
+        - **name**: filters
+        - **type**: jsonb
+      -
+        - **name**: result_count
+        - **type**: int
+      -
+        - **name**: mode
+        - **notes**: fts/vector/hybrid
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id, created_at)
+      - (tenant_id, kind, created_at)
+    - **name**: search_query_log
+    - **purpose**: Append-only log of every query and export
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: owner_user_id
+        - **type**: uuid
+      -
+        - **name**: party_id
+        - **type**: uuid
+      -
+        - **name**: date_from
+        - **type**: date
+      -
+        - **name**: date_to
+        - **type**: date
+      -
+        - **name**: reference
+        - **type**: text
+      -
+        - **name**: record_types
+        - **type**: text[]
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: case_id
+        - **notes**: pin to case, nullable (cases removed)
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, owner_user_id)
+    - **name**: retrieval_queries
+    - **purpose**: Saved structured retrieval definitions
+    - **relations**:
+      - users
+      - assets
+      - companies
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: retrieval_query_id
+        - **type**: uuid
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: items
+        - **notes**: record_type, id, hash, version
+        - **type**: jsonb
+      -
+        - **name**: item_count
+        - **type**: int
+      -
+        - **name**: hold_marked
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, created_at)
+    - **name**: result_set_snapshots
+    - **purpose**: Frozen result sets for evidence
+    - **relations**:
+      - retrieval_queries
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: snapshot_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: bundle file
+        - **type**: uuid
+      -
+        - **name**: manifest_hash
+        - **type**: text
+      -
+        - **name**: custody_log
+        - **notes**: or separate append-only events
+        - **type**: jsonb
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (snapshot_id)
+      - (manifest_hash)
+    - **name**: export_bundles
+    - **purpose**: Evidence bundle with hash manifest and chain of custody
+    - **relations**:
+      - result_set_snapshots
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: filter
+        - **notes**: JSONLogic with parameters
+        - **type**: jsonb
+      -
+        - **name**: parameter_defs
+        - **notes**: e.g. my_area, shutdown
+        - **type**: jsonb
+      -
+        - **name**: display_mode
+        - **notes**: list/count/tile
+        - **type**: text
+      -
+        - **name**: scope
+        - **notes**: personal/team/project
+        - **type**: text
+      -
+        - **name**: owner_user_id
+        - **type**: uuid
+      -
+        - **name**: team_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, scope, owner_user_id)
+      - (tenant_id, project_id)
+      - (tenant_id, record_type)
+    - **name**: saved_views
+    - **purpose**: Saved filters for lists, counts and tiles
+    - **relations**:
+      - users
+      - teams
+      - projects

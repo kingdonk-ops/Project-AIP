@@ -1,0 +1,598 @@
+# Roles, permissions & teams — Data model & schema
+
+
+- **notes**: Policy evaluation and RLS helpers live in code. Scope tables denormalise asset_path (ltree) so RLS predicates avoid joins; a trigger must refresh them when assets move. SCIM mapping must never create a tenant-scope admin assignment. Approval for overrides and custom roles reuses the approvals engine; CASL vs OpenFGA is open, and this schema supports either as a source of tuples.
+- **reuses existing**:
+  - disciplines
+  - certificates
+  - assets
+  - entity_types
+  - documents
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: platform tenant; RLS read-all for reference rows
+        - **type**: uuid
+      -
+        - **name**: module_id
+        - **type**: text
+      -
+        - **name**: ability
+        - **notes**: e.g. inspection.sign
+        - **type**: text
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: is_privileged
+        - **notes**: requires MFA and approval to grant
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (module_id, ability)
+    - **name**: permission
+    - **purpose**: Catalogue of module abilities registered from each module's permissions.py.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: code
+        - **notes**: stable internal code
+        - **type**: text
+      -
+        - **name**: name_term_key
+        - **notes**: terms key for display; custom roles may use name
+        - **type**: text
+      -
+        - **name**: name
+        - **notes**: nullable custom name
+        - **type**: text
+      -
+        - **name**: is_system
+        - **notes**: inspector, supervisor, engineer, manager, client
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+    - **name**: role
+    - **purpose**: Default and custom roles.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: role_id
+        - **notes**: FK role
+        - **type**: uuid
+      -
+        - **name**: permission_id
+        - **notes**: FK permission
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (role_id, permission_id) where deleted_at is null
+    - **name**: role_permission
+    - **purpose**: Permissions granted to a role.
+    - **relations**:
+      - role.id
+      - permission.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: role_id
+        - **notes**: FK role
+        - **type**: uuid
+      -
+        - **name**: scope_type
+        - **notes**: tenant|organisation|project|team|asset_subtree
+        - **type**: text
+      -
+        - **name**: organisation_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: team_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, FK assets; subtree root
+        - **type**: uuid
+      -
+        - **name**: asset_path
+        - **notes**: denormalised from assets for fast filter
+        - **type**: ltree
+      -
+        - **name**: source
+        - **notes**: manual|scim|delegation
+        - **type**: text
+      -
+        - **name**: valid_from
+        - **type**: date
+      -
+        - **name**: valid_to
+        - **type**: date
+      -
+        - **name**: approved_by
+        - **notes**: for privileged roles
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id)
+      - (tenant_id, project_id, role_id)
+      - GIST (asset_path)
+    - **name**: role_assignment
+    - **purpose**: Assigns a role to a user within a project, team or asset-subtree scope.
+    - **relations**:
+      - app_user.id
+      - role.id
+      - projects
+      - team.id
+      - assets.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: permission_id
+        - **notes**: FK permission
+        - **type**: uuid
+      -
+        - **name**: effect
+        - **notes**: allow|deny
+        - **type**: text
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: approved_by
+        - **type**: uuid
+      -
+        - **name**: valid_to
+        - **notes**: nullable
+        - **type**: date
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id)
+    - **name**: user_override
+    - **purpose**: Per-user permission grant or deny on top of roles.
+    - **relations**:
+      - app_user.id
+      - permission.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: organisation_id
+        - **notes**: owning organisation
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: team_type
+        - **notes**: internal|subcontractor|client
+        - **type**: text
+      -
+        - **name**: scim_group_id
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+      - unique (tenant_id, scim_group_id) where not null
+    - **name**: team
+    - **purpose**: Team of users such as an insulation crew, subcontractor or client reviewers.
+    - **relations**:
+      - organisations
+      - projects.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: team_id
+        - **notes**: FK team
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: source
+        - **notes**: manual|scim
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (team_id, user_id) where deleted_at is null
+      - (tenant_id, user_id)
+    - **name**: team_member
+    - **purpose**: Team membership.
+    - **relations**:
+      - team.id
+      - app_user.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: team_id
+        - **notes**: FK team
+        - **type**: uuid
+      -
+        - **name**: entity_type_code
+        - **notes**: neutral code or module; null means all
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: nullable, FK assets; include root
+        - **type**: uuid
+      -
+        - **name**: asset_path
+        - **notes**: denormalised
+        - **type**: ltree
+      -
+        - **name**: effect
+        - **notes**: include|exclude
+        - **type**: text
+      -
+        - **name**: own_records_only
+        - **notes**: e.g. subcontractor sees own
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, team_id)
+      - GIST (asset_path)
+    - **name**: visibility_rule
+    - **purpose**: What a team can see by entity type and asset subtree, with explicit exclusions.
+    - **relations**:
+      - team.id
+      - assets.id
+      - entity_types (by code)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: team_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: party_type
+        - **notes**: nullable: client|subcontractor
+        - **type**: text
+      -
+        - **name**: entity_type_code
+        - **type**: text
+      -
+        - **name**: field_name
+        - **notes**: e.g. rate, internal_notes
+        - **type**: text
+      -
+        - **name**: mask_mode
+        - **notes**: hide|redact|aggregate
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, entity_type_code)
+      - (tenant_id, team_id)
+    - **name**: field_mask
+    - **purpose**: Field masking policy per party or team.
+    - **relations**:
+      - team.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: discipline_id
+        - **notes**: FK disciplines
+        - **type**: uuid
+      -
+        - **name**: method_code
+        - **notes**: e.g. UT, nullable
+        - **type**: text
+      -
+        - **name**: can_inspect
+        - **type**: boolean
+      -
+        - **name**: can_sign
+        - **type**: boolean
+      -
+        - **name**: required_certificate_type
+        - **notes**: nullable; links to certificate gate
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, user_id, discipline_id, coalesce(method_code,'')) where deleted_at is null
+    - **name**: discipline_grant
+    - **purpose**: Discipline and method sign-off grants tied to competency.
+    - **relations**:
+      - app_user.id
+      - disciplines.id
+      - certificates (type)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: delegator_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: delegate_id
+        - **notes**: FK app_user
+        - **type**: uuid
+      -
+        - **name**: role_id
+        - **notes**: FK role
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: starts_at
+        - **type**: timestamptz
+      -
+        - **name**: ends_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, delegate_id, ends_at)
+    - **name**: delegation
+    - **purpose**: Time-boxed acting-in-role.
+    - **relations**:
+      - app_user.id
+      - role.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: actor_id
+        - **type**: uuid
+      -
+        - **name**: subject_user_id
+        - **type**: uuid
+      -
+        - **name**: change_type
+        - **type**: text
+      -
+        - **name**: before
+        - **type**: jsonb
+      -
+        - **name**: after
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, subject_user_id, created_at desc)
+    - **name**: access_change_log
+    - **purpose**: Append-only log of privilege changes feeding the audit chain and quarterly reviews.
+    - **relations**:
+      - app_user.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: period
+        - **notes**: e.g. 2025-Q1
+        - **type**: text
+      -
+        - **name**: reviewer_id
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: open|complete
+        - **type**: text
+      -
+        - **name**: export_document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: completed_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, period)
+    - **name**: access_review
+    - **purpose**: Quarterly access review with per-line attestation.
+    - **relations**:
+      - documents.id

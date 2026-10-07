@@ -1,0 +1,123 @@
+# Regional reference data packs — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Tenant admins with refpacks.admin
+    - **actions**:
+      - Enable pack
+      - Disable pack
+      - Import licensed content
+      - Set licence flag
+      - View versions
+    - **layout**: Card or table list of available and enabled packs with licence badges.
+    - **name**: Library Manager
+    - **purpose**: Enable, import, version and manage reference packs for the tenant.
+    - **route**: /settings/reference-packs
+    - **sections**:
+      - Available shipped packs (for example AU-WA starter pack)
+      - Enabled packs with version
+      - Customer-loaded licensed libraries with licence flag
+      - Pack detail drawer
+  -
+    - **access**: refpacks.view to read, refpacks.admin to edit
+    - **actions**:
+      - Search items
+      - Map standard clause to checklist item
+      - Create version
+      - Export
+    - **layout**: Tabs: Items, Standards map, Versions, Usage.
+    - **name**: Pack Detail
+    - **purpose**: Browse a pack's items, standards and versions.
+    - **route**: /settings/reference-packs/:id
+    - **sections**:
+      - Item table (code, description, unit)
+      - Standards-to-checklist mapping
+      - Version history
+      - Projects pinned to each version
+  -
+    - **access**: refpacks.admin
+    - **actions**:
+      - Confirm licence
+      - Upload
+      - Map
+      - Confirm import
+      - Roll back
+    - **layout**: Wizard: licence confirmation, upload, mapping, validate, confirm.
+    - **name**: Licensed Content Import
+    - **purpose**: Customer loads its own licensed data, which stays tenant-owned and is never shared.
+    - **route**: /settings/reference-packs/:id/import
+    - **sections**:
+      - Licence acknowledgement
+      - File upload and mapping
+      - Validation report
+      - Confirmation
+  -
+    - **access**: refpacks.admin or project admins for their own project
+    - **actions**:
+      - Approve upgrade for a project
+      - Keep pinned
+      - Export diff
+    - **layout**: Diff view with an affected-references panel.
+    - **name**: Upgrade Preview
+    - **purpose**: Show the impact of a new pack version before projects adopt it.
+    - **route**: /settings/reference-packs/:id/upgrade
+    - **sections**:
+      - Added, changed and removed items
+      - Affected records and checklist links
+      - Projects pinned to the old version
+  -
+    - **access**: Project admins
+    - **actions**:
+      - Pin version
+      - Open upgrade preview
+    - **layout**: Table of packs with pinned version and an upgrade indicator.
+    - **name**: Project Pack Pins
+    - **purpose**: Pin pack versions per project.
+    - **route**: /projects/:projectId/settings/reference-packs
+    - **sections**:
+      - Pinned versions
+      - Upgrade available badges
+  -
+    - **access**: Tenant admins with refpacks.admin
+    - **actions**:
+      - Add currency
+      - Set rate
+      - Choose source
+      - Edit tax rate
+    - **layout**: Two tables with a source configuration panel.
+    - **name**: Currency and Rate Settings
+    - **purpose**: Manage currencies, tax rates and exchange rate sources.
+    - **route**: /settings/currencies
+    - **sections**:
+      - Currencies
+      - Tax rates
+      - Exchange rates with source and effective date
+  -
+    - **access**: Tenant admins
+    - **actions**:
+      - Apply bundle
+      - Preview changes
+      - Override a setting
+    - **layout**: Bundle cards with a preview of what will change.
+    - **name**: Market and Jurisdiction Bundles
+    - **purpose**: Enable a market in one step: terminology, tax, holidays and formats.
+    - **route**: /settings/markets
+    - **sections**:
+      - Available bundles (AU-WA first)
+      - Preview of terminology, holidays and formats
+      - Currently applied bundle
+  -
+    - **access**: Any user with access to the host module
+    - **actions**:
+      - Search
+      - Select
+      - Clear
+    - **layout**: Searchable popover or dialog with pinned-version indicator.
+    - **name**: Reference Picker (shared component)
+    - **purpose**: Reusable picker used inside other modules to select a reference item, standard clause or currency.
+    - **route**: component:reference-picker
+    - **sections**:
+      - Search
+      - Result list with code and description
+      - Version badge

@@ -1,0 +1,285 @@
+# Roles, permissions & teams — Feature filler
+
+
+- **detail sections**:
+  - Permission catalogue entries
+  - Role permissions
+  - Scopes and inheritance with exclusions
+  - Team members and rules
+  - Field mask policies
+  - Effective-access explorer
+  - Privilege change history
+  - Access review
+- **notifications**:
+  - Role or team membership changed
+  - Delegation started or ending
+  - Custom role or override pending approval
+  - Access review due
+  - Discipline grant expiring
+  - Permission cache invalidated after team.membership_changed (system)
+- **settings**:
+  - Default roles and permissions
+  - Approval required for custom roles and overrides
+  - Approver role
+  - Access review frequency
+  - Maximum delegation duration
+  - SCIM mapping guardrails (no tenant admin)
+  - Default field mask templates
+  - Deny-by-default confirmation
+  - Policy engine choice (CASL or OpenFGA)
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export matrix
+    - **columns**:
+      - Role
+      - Type (default/custom)
+      - Permissions count
+      - Users
+      - Last changed
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Permissions
+        - **required**: true
+        - **type**: catalogue multi-select
+      -
+        - **field**: Description
+        - **required**: false
+        - **type**: text
+    - **empty state**: No custom roles. Default roles are available.
+    - **filters**:
+      - Type
+      - In use
+    - **name**: Roles
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Delete
+      - View users
+    - **search**: Role name
+    - **sort**:
+      - Name
+      - Users
+  -
+    - **bulk actions**:
+      - Assign role
+      - Remove
+    - **columns**:
+      - User
+      - Role
+      - Scope (project/team/subtree)
+      - Start
+      - End
+      - Assigned by
+    - **create form**:
+      -
+        - **field**: User
+        - **required**: true
+        - **type**: user select
+      -
+        - **field**: Role
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Asset subtree
+        - **required**: false
+        - **type**: tree picker
+      -
+        - **field**: End date
+        - **required**: false
+        - **type**: date
+    - **empty state**: No assignments in this project.
+    - **filters**:
+      - Role
+      - Project
+      - Team
+      - Expiring
+    - **name**: Role assignments
+    - **row actions**:
+      - Edit
+      - Remove
+      - Explain access
+    - **search**: User
+    - **sort**:
+      - User
+      - End
+  -
+    - **bulk actions**:
+      - Add members
+      - Delete
+    - **columns**:
+      - Team
+      - Organisation
+      - Project
+      - Type
+      - Members
+      - Visibility rules
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Organisation
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: SCIM group link
+        - **required**: false
+        - **type**: select
+    - **empty state**: No teams yet. Create a team to scope what a group can see.
+    - **filters**:
+      - Organisation
+      - Project
+      - Type
+    - **name**: Teams
+    - **row actions**:
+      - Open
+      - Edit
+      - Preview visibility
+      - Delete
+    - **search**: Team name
+    - **sort**:
+      - Name
+      - Members
+  -
+    - **bulk actions**:
+      - Delete
+    - **columns**:
+      - Team
+      - Module or entity
+      - Asset subtree
+      - Exclusions
+      - Field masks
+    - **create form**:
+      -
+        - **field**: Module or entity type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Asset subtree
+        - **required**: false
+        - **type**: tree picker
+      -
+        - **field**: Exclusions
+        - **required**: false
+        - **type**: tree picker
+      -
+        - **field**: Masked fields
+        - **required**: false
+        - **type**: multi-select
+    - **empty state**: No rules; the team sees nothing by default.
+    - **filters**:
+      - Team
+      - Module
+    - **name**: Visibility rules
+    - **row actions**:
+      - Edit
+      - Preview
+    - **search**: Team and entity
+    - **sort**:
+      - Team
+  -
+    - **bulk actions**:
+      - End now
+    - **columns**:
+      - Delegator
+      - Delegate
+      - Role
+      - Start
+      - End
+      - Status
+    - **create form**:
+      -
+        - **field**: Delegate
+        - **required**: true
+        - **type**: user select
+      -
+        - **field**: Role
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Start
+        - **required**: true
+        - **type**: datetime
+      -
+        - **field**: End
+        - **required**: true
+        - **type**: datetime
+    - **empty state**: No delegations.
+    - **filters**:
+      - Active
+      - Expired
+    - **name**: Delegations
+    - **row actions**:
+      - End
+      - View audit
+    - **search**: User
+    - **sort**:
+      - Start
+      - End
+  -
+    - **bulk actions**:
+      - Revoke
+    - **columns**:
+      - User
+      - Discipline
+      - Method
+      - Competency link
+      - Valid to
+    - **create form**:
+      -
+        - **field**: User
+        - **required**: true
+        - **type**: user select
+      -
+        - **field**: Discipline
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Method
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Competency record
+        - **required**: true
+        - **type**: select
+    - **empty state**: No grants recorded.
+    - **filters**:
+      - Discipline
+      - Method
+      - Expiring
+    - **name**: Discipline and method grants
+    - **row actions**:
+      - Edit
+      - Revoke
+    - **search**: User
+    - **sort**:
+      - Valid to
+- **walkthrough**:
+  - Admin creates a team for a subcontractor within a project.
+  - Admin adds members, manually or from a SCIM group.
+  - Admin builds a visibility rule limiting the team to a unit's subtree and excluding a sensitive system.
+  - Admin adds field masks hiding rates and internal NCR notes.
+  - Preview shows exactly what the team can see.
+  - Admin assigns project-scoped roles to team members.
+  - Admin assigns UT discipline grants linked to competency records.
+  - Admin opens the effective-access explorer for a user and record to confirm allow or deny reasons.
+  - A supervisor creates a time-boxed delegation for leave cover.
+  - Reviewer runs the quarterly access review export and confirms or removes access.

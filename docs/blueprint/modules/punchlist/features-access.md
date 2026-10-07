@@ -1,0 +1,251 @@
+# Punch list & defects liability — Feature filler
+
+
+- **detail sections**:
+  - Summary (status, priority, asset, responsible, due, workflow bar)
+  - Photos and evidence
+  - Location (asset tree path and drawing pin)
+  - Verification record (verifier, date, evidence)
+  - Status history and reopen log
+  - Escalation to NCR and linked issue
+  - Defects liability details (period, assigned contractor)
+  - Retention release linkage
+  - Comments
+  - Audit trail
+- **notifications**:
+  - Item assigned (to responsible party)
+  - Due soon and overdue (to responsible party and manager)
+  - Ready for verification (to verifier)
+  - Item rejected or reopened (to responsible party)
+  - Item closed (to raiser)
+  - Defect reported during liability period (to contractor)
+  - Liability period ending soon with open defects (to project manager)
+  - Retention release eligible or blocked (to commercial manager)
+- **settings**:
+  - Term labels (Punch, Defect, Deficiency, Snag)
+  - Categories and priorities
+  - Verifier independence rule and evidence requirement
+  - Defaults for due dates by priority
+  - Defects liability period defaults
+  - Retention release gating rules
+  - Walkdown mode defaults
+  - Export formats and grouping
+  - Escalation to NCR rules
+  - Reminder schedule
+  - Portal visibility for contractors
+- **tables**:
+  -
+    - **bulk actions**:
+      - Assign selected
+      - Change due date
+      - Mark ready for verification
+      - Verify selected
+      - Export list per area
+      - Add to transmittal
+    - **columns**:
+      - Item no.
+      - Description
+      - Asset
+      - Area/location
+      - Category
+      - Priority
+      - Responsible party
+      - Due date
+      - Status
+      - Photos
+      - Phase (punch/defects liability)
+    - **create form**:
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset reference
+      -
+        - **field**: Location pin on drawing
+        - **required**: false
+        - **type**: drawing pin
+      -
+        - **field**: Photos
+        - **required**: false
+        - **type**: photo multi
+      -
+        - **field**: Category
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Priority
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Responsible party
+        - **required**: true
+        - **type**: user/company reference
+      -
+        - **field**: Due date
+        - **required**: false
+        - **type**: date
+    - **empty state**: No punch items. Capture items during a walkdown or create them from minor inspection failures.
+    - **filters**:
+      - Status
+      - Phase
+      - Asset subtree
+      - Area
+      - Responsible party
+      - Priority
+      - Category
+      - Due date range
+      - Overdue
+      - Project
+    - **name**: Punch List
+    - **row actions**:
+      - Open
+      - Assign
+      - Ready for verification
+      - Verify and close
+      - Reopen
+      - Escalate to NCR
+      - Show on drawing
+    - **search**: Item number, description, asset or responsible
+    - **sort**:
+      - Priority
+      - Due date
+      - Created
+      - Area
+      - Status
+  -
+    - **bulk actions**:
+      - Verify selected
+      - Reject selected
+    - **columns**:
+      - Item no.
+      - Asset
+      - Responsible
+      - Marked ready by
+      - Evidence
+      - Waiting since
+    - **empty state**: Nothing waiting for verification.
+    - **filters**:
+      - Project
+      - Responsible
+      - Area
+      - Waiting longer than
+    - **name**: Verification Queue
+    - **row actions**:
+      - Review evidence
+      - Verify and close
+      - Reject with reason
+    - **search**: Item number or asset
+    - **sort**:
+      - Waiting since (default oldest)
+  -
+    - **bulk actions**:
+      - Assign selected
+      - Export
+    - **columns**:
+      - Defect no.
+      - Description
+      - Asset
+      - Contract/project
+      - Reported
+      - Liability period end
+      - Assigned to (contractor/subcontractor)
+      - Status
+      - Retention impact
+    - **create form**:
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset reference
+      -
+        - **field**: Reported by
+        - **required**: true
+        - **type**: user/contact reference
+      -
+        - **field**: Assigned to
+        - **required**: true
+        - **type**: company reference
+      -
+        - **field**: Photos
+        - **required**: false
+        - **type**: photo multi
+      -
+        - **field**: Priority
+        - **required**: true
+        - **type**: dropdown
+    - **empty state**: No defects reported in the liability period.
+    - **filters**:
+      - Status
+      - Contract
+      - Contractor
+      - Period active/expired
+      - Asset subtree
+    - **name**: Defects Liability Records
+    - **row actions**:
+      - Open
+      - Assign
+      - Verify and close
+      - Reopen
+      - Escalate to NCR
+    - **search**: Defect number, description or asset
+    - **sort**:
+      - Reported
+      - Period end
+      - Status
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Project/contract
+      - Start
+      - End
+      - Retention held
+      - Open defects
+      - Retention release status
+    - **create form**:
+      -
+        - **field**: Project/contract
+        - **required**: true
+        - **type**: reference
+      -
+        - **field**: Start date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: End date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Retention amount
+        - **required**: false
+        - **type**: currency
+    - **empty state**: No liability periods set. Add one when a project or contract is handed over.
+    - **filters**:
+      - Status (active/ended)
+      - Contract
+    - **name**: Defects Liability Periods
+    - **row actions**:
+      - Edit period
+      - View defects
+      - Request retention release
+    - **search**: Project or contract
+    - **sort**:
+      - End date
+      - Project
+- **walkthrough**:
+  - Inspector starts walkdown mode on the tablet and selects the area or asset.
+  - They capture a punch item with photo, markup, drawing pin and the asset it relates to.
+  - The item is assigned a responsible party and due date; the responsible party is notified.
+  - The responsible party fixes the item and uploads evidence photos, marking it ready for verification.
+  - A different person checks the evidence in the verification queue and verifies or rejects.
+  - Verified items are closed; rejected items return to the responsible party.
+  - The manager exports the punch list per area for handover and reviews closeout readiness.
+  - At handover, remaining items convert to defects liability records, with the period start and end dates set.
+  - During the period, new defects are reported against the asset and assigned to the contractor or subcontractor.
+  - When all defects are verified closed at period end, retention release is requested and gated on verified closure.

@@ -1,0 +1,121 @@
+# Workflow & approvals engine — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: modules/approvals/router.py
+    - **purpose**: Routes for definitions, instances, inbox, delegation, authority matrix, simulator
+  -
+    - **path**: modules/approvals/engine.py
+    - **purpose**: State machine executor: transitions, guards, side effects, version pinning
+  -
+    - **path**: modules/approvals/routes.py
+    - **purpose**: Approval route logic: ordered/parallel steps, thresholds, escalation
+  -
+    - **path**: modules/approvals/models.py
+    - **purpose**: WorkflowDefinition (versioned), RouteTemplate, Step, Instance, DecisionHistory (hash-chained), AuthorityMatrix, Delegation
+  -
+    - **path**: modules/approvals/schemas.py
+    - **purpose**: Pydantic models and definition JSON schema
+  -
+    - **path**: modules/approvals/guards.py
+    - **purpose**: Adapter calling the rules engine plus the qualification guard via eligibility API
+  -
+    - **path**: modules/approvals/stepup.py
+    - **purpose**: Re-authentication requirement on critical transitions
+  -
+    - **path**: modules/approvals/simulator.py
+    - **purpose**: Dry-run of a definition or route against sample records
+  -
+    - **path**: modules/approvals/migrate_inspection.py
+    - **purpose**: One-off mapping of hardcoded inspection lifecycle onto presets
+  -
+    - **path**: modules/approvals/presets/
+    - **purpose**: Preset definitions as data (inspection, issue, document, PO, variation, invoice)
+  -
+    - **path**: modules/approvals/subscribers.py
+    - **purpose**: Overdue timers, record-changed invalidation
+  -
+    - **path**: modules/approvals/migrations/
+    - **purpose**: Alembic migrations, RLS
+  -
+    - **path**: modules/approvals/tests/
+    - **purpose**: Engine, pinning, permission and visibility tests
+  -
+    - **path**: modules/approvals/module.yaml
+    - **purpose**: Manifest
+- **change isolation**: Host modules only call the engine interface and react to approval events, so adding a record type means a new definition, not engine code. Engine changes stay in engine.py and routes.py behind definition versioning.
+- **config not code**:
+  - Workflow definitions: states, transitions, roles, guards, side effects
+  - Route templates and threshold bands
+  - Authority matrix limits and currencies
+  - Which transitions count as critical (step-up)
+  - Escalation and reminder timings
+  - State and action labels per tenant
+  - Stamp templates
+  - Preset packs per market
+- **events consumed**:
+  - record.submitted
+  - document.version_added
+  - po.value_changed
+  - variation.value_changed
+  - certificate.status_changed
+  - user.deactivated
+  - legal_hold.changed
+- **events emitted**:
+  - approval.requested
+  - approval.approved
+  - approval.rejected
+  - approval.completed
+  - workflow.transitioned
+  - workflow.escalated
+  - workflow.definition_published
+- **frontend files**:
+  -
+    - **path**: features/approvals/pages/ApprovalsInbox.tsx
+    - **purpose**: Inbox with batch actions and inline preview
+  -
+    - **path**: features/approvals/pages/TemplateDesigner.tsx
+    - **purpose**: Definition designer with simulator
+  -
+    - **path**: features/approvals/pages/InstanceTimeline.tsx
+    - **purpose**: Timeline with delegate, reassign, recall, resubmit
+  -
+    - **path**: features/approvals/pages/AuthorityMatrix.tsx
+    - **purpose**: Matrix and delegation manager
+  -
+    - **path**: features/approvals/pages/PresetGallery.tsx
+    - **purpose**: Preset selection for new projects
+  -
+    - **path**: features/approvals/components/RouteDiagram.tsx
+    - **purpose**: Route visualisation
+  -
+    - **path**: features/approvals/components/StepUpDialog.tsx
+    - **purpose**: MFA/PIN re-entry
+  -
+    - **path**: features/approvals/components/ApprovalActions.tsx
+    - **purpose**: Embeddable action bar used by host modules
+  -
+    - **path**: features/approvals/api.ts
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - POST /approvals/instances (record_type, record_id)
+  - POST /approvals/instances/{id}/transition
+  - POST /approvals/instances/{id}/decide
+  - POST /approvals/instances/{id}/delegate|reassign|recall|resubmit
+  - GET /approvals/inbox
+  - CRUD /approvals/definitions and POST /approvals/definitions/{id}/publish
+  - POST /approvals/simulate
+  - CRUD /approvals/authority-matrix and /approvals/delegations
+  - GET /approvals/instances/{id}/history
+  - Python service interface: engine.available_transitions(record)
+- **reuses shared**:
+  - Rules and validation engine (guards)
+  - Eligibility gate (qualification guard)
+  - Audit trail hash chain
+  - Notifications and reminders
+  - Permission/policy service
+  - PDF stamping service
+  - Auth step-up service
+  - Terminology dictionary
+  - Background job runner for escalation timers

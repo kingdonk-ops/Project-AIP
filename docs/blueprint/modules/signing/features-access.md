@@ -1,0 +1,184 @@
+# E-signatures & tamper-evident records — Feature filler
+
+
+- **detail sections**:
+  - Document and hash
+  - Signers and status
+  - Attestations
+  - Competency check
+  - Seal and verification
+  - Provider envelope
+  - Evidence bundle
+  - Audit chain
+- **notifications**:
+  - Signature requested
+  - Reminder
+  - Signed
+  - Declined
+  - Voided after change
+  - Seal complete
+  - Competency missing for signer
+  - Provider webhook failure
+- **settings**:
+  - Signature meanings
+  - Consent statement library
+  - Step-up policy per record type
+  - Provider connections
+  - KMS key and seal config
+  - Retention and Object Lock
+  - Trusted time source
+  - Offline signing on/off
+  - Bulk signing allowed types
+  - Terminology labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Sign selected (routine types only)
+    - **columns**:
+      - Record
+      - Meaning
+      - Requested by
+      - Required by
+      - Auth needed
+      - Status
+    - **empty state**: No signatures are waiting for you.
+    - **filters**:
+      - Status
+      - Meaning
+      - Record type
+      - Due
+    - **name**: Signer inbox
+    - **row actions**:
+      - Review and sign
+      - Decline
+      - Delegate
+    - **search**: Record, requester
+    - **sort**:
+      - Required by
+      - Requested
+  -
+    - **bulk actions**:
+      - Remind
+      - Void
+    - **columns**:
+      - Record
+      - Version hash
+      - Signers
+      - Order
+      - Status
+      - Created
+    - **create form**:
+      -
+        - **field**: Document version
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Signers
+        - **required**: true
+        - **type**: user list
+      -
+        - **field**: Order
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Meaning
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Step-up policy
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Provider (in-app/DocuSign/Adobe)
+        - **required**: true
+        - **type**: select
+    - **empty state**: No signature requests.
+    - **filters**:
+      - Status
+      - Record type
+      - Project
+    - **name**: Signature requests
+    - **row actions**:
+      - View
+      - Remind
+      - Void
+      - Verify
+    - **search**: Record
+    - **sort**:
+      - Created
+      - Status
+  -
+    - **bulk actions**:
+      - Export evidence bundle
+    - **columns**:
+      - Signer
+      - Record
+      - Meaning
+      - Auth strength
+      - Device time
+      - Server time
+      - Hash
+      - Valid
+    - **empty state**: No attestations yet.
+    - **filters**:
+      - Signer
+      - Record type
+      - Meaning
+      - Date
+      - Valid/voided
+    - **name**: Attestation register
+    - **row actions**:
+      - Verify
+      - View manifest
+      - Download bundle
+    - **search**: Signer, record, hash
+    - **sort**:
+      - Server time
+      - Signer
+  -
+    - **columns**:
+      - Record type
+      - Meaning
+      - Market
+      - Text
+      - Version
+    - **create form**:
+      -
+        - **field**: Record type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Meaning
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Market
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Statement
+        - **required**: true
+        - **type**: textarea
+    - **empty state**: No statements. Defaults apply until you add them.
+    - **filters**:
+      - Record type
+      - Market
+    - **name**: Consent statements
+    - **row actions**:
+      - Edit
+      - Version history
+    - **search**: Text
+    - **sort**:
+      - Record type
+- **walkthrough**:
+  - Requester creates a signature request on a record version.
+  - Pick signers, order, meaning and step-up policy.
+  - The signer receives the request.
+  - The signer reviews the record and the consent text.
+  - Hold points require MFA or PIN, and the signer's competency is checked.
+  - The signer signs, creating an attestation chained to the audit log.
+  - After all signatures the PDF is sealed with PAdES.
+  - The sealed file is stored, under Object Lock where retention applies.
+  - Anyone can verify through the verification page.
+  - Edits after signing void the seal and force a superseding version.
+  - Export the evidence bundle.

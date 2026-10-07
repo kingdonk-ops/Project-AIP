@@ -1,0 +1,37 @@
+# Certificates, competency & calibration gate — Feature scout
+
+
+- **abilities seen in market**:
+  - Competency matrix by role, task and inspection type showing gaps and expiring items
+  - Automated reminders to person, supervisor and manager at configurable windows
+  - Onboarding and induction tracking with document verification workflow
+  - Equipment calibration schedules with due dates, in-service and quarantine status
+  - Audited override with reason, approver and expiry
+  - Verification of third-party licences and tickets against issuing registers where available
+  - Pre-start eligibility check of a crew or a work package before work starts
+  - Renewal workflow with evidence upload and approval
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Audited override with approver and expiry
+    - **why**: Deferred in AIP. Real sites need a controlled exception path (reason, approver, time-limited) and reporting on how often it is used.
+  -
+    - **effort**: M
+    - **feature**: Crew and work-package eligibility pre-check
+    - **why**: Checking everyone and every instrument assigned to a task before the shift prevents stop-work and invalid sign-offs.
+  -
+    - **effort**: S
+    - **feature**: Reminder notifications with supervisor escalation
+    - **why**: Once notifications exist, reminders at 60/30/7 days with escalation to the manager keep tickets current. Respect the out-of-stock suppression rule at send time.
+  -
+    - **effort**: M
+    - **feature**: Calibration schedule and quarantine status for instruments
+    - **why**: Beyond certificates, due-date planning and an out-for-calibration state keep instruments available and flag overdue ones to the gate.
+  -
+    - **effort**: M
+    - **feature**: Competency matrix view and gap report
+    - **why**: A people-by-requirement grid for planning and tenders shows who can be deployed and what training is needed.
+  -
+    - **effort**: S
+    - **feature**: Expired-certificate block for inspection categories
+    - **why**: Deferred. Enforcing at category level closes the gap between person-level and discipline-level gating.

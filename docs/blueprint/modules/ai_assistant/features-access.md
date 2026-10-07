@@ -1,0 +1,271 @@
+# AI assistant & agents — Feature filler
+
+
+- **detail sections**:
+  - Agent run console: steps (reason, tool call, observation), tokens and cost, start and stop controls
+  - Chat transcript with citations and answer cards
+  - Proposed change review: target record, before and after diff, evidence, status timeline, confirm bar
+  - Tool call log: tool, parameters, caller permission result, record count returned
+  - Prompt-injection screening results for retrieved content
+  - Extraction detail: source image beside extracted values, verification status
+  - Per-tenant usage and data-flow dashboard: tokens, spend, model, region, data classes sent
+- **notifications**:
+  - Proposed change is waiting for review (to the requesting user)
+  - Proposed change failed to apply (to the user)
+  - Extraction ready for verification (to the assigned verifier)
+  - Agent run finished, stopped or hit a step or spend limit (to the starter)
+  - Monthly spend cap at 80% and 100% (to AI admins)
+  - Kill switch activated or cleared (to tenant admins)
+  - Evaluation run regression detected (to AI admins)
+  - Prompt-injection attempt detected in retrieved content (to AI admins and security)
+- **settings**:
+  - Tenant opt-in for AI and kill switch
+  - Agents enabled (off by default; read-only tools only)
+  - Allowed models and tenant model choice (open question)
+  - Region (AU only)
+  - Monthly spend cap and per-run step and spend limits
+  - Tool registry: read or write flag, scope, enabled state per tool
+  - Permission mapping for AI use, agent run, and AI admin
+  - Redaction rules before model calls
+  - Prompt and tool-call log retention, aligned to records retention and legal hold
+  - Evaluation gate: block model or prompt change if pass rate drops below the threshold
+  - Extraction confidence threshold for flagging
+  - Terminology tokens for assistant labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export transcripts
+      - Delete own chats (blocked under legal hold)
+    - **columns**:
+      - Title
+      - Type (chat or agent run)
+      - User
+      - Scope (project or asset subtree)
+      - Status
+      - Messages or steps
+      - Tokens
+      - Started
+      - Last activity
+    - **create form**:
+      -
+        - **field**: Question (composer)
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Scope chip (project or asset subtree)
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Time range override
+        - **required**: false
+        - **type**: date range
+    - **empty state**: No chats yet. Ask a question about your inspections, ITPs, hold points or RFIs. Answers cite the records they used.
+    - **filters**:
+      - Type
+      - Date range
+      - User (admins and auditors only)
+      - Status
+      - Scope asset
+      - Has proposed change
+      - Flagged as wrong
+    - **name**: Chat and run history
+    - **row actions**:
+      - Reopen chat
+      - Preview transcript
+      - Open run console
+      - Export transcript
+      - Delete
+    - **search**: Full text over title and message content, limited to what the caller may see
+    - **sort**:
+      - Last activity (default, newest first)
+      - Started
+      - Tokens
+      - Title
+  -
+    - **bulk actions**:
+      - Discard selected
+    - **columns**:
+      - Target record
+      - Change summary
+      - Proposed by (chat or run)
+      - Status (pending, applied, discarded, failed)
+      - Created
+      - Applied by
+      - Applied at
+    - **empty state**: No proposed changes. When the assistant suggests a task or reassignment, it appears here for you to apply or discard.
+    - **filters**:
+      - Status
+      - Target module
+      - Created date
+      - Chat or run
+    - **name**: Proposed changes
+    - **row actions**:
+      - Open review card
+      - Approve and apply
+      - Edit before applying
+      - Discard
+      - Open target record
+    - **search**: Target record tag or reference and summary text
+    - **sort**:
+      - Created (default, newest first)
+      - Status
+      - Target module
+  -
+    - **bulk actions**:
+      - Enable selected
+      - Disable selected
+    - **columns**:
+      - Agent or tool name
+      - Type
+      - Read or write
+      - Scope
+      - Step limit
+      - Spend cap
+      - Enabled
+      - Last run
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Allowed tools
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Step limit
+        - **required**: true
+        - **type**: integer
+      -
+        - **field**: Spend cap per run
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Permission required to run
+        - **required**: true
+        - **type**: permission picker
+      -
+        - **field**: Enabled
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No agents are defined. Agents are off by default and use read-only tools unless a tenant admin enables them.
+    - **filters**:
+      - Type (agent or tool)
+      - Read or write
+      - Module
+      - Enabled
+    - **name**: Agent definitions and tool registry
+    - **row actions**:
+      - Edit
+      - Enable or disable
+      - View permission mapping
+      - View run history
+    - **search**: Name and description
+    - **sort**:
+      - Name (default)
+      - Last run
+      - Spend cap
+  -
+    - **bulk actions**:
+      - Assign verifier
+      - Reject selected
+    - **columns**:
+      - Source file
+      - Type (certificate, MTR, NCR draft)
+      - Extracted key values (heat number, grade, expiry)
+      - Confidence
+      - Verification status
+      - Linked asset or component
+      - Created
+    - **create form**:
+      -
+        - **field**: Source file or scan
+        - **required**: true
+        - **type**: file upload (quarantine pipeline)
+      -
+        - **field**: Extraction type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Linked asset or component
+        - **required**: false
+        - **type**: record picker
+    - **empty state**: Nothing waiting for verification. Extracted certificates, MTRs and NCR drafts appear here for a person to confirm.
+    - **filters**:
+      - Type
+      - Verification status
+      - Confidence band
+      - Asset
+      - Created date
+    - **name**: Extraction and draft verification queue
+    - **row actions**:
+      - Open verification screen
+      - Verify and save
+      - Edit values
+      - Reject
+      - Open source file
+    - **search**: Heat number, certificate number, asset tag, file name
+    - **sort**:
+      - Created (default, oldest first)
+      - Confidence (lowest first)
+      - Status
+  -
+    - **bulk actions**:
+      - Run selected sets
+    - **columns**:
+      - Set name
+      - Questions
+      - Last run
+      - Model and prompt version
+      - Pass rate
+      - Change from previous
+      - Status
+    - **create form**:
+      -
+        - **field**: Question
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Expected records or answer
+        - **required**: true
+        - **type**: structured text
+      -
+        - **field**: Category (ITP, hold point, asset, RFI)
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Permission profile to run as
+        - **required**: true
+        - **type**: role picker
+    - **empty state**: No evaluation sets. Add domain questions so every model or prompt change can be tested before release.
+    - **filters**:
+      - Model
+      - Prompt version
+      - Pass or fail
+      - Date range
+    - **name**: Evaluation sets and results
+    - **row actions**:
+      - Run now
+      - View results
+      - Compare to previous run
+      - Add question
+    - **search**: Set name and question text
+    - **sort**:
+      - Last run (default)
+      - Pass rate
+      - Name
+- **walkthrough**:
+  - The user opens the assistant panel on a project. The tenant must have opted in and the user must hold the AI use permission.
+  - The user sets the scope chip to an asset subtree such as Area 3.
+  - The user asks which ITPs on Area 3 are waiting on a hold point.
+  - The gateway redacts the prompt and routes it to the AU-region model. The model calls read-only search and inspection tools, each running as the user so only permitted records return.
+  - Retrieved text is treated as untrusted data and screened for injection before it reaches the model.
+  - The answer appears with an answer card showing filters, record counts and time range, and with citations linking to each record.
+  - The user edits a filter and re-runs, or flags the answer as wrong.
+  - The user asks the assistant to raise a task for the overdue hold point. A proposed change card appears with target record and diff.
+  - The user opens the review card, edits if needed, and confirms. The change is applied through the normal module API under the user's identity.
+  - The prompts, tool calls and the applied change are written to the audit trail and timeline, and the usage dashboard updates.

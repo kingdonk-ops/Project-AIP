@@ -1,0 +1,245 @@
+# Contacts & companies — Feature filler
+
+
+- **detail sections**:
+  - Profile
+  - People
+  - Projects and roles
+  - Credential and insurance links
+  - Linked user account
+  - Privacy and retention status
+  - Change history
+- **notifications**:
+  - Invite sent
+  - Credential or insurance expiring
+  - Duplicate detected after import
+  - Merge completed
+  - Erasure request submitted or blocked by legal hold
+  - Person deactivated to linked user admin
+- **settings**:
+  - Organisation types
+  - Tags
+  - Duplicate matching rules
+  - ABN validation
+  - Visibility by organisation type
+  - Retention and erasure rules
+  - Import mapping templates
+  - Terminology labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Bulk tag
+      - Export
+      - Deactivate
+      - Merge selected
+    - **columns**:
+      - Name
+      - Type
+      - ABN or ID
+      - Projects
+      - People
+      - Status
+      - Tags
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select (client, contractor, subcontractor, supplier, consultant, authority)
+      -
+        - **field**: ABN or equivalent
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Address
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Phone
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Email
+        - **required**: false
+        - **type**: email
+      -
+        - **field**: Tags
+        - **required**: false
+        - **type**: multi-select
+    - **empty state**: No organisations. Create one or import a CSV.
+    - **filters**:
+      - Type
+      - Tags
+      - Project
+      - Status
+      - Credential expiring
+    - **name**: Organisations
+    - **row actions**:
+      - Open
+      - Edit
+      - Add person
+      - Assign project role
+      - Deactivate
+      - Merge
+    - **search**: Name, ABN, tag, email domain
+    - **sort**:
+      - Name
+      - Type
+      - Updated
+  -
+    - **bulk actions**:
+      - Bulk tag
+      - Export
+      - Deactivate
+    - **columns**:
+      - Name
+      - Organisation
+      - Role
+      - Email
+      - Phone
+      - Linked user
+      - Status
+    - **create form**:
+      -
+        - **field**: Full name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Organisation
+        - **required**: true
+        - **type**: organisation picker
+      -
+        - **field**: Job role
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Email
+        - **required**: false
+        - **type**: email
+      -
+        - **field**: Phone
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Tags
+        - **required**: false
+        - **type**: multi-select
+    - **empty state**: No people yet. Add a person to an organisation.
+    - **filters**:
+      - Organisation
+      - Type
+      - Project
+      - Has user account
+      - Status
+      - Tags
+    - **name**: People
+    - **row actions**:
+      - Open
+      - Edit
+      - Invite as user
+      - Deactivate
+      - Request erasure
+    - **search**: Name, email, phone, organisation
+    - **sort**:
+      - Name
+      - Organisation
+  -
+    - **bulk actions**:
+      - End assignments
+    - **columns**:
+      - Person
+      - Organisation
+      - Project
+      - Role
+      - From
+      - To
+    - **create form**:
+      -
+        - **field**: Person
+        - **required**: true
+        - **type**: person picker
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: project picker
+      -
+        - **field**: Role
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Start date
+        - **required**: false
+        - **type**: date
+    - **empty state**: No project roles assigned.
+    - **filters**:
+      - Project
+      - Role
+    - **name**: Project role assignments
+    - **row actions**:
+      - Edit
+      - End
+    - **search**: Person, project
+    - **sort**:
+      - Project
+      - Person
+  -
+    - **bulk actions**:
+      - Dismiss selected
+    - **columns**:
+      - Record A
+      - Record B
+      - Match reason
+      - Score
+    - **empty state**: No duplicates detected.
+    - **filters**:
+      - Type
+      - Score
+    - **name**: Duplicate candidates
+    - **row actions**:
+      - Merge
+      - Dismiss
+    - **search**: Name
+    - **sort**:
+      - Score
+  -
+    - **columns**:
+      - File
+      - Date
+      - Rows
+      - Created
+      - Errors
+      - Status
+    - **create form**:
+      -
+        - **field**: CSV file
+        - **required**: true
+        - **type**: file
+      -
+        - **field**: Column mapping
+        - **required**: true
+        - **type**: mapper
+    - **empty state**: No imports yet.
+    - **filters**:
+      - Status
+    - **name**: Import batches
+    - **row actions**:
+      - View report
+      - Roll back
+    - **search**: File name
+    - **sort**:
+      - Date
+- **walkthrough**:
+  - An admin opens the directory and searches for a company to avoid duplicates.
+  - If not found, they create the organisation with type and ABN.
+  - The duplicate panel warns of near matches while typing.
+  - They add people with role and contact details.
+  - They assign project roles for the relevant projects.
+  - They link credential and insurance expiry records.
+  - They invite a person as a user, subject to identity.invite.
+  - Bulk records arrive by CSV import with mapping, validation and rollback.
+  - Duplicates are merged and the change is logged.
+  - Other modules use the directory for suppliers, recipients and portal users.
+  - A privacy erasure request is checked against legal hold.

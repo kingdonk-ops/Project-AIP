@@ -1,0 +1,104 @@
+# Interface management — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: app/modules/interfaces/router.py
+    - **purpose**: Interface, template, ladder, matrix and heat-map endpoints
+  -
+    - **path**: app/modules/interfaces/models.py
+    - **purpose**: Interface, Agreement, EvidenceLink, AcceptanceRecord, Template, BlockedBy, EscalationLadder
+  -
+    - **path**: app/modules/interfaces/schemas.py
+    - **purpose**: API schemas
+  -
+    - **path**: app/modules/interfaces/service.py
+    - **purpose**: Raise, agree, deliver, accept, escalate; status stages
+  -
+    - **path**: app/modules/interfaces/acceptance.py
+    - **purpose**: Two-party attestation via signing engine
+  -
+    - **path**: app/modules/interfaces/escalation.py
+    - **purpose**: Ladder evaluation and meeting-agenda flagging
+  -
+    - **path**: app/modules/interfaces/constraints.py
+    - **purpose**: Constraint provider exposing blocked-by to RSW tasks and look-ahead
+  -
+    - **path**: app/modules/interfaces/matrix.py
+    - **purpose**: Package-pair matrix, ageing and heat-map queries
+  -
+    - **path**: app/modules/interfaces/visibility.py
+    - **purpose**: Party-scoped filters via policy service
+  -
+    - **path**: app/modules/interfaces/seeds.py
+    - **purpose**: Remediation handoff templates (scaffold, insulation strip, coating access, isolation)
+  -
+    - **path**: app/modules/interfaces/module.yaml
+    - **purpose**: Manifest, permissions, events
+  -
+    - **path**: alembic/versions/xxxx_interfaces.py
+    - **purpose**: Tables and RLS
+- **change isolation**: Remediation-specific handoffs are template rows, and escalation timing is ladder data. Scheduling impact is limited to the constraint provider, so schedule and RSW modules change independently.
+- **config not code**:
+  - Interface templates (provider, receiver, lead time)
+  - Escalation ladder levels, roles and timings
+  - Status stage labels
+  - Package and party lists
+  - Heat-map thresholds
+  - Terminology for interface, provider, receiver
+  - Party visibility rules
+- **events consumed**:
+  - scope_task.created
+  - scope_task.completed
+  - deadline.overdue
+  - meeting.agenda_requested
+  - rfi.closed
+  - submittal.accepted
+  - document.created
+  - signature.completed
+- **events emitted**:
+  - interface.raised
+  - interface.agreed
+  - interface.delivered
+  - interface.accepted
+  - interface.overdue
+  - interface.escalated
+  - constraint.added
+  - constraint.cleared
+- **frontend files**:
+  -
+    - **path**: web/src/modules/interfaces/InterfaceMatrix.tsx
+    - **purpose**: Matrix by package or contractor
+  -
+    - **path**: web/src/modules/interfaces/InterfaceList.tsx
+    - **purpose**: List with ageing
+  -
+    - **path**: web/src/modules/interfaces/InterfaceDetail.tsx
+    - **purpose**: Evidence, comments, sign-off
+  -
+    - **path**: web/src/modules/interfaces/HeatMap.tsx
+    - **purpose**: Ageing heat-map by package pair
+  -
+    - **path**: web/src/modules/interfaces/TemplateAdmin.tsx
+    - **purpose**: Templates and escalation ladder config
+  -
+    - **path**: web/src/modules/interfaces/ConstraintChip.tsx
+    - **purpose**: Blocked-by chip embedded on RSW task and look-ahead
+- **public api**:
+  - CRUD /interfaces
+  - POST /interfaces/{id}/agree | deliver | accept | escalate
+  - GET /interfaces/matrix, /interfaces/heatmap
+  - CRUD /interface-templates, /escalation-ladders
+  - GET /assets/{id}/interfaces
+  - Constraint provider: interfaces.constraints_for(task_ids)
+- **reuses shared**:
+  - signing engine for two-party attestation
+  - tasks and deadlines
+  - notifications and escalation
+  - rules engine for ladder timing
+  - documents for evidence
+  - contacts and companies
+  - permissions policy service for party scope
+  - reporting for overdue reports
+  - schedule look-ahead constraint hook
+  - terms dictionary

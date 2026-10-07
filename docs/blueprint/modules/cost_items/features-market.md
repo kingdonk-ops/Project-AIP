@@ -1,0 +1,33 @@
+# Cost items & schedule of rates (thin) — Feature scout
+
+
+- **abilities seen in market**:
+  - Schedule of rates import with versioning and rate effective dates
+  - Hierarchical cost codes and WBS mapping
+  - Budget, committed, forecast and earned value roll-ups
+  - Unit-rate pricing of measured quantities against scope items
+  - Rate build-ups and markup tiers (labour, plant, materials, margin)
+  - Progress claims generated from measured quantities
+  - Multi-currency and tax handling per line
+  - Cost report export to finance systems
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Measured quantity capture on scope tasks (e.g. m² insulation stripped, m recoated) priced automatically from the schedule of rates
+    - **why**: Turns field progress into earned value and claim-ready quantities with no re-keying.
+  -
+    - **effort**: S
+    - **feature**: Versioned rate schedules with effective dates and per-contract assignment
+    - **why**: Client and Kaefer rates change by contract and period; historical pricing must stay reproducible.
+  -
+    - **effort**: M
+    - **feature**: Tiered work-type pricing (e.g. access, height, confined space or shift loadings) as rate modifiers
+    - **why**: Remediation work is priced with conditions that standard unit rates miss.
+  -
+    - **effort**: M
+    - **feature**: Cost roll-up by asset subtree using the ltree hierarchy
+    - **why**: Shows cost and progress per unit, line or area, which is unique to an asset-centric model.
+  -
+    - **effort**: S
+    - **feature**: Import mapping templates with validation report and rollback
+    - **why**: Client schedules arrive in varied Excel layouts; reusable mappings cut onboarding time.

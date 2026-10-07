@@ -1,0 +1,37 @@
+# RFIs & submittals — Feature scout
+
+
+- **abilities seen in market**:
+  - RFI register with question, response, due date and ball-in-court tracking
+  - Cost and schedule impact flags that can start a change
+  - Submittal register with types, review codes and revision cycles
+  - Drawing and document references with markup
+  - Overdue ageing and automatic reminders
+  - Linked spec sections or work packages
+  - Bulk import of submittal registers from spreadsheets
+  - Review workflows with multiple reviewers and consolidated response
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: Terminology switch for the word RFI: configurable labels (Request for Information, Technical Query, Query) kept distinct from Request for Inspection hold points, with a clear disambiguating prefix in cross-module lists
+    - **why**: Resolves the naming collision already noted in AIP and lets each market use its own term.
+  -
+    - **effort**: M
+    - **feature**: Asset-node linkage showing open RFIs and submittals on any asset, with their effect on pending inspections
+    - **why**: Lets an inspector see that a design query is unresolved before attempting a hold-point release.
+  -
+    - **effort**: M
+    - **feature**: Submittal types for inspection paperwork: weld procedures, NDT procedures, personnel qualifications, calibration records and ITP approvals
+    - **why**: Matches the contractor deliverables in remediation and fabrication scopes and links to the certificate gate.
+  -
+    - **effort**: M
+    - **feature**: Gate rule: block an inspection or work-scope task until a required submittal (such as an approved NDT procedure) reaches an accepted review code
+    - **why**: Turns the register into an enforced control, consistent with AIP's existing completion gates.
+  -
+    - **effort**: S
+    - **feature**: Response-time analytics by party, discipline and asset area
+    - **why**: Gives project managers evidence of delays caused by slow responses for claims and process improvement.
+  -
+    - **effort**: S
+    - **feature**: Convert RFI to variation candidate with pre-filled references, impact notes and attachments
+    - **why**: Preserves evidence trail from question to commercial change with minimal re-entry.

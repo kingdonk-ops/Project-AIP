@@ -1,0 +1,376 @@
+# Tenancy, organisations & data residency — Data model & schema
+
+
+- **notes**: Backfill tenant_id on every existing AIP table, then FORCE RLS with policy USING (tenant_id = current_setting('app.tenant_id')::uuid), failing closed when unset. App role is non-owner without BYPASSRLS. Activate user_roles.project_id. Note the tenants table itself is protected by id = app.tenant_id. Which customers must use the siloed stack is an open decision; the schema works identically in both shapes. Redis keys, queues, S3 prefixes and search indexes are prefixed by tenant id via keys.py, not tables.
+- **reuses existing**:
+  - organisations
+  - projects
+  - sites
+  - assets
+  - documents
+  - users
+  - user_roles
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK; equals tenant_id used elsewhere
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: slug
+        - **type**: text
+      -
+        - **name**: deployment_shape
+        - **notes**: pooled or siloed
+        - **type**: text
+      -
+        - **name**: region_id
+        - **notes**: FK deployment_regions
+        - **type**: uuid
+      -
+        - **name**: kms_key_ref
+        - **notes**: ARN of per-tenant key
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: provisioning, active, suspended, offboarding, offboarded
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (slug)
+      - btree (status)
+    - **name**: tenants
+    - **purpose**: Top-level customer (e.g. Kaefer) and its hosting shape.
+    - **relations**:
+      - deployment_regions.id
+      - referenced by every tenant table
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: code
+        - **notes**: AWS region code
+        - **type**: text
+      -
+        - **name**: label
+        - **notes**: Sydney, London, Singapore
+        - **type**: text
+      -
+        - **name**: in_country_only
+        - **notes**: for NZ/AU residency wording
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (code)
+    - **name**: deployment_regions
+    - **purpose**: Hosting regions (ap-southeast-2, eu-west-2, ap-southeast-1).
+    - **relations**:
+      - tenants.region_id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: added and backfilled
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: org_type
+        - **notes**: owner, client, subcontractor
+        - **type**: text
+      -
+        - **name**: contact_company_id
+        - **notes**: nullable link to contacts company
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, org_type)
+      - unique (tenant_id, lower(name)) WHERE deleted_at IS NULL
+    - **name**: organisations
+    - **purpose**: Organisations inside a tenant (owner, client, subcontractor); Rio Tinto is a client organisation in Kaefer's tenant. Existing AIP table, extended.
+    - **relations**:
+      - tenants.id
+      - projects.organisation_id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: unique
+        - **type**: uuid
+      -
+        - **name**: branding
+        - **notes**: logo key, colours
+        - **type**: jsonb
+      -
+        - **name**: terminology_set_id
+        - **notes**: FK terms module set
+        - **type**: uuid
+      -
+        - **name**: retention_defaults
+        - **notes**: per record type
+        - **type**: jsonb
+      -
+        - **name**: ip_allowlist
+        - **notes**: CIDR array
+        - **type**: jsonb
+      -
+        - **name**: session_policy
+        - **notes**: idle and absolute timeouts, MFA rules
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id)
+    - **name**: tenant_settings
+    - **purpose**: Branding, terminology set selection, retention defaults, IP allow-list, session policy.
+    - **relations**:
+      - tenants.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: module_key
+        - **type**: text
+      -
+        - **name**: enabled
+        - **type**: boolean
+      -
+        - **name**: enabled_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, module_key)
+    - **name**: tenant_modules
+    - **purpose**: Modules enabled per tenant.
+    - **relations**:
+      - tenants.id
+      - module_manifests.module_key
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: organisation_id
+        - **notes**: party receiving visibility
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: subtree root
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: visible_field_groups
+        - **notes**: e.g. status, evidence; commercial excluded
+        - **type**: jsonb
+      -
+        - **name**: valid_from
+        - **type**: date
+      -
+        - **name**: valid_to
+        - **notes**: nullable
+        - **type**: date
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, organisation_id)
+      - btree (tenant_id, asset_id)
+      - unique (tenant_id, organisation_id, asset_id, coalesce(project_id,'00000000-0000-0000-0000-000000000000')) WHERE deleted_at IS NULL
+    - **name**: org_asset_shares
+    - **purpose**: Rules for sharing an asset record with a client organisation and which field groups each party sees.
+    - **relations**:
+      - organisations.id
+      - assets.id
+      - projects.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: requested, exporting, hold_check, shred_scheduled, completed, blocked
+        - **type**: text
+      -
+        - **name**: export_job_id
+        - **notes**: FK ops jobs
+        - **type**: uuid
+      -
+        - **name**: export_storage_key
+        - **type**: text
+      -
+        - **name**: legal_hold_blocked
+        - **type**: boolean
+      -
+        - **name**: kms_deletion_date
+        - **notes**: scheduled key deletion
+        - **type**: timestamptz
+      -
+        - **name**: certificate_document_id
+        - **notes**: FK documents; signed certificate
+        - **type**: uuid
+      -
+        - **name**: requested_by
+        - **type**: uuid
+      -
+        - **name**: completed_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, status)
+    - **name**: tenant_offboarding_runs
+    - **purpose**: Offboarding workflow: export, legal-hold check, crypto-shred, signed deletion certificate.
+    - **relations**:
+      - tenants.id
+      - jobs.id
+      - documents.id
+      - legal_holds
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: support_user_ref
+        - **notes**: vendor staff identity
+        - **type**: text
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: approved_by
+        - **notes**: tenant admin
+        - **type**: uuid
+      -
+        - **name**: starts_at
+        - **type**: timestamptz
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only except revoked_at
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, expires_at) WHERE revoked_at IS NULL
+    - **name**: support_access_grants
+    - **purpose**: Customer-approved, time-boxed support access with audit.
+    - **relations**:
+      - users.id
+      - audit entries reference grant id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: quota_key
+        - **notes**: jobs_concurrent, storage_gb, api_rpm
+        - **type**: text
+      -
+        - **name**: limit_value
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, quota_key)
+    - **name**: tenant_quotas
+    - **purpose**: Per-tenant limits for jobs, storage and API calls (noisy-neighbour control).
+    - **relations**:
+      - tenants.id

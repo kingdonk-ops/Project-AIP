@@ -1,0 +1,45 @@
+# Testing & quality engineering — Data model & schema
+
+
+- **notes**: Testing is mostly outside the product schema. Seed and scenario data live in repo fixtures and use the existing tables. The only runtime table is test_evidence_run, and it is optional because retaining test evidence is an undecided question. The schema-guard CI test requires every table, including this one, to carry tenant_id and an RLS policy.
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: platform tenant id; RLS
+        - **type**: uuid
+      -
+        - **name**: commit_sha
+        - **type**: text
+      -
+        - **name**: suite
+        - **notes**: tenancy|permission_matrix|workflow|hash_chain|migration|load
+        - **type**: text
+      -
+        - **name**: result
+        - **notes**: pass|fail
+        - **type**: text
+      -
+        - **name**: counts
+        - **notes**: scenario totals and coverage
+        - **type**: jsonb
+      -
+        - **name**: artefact_uri
+        - **notes**: S3 report location
+        - **type**: text
+      -
+        - **name**: artefact_sha256
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only; UPDATE/DELETE revoked
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, suite, created_at desc)
+    - **name**: test_evidence_run
+    - **purpose**: Optional append-only store of CI test run summaries kept as control-testing evidence for SOC 2/ISO audits.

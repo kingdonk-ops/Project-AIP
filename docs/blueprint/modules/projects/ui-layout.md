@@ -1,0 +1,176 @@
+# Projects, sites & classification — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Users with project.view; the all-projects override needs a tenant-level permission. Portal users are excluded.
+    - **actions**:
+      - Create project
+      - Open
+      - Export CSV
+      - Change work type with impact preview
+      - Apply template settings
+      - Archive (only if closeout complete)
+    - **layout**: Full-width DataTable with table/card toggle, filter bar and right-side quick-view drawer.
+    - **name**: Project list
+    - **purpose**: Portfolio register of projects in the tenant, scoped to what the user may see.
+    - **route**: /projects
+    - **sections**:
+      - Filters: status, work type, client, region
+      - Portfolio table: code, name, client, site, work type, region, status, open holds, open NCRs, updated
+      - Card view
+      - Empty state
+  -
+    - **access**: project.create (tenant admin or project manager role).
+    - **actions**:
+      - Next/back
+      - Save draft
+      - Create project
+      - Cancel
+    - **layout**: Stepper wizard with a summary rail and a final review step.
+    - **name**: Project setup wizard
+    - **purpose**: Create a project from a work-type template with its sites, scope and members.
+    - **route**: /projects/new
+    - **sections**:
+      - Basics: code (unique per tenant), name, client organisation, work type, template
+      - Site and region: primary site picker or create, region, timezone, currency
+      - Scope: asset scope picker
+      - Members and default roles
+      - Numbering and enabled modules
+      - Review with required-items preview
+  -
+    - **access**: Project members with project.view; wider visibility for tenant admins.
+    - **actions**:
+      - Edit
+      - Start closeout
+      - Archive or reopen
+      - Switch to project
+      - Open settings
+    - **layout**: Header with status and actions, KPI strip, tabbed body, tile grid and linked assets panel.
+    - **name**: Project dashboard and detail
+    - **purpose**: Entry point for one project: status, KPIs and links to its parts.
+    - **route**: /projects/:id
+    - **sections**:
+      - Header and status
+      - Overview: client, site, region, timezone, currency, dates
+      - KPI strip and tiles
+      - Linked assets panel
+      - Members summary
+      - Activity and scope-change history
+  -
+    - **access**: project.scope.edit; read access for project members.
+    - **actions**:
+      - Add assets or subtree
+      - Remove from scope
+      - Mark as baseline
+      - Add scope change with reason
+      - Export diff
+    - **layout**: Split view with the hierarchy tree on the left and the selected scope table on the right; baseline vs current diff tab.
+    - **name**: Scope baseline and asset scope picker
+    - **purpose**: Link assets to the project and compare baseline with current scope.
+    - **route**: /projects/:id/scope
+    - **sections**:
+      - Asset tree with checkboxes and subtree selection
+      - Scope list with baseline status
+      - Baseline vs current diff
+      - Scope-change history
+  -
+    - **access**: project.classify (project manager); view for members.
+    - **actions**:
+      - Run classification wizard
+      - Change work type
+      - Confirm recalculation
+      - Export checklist
+    - **layout**: Wizard on top, with a required-items checklist below.
+    - **name**: Classification and required items
+    - **purpose**: Show how the work type drives required approvals, ITP templates, documents and workflows.
+    - **route**: /projects/:id/classification
+    - **sections**:
+      - Classifier questions
+      - Resulting work type
+      - Requirement bundle checklist: approvals, ITPs, documents, workflows
+      - Impact preview on change
+  -
+    - **access**: project.members.manage; members can view the directory.
+    - **actions**:
+      - Add or remove member
+      - Change role
+      - Add participant
+      - Invite to portal
+      - Export
+    - **layout**: Two tabs, each with a table and a side drawer.
+    - **name**: Members and participant directory
+    - **purpose**: Manage project-scoped roles and external party roles.
+    - **route**: /projects/:id/people
+    - **sections**:
+      - Members table with project role
+      - Participant directory with party role: client, principal contractor, subcontractor, third-party inspector
+      - Default roles
+      - Portal grant status per participant
+  -
+    - **access**: project.settings.edit (project manager, tenant admin).
+    - **actions**:
+      - Edit
+      - Reset to tenant default
+      - Preview numbering
+      - Save
+    - **layout**: Left settings nav with form panels and inherited-from-tenant indicators.
+    - **name**: Project settings
+    - **purpose**: Override tenant defaults for this project.
+    - **route**: /projects/:id/settings
+    - **sections**:
+      - Region, timezone, currency, units, calendar
+      - Numbering schemes and client prefixes
+      - Enabled modules
+      - Terminology editor
+      - Retention overrides (within legal hold limits)
+      - Closeout rules
+      - External access auto-expiry
+  -
+    - **access**: project.closeout (project manager); view for members.
+    - **actions**:
+      - Jump to blocker
+      - Request waiver where permitted
+      - Sign off
+      - Archive project
+    - **layout**: Checklist grouped by source module with blocker counts and a sign-off panel.
+    - **name**: Closeout checklist
+    - **purpose**: Show and clear blockers before archive.
+    - **route**: /projects/:id/closeout
+    - **sections**:
+      - Open hold points
+      - Open NCRs
+      - Expiring or open certificates
+      - Required documents
+      - Sign-off and archive
+  -
+    - **access**: Tenant admin.
+    - **actions**:
+      - Add or edit work type
+      - Edit route
+      - Save template
+      - Publish
+      - Test with sample project
+    - **layout**: Master list with a visual route designer and bundle editor.
+    - **name**: Work-type classification and route designer
+    - **purpose**: Tenant admins define work types, routes and requirement bundles.
+    - **route**: /admin/projects/classification
+    - **sections**:
+      - Work type list
+      - Route designer
+      - Requirement bundles
+      - Project templates by work type
+      - Preview
+  -
+    - **access**: Any internal user with project membership.
+    - **actions**:
+      - Select project
+      - Download for offline
+    - **layout**: Full-screen searchable list with recent projects and an offline-available badge.
+    - **name**: Mobile project switcher
+    - **purpose**: Choose the active project in the field.
+    - **route**: /m/projects
+    - **sections**:
+      - Recent
+      - All my projects
+      - Sync status

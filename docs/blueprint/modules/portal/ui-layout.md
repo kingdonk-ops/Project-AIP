@@ -1,0 +1,185 @@
+# Client & subcontractor portal — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: portal.admin; approvers see their own pending items.
+    - **actions**:
+      - Invite
+      - Approve or reject
+      - Revoke
+      - Extend expiry
+      - Resend invite
+      - Export
+    - **layout**: DataTable with status filters and a detail drawer.
+    - **name**: External users
+    - **purpose**: Internal admin register of external users and their status.
+    - **route**: /admin/portal/users
+    - **sections**:
+      - Table: name, email, company, party role, invited by, approved by, status, last sign-in, grants
+      - Filters: project, company, status
+      - Pending approvals tab
+  -
+    - **access**: portal.invite (project manager or delegated admin).
+    - **actions**:
+      - Submit for approval
+      - Save draft
+      - Cancel
+    - **layout**: Single form with grant builder and an approval summary.
+    - **name**: Invite external user
+    - **purpose**: Create an invitation with scoped grants.
+    - **route**: /admin/portal/users/new
+    - **sections**:
+      - Identity: email, name, company, party role
+      - Projects
+      - Internal owner (approver)
+      - Expiry
+      - Grant builder: project, asset subtree, module, action, download policy
+  -
+    - **access**: portal.admin.
+    - **actions**:
+      - Edit grants
+      - Revoke session
+      - Revoke access
+      - Extend expiry
+      - Reset PIN
+    - **layout**: Header with status and tabs.
+    - **name**: External user detail
+    - **purpose**: Review one external user's onboarding, grants and activity.
+    - **route**: /admin/portal/users/:id
+    - **sections**:
+      - Profile and status
+      - Company and certificate onboarding gate
+      - Grants
+      - Sessions and devices
+      - Audit trail
+      - Pending actions
+  -
+    - **access**: portal.sharepack.manage.
+    - **actions**:
+      - Create
+      - Revoke
+      - Extend
+      - Copy link
+      - Export access log
+    - **layout**: Table and a create drawer.
+    - **name**: Share packs
+    - **purpose**: Manage time-limited read-only bundles.
+    - **route**: /admin/portal/share-packs
+    - **sections**:
+      - Pack list: scope, contents, expiry, views
+      - Contents builder
+      - Access log
+  -
+    - **access**: Tenant admin with portal.settings.
+    - **actions**:
+      - Enable or disable
+      - Save
+      - Preview branding
+      - Test email
+    - **layout**: Sectioned settings form with a branding preview.
+    - **name**: Portal settings
+    - **purpose**: Configure the portal per tenant, off by default.
+    - **route**: /admin/portal/settings
+    - **sections**:
+      - Enable portal
+      - Origin and domain
+      - Session and idle timeout
+      - Magic link TTL and PIN lockout
+      - Rate limits and WAF profile
+      - Download policy and watermark
+      - Witness waive notice period
+      - Invitation approval rules
+      - Visible modules
+      - Per-client branding and terminology
+      - Enterprise SSO connection if adopted
+  -
+    - **access**: Invited external users; unauthenticated.
+    - **actions**:
+      - Request link
+      - Confirm sign-in
+      - Enter PIN
+    - **layout**: Minimal centred card using client branding.
+    - **name**: Portal sign-in
+    - **purpose**: Magic link and PIN entry on the separate origin.
+    - **route**: portal:/signin
+    - **sections**:
+      - Email entry
+      - Link confirmation (POST click-through)
+      - PIN entry with lockout message
+      - Expired link state
+  -
+    - **access**: External users with at least one grant.
+    - **actions**:
+      - Open item
+      - Counter-sign
+      - Respond
+      - Upload
+      - Confirm or waive witness
+    - **layout**: Branded header, action inbox list and summary tiles.
+    - **name**: Portal home: needs my action
+    - **purpose**: Inbox of items awaiting the external user.
+    - **route**: portal:/
+    - **sections**:
+      - Needs my action
+      - Upcoming hold and witness points
+      - Recent shares
+      - Expiring access notice
+  -
+    - **access**: External users with an asset grant.
+    - **actions**:
+      - Browse
+      - Download if the policy allows
+      - Comment
+    - **layout**: Tree panel and detail pane.
+    - **name**: Portal asset tree
+    - **purpose**: Read-only view of granted assets with status and documents.
+    - **route**: portal:/assets
+    - **sections**:
+      - Tree limited to granted subtrees
+      - Status and open items
+      - Documents and reports
+  -
+    - **access**: External users with the matching action grant; subcontractors need a passed onboarding gate.
+    - **actions**:
+      - Counter-sign
+      - Reject with comment
+      - Submit response
+      - Upload evidence
+      - Confirm attendance
+      - Waive with notice
+    - **layout**: Focused single-column record view with an action panel.
+    - **name**: Portal action page
+    - **purpose**: Complete a counter-sign, NCR response, upload or witness decision.
+    - **route**: portal:/actions/:type/:id
+    - **sections**:
+      - Record summary
+      - Evidence and attachments
+      - Action form
+      - Audit notice
+  -
+    - **access**: Client party role with a dashboard grant.
+    - **actions**:
+      - Filter by area and date
+      - Export if permitted
+    - **layout**: KPI strip and chart grid.
+    - **name**: Asset condition dashboard
+    - **purpose**: Read-only defect trends by area for clients.
+    - **route**: portal:/dashboard
+    - **sections**:
+      - Condition summary
+      - Defect trends by area
+      - Status by subtree
+  -
+    - **access**: Holders of a valid token; no account needed.
+    - **actions**:
+      - View
+      - Download if the policy allows
+    - **layout**: Branded viewer with a contents list and preview pane.
+    - **name**: Share pack viewer
+    - **purpose**: Open a time-limited bundle without a full account.
+    - **route**: portal:/share/:token
+    - **sections**:
+      - Pack contents
+      - Viewer with watermark
+      - Expiry notice

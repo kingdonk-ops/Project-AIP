@@ -1,0 +1,364 @@
+# Projects, sites & classification — Feature filler
+
+
+- **detail sections**:
+  - Header and status
+  - Overview (client, site, region, timezone, currency, dates)
+  - Dashboard summary (KPI strip, tiles)
+  - Scope baseline and linked assets
+  - Classification and required-items checklist
+  - Members and roles
+  - Participant directory
+  - Settings (numbering, enabled modules, terminology overrides, retention, units, calendar)
+  - Closeout checklist
+  - Activity and scope-change history
+- **notifications**:
+  - Added to project (with role)
+  - Removed from project
+  - Scope change added to baseline
+  - Classification changed: requirements recalculated
+  - Closeout started and checklist blockers outstanding
+  - Project archived or reopened
+  - Portal participant invited and external access expiring
+- **settings**:
+  - Tenant defaults for region, timezone, currency, units, calendar with per-project override
+  - Work-type classification list and routes
+  - Project templates by work type
+  - Numbering scheme patterns and client prefixes
+  - Enabled modules per project
+  - Terminology overrides
+  - Retention overrides (within legal hold limits)
+  - Closeout checklist rules
+  - Default roles for new members
+  - External access auto-expiry on close
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export CSV
+      - Change work type (with impact preview)
+      - Apply project template settings
+      - Archive (only where closeout checklist is complete)
+    - **columns**:
+      - Code
+      - Name
+      - Client organisation
+      - Primary site
+      - Work type
+      - Region
+      - Status
+      - Open holds
+      - Open NCRs
+      - Updated
+    - **create form**:
+      -
+        - **field**: Project code
+        - **required**: true
+        - **type**: text (unique per tenant)
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Client organisation
+        - **required**: true
+        - **type**: contact/company picker
+      -
+        - **field**: Work type
+        - **required**: true
+        - **type**: dropdown (tenant classification)
+      -
+        - **field**: Project template
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Primary site
+        - **required**: true
+        - **type**: site picker or create
+      -
+        - **field**: Region
+        - **required**: true
+        - **type**: dropdown (AU, NZ, UK, Asia)
+      -
+        - **field**: Timezone
+        - **required**: true
+        - **type**: dropdown (defaults from region)
+      -
+        - **field**: Currency
+        - **required**: true
+        - **type**: dropdown (defaults from tenant)
+      -
+        - **field**: Start / planned end date
+        - **required**: false
+        - **type**: date range
+      -
+        - **field**: Project manager
+        - **required**: false
+        - **type**: user picker
+    - **empty state**: No projects yet. Create your first project from a template or start the setup wizard. Projects are scoped campaigns over your asset tree; assets stay with the tenant.
+    - **filters**:
+      - Status
+      - Work type
+      - Client organisation
+      - Region
+      - Site
+      - Has open holds
+      - Archived (include/exclude)
+    - **name**: Projects
+    - **row actions**:
+      - Open dashboard
+      - Edit
+      - Settings
+      - Switch to project
+      - Duplicate from template
+      - Start closeout
+      - Archive
+      - Reopen
+    - **search**: Code, name, client organisation, site name
+    - **sort**:
+      - Code
+      - Name
+      - Status
+      - Updated (default newest)
+      - Open NCRs
+  -
+    - **bulk actions**:
+      - Export
+      - Deactivate
+    - **columns**:
+      - Site name
+      - Project(s)
+      - GPS
+      - Address
+      - Timezone
+      - System site (Y/N)
+      - Status
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: project picker
+      -
+        - **field**: GPS location
+        - **required**: false
+        - **type**: map point
+      -
+        - **field**: Address
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Timezone
+        - **required**: false
+        - **type**: dropdown
+    - **empty state**: No sites on this project. A hidden system site is created automatically to hold the hierarchy; add real sites to record GPS and timezone.
+    - **filters**:
+      - Project
+      - Status
+      - System site
+    - **name**: Sites
+    - **row actions**:
+      - Edit
+      - Set GPS on map
+      - Deactivate
+    - **search**: Site name, address
+    - **sort**:
+      - Name
+      - Project
+  -
+    - **bulk actions**:
+      - Assign role
+      - Add to team
+      - Remove from project
+      - Export
+    - **columns**:
+      - User
+      - Organisation
+      - Project role
+      - Team
+      - Party role
+      - Added
+      - Status
+    - **create form**:
+      -
+        - **field**: User
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Project role
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Team
+        - **required**: false
+        - **type**: multi-select
+      -
+        - **field**: Asset-subtree restriction
+        - **required**: false
+        - **type**: asset tree picker
+    - **empty state**: No members yet. Add users to give them access to this project; defaults come from the project template.
+    - **filters**:
+      - Project role
+      - Party role
+      - Team
+      - Status
+    - **name**: Project members
+    - **row actions**:
+      - Change role
+      - Remove
+      - View permissions summary
+    - **search**: Name, email, organisation
+    - **sort**:
+      - Name
+      - Role
+      - Added
+  -
+    - **bulk actions**:
+      - Invite to portal
+      - Export
+    - **columns**:
+      - Company
+      - Party role
+      - Contact
+      - Portal access
+      - Certificate status
+      - Routing role
+    - **create form**:
+      -
+        - **field**: Company
+        - **required**: true
+        - **type**: company picker
+      -
+        - **field**: Party role
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Primary contact
+        - **required**: false
+        - **type**: contact picker
+      -
+        - **field**: Routing role
+        - **required**: false
+        - **type**: dropdown
+    - **empty state**: No participants listed. Add the client, subcontractors and third-party inspectors so portal grants, visibility and routing work.
+    - **filters**:
+      - Party role (client, principal contractor, subcontractor, third-party inspector)
+      - Portal access
+      - Certificate status
+    - **name**: Participant directory
+    - **row actions**:
+      - Edit party role
+      - Invite to portal
+      - Remove
+    - **search**: Company, contact name
+    - **sort**:
+      - Company
+      - Party role
+  -
+    - **bulk actions**:
+      - Add selected assets to scope
+      - Remove from scope
+      - Export baseline vs current
+    - **columns**:
+      - Asset tag
+      - Asset name
+      - Type
+      - Scope status (in scope/removed)
+      - Baseline or added
+      - Added by
+      - Date
+      - Change reason
+    - **create form**:
+      -
+        - **field**: Assets (from hierarchy tree)
+        - **required**: true
+        - **type**: tree multi-picker
+      -
+        - **field**: Include descendants
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Change reason
+        - **required**: true
+        - **type**: text
+    - **empty state**: No assets in scope. Pick assets from the hierarchy tree to build the baseline; later additions are tracked as scope changes.
+    - **filters**:
+      - Baseline vs added
+      - Scope status
+      - Asset type
+      - Subtree
+    - **name**: Scope baseline (project assets)
+    - **row actions**:
+      - Open asset
+      - Remove from scope
+      - View scope-change history
+    - **search**: Tag, asset name
+    - **sort**:
+      - Tag
+      - Date added
+      - Type
+  -
+    - **bulk actions**:
+      - Activate
+      - Deactivate
+      - Export
+    - **columns**:
+      - Name
+      - Work type
+      - Classifier values
+      - Required approvals
+      - ITP templates
+      - Documents
+      - Workflows
+      - Version
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Work type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Classifier values
+        - **required**: false
+        - **type**: key/value rules
+      -
+        - **field**: Requirement bundle
+        - **required**: true
+        - **type**: multi-picker of approvals, ITP templates, documents, workflows
+      -
+        - **field**: Roles and approval chains
+        - **required**: false
+        - **type**: template builder
+    - **empty state**: No work-type classifications defined. Create the types your market uses (e.g. remediation, shutdown, CUI campaign) and what each requires.
+    - **filters**:
+      - Work type
+      - Active
+      - Kind (route/template)
+    - **name**: Classification routes and project templates (admin)
+    - **row actions**:
+      - Edit
+      - Preview impact
+      - Duplicate
+      - Deactivate
+    - **search**: Name, work type
+    - **sort**:
+      - Name
+      - Updated
+- **walkthrough**:
+  - Admin opens Projects and selects New project, optionally choosing a project template by work type.
+  - Enters code, name, client organisation, region, timezone and currency; defaults load from tenant settings.
+  - Creates or selects the site; the hidden system site is auto-created.
+  - Classification wizard assigns the work type and shows the required-items checklist (approvals, ITP sets, documents, workflows).
+  - Admin opens the scope picker and selects asset subtrees to set the baseline.
+  - Adds members with project-scoped roles and teams, and adds participants with party roles.
+  - Configures numbering schemes (e.g. client prefix), enabled modules and terminology overrides such as Work Pack versus Job.
+  - Users select the project in the header switcher; all lists scope to it, with an All projects override for permitted roles.
+  - As scope grows, assets are added and the change is logged against the baseline.
+  - If the work type changes, the impact preview is reviewed and the recalculation event confirmed.
+  - PM starts closeout; the checklist lists open holds, NCRs and certificates still to resolve.
+  - Once clear, the project is archived, project.closed is emitted and external access expires.

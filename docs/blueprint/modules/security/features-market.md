@@ -1,0 +1,37 @@
+# Security & compliance programme — Feature scout
+
+
+- **abilities seen in market**:
+  - Control library mapped once to SOC 2, ISO 27001 and IRAP with continuous evidence collection
+  - Customer-facing trust centre with policies, sub-processor list and pen-test summary
+  - Security questionnaire answer bank
+  - Vulnerability management with severity SLAs and tracked exceptions
+  - Customer-managed keys and IP allow-listing for enterprise tenants
+  - Anomaly detection on sign-ins and bulk exports
+  - Data classification labels driving masking, retention and export rules
+  - Incident response runbooks with tabletop exercises and breach-notification clocks
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Control-to-evidence matrix mapping each control to its automated test, CI job or screenshot source
+    - **why**: Makes SOC 2 and ISO audits repeatable and shows which AIP controls are specified but not yet proven.
+  -
+    - **effort**: S
+    - **feature**: Trust pack: security whitepaper, sub-processor list, data-flow diagram and standard questionnaire answers
+    - **why**: Rio Tinto and Kaefer procurement will ask on day one, and ready answers shorten onboarding.
+  -
+    - **effort**: M
+    - **feature**: Data classification tags on fields and attachments (public, internal, sensitive, health)
+    - **why**: Drives masking for incident and health data and tells the AI layer what must never leave region.
+  -
+    - **effort**: M
+    - **feature**: Bulk-export and anomalous-access alerts to tenant admins
+    - **why**: Detects credential misuse on a platform holding client asset integrity data.
+  -
+    - **effort**: S
+    - **feature**: Pre-production security gate: pen-test findings tracker with release block on open highs
+    - **why**: Ties external testing to the release process for audit evidence.
+  -
+    - **effort**: S
+    - **feature**: Customer IP allow-list and session policy settings per tenant
+    - **why**: Mining and government customers often require network and session restrictions.

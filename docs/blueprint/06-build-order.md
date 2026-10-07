@@ -1,0 +1,179 @@
+# Build order and phases
+
+
+- **phases**:
+  -
+    - **exit criteria**:
+      - Every table has tenant_id and FORCE RLS; a non-owner role with SET LOCAL app.tenant_id fails closed when unset; Testcontainers isolation and permission-matrix tests are green in CI
+      - Keycloak SSO/MFA and local email+password+MFA work; SCIM deprovisioning revokes sessions in one transaction
+      - Terminology keys resolve all labels with en-AU defaults, and a lint rule blocks hard-coded labels
+      - Workflow engine reproduces AIP's inspection lifecycle as golden tests
+      - Image is built once, scanned and promoted to AWS ap-southeast-2 staging via Terraform/OpenTofu; Coolify hosts dev and demo only
+      - Append-only hash-chained audit log is live; upload quarantine, scan and release is the only path into storage
+    - **goal**: Stand up the TypeScript platform base: pooled tenancy with RLS, identity, one authorisation layer, terminology, workflow engine, audit, uploads and the AWS/IaC pipeline, before any domain module is ported.
+    - **modules**:
+      - arch
+      - stack
+      - database
+      - tenancy
+      - security
+      - ops
+      - testing
+      - design
+      - terms
+      - identity
+      - access
+      - projects
+      - audit
+      - approvals
+      - uploads
+    - **name**: P0 Foundations and proof of isolation
+  -
+    - **exit criteria**:
+      - Asset ltree hierarchy, item types, templates, inspections with full review lifecycle, ITP/hold points and RSW completion gate pass AIP golden tests
+      - Expired certificate or calibration is hard-blocked at the server
+      - Weld/component traceability queries (welder, batch, instrument) return correct chains
+      - Asset tag import runs with dry-run and validation, with the platform as master
+      - Kaefer pilot data migrated from AIP and reconciled
+    - **goal**: Port AIP's differentiating domain logic onto the new base so the first customer's remediation workflow runs end to end.
+    - **modules**:
+      - assets
+      - item_types
+      - rules
+      - forms
+      - eligibility
+      - inspections
+      - scope_work
+      - components
+      - issues
+      - inventory
+      - equipment
+      - documents
+      - contacts
+      - comments
+      - tasks
+      - data_io
+    - **name**: P1 Core parity for Kaefer on Rio Tinto
+  -
+    - **exit criteria**:
+      - Gotenberg reports render from data templates in worker jobs and are stored as documents
+      - Offline PWA passes sync tests: idempotent push, cursor pull, append-only responses, deferred media
+      - Portal on a separate origin uses single-use hashed magic links with POST confirmation, and passes cross-tenant and IDOR tests
+      - Diary seals and signature attestations are tamper-evident and verifiable
+      - Search honours caller permissions
+      - SOC 2 Type I evidence collection is running
+    - **goal**: Deliver the outputs and field and client channels Kaefer needs: PDF reports, offline PWA, signed records, diary, markup, read-only portal with hold-point witnessing.
+    - **modules**:
+      - report_engine
+      - signing
+      - markup
+      - offline
+      - diary
+      - portal
+      - punchlist
+      - schedule
+      - resources
+      - search
+      - qms
+      - handover
+      - safety
+      - transmittals
+    - **name**: P2 Reports, field capture and external access
+  -
+    - **exit criteria**:
+      - Reporting snapshot tables carry tenant_id with RLS and drill down to source records
+      - Public API and signed webhooks are versioned with retry
+      - Inbound capture is disabled by default and runs through quarantine and scan in isolated workers
+      - Change and procurement flows run on the shared workflow engine
+    - **goal**: Add the collaboration and commercial modules and reporting once core and portal are proven.
+    - **modules**:
+      - rfi_submittals
+      - change
+      - procurement
+      - logistics
+      - temporary_works
+      - reporting
+      - integrations
+      - ingestion
+    - **name**: P3 Coordination, commercial and integration
+  -
+    - **exit criteria**:
+      - No model call bypasses the AI gateway; the data-flow register is versioned and AI output needs human confirmation
+      - AI answers respect the caller's permissions
+      - Service campaigns reuse inspection programmes
+      - A second market terminology pack and reference packs load as data only, with no code change
+    - **goal**: Add AI behind governance, post-handover lifecycle and other-market content once the core is paid for.
+    - **modules**:
+      - ai_gov
+      - voice_phone
+      - meetings
+      - ai_assistant
+      - interfaces
+      - service
+      - prefab
+      - commissioning
+      - ref_packs
+    - **name**: P4 AI, lifecycle and market expansion
+- **build order**:
+  - Architecture & module boundaries
+  - Tech stack
+  - Database & schema conventions
+  - Tenancy, organisations & data residency
+  - Security & compliance programme
+  - Operations, hosting & deployment
+  - Testing & quality engineering
+  - Terminology dictionary & localisation
+  - Design system & app shell
+  - Users, sign-in & SSO
+  - Roles, permissions & teams
+  - Projects, sites & classification
+  - Audit trail, activity & timeline
+  - Workflow & approvals engine
+  - Upload & file processing pipeline
+  - Asset hierarchy & registers
+  - Content types, item types & attributes
+  - Rules & validation engine
+  - Form & template designer
+  - Certificates, competency & calibration gate
+  - Inspections, ITPs & hold points
+  - Scopes of work (RSW), disciplines & tasks
+  - Traceability graph: components, materials & certificates
+  - Issues, NCRs & corrective actions
+  - Document library & control
+  - Contacts & companies
+  - Comments, mentions & notifications
+  - Tasks, deadlines & my work
+  - Equipment & fleet
+  - Stock, consumables & materials
+  - Data import, export & backup
+  - Report engine & published records
+  - E-signatures & tamper-evident records
+  - Markup, viewer & plan room
+  - Offline field app & sync
+  - Site diary & field reports
+  - Client & subcontractor portal
+  - Punch list & defects liability
+  - Schedule & look-ahead (basic)
+  - Resources & crews (basic)
+  - Search, retrieval & saved views
+  - Quality roll-up & audits
+  - Handover, data books & submissions
+  - Safety & HSE
+  - Transmittals & correspondence
+  - RFIs & submittals
+  - Change orders, variations & MOC (basic)
+  - Supplier catalogue, requisitions & POs
+  - Site logistics & mobilisation
+  - Temporary works register
+  - Dashboards & KPI reporting
+  - Integrations & webhooks
+  - Inbound capture & connectors
+  - AI governance & data controls
+  - Voice notes & phone log
+  - Meetings & AI minutes
+  - AI assistant & agents
+  - Interface management
+  - Service & maintenance
+  - Prefab & off-site manufacture
+  - Commissioning
+  - Regional reference data packs

@@ -1,0 +1,173 @@
+# Inspections, ITPs & hold points — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Project members by scope; bulk approve limited to reviewer roles
+    - **actions**:
+      - Create
+      - Assign
+      - Approve
+      - Reject/resend
+      - Reschedule
+      - Export
+      - Open review queue
+    - **layout**: Data table with saved views; optional board toggle by status.
+    - **name**: Inspection register
+    - **purpose**: Cross-asset list of inspections, ITPs and RFIs.
+    - **route**: /inspections
+    - **sections**:
+      - Filters (kind, status, asset, discipline, assignee, due)
+      - Table
+      - Bulk bar
+  -
+    - **access**: Inspectors, supervisors, coordinators
+    - **actions**:
+      - Create draft
+      - Assign
+      - Cancel
+    - **layout**: Wizard dialog.
+    - **name**: Create inspection
+    - **purpose**: Instantiate a template against an asset.
+    - **route**: /inspections/new
+    - **sections**:
+      - Select asset (tree picker)
+      - Select template and pinned revision
+      - Assignee (competency-aware)
+      - Due date and booking
+  -
+    - **access**: Assignee, reviewers per workflow stage, client reviewer when enabled
+    - **actions**:
+      - Autosave
+      - Discard
+      - Submit
+      - Approve/reject
+      - Release hold point
+      - Sign
+      - Re-inspect
+      - Raise issue
+      - Generate report
+    - **layout**: Header with workflow bar; main answers column; right rail for sign-off and links.
+    - **name**: Inspection detail
+    - **purpose**: Full-page execution and review.
+    - **route**: /inspections/:id
+    - **sections**:
+      - Header (number, asset, revision, status)
+      - Eligibility banner
+      - Questions and append-only answers
+      - ITP steps with point types
+      - Sign-off chips with auth strength
+      - Linked tasks and downstream blocks
+      - Evidence and instruments
+      - Issues raised
+      - Bookings
+      - Related inspections by discipline
+      - Review history
+      - Report
+      - Audit trail
+  -
+    - **access**: Inspector, supervisor and client reviewers by stage
+    - **actions**:
+      - Approve
+      - Reject with reason
+      - Next/previous
+      - Skip
+    - **layout**: Split view with next/previous.
+    - **name**: Review queue
+    - **purpose**: Step through items awaiting review.
+    - **route**: /inspections/review
+    - **sections**:
+      - Queue list
+      - Inspection preview
+      - Decision panel
+  -
+    - **access**: Authorised releasers and witnesses; others read-only
+    - **actions**:
+      - Release hold
+      - Acknowledge witness
+      - Book inspection
+      - Waive (with override)
+    - **layout**: Vertical step timeline with point-type badges.
+    - **name**: ITP progress
+    - **purpose**: Step-by-step ITP status for an asset or work package.
+    - **route**: /itps/:id
+    - **sections**:
+      - Steps (hold, witness, review, surveillance)
+      - Linked tasks
+      - Notice periods and bookings
+      - Sign-offs
+  -
+    - **access**: Schedulers, inspectors; clients see their own bookings
+    - **actions**:
+      - Create booking
+      - Reschedule
+      - Cancel
+      - Send reminder
+      - Accept/decline invite
+    - **layout**: Month/week/agenda calendar with side filters.
+    - **name**: Scheduling calendar
+    - **purpose**: Customer/inspector bookings.
+    - **route**: /inspections/calendar
+    - **sections**:
+      - Bookings
+      - Invitations status
+      - Notice-period warnings
+  -
+    - **access**: Quality managers, schedulers
+    - **actions**:
+      - Create
+      - Edit
+      - Pause
+      - Run now
+    - **layout**: Table with detail drawer.
+    - **name**: Inspection programmes
+    - **purpose**: Recurring and triggered inspection plans.
+    - **route**: /inspections/programmes
+    - **sections**:
+      - Programmes (frequency, next due, trigger)
+      - Generated inspections
+  -
+    - **access**: Quality managers
+    - **actions**:
+      - Save
+      - Preview next dates
+    - **layout**: Form page.
+    - **name**: Create/edit programme
+    - **purpose**: Define triggers and targets.
+    - **route**: /inspections/programmes/new
+    - **sections**:
+      - Template and asset scope
+      - Frequency and triggers (calendar, cert expiry, issue, ad hoc)
+      - Lead time and assignment rules
+  -
+    - **access**: Tenant admin; quality manager
+    - **actions**:
+      - Edit
+      - Save
+    - **layout**: Settings tabs.
+    - **name**: Inspection settings
+    - **purpose**: Workflow and point-type configuration.
+    - **route**: /settings/inspections
+    - **sections**:
+      - Workflow stages per kind
+      - Point types and notice periods
+      - Sign-off rules
+      - Overrides
+      - Auto-raise rules
+      - Terminology
+  -
+    - **access**: Eligible assigned inspector
+    - **actions**:
+      - Pass/fail
+      - Capture
+      - Sign
+      - Request hold release
+    - **layout**: Full-screen step view.
+    - **name**: ITP step execution (mobile)
+    - **purpose**: Execute a step with evidence and signature on device.
+    - **route**: /m/inspections/:id/step/:stepId
+    - **sections**:
+      - Eligibility banner
+      - Acceptance criteria
+      - Evidence capture
+      - Signature

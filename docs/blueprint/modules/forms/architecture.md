@@ -1,0 +1,98 @@
+# Form & template designer — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/forms/router.py
+    - **purpose**: Template CRUD, revision publish, clone, archive, export/import, delete/restore
+  -
+    - **path**: backend/app/modules/forms/models.py
+    - **purpose**: form_templates, form_revisions (frozen JSONB schema), template kind, competency and frequency requirements
+  -
+    - **path**: backend/app/modules/forms/schemas.py
+    - **purpose**: Pydantic and JSON Schema for form definition, sections, layout, field specs
+  -
+    - **path**: backend/app/modules/forms/service_lifecycle.py
+    - **purpose**: draft > approved > retired, multi-draft history, immutable published revisions
+  -
+    - **path**: backend/app/modules/forms/validator.py
+    - **purpose**: Definition lint: field refs, cycles in calculations, expression parse check
+  -
+    - **path**: backend/app/modules/forms/seeds/
+    - **purpose**: Template library as data: coating/blasting ITR, UTT survey, vehicle pre-start, generator maintenance, bolt torque, welding, spraying, concrete pour, CUI
+  -
+    - **path**: backend/app/modules/forms/events.py
+    - **purpose**: Event definitions
+  -
+    - **path**: backend/app/modules/forms/tests/
+    - **purpose**: Revision immutability, definition lint, evaluator parity fixtures
+  -
+    - **path**: packages/form-evaluator/
+    - **purpose**: Shared TS evaluator (visible_if, required_if, calculations, validation) used by web and PWA; Python port tested against same fixtures
+- **change isolation**: New field types are added to the shared registry plus one runtime component and evaluator entry, with no change to the designer shell. New industry templates are data seeds only.
+- **config not code**:
+  - Every template: sections, fields, layout, conditions, formulas, validations
+  - Template kind, required competency, default frequency
+  - Field type options, units lists, dropdown option sets
+  - Formula function allow-list
+  - Template seed library per market pack
+  - Template approval workflow definition
+- **events consumed**:
+  - competency_type.changed (requirement refs)
+  - terms.updated (labels)
+  - rules.expression_library_changed
+- **events emitted**:
+  - template.draft_saved
+  - template.published
+  - template.retired
+  - template.deleted
+  - template.restored
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/forms/designer/DesignerCanvas.tsx
+    - **purpose**: Drag-and-drop sections, grid/tabular layout
+  -
+    - **path**: frontend/src/modules/forms/designer/FieldPalette.tsx
+    - **purpose**: Field types from shared field-type registry
+  -
+    - **path**: frontend/src/modules/forms/designer/FieldInspector.tsx
+    - **purpose**: Field properties, units, limits, expiry flag
+  -
+    - **path**: frontend/src/modules/forms/designer/ConditionBuilder.tsx
+    - **purpose**: Visual builder producing JSONLogic/CEL for visible_if and required_if
+  -
+    - **path**: frontend/src/modules/forms/designer/FormulaEditor.tsx
+    - **purpose**: Restricted formula editor with live test values
+  -
+    - **path**: frontend/src/modules/forms/designer/RevisionPanel.tsx
+    - **purpose**: Drafts, publish, diff, clone, retire
+  -
+    - **path**: frontend/src/modules/forms/runtime/FormRenderer.tsx
+    - **purpose**: Renders a frozen revision for fill-in (web and PWA)
+  -
+    - **path**: frontend/src/modules/forms/runtime/fields/
+    - **purpose**: One component per field type, including repeating table, signature, GPS, barcode
+  -
+    - **path**: frontend/src/modules/forms/pages/TemplateLibrary.tsx
+    - **purpose**: List, filters, import/export
+  -
+    - **path**: frontend/src/modules/forms/index.ts
+    - **purpose**: Public exports (FormRenderer, evaluator hooks)
+- **public api**:
+  - GET/POST /api/v1/form-templates
+  - GET/PATCH/DELETE /api/v1/form-templates/{id}
+  - POST /api/v1/form-templates/{id}/revisions (save draft)
+  - POST /api/v1/form-revisions/{id}/publish
+  - POST /api/v1/form-templates/{id}/clone
+  - GET /api/v1/form-templates/{id}/export
+  - POST /api/v1/form-templates/import
+  - POST /api/v1/form-revisions/{id}/validate-definition
+  - GET /api/v1/form-revisions/{id} (frozen schema)
+- **reuses shared**:
+  - Rules & validation engine (JSONLogic/CEL sandbox, no user scripts)
+  - Shared field-type registry with item_types
+  - Workflow engine for template approval
+  - Report engine slot mapping
+  - Permission service
+  - Audit writer
+  - Terms dictionary for labels

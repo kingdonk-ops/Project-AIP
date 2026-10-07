@@ -1,0 +1,233 @@
+# Search, retrieval & saved views — Feature filler
+
+
+- **detail sections**:
+  - Result preview (record summary and hit highlights)
+  - Retrieval filters
+  - Bundle contents, index and hash manifest
+  - Chain of custody
+  - Saved view definition and parameters
+  - Index status
+  - Query log entry
+- **notifications**:
+  - View shared with you
+  - Bundle export ready
+  - Reindex completed or failed
+  - Semantic indexing enabled
+  - Export logged for commercial access review
+  - Embedding purge completed after deletion or offboarding
+- **settings**:
+  - Terminology synonyms
+  - Reindex and index status
+  - Semantic search toggle and embedding provider
+  - Searchable record types
+  - Party restrictions
+  - Query log retention
+  - Export roles (retrieval.use, views.share)
+  - Embedding lifecycle under legal hold
+  - Masked fields excluded from index
+- **tables**:
+  -
+    - **bulk actions**:
+      - Save as view
+      - Add to evidence bundle
+    - **columns**:
+      - Type
+      - Title / reference
+      - Asset
+      - Project
+      - Status
+      - Date
+      - Snippet
+    - **empty state**: No results. Try a partial tag, a different spelling or fewer filters.
+    - **filters**:
+      - Record type
+      - Asset subtree
+      - Project
+      - NDT method
+      - Tag
+      - Date range
+      - Status
+    - **name**: Search Results
+    - **row actions**:
+      - Open
+      - Preview
+      - Pin to case
+      - Add to bundle
+    - **search**: Free text (full-text plus semantic), tag, line number, wildcard asset code
+    - **sort**:
+      - Relevance
+      - Date
+      - Type
+  -
+    - **bulk actions**:
+      - Add to bundle
+      - Pin to case
+    - **columns**:
+      - Record type
+      - Reference
+      - Party
+      - Date
+      - Asset
+      - Title
+    - **empty state**: No records match these filters. Widen the date window or remove the party filter.
+    - **filters**:
+      - Party
+      - Date window
+      - Reference
+      - Record type
+      - Asset
+    - **name**: Structured Retrieval Results
+    - **row actions**:
+      - Open
+      - Add to bundle
+    - **search**: Reference number
+    - **sort**:
+      - Date
+      - Record type
+      - Party
+  -
+    - **bulk actions**:
+      - Delete
+      - Share
+    - **columns**:
+      - Name
+      - Record type
+      - Scope (personal, team, project)
+      - Display mode (list, count, tile)
+      - Parameters
+      - Owner
+      - Used in tiles
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Record type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Filter definition
+        - **required**: true
+        - **type**: filter builder
+      -
+        - **field**: Parameters (for example my area, this shutdown)
+        - **required**: false
+        - **type**: list
+      -
+        - **field**: Scope
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Display mode
+        - **required**: true
+        - **type**: select
+    - **empty state**: No saved views. Run a search or filter any register and save it.
+    - **filters**:
+      - Scope
+      - Record type
+      - Owner
+      - Display mode
+    - **name**: Saved Views
+    - **row actions**:
+      - Open
+      - Edit
+      - Share
+      - Use as tile
+      - Duplicate
+    - **search**: View name
+    - **sort**:
+      - Name
+      - Last used
+  -
+    - **columns**:
+      - Bundle
+      - Records
+      - Created by
+      - Created
+      - Legal hold marker
+      - Status
+    - **create form**:
+      -
+        - **field**: Bundle name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Case (optional)
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Records
+        - **required**: true
+        - **type**: selection
+    - **empty state**: No bundles. Add records from retrieval results to build one with an index, hashes and chain of custody.
+    - **filters**:
+      - Created by
+      - Date range
+      - Hold marker
+    - **name**: Evidence Bundles
+    - **row actions**:
+      - Open
+      - Export
+      - Apply hold marker
+    - **search**: Bundle name
+    - **sort**:
+      - Created
+  -
+    - **bulk actions**:
+      - Export log
+    - **columns**:
+      - Time
+      - User
+      - Query or filter
+      - Result count
+      - Export
+    - **empty state**: No queries logged.
+    - **filters**:
+      - User
+      - Date range
+      - Export only
+    - **name**: Query Log
+    - **row actions**:
+      - View detail
+    - **search**: User, query text
+    - **sort**:
+      - Time
+  -
+    - **bulk actions**:
+      - Delete
+    - **columns**:
+      - Term
+      - Synonyms
+      - Source (dictionary or custom)
+    - **create form**:
+      -
+        - **field**: Term
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Synonyms
+        - **required**: true
+        - **type**: tag list
+    - **empty state**: No custom synonyms. Terminology dictionary terms are used automatically.
+    - **filters**:
+      - Source
+    - **name**: Synonyms
+    - **row actions**:
+      - Edit
+      - Delete
+    - **search**: Term
+    - **sort**:
+      - Term
+- **walkthrough**:
+  - User types a query in the header search or presses Cmd+K.
+  - Results are returned filtered by tenant and permissions in the query itself, ranked by full-text and semantic fusion.
+  - User narrows by type, asset subtree, project and NDT method.
+  - User searches a partial tag or line number and finds an isometric via OCR text.
+  - User saves the filter as a view with a parameter, choosing personal, team or project scope.
+  - User uses the view as a count or tile on a dashboard.
+  - Commercial user opens the Structured Finder and sets party, date window and reference.
+  - User adds results to an evidence bundle.
+  - Bundle builder shows index, document hashes and chain of custody; user applies a legal hold marker.
+  - User exports the bundle; the export is logged to the timeline.

@@ -1,0 +1,105 @@
+# Operations, hosting & deployment — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Any authenticated user (own jobs only)
+    - **actions**:
+      - Open result
+      - Cancel
+      - Retry
+      - Clear completed
+    - **layout**: Right-hand drawer opened from header icon; works on mobile as a bottom sheet
+    - **name**: My jobs drawer
+    - **purpose**: Show the user's running and recent background jobs from any page.
+    - **route**: (drawer)/jobs
+    - **sections**:
+      - Filter chips (running, completed, failed)
+      - Job list with progress
+  -
+    - **access**: Tenant admin for own tenant; platform admin across tenants
+    - **actions**:
+      - Retry
+      - Cancel
+      - Download result
+      - Copy correlation ID
+      - Bulk retry or cancel
+    - **layout**: DataTable with filters and detail drawer
+    - **name**: Admin queue
+    - **purpose**: View and manage all jobs and queue health.
+    - **route**: /admin/jobs
+    - **sections**:
+      - Queue health strip
+      - Jobs table
+      - Job detail (parameters, events, result, error, correlation ID)
+  -
+    - **access**: Platform admin and engineering
+    - **actions**:
+      - View deployment
+      - Open status page
+    - **layout**: Card grid plus deployments table
+    - **name**: Environments and deployments
+    - **purpose**: Show environment health, versions and pipeline status.
+    - **route**: /admin/ops/environments
+    - **sections**:
+      - Environment table (hosting, region, version, health, data class)
+      - Pipeline status
+      - SLOs and alerts
+      - Recovery targets
+  -
+    - **access**: Platform admin and security lead
+    - **actions**:
+      - Record restore test
+      - Download evidence
+      - Trigger backup
+    - **layout**: Status cards plus table
+    - **name**: Backups and restore evidence
+    - **purpose**: Backup status and quarterly restore test records.
+    - **route**: /admin/ops/backups
+    - **sections**:
+      - Backup schedule and last result
+      - Restore test evidence
+      - PITR window
+  -
+    - **access**: Super-admin with storage_lifecycle:manage
+    - **actions**:
+      - Save
+      - Add override
+      - Apply policy
+    - **layout**: Settings form with JSON preview
+    - **name**: Storage lifecycle
+    - **purpose**: Set defaults and per-project overrides while blocking expiry on evidence.
+    - **route**: /settings/storage-lifecycle
+    - **sections**:
+      - Defaults (tier transitions)
+      - Project overrides
+      - Rendered s3-lifecycle.json preview
+      - Evidence no-expiry guard
+  -
+    - **access**: Platform admin
+    - **actions**:
+      - Save
+      - Reset sandbox now
+    - **layout**: Tabbed settings form
+    - **name**: Ops settings
+    - **purpose**: Configure job limits, error sink, backup and SLO thresholds.
+    - **route**: /admin/ops/settings
+    - **sections**:
+      - Job types and limits
+      - Tenant queue quotas
+      - Client error limits
+      - SLO thresholds
+      - Sandbox reset schedule
+  -
+    - **access**: Platform admin; tenant admin sees own tenant
+    - **actions**:
+      - Export CSV
+      - Change period
+    - **layout**: Chart and table report
+    - **name**: Tenant cost and usage
+    - **purpose**: Per-tenant storage, jobs and AI call reporting.
+    - **route**: /admin/ops/usage
+    - **sections**:
+      - Usage by tenant
+      - Trend charts
+      - Quota status

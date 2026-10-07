@@ -1,0 +1,135 @@
+# Prefab & off-site manufacture — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: prefab.view; create with prefab.manage
+    - **actions**:
+      - Register unit
+      - Bulk import
+      - Filter
+      - Export
+    - **layout**: Register table with pipeline header chips
+    - **name**: Unit Register
+    - **purpose**: Register of units with status pipeline
+    - **route**: /projects/:pid/prefab/units
+    - **sections**:
+      - Pipeline status chips
+      - Unit table
+      - Filters by type and destination
+  -
+    - **access**: prefab.manage
+    - **actions**:
+      - Save
+      - Generate ITP
+      - Revise
+    - **layout**: Form with side summary
+    - **name**: Create/Edit Unit
+    - **purpose**: Register or revise a unit and generate ITP from stage template
+    - **route**: /projects/:pid/prefab/units/new
+    - **sections**:
+      - Type, mark, revision
+      - Destination asset picker
+      - Stage template preview
+      - BOM lines
+  -
+    - **access**: prefab.view; gates require prefab.release and pass certificate checks
+    - **actions**:
+      - Release for dispatch
+      - Release for install
+      - Raise NCR
+      - Print QR label
+    - **layout**: Tabbed detail
+    - **name**: Unit Detail
+    - **purpose**: Stage register, holds, BOM, shipment and handover checklist for one unit
+    - **route**: /projects/:pid/prefab/units/:unitId
+    - **sections**:
+      - Stages and hold points
+      - BOM and certificates
+      - Shipment
+      - Receipt
+      - Handover checklist
+      - Activity
+  -
+    - **access**: prefab.view
+    - **actions**:
+      - Advance stage (if gates pass)
+      - Filter
+      - Open unit
+    - **layout**: Kanban by stage
+    - **name**: Production and Sequence Board
+    - **purpose**: Show units by production stage and sequence dependencies
+    - **route**: /projects/:pid/prefab/board
+    - **sections**:
+      - Stage columns
+      - Unit cards with hold/NCR flags
+      - Sequence dependency indicators
+  -
+    - **access**: prefab.view; manage with prefab.manage
+    - **actions**:
+      - Create shipment
+      - Record status event
+      - Assign install slot
+    - **layout**: Table with map-free status timeline
+    - **name**: Delivery and Install Tracker
+    - **purpose**: Track shipments, ETA, receipt and installation
+    - **route**: /projects/:pid/prefab/delivery
+    - **sections**:
+      - Shipments
+      - Receipt status
+      - Installation slots
+  -
+    - **access**: prefab.view; generate with prefab.report
+    - **actions**:
+      - Generate report
+      - Export PDF
+      - Raise NCR
+    - **layout**: List with report preview panel
+    - **name**: Off-site Delivery Inspection List and Report
+    - **purpose**: Per-delivery inspection list and generated report
+    - **route**: /projects/:pid/prefab/reports/delivery-inspection
+    - **sections**:
+      - Delivery selector
+      - Inspection list with results and photos
+      - Report preview
+  -
+    - **access**: prefab.view; edit with prefab.manage
+    - **actions**:
+      - Link document
+      - Mark handed over
+      - Export
+    - **layout**: Matrix of units by required document
+    - **name**: Handover Completeness View
+    - **purpose**: Confirm documents, MDR and files handed over per unit
+    - **route**: /projects/:pid/prefab/handover
+    - **sections**:
+      - Completeness matrix
+      - Missing items list
+  -
+    - **access**: prefab.configure
+    - **actions**:
+      - Create/edit
+      - Publish
+    - **layout**: List with editor
+    - **name**: Stage Templates and Unit Types
+    - **purpose**: Configure unit types, stages and ITP templates
+    - **route**: /settings/prefab/stage-templates
+    - **sections**:
+      - Unit types
+      - Stage sequence
+      - ITP and gate bindings
+  -
+    - **access**: Field roles with prefab.receive
+    - **actions**:
+      - Scan
+      - Record result
+      - Auto-raise NCR
+      - Sync
+    - **layout**: Full-screen scanner then checklist
+    - **name**: Mobile Scan and Receipt
+    - **purpose**: Scan QR, perform receipt inspection offline
+    - **route**: /m/prefab/receive
+    - **sections**:
+      - Scanner
+      - Receipt checklist
+      - Damage photos

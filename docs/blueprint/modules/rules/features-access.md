@@ -1,0 +1,246 @@
+# Rules & validation engine — Feature filler
+
+
+- **detail sections**:
+  - Definition (target, expression, message, severity)
+  - Version history and diff
+  - Test panel with sample records
+  - Where used (forms, transitions, report pre-flight)
+  - Evaluation results and trends
+  - Waivers
+  - Audit trail
+- **notifications**:
+  - Rule set published
+  - Rule set rollback
+  - Block rule failing above threshold
+  - Waiver recorded
+  - Requirement converted to rule
+  - Expression error in a rule
+- **settings**:
+  - Expression language (JSONLogic/CEL)
+  - Allowed target record types and fields
+  - Waiver roles and reason required
+  - Rule set assignment defaults per project
+  - Evaluation timeout and limits
+  - Log retention
+  - Require test cases before publish
+  - Message terminology keys
+- **tables**:
+  -
+    - **bulk actions**:
+      - Activate
+      - Deactivate
+      - Move to rule set
+      - Export JSON
+    - **columns**:
+      - Rule key
+      - Name
+      - Target record type
+      - Scope (use: validation/guard/requirement)
+      - Severity (block/warn)
+      - Rule set
+      - Version
+      - Status
+      - Last evaluated
+      - Fail count (30d)
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Target record type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Use
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Expression (JSONLogic/CEL)
+        - **required**: true
+        - **type**: expression editor
+      -
+        - **field**: Message
+        - **required**: true
+        - **type**: text (terminology keys allowed)
+      -
+        - **field**: Severity
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Rule set
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Workflow transition (for guards)
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Applies to project(s)
+        - **required**: false
+        - **type**: multi-select
+    - **empty state**: No rules defined. Create a rule to validate data or guard a workflow transition.
+    - **filters**:
+      - Target type
+      - Use
+      - Severity
+      - Status
+      - Rule set
+      - Project
+    - **name**: Rules
+    - **row actions**:
+      - Edit
+      - Test
+      - Duplicate
+      - View versions
+      - Deactivate
+      - Delete draft
+    - **search**: Rule key, name, message, target type
+    - **sort**:
+      - Name
+      - Last edited
+      - Fail count
+      - Severity
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Name
+      - Level (tenant/project)
+      - Current version
+      - Status
+      - Rule count
+      - Published by
+      - Published date
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Level
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Project
+        - **required**: false
+        - **type**: project picker
+      -
+        - **field**: Base on (existing set)
+        - **required**: false
+        - **type**: select
+    - **empty state**: No rule sets yet. Create one to group and version rules.
+    - **filters**:
+      - Level
+      - Status
+      - Project
+    - **name**: Rule sets
+    - **row actions**:
+      - Open
+      - New draft version
+      - Publish
+      - Roll back
+      - Assign to project
+    - **search**: Name
+    - **sort**:
+      - Name
+      - Published date
+  -
+    - **bulk actions**:
+      - Approve
+      - Convert to rules
+      - Delete drafts
+      - Export
+    - **columns**:
+      - Req ID
+      - Source document
+      - Clause/ref
+      - Entity
+      - Attribute
+      - Constraint
+      - Value
+      - Status (draft/approved/linked to rule)
+      - Linked rule
+    - **create form**:
+      -
+        - **field**: Source document
+        - **required**: true
+        - **type**: document picker
+      -
+        - **field**: Clause reference
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Entity
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Attribute
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Constraint operator
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Value
+        - **required**: true
+        - **type**: typed value
+    - **empty state**: No requirements captured. Add entity-attribute-constraint items from specs or contracts.
+    - **filters**:
+      - Source document
+      - Entity
+      - Status
+      - Project
+      - Has linked rule
+    - **name**: Requirements register
+    - **row actions**:
+      - Edit
+      - Convert to rule
+      - Open source
+      - Link rule
+    - **search**: Entity, attribute, source, clause
+    - **sort**:
+      - Source
+      - Entity
+      - Status
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Time
+      - Rule
+      - Record
+      - Context (form/transition/export)
+      - Result
+      - Message
+      - User
+      - Waiver
+    - **empty state**: No evaluations recorded yet.
+    - **filters**:
+      - Result
+      - Severity
+      - Rule
+      - Context
+      - Date range
+    - **name**: Evaluation log
+    - **row actions**:
+      - Open record
+      - View inputs
+      - Waive (permitted roles, with reason)
+    - **search**: Record id, rule key
+    - **sort**:
+      - Time
+      - Rule
+- **walkthrough**:
+  - Admin opens Rules and creates a draft rule set for a project.
+  - Adds a rule choosing the target record type, e.g. Inspection.
+  - Writes the expression, e.g. no open critical issues on the asset.
+  - Sets the message and severity (block or warn).
+  - Opens the test panel, selects sample records and checks pass/fail results.
+  - Attaches the rule to a workflow transition guard or form field.
+  - Publishes the rule set; a new version is created and pinned.
+  - A user attempts the transition; the server evaluates the rule and blocks with the message.
+  - A permitted user may waive a warn-level finding with a reason, which is logged.
+  - Admin reviews the evaluation log and fail trends, then iterates on a new version.

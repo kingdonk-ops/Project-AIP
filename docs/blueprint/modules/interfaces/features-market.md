@@ -1,0 +1,37 @@
+# Interface management — Feature scout
+
+
+- **abilities seen in market**:
+  - Interface register of provider, receiver, deliverable and need date
+  - Interface agreements with status stages (identified, agreed, delivered, accepted)
+  - Interface matrix by package or contractor
+  - Escalation when dates are missed
+  - Links to RFIs, documents and schedule activities
+  - Party-scoped visibility
+  - Reports on overdue and at-risk interfaces
+  - Sign-off by both provider and receiver on delivery
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Asset-linked interface points (for example scaffold handover, insulation strip, coating access, isolation ready) tied to the asset node and scope task
+    - **why**: Remediation work depends on handoffs between trades; linking them to assets shows exactly what is blocking a scope.
+  -
+    - **effort**: S
+    - **feature**: Interface templates for common remediation handoffs with default providers, receivers and lead times
+    - **why**: Speeds setup on new projects and standardises what Kaefer and later customers track.
+  -
+    - **effort**: M
+    - **feature**: Blocked-by relationships that surface on RSW tasks and look-ahead as a visible constraint
+    - **why**: Connects interface delays to schedule risk using data already in the platform.
+  -
+    - **effort**: M
+    - **feature**: Two-party acceptance with signed attestation and evidence attachments (photos, certificates, inspection records)
+    - **why**: Creates defensible proof that a handover happened and was accepted, reducing later disputes.
+  -
+    - **effort**: S
+    - **feature**: Automatic escalation ladder with configurable levels (responsible person, package manager, project manager) and inclusion in the next meeting agenda
+    - **why**: Ensures overdue interfaces get attention without manual chasing.
+  -
+    - **effort**: S
+    - **feature**: Interface ageing and heat-map view by package pair
+    - **why**: Shows at a glance where coordination is breaking down on multi-package projects.

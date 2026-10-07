@@ -1,0 +1,109 @@
+# Content types, item types & attributes — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/item_types/models.py
+    - **purpose**: ContentType, ItemCategory, ItemType (versioned JSONB schema, parent), Attribute registry, StatusSet, StarterPack
+  -
+    - **path**: backend/app/modules/item_types/schemas.py
+    - **purpose**: Pydantic models and the field-type definition union shared with forms
+  -
+    - **path**: backend/app/modules/item_types/router.py
+    - **purpose**: Content type, category, type, attribute, status set and starter pack endpoints
+  -
+    - **path**: backend/app/modules/item_types/field_types.py
+    - **purpose**: Field-type registry used by both item types and the form designer
+  -
+    - **path**: backend/app/modules/item_types/validator.py
+    - **purpose**: Server-side attribute validation against the effective schema, incl. units and tolerances
+  -
+    - **path**: backend/app/modules/item_types/inheritance.py
+    - **purpose**: Effective schema resolution (parent plus child, add-only override rules until decided)
+  -
+    - **path**: backend/app/modules/item_types/versioning.py
+    - **purpose**: Immutable schema versions, migration preview and impact count on existing assets
+  -
+    - **path**: backend/app/modules/item_types/expressions.py
+    - **purpose**: Adapter to the shared sandboxed expression evaluator for conditional and calculated attributes
+  -
+    - **path**: backend/app/modules/item_types/status_sets.py
+    - **purpose**: Custom statuses mapped to the fixed neutral lifecycle states
+  -
+    - **path**: backend/app/modules/item_types/starter_packs.py
+    - **purpose**: Import of pack definitions (NDT/CUI, welding, insulation, coating)
+  -
+    - **path**: backend/app/modules/item_types/packs/
+    - **purpose**: JSON pack definitions, versioned data not code
+  -
+    - **path**: backend/app/modules/item_types/events.py
+    - **purpose**: Event payloads
+  -
+    - **path**: backend/migrations/versions/xxxx_item_types.py
+    - **purpose**: Schema and RLS
+  -
+    - **path**: backend/tests/modules/item_types/
+    - **purpose**: Validation, inheritance, version migration and expression sandbox tests
+- **change isolation**: New fields or types are data and never need a deploy. A new field kind is added once in field_types.py and is then available to forms and assets together.
+- **config not code**:
+  - every content type, category, item type and attribute
+  - required, expiry and reference flags
+  - units and tolerances
+  - status sets and neutral mapping
+  - default ITP and inspection templates
+  - starter pack content
+  - calculated expressions
+- **events consumed**:
+  - terminology.changed (display names)
+  - asset.created (validate attributes, auto-create ITP or inspection per type flags)
+  - tenant.provisioned (offer starter packs)
+- **events emitted**:
+  - item_type.created
+  - item_type.schema_published
+  - item_type.status_set_changed
+  - content_type.created or renamed
+  - starter_pack.imported
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/item_types/pages/ContentTypeList.tsx
+    - **purpose**: List and drill-down
+  -
+    - **path**: frontend/src/modules/item_types/pages/ItemTypeEditor.tsx
+    - **purpose**: Category and type editor with attribute schema builder
+  -
+    - **path**: frontend/src/modules/item_types/pages/AttributeRegistry.tsx
+    - **purpose**: Shared attributes
+  -
+    - **path**: frontend/src/modules/item_types/pages/SchemaVersions.tsx
+    - **purpose**: Version history and migration preview
+  -
+    - **path**: frontend/src/modules/item_types/pages/StatusSetEditor.tsx
+    - **purpose**: Status mapping editor
+  -
+    - **path**: frontend/src/modules/item_types/pages/StarterPackImport.tsx
+    - **purpose**: Pack browse and import
+  -
+    - **path**: frontend/src/shared/fields/DynamicFieldForm.tsx
+    - **purpose**: Schema-driven renderer reused by assets and forms (shared, not owned here)
+  -
+    - **path**: frontend/src/modules/item_types/api.ts
+    - **purpose**: Generated client wrappers
+- **public api**:
+  - GET/POST/PATCH /content-types
+  - GET/POST/PATCH /item-categories
+  - GET/POST/PATCH /item-types
+  - GET /item-types/{id}/effective-schema
+  - POST /item-types/{id}/versions/preview and /publish
+  - GET/POST /attributes
+  - GET/POST /status-sets
+  - GET/POST /starter-packs and /starter-packs/{id}/import
+  - Python service: validate_attributes(item_type_id, data)
+  - Python service: neutral_state(item_type_id, status)
+- **reuses shared**:
+  - field-type registry shared with forms
+  - sandboxed expression evaluator (rules engine)
+  - terminology dictionary
+  - state-machine neutral lifecycle states
+  - rules engine for tolerance flags
+  - audit trail
+  - data_io for pack import

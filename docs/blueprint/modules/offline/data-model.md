@@ -1,0 +1,302 @@
+# Offline field app & sync — Data model & schema
+
+
+- **notes**: Pull cursor (updated_at, id) needs a composite index on every syncable table: (tenant_id, updated_at, id), plus sync_version and soft-delete tombstones (deleted_at) so deletes propagate. Offline media rows live in uploads module; this module only stores pending refs in op payloads. Store sync_operations payloads under a retention job; keep hash-only after retention for legal hold.
+- **reuses existing**:
+  - assets
+  - inspections
+  - inspection_responses
+  - tasks
+  - documents
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: device_label
+        - **notes**: user-visible name
+        - **type**: text
+      -
+        - **name**: platform
+        - **notes**: pwa|ios|android
+        - **type**: text
+      -
+        - **name**: public_key
+        - **notes**: device-bound credential
+        - **type**: text
+      -
+        - **name**: app_version
+        - **notes**: protocol compatibility
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: active|revoked|wipe_pending|wiped
+        - **type**: text
+      -
+        - **name**: last_seen_at
+        - **type**: timestamptz
+      -
+        - **name**: last_pull_cursor
+        - **notes**: {ts,id} last acknowledged
+        - **type**: jsonb
+      -
+        - **name**: wipe_requested_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id) where deleted_at is null
+      - (tenant_id, status)
+    - **name**: devices
+    - **purpose**: Registered field devices (PWA or native) per user, supporting PIN users, revocation and remote wipe.
+    - **relations**:
+      - users (identity module)
+      - sync_batches.device_id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: device_id
+        - **notes**: FK devices
+        - **type**: uuid
+      -
+        - **name**: batch_id
+        - **notes**: client-generated
+        - **type**: uuid
+      -
+        - **name**: op_count
+        - **notes**: check <= 500
+        - **type**: int
+      -
+        - **name**: result
+        - **notes**: per-op results returned on replay
+        - **type**: jsonb
+      -
+        - **name**: received_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, device_id, batch_id)
+    - **name**: sync_batches
+    - **purpose**: One row per pushed batch for idempotency; replay returns stored result.
+    - **relations**:
+      - devices
+      - sync_operations.batch_pk
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: batch_pk
+        - **notes**: FK sync_batches
+        - **type**: uuid
+      -
+        - **name**: device_id
+        - **type**: uuid
+      -
+        - **name**: op_id
+        - **notes**: client-generated, unique per device
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **notes**: registered handler key
+        - **type**: text
+      -
+        - **name**: record_id
+        - **notes**: client-generated id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, FK assets
+        - **type**: uuid
+      -
+        - **name**: op
+        - **notes**: create|update|append|delete
+        - **type**: text
+      -
+        - **name**: base_sync_version
+        - **notes**: version client edited from
+        - **type**: int
+      -
+        - **name**: payload
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: applied|duplicate|conflict|rejected
+        - **type**: text
+      -
+        - **name**: error_code
+        - **type**: text
+      -
+        - **name**: client_ts
+        - **notes**: device clock
+        - **type**: timestamptz
+      -
+        - **name**: applied_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, device_id, op_id)
+      - (tenant_id, record_type, record_id)
+      - (tenant_id, status) where status='conflict'
+    - **name**: sync_operations
+    - **purpose**: Append-only log of every pushed op with outcome, for audit and debugging.
+    - **relations**:
+      - sync_batches
+      - devices
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: operation_id
+        - **notes**: FK sync_operations
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: who must resolve
+        - **type**: uuid
+      -
+        - **name**: field_diffs
+        - **notes**: [{field, base, server, client}]
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: open|resolved
+        - **type**: text
+      -
+        - **name**: resolution
+        - **notes**: chosen value per field
+        - **type**: jsonb
+      -
+        - **name**: resolved_by
+        - **type**: uuid
+      -
+        - **name**: resolved_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id, status)
+      - (tenant_id, record_type, record_id)
+    - **name**: sync_conflicts
+    - **purpose**: Field-level conflicts awaiting the merge screen.
+    - **relations**:
+      - sync_operations
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: role_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: history_months
+        - **notes**: default 12
+        - **type**: int
+      -
+        - **name**: record_types
+        - **notes**: allow list
+        - **type**: jsonb
+      -
+        - **name**: max_batch_ops
+        - **notes**: default 500
+        - **type**: int
+      -
+        - **name**: max_pull_rows
+        - **notes**: default 2000
+        - **type**: int
+      -
+        - **name**: sync_interval_s
+        - **notes**: default 300
+        - **type**: int
+      -
+        - **name**: retention_days
+        - **notes**: device data retention
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, role_id)
+    - **name**: sync_scope_rules
+    - **purpose**: Tenant-configurable scope: history months, record types, limits per role or project.
+    - **relations**:
+      - projects
+      - roles

@@ -1,0 +1,441 @@
+# Tasks, deadlines & my work — Feature filler
+
+
+- **detail sections**:
+  - Header (status, priority, due, assignee)
+  - Description
+  - Checklist
+  - Asset and source record link
+  - Comments and mentions
+  - Attachments and photos
+  - Deadline and escalation history
+  - Audit and timeline
+- **notifications**:
+  - Task assigned
+  - Task due soon
+  - Deadline due soon to owner
+  - Deadline overdue to owner
+  - Escalation to manager after grace period
+  - Extension recorded to manager
+  - Delegation started or ended
+  - Approval or sign-off routed to delegate
+  - Mention in task comment
+  - Auto-task raised
+- **settings**:
+  - Grace period and escalation manager rule per deadline type
+  - Auto-task rules
+  - Recurring templates
+  - Project calendars, regional public holidays and shutdown periods
+  - Roster patterns (FIFO and DIDO)
+  - Delegation permissions and maximum range
+  - Default task priorities and statuses
+  - Terminology labels
+  - Retention of escalation logs
+- **tables**:
+  -
+    - **bulk actions**:
+      - Acknowledge selected
+      - Snooze with reason
+      - Mark mentions read
+    - **columns**:
+      - Type (approval, sign, overdue, mention, expiry)
+      - Title
+      - Source record
+      - Asset
+      - Due
+      - Urgency
+      - Inline action
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Due date
+        - **required**: false
+        - **type**: date
+    - **empty state**: Nothing needs your attention. Use quick-add to create a to-do.
+    - **filters**:
+      - Chip: All, Approvals, Sign, Overdue, Mentions, Expiries
+      - Due date range
+      - Asset subtree
+      - Source module
+      - Acting as delegate
+    - **name**: My Work queue
+    - **row actions**:
+      - Approve
+      - Sign
+      - Open source record
+      - Acknowledge
+      - Snooze with reason
+    - **search**: Free text on title, source reference and asset name
+    - **sort**:
+      - Urgency (default)
+      - Due date
+      - Source module
+      - Newest
+  -
+    - **bulk actions**:
+      - Reassign (tasks.assign)
+      - Change priority
+      - Change due date
+      - Complete
+      - Export
+    - **columns**:
+      - Title
+      - Assignee
+      - Due date
+      - Priority
+      - Status
+      - Asset
+      - Source
+      - Checklist progress
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Description
+        - **required**: false
+        - **type**: rich text
+      -
+        - **field**: Assignee
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Due date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Priority
+        - **required**: true
+        - **type**: select (low, normal, high, urgent)
+      -
+        - **field**: Asset
+        - **required**: false
+        - **type**: asset tree picker
+      -
+        - **field**: Source record link
+        - **required**: false
+        - **type**: record picker
+      -
+        - **field**: Checklist items
+        - **required**: false
+        - **type**: repeating text
+      -
+        - **field**: Attachments and photos
+        - **required**: false
+        - **type**: file
+      -
+        - **field**: Recurrence
+        - **required**: false
+        - **type**: template picker
+    - **empty state**: No tasks yet. Create a task or quick-add a personal to-do.
+    - **filters**:
+      - Status
+      - Priority
+      - Assignee
+      - Due
+      - Asset subtree
+      - Source module
+      - Personal only
+    - **name**: Tasks
+    - **row actions**:
+      - Open drawer
+      - Edit
+      - Complete
+      - Tick checklist
+      - Reassign
+      - Delete (personal or creator)
+    - **search**: Title, description, asset name
+    - **sort**:
+      - Due date
+      - Priority
+      - Status
+      - Updated
+  -
+    - **bulk actions**:
+      - Acknowledge
+      - Reassign (tasks.assign)
+      - Export
+    - **columns**:
+      - Source type
+      - Source record
+      - Asset
+      - Owner
+      - Due date
+      - Grace period ends
+      - Escalation manager
+      - Status
+      - Escalation level
+    - **create form**:
+      -
+        - **field**: Source record type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Source record id
+        - **required**: true
+        - **type**: record picker
+      -
+        - **field**: Owner
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Due date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Grace period override
+        - **required**: false
+        - **type**: duration
+      -
+        - **field**: Escalation manager
+        - **required**: false
+        - **type**: user picker
+    - **empty state**: No open deadlines. Deadlines appear automatically as other modules register due dates.
+    - **filters**:
+      - Status (open, acknowledged, overdue, escalated, extended, resolved)
+      - Source module
+      - Owner
+      - Team
+      - Escalation level
+      - Asset subtree
+      - Due window
+    - **name**: Deadline register
+    - **row actions**:
+      - Acknowledge
+      - Reassign
+      - Extend with reason
+      - Resolve
+      - Open source
+    - **search**: Source reference, owner, asset
+    - **sort**:
+      - Due date
+      - Days overdue
+      - Source module
+      - Owner
+  -
+    - **bulk actions**:
+      - Enable
+      - Disable
+    - **columns**:
+      - Name
+      - Trigger event
+      - Condition
+      - Assignee rule
+      - Due offset
+      - Active
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Trigger event (hold point reached, NCR opened, certificate expiring, calibration due, inspection rejected)
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Condition
+        - **required**: false
+        - **type**: rule builder
+      -
+        - **field**: Assignee rule
+        - **required**: true
+        - **type**: select (role, record owner, team lead)
+      -
+        - **field**: Due offset (working days)
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Title template
+        - **required**: true
+        - **type**: text with tokens
+    - **empty state**: No auto-task rules. Add a rule to raise tasks from events.
+    - **filters**:
+      - Trigger event
+      - Active
+      - Module
+    - **name**: Auto-task rules
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Disable
+      - Delete
+      - View fired log
+    - **search**: Rule name, trigger
+    - **sort**:
+      - Name
+      - Last fired
+  -
+    - **bulk actions**:
+      - Pause
+      - Resume
+    - **columns**:
+      - Title
+      - Schedule
+      - Asset or area
+      - Assignee
+      - Next run
+      - Active
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Checklist
+        - **required**: false
+        - **type**: repeating text
+      -
+        - **field**: Recurrence (weekly, fortnightly, monthly, custom)
+        - **required**: true
+        - **type**: schedule
+      -
+        - **field**: Asset or area
+        - **required**: false
+        - **type**: asset tree picker
+      -
+        - **field**: Assignee
+        - **required**: true
+        - **type**: user or role
+      -
+        - **field**: Roster aware
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No recurring templates, for example a weekly CUI strip-and-inspect check per area.
+    - **filters**:
+      - Active
+      - Asset subtree
+      - Assignee
+    - **name**: Recurring task templates
+    - **row actions**:
+      - Edit
+      - Run now
+      - Pause
+      - Delete
+    - **search**: Title, area
+    - **sort**:
+      - Next run
+      - Title
+  -
+    - **bulk actions**:
+      - End early
+    - **columns**:
+      - Delegator
+      - Delegate
+      - From
+      - To
+      - Scope
+      - Status
+    - **create form**:
+      -
+        - **field**: Delegate
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Start date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: End date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Scope (approvals, sign-offs, all)
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Reason
+        - **required**: false
+        - **type**: text
+    - **empty state**: No delegations. Set one before you go on leave.
+    - **filters**:
+      - Status (active, scheduled, expired)
+      - Scope
+    - **name**: Delegations
+    - **row actions**:
+      - Edit
+      - End early
+      - View audit
+    - **search**: Delegator or delegate name
+    - **sort**:
+      - From
+      - Delegator
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Deadline
+      - Source module
+      - Owner
+      - Manager
+      - Escalated at
+      - Level
+      - Outcome
+    - **empty state**: Nothing overdue or escalated.
+    - **filters**:
+      - Source module
+      - Team
+      - Project
+      - Date range
+      - Level
+    - **name**: Escalation log and overdue board
+    - **row actions**:
+      - Open deadline
+      - Open source
+    - **search**: Source reference, owner
+    - **sort**:
+      - Escalated at
+      - Days overdue
+  -
+    - **bulk actions**:
+      - Import holidays
+      - Delete
+    - **columns**:
+      - Calendar
+      - Region
+      - Type (holiday, shutdown, roster)
+      - Dates
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Start and end date
+        - **required**: true
+        - **type**: date range
+      -
+        - **field**: Project or region
+        - **required**: true
+        - **type**: select
+    - **empty state**: No calendar entries. Load the regional holiday set.
+    - **filters**:
+      - Region
+      - Type
+      - Project
+    - **name**: Calendars
+    - **row actions**:
+      - Edit
+      - Delete
+    - **search**: Name
+    - **sort**:
+      - Start date
+- **walkthrough**:
+  - A user opens My Work and sees approvals, signs, overdue items, mentions and expiries ranked by urgency.
+  - The user quick-adds a task with title, due date and optional asset.
+  - They open the full form to add a checklist, attach a photo and link the source record.
+  - An auto-task rule raises a task when a hold point is reached and assigns it to the inspector.
+  - The deadline sweep registers the source due date and notifies the owner before it falls due.
+  - The owner is away, so the delegation routes approvals to the delegate for the date range.
+  - If the deadline passes the grace period (calendar and roster aware), the manager is notified.
+  - The owner extends with a mandatory reason, which is audited.
+  - In the field, the user completes the task offline with a photo and it syncs later.
+  - Closing the source record resolves the deadline automatically.
+  - A manager reviews the overdue board and exports ageing analytics.

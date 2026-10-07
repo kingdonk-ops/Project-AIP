@@ -1,0 +1,96 @@
+# Audit trail, activity & timeline — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: audit.read
+    - **actions**:
+      - Filter
+      - Open source
+      - Export
+    - **layout**: Feed with filter rail
+    - **name**: Project Timeline
+    - **purpose**: Cross-module event feed
+    - **route**: /projects/:pid/timeline
+    - **sections**:
+      - Filters
+      - Event feed
+      - Exception flags
+  -
+    - **access**: Asset view plus audit scope
+    - **actions**:
+      - Toggle subtree
+      - Open source
+    - **layout**: Tab on asset detail with subtree toggle
+    - **name**: Asset Activity and Who Touched This
+    - **purpose**: Subtree rollup of events for an asset
+    - **route**: /assets/:assetId/activity
+    - **sections**:
+      - Subtree toggle
+      - Feed
+      - Actor summary
+  -
+    - **access**: Record view permission
+    - **actions**:
+      - Open diff
+    - **layout**: Tab on record
+    - **name**: Record Activity Tab
+    - **purpose**: Field-level history with reasons
+    - **route**: /records/:type/:id/activity
+    - **sections**:
+      - Events
+      - Before/after diff
+      - Reason for change
+  -
+    - **access**: security.audit.read
+    - **actions**:
+      - Filter
+      - Export
+    - **layout**: Table with filters
+    - **name**: Security Audit View
+    - **purpose**: Auth, permission and export events
+    - **route**: /admin/audit/security
+    - **sections**:
+      - Events
+      - Filters
+      - SIEM status
+  -
+    - **access**: audit.export
+    - **actions**:
+      - Export
+      - Verify
+      - Download verifier
+    - **layout**: Wizard
+    - **name**: Audit Export and Verification
+    - **purpose**: Export with signed manifest and verify chain
+    - **route**: /admin/audit/export
+    - **sections**:
+      - Scope
+      - Manifest
+      - Verification result
+      - Verifier download
+  -
+    - **access**: legal.hold.manage
+    - **actions**:
+      - Place hold
+      - Release hold
+    - **layout**: Register with form
+    - **name**: Legal Hold Register
+    - **purpose**: Place and release holds
+    - **route**: /admin/audit/holds
+    - **sections**:
+      - Active holds
+      - History
+      - Scope picker
+  -
+    - **access**: recycle.manage
+    - **actions**:
+      - Restore
+      - Purge (blocked under hold)
+    - **layout**: Table with days remaining
+    - **name**: Recycle Bin
+    - **purpose**: Restore or purge soft-deleted records
+    - **route**: /admin/recycle-bin
+    - **sections**:
+      - Items
+      - Hold flags

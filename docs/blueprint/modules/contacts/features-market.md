@@ -1,0 +1,37 @@
+# Contacts & companies — Feature scout
+
+
+- **abilities seen in market**:
+  - Tenant-level organisation and person directory with project-level roles
+  - Duplicate detection and merge with audit
+  - Distribution lists and role-based groups
+  - Company prequalification status and document expiry tracking
+  - Bulk import and sync from identity provider or CRM
+  - Contact visibility rules by organisation type
+  - Tags, custom fields and search
+  - Privacy controls: consent, retention and erasure
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Organisation relationship model (client, head contractor, subcontractor, supplier) with per-party visibility rules
+    - **why**: Keeps Kaefer and Rio Tinto data separated and drives portal and commercial visibility.
+  -
+    - **effort**: S
+    - **feature**: Credential and insurance expiry linked to organisations and people, feeding the eligibility gate
+    - **why**: Reuses the certificate hard-block for subcontractors and suppliers.
+  -
+    - **effort**: M
+    - **feature**: Merge tool with field-level conflict resolution and reference rewiring across modules
+    - **why**: Prevents duplicate parties breaking transmittal and PO history.
+  -
+    - **effort**: S
+    - **feature**: Distribution lists by project role and discipline, reusable in transmittals and notifications
+    - **why**: Saves manual recipient selection and keeps distribution consistent.
+  -
+    - **effort**: S
+    - **feature**: Link person records to SCIM or SSO users with offboarding flag and reassignment prompt
+    - **why**: Supports identity lifecycle expectations raised by the security advisor.
+  -
+    - **effort**: S
+    - **feature**: Privacy erasure and retention controls on personal contact data
+    - **why**: Needed for Australian Privacy Act and legal-hold interplay.

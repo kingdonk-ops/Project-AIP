@@ -1,0 +1,420 @@
+# Supplier catalogue, requisitions & POs — Feature filler
+
+
+- **detail sections**:
+  - Header and workflow bar
+  - Lines and totals
+  - Comment thread
+  - Approval trail
+  - Linked PO and issued file
+  - Three-way match panel
+  - Goods receipts and certificates
+  - Linked assets and scope tasks
+  - Bank-change log
+- **notifications**:
+  - Requisition submitted to accounts (in-app and email)
+  - Reply or comment on requisition
+  - Approved or rejected to requester
+  - PO issued
+  - Goods received
+  - Match exception raised
+  - Price import awaiting review
+  - Vendor certificate expiring
+  - Bank-detail change awaiting second approval
+- **settings**:
+  - Approval routes for requisitions and POs
+  - PO numbering
+  - Three-way match tolerances
+  - Price-change flag threshold
+  - Import schedules and email ingest address
+  - Email sender for POs
+  - Eligibility gate rules
+  - Bank-change dual approval
+  - Accounting export format
+  - Role visibility of prices
+  - Delivery addresses
+  - Terminology labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Add to basket
+      - Favourite
+      - Export
+    - **columns**:
+      - Code
+      - SKU
+      - Description
+      - Supplier
+      - UoM
+      - Price (hidden for subcontractors)
+      - Lead time
+      - Price valid to
+      - Favourite
+    - **create form**:
+      -
+        - **field**: Supplier
+        - **required**: true
+        - **type**: vendor picker
+      -
+        - **field**: Item code
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: SKU
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Specification
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Unit of measure
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Price
+        - **required**: true
+        - **type**: currency
+      -
+        - **field**: Price tiers
+        - **required**: false
+        - **type**: repeating
+      -
+        - **field**: Lead time (days)
+        - **required**: false
+        - **type**: number
+      -
+        - **field**: Category
+        - **required**: false
+        - **type**: select
+    - **empty state**: No catalogue items. Add an item or import a supplier price file.
+    - **filters**:
+      - Supplier
+      - Category
+      - Price validity
+      - Favourites
+      - Recently ordered
+    - **name**: Catalogue items
+    - **row actions**:
+      - Add to basket
+      - Favourite
+      - Edit item
+      - View price tiers
+    - **search**: Code, SKU, description, spec, supplier
+    - **sort**:
+      - Description
+      - Price
+      - Supplier
+      - Lead time
+  -
+    - **bulk actions**:
+      - Approve unflagged lines
+      - Reject import
+    - **columns**:
+      - Import
+      - Supplier
+      - Source (upload, schedule, email)
+      - Lines
+      - Changed
+      - Max % change
+      - Flagged
+      - Effective from
+      - Status
+    - **create form**:
+      -
+        - **field**: Supplier
+        - **required**: true
+        - **type**: vendor picker
+      -
+        - **field**: File (CSV or Excel)
+        - **required**: true
+        - **type**: file
+      -
+        - **field**: Column mapping
+        - **required**: true
+        - **type**: mapper
+      -
+        - **field**: Effective from
+        - **required**: true
+        - **type**: date
+    - **empty state**: No imports waiting for review.
+    - **filters**:
+      - Status
+      - Supplier
+      - Flagged only
+      - Source
+    - **name**: Price list import review queue
+    - **row actions**:
+      - Review diff
+      - Approve
+      - Reject
+      - Set effective-from date
+    - **search**: Supplier, file name
+    - **sort**:
+      - Received
+      - Max % change
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Number
+      - Requester
+      - Project
+      - Asset
+      - Required date
+      - Total
+      - Status
+      - Submitted
+    - **create form**:
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: project picker
+      -
+        - **field**: Asset
+        - **required**: false
+        - **type**: asset tree picker
+      -
+        - **field**: Required date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Delivery address
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Lines (item, qty, optional asset)
+        - **required**: true
+        - **type**: repeating
+      -
+        - **field**: Notes to accounts
+        - **required**: false
+        - **type**: text
+    - **empty state**: No requisitions. Browse the catalogue and add items to the basket.
+    - **filters**:
+      - Status
+      - Project
+      - Requester
+      - Required date
+      - Asset subtree
+    - **name**: Requisitions
+    - **row actions**:
+      - Open
+      - Print
+      - Comment
+      - Approve
+      - Reject
+      - Raise PO
+    - **search**: Number, requester, item description
+    - **sort**:
+      - Submitted
+      - Required date
+      - Total
+  -
+    - **bulk actions**:
+      - Accounting export (Xero, MYOB, CSV)
+      - Export
+    - **columns**:
+      - PO number
+      - Supplier
+      - Project
+      - Required date
+      - Total
+      - Status
+      - Received %
+      - Match state
+    - **create form**:
+      -
+        - **field**: Supplier
+        - **required**: true
+        - **type**: vendor picker
+      -
+        - **field**: Lines
+        - **required**: true
+        - **type**: repeating
+      -
+        - **field**: Delivery address
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Required date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: project picker
+      -
+        - **field**: Asset
+        - **required**: false
+        - **type**: asset tree picker
+      -
+        - **field**: Cost code (text)
+        - **required**: false
+        - **type**: text
+    - **empty state**: No purchase orders yet. Raise one from an approved requisition.
+    - **filters**:
+      - Status
+      - Outstanding
+      - Supplier
+      - Project
+      - Match exceptions
+    - **name**: Purchase orders
+    - **row actions**:
+      - Open
+      - Send to supplier
+      - Upload issued PO
+      - Receive goods
+      - Close
+    - **search**: PO number, supplier, line description
+    - **sort**:
+      - PO number
+      - Required date
+      - Total
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Receipt
+      - PO
+      - Supplier
+      - Date
+      - Lines received
+      - Docket
+      - Certs captured
+    - **create form**:
+      -
+        - **field**: PO
+        - **required**: true
+        - **type**: PO picker
+      -
+        - **field**: Quantity received per line
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Batch or serial
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Delivery docket
+        - **required**: true
+        - **type**: file
+      -
+        - **field**: Material certificate (MTR)
+        - **required**: false
+        - **type**: file
+    - **empty state**: No receipts recorded.
+    - **filters**:
+      - Supplier
+      - Date
+      - Partial only
+      - Certs missing
+    - **name**: Goods receipts
+    - **row actions**:
+      - Open
+      - Attach docket
+      - Add MTR
+    - **search**: PO number, docket number, batch or serial
+    - **sort**:
+      - Date
+  -
+    - **bulk actions**:
+      - Export matched
+    - **columns**:
+      - Invoice
+      - Supplier
+      - PO
+      - Amount
+      - Variance
+      - Status
+    - **create form**:
+      -
+        - **field**: PO
+        - **required**: true
+        - **type**: PO picker
+      -
+        - **field**: Invoice file
+        - **required**: true
+        - **type**: file
+      -
+        - **field**: Invoice number
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Amount
+        - **required**: true
+        - **type**: currency
+    - **empty state**: No invoices uploaded.
+    - **filters**:
+      - Status (matched, exception)
+      - Supplier
+    - **name**: Invoices and match exceptions
+    - **row actions**:
+      - Open three-way match
+      - Accept within tolerance
+      - Dispute
+    - **search**: Invoice number, PO, supplier
+    - **sort**:
+      - Received
+      - Variance
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Name
+      - ABN
+      - Terms
+      - Insurance expiry
+      - Accreditation expiry
+      - Eligibility
+    - **create form**:
+      -
+        - **field**: Company
+        - **required**: true
+        - **type**: contact company picker
+      -
+        - **field**: ABN
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Payment terms
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Insurance certificates
+        - **required**: false
+        - **type**: file with expiry
+      -
+        - **field**: Bank details
+        - **required**: false
+        - **type**: restricted
+    - **empty state**: No vendors. Create from the contacts directory.
+    - **filters**:
+      - Eligibility (eligible, blocked)
+      - Expiring in 30 days
+    - **name**: Vendors
+    - **row actions**:
+      - Open
+      - Edit
+      - Change bank details
+    - **search**: Name, ABN
+    - **sort**:
+      - Name
+      - Insurance expiry
+- **walkthrough**:
+  - A user browses the catalogue and filters by supplier.
+  - They add items to the basket and optionally assign an asset.
+  - They submit the requisition with required date and address.
+  - Accounts is notified in-app and by email.
+  - Accounts prints, comments and replies on the requisition.
+  - Accounts approves or rejects through the approvals engine.
+  - Accounts raises the PO; the eligibility gate blocks issue if vendor cover has expired.
+  - The PO is emailed to the supplier and the issued PO is uploaded.
+  - Goods arrive and the receipt records quantities, batch, serial and MTRs.
+  - The invoice is uploaded and the three-way match runs against tolerances.
+  - Exceptions are resolved and the matched PO is exported to accounting.
+  - Received items post to stock.

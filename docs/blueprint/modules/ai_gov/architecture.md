@@ -1,0 +1,104 @@
+# AI governance & data controls — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/ai_gov/router.py
+    - **purpose**: Tenant AI settings, kill switch, register, audit log, usage endpoints
+  -
+    - **path**: backend/app/modules/ai_gov/models.py
+    - **purpose**: Tables: ai_register_entry (versioned), ai_tenant_feature_setting, ai_restriction (feature/project/client), ai_kill_switch, ai_call_log, ai_citation, ai_output_label, ai_usage, ai_budget, redteam_case/result
+  -
+    - **path**: backend/app/modules/ai_gov/gateway.py
+    - **purpose**: The only path to a model provider: checks opt-in, kill switch, restrictions, region, redaction, budget, then calls
+  -
+    - **path**: backend/app/modules/ai_gov/providers/bedrock.py
+    - **purpose**: Bedrock ap-southeast-2 adapter with zero-retention settings recorded
+  -
+    - **path**: backend/app/modules/ai_gov/redaction.py
+    - **purpose**: PII and commercial rate redaction before send
+  -
+    - **path**: backend/app/modules/ai_gov/retrieval.py
+    - **purpose**: Permission-aware retrieval via the policy service at query time
+  -
+    - **path**: backend/app/modules/ai_gov/tools.py
+    - **purpose**: Read-only tool registry; write tools require a confirmation token; no network tools
+  -
+    - **path**: backend/app/modules/ai_gov/validation.py
+    - **purpose**: Output validation, citation enforcement, untrusted-content isolation
+  -
+    - **path**: backend/app/modules/ai_gov/labelling.py
+    - **purpose**: AI-generated tag and human acceptance gate before sealed records
+  -
+    - **path**: backend/app/modules/ai_gov/register_export.py
+    - **purpose**: Data-flow register export as PDF/JSON security pack
+  -
+    - **path**: backend/app/modules/ai_gov/metering.py
+    - **purpose**: Per-tenant usage and budget caps
+  -
+    - **path**: backend/app/modules/ai_gov/tests/redteam/
+    - **purpose**: Injection suite run in CI
+  -
+    - **path**: backend/app/modules/ai_gov/permissions.py
+    - **purpose**: Catalogue entries
+  -
+    - **path**: backend/app/modules/ai_gov/migrations/
+    - **purpose**: Alembic migrations
+- **change isolation**: Adding a model provider means a new adapter plus a register entry; adding an AI feature means registering it and calling the gateway. Controls are never reimplemented in feature modules.
+- **config not code**:
+  - Per-tenant, feature, project and client AI settings
+  - Model, region and retention per register entry
+  - Budget caps
+  - Redaction pattern sets and rate field lists
+  - Log retention periods
+  - Which tools each feature may use
+- **events consumed**:
+  - tenancy.tenant.created (default all AI off)
+  - projects.client_restriction.changed (propagate client prohibits AI)
+  - documents.document.created (inherit AI restriction flag)
+  - identity.user.deactivated (revoke pending confirmation tokens)
+  - access.team.membership_changed (invalidate retrieval caches)
+- **events emitted**:
+  - ai.call.completed
+  - ai.call.blocked (reason: opt-out, kill switch, client prohibits, budget)
+  - ai.output.accepted
+  - ai.kill_switch.changed
+  - ai.budget.exceeded
+  - ai.register.version_published
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/ai_gov/TenantAiSettings.tsx
+    - **purpose**: Per-feature toggles and restrictions
+  -
+    - **path**: frontend/src/modules/ai_gov/KillSwitchPanel.tsx
+    - **purpose**: Platform kill switch control (platform admins only)
+  -
+    - **path**: frontend/src/modules/ai_gov/RegisterView.tsx
+    - **purpose**: Data-flow register view and export
+  -
+    - **path**: frontend/src/modules/ai_gov/AiAuditLog.tsx
+    - **purpose**: Prompt, response and tool-call viewer
+  -
+    - **path**: frontend/src/modules/ai_gov/UsageDashboard.tsx
+    - **purpose**: Usage and budget
+  -
+    - **path**: frontend/src/modules/ai_gov/AiLabel.tsx
+    - **purpose**: Shared AI-drafted badge and accept/reject control
+- **public api**:
+  - Python: ai_gateway.invoke(feature, caller_ctx, input, tools=None)
+  - ai_gateway.retrieve(feature, caller_ctx, query)
+  - GET/PUT /ai/settings (tenant, feature, project, client)
+  - POST /ai/kill-switch
+  - GET /ai/register, GET /ai/register/export?format=pdf|json
+  - GET /ai/audit-log
+  - GET /ai/usage, PUT /ai/budget
+  - POST /ai/outputs/{id}/accept
+  - TS: <AiLabel/>
+- **reuses shared**:
+  - Policy service for retrieval filtering
+  - Audit service and hash chain for call logs
+  - Outbox/event bus
+  - Upload pipeline for any input documents
+  - Search/embedding store with tenant and permission filters
+  - Terms dictionary for UI labels
+  - Testing fixtures for prompt injection

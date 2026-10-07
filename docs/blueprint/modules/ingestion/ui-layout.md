@@ -1,0 +1,148 @@
+# Inbound capture & connectors — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: ingestion.view; project-scoped data filtered by policy service; module hidden unless enabled for tenant
+    - **actions**:
+      - Drill into queue
+      - Acknowledge alert
+      - Run now
+    - **layout**: Dashboard with KPI tiles on top, ageing chart and alert list below, and a connector health strip.
+    - **name**: Ingestion dashboard
+    - **purpose**: Show intake health: quarantined, failed and unfiled counts with ageing alerts.
+    - **route**: /ingestion
+    - **sections**:
+      - Counts by state (quarantined, failed, unfiled)
+      - Ageing alerts
+      - Connector health summary
+      - Recent runs
+  -
+    - **access**: ingestion.manage for actions; ingestion.view to read
+    - **actions**:
+      - Create
+      - Pause/resume
+      - Run now
+      - Test connection
+      - Open run log
+    - **layout**: DataTable with status chips and a row action menu.
+    - **name**: Connector list
+    - **purpose**: List connectors with schedule and health status.
+    - **route**: /ingestion/connectors
+    - **sections**:
+      - Filters by type, project and status
+      - Table: type, target, project, schedule, last run, health
+  -
+    - **access**: ingestion.manage; secrets are write-only and never displayed
+    - **actions**:
+      - Test connection
+      - Save draft
+      - Enable
+      - Cancel
+    - **layout**: Stepper wizard with a test-result side panel; edit reuses the same steps.
+    - **name**: Connector setup wizard
+    - **purpose**: Create or edit a connector and verify it before enabling.
+    - **route**: /ingestion/connectors/new
+    - **sections**:
+      - Type (watched folder, S3, SharePoint, email)
+      - Target and credentials reference
+      - Project, default category and asset
+      - Schedule
+      - Data minimisation (file types, max size, path filters, source retention)
+      - Test connection result
+      - Review
+  -
+    - **access**: ingestion.view; retry needs ingestion.manage
+    - **actions**:
+      - Retry failed
+      - Open imported file
+      - Export log
+    - **layout**: Master-detail: run table with a detail drawer.
+    - **name**: Run log
+    - **purpose**: Show import runs with failures and duplicates.
+    - **route**: /ingestion/connectors/:id/runs
+    - **sections**:
+      - Run table with counts and errors
+      - Failed and duplicate file list
+      - Error detail
+  -
+    - **access**: ingestion.file, scoped to the user's projects; nothing files automatically
+    - **actions**:
+      - Assign to project or asset
+      - File
+      - Reject
+      - Mark as duplicate or new version
+      - Confirm certificate candidate
+      - Bulk assign
+    - **layout**: Three-pane: queue list, preview with scan and sender badges, and suggestion panel.
+    - **name**: Filing queue
+    - **purpose**: Let a person file or reject each inbound draft.
+    - **route**: /ingestion/filing-queue
+    - **sections**:
+      - Queue with filters (channel, sender trust, age)
+      - Preview (sanitised email or document)
+      - Provenance (sender, SPF/DKIM/DMARC, hash, channel)
+      - Suggested project, asset, document type and thread
+      - Certificate candidates from the mill-cert recogniser
+  -
+    - **access**: ingestion.file
+    - **actions**:
+      - Assign to project or asset
+      - Reject
+      - Open in mapping screen
+    - **layout**: DataTable with bulk selection and a right-hand detail panel.
+    - **name**: Import queue (unmatched)
+    - **purpose**: Triage items that could not be matched to a project or asset.
+    - **route**: /ingestion/import-queue
+    - **sections**:
+      - Unmatched items
+      - Reason for no match
+      - Sender trust
+      - Quarantine state
+  -
+    - **access**: ingestion.manage
+    - **actions**:
+      - Edit rule
+      - Disable rule
+      - Reprocess unmatched items
+    - **layout**: Two-column: pattern rules table with an example preview.
+    - **name**: Mapping and review
+    - **purpose**: Review and correct learned mappings from sender and filename patterns.
+    - **route**: /ingestion/mapping
+    - **sections**:
+      - Sender and filename pattern rules
+      - Default category and asset per rule
+      - Sample matches
+  -
+    - **access**: ingestion.manage; tenant admin for domain verification
+    - **actions**:
+      - Create alias
+      - Add sender or domain
+      - Verify domain
+      - Rotate webhook secret
+      - Upload .eml
+      - Disable alias
+    - **layout**: List with a detail form and a trust results panel.
+    - **name**: Mailbox and alias settings
+    - **purpose**: Configure project aliases, allowed senders and sender trust.
+    - **route**: /ingestion/mailboxes
+    - **sections**:
+      - Aliases per project
+      - Allow-list and verified domains
+      - SPF/DKIM/DMARC results
+      - Rate limits
+      - Webhook and chat channels with HMAC settings
+  -
+    - **access**: ingestion.manage
+    - **actions**:
+      - Enrol
+      - Revoke
+      - Edit destinations
+    - **layout**: DataTable with an enrolment dialog.
+    - **name**: Site agents
+    - **purpose**: Enrol and monitor outbound-only agents on site laptops and instrument export folders.
+    - **route**: /ingestion/agents
+    - **sections**:
+      - Enrolled agents and last check-in
+      - Allow-listed destinations
+      - Enrolment code

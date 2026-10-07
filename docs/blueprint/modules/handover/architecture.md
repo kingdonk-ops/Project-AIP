@@ -1,0 +1,146 @@
+# Handover, data books & submissions — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/handover/__init__.py
+    - **purpose**: Module registration, router mount, permission catalogue entries
+  -
+    - **path**: backend/app/modules/handover/models.py
+    - **purpose**: CloseoutTemplate, CloseoutItem, CloseoutPackage, SubmissionTemplate, SubmissionPackage, SubmissionItem, ValidationResult, TransmissionLog, BaselineSnapshot, HashManifest
+  -
+    - **path**: backend/app/modules/handover/schemas.py
+    - **purpose**: Pydantic request/response schemas feeding the OpenAPI client
+  -
+    - **path**: backend/app/modules/handover/router.py
+    - **purpose**: HTTP endpoints for checklist, packages, submissions, templates, review cycle
+  -
+    - **path**: backend/app/modules/handover/service_closeout.py
+    - **purpose**: Closeout checklist evaluation and percent-complete by system/area from live evidence
+  -
+    - **path**: backend/app/modules/handover/service_completeness.py
+    - **purpose**: Completeness engine: required ITP/document list per asset class vs signed records, gaps by subtree
+  -
+    - **path**: backend/app/modules/handover/service_databook.py
+    - **purpose**: MDR/data book assembly from asset tree with index, applying client MDR structure template
+  -
+    - **path**: backend/app/modules/handover/service_submission.py
+    - **purpose**: Submission build, field mapping, validation, freeze to immutable snapshot, revision and diff
+  -
+    - **path**: backend/app/modules/handover/mappers/base.py
+    - **purpose**: Mapper interface (CSV, Excel, JSON, PDF index, XML) driven by template mapping config
+  -
+    - **path**: backend/app/modules/handover/mappers/kaefer_riotinto.py
+    - **purpose**: First validated target format adapter; added only once the format is agreed
+  -
+    - **path**: backend/app/modules/handover/service_baseline.py
+    - **purpose**: Baseline condition snapshot per asset at acceptance (wall loss, coating, CUI findings)
+  -
+    - **path**: backend/app/modules/handover/service_review.py
+    - **purpose**: Authority/client review cycle: comments, responses, resubmission tracking, acknowledgement
+  -
+    - **path**: backend/app/modules/handover/handlers.py
+    - **purpose**: Event consumers (evidence changes, NCR reopen, punch changes, acceptance side effects)
+  -
+    - **path**: backend/app/modules/handover/jobs.py
+    - **purpose**: Background jobs for pack compile, export and live status recompute
+  -
+    - **path**: backend/app/modules/handover/seeds/default_templates.json
+    - **purpose**: Seed closeout and submission templates
+  -
+    - **path**: backend/migrations/versions/xxxx_handover.py
+    - **purpose**: Tables with tenant_id, RLS policies, append-only grants on manifest tables
+  -
+    - **path**: backend/tests/modules/handover/
+    - **purpose**: Isolation, permission-matrix, completeness, immutability and hash tests
+- **change isolation**: A new client format means a new template and mapping record, plus a small mapper class only if the output syntax is new, all inside handover/mappers. Evidence rules change in config; gate and snapshot logic stays in the shared engines.
+- **config not code**:
+  - Closeout templates (requirements per asset class)
+  - Client MDR structure: folder numbering, document codes, naming rules
+  - Submission template schema, field mappings and validation rules
+  - EAM export column mappings
+  - Terminology labels per tenant
+  - Required ITP/document list per asset class
+  - Review route definitions
+  - Retention milestone rules
+- **events consumed**:
+  - inspection.signed_off / inspection.reopened
+  - ncr.opened / ncr.closed / ncr.reopened
+  - punch.item_changed
+  - document.revision_approved / document.superseded
+  - certificate.issued / certificate.expired
+  - commissioning.certificate_issued
+  - approval.completed
+  - signing.completed
+  - asset.created / asset.moved
+- **events emitted**:
+  - submission.validated
+  - submission.approved
+  - submission.issued
+  - submission.acknowledged
+  - handover.accepted (starts defects liability, creates service assets, sets retention milestone)
+  - closeout.item_status_changed
+  - closeout.package_signed_off
+  - baseline.captured
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/handover/routes.tsx
+    - **purpose**: Route definitions under Reports > Closeout and Handover
+  -
+    - **path**: frontend/src/modules/handover/pages/ChecklistBoard.tsx
+    - **purpose**: Checklist tree with live evidence status and percent complete
+  -
+    - **path**: frontend/src/modules/handover/pages/ItemDetail.tsx
+    - **purpose**: Item detail with evidence panel
+  -
+    - **path**: frontend/src/modules/handover/pages/PackageBuilder.tsx
+    - **purpose**: Subtree selection, completeness checklist and gap view
+  -
+    - **path**: frontend/src/modules/handover/pages/PackagePreview.tsx
+    - **purpose**: Preview and export of a package
+  -
+    - **path**: frontend/src/modules/handover/pages/TemplateDesigner.tsx
+    - **purpose**: Submission and MDR template designer with field mapper
+  -
+    - **path**: frontend/src/modules/handover/pages/ValidationReport.tsx
+    - **purpose**: Validation results with click-through to source record
+  -
+    - **path**: frontend/src/modules/handover/pages/IssueTracker.tsx
+    - **purpose**: Issue/acknowledgement tracker with resubmission diff view
+  -
+    - **path**: frontend/src/modules/handover/api.ts
+    - **purpose**: Generated client wrapper and query hooks
+  -
+    - **path**: frontend/src/modules/handover/i18n/keys.ts
+    - **purpose**: Terminology keys resolved through the dictionary
+- **public api**:
+  - GET/POST /handover/closeout-templates
+  - GET /projects/{id}/closeout (checklist, percent complete by system/area)
+  - GET /closeout-items/{id} (with evidence)
+  - GET /handover/completeness?asset_id=&subtree=true
+  - POST /handover/packages (build from subtree)
+  - GET /handover/packages/{id}/preview
+  - POST /handover/packages/{id}/validate
+  - POST /handover/packages/{id}/issue (freeze snapshot, hash manifest, sign)
+  - POST /handover/packages/{id}/revisions
+  - GET /handover/packages/{id}/diff?against=
+  - GET/POST /handover/submission-templates
+  - POST /handover/submissions/{id}/comments and /responses
+  - POST /handover/submissions/{id}/acknowledge
+  - POST /handover/submissions/{id}/transmissions (manual log entry)
+  - GET /handover/assets/{id}/baseline
+  - GET /handover/exports/eam-register?template=
+- **reuses shared**:
+  - Asset hierarchy (ltree subtree queries)
+  - Inspection and ITP engine (evidence lookup)
+  - Documents library and revisions
+  - Report engine (PDF index, compiled data book)
+  - Signing and tamper-evident seal engine (SHA-256 manifest, signer)
+  - Approvals/workflow engine (review routes)
+  - Transmittals and connectors (optional send)
+  - Terminology dictionary
+  - Rules and validation engine (submission validation rules)
+  - Notifications and deadlines
+  - Audit outbox
+  - Permissions catalogue and RLS policy service
+  - Data import/export engine (CSV/Excel writers)

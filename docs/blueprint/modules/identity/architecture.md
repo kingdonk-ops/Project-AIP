@@ -1,0 +1,125 @@
+# Users, sign-in & SSO — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/identity/router.py
+    - **purpose**: Auth, session, invite, profile, API key and admin endpoints
+  -
+    - **path**: backend/app/modules/identity/models.py
+    - **purpose**: Tables: user, tenant_membership, organisation link, session, magic_link_token, api_key, external_sponsor, mfa_credential, break_glass_grant
+  -
+    - **path**: backend/app/modules/identity/workos_adapter.py
+    - **purpose**: WorkOS SSO and Directory Sync: JWT/webhook verification, domain claim, SCIM event mapping
+  -
+    - **path**: backend/app/modules/identity/sessions.py
+    - **purpose**: 15-minute access tokens, rotating 30-day refresh, server-side revocable session table
+  -
+    - **path**: backend/app/modules/identity/passwords.py
+    - **purpose**: Argon2id hashing, local login, SSO-enforcement check
+  -
+    - **path**: backend/app/modules/identity/mfa.py
+    - **purpose**: TOTP and WebAuthn enrolment/verification, recovery codes, step-up
+  -
+    - **path**: backend/app/modules/identity/magic_link.py
+    - **purpose**: Single-use hashed tokens/PINs, device binding, lockout, POST confirm
+  -
+    - **path**: backend/app/modules/identity/api_keys.py
+    - **purpose**: Scoped, hashed, expiring keys and OAuth client credentials
+  -
+    - **path**: backend/app/modules/identity/external.py
+    - **purpose**: Sponsor-owned external accounts, expiry, re-confirmation
+  -
+    - **path**: backend/app/modules/identity/breakglass.py
+    - **purpose**: Time-boxed elevation with dual approval; login-as pattern
+  -
+    - **path**: backend/app/modules/identity/deprovision.py
+    - **purpose**: Revokes sessions, keys, links and portal access; emits user.deactivated
+  -
+    - **path**: backend/app/modules/identity/invites.py
+    - **purpose**: Invite and accept flow
+  -
+    - **path**: backend/app/modules/identity/permissions.py
+    - **purpose**: Catalogue entries
+  -
+    - **path**: backend/app/modules/identity/migrations/
+    - **purpose**: Alembic migrations, incl. replacing the HS256 single JWT
+- **change isolation**: Swapping the identity provider (WorkOS to Keycloak) is confined to workos_adapter.py, because sessions, API keys and magic links are local. Policy changes such as timeouts or MFA rules are settings, not code.
+- **config not code**:
+  - SSO enforcement and domain claims per tenant
+  - SCIM group-to-role/team mapping
+  - MFA requirement per role and user class
+  - Idle and absolute session timeouts per user class
+  - Magic-link TTL and attempt limits
+  - External account expiry and re-confirmation period
+  - Deprovisioning time target
+- **events consumed**:
+  - tenancy.tenant.created (create admin invite)
+  - access.role_assignment.changed (audit privilege change, session claims refresh)
+  - projects.membership.changed (scope magic-link grants)
+  - eligibility.certificate.updated (profile competency display)
+- **events emitted**:
+  - user.created
+  - user.deactivated
+  - user.sso_enforced
+  - session.revoked
+  - auth.sign_in
+  - auth.step_up_completed
+  - auth.failed_lockout
+  - api_key.created / revoked
+  - external_account.expired
+  - break_glass.granted
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/identity/auth/LoginPage.tsx
+    - **purpose**: Org disambiguation, SSO redirect, password + MFA
+  -
+    - **path**: frontend/src/modules/identity/auth/MagicLinkConfirm.tsx
+    - **purpose**: Click-through POST confirmation page
+  -
+    - **path**: frontend/src/modules/identity/auth/PinQuickSwitch.tsx
+    - **purpose**: Shared-device PIN switch and auto-lock
+  -
+    - **path**: frontend/src/modules/identity/auth/StepUpDialog.tsx
+    - **purpose**: Re-authentication at hold-point sign-off
+  -
+    - **path**: frontend/src/modules/identity/auth/session.ts
+    - **purpose**: Token refresh and session state
+  -
+    - **path**: frontend/src/modules/identity/settings/UserDirectory.tsx
+    - **purpose**: User table with role, team, MFA and SCIM status; detail drawer
+  -
+    - **path**: frontend/src/modules/identity/settings/ScimStatus.tsx
+    - **purpose**: SCIM sync status panel
+  -
+    - **path**: frontend/src/modules/identity/settings/MfaSessionPolicy.tsx
+    - **purpose**: MFA and session policy per user class
+  -
+    - **path**: frontend/src/modules/identity/settings/ApiKeys.tsx
+    - **purpose**: API key management
+  -
+    - **path**: frontend/src/modules/identity/profile/ProfilePage.tsx
+    - **purpose**: Profile, competencies, signature capture, notification preferences
+  -
+    - **path**: frontend/src/modules/identity/invite/AcceptInvite.tsx
+    - **purpose**: Accept invite and set password
+- **public api**:
+  - POST /auth/login, /auth/refresh, /auth/logout, /auth/sso/callback
+  - POST /auth/magic-link/request, /auth/magic-link/confirm
+  - POST /auth/step-up
+  - POST /webhooks/workos (SCIM and SSO events)
+  - GET/POST/PATCH /users, POST /users/{id}/deactivate
+  - POST /invites, POST /invites/{token}/accept
+  - GET/PUT /me/profile
+  - GET/POST/DELETE /api-keys
+  - POST /oauth/token (client credentials)
+  - POST /break-glass/request, /approve
+  - Python: current_principal() dependency, require_assurance(level)
+- **reuses shared**:
+  - WorkOS for SAML, OIDC, SCIM and admin portal
+  - Policy service for post-sign-in checks
+  - Audit service (hash-chained) for sign-ins and privilege changes
+  - Outbox/event bus
+  - Notification service for invites and links
+  - Redis for lockout counters (tenant-prefixed)
+  - Terms dictionary for UI and emails

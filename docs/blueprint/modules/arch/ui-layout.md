@@ -1,0 +1,131 @@
+# Architecture & module boundaries — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Platform admin and developers; tenant admins read-only for their own tenant's events
+    - **actions**:
+      - Search
+      - Export catalogue CSV
+      - Mark deprecated
+      - View schema
+      - View recent events
+      - Replay range
+      - Register event (create form)
+    - **layout**: Full-width DataTable with filter bar and right-hand detail drawer
+    - **name**: Domain event catalogue
+    - **purpose**: Register of all versioned domain events, their owners, subscribers and 24h health.
+    - **route**: /admin/platform/events
+    - **sections**:
+      - Filter bar (module, status, has failures, version)
+      - Catalogue table (event, version, owning module, schema, subscribers, published 24h, failed 24h, status)
+      - Schema viewer drawer
+      - Recent events panel
+  -
+    - **access**: Platform admin and developers
+    - **actions**:
+      - Replay range
+      - Deprecate
+      - Copy schema reference
+    - **layout**: Two-column detail with tabs
+    - **name**: Event detail
+    - **purpose**: Inspect one event: schema, subscribers, throughput and failures.
+    - **route**: /admin/platform/events/:eventName
+    - **sections**:
+      - Overview and bounded context
+      - Published interface and payload schema
+      - Subscribers and health
+      - Recent changes and ADR references
+  -
+    - **access**: Platform admin; tenant admin sees own tenant rows only
+    - **actions**:
+      - Retry selected
+      - Discard with reason
+      - Export
+      - Open related event
+    - **layout**: DataTable with bulk toolbar and error detail drawer
+    - **name**: Dead-letter queue
+    - **purpose**: Triage events that exhausted retries.
+    - **route**: /admin/platform/events/dead-letter
+    - **sections**:
+      - Summary strip (count, oldest, alert threshold)
+      - Table (event ID, event, subscriber, attempts, last error, first failed, tenant, status)
+      - Error and payload drawer
+  -
+    - **access**: Platform admin with replay permission
+    - **actions**:
+      - Start replay
+      - Cancel
+      - View result
+    - **layout**: Wizard form plus job history table
+    - **name**: Replay jobs
+    - **purpose**: Request and monitor replay of events to rebuild timeline, search or deadlines.
+    - **route**: /admin/platform/events/replay
+    - **sections**:
+      - Replay form (event, version, range, subscriber, dry run)
+      - Impact preview
+      - History of replay jobs with status
+  -
+    - **access**: Tenant admin; import requires approval role when setting is on
+    - **actions**:
+      - Export bundle
+      - Upload and validate
+      - Review diff
+      - Approve and apply
+      - Roll back
+      - Promote sandbox to production
+    - **layout**: Tabbed page: Export, Import and diff, History
+    - **name**: Tenant configuration bundles
+    - **purpose**: Export, diff and import versioned bundles of templates, types, workflows, terms and rules.
+    - **route**: /admin/config-bundles
+    - **sections**:
+      - Export selector (component types to include)
+      - Import upload with validation result
+      - Side-by-side diff with change summary
+      - Approval step if required
+      - Bundle history
+  -
+    - **access**: Workflow owners and tenant admin
+    - **actions**:
+      - Create version
+      - Publish
+      - Compare versions
+      - Retire
+    - **layout**: DataTable with version history drawer
+    - **name**: Workflow definitions
+    - **purpose**: List versioned workflow definitions with in-flight pinning counts.
+    - **route**: /admin/workflows
+    - **sections**:
+      - Definitions table (record type, version, status, in-flight records)
+      - Version history
+      - Publish confirmation showing pinned in-flight count
+  -
+    - **access**: Platform admin; tenant admin can toggle flags for own tenant
+    - **actions**:
+      - Toggle flag
+      - Open manifest
+      - Download module-map.md
+    - **layout**: Split view: dependency graph left, module list with flags right
+    - **name**: Module map and feature flags
+    - **purpose**: View modules, dependencies and manifest status; toggle per-tenant feature flags.
+    - **route**: /admin/platform/modules
+    - **sections**:
+      - Generated module map by bounded context
+      - Manifest and import-lint status
+      - Feature flag toggles (BIM, AI, deferred modules)
+      - Rollup cache settings
+  -
+    - **access**: Platform admin
+    - **actions**:
+      - Save
+      - Reset to defaults
+    - **layout**: Single-column settings form
+    - **name**: Platform settings
+    - **purpose**: Configure outbox and rollup behaviour.
+    - **route**: /admin/platform/settings
+    - **sections**:
+      - Dispatcher poll interval and batch size
+      - Retry and backoff
+      - Dead-letter alert threshold
+      - Event retention
+      - Rollup cache TTL and invalidation mode

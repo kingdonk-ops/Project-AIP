@@ -1,0 +1,439 @@
+# Asset hierarchy & registers — Feature filler
+
+
+- **detail sections**:
+  - Header (name, tag number, internal tag, status, criticality, breadcrumb path)
+  - Attributes (generated from item type, including CUI fields)
+  - History timeline
+  - Inspections and ITPs
+  - Issues and NCRs
+  - Documents and P&ID links
+  - Certificates and calibration
+  - Child assets and components
+  - Lineage (merge/split/retag)
+  - Projects in which this asset is in scope
+  - Location map
+  - Labels and tags (QR/RFID)
+  - Activity
+- **notifications**:
+  - Import completed or failed
+  - Import preview has conflicts
+  - Asset inspection overdue (risk-based schedule)
+  - Asset status or criticality changed
+  - Asset moved or merged
+  - Equipment calibration or certificate expiring
+  - Label sheet ready
+- **settings**:
+  - Item types and categories allowed per register
+  - Tag number format and uniqueness rules
+  - Bulk add limits
+  - Import mapping templates and validation strictness
+  - Risk-based inspection schedule per asset class
+  - Criticality scale
+  - CUI corrosion severity grade scale
+  - QR/RFID label templates
+  - Terminology for asset levels
+  - Tree depth guidance
+  - Status sets
+- **tables**:
+  -
+    - **bulk actions**:
+      - Bulk add (pattern ###, start, repeats up to 100)
+      - Move to new parent
+      - Change status
+      - Print labels
+      - Export subtree
+    - **columns**:
+      - Name
+      - Tag Number
+      - Item type
+      - Status
+      - Criticality
+      - Open items count
+    - **create form**:
+      -
+        - **field**: Parent
+        - **required**: true
+        - **type**: tree picker
+      -
+        - **field**: Item type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Tag Number
+        - **required**: false
+        - **type**: text (conflict-checked)
+      -
+        - **field**: Category
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Criticality
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Status
+        - **required**: false
+        - **type**: dropdown (status set)
+      -
+        - **field**: GPS location
+        - **required**: false
+        - **type**: map point
+      -
+        - **field**: Attributes
+        - **required**: false
+        - **type**: generated from item type
+    - **empty state**: No assets yet. Add the first site or area, bulk add items, or import from Excel/CSV.
+    - **filters**:
+      - Item type
+      - Category
+      - Status
+      - Criticality
+      - Has open items
+      - Project scope
+      - Item vs module
+    - **name**: Asset tree (hierarchy)
+    - **row actions**:
+      - Open detail
+      - Add item
+      - Add module
+      - Bulk add
+      - Sort children
+      - Import under node
+      - Reparent (drag)
+      - Print QR label
+      - Delete / deactivate
+    - **search**: Name, tag number, internal tag (within selected subtree)
+    - **sort**:
+      - Manual order (default)
+      - Name
+      - Tag number
+  -
+    - **bulk actions**:
+      - Export
+      - Change status
+      - Print labels
+    - **columns**:
+      - Name
+      - Tag/ID
+      - Role
+      - Employer
+      - Certificates status
+      - Next expiry
+      - Status
+      - Used in
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Item type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: ID / tag number
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Employer
+        - **required**: false
+        - **type**: company picker
+      -
+        - **field**: Attributes incl. expiry dates
+        - **required**: false
+        - **type**: generated
+    - **empty state**: No staff registered. Add people or import a list so certificates and competency can be tracked.
+    - **filters**:
+      - Role
+      - Certificate status
+      - Employer
+      - Status
+    - **name**: Staff register
+    - **row actions**:
+      - Open
+      - Edit
+      - View used in
+      - View certificates
+    - **search**: Name, ID, employer
+    - **sort**:
+      - Name
+      - Next expiry
+  -
+    - **bulk actions**:
+      - Export
+      - Change status
+      - Print labels
+    - **columns**:
+      - Tag
+      - Description
+      - Registration
+      - Status
+      - Next service/expiry
+      - Used in
+    - **create form**:
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Item type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Registration
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Attributes
+        - **required**: false
+        - **type**: generated
+    - **empty state**: No vehicles registered.
+    - **filters**:
+      - Status
+      - Item type
+      - Expiry state
+    - **name**: Vehicles register
+    - **row actions**:
+      - Open
+      - Edit
+      - View used in
+    - **search**: Tag, registration, description
+    - **sort**:
+      - Tag
+      - Next expiry
+  -
+    - **bulk actions**:
+      - Export
+      - Change status
+      - Print labels
+      - Mark unavailable
+    - **columns**:
+      - Tag
+      - Description
+      - Serial no.
+      - Calibration status
+      - Calibration due
+      - Status
+      - Used in
+    - **create form**:
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Item type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Serial number
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Calibration certificate
+        - **required**: false
+        - **type**: document upload
+      -
+        - **field**: Attributes
+        - **required**: false
+        - **type**: generated
+    - **empty state**: No equipment registered. Add instruments and tools so calibration gates can apply.
+    - **filters**:
+      - Calibration status
+      - Item type
+      - Status
+      - Due within 30 days
+    - **name**: Equipment register
+    - **row actions**:
+      - Open
+      - Edit
+      - View calibration
+      - View used in
+    - **search**: Tag, serial, description
+    - **sort**:
+      - Tag
+      - Calibration due
+  -
+    - **bulk actions**:
+      - Export
+      - Quarantine batch
+    - **columns**:
+      - Item
+      - Batch/heat
+      - Unit
+      - On hand
+      - Supplier
+      - Expiry
+      - Status
+      - Used in
+    - **create form**:
+      -
+        - **field**: Item name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Item type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Batch/heat no.
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Unit
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Expiry date
+        - **required**: false
+        - **type**: date
+    - **empty state**: No consumables registered.
+    - **filters**:
+      - Item type
+      - Expiry state
+      - Status
+      - Supplier
+    - **name**: Consumables register
+    - **row actions**:
+      - Open
+      - Edit
+      - View used in
+    - **search**: Item, batch, heat number
+    - **sort**:
+      - Item
+      - Expiry
+  -
+    - **bulk actions**:
+      - Export
+      - Supersede
+    - **columns**:
+      - WPS no.
+      - Revision
+      - Process
+      - Material group
+      - Status
+      - Used in
+    - **create form**:
+      -
+        - **field**: WPS number
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Revision
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Process
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Supporting document (PQR)
+        - **required**: false
+        - **type**: document picker
+    - **empty state**: No WPS registered.
+    - **filters**:
+      - Process
+      - Status
+      - Material group
+    - **name**: WPS register
+    - **row actions**:
+      - Open
+      - Edit
+      - View used in
+      - Attach document
+    - **search**: WPS number, process
+    - **sort**:
+      - WPS no.
+      - Revision
+  -
+    - **columns**:
+      - Batch
+      - File
+      - Rows
+      - Errors
+      - Duplicates/tag conflicts
+      - Status
+      - Imported by
+      - Date
+    - **create form**:
+      -
+        - **field**: File (xlsx/csv)
+        - **required**: true
+        - **type**: file
+      -
+        - **field**: Target parent node
+        - **required**: true
+        - **type**: tree picker
+      -
+        - **field**: Default item type
+        - **required**: false
+        - **type**: dropdown
+      -
+        - **field**: Column mapping
+        - **required**: true
+        - **type**: mapper
+    - **empty state**: No imports yet. Upload an Excel or CSV file to preview, validate and import assets.
+    - **filters**:
+      - Status (preview, committed, rolled back, failed)
+      - User
+      - Date range
+    - **name**: Import batches
+    - **row actions**:
+      - Open preview
+      - Commit
+      - Download error report
+      - Rollback
+    - **search**: File name, batch ID
+    - **sort**:
+      - Date (newest)
+      - Status
+  -
+    - **bulk actions**:
+      - Download PDF
+    - **columns**:
+      - Sheet
+      - Assets count
+      - Format (QR/barcode/RFID)
+      - Created
+      - Created by
+    - **create form**:
+      -
+        - **field**: Subtree or selection
+        - **required**: true
+        - **type**: tree picker
+      -
+        - **field**: Format
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Label template (size)
+        - **required**: true
+        - **type**: dropdown
+    - **empty state**: No label sheets generated. Select assets in the tree to print QR labels.
+    - **filters**:
+      - Format
+      - Created by
+    - **name**: Label sheets
+    - **row actions**:
+      - Download
+      - Regenerate
+    - **search**: Sheet name
+    - **sort**:
+      - Created
+- **walkthrough**:
+  - User opens Assets; the tree shows with open-item counts per node.
+  - Right-clicks a node and selects Add Item, choosing item type and name.
+  - Fills Tag Number and the attribute form generated from the item type; internal tag is assigned automatically.
+  - Uses Bulk Add with a name pattern (e.g. Line-###, start 1, repeat 20) to create many items.
+  - Alternatively imports Excel/CSV: maps columns, previews errors and tag conflicts, commits, or rolls back.
+  - Drags items to reparent; the system blocks cycles and recomputes ltree paths.
+  - Selects a node to set the asset scope chip, which filters lists and dashboards.
+  - Opens an asset detail page to see inspections, issues, documents and certificates in one timeline.
+  - Generates printable QR/RFID labels from the tree.
+  - In the field, scans the QR code to open the asset on mobile.
+  - When equipment is replaced or renumbered, merges or splits the asset history with lineage preserved.
+  - Exports the register to Excel/CSV/JSON.

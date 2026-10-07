@@ -1,0 +1,148 @@
+# Supplier catalogue, requisitions & POs — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/procurement/models.py
+    - **purpose**: Vendor, CatalogItem, PriceList, PriceListTier, Requisition, RequisitionLine, PurchaseOrder, POLine, GoodsReceipt, GoodsReceiptLine, Invoice, ImportJob, ImportDiffLine, BankChangeLog, MatchTolerance
+  -
+    - **path**: backend/app/modules/procurement/schemas.py
+    - **purpose**: Pydantic schemas; price fields marked for role-based redaction
+  -
+    - **path**: backend/app/modules/procurement/router.py
+    - **purpose**: Catalogue, requisition, PO, receipt, invoice, vendor endpoints
+  -
+    - **path**: backend/app/modules/procurement/catalogue_service.py
+    - **purpose**: Item search, favourites, recently ordered, item add/edit
+  -
+    - **path**: backend/app/modules/procurement/pricing.py
+    - **purpose**: Price list validity, tier resolution, effective dating
+  -
+    - **path**: backend/app/modules/procurement/import_service.py
+    - **purpose**: Parse CSV/Excel via import mapping, compute diffs and % flags, stage for review, publish on approval
+  -
+    - **path**: backend/app/modules/procurement/import_jobs.py
+    - **purpose**: Scheduled re-import and email-ingested file handlers
+  -
+    - **path**: backend/app/modules/procurement/requisition_service.py
+    - **purpose**: Cart, submit, accounts view, reply
+  -
+    - **path**: backend/app/modules/procurement/po_service.py
+    - **purpose**: PO creation, issue with eligibility gate, email send, signed PO upload, status transitions
+  -
+    - **path**: backend/app/modules/procurement/receipt_service.py
+    - **purpose**: Goods receipt, partials, batch/serial, MTR capture handoff to components
+  -
+    - **path**: backend/app/modules/procurement/match_service.py
+    - **purpose**: Three-way match with tolerances and exception queue
+  -
+    - **path**: backend/app/modules/procurement/vendor_service.py
+    - **purpose**: Vendor master, insurance cert links, bank-detail dual approval and call-back log
+  -
+    - **path**: backend/app/modules/procurement/export.py
+    - **purpose**: Xero, MYOB, CSV export of approved POs and matched invoices
+  -
+    - **path**: backend/app/modules/procurement/events.py
+    - **purpose**: Emitters and handlers
+  -
+    - **path**: backend/app/modules/procurement/permissions.py
+    - **purpose**: Permission keys incl. view_pricing, approve_price_import, change_bank_details
+  -
+    - **path**: backend/app/modules/procurement/seed/defaults.json
+    - **purpose**: Default tolerances, PO status set, workflow definitions, term keys
+  -
+    - **path**: backend/migrations/versions/xxxx_procurement.py
+    - **purpose**: Migration with RLS
+  -
+    - **path**: backend/tests/modules/procurement/
+    - **purpose**: Match tolerance, price redaction, eligibility gate, bank change, tenant isolation tests
+- **change isolation**: Supplier file formats and accounting targets change only in import mapping templates and export.py adapters. Receipt-to-stock and eligibility are consumed via events and the shared gate, so inventory and certificate changes do not touch procurement. Cost coding uses a plain cost-code reference field, so removal of cost_items does not break POs.
+- **config not code**:
+  - Match tolerances (% and value)
+  - Price change flag thresholds
+  - Approval routes and limits
+  - PO number format
+  - PO status labels
+  - Import column mapping templates
+  - Scheduled import cadence
+  - Which certificate types gate vendor issue
+  - Accounting export mappings
+  - Roles allowed to see prices
+  - Term keys (Requisition, Purchase Order)
+- **events consumed**:
+  - approval.completed
+  - certificate.expired (vendor eligibility)
+  - certificate.renewed
+  - upload.released (PO, docket, invoice files)
+  - ingestion.file_received (price files)
+  - contact.company_updated
+- **events emitted**:
+  - requisition.submitted
+  - requisition.approved
+  - po.issued
+  - goods.received
+  - invoice.matched
+  - invoice.exception
+  - price_import.pending_review
+  - vendor.bank_change_requested
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/procurement/pages/Catalogue.tsx
+    - **purpose**: Browser with search, filters, basket
+  -
+    - **path**: frontend/src/modules/procurement/pages/PriceImportReview.tsx
+    - **purpose**: Per-line diff review queue
+  -
+    - **path**: frontend/src/modules/procurement/pages/RequisitionView.tsx
+    - **purpose**: Comment thread, print, reply, PO upload
+  -
+    - **path**: frontend/src/modules/procurement/pages/POList.tsx
+    - **purpose**: List with outstanding filter
+  -
+    - **path**: frontend/src/modules/procurement/pages/PODetail.tsx
+    - **purpose**: PO detail with three-way match panel
+  -
+    - **path**: frontend/src/modules/procurement/pages/ReceiptEntry.tsx
+    - **purpose**: Goods receipt entry with docket upload and MTR capture
+  -
+    - **path**: frontend/src/modules/procurement/pages/VendorMaster.tsx
+    - **purpose**: Vendor list and detail
+  -
+    - **path**: frontend/src/modules/procurement/components/Basket.tsx
+    - **purpose**: Requisition cart
+  -
+    - **path**: frontend/src/modules/procurement/components/MatchPanel.tsx
+    - **purpose**: PO/docket/invoice side by side
+  -
+    - **path**: frontend/src/modules/procurement/api.ts
+    - **purpose**: Generated client wrapper and query hooks
+  -
+    - **path**: frontend/src/modules/procurement/routes.tsx
+    - **purpose**: Route and nav registration
+- **public api**:
+  - GET/POST/PATCH /catalogue/items
+  - GET/POST /price-lists and POST /price-imports (review, approve, reject)
+  - POST/GET /requisitions and POST /requisitions/{id}/submit
+  - POST /requisitions/{id}/comments (via shared comments)
+  - POST/GET /purchase-orders, POST /purchase-orders/{id}/issue|send|upload-signed
+  - POST /purchase-orders/{id}/receipts
+  - POST /invoices and GET /purchase-orders/{id}/match
+  - GET/POST /vendors and POST /vendors/{id}/bank-change
+  - GET /exports/accounting?format=xero|myob|csv
+  - read interface get_po_lines_for_cost_code(cost_code) for committed figures
+- **reuses shared**:
+  - Approvals engine for requisition, PO, price import, bank change
+  - Notification and email service
+  - Comments service
+  - Documents library for PO, docket, invoice
+  - Upload/quarantine pipeline
+  - Eligibility/certificate gate
+  - Ingestion connectors for email files
+  - Import mapping template component shared with data_io
+  - Contacts for suppliers
+  - Inventory for stock receipts
+  - Logistics for delivery bookings
+  - Permissions and field-level redaction
+  - Audit trail
+  - Terminology dictionary
+  - Scheduler

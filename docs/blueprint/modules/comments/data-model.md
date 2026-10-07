@@ -1,0 +1,579 @@
+# Comments, mentions & notifications — Data model & schema
+
+
+- **notes**: Comment visibility is enforced by the policy service and RLS, so external parties never see rows outside their class. Activity events for the timeline come from the existing audit/activity feed, not a new table. Transport choice (SSE, SES, Teams or Slack) stays out of the schema because channel is text. Reply-by-email is not modelled. The asset thread view is a query over comments.asset_id joined to assets.path (ltree).
+- **reuses existing**:
+  - assets
+  - issues
+  - tasks
+  - disciplines
+  - documents (file versions)
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets, drives asset thread roll-up
+        - **type**: uuid
+      -
+        - **name**: parent_id
+        - **notes**: self FK, nullable
+        - **type**: uuid
+      -
+        - **name**: file_version_id
+        - **notes**: nullable; comment scoped to a version
+        - **type**: uuid
+      -
+        - **name**: carried_from_comment_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: author_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: author_org_id
+        - **notes**: FK contacts/companies
+        - **type**: uuid
+      -
+        - **name**: body
+        - **notes**: current text
+        - **type**: text
+      -
+        - **name**: visibility_class
+        - **notes**: internal|client|subcontractor, names from config
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: open|resolved
+        - **type**: text
+      -
+        - **name**: resolved_by
+        - **type**: uuid
+      -
+        - **name**: resolved_at
+        - **type**: timestamptz
+      -
+        - **name**: is_edited
+        - **type**: boolean
+      -
+        - **name**: legal_hold
+        - **notes**: blocks delete
+        - **type**: boolean
+      -
+        - **name**: converted_to_type
+        - **notes**: task|issue|corrective_action
+        - **type**: text
+      -
+        - **name**: converted_to_id
+        - **notes**: back-link
+        - **type**: uuid
+      -
+        - **name**: row_version
+        - **notes**: optimistic concurrency
+        - **type**: int
+      -
+        - **name**: sync_version
+        - **notes**: offline commenting
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete, refused when legal_hold
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, record_type, record_id, created_at)
+      - (tenant_id, asset_id, created_at)
+      - (tenant_id, parent_id)
+      - (tenant_id, status) where status = 'open'
+      - GIN to_tsvector(body)
+    - **name**: comments
+    - **purpose**: Threaded comments on any record or file. Each edit adds a revision rather than overwriting.
+    - **relations**:
+      - assets
+      - comments (parent)
+      - users
+      - tasks/issues (conversion targets)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: comment_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: revision_no
+        - **type**: int
+      -
+        - **name**: body
+        - **notes**: prior text
+        - **type**: text
+      -
+        - **name**: edited_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (comment_id, revision_no)
+    - **name**: comment_revisions
+    - **purpose**: Append-only edit history.
+    - **relations**:
+      - comments
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: comment_id
+        - **type**: uuid
+      -
+        - **name**: mentioned_user_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: mentioned_team_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, mentioned_user_id, created_at desc)
+      - (comment_id)
+    - **name**: comment_mentions
+    - **purpose**: Resolved @mentions of users or teams.
+    - **relations**:
+      - comments
+      - users
+      - teams
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: comment_id
+        - **notes**: unique
+        - **type**: uuid
+      -
+        - **name**: file_id
+        - **notes**: FK stored_files
+        - **type**: uuid
+      -
+        - **name**: file_version_id
+        - **type**: uuid
+      -
+        - **name**: page
+        - **type**: int
+      -
+        - **name**: x
+        - **notes**: normalised 0-1
+        - **type**: numeric
+      -
+        - **name**: y
+        - **notes**: normalised 0-1
+        - **type**: numeric
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: issue_id
+        - **notes**: nullable FK issues
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, file_id, page)
+    - **name**: comment_pins
+    - **purpose**: Pin on a PDF page or photo, optionally linked to an asset or defect.
+    - **relations**:
+      - comments
+      - stored_files
+      - assets
+      - issues
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: comment_id
+        - **type**: uuid
+      -
+        - **name**: file_id
+        - **notes**: drawing or photo
+        - **type**: uuid
+      -
+        - **name**: file_version_id
+        - **type**: uuid
+      -
+        - **name**: camera_state
+        - **notes**: zoom, pan, page
+        - **type**: jsonb
+      -
+        - **name**: markup
+        - **notes**: annotation JSON
+        - **type**: jsonb
+      -
+        - **name**: snapshot_file_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, comment_id)
+    - **name**: comment_viewpoints
+    - **purpose**: Saved drawing or photo viewpoint with markup.
+    - **relations**:
+      - comments
+      - stored_files
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: nullable for platform defaults
+        - **type**: uuid
+      -
+        - **name**: event_type
+        - **type**: text
+      -
+        - **name**: message_key
+        - **notes**: terminology key
+        - **type**: text
+      -
+        - **name**: locale
+        - **notes**: en-AU etc.
+        - **type**: text
+      -
+        - **name**: subject_override
+        - **type**: text
+      -
+        - **name**: body_override
+        - **type**: text
+      -
+        - **name**: is_mandatory
+        - **notes**: bypasses mute (safety and legal)
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, event_type, locale) where deleted_at is null
+    - **name**: notification_templates
+    - **purpose**: Default message keys per event type, with per-tenant wording overrides.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: recipient_user_id
+        - **type**: uuid
+      -
+        - **name**: event_id
+        - **notes**: outbox event id
+        - **type**: uuid
+      -
+        - **name**: event_type
+        - **type**: text
+      -
+        - **name**: message_key
+        - **type**: text
+      -
+        - **name**: params
+        - **type**: jsonb
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: severity
+        - **type**: text
+      -
+        - **name**: channel
+        - **notes**: in_app|email|push
+        - **type**: text
+      -
+        - **name**: dedupe_key
+        - **type**: text
+      -
+        - **name**: delivery_status
+        - **notes**: pending|sent|failed|suppressed|digested
+        - **type**: text
+      -
+        - **name**: deliver_after
+        - **notes**: quiet hours, snooze
+        - **type**: timestamptz
+      -
+        - **name**: sent_at
+        - **type**: timestamptz
+      -
+        - **name**: seen_at
+        - **type**: timestamptz
+      -
+        - **name**: read_at
+        - **type**: timestamptz
+      -
+        - **name**: snoozed_until
+        - **type**: timestamptz
+      -
+        - **name**: escalation_level
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, dedupe_key, channel, recipient_user_id)
+      - (tenant_id, recipient_user_id, read_at, created_at desc)
+      - (delivery_status, deliver_after) where delivery_status='pending'
+    - **name**: notifications
+    - **purpose**: Per-recipient, per-channel delivery record. Unique dedupe key makes delivery idempotent.
+    - **relations**:
+      - users
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: event_type
+        - **notes**: or '*' default
+        - **type**: text
+      -
+        - **name**: channel
+        - **type**: text
+      -
+        - **name**: enabled
+        - **type**: boolean
+      -
+        - **name**: digest_frequency
+        - **notes**: off|daily|weekly
+        - **type**: text
+      -
+        - **name**: quiet_hours
+        - **notes**: start, end, timezone
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, user_id, event_type, channel)
+    - **name**: notification_preferences
+    - **purpose**: User preference matrix.
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: muted_until
+        - **notes**: nullable means indefinite
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, user_id, record_type, record_id)
+    - **name**: thread_mutes
+    - **purpose**: Per-user mute or follow of a thread.
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: event_type
+        - **type**: text
+      -
+        - **name**: asset_path
+        - **notes**: subtree root, nullable
+        - **type**: ltree
+      -
+        - **name**: discipline_id
+        - **notes**: FK disciplines, nullable
+        - **type**: uuid
+      -
+        - **name**: min_severity
+        - **type**: text
+      -
+        - **name**: recipient_user_ids
+        - **type**: jsonb
+      -
+        - **name**: recipient_role_ids
+        - **type**: jsonb
+      -
+        - **name**: escalate_after_minutes
+        - **type**: int
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, event_type) where active
+      - GIST on asset_path
+    - **name**: notification_rules
+    - **purpose**: Admin rules by asset subtree, discipline and severity.
+    - **relations**:
+      - disciplines
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: timezone
+        - **type**: text
+      -
+        - **name**: windows
+        - **notes**: weekday start/end
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+    - **name**: shift_calendars
+    - **purpose**: Site shift windows for quiet-hour and shift-aware delivery.
+    - **relations**:
+      - projects

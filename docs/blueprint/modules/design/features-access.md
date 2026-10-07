@@ -1,0 +1,164 @@
+# Design system & app shell — Feature filler
+
+
+- **detail sections**:
+  - Component library and style reference (tokens, type, status chips)
+  - Tenant theme (accent, density, contrast theme) with live preview
+  - Reference layouts: register, record detail, split-pane, blade, KPI strip, viewer, ITP execution, field mode
+  - Accessibility and visual regression results
+  - Per-user preferences (density, columns)
+- **notifications**:
+  - View shared with you by a colleague
+  - Role default view changed for your role
+  - Saved view's source filter no longer valid (field renamed or removed)
+  - Theme changed by tenant admin
+  - Sync conflict needs your attention (in-app)
+- **settings**:
+  - Tenant accent colour token
+  - Default density (compact/comfortable)
+  - High-contrast outdoor theme availability
+  - Default home layout per role
+  - Field mode enablement per project
+  - Touch target size
+  - Command palette recents retention
+  - Allowed export columns policy
+  - Terminology lint strictness in CI
+- **tables**:
+  -
+    - **bulk actions**:
+      - Share to team
+      - Change scope
+      - Delete
+      - Set as role default
+    - **columns**:
+      - Name
+      - Module
+      - Owner
+      - Scope (personal/team/project)
+      - Role default
+      - Shared with
+      - Last used
+      - URL
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Module
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Scope
+        - **required**: true
+        - **type**: select (personal/team/project)
+      -
+        - **field**: Team or project
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Filter definition
+        - **required**: true
+        - **type**: filter builder
+      -
+        - **field**: Columns and sort
+        - **required**: false
+        - **type**: column chooser
+      -
+        - **field**: Role default
+        - **required**: false
+        - **type**: multi-select roles
+    - **empty state**: No saved views yet. Set filters on any register, then choose Save view to keep and share it.
+    - **filters**:
+      - Module
+      - Scope
+      - Owner
+      - Role default
+      - Shared with me
+    - **name**: Saved views
+    - **row actions**:
+      - Open
+      - Rename
+      - Duplicate
+      - Copy link
+      - Share
+      - Set default
+      - Delete
+    - **search**: Name, module and owner
+    - **sort**:
+      - Name
+      - Module
+      - Last used
+      - Owner
+  -
+    - **bulk actions**:
+      - Remove
+      - Move to dashboard
+    - **columns**:
+      - Tile title
+      - Source saved view
+      - Type (KPI/list/chart)
+      - Position
+      - Restricted state
+      - Dashboard
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Source saved view
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Tile type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Threshold colours
+        - **required**: false
+        - **type**: number pairs
+    - **empty state**: This dashboard has no tiles. Add a tile from any saved view.
+    - **filters**:
+      - Dashboard
+      - Type
+      - Source view
+    - **name**: Dashboard tiles
+    - **row actions**:
+      - Edit
+      - Resize
+      - Change source view
+      - Remove
+    - **search**: Tile title
+    - **sort**:
+      - Position
+      - Title
+  -
+    - **bulk actions**:
+      - Clear history
+    - **columns**:
+      - Record
+      - Type
+      - Asset
+      - Opened at
+    - **empty state**: Nothing opened recently. Records you open will appear here.
+    - **filters**:
+      - Type
+    - **name**: Recent items
+    - **row actions**:
+      - Open
+      - Remove from recents
+    - **search**: Shown in command palette; matches record ID and title
+    - **sort**:
+      - Opened at
+- **walkthrough**:
+  - Admin opens Settings > Appearance and sets the accent token; the contrast checker flags any value that fails WCAG AA.
+  - Admin previews the theme on the reference layouts in office and field mode, then saves.
+  - User signs in and lands on My Work with the shell: 56px header, nav rail and scope bar.
+  - User picks a project and an asset node in the scope bar; the chip appears and every list and dashboard filters.
+  - User opens a register, applies quick filters, chooses columns and sorts by status.
+  - User saves the view as a team view; the URL now reopens the same filters.
+  - User presses the command palette shortcut, types an asset tag and jumps to the record detail.
+  - User approves a record from the workflow bar; a non-blocking toast confirms the save.
+  - When offline, the sync chip changes state and writes show a queued variant; a conflict shows the conflict variant with a resolve action.
+  - On site, user switches to field mode and works from the large next-action card.

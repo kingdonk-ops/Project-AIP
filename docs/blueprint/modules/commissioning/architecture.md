@@ -1,0 +1,91 @@
+# Commissioning — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/commissioning/__init__.py
+    - **purpose**: Registration, permissions and event declarations
+  -
+    - **path**: backend/app/modules/commissioning/models.py
+    - **purpose**: commissioning_system (links to asset node), system_membership, readiness_snapshot, commission_record; checklists are inspection kinds, issues are issues
+  -
+    - **path**: backend/app/modules/commissioning/schemas.py
+    - **purpose**: API schemas
+  -
+    - **path**: backend/app/modules/commissioning/router.py
+    - **purpose**: System, readiness and commission gate endpoints
+  -
+    - **path**: backend/app/modules/commissioning/service.py
+    - **purpose**: System definition over asset subtrees, checklist generation from templates
+  -
+    - **path**: backend/app/modules/commissioning/readiness.py
+    - **purpose**: Readiness score computed from inspection, issue and sign-off data per configured weights
+  -
+    - **path**: backend/app/modules/commissioning/gate.py
+    - **purpose**: Commission action guard expressed as a rule set evaluated through the rules engine
+  -
+    - **path**: backend/app/modules/commissioning/handlers.py
+    - **purpose**: Recompute readiness on source events
+  -
+    - **path**: backend/alembic/versions/commissioning_0001_init.py
+    - **purpose**: Migration with RLS
+  -
+    - **path**: backend/tests/modules/commissioning/
+    - **purpose**: Gate, readiness and isolation tests
+- **change isolation**: Gate conditions and weights are config; the module only adds system grouping and a score calculation. Checklist behaviour changes happen in inspections or form templates, not here.
+- **config not code**:
+  - pre-functional and functional checklist templates
+  - readiness weighting by checklist type
+  - gate rule set
+  - commissioning workflow states
+  - system classification names via terminology
+- **events consumed**:
+  - inspection.approved
+  - inspection.rejected
+  - issue.created
+  - issue.closed
+  - punch.item.closed
+  - asset.moved
+  - certificate.status.changed
+- **events emitted**:
+  - commissioning.system.created
+  - commissioning.readiness.changed
+  - commissioning.system.commissioned
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/commissioning/index.ts
+    - **purpose**: Route registration
+  -
+    - **path**: frontend/src/modules/commissioning/pages/SystemList.tsx
+    - **purpose**: System tree with readiness rings
+  -
+    - **path**: frontend/src/modules/commissioning/pages/SystemDetail.tsx
+    - **purpose**: Tabs: checklists, issue log, gate
+  -
+    - **path**: frontend/src/modules/commissioning/components/ReadinessRing.tsx
+    - **purpose**: Score visual
+  -
+    - **path**: frontend/src/modules/commissioning/components/CommissionGatePanel.tsx
+    - **purpose**: Outstanding items and commission action
+  -
+    - **path**: frontend/src/modules/commissioning/api/
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - GET/POST /commissioning/systems
+  - GET /commissioning/systems/{id}
+  - POST /commissioning/systems/{id}/members
+  - POST /commissioning/systems/{id}/generate-checklists
+  - GET /commissioning/systems/{id}/readiness
+  - GET /commissioning/systems/{id}/outstanding
+  - POST /commissioning/systems/{id}/commission
+- **reuses shared**:
+  - inspection engine (checklists as inspection kinds)
+  - form/template designer
+  - asset hierarchy and ltree
+  - issues engine for the issue log
+  - workflow engine for commission action
+  - rules engine for gate conditions
+  - eligibility gate for credentialled sign-off
+  - audit trail
+  - reporting tiles
+  - handover module for closeout

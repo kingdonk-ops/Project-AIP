@@ -1,0 +1,358 @@
+# Handover, data books & submissions — Feature filler
+
+
+- **detail sections**:
+  - Package header (project, template, revision, status, signer)
+  - Scope and asset subtree
+  - Completeness and gap view
+  - Items with mapped values
+  - Validation report with click-through
+  - Evidence and linked records
+  - Review cycle (comments and responses)
+  - Revision history and diff
+  - Snapshot and SHA-256 manifest
+  - Transmission and acknowledgement
+  - Baseline condition snapshots
+  - Activity
+- **notifications**:
+  - Closeout item assigned or reassigned
+  - Item due soon or overdue
+  - Evidence reopened (for example NCR reopened) flipping an item to open
+  - Certificate linked to a package expiring
+  - Validation completed with errors
+  - Package submitted for approval, approved or rejected
+  - Package issued and acknowledgement received
+  - Client review comment or response added
+  - Handover accepted and defects liability period started
+- **settings**:
+  - Closeout template library
+  - Submission template library and field mapper
+  - Client MDR structure (folder numbering, document codes, naming rules)
+  - EAM export mappings
+  - Validation rule sets
+  - Approval route per package type
+  - Baseline condition fields per asset class
+  - Terminology labels for handover terms
+  - Retention milestone rules
+  - Transmission channels (manual, connector, portal)
+  - Hash and snapshot retention
+- **tables**:
+  -
+    - **bulk actions**:
+      - Assign owner
+      - Set due date
+      - Add to package draft
+      - Export checklist (CSV/Excel)
+    - **columns**:
+      - Requirement
+      - Asset / system
+      - Discipline
+      - Evidence status (live)
+      - Linked documents
+      - Open punch / NCR count
+      - Owner
+      - Due date
+      - Status
+    - **create form**:
+      -
+        - **field**: Requirement
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Asset or subtree
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Closeout template
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Evidence rule (record type and status needed)
+        - **required**: true
+        - **type**: rule picker
+      -
+        - **field**: Owner
+        - **required**: false
+        - **type**: user picker
+      -
+        - **field**: Due date
+        - **required**: false
+        - **type**: date
+    - **empty state**: No closeout items yet. Apply a closeout template to a project or asset subtree to generate the checklist from required ITPs and documents.
+    - **filters**:
+      - Asset subtree
+      - System / area
+      - Discipline
+      - Status (open, partial, closed, blocked)
+      - Owner
+      - Due window
+      - Has open NCR
+      - Has expiring certificate
+    - **name**: Closeout Items
+    - **row actions**:
+      - Open detail
+      - Link / unlink evidence
+      - Reassign owner
+      - Add comment
+      - Open source record
+    - **search**: Requirement text, asset tag, document code
+    - **sort**:
+      - Asset tag
+      - Due date
+      - Status
+      - Percent complete
+      - Owner
+  -
+    - **bulk actions**:
+      - Retire
+      - Export
+    - **columns**:
+      - Name
+      - Asset class scope
+      - Item count
+      - Version
+      - Status
+      - Last edited
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Asset classes covered
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Required ITP types per class
+        - **required**: false
+        - **type**: multi-select
+      -
+        - **field**: Required document types per class
+        - **required**: false
+        - **type**: multi-select
+    - **empty state**: No closeout templates. Create one per asset class or import the Kaefer / Rio Tinto starter template.
+    - **filters**:
+      - Asset class
+      - Status (draft, active, retired)
+    - **name**: Closeout Templates
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Apply to project
+      - View versions
+    - **search**: Template name
+    - **sort**:
+      - Name
+      - Last edited
+  -
+    - **bulk actions**:
+      - Run validation
+      - Export index
+      - Download selected snapshots
+    - **columns**:
+      - Package ref
+      - Type
+      - Authority / client
+      - Revision
+      - Scope (subtree)
+      - Status
+      - Validation errors
+      - Hash (short)
+      - Issued date
+      - Acknowledged
+    - **create form**:
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: project picker
+      -
+        - **field**: Submission template
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Asset subtree
+        - **required**: true
+        - **type**: asset tree picker
+      -
+        - **field**: Authority / client contact
+        - **required**: true
+        - **type**: contact picker
+      -
+        - **field**: Revision note
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Approval route
+        - **required**: false
+        - **type**: select
+    - **empty state**: No submission packages. Use the Package Builder to select a subtree, check completeness and build the first draft.
+    - **filters**:
+      - Status (draft, validated, approved, issued, acknowledged, rejected)
+      - Authority / contact
+      - Template
+      - Revision
+      - Issue date range
+    - **name**: Submission Packages
+    - **row actions**:
+      - Open
+      - Validate
+      - Preview
+      - Issue new revision
+      - Diff against previous revision
+      - Record transmission
+      - Download manifest
+    - **search**: Package ref, authority reference, contact name
+    - **sort**:
+      - Issued date
+      - Revision
+      - Status
+      - Package ref
+  -
+    - **bulk actions**:
+      - Retire
+      - Export definition
+    - **columns**:
+      - Name
+      - Format (CSV, Excel, XML, PDF index, JSON)
+      - Target (client / authority / EAM)
+      - Version
+      - Mapped fields
+      - Status
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Format
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Target type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Source entity
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Field mappings
+        - **required**: true
+        - **type**: mapping table
+      -
+        - **field**: Validation rules
+        - **required**: false
+        - **type**: rule list
+      -
+        - **field**: Terminology labels
+        - **required**: false
+        - **type**: key/value
+      -
+        - **field**: Folder numbering and naming rule
+        - **required**: false
+        - **type**: pattern text
+    - **empty state**: No submission templates. Start from the validated Kaefer / Rio Tinto format or create a blank mapping.
+    - **filters**:
+      - Format
+      - Target
+      - Status
+    - **name**: Submission Templates
+    - **row actions**:
+      - Edit mapping
+      - Test with sample
+      - Duplicate
+      - Publish new version
+    - **search**: Template name, target
+    - **sort**:
+      - Name
+      - Version
+      - Last edited
+  -
+    - **bulk actions**:
+      - Export log
+    - **columns**:
+      - Package / revision
+      - Sent time
+      - Channel (manual, connector, portal)
+      - Recipient
+      - Acknowledgement
+      - Authority reference
+      - Recorded by
+    - **create form**:
+      -
+        - **field**: Package revision
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Sent time
+        - **required**: true
+        - **type**: datetime
+      -
+        - **field**: Channel
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Recipient
+        - **required**: true
+        - **type**: contact picker
+      -
+        - **field**: Authority reference
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Receipt attachment
+        - **required**: false
+        - **type**: file
+    - **empty state**: Nothing issued yet. Issued packages and their acknowledgements will be logged here.
+    - **filters**:
+      - Channel
+      - Acknowledged (yes/no)
+      - Date range
+    - **name**: Transmission Log
+    - **row actions**:
+      - Record acknowledgement
+      - Open package
+      - Attach receipt
+    - **search**: Authority reference, recipient
+    - **sort**:
+      - Sent time
+      - Acknowledgement date
+  -
+    - **bulk actions**:
+      - Re-run validation
+      - Export report
+    - **columns**:
+      - Severity
+      - Rule
+      - Source record
+      - Asset
+      - Message
+      - Status (open, fixed, waived)
+    - **empty state**: No validation results. Run validation on a draft package to see gaps and rule failures.
+    - **filters**:
+      - Severity
+      - Rule
+      - Status
+      - Asset subtree
+    - **name**: Validation Results
+    - **row actions**:
+      - Open source record to fix
+      - Waive with reason
+      - Re-check
+    - **search**: Message text, asset tag
+    - **sort**:
+      - Severity
+      - Asset
+      - Status
+- **walkthrough**:
+  - Admin applies a closeout template to the project so checklist items are generated per asset class.
+  - Owners work items; evidence links live to inspections, NCRs, certificates and documents, and status updates automatically.
+  - Handover lead opens the Overview and reviews percent complete by system and area.
+  - Lead opens the Package Builder, picks an asset subtree and a submission template.
+  - Completeness engine compares required ITPs and documents against signed records and lists gaps by subtree.
+  - Team fixes gaps through click-through links, or waives with a reason.
+  - Lead builds the draft package and runs validation until it is clean.
+  - Package goes through the approval route and is signed; an immutable snapshot with SHA-256 manifest is created.
+  - Package is exported or sent, and the transmission is logged with channel and reference.
+  - Client review comments are recorded and responded to; corrections issue as a new revision with a diff.
+  - On acceptance, a handover event starts the defects liability period, creates service assets with baseline condition snapshots and sets the retention milestone.

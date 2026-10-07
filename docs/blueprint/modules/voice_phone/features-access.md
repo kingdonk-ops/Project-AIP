@@ -1,0 +1,179 @@
+# Voice notes & phone log — Feature filler
+
+
+- **detail sections**:
+  - Capture summary: author, time, input, consent
+  - Audio player and retention status
+  - Transcript with provider, region and model
+  - Proposed record and extracted fields (editable)
+  - Suggested asset (user confirms)
+  - Confirmation outcome and created record link
+  - Phone call details and parties
+  - Verbal instruction and change link
+  - Consent record and jurisdiction rule applied
+  - Audit and data-flow log
+- **notifications**:
+  - Draft awaiting confirmation (reminder)
+  - Transcription failed or provider unavailable
+  - Verbal instruction flagged (to commercial lead)
+  - Change record started from call
+  - Audio scheduled for deletion
+  - Consent missing on a recorded call
+- **settings**:
+  - Tenant opt-in for transcription and AI extraction
+  - Provider and region (AU only by default)
+  - Consent text and jurisdiction rules
+  - Raw audio retention period
+  - Allowed draft types
+  - Draft expiry before auto-discard
+  - Verbal instruction notification recipients
+  - Maximum recording length
+  - Terminology keys
+- **tables**:
+  -
+    - **bulk actions**:
+      - Discard selected drafts
+      - Reassign project
+      - Delete raw audio early
+    - **columns**:
+      - Recorded at
+      - Author
+      - Project
+      - Input (audio or typed)
+      - Duration
+      - Proposed type (diary note, defect, task)
+      - Status (draft, confirmed, discarded)
+      - Result record
+      - Transcription status
+      - Audio retention date
+    - **create form**:
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Input mode
+        - **required**: true
+        - **type**: select (record or type)
+      -
+        - **field**: Audio or text
+        - **required**: true
+        - **type**: recorder or long text
+      -
+        - **field**: Consent confirmed
+        - **required**: true
+        - **type**: checkbox
+      -
+        - **field**: Context asset
+        - **required**: false
+        - **type**: asset picker
+    - **empty state**: No voice notes yet. Record or type a note and review the drafted record before it is saved.
+    - **filters**:
+      - Status
+      - Proposed type
+      - Author
+      - Project
+      - Date range
+      - Transcription status
+    - **name**: Voice notes
+    - **row actions**:
+      - Review draft
+      - Confirm
+      - Discard
+      - Play audio
+      - View transcript
+      - Open created record
+    - **search**: Transcript text, author and result record reference
+    - **sort**:
+      - Recorded at
+      - Author
+      - Status
+  -
+    - **bulk actions**:
+      - Export selected
+      - Flag as verbal instruction
+      - Link to change record
+    - **columns**:
+      - Date and time
+      - Direction
+      - Our party
+      - Other party
+      - Company
+      - Duration
+      - Summary
+      - Instruction given
+      - Verbal instruction flag
+      - Linked change
+      - Logged by
+    - **create form**:
+      -
+        - **field**: Project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Date and time
+        - **required**: true
+        - **type**: datetime
+      -
+        - **field**: Direction
+        - **required**: true
+        - **type**: select (inbound, outbound)
+      -
+        - **field**: Other party
+        - **required**: true
+        - **type**: contact picker
+      -
+        - **field**: Duration (minutes)
+        - **required**: false
+        - **type**: number
+      -
+        - **field**: Summary
+        - **required**: true
+        - **type**: long text
+      -
+        - **field**: Instruction given
+        - **required**: false
+        - **type**: long text
+      -
+        - **field**: Verbal instruction (potential variation)
+        - **required**: false
+        - **type**: checkbox
+      -
+        - **field**: Recorded call
+        - **required**: false
+        - **type**: checkbox
+      -
+        - **field**: Consent evidence
+        - **required**: false
+        - **type**: select
+    - **empty state**: No calls logged. Log a call or verbal instruction to build the evidence chronology.
+    - **filters**:
+      - Direction
+      - Verbal instruction flag
+      - Company
+      - Project
+      - Date range
+      - Has linked change
+    - **name**: Phone log
+    - **row actions**:
+      - Open
+      - Edit (before lock)
+      - Start change record
+      - Add to diary
+      - Link correspondence
+    - **search**: Summary, instruction text and party names
+    - **sort**:
+      - Date and time
+      - Duration
+      - Company
+- **walkthrough**:
+  - Worker opens voice capture on the project and sees the consent notice for the site's jurisdiction.
+  - Worker records audio or types a note; offline audio is queued on the device.
+  - On upload, the file passes scanning and transcription is requested only if the tenant has opted in to the AU-region provider.
+  - The system proposes a record type and extracts fields such as description, asset, time and priority.
+  - Worker reviews the draft, corrects fields, and confirms the suggested asset or picks another.
+  - Worker confirms to create the diary note, defect or task, or discards the draft; nothing is saved without confirmation.
+  - For phone calls, worker logs parties, direction, duration, summary and instruction given.
+  - If the call contained a verbal instruction, worker flags it and optionally starts a change record prefilled from the log.
+  - Confirmed items appear in the diary and evidence chronology with a link back to the source note.
+  - Raw audio is deleted on the retention schedule while the confirmed record remains.

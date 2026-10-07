@@ -1,0 +1,97 @@
+# AI governance & data controls — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Tenant admin with AI governance permission; off by default.
+    - **actions**:
+      - Enable/disable
+      - Set exclusions
+      - Set budget cap
+      - Bulk disable
+    - **layout**: Feature table with toggles; blade for restrictions and budget.
+    - **name**: Tenant AI settings
+    - **purpose**: Enable AI per feature, set restrictions and budgets.
+    - **route**: /settings/ai
+    - **sections**:
+      - Features table (Feature, Enabled, Scope restrictions, Client prohibits AI, Budget cap, Changed by)
+      - Project/client exclusions
+      - Agent write confirmation policy
+      - Citation threshold
+      - Log retention
+  -
+    - **access**: Platform administrators only.
+    - **actions**:
+      - Activate
+      - Deactivate with reason
+    - **layout**: Single control panel with state banner and history.
+    - **name**: Platform kill switch
+    - **purpose**: Disable AI features platform-wide or per feature instantly.
+    - **route**: /admin/ai/kill-switch
+    - **sections**:
+      - Current state
+      - Scope selector
+      - Change history
+  -
+    - **access**: Platform admin edits; tenant admins and security reviewers read.
+    - **actions**:
+      - View
+      - New version
+      - Retire
+      - Attach evidence
+      - Export PDF/JSON
+    - **layout**: Register with detail page and version history tab.
+    - **name**: AI data-flow register
+    - **purpose**: Versioned record of provider, model, region, retention and training-use terms per feature.
+    - **route**: /settings/ai/register
+    - **sections**:
+      - Register table
+      - Version history
+      - Zero-retention evidence files
+      - Export pack
+  -
+    - **access**: Tenant AI auditor role; entries respect source-data permissions.
+    - **actions**:
+      - Filter
+      - Open source record
+      - Export
+      - Flag
+    - **layout**: Register with split-pane detail showing prompt, response, tools and citations.
+    - **name**: AI audit log
+    - **purpose**: Review prompts, responses and tool calls with citations and acceptance status.
+    - **route**: /settings/ai/audit
+    - **sections**:
+      - Call log table
+      - Detail pane
+      - Citation links
+      - Redaction markers
+      - Acceptance label
+  -
+    - **access**: Tenant admin; platform admin for cross-tenant view.
+    - **actions**:
+      - Adjust cap
+      - Export
+      - View failing red-team case
+    - **layout**: KPI strip with charts and per-feature table.
+    - **name**: Usage and budget dashboard
+    - **purpose**: Track AI cost and usage against caps.
+    - **route**: /settings/ai/usage
+    - **sections**:
+      - Spend vs cap
+      - Usage by feature
+      - Blocked unsupported answers
+      - Red-team CI status
+  -
+    - **access**: Tenant admin with AI governance permission.
+    - **actions**:
+      - Add rule
+      - Edit
+      - Test
+      - Disable
+    - **layout**: Rules list with test panel.
+    - **name**: Redaction rules
+    - **purpose**: Configure PII and commercial rate redaction applied before sending.
+    - **route**: /settings/ai/redaction
+    - **sections**:
+      - Rule list
+      - Test input and redacted output

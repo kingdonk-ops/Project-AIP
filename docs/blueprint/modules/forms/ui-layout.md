@@ -1,0 +1,123 @@
+# Form & template designer — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Template admins and quality managers; others read-only
+    - **actions**:
+      - Create
+      - Clone
+      - Archive
+      - Retire
+      - Export JSON
+      - Import
+      - Restore
+      - Change category
+    - **layout**: Data table with filters and bulk bar.
+    - **name**: Template register
+    - **purpose**: List all templates by kind, status and category.
+    - **route**: /templates
+    - **sections**:
+      - Filters (kind, category, status, competency)
+      - Table (name, kind, revision, status, usage)
+      - Deleted templates toggle
+  -
+    - **access**: Template admins
+    - **actions**:
+      - Create draft
+      - Cancel
+    - **layout**: Short modal/page form.
+    - **name**: Create template
+    - **purpose**: Capture basics before opening the designer.
+    - **route**: /templates/new
+    - **sections**:
+      - Name, kind, category
+      - Required competency, default frequency
+      - Start from blank, clone or starter pack
+  -
+    - **access**: Template admins; approvers; read-only for others
+    - **actions**:
+      - Edit draft
+      - Submit for approval
+      - Approve/reject
+      - Publish revision
+      - Retire
+      - Delete/restore
+      - Export
+    - **layout**: Header with status and workflow bar; tabs.
+    - **name**: Template detail
+    - **purpose**: Overview, revisions and usage.
+    - **route**: /templates/:id
+    - **sections**:
+      - Summary and settings
+      - Revision history and compare
+      - Usage (inspections, programmes, report mappings)
+      - Report slot mapping
+      - Audit trail
+  -
+    - **access**: Template authors; publish requires approver role if approval is enabled
+    - **actions**:
+      - Add/move/delete field
+      - Edit logic
+      - Run tests
+      - Save draft
+      - Preview
+      - Publish (blocked if tests fail)
+    - **layout**: Three panes: field palette, canvas, properties; top toolbar with preview toggles.
+    - **name**: Designer
+    - **purpose**: Drag-and-drop form building.
+    - **route**: /templates/:id/revisions/:rev/design
+    - **sections**:
+      - Field palette (all field types)
+      - Canvas with sections and grid/tabular layouts
+      - Field properties (type, unit, limits, expiry flag, references)
+      - Conditional logic builder (visible_if, required_if)
+      - Calculated fields and validation rules
+      - Repeating tables with row validation
+      - Print layout preview
+      - Mobile/offline preview
+      - Test console with sample data
+      - Lint results
+  -
+    - **access**: Template admins and approvers
+    - **actions**:
+      - Select revisions
+      - Restore as new draft
+    - **layout**: Side-by-side diff.
+    - **name**: Revision compare
+    - **purpose**: Diff two revisions.
+    - **route**: /templates/:id/revisions/compare
+    - **sections**:
+      - Field/section changes
+      - Logic and validation changes
+      - Impact on in-flight inspections
+  -
+    - **access**: Tenant admin
+    - **actions**:
+      - Edit
+      - Save
+      - Manage option lists
+    - **layout**: Settings cards.
+    - **name**: Form settings
+    - **purpose**: Tenant rules for the designer.
+    - **route**: /settings/forms
+    - **sections**:
+      - Approval requirement and roles
+      - Allowed field types
+      - Expression limits
+      - Units by market
+      - Option lists
+      - Template kind labels
+      - Starter packs
+  -
+    - **access**: Template admins
+    - **actions**:
+      - Import as draft
+      - Preview
+    - **layout**: Card grid with preview drawer.
+    - **name**: Starter template library
+    - **purpose**: Browse and import market-pack templates.
+    - **route**: /templates/library
+    - **sections**:
+      - Packs (coating ITR, UTT, pre-start, torque, welding, concrete, CUI)
+      - Preview

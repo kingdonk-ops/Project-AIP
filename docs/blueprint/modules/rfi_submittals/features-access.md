@@ -1,0 +1,247 @@
+# RFIs & submittals — Feature filler
+
+
+- **detail sections**:
+  - Question or submittal summary
+  - Response and review thread
+  - Drawing and document references
+  - Impact estimate
+  - Linked inspections affected and gate status
+  - Resubmission history and comparison
+  - Attachments and markups
+  - Comments
+  - Activity
+- **notifications**:
+  - RFI assigned
+  - RFI response received
+  - RFI accepted or rejected
+  - RFI or submittal due soon and overdue
+  - Submittal submitted for review
+  - Review code returned
+  - Resubmission received
+  - Gate blocking an inspection raised
+  - Variation candidate created
+- **settings**:
+  - RFI label and numbering format
+  - Disambiguation prefix versus Request for Inspection
+  - Review outcome codes and gate acceptance
+  - Submittal types and required fields
+  - Review routes
+  - Default response periods
+  - Reminder rules
+  - Gate rules per inspection or task type
+  - Spreadsheet import enable
+- **tables**:
+  -
+    - **bulk actions**:
+      - Assign
+      - Export
+      - Close
+    - **columns**:
+      - Number
+      - Title
+      - Discipline
+      - Asset
+      - Package
+      - Raised by
+      - Ball-in-court
+      - Due date
+      - Age
+      - Status
+      - Cost impact
+      - Schedule impact
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Question
+        - **required**: true
+        - **type**: rich text
+      -
+        - **field**: Discipline
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Asset(s)
+        - **required**: true
+        - **type**: asset picker (multi)
+      -
+        - **field**: Package
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Drawing or document references
+        - **required**: false
+        - **type**: document picker
+      -
+        - **field**: Assignee or ball-in-court
+        - **required**: true
+        - **type**: user or contact
+      -
+        - **field**: Due date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Cost impact
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Schedule impact
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Attachments
+        - **required**: false
+        - **type**: files with markup
+    - **empty state**: No RFIs raised. Raise one to ask the client or designer a formal question.
+    - **filters**:
+      - Asset subtree
+      - Status
+      - Discipline
+      - Ball-in-court
+      - Overdue
+      - Impact flags
+    - **name**: RFI register
+    - **row actions**:
+      - Open
+      - Assign
+      - Respond
+      - Close
+      - Convert to variation candidate
+    - **search**: Number, title, question text
+    - **sort**:
+      - Number
+      - Due date
+      - Age
+      - Status
+  -
+    - **bulk actions**:
+      - Assign reviewer
+      - Export
+    - **columns**:
+      - Number
+      - Type
+      - Spec reference
+      - Asset or package
+      - Revision
+      - Required by
+      - Age
+      - Review code
+      - Status
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Spec reference
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Asset or package
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Revision
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Required-by date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Review route
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Documents
+        - **required**: true
+        - **type**: files
+      -
+        - **field**: Gates inspection or scope task
+        - **required**: false
+        - **type**: picker
+    - **empty state**: No submittals yet. Create one for a procedure, certificate or drawing needing review.
+    - **filters**:
+      - Type
+      - Spec
+      - Status
+      - Asset subtree
+      - Overdue
+      - Review code
+    - **name**: Submittal register
+    - **row actions**:
+      - Open
+      - Submit
+      - Review
+      - Return
+      - Resubmit
+      - Close
+    - **search**: Number, title, spec reference
+    - **sort**:
+      - Number
+      - Required by
+      - Status
+  -
+    - **columns**:
+      - Kind (RFI or submittal)
+      - Number
+      - Status
+      - Due
+      - Affected inspection
+    - **empty state**: No open RFIs or submittals on this asset.
+    - **filters**:
+      - Kind
+      - Status
+    - **name**: Open on this asset
+    - **row actions**:
+      - Open
+    - **search**: Number, title
+    - **sort**:
+      - Due
+  -
+    - **columns**:
+      - Code
+      - Label
+      - Accepted for gate
+      - Order
+    - **create form**:
+      -
+        - **field**: Code
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Label
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Accepted for gate
+        - **required**: true
+        - **type**: boolean
+    - **empty state**: Defaults loaded: approved, approved as noted, revise and resubmit, rejected.
+    - **filters**:
+      - Accepted for gate
+    - **name**: Review codes
+    - **row actions**:
+      - Edit
+      - Deactivate
+    - **search**: Label
+    - **sort**:
+      - Order
+- **walkthrough**:
+  - Inspector or engineer raises an RFI against an asset with drawing references and a due date.
+  - The RFI is assigned and ball-in-court moves to the responder.
+  - The responder replies, and the originator accepts or rejects.
+  - If cost or schedule is affected, the RFI is converted to a variation candidate with evidence carried across.
+  - Separately, the contractor creates a submittal, such as an NDT procedure, and links it to the inspection it gates.
+  - The submittal is submitted and enters the review route.
+  - The reviewer opens the review workspace and returns a review code.
+  - If revise and resubmit, a new revision is submitted and compared with the last.
+  - On an accepted code the gate clears and the inspection or task can proceed.
+  - The register and asset node show ageing and open items, and analytics show response times.

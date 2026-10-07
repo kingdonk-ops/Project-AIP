@@ -1,0 +1,199 @@
+# Commissioning — Feature filler
+
+
+- **detail sections**:
+  - System summary and readiness ring
+  - Asset nodes and subsystems
+  - Checklists (pre-functional and functional)
+  - Issue log
+  - Gate requirements and outstanding items
+  - Linked documents and certificates
+  - Sign-offs
+  - Commission action and history
+  - Activity
+- **notifications**:
+  - Checklist assigned
+  - Issue assigned
+  - Blocking issue raised
+  - System ready to commission
+  - Commission gate passed
+  - Gate blocked by new NCR
+  - Sign-off requested
+- **settings**:
+  - Checklist templates per phase
+  - Readiness score weighting
+  - Gate rules (required checks, blocking severity)
+  - Required sign-off roles and competencies
+  - Issue severity list
+  - System numbering
+  - Handover status mapping
+- **tables**:
+  -
+    - **bulk actions**:
+      - Apply checklist templates
+      - Export
+      - Assign owner
+    - **columns**:
+      - System no.
+      - Name
+      - Parent system
+      - Asset node
+      - Readiness %
+      - Pre-functional status
+      - Functional status
+      - Open issues
+      - Blocking NCRs
+      - Status
+    - **create form**:
+      -
+        - **field**: System no.
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Asset node(s)
+        - **required**: true
+        - **type**: asset tree picker
+      -
+        - **field**: Parent system
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Responsible lead
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Checklist templates
+        - **required**: true
+        - **type**: multi template picker
+    - **empty state**: No systems defined. Group asset nodes into systems to start commissioning.
+    - **filters**:
+      - Project
+      - Status
+      - Readiness range
+      - Has blocking items
+      - Discipline
+    - **name**: Systems
+    - **row actions**:
+      - Open
+      - Run checklists
+      - Log issue
+      - Request commission
+      - Edit
+    - **search**: System no., name, asset
+    - **sort**:
+      - Readiness %
+      - System no.
+      - Open issues
+  -
+    - **bulk actions**:
+      - Assign
+      - Export
+    - **columns**:
+      - System
+      - Checklist
+      - Phase (pre-functional/functional)
+      - Assignee
+      - Progress
+      - Result
+      - Completed date
+    - **create form**:
+      -
+        - **field**: System
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Template
+        - **required**: true
+        - **type**: template picker
+      -
+        - **field**: Assignee
+        - **required**: false
+        - **type**: user picker
+    - **empty state**: No checklists generated for this system.
+    - **filters**:
+      - Phase
+      - Result
+      - Assignee
+      - System
+    - **name**: Checklists
+    - **row actions**:
+      - Open/execute
+      - Reassign
+      - View signatures
+    - **search**: System, checklist name
+    - **sort**:
+      - System
+      - Progress
+      - Completed date
+  -
+    - **bulk actions**:
+      - Reassign
+      - Close
+      - Export
+    - **columns**:
+      - Issue no.
+      - System
+      - Description
+      - Severity
+      - Blocks commission
+      - Owner
+      - Due
+      - Status
+    - **create form**:
+      -
+        - **field**: System
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Severity
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Blocks commission
+        - **required**: true
+        - **type**: boolean
+      -
+        - **field**: Photos
+        - **required**: false
+        - **type**: file
+      -
+        - **field**: Owner
+        - **required**: false
+        - **type**: user picker
+    - **empty state**: No commissioning issues logged.
+    - **filters**:
+      - System
+      - Severity
+      - Blocks commission
+      - Status
+      - Owner
+    - **name**: Commissioning issue log
+    - **row actions**:
+      - Open
+      - Convert to punch/NCR
+      - Close
+    - **search**: Issue no., description
+    - **sort**:
+      - Severity
+      - Due
+      - Status
+- **walkthrough**:
+  - Commissioning lead creates systems and attaches asset nodes.
+  - Applies pre-functional and functional checklist templates.
+  - Technicians execute pre-functional checklists on mobile, with evidence.
+  - Failures create commissioning issues, flagged as blocking or not.
+  - Issues are resolved and verified.
+  - Functional checklists are executed once pre-functional is complete.
+  - Readiness score updates from completed checks, open issues and blocking NCRs.
+  - The lead opens the gate view and reviews outstanding items.
+  - When all required items are complete, the gate allows the Commission action.
+  - Credentialled sign-offs are captured and the system is marked commissioned.
+  - Readiness and status feed handover.

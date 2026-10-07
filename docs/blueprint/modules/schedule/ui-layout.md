@@ -1,0 +1,131 @@
+# Schedule & look-ahead (basic) — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: schedule.view; items limited by the viewer's project, asset-subtree and source-module permissions
+    - **actions**:
+      - Switch view
+      - Filter
+      - Open source record
+      - Reschedule where source allows
+      - Set reminder
+      - Assign crew
+      - Export to iCal
+    - **layout**: Full-width calendar with a left filter rail (project, asset subtree, discipline, crew, type, status, overdue only) and a top toolbar for view switch, today and iCal. Item click opens a right drawer.
+    - **name**: Calendar
+    - **purpose**: Month, week and agenda view of inspections due, scope mandated dates, certificate expiries and commitments.
+    - **route**: /schedule
+    - **sections**:
+      - Filter rail
+      - Calendar grid or agenda list
+      - Type colour legend
+      - Item summary drawer (source link, asset, crew, reminders)
+      - Overdue banner
+  -
+    - **access**: schedule.view to see; schedule.plan to assign, add to plan or create items
+    - **actions**:
+      - Add to weekly plan
+      - Assign crew
+      - Set reminder
+      - Export selected to iCal
+      - Create ad hoc item
+      - Roll forward
+    - **layout**: Window selector (2-6 weeks) above a week-column board or table toggle, with bulk action bar on selection.
+    - **name**: Look-ahead
+    - **purpose**: Two- to six-week list of upcoming items grouped by week and crew.
+    - **route**: /schedule/lookahead
+    - **sections**:
+      - Window and filter bar
+      - Weekly columns or Look-ahead items table (date, type, title, asset, scope, crew, status, overdue flag)
+      - Bulk action bar
+      - Empty state with guidance
+  -
+    - **access**: schedule.plan
+    - **actions**:
+      - Save
+      - Cancel
+      - Delete (manual items only)
+    - **layout**: Modal or side sheet form.
+    - **name**: Create or edit schedule item
+    - **purpose**: Add a manual dated item (title, date, asset, scope, notes) or edit one.
+    - **route**: /schedule/items/new
+    - **sections**:
+      - Title and date
+      - Asset picker
+      - Scope picker
+      - Notes
+  -
+    - **access**: schedule.view; edit actions need schedule.plan
+    - **actions**:
+      - Open source
+      - Add commitment
+      - Assign crew
+      - Set reminder
+      - Reschedule
+    - **layout**: Single column detail with a right-hand activity panel.
+    - **name**: Schedule item detail
+    - **purpose**: Show one calendar entry with its source record, crew, reminders and commitment history.
+    - **route**: /schedule/items/:id
+    - **sections**:
+      - Summary and dates
+      - Source record link
+      - Asset and location
+      - Assigned crew and people
+      - Reminders
+      - Commitment history and reasons not done
+      - Activity
+  -
+    - **access**: schedule.plan; read-only for schedule.view; hidden if commitments disabled for the project
+    - **actions**:
+      - Add commitment
+      - Mark done
+      - Record reason not done
+      - Roll forward to next week
+      - Remove commitment
+      - Publish plan
+    - **layout**: Week picker header, commitments table grouped by crew, completion summary strip.
+    - **name**: Weekly work plan
+    - **purpose**: Optional weekly commitments per crew with tick-off and reason when not done.
+    - **route**: /schedule/weekly-plan
+    - **sections**:
+      - Week selector and publish status
+      - Commitments table (task/scope, asset, crew, committed by, done, reason not done)
+      - Reason-code dialog
+      - Completion summary
+  -
+    - **access**: schedule.view; tick-off needs schedule.plan or crew membership
+    - **actions**:
+      - Open item
+      - Tick commitment done
+      - Pick reason not done
+      - Set reminder
+    - **layout**: Mobile single column agenda with day chips, cached offline, large tap targets.
+    - **name**: Mobile today and this week
+    - **purpose**: Field view of the user's own and crew items for today and the week.
+    - **route**: /schedule/mobile
+    - **sections**:
+      - Day selector
+      - Agenda cards (type icon, asset, due state)
+      - Commitment tick-off
+      - Offline sync indicator
+  -
+    - **access**: Tenant or project admin with schedule.export and settings permission
+    - **actions**:
+      - Save
+      - Rotate iCal token
+      - Reset to defaults
+      - Edit labels
+    - **layout**: Tabbed settings form.
+    - **name**: Schedule settings
+    - **purpose**: Configure look-ahead, sources, reminders, reason codes and iCal feed.
+    - **route**: /settings/schedule
+    - **sections**:
+      - Default look-ahead length
+      - Item sources and colours
+      - Reminder lead times per type
+      - Weekly plan on/off per project
+      - Reason-code list
+      - Working days and week start
+      - iCal feed and token rotation
+      - Terminology labels

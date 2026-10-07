@@ -1,0 +1,252 @@
+# Quality roll-up & audits — Feature filler
+
+
+- **detail sections**:
+  - Audit summary and status
+  - Scope and clauses
+  - Audit team and auditee
+  - Checklist and evidence
+  - Findings and linked issues
+  - Closure and verification
+  - Attachments
+  - Activity and audit trail
+  - Dashboard snapshot (project quality view with ITP completion, open NCRs, punch ageing)
+- **notifications**:
+  - Audit scheduled
+  - Audit due in N days
+  - Finding assigned
+  - Finding overdue
+  - Linked issue closed (awaiting verification)
+  - Audit closed
+  - Scheduled quality report ready
+- **settings**:
+  - Audit types and standards list
+  - ISO clause library per tenant
+  - COPQ categories and cost rates
+  - Cost source selection (issues only or include change orders)
+  - FTPR definition (what counts as first-time pass)
+  - Finding classification and due-date defaults
+  - Dashboard tile defaults
+  - Scheduled report recipients and frequency
+  - Audit numbering
+- **tables**:
+  -
+    - **bulk actions**:
+      - Reassign lead auditor
+      - Reschedule
+      - Export CSV
+      - Cancel planned audits
+    - **columns**:
+      - Audit no.
+      - Title
+      - Type (internal/external/supplier)
+      - Scope (project/site/discipline)
+      - Standard and clause
+      - Lead auditor
+      - Auditee
+      - Planned date
+      - Status
+      - Findings count
+      - Open findings
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Audit type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Standard (e.g. ISO 9001:2015)
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Clauses in scope
+        - **required**: false
+        - **type**: multi-select
+      -
+        - **field**: Project/site
+        - **required**: true
+        - **type**: entity picker
+      -
+        - **field**: Auditee (company or user)
+        - **required**: true
+        - **type**: entity picker
+      -
+        - **field**: Lead auditor
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Audit team
+        - **required**: false
+        - **type**: multi user picker
+      -
+        - **field**: Planned date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Scope notes
+        - **required**: false
+        - **type**: rich text
+      -
+        - **field**: Checklist template
+        - **required**: false
+        - **type**: template picker
+    - **empty state**: No audits yet. Plan your first internal audit to track findings and corrective actions.
+    - **filters**:
+      - Type
+      - Status
+      - Project
+      - Site
+      - Lead auditor
+      - Planned date range
+      - Has open findings
+    - **name**: Internal audit register
+    - **row actions**:
+      - Open
+      - Edit
+      - Start audit
+      - Add finding
+      - Close audit
+      - Duplicate
+      - View audit log
+    - **search**: Audit no., title, auditee, lead auditor
+    - **sort**:
+      - Planned date
+      - Audit no.
+      - Status
+      - Open findings
+  -
+    - **bulk actions**:
+      - Raise linked issues
+      - Reassign owner
+      - Export
+    - **columns**:
+      - Finding no.
+      - Audit
+      - Clause
+      - Classification (major/minor/OFI)
+      - Description
+      - Linked issue/NCR
+      - Owner
+      - Due date
+      - Status
+    - **create form**:
+      -
+        - **field**: Audit
+        - **required**: true
+        - **type**: entity picker
+      -
+        - **field**: Clause
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Classification
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: rich text
+      -
+        - **field**: Evidence (files/photos)
+        - **required**: false
+        - **type**: file
+      -
+        - **field**: Owner
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Due date
+        - **required**: true
+        - **type**: date
+    - **empty state**: No findings recorded. Findings raised during an audit appear here and link to issues.
+    - **filters**:
+      - Audit
+      - Classification
+      - Status
+      - Owner
+      - Overdue
+      - Clause
+    - **name**: Audit findings
+    - **row actions**:
+      - Open
+      - Raise issue/NCR
+      - Link existing issue
+      - Verify closure
+      - Edit
+    - **search**: Finding no., description, clause
+    - **sort**:
+      - Due date
+      - Classification
+      - Status
+      - Created
+  -
+    - **bulk actions**:
+      - Export CSV
+      - Pin to dashboard
+    - **columns**:
+      - Group (discipline/inspector/subcontractor)
+      - Inspections submitted
+      - Passed first time
+      - FTPR %
+      - Trend vs prior period
+      - Rework count
+    - **empty state**: No completed inspections in this period or filter.
+    - **filters**:
+      - Group by
+      - Project
+      - Period
+      - Asset subtree
+      - Inspection kind
+    - **name**: First-time pass rate (read-only roll-up)
+    - **row actions**:
+      - Drill to inspections
+      - Drill to failed items
+    - **search**: Group name
+    - **sort**:
+      - FTPR %
+      - Inspections submitted
+      - Rework count
+  -
+    - **bulk actions**:
+      - Export CSV
+      - Assign category
+    - **columns**:
+      - Issue/NCR
+      - Category
+      - Rework hours
+      - Rework cost
+      - Discipline
+      - Subcontractor
+      - Asset
+      - Date closed
+    - **empty state**: No rework cost recorded on issues. Enter rework hours/cost on NCRs to populate this view.
+    - **filters**:
+      - Category
+      - Project
+      - Discipline
+      - Subcontractor
+      - Period
+      - Cost source
+    - **name**: Cost of poor quality
+    - **row actions**:
+      - Open issue
+      - Edit cost entry link
+    - **search**: Issue no., asset, subcontractor
+    - **sort**:
+      - Rework cost
+      - Rework hours
+      - Date closed
+- **walkthrough**:
+  - Quality manager opens the Quality dashboard and reviews ITP completion, open NCRs, punch items and FTPR for the project.
+  - Selects Audits and creates a new audit with standard, clauses, auditee, lead auditor and date.
+  - The audit is scheduled; the auditor and auditee are notified.
+  - On the day, the auditor starts the audit and works through the checklist, attaching evidence.
+  - Adds findings with clause and classification.
+  - For each finding, raises a linked issue/NCR or corrective action, which is owned in the Issues module.
+  - Auditee completes the corrective actions in Issues; status flows back to the finding.
+  - Auditor verifies closure and closes the finding.
+  - Quality manager closes the audit once all findings are closed or accepted.
+  - Reviews the COPQ and FTPR views, drills to source records and exports an evidence pack.

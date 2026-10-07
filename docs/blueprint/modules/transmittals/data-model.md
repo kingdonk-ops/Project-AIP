@@ -1,0 +1,523 @@
+# Transmittals & correspondence — Data model & schema
+
+
+- **notes**: Immutability: DB triggers block update/delete of transmittal_lines and issued transmittals except status and superseded_by_id; acknowledgements are append-only. Commercial restriction is enforced in RLS or policy so subcontractors never see other parties' items. Portal tokens are hashed, expiring and confirmed by POST.
+- **reuses existing**:
+  - documents/document_versions
+  - assets
+  - inspections
+  - tasks
+  - contacts (companies and contacts module)
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: number
+        - **notes**: From tenant numbering pattern
+        - **type**: text
+      -
+        - **name**: reason_code
+        - **notes**: Tenant-configured
+        - **type**: text
+      -
+        - **name**: subject
+        - **type**: text
+      -
+        - **name**: sender_id
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: draft|issued|superseded|void
+        - **type**: text
+      -
+        - **name**: issued_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: response_due
+        - **notes**: nullable
+        - **type**: date
+      -
+        - **name**: superseded_by_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: cover_document_version_id
+        - **notes**: Cover PDF, nullable
+        - **type**: uuid
+      -
+        - **name**: is_external_import
+        - **notes**: Read-only imported
+        - **type**: boolean
+      -
+        - **name**: external_ref
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: commercial_restricted
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id, number)
+      - (tenant_id, status)
+      - (tenant_id, response_due)
+    - **name**: transmittals
+    - **purpose**: Formal record of document revisions issued to recipients.
+    - **relations**:
+      - projects
+      - users
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: transmittal_id
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: document_version_id
+        - **notes**: Locked at issue
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: databook_item_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: sha256
+        - **notes**: Copied at issue
+        - **type**: text
+      -
+        - **name**: line_no
+        - **type**: int
+    - **indexes**:
+      - (tenant_id, transmittal_id)
+      - (tenant_id, asset_id)
+      - (tenant_id, document_version_id)
+    - **name**: transmittal_lines
+    - **purpose**: Locked document versions issued, with asset linkage.
+    - **relations**:
+      - transmittals
+      - documents
+      - document_versions
+      - assets
+      - inspections
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: transmittal_id
+        - **type**: uuid
+      -
+        - **name**: contact_id
+        - **notes**: FK contacts, nullable
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: company_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: portal_token_hash
+        - **notes**: External link, nullable
+        - **type**: text
+      -
+        - **name**: portal_token_expires_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: last_chased_at
+        - **notes**: nullable
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, transmittal_id)
+      - (tenant_id, contact_id)
+      - unique (portal_token_hash)
+    - **name**: transmittal_recipients
+    - **purpose**: Recipients (contact or user) and organisation.
+    - **relations**:
+      - transmittals
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: recipient_id
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: acknowledged|responded
+        - **type**: text
+      -
+        - **name**: response_text
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: via
+        - **notes**: app|portal
+        - **type**: text
+      -
+        - **name**: ip_address
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, recipient_id)
+    - **name**: transmittal_acknowledgements
+    - **purpose**: Append-only acknowledgements and responses.
+    - **relations**:
+      - transmittal_recipients
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: item_type
+        - **notes**: letter|email|notice|memo
+        - **type**: text
+      -
+        - **name**: direction
+        - **notes**: in|out
+        - **type**: text
+      -
+        - **name**: subject
+        - **type**: text
+      -
+        - **name**: body
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: from_party
+        - **type**: jsonb
+      -
+        - **name**: to_parties
+        - **type**: jsonb
+      -
+        - **name**: item_date
+        - **type**: date
+      -
+        - **name**: response_required_by
+        - **notes**: nullable
+        - **type**: date
+      -
+        - **name**: thread_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: is_contract_notice
+        - **type**: boolean
+      -
+        - **name**: clause_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: commercial_restricted
+        - **type**: boolean
+      -
+        - **name**: assigned_to
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: source_inbound_id
+        - **notes**: Inbound capture reference, nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, item_date)
+      - (tenant_id, thread_id)
+      - (tenant_id, is_contract_notice, response_required_by)
+    - **name**: correspondence_items
+    - **purpose**: Register of letters, emails, notices, memos.
+    - **relations**:
+      - projects
+      - contract_clauses
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: correspondence_id
+        - **type**: uuid
+      -
+        - **name**: target_type
+        - **notes**: document|rfi|variation|asset|transmittal
+        - **type**: text
+      -
+        - **name**: target_id
+        - **notes**: Polymorphic
+        - **type**: uuid
+      -
+        - **name**: is_attachment
+        - **type**: boolean
+    - **indexes**:
+      - (tenant_id, correspondence_id)
+      - (tenant_id, target_type, target_id)
+    - **name**: correspondence_links
+    - **purpose**: Attachments and cross-references (documents, RFIs, variations, assets).
+    - **relations**:
+      - correspondence_items
+      - documents
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: clause_ref
+        - **type**: text
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: time_bar_days
+        - **type**: int
+      -
+        - **name**: trigger_event
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, clause_ref)
+    - **name**: contract_clauses
+    - **purpose**: Clause library with time bars.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: clause_id
+        - **type**: uuid
+      -
+        - **name**: correspondence_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: trigger_ref_type
+        - **type**: text
+      -
+        - **name**: trigger_ref_id
+        - **type**: uuid
+      -
+        - **name**: triggered_at
+        - **type**: timestamptz
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: status
+        - **notes**: running|served|lapsed
+        - **type**: text
+      -
+        - **name**: task_id
+        - **notes**: FK tasks, nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status, expires_at)
+    - **name**: notice_clocks
+    - **purpose**: Running time bars created from trigger events, linked to tasks.
+    - **relations**:
+      - contract_clauses
+      - correspondence_items
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: item_type
+        - **type**: text
+      -
+        - **name**: body_template
+        - **type**: text
+      -
+        - **name**: merge_fields
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, item_type)
+    - **name**: notice_templates
+    - **purpose**: Notice and letter templates with merge fields.
+  -
+    - **fields**:
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: pattern_key
+        - **type**: text
+      -
+        - **name**: next_value
+        - **notes**: Incremented under row lock
+        - **type**: int
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - PK (tenant_id, project_id, pattern_key)
+    - **name**: transmittal_numbering_sequences
+    - **purpose**: Per-project counters for numbering patterns.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: transmittal_id
+        - **notes**: Created read-only record
+        - **type**: uuid
+      -
+        - **name**: source_system
+        - **notes**: Aconex, Procore, etc.
+        - **type**: text
+      -
+        - **name**: source_ref
+        - **type**: text
+      -
+        - **name**: raw_document_id
+        - **notes**: Original file, nullable
+        - **type**: uuid
+      -
+        - **name**: column_mapping
+        - **type**: jsonb
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+      - unique (tenant_id, source_system, source_ref)
+    - **name**: transmittal_external_imports
+    - **purpose**: Import batch log for external transmittals (CSV or forwarded email).
+    - **relations**:
+      - transmittals
+      - documents

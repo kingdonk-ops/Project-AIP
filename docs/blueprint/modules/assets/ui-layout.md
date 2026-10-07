@@ -1,0 +1,155 @@
+# Asset hierarchy & registers — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: asset.view within project and subtree scope; edit needs asset.edit.
+    - **actions**:
+      - Add item or module
+      - Bulk add (pattern ###, up to 100)
+      - Drag to reparent or reorder
+      - Sort
+      - Import
+      - Move
+      - Change status
+      - Print labels
+      - Export subtree
+    - **layout**: Collapsible left tree panel and main list or detail area, with a top scope bar and scope chip.
+    - **name**: Asset tree and register
+    - **purpose**: Browse and manage the hierarchy with open-item counts.
+    - **route**: /assets
+    - **sections**:
+      - Tree with open-item counts
+      - Context menu
+      - Asset table: name, tag number, item type, status, criticality, open items
+      - Filters: item type, category, status, criticality
+  -
+    - **access**: asset.create.
+    - **actions**:
+      - Save
+      - Save and add another
+      - Cancel
+    - **layout**: Slide-over or full-page form.
+    - **name**: Create or edit asset
+    - **purpose**: Add an asset using a generated form.
+    - **route**: /assets/new
+    - **sections**:
+      - Parent tree picker
+      - Item type
+      - Name, tag number (conflict-checked)
+      - Category, criticality, status
+      - GPS map point
+      - Attributes generated from item type, including CUI fields
+  -
+    - **access**: asset.view; actions per permission and scope.
+    - **actions**:
+      - Edit
+      - Reparent
+      - Merge or split
+      - Retag
+      - Print label
+      - Link document
+      - Raise issue
+      - Start inspection
+    - **layout**: Header with breadcrumb path and tabbed body.
+    - **name**: Asset detail
+    - **purpose**: One asset's attributes and full history across projects.
+    - **route**: /assets/:id
+    - **sections**:
+      - Header: name, tag, internal tag, status, criticality
+      - Attributes
+      - History timeline
+      - Inspections and ITPs
+      - Issues and NCRs
+      - Documents and P&ID links
+      - Certificates and calibration
+      - Child assets and components
+      - Lineage
+      - Projects in scope
+      - Location map
+      - Labels and tags
+      - Activity
+  -
+    - **access**: Per content type view and edit permissions.
+    - **actions**:
+      - Add
+      - Edit
+      - Used-in lookup
+      - Import
+      - Export
+    - **layout**: DataTable with filters and a detail drawer.
+    - **name**: Register page
+    - **purpose**: Flat lists for Staff, Vehicles, Equipment, Consumables and WPS, generated from configuration.
+    - **route**: /registers/:contentType
+    - **sections**:
+      - Config-driven columns
+      - Used in column
+      - Expiry indicators
+      - Filters and saved views
+  -
+    - **access**: asset.import; export needs asset.export.
+    - **actions**:
+      - Map columns
+      - Commit
+      - Roll back batch
+      - Export Excel/CSV/JSON
+    - **layout**: Stepper: upload, map, preview, commit, then batch history.
+    - **name**: Import and export
+    - **purpose**: Async import with preview, conflict detection and rollback.
+    - **route**: /assets/import
+    - **sections**:
+      - Upload and template mapping
+      - Validation preview with duplicates and tag conflicts
+      - Commit progress
+      - Batch history and rollback
+      - Export options
+  -
+    - **access**: asset.labels.
+    - **actions**:
+      - Choose template
+      - Generate PDF
+      - Download
+    - **layout**: Split view with a selection tree and a label template preview.
+    - **name**: Label sheet generation
+    - **purpose**: Bulk QR/RFID labels from the tree.
+    - **route**: /assets/labels
+    - **sections**:
+      - Subtree selection
+      - Label template
+      - Preview
+      - Generated sheets
+  -
+    - **access**: Tenant admin or asset admin.
+    - **actions**:
+      - Edit
+      - Save
+      - Test tag format
+    - **layout**: Sectioned settings form.
+    - **name**: Asset settings
+    - **purpose**: Tenant configuration for tags, scales and inspection schedules.
+    - **route**: /admin/assets/settings
+    - **sections**:
+      - Tag number format
+      - Criticality and CUI corrosion scales
+      - Status sets
+      - RBI schedule per asset class
+      - Import mapping templates
+      - Label templates
+      - Level terminology
+  -
+    - **access**: Internal field users with assets in their synced scope.
+    - **actions**:
+      - Scan
+      - Open asset
+      - Start inspection
+      - Raise issue
+      - Take photo
+    - **layout**: Full-screen camera with a bottom sheet asset summary.
+    - **name**: Mobile scan and asset
+    - **purpose**: Scan a QR/barcode/RFID tag to open an asset in the field.
+    - **route**: /m/scan
+    - **sections**:
+      - Scanner
+      - Asset summary
+      - Quick actions
+      - Offline indicator

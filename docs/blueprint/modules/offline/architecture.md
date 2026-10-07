@@ -1,0 +1,109 @@
+# Offline field app & sync — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/offline/router.py
+    - **purpose**: Sync endpoints: pull, push, device register/revoke, scope manifest
+  -
+    - **path**: backend/app/modules/offline/schemas.py
+    - **purpose**: Pydantic models for op batches, cursors, pull pages, conflict payloads
+  -
+    - **path**: backend/app/modules/offline/models.py
+    - **purpose**: devices and sync_operations tables, tenant_id with RLS, batch_id uniqueness
+  -
+    - **path**: backend/app/modules/offline/service_pull.py
+    - **purpose**: Cursor (timestamp,id) delta pull, 2,000 row cap, has_more, scope filtering
+  -
+    - **path**: backend/app/modules/offline/service_push.py
+    - **purpose**: Idempotent batch apply (max 500 ops), per-op result, dispatch to record-type handlers
+  -
+    - **path**: backend/app/modules/offline/scope.py
+    - **purpose**: Resolves device sync scope: assigned sites/projects, active templates, open work, 12 months history
+  -
+    - **path**: backend/app/modules/offline/conflict_registry.py
+    - **purpose**: Per record type conflict rules (append-only, last-writer, field merge) registered by owning modules
+  -
+    - **path**: backend/app/modules/offline/handlers/__init__.py
+    - **purpose**: Handler registry; other modules register apply/serialise functions, no direct imports
+  -
+    - **path**: backend/app/modules/offline/events.py
+    - **purpose**: Event names and payload types
+  -
+    - **path**: backend/app/modules/offline/tests/
+    - **purpose**: Replay, idempotency, cap, conflict and tenant isolation tests
+  -
+    - **path**: backend/alembic/versions/xxxx_offline.py
+    - **purpose**: Migration for devices/sync_operations and sync_version indexes
+- **change isolation**: New syncable record types are added by registering a handler and conflict rule from the owning module, with no change to the sync engine. Protocol changes stay in service_pull/push and the client engine, versioned via the API path.
+- **config not code**:
+  - Sync scope rules (history months, projects, record types)
+  - Batch and page size limits, sync interval
+  - Conflict rule per record type
+  - Device retention and remote wipe policy
+  - Media size limits and Wi-Fi-only upload setting
+  - Terminology for tab labels via terms dictionary
+- **events consumed**:
+  - user.deactivated (revoke devices)
+  - assignment.changed (scope change)
+  - template.published
+  - upload.released (reconcile media refs)
+  - asset.updated (feeds pull)
+- **events emitted**:
+  - sync.batch_applied
+  - sync.op_rejected
+  - sync.conflict_detected
+  - device.registered
+  - device.revoked
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/offline/db/schema.ts
+    - **purpose**: Dexie stores, encrypted at rest (WebCrypto wrapped key); SQLCipher if native later
+  -
+    - **path**: frontend/src/modules/offline/sync/engine.ts
+    - **purpose**: Pull/push loop, triggers (foreground, reconnect, 5 min), 2s autosave debounce
+  -
+    - **path**: frontend/src/modules/offline/sync/outbox.ts
+    - **purpose**: Outbox with client-generated ids and batch_id
+  -
+    - **path**: frontend/src/modules/offline/sync/mediaQueue.ts
+    - **purpose**: Deferred presigned upload queue with resume and retry
+  -
+    - **path**: frontend/src/modules/offline/sw/service-worker.ts
+    - **purpose**: Asset caching, background sync hook
+  -
+    - **path**: frontend/src/modules/offline/shell/BottomTabs.tsx
+    - **purpose**: Today, Capture, Inspections, Sync tabs and large Capture button
+  -
+    - **path**: frontend/src/modules/offline/shell/SyncChip.tsx
+    - **purpose**: Header sync state chip and per-item state badge
+  -
+    - **path**: frontend/src/modules/offline/screens/SyncScreen.tsx
+    - **purpose**: Queue, errors, last sync, retry
+  -
+    - **path**: frontend/src/modules/offline/screens/MergeScreen.tsx
+    - **purpose**: Field-level conflict resolution
+  -
+    - **path**: frontend/src/modules/offline/screens/ScanAsset.tsx
+    - **purpose**: QR/NFC open asset, last-used default
+  -
+    - **path**: frontend/src/modules/offline/screens/CaptureSheet.tsx
+    - **purpose**: Photo, voice, form, defect entry points with markup
+  -
+    - **path**: frontend/src/modules/offline/index.ts
+    - **purpose**: Module public export
+- **public api**:
+  - POST /api/v1/sync/devices (register device)
+  - DELETE /api/v1/sync/devices/{id} (revoke, remote wipe flag)
+  - GET /api/v1/sync/pull?cursor=&limit=2000
+  - POST /api/v1/sync/push (batch_id, ops[] max 500)
+  - GET /api/v1/sync/scope (manifest for this device)
+  - register_sync_handler(record_type, handler) (internal registry for other modules)
+- **reuses shared**:
+  - Upload & file processing pipeline (presigned, quarantine)
+  - Permission/policy service for scope and per-op authorisation
+  - Audit trail writer
+  - Identity device binding and PIN/magic-link sessions
+  - Shared form evaluator package (web and mobile)
+  - Event bus/outbox
+  - OpenAPI generated TS client

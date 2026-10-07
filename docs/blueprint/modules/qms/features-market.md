@@ -1,0 +1,37 @@
+# Quality roll-up & audits — Feature scout
+
+
+- **abilities seen in market**:
+  - Live quality dashboards rolled up by project, asset, discipline, contractor and period
+  - Audit planning with schedules, checklists, findings and clause mapping to ISO 9001
+  - Findings that raise NCRs or corrective actions with closure verification
+  - Cost of poor quality with categories (rework, scrap, re-inspection, delay)
+  - Management review packs with objectives, trends and actions
+  - Supplier and subcontractor quality scorecards
+  - Drill-down from any KPI to the underlying records
+  - Scheduled quality report distribution
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: ISO 9001 clause-mapped evidence pack generator
+    - **why**: Auditors ask for evidence per clause. Auto-assembling approved ITPs, NCR closures, calibration and competency records per clause saves days of audit prep without duplicating data.
+  -
+    - **effort**: S
+    - **feature**: First-time pass rate with defined denominators and exclusions
+    - **why**: Rates are disputed unless a first submission, a reinspection and a withdrawn inspection are counted consistently. Show the definition and let users drill to the failed inspections.
+  -
+    - **effort**: M
+    - **feature**: Repeat-defect and root-cause trend view by asset class, coating system or CUI mechanism
+    - **why**: Remediation clients want to see systemic causes, not just counts. This makes the roll-up useful for corrective action decisions.
+  -
+    - **effort**: M
+    - **feature**: Audit sampling that pulls random closed inspections or hold points for internal audit
+    - **why**: Lets auditors verify records objectively and keeps the audit register tied to real execution data.
+  -
+    - **effort**: S
+    - **feature**: Quality objectives and targets with RAG status per project
+    - **why**: Management review needs objectives measured against live roll-up data, owned as small records.
+  -
+    - **effort**: M
+    - **feature**: Client-facing quality snapshot via the portal with fixed, approved KPIs
+    - **why**: Gives Rio Tinto-type clients transparency without exposing internal NCR detail.

@@ -1,0 +1,253 @@
+# Document library & control — Feature filler
+
+
+- **detail sections**:
+  - Preview
+  - Metadata and custom fields
+  - Linked assets and records
+  - Version history
+  - Cross-references
+  - Distribution and subscribers
+  - ISO 19650 state and transition log
+  - Approvals
+  - Activity and audit
+- **notifications**:
+  - New revision to subscribers
+  - Upload failed or file quarantined
+  - Required document received
+  - Required document overdue
+  - CDE state changed
+  - Approval requested
+  - Bin purge approaching
+- **settings**:
+  - Document types, categories and tags
+  - Naming conventions and filename parsers
+  - Distribution lists
+  - ISO 19650 on/off, states and suitability codes
+  - Retention and bin window
+  - Legal hold rules
+  - Watermark and stamp text
+  - Register export templates
+  - Storage region and size limits
+  - Terminology labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Tag
+      - Change type
+      - Link to asset
+      - Add to distribution
+      - Download (stamped)
+      - Move to bin
+      - Export register
+    - **columns**:
+      - Doc number/title
+      - Type
+      - Revision
+      - Status
+      - Asset(s)
+      - Discipline
+      - Project
+      - Tags
+      - Uploaded by
+      - Updated
+      - Size
+    - **create form**:
+      -
+        - **field**: File(s)
+        - **required**: true
+        - **type**: file multi
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Document type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Asset(s)
+        - **required**: false
+        - **type**: asset multi-picker
+      -
+        - **field**: Linked record
+        - **required**: false
+        - **type**: record picker
+      -
+        - **field**: Discipline
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Revision
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Tags
+        - **required**: false
+        - **type**: tag multi
+      -
+        - **field**: Custom fields
+        - **required**: false
+        - **type**: dynamic
+    - **empty state**: No documents match. Upload a file against an asset or record, or clear filters.
+    - **filters**:
+      - Project
+      - Asset subtree (with children toggle)
+      - Type
+      - Discipline
+      - Status/CDE state
+      - Tags
+      - Uploader
+      - Date range
+      - Linked record type
+      - Favourites
+    - **name**: Document library
+    - **row actions**:
+      - Preview
+      - Download
+      - Upload new revision
+      - Version history
+      - Promote/restore version
+      - Link record
+      - Favourite/pin
+      - Move to bin
+    - **search**: Title, number, tags, OCR full text, asset code
+    - **sort**:
+      - Updated
+      - Title
+      - Type
+      - Status
+      - Revision
+  -
+    - **bulk actions**:
+      - Mark received
+      - Assign owner
+    - **columns**:
+      - Document
+      - Category
+      - Scope/asset
+      - Due
+      - Status
+      - Received date
+      - Linked document
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Category
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Scope or asset
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Due date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Blocks scope start
+        - **required**: true
+        - **type**: boolean
+    - **empty state**: No required documents defined. Add permits, surveys or procedures that must be received before work starts.
+    - **filters**:
+      - Project
+      - Scope
+      - Status
+      - Category
+      - Overdue
+    - **name**: Required documents register
+    - **row actions**:
+      - Mark received
+      - Link document
+      - Edit
+      - Remove
+    - **search**: Name, scope
+    - **sort**:
+      - Due
+      - Status
+      - Scope
+  -
+    - **bulk actions**:
+      - Transition state
+    - **columns**:
+      - Container
+      - Originator
+      - State
+      - Suitability code
+      - Asset/zone
+      - Last transition
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Originator
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: State
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Suitability code
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Asset/zone
+        - **required**: false
+        - **type**: picker
+    - **empty state**: ISO 19650 containers are not enabled or none exist yet.
+    - **filters**:
+      - State
+      - Suitability
+      - Project
+    - **name**: CDE containers
+    - **row actions**:
+      - Transition
+      - View log
+      - Open
+    - **search**: Container name, originator
+    - **sort**:
+      - Container
+      - State
+      - Last transition
+  -
+    - **bulk actions**:
+      - Restore
+      - Purge (blocked if held)
+    - **columns**:
+      - Document
+      - Deleted by
+      - Deleted at
+      - Purge date
+      - Legal hold
+    - **empty state**: The bin is empty.
+    - **filters**:
+      - Deleted by
+      - Date
+      - Legal hold
+    - **name**: Recycle bin
+    - **row actions**:
+      - Restore
+      - Purge
+    - **search**: Title
+    - **sort**:
+      - Deleted at
+      - Purge date
+- **walkthrough**:
+  - Open Document Library or the Documents tab on an asset.
+  - Click Upload and drag files in.
+  - Parse filenames or choose type, asset, discipline and revision; duplicates are flagged by hash.
+  - Files go through quarantine, virus scan and OCR before becoming available.
+  - Review the metadata and confirm.
+  - Find the file by asset facet, tag or full-text search.
+  - Upload a new revision; the old one becomes superseded.
+  - Submit for approval if the type requires it.
+  - On approval a stamped copy is saved as a new version.
+  - Subscribers are notified.
+  - Download a copy and the watermark stamps user, time and revision.
+  - Delete moves to the bin, subject to legal hold.

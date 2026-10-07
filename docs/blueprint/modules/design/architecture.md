@@ -1,0 +1,93 @@
+# Design system & app shell — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/design/router.py
+    - **purpose**: Endpoints for tenant theme, saved views, recent items and user UI preferences
+  -
+    - **path**: backend/app/modules/design/models.py
+    - **purpose**: Tables: tenant_theme, saved_view, recent_item, user_ui_pref, all with tenant_id and RLS
+  -
+    - **path**: backend/app/modules/design/schemas.py
+    - **purpose**: Pydantic schemas incl. URL-addressable filter definition and view scope
+  -
+    - **path**: backend/app/modules/design/service.py
+    - **purpose**: Saved view sharing (personal, team, project), role defaults, recent item trimming
+  -
+    - **path**: backend/app/modules/design/permissions.py
+    - **purpose**: Registers design abilities in the permissions catalogue
+  -
+    - **path**: backend/app/modules/design/migrations/
+    - **purpose**: Alembic migrations for this module's tables
+  -
+    - **path**: backend/app/modules/design/tests/
+    - **purpose**: Saved-view visibility and theme isolation tests
+- **change isolation**: Visual changes land in tokens.css or the component library; a new screen assembles existing patterns without touching the shell. Labels and tile contents change via dictionary and saved-view data, so no module needs edits.
+- **config not code**:
+  - Accent colour, density default and contrast theme per tenant
+  - Default saved view per role
+  - Nav rail items and order per role/market
+  - KPI tile definitions (each is a saved view)
+  - Which register columns are visible by default
+  - Field mode enablement per project
+- **events consumed**:
+  - terms.pack.activated (refresh label cache)
+  - access.team.membership_changed (invalidate view visibility)
+  - identity.user.deactivated (purge recents and prefs)
+  - sync.state.changed (offline module, drives sync chip)
+- **events emitted**:
+  - design.saved_view.shared
+  - design.theme.changed
+  - ui.scope.changed (client-side bus)
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/design/tokens/tokens.css
+    - **purpose**: Colour, type, spacing, radii tokens; accent as a single CSS variable; high-contrast outdoor theme
+  -
+    - **path**: frontend/src/modules/design/components/
+    - **purpose**: shadcn-based shared library: dialogs, toasts, status chip (icon + label), empty/loading/error states with offline and conflict variants
+  -
+    - **path**: frontend/src/modules/design/shell/AppShell.tsx
+    - **purpose**: 56px header, 56px nav rail, content slot, sync chip, project switcher
+  -
+    - **path**: frontend/src/modules/design/shell/ScopeBar.tsx
+    - **purpose**: Tenant/org/project/asset-subtree pickers and clearable scope chip
+  -
+    - **path**: frontend/src/modules/design/shell/FieldShell.tsx
+    - **purpose**: Field mode shell: next-action card, 48px glove-safe controls
+  -
+    - **path**: frontend/src/modules/design/patterns/
+    - **purpose**: Register, RecordDetail, SplitPane, Blade, KpiStrip, DocViewerFrame, ExecutionScreen, Dashboard layouts
+  -
+    - **path**: frontend/src/modules/design/register/RegisterTable.tsx
+    - **purpose**: Dense table with sticky header, column chooser, bulk actions, quick filters, CSV export hook
+  -
+    - **path**: frontend/src/modules/design/saved-views/
+    - **purpose**: Saved view picker, share dialog, URL filter codec
+  -
+    - **path**: frontend/src/modules/design/home/MyWork.tsx
+    - **purpose**: My Work queue with inline actions, credentials and calendar column
+  -
+    - **path**: frontend/src/modules/design/palette/CommandPalette.tsx
+    - **purpose**: Jump-to asset, record and action with recent items
+  -
+    - **path**: frontend/src/modules/design/styleguide/
+    - **purpose**: Component library reference page
+  -
+    - **path**: frontend/src/modules/design/__tests__/
+    - **purpose**: axe accessibility and visual regression tests on the shared library
+- **public api**:
+  - GET/PUT /design/theme
+  - GET/POST/PATCH/DELETE /design/saved-views
+  - GET /design/saved-views/resolve?url_filter=
+  - GET/POST /design/recent-items
+  - GET/PUT /design/me/ui-prefs
+  - Frontend exports: AppShell, ScopeBar, RegisterTable, RecordDetail, KpiStrip, Blade, SplitPane, useScope(), useSavedView(), toast()/confirm() helpers
+- **reuses shared**:
+  - Terminology dictionary client (t()) for every label
+  - Policy service for view visibility and the restricted tile state
+  - Single permission-aware read model for KPI tiles
+  - Comments/notifications service for the right rail
+  - Audit service for view sharing changes
+  - Generated OpenAPI TypeScript client

@@ -1,0 +1,37 @@
+# Scopes of work (RSW), disciplines & tasks — Feature scout
+
+
+- **abilities seen in market**:
+  - Work packaging with baseline versus actual and earned-value rules (steps weighted by hours or cost)
+  - Look-ahead and constraint tracking per package (permit, access, materials, labour, inspection ready)
+  - Scope change control: added, deleted and revised scope with revision comparison
+  - Crew and shift allocation to tasks with daily progress claims and supervisor approval
+  - Task templates and RSW templates by corrosion environment or asset class that spawn disciplines, tasks and requirements
+  - Access and scaffold request tracking linked to scope
+  - Measured quantity progress (m², metres scanned, joints) alongside hours
+  - Bulk edit and import of scopes from client portals or spreadsheets
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: RSW templates by asset class and environment
+    - **why**: Remediation scopes repeat. A template that generates disciplines, ordered tasks, flags and ITPs cuts set-up time on every new RSW and standardises quality.
+  -
+    - **effort**: M
+    - **feature**: Constraints and readiness checklist per RSW
+    - **why**: Making permit, access, materials, scaffold and competent-personnel readiness visible before work starts addresses the delay reasons already tracked and makes them preventable.
+  -
+    - **effort**: M
+    - **feature**: Quantity-based progress and earned value
+    - **why**: Many remediation tasks are measured in m², metres or items. Quantity progress alongside hours gives credible earned value and client claims.
+  -
+    - **effort**: M
+    - **feature**: Scope revision comparison and change flag
+    - **why**: Clients revise RSWs. A diff view with approval of scope changes preserves the commercial position and ties into variations.
+  -
+    - **effort**: M
+    - **feature**: Bulk import and sync of scopes from client portal exports
+    - **why**: Scope portal data often arrives as spreadsheets. Mapped, validated import with dry run and error report speeds mobilisation on new customers.
+  -
+    - **effort**: S
+    - **feature**: Cross-RSW task reporting endpoint with saved views
+    - **why**: Already deferred. Questions like every task needing an ITP, grouped by area, drive daily planning and should be a first-class report.

@@ -1,0 +1,507 @@
+# Handover, data books & submissions — Data model & schema
+
+
+- **notes**: Closeout item status is recalculated from live evidence events, so reopening an NCR flips the item to open. Submissions are frozen at issue, corrections are new revisions, and manifests and baselines are append-only. The kaefer_riotinto mapper stays as template config until the target format is agreed. Acceptance emits an event that starts the defects liability period.
+- **reuses existing**:
+  - assets
+  - entity_types
+  - inspections
+  - inspection_responses
+  - issues
+  - documents
+  - certificates
+  - tasks
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: entity_type_id
+        - **notes**: FK entity_types; asset class
+        - **type**: uuid
+      -
+        - **name**: requirements
+        - **notes**: required ITPs, document types, certificates
+        - **type**: jsonb
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, entity_type_id)
+    - **name**: closeout_templates
+    - **purpose**: Configurable closeout checklists by asset class.
+    - **relations**:
+      - entity_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: root_asset_id
+        - **notes**: subtree root
+        - **type**: uuid
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: status
+        - **notes**: open, ready, signed_off
+        - **type**: text
+      -
+        - **name**: signed_record_id
+        - **notes**: signing module
+        - **type**: uuid
+      -
+        - **name**: issue_date
+        - **type**: date
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+      - (tenant_id, root_asset_id)
+    - **name**: closeout_packages
+    - **purpose**: Closeout package per project or subtree.
+    - **relations**:
+      - projects
+      - assets
+      - signing records
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: package_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: requirement_key
+        - **type**: text
+      -
+        - **name**: evidence_type
+        - **notes**: inspection, document, certificate, ncr, punch
+        - **type**: text
+      -
+        - **name**: evidence_id
+        - **notes**: polymorphic live link
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: derived from evidence; recalculated on events
+        - **type**: text
+      -
+        - **name**: owner_id
+        - **type**: uuid
+      -
+        - **name**: status_updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (package_id, status)
+      - (tenant_id, asset_id)
+      - (tenant_id, evidence_type, evidence_id)
+    - **name**: closeout_items
+    - **purpose**: Requirement bound to live evidence.
+    - **relations**:
+      - closeout_packages
+      - assets
+      - inspections
+      - certificates
+      - issues
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: submission_type
+        - **notes**: mdr, authority, eam_register
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: schema_def
+        - **type**: jsonb
+      -
+        - **name**: field_mappings
+        - **type**: jsonb
+      -
+        - **name**: validation_rules
+        - **type**: jsonb
+      -
+        - **name**: structure_config
+        - **notes**: folder numbering, doc codes, naming rules
+        - **type**: jsonb
+      -
+        - **name**: term_labels
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, name, version)
+    - **name**: submission_templates
+    - **purpose**: Versioned submission and MDR templates.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **type**: uuid
+      -
+        - **name**: root_asset_id
+        - **type**: uuid
+      -
+        - **name**: recipient_org_id
+        - **notes**: FK contacts organisations
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: draft, validated, issued, in_review, approved, rejected, acknowledged
+        - **type**: text
+      -
+        - **name**: revision
+        - **notes**: corrections issue a new revision row
+        - **type**: int
+      -
+        - **name**: supersedes_id
+        - **type**: uuid
+      -
+        - **name**: manifest_hash
+        - **notes**: SHA-256 of manifest
+        - **type**: text
+      -
+        - **name**: snapshot_document_id
+        - **notes**: immutable compiled pack
+        - **type**: uuid
+      -
+        - **name**: signed_record_id
+        - **type**: uuid
+      -
+        - **name**: frozen_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **notes**: frozen content columns immutable after issue
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, project_id, template_id, revision)
+      - (tenant_id, status)
+    - **name**: submission_packages
+    - **purpose**: Submission with review lifecycle and frozen snapshot.
+    - **relations**:
+      - projects
+      - submission_templates
+      - assets
+      - organisations
+      - documents
+      - signing records
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: submission_id
+        - **type**: uuid
+      -
+        - **name**: source_type
+        - **type**: text
+      -
+        - **name**: source_id
+        - **type**: uuid
+      -
+        - **name**: source_revision
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: mapped_values
+        - **type**: jsonb
+      -
+        - **name**: file_sha256
+        - **type**: text
+    - **indexes**:
+      - (submission_id)
+      - (tenant_id, asset_id)
+    - **name**: submission_items
+    - **purpose**: Frozen items in a submission.
+    - **relations**:
+      - submission_packages
+      - assets
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: submission_id
+        - **type**: uuid
+      -
+        - **name**: entries
+        - **notes**: path to sha256
+        - **type**: jsonb
+      -
+        - **name**: manifest_sha256
+        - **type**: text
+      -
+        - **name**: signer_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only: REVOKE UPDATE/DELETE
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(submission_id)
+    - **name**: submission_hash_manifests
+    - **purpose**: Append-only manifest per frozen snapshot.
+    - **relations**:
+      - submission_packages
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: submission_id
+        - **type**: uuid
+      -
+        - **name**: rule_key
+        - **type**: text
+      -
+        - **name**: severity
+        - **notes**: error, warning
+        - **type**: text
+      -
+        - **name**: source_type
+        - **type**: text
+      -
+        - **name**: source_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: message
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (submission_id, severity)
+    - **name**: validation_results
+    - **purpose**: Validation findings with click-through.
+    - **relations**:
+      - submission_packages
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: submission_id
+        - **type**: uuid
+      -
+        - **name**: submission_item_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: parent_id
+        - **notes**: response threading
+        - **type**: uuid
+      -
+        - **name**: author_id
+        - **type**: uuid
+      -
+        - **name**: body
+        - **type**: text
+      -
+        - **name**: disposition
+        - **notes**: open, accepted, rejected
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (submission_id, created_at)
+    - **name**: submission_review_comments
+    - **purpose**: Authority/client review cycle comments and responses.
+    - **relations**:
+      - submission_packages
+      - submission_items
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: submission_id
+        - **type**: uuid
+      -
+        - **name**: channel
+        - **notes**: manual, email, portal, connector
+        - **type**: text
+      -
+        - **name**: sent_at
+        - **type**: timestamptz
+      -
+        - **name**: acknowledged_at
+        - **type**: timestamptz
+      -
+        - **name**: authority_reference
+        - **type**: text
+      -
+        - **name**: recorded_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, submission_id)
+    - **name**: transmission_logs
+    - **purpose**: Append-only issue and acknowledgement log.
+    - **relations**:
+      - submission_packages
+      - transmittals
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: history follows the asset
+        - **type**: uuid
+      -
+        - **name**: submission_id
+        - **type**: uuid
+      -
+        - **name**: captured_at
+        - **type**: timestamptz
+      -
+        - **name**: wall_loss
+        - **notes**: thickness readings and summary
+        - **type**: jsonb
+      -
+        - **name**: coating_condition
+        - **type**: jsonb
+      -
+        - **name**: cui_findings
+        - **type**: jsonb
+      -
+        - **name**: source_inspection_ids
+        - **type**: jsonb
+      -
+        - **name**: content_sha256
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, asset_id, captured_at desc)
+    - **name**: baseline_snapshots
+    - **purpose**: Baseline condition per asset at handover, append-only.
+    - **relations**:
+      - assets
+      - submission_packages
+      - inspections

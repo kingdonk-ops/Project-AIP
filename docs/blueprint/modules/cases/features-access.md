@@ -1,0 +1,165 @@
+# User-authored playbooks — Feature filler
+
+
+- **detail sections**:
+  - Revision header and history
+  - Rendered Markdown with project terminology resolved
+  - Acknowledgement bar for the signed-in user
+  - Acknowledgement status by person
+  - Linked competency requirement and tasks it gates
+  - Approval status (if approval before issue is adopted; open question)
+- **notifications**:
+  - New revision issued, acknowledgement required (to audience)
+  - Acknowledgement due soon or overdue (to the person, if due days are enabled)
+  - Overdue acknowledgements summary (to supervisors and document controllers)
+  - Acknowledgement recorded as competency evidence (to the person)
+  - Procedure submitted for approval and approval outcome (to owner, if approval is adopted)
+- **settings**:
+  - Procedure document types
+  - Acknowledgement required default per type
+  - Due days and whether overdue events are enabled
+  - Approval before issue (open question)
+  - Competency type mapping and task types that check acknowledgement (open question)
+  - Acknowledgement methods allowed (in-app, PIN, portal magic link)
+  - Terminology tokens available in Markdown
+  - Screen to guide mapping
+  - Delivery phase for these folded-in capabilities (open question)
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export acknowledgement status
+      - Send acknowledgement reminders
+    - **columns**:
+      - Procedure number
+      - Title
+      - Type
+      - Current revision
+      - Owner
+      - Status
+      - Acknowledged %
+      - Overdue count
+      - Last issued
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Discipline
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Markdown content (with terminology tokens)
+        - **required**: true
+        - **type**: markdown
+      -
+        - **field**: Acknowledgement required
+        - **required**: true
+        - **type**: boolean
+      -
+        - **field**: Audience (roles, teams, disciplines or users)
+        - **required**: false
+        - **type**: multi-select
+      -
+        - **field**: Due days
+        - **required**: false
+        - **type**: integer
+      -
+        - **field**: Competency type evidenced
+        - **required**: false
+        - **type**: select
+    - **empty state**: No controlled procedures. Create one in Markdown, for example how a CUI inspection is raised through to NCR closure.
+    - **filters**:
+      - Type
+      - Discipline
+      - Status
+      - Owner
+      - Acknowledgement overdue
+    - **name**: Controlled procedures register
+    - **row actions**:
+      - Open
+      - Issue new revision
+      - View acknowledgements
+      - Edit
+    - **search**: Number, title and Markdown content
+    - **sort**:
+      - Procedure number (default)
+      - Last issued
+      - Acknowledged %
+  -
+    - **bulk actions**:
+      - Send reminder to selected
+      - Export list
+    - **columns**:
+      - Person
+      - Team
+      - Revision
+      - Status (acknowledged or outstanding)
+      - Acknowledged at
+      - Method
+      - Due
+      - Linked competency record
+    - **empty state**: No one is required to acknowledge this procedure yet. Set the audience in the procedure settings.
+    - **filters**:
+      - Status
+      - Team
+      - Revision
+      - Overdue
+    - **name**: Acknowledgement status
+    - **row actions**:
+      - Send reminder
+      - Open competency record
+    - **search**: Person name
+    - **sort**:
+      - Status (outstanding first)
+      - Acknowledged at
+      - Person
+  -
+    - **bulk actions**:
+      - Remove selected
+    - **columns**:
+      - Screen or context
+      - Guide
+      - Project scope
+      - Updated
+    - **create form**:
+      -
+        - **field**: Screen or context key
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Guide (procedure document)
+        - **required**: true
+        - **type**: document picker
+      -
+        - **field**: Project scope
+        - **required**: false
+        - **type**: project picker
+    - **empty state**: No guides are linked to screens. Link a procedure so the help button opens it.
+    - **filters**:
+      - Project
+      - Guide
+    - **name**: Screen to guide mapping
+    - **row actions**:
+      - Edit
+      - Remove
+      - Preview guide
+    - **search**: Screen name and guide title
+    - **sort**:
+      - Screen name
+      - Updated
+- **walkthrough**:
+  - A document controller creates a procedure in the documents module and writes the content in Markdown, inserting terminology tokens from the picker.
+  - The controller sets the audience, due days and any competency type it evidences.
+  - The controller previews the content using the project's terms.
+  - The controller issues the revision, or submits it for approval if the owner adopts that route.
+  - Audience members are notified that a new revision needs acknowledgement.
+  - A user opens the procedure and reads it, then acknowledges the current revision. The method is recorded as in-app, PIN or portal magic link.
+  - The acknowledgement is stored against that revision, and where configured it creates the competency evidence link.
+  - The eligibility gate checks the acknowledgement for the task types configured.
+  - A supervisor opens the acknowledgement status view, sees who is outstanding and sends reminders.
+  - In the field, a user taps the help button on a screen and the mapped guide opens.

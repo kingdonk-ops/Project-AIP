@@ -1,0 +1,553 @@
+# Tasks, deadlines & my work — Data model & schema
+
+
+- **notes**: The existing tasks table is the RSW scope task and its completion gate must not change. The new work_tasks table holds general tasks, and the my-work queue aggregates both plus approvals, mentions and expiries through source adapters, so no queue table is needed. Both the cross-module deadline table and the escalation log use append-only events. The sweep is scheduled on the Python worker, with idempotency from the unique deadline key. Statutory clocks and multi-stage ladders are not modelled: deadline_policies has a single escalation role. Topic and Decision records are not here, since meeting_decisions covers decisions. The dashboard Due soon widget reads from deadlines.
+- **reuses existing**:
+  - tasks
+  - assets
+  - entity_types
+  - certificates
+  - inspections
+  - users
+  - projects
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: timezone
+        - **type**: text
+      -
+        - **name**: region_code
+        - **notes**: e.g. AU-WA
+        - **type**: text
+      -
+        - **name**: working_days
+        - **notes**: weekday pattern or roster cycle (FIFO/DIDO)
+        - **type**: jsonb
+      -
+        - **name**: is_default
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+    - **name**: project_calendars
+    - **purpose**: Working calendars for roster-aware date arithmetic.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: calendar_id
+        - **type**: uuid
+      -
+        - **name**: kind
+        - **notes**: holiday|shutdown
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: start_date
+        - **type**: date
+      -
+        - **name**: end_date
+        - **type**: date
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (calendar_id, start_date, end_date)
+    - **name**: calendar_exceptions
+    - **purpose**: Public holidays and shutdown periods, which may be seeded from ref_packs.
+    - **relations**:
+      - project_calendars
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable for personal tasks
+        - **type**: uuid
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: assignee_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: due_date
+        - **type**: date
+      -
+        - **name**: priority
+        - **notes**: low|medium|high|critical
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: open|in_progress|done|cancelled
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: source_type
+        - **notes**: record the task was raised from
+        - **type**: text
+      -
+        - **name**: source_id
+        - **type**: uuid
+      -
+        - **name**: is_personal
+        - **type**: boolean
+      -
+        - **name**: recurring_template_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: completed_at
+        - **type**: timestamptz
+      -
+        - **name**: client_request_id
+        - **notes**: idempotent offline create
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **notes**: offline capture
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, assignee_id, status, due_date)
+      - (tenant_id, asset_id)
+      - (tenant_id, source_type, source_id)
+      - unique (tenant_id, client_request_id) where client_request_id is not null
+    - **name**: work_tasks
+    - **purpose**: Simple tasks and personal to-dos. The existing tasks table is the RSW scope task, so this module's table is named distinctly. If the existing tasks table already serves general tasks, extend it with these columns instead.
+    - **relations**:
+      - assets
+      - users
+      - tasks (RSW) via source
+      - recurring_task_templates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **type**: uuid
+      -
+        - **name**: seq
+        - **type**: int
+      -
+        - **name**: label
+        - **type**: text
+      -
+        - **name**: done
+        - **type**: boolean
+      -
+        - **name**: done_by
+        - **type**: uuid
+      -
+        - **name**: done_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (task_id, seq)
+    - **name**: work_task_checklist_items
+    - **purpose**: Checklist items per task.
+    - **relations**:
+      - work_tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: deadline_type
+        - **notes**: e.g. ncr_action, cert_expiry, rfi_response
+        - **type**: text
+      -
+        - **name**: grace_working_days
+        - **type**: int
+      -
+        - **name**: escalation_role
+        - **notes**: manager role, single level
+        - **type**: text
+      -
+        - **name**: remind_before_days
+        - **type**: int
+      -
+        - **name**: calendar_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id, deadline_type) where deleted_at is null
+    - **name**: deadline_policies
+    - **purpose**: Grace and escalation settings per deadline type.
+    - **relations**:
+      - project_calendars
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: source_type
+        - **type**: text
+      -
+        - **name**: source_id
+        - **type**: uuid
+      -
+        - **name**: deadline_type
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: owner_user_id
+        - **type**: uuid
+      -
+        - **name**: escalation_manager_id
+        - **type**: uuid
+      -
+        - **name**: due_at
+        - **type**: timestamptz
+      -
+        - **name**: grace_until
+        - **notes**: computed from calendar
+        - **type**: timestamptz
+      -
+        - **name**: status
+        - **notes**: open|acknowledged|extended|resolved|escalated
+        - **type**: text
+      -
+        - **name**: snooze_reason
+        - **type**: text
+      -
+        - **name**: escalated_at
+        - **notes**: escalate once
+        - **type**: timestamptz
+      -
+        - **name**: resolved_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, source_type, source_id, deadline_type) where deleted_at is null
+      - (tenant_id, status, due_at)
+      - (tenant_id, owner_user_id, status)
+      - (tenant_id, asset_id)
+    - **name**: deadlines
+    - **purpose**: Cross-module deadline register. Upserted idempotently from source events.
+    - **relations**:
+      - assets
+      - users
+      - source records
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: deadline_id
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: acknowledge|reassign|extend|resolve|notify_owner|escalate
+        - **type**: text
+      -
+        - **name**: actor_user_id
+        - **notes**: nullable for system
+        - **type**: uuid
+      -
+        - **name**: from_value
+        - **notes**: e.g. previous due_at or owner
+        - **type**: jsonb
+      -
+        - **name**: to_value
+        - **type**: jsonb
+      -
+        - **name**: reason
+        - **notes**: required for extend
+        - **type**: text
+      -
+        - **name**: occurred_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only: REVOKE UPDATE/DELETE
+        - **type**: timestamptz
+    - **indexes**:
+      - (deadline_id, occurred_at)
+      - (tenant_id, action, occurred_at)
+    - **name**: deadline_events
+    - **purpose**: Append-only log of acknowledge, reassign, extend (with reason), resolve and escalation. Extensions can be contractual evidence.
+    - **relations**:
+      - deadlines
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: delegator_id
+        - **type**: uuid
+      -
+        - **name**: delegate_id
+        - **type**: uuid
+      -
+        - **name**: starts_on
+        - **type**: date
+      -
+        - **name**: ends_on
+        - **type**: date
+      -
+        - **name**: scope
+        - **notes**: approval types, project ids
+        - **type**: jsonb
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, delegator_id, starts_on, ends_on)
+      - (tenant_id, delegate_id)
+    - **name**: delegations
+    - **purpose**: Out-of-office routing for approvals and sign-offs.
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: event_type
+        - **notes**: hold_point.reached, ncr.opened, certificate.expiring, calibration.due, inspection.rejected
+        - **type**: text
+      -
+        - **name**: condition
+        - **notes**: rules engine predicate
+        - **type**: jsonb
+      -
+        - **name**: title_template_key
+        - **notes**: terminology key
+        - **type**: text
+      -
+        - **name**: assignee_strategy
+        - **notes**: role|record_owner|discipline_lead
+        - **type**: text
+      -
+        - **name**: assignee_role_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: due_offset_days
+        - **type**: int
+      -
+        - **name**: priority
+        - **type**: text
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, event_type) where active
+    - **name**: auto_task_rules
+    - **purpose**: Maps events to automatic task creation.
+    - **relations**:
+      - roles
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: checklist
+        - **type**: jsonb
+      -
+        - **name**: recurrence_rule
+        - **notes**: RRULE
+        - **type**: text
+      -
+        - **name**: asset_path
+        - **notes**: subtree root; one task per matching asset or area
+        - **type**: ltree
+      -
+        - **name**: entity_type_id
+        - **notes**: nullable, restrict to asset type
+        - **type**: uuid
+      -
+        - **name**: assignee_role_id
+        - **type**: uuid
+      -
+        - **name**: priority
+        - **type**: text
+      -
+        - **name**: last_materialised_at
+        - **type**: timestamptz
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - GIST on asset_path
+      - (tenant_id, active, last_materialised_at)
+    - **name**: recurring_task_templates
+    - **purpose**: Recurring tasks such as weekly CUI strip-and-inspect checks.
+    - **relations**:
+      - entity_types
+      - roles

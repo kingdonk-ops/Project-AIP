@@ -1,0 +1,178 @@
+# Offline field app & sync — Feature filler
+
+
+- **detail sections**:
+  - Device summary (user, platform, app version, storage used, encryption status)
+  - Sync scope (sites, projects, templates, history window)
+  - Pending outbox with per-item state
+  - Pull cursor and last successful sync
+  - Conflict list and merge history
+  - Deferred media uploads (progress, retries, size)
+  - Sync log (batch ids, counts, errors)
+  - Security (registration, revocation, wipe status)
+- **notifications**:
+  - Sync failed repeatedly (to user, in-app and push)
+  - Conflict needs resolution (to user)
+  - Unsynced data older than threshold (to user and supervisor)
+  - Media upload stalled or rejected by scan (to user)
+  - Device revoked or wipe requested (to user and admin)
+  - Device not synced for X days (to admin)
+  - Storage nearly full on device (to user)
+- **settings**:
+  - Sync scope rules (history window, default 12 months)
+  - Pull page cap (default 2,000) and push batch max (default 500)
+  - Auto-sync interval (default 5 minutes) and autosave debounce
+  - Allowed sync networks (wifi only for media option)
+  - Local encryption required and key handling
+  - Device registration approval and max devices per user
+  - PIN policy for field users (length, lockout, offline TTL)
+  - Offline session maximum duration before re-authentication
+  - Conflict rules per record type
+  - Media compression and max file size
+  - Remote wipe and revoke policy
+  - Stale-data warning threshold
+- **tables**:
+  -
+    - **bulk actions**:
+      - Retry selected
+      - Retry all failed
+      - Discard selected (with confirmation, drafts only)
+    - **columns**:
+      - Record
+      - Type
+      - Operation
+      - Created offline at
+      - Attempts
+      - State (pending/syncing/synced/conflict/failed)
+      - Last error
+    - **empty state**: Everything is synced. Last sync was [time]. Work you capture offline will queue here.
+    - **filters**:
+      - State
+      - Record type
+      - Project
+      - Created date range
+    - **name**: Sync Queue (device outbox)
+    - **row actions**:
+      - Retry
+      - View payload
+      - Resolve conflict
+      - Discard
+    - **search**: Record label, asset tag or error text
+    - **sort**:
+      - Created at (default oldest first)
+      - State
+      - Attempts
+  -
+    - **bulk actions**:
+      - Keep mine for selected
+      - Keep server for selected
+    - **columns**:
+      - Record
+      - Field
+      - Your value
+      - Server value
+      - Changed by
+      - Changed at
+      - Status
+    - **empty state**: No conflicts. Conflicts appear when the same field was changed on the device and on the server.
+    - **filters**:
+      - Record type
+      - Status (open/resolved)
+      - Project
+    - **name**: Conflicts
+    - **row actions**:
+      - Open merge screen
+      - Keep mine
+      - Keep server
+      - Edit manually
+    - **search**: Record label or field name
+    - **sort**:
+      - Detected at
+      - Record type
+  -
+    - **bulk actions**:
+      - Pin selected
+      - Unpin selected
+      - Remove from device
+      - Refresh selected
+    - **columns**:
+      - Asset tag
+      - Name
+      - Project/site
+      - Templates included
+      - Open work count
+      - Last pulled
+      - Size
+    - **empty state**: No assets on this device. Choose a site or project to download your assigned assets and templates.
+    - **filters**:
+      - Project
+      - Site
+      - Pinned
+      - Has open work
+    - **name**: Downloaded Assets (offline pack)
+    - **row actions**:
+      - Open asset
+      - Pin/unpin
+      - Refresh
+      - Remove
+    - **search**: Asset tag or name
+    - **sort**:
+      - Last pulled
+      - Asset tag
+      - Size
+  -
+    - **bulk actions**:
+      - Revoke selected
+      - Request remote wipe
+      - Export list
+    - **columns**:
+      - Device name
+      - User
+      - Platform
+      - App version
+      - Registered
+      - Last sync
+      - Status (active/revoked/wiped)
+    - **create form**:
+      -
+        - **field**: Device name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: User
+        - **required**: true
+        - **type**: user reference
+      -
+        - **field**: Registration method
+        - **required**: true
+        - **type**: dropdown (SSO/PIN)
+    - **empty state**: No devices registered. Devices appear here when a user signs in on the field app.
+    - **filters**:
+      - Status
+      - Platform
+      - App version
+      - Last sync older than
+    - **name**: Registered Devices (admin)
+    - **row actions**:
+      - View sync history
+      - Revoke
+      - Remote wipe
+      - Rename
+    - **search**: Device name, user or device id
+    - **sort**:
+      - Last sync
+      - Registered
+      - User
+- **walkthrough**:
+  - Inspector signs in on the tablet with SSO or PIN; the device registers and the encrypted local store is created.
+  - While online, the app pulls the assigned sites, active template revisions, open work and the last 12 months of history, in pages of up to 2,000 rows with has_more.
+  - Inspector sees the Today tab with assigned inspections and the sync chip showing 'Up to date'.
+  - On site with no signal, they scan the asset QR or NFC tag; the asset opens from the local store.
+  - They open an inspection, answer fields (autosaved after a 2s debounce), take photos with markup and record measurements.
+  - Each change is written to the outbox with a client-generated id; photos queue for deferred presigned upload.
+  - Items show per-item sync state (pending) and the header chip shows the count of queued items.
+  - On reconnect, foreground or the 5-minute timer, the app pushes batches of up to 500 ops with a batch_id for idempotency.
+  - Server applies append-only responses and reports any field conflicts; the app then pulls deltas from its cursor.
+  - If a conflict exists, the inspector uses the field-level merge screen to keep mine, keep server or edit.
+  - Deferred media uploads in the background and each file goes through the quarantine and scan pipeline.
+  - The chip returns to 'Up to date' and the inspector submits for review.

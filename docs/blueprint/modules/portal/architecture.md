@@ -1,0 +1,124 @@
+# Client & subcontractor portal — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/portal/models.py
+    - **purpose**: PortalUser, PortalGrant, PortalSession, PortalAuditEvent, SharePack, ClientBranding; tenant_id and RLS on all
+  -
+    - **path**: backend/app/modules/portal/api/router.py
+    - **purpose**: Narrow external API on a separate app instance and origin; no admin routes
+  -
+    - **path**: backend/app/modules/portal/admin_router.py
+    - **purpose**: Internal-side invitations, approvals, grants and share pack administration
+  -
+    - **path**: backend/app/modules/portal/auth.py
+    - **purpose**: Magic link and PIN flow: hashed, single-use, short TTL, POST confirm, device binding, lockout; optional WorkOS SSO adapter
+  -
+    - **path**: backend/app/modules/portal/grants.py
+    - **purpose**: Grant evaluation feeding the central policy service as an external-user class
+  -
+    - **path**: backend/app/modules/portal/inbox.py
+    - **purpose**: 'Needs my action' aggregation from consumed events
+  -
+    - **path**: backend/app/modules/portal/witness.py
+    - **purpose**: Hold and witness point confirm or waive with notice-period check
+  -
+    - **path**: backend/app/modules/portal/share_packs.py
+    - **purpose**: Time-limited read-only bundles with expiry and revocation
+  -
+    - **path**: backend/app/modules/portal/onboarding_gate.py
+    - **purpose**: Calls eligibility to block subcontractor submissions without valid certificates
+  -
+    - **path**: backend/app/modules/portal/watermark.py
+    - **purpose**: Per-grant download policy and watermark request to the report engine
+  -
+    - **path**: backend/app/modules/portal/events.py
+    - **purpose**: Event payloads and handlers
+  -
+    - **path**: backend/app/modules/portal/settings.py
+    - **purpose**: Portal rate limits, session policy, and tenant toggle (off by default)
+  -
+    - **path**: backend/migrations/versions/xxxx_portal.py
+    - **purpose**: Schema and RLS
+  -
+    - **path**: backend/tests/modules/portal/
+    - **purpose**: Isolation, grant-matrix, link-burn and expiry tests
+- **change isolation**: The portal is a separate deployable and narrow API that only calls other modules through the policy service and events. New external actions are added as grant actions plus one endpoint without touching internal modules.
+- **config not code**:
+  - tenant portal on/off
+  - per-grant download policy
+  - witness notice period (per client or ITP)
+  - session TTL and rate limits
+  - client branding and vocabulary
+  - email templates
+  - share pack default expiry
+  - external role definitions
+- **events consumed**:
+  - project.closed (expire grants)
+  - project.member_removed and scim.user_deprovisioned (revoke)
+  - inspection.client_review_requested
+  - hold_point.scheduled
+  - issue.assigned_external
+  - certificate.expired (onboarding gate)
+  - document.published
+  - terminology.changed
+- **events emitted**:
+  - portal.invitation_requested
+  - portal.invitation_approved
+  - portal.user_signed_in
+  - portal.grant_created and portal.grant_revoked
+  - portal.witness_confirmed and portal.witness_waived
+  - portal.client_signoff_submitted
+  - portal.response_submitted
+  - portal.share_pack_issued and portal.share_pack_viewed
+- **frontend files**:
+  -
+    - **path**: portal-web/src/App.tsx
+    - **purpose**: Separate Vite build and origin, own session handling and branding provider
+  -
+    - **path**: portal-web/src/pages/Home.tsx
+    - **purpose**: Needs-my-action inbox
+  -
+    - **path**: portal-web/src/pages/AssetTree.tsx
+    - **purpose**: Read-only tree with status and documents, reusing the shared tree component
+  -
+    - **path**: portal-web/src/pages/actions/CounterSign.tsx
+    - **purpose**: Client review and counter-sign
+  -
+    - **path**: portal-web/src/pages/actions/RespondNcr.tsx
+    - **purpose**: Subcontractor response and evidence upload
+  -
+    - **path**: portal-web/src/pages/actions/Witness.tsx
+    - **purpose**: Confirm or waive
+  -
+    - **path**: portal-web/src/pages/ConditionDashboard.tsx
+    - **purpose**: Read-only defect trends by area from reporting widgets
+  -
+    - **path**: portal-web/src/pages/SharePack.tsx
+    - **purpose**: Share pack viewer without full account
+  -
+    - **path**: frontend/src/modules/portal/admin/
+    - **purpose**: Internal admin screens for invitations, approvals and grants
+- **public api**:
+  - POST /portal/auth/request-link and POST /portal/auth/confirm (POST-only consumption)
+  - GET /portal/me/inbox
+  - GET /portal/assets and /portal/assets/{id} (grant-scoped)
+  - GET /portal/documents/{id} (policy-checked, watermarked)
+  - POST /portal/inspections/{id}/counter-sign
+  - POST /portal/witness/{id}/confirm or /waive
+  - POST /portal/issues/{id}/responses
+  - GET /portal/share/{token}
+  - Admin: /portal-admin/invitations, /grants, /share-packs, /audit
+- **reuses shared**:
+  - central policy service with external-user class
+  - RLS tenant context
+  - magic link and session primitives from identity
+  - approval engine for invitation approval and counter-sign
+  - uploads quarantine pipeline
+  - notification service and email templates
+  - terminology dictionary with client vocabulary
+  - report engine for watermarking
+  - audit trail
+  - eligibility gate
+  - state-machine engine for client_review

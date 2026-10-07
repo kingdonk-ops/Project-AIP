@@ -1,0 +1,37 @@
+# Search, retrieval & saved views — Feature scout
+
+
+- **abilities seen in market**:
+  - Global search across records with type facets and deep links
+  - Keyword plus semantic hybrid ranking
+  - Command bar for navigation and actions
+  - Saved filters shared by team and reusable as lists or tiles
+  - OCR text search inside drawings and documents with hit highlighting
+  - Search by tag patterns and wildcard asset codes
+  - Recent items and recent searches
+  - Result filtering by permission at query time
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: Tag-aware asset search with fuzzy and pattern matching
+    - **why**: Inspectors search by partial tags such as line numbers or spool marks with typos. Plain full-text handles these poorly.
+  -
+    - **effort**: S
+    - **feature**: Terminology-aware synonyms driven by the tenant dictionary
+    - **why**: Renamed terms must still find records, and the same term may differ between markets, so search follows the tenant's labels.
+  -
+    - **effort**: M
+    - **feature**: Saved views with parameters such as 'my area' or 'this shutdown'
+    - **why**: Lets one view serve many users and projects, keeping dashboard tiles reusable.
+  -
+    - **effort**: M
+    - **feature**: Search inside document OCR and drawing title blocks, linked back to assets
+    - **why**: Finds the right isometric or datasheet by line number, speeding field and desk work.
+  -
+    - **effort**: M
+    - **feature**: Embedding lifecycle tied to permissions, deletion and legal hold
+    - **why**: Prevents semantic search from surfacing content a user cannot open or content that should have been deleted.
+  -
+    - **effort**: M
+    - **feature**: Evidence retrieval pack builder from search results
+    - **why**: Commercial teams can assemble a dated, referenced set of records for a claim directly from a filtered search.

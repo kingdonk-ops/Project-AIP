@@ -1,0 +1,338 @@
+# Operations, hosting & deployment — Data model & schema
+
+
+- **notes**: Job runner choice (arq recommended) is independent of the schema, since state lives in these tables. Cancellation checks the requester's permission in the service layer. client_error_reports and rate_limit_counters need a restricted insert-only path and short retention; consider time partitioning. Back up the Kaefer AIP Postgres with PITR as part of ops. Terraform vs CDK, and Sentry vs in-house, remain open.
+- **reuses existing**:
+  - documents
+  - tasks
+  - consumable_issuances
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: job_type
+        - **notes**: from registry: import, ocr, export, report_pack
+        - **type**: text
+      -
+        - **name**: requested_by
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: queued, running, succeeded, failed, cancelled
+        - **type**: text
+      -
+        - **name**: progress
+        - **notes**: 0-100
+        - **type**: int
+      -
+        - **name**: idempotency_key
+        - **type**: text
+      -
+        - **name**: payload
+        - **notes**: tenant-scoped, no secrets
+        - **type**: jsonb
+      -
+        - **name**: result_ref
+        - **notes**: document id or storage key
+        - **type**: text
+      -
+        - **name**: error
+        - **type**: text
+      -
+        - **name**: correlation_id
+        - **type**: text
+      -
+        - **name**: timeout_seconds
+        - **type**: int
+      -
+        - **name**: attempts
+        - **type**: int
+      -
+        - **name**: queued_at
+        - **type**: timestamptz
+      -
+        - **name**: started_at
+        - **type**: timestamptz
+      -
+        - **name**: finished_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, job_type, idempotency_key) WHERE idempotency_key IS NOT NULL
+      - btree (tenant_id, requested_by, created_at desc)
+      - btree (tenant_id, status, queued_at)
+    - **name**: jobs
+    - **purpose**: Background job state persisted in Postgres (Redis is not the system of record).
+    - **relations**:
+      - users.id
+      - projects.id
+      - assets.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: job_id
+        - **notes**: FK jobs
+        - **type**: uuid
+      -
+        - **name**: event_type
+        - **notes**: queued, started, progress, retry, cancelled, failed, completed
+        - **type**: text
+      -
+        - **name**: detail
+        - **type**: jsonb
+      -
+        - **name**: actor_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, job_id, created_at)
+    - **name**: job_events
+    - **purpose**: Append-only job event log (state changes, progress, errors).
+    - **relations**:
+      - jobs.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: nullable if unauthenticated; RLS permits insert via dedicated role
+        - **type**: uuid
+      -
+        - **name**: release_version
+        - **type**: text
+      -
+        - **name**: route
+        - **notes**: scrubbed route template
+        - **type**: text
+      -
+        - **name**: message
+        - **notes**: size-capped
+        - **type**: text
+      -
+        - **name**: stack
+        - **notes**: size-capped, URL/token scrubbed
+        - **type**: text
+      -
+        - **name**: user_agent
+        - **type**: text
+      -
+        - **name**: tenant_hash
+        - **type**: text
+      -
+        - **name**: project_hash
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: short retention
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (release_version, created_at desc)
+      - btree (tenant_id, created_at desc)
+    - **name**: client_error_reports
+    - **purpose**: Scrubbed, anonymised browser error reports (hostile input).
+    - **relations**:
+      - deployment_info.release_version
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: bucket_key
+        - **notes**: ip hash or tenant
+        - **type**: text
+      -
+        - **name**: window_start
+        - **type**: timestamptz
+      -
+        - **name**: count
+        - **type**: int
+    - **indexes**:
+      - unique (bucket_key, window_start)
+    - **name**: rate_limit_counters
+    - **purpose**: Persisted counters for error-sink and API rate limits where Redis is not suitable.
+    - **relations**:
+      - none
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable = tenant default
+        - **type**: uuid
+      -
+        - **name**: ia_after_days
+        - **notes**: default 365
+        - **type**: int
+      -
+        - **name**: glacier_ir_after_days
+        - **notes**: default 2555 (7 years)
+        - **type**: int
+      -
+        - **name**: evidence_prefix
+        - **type**: text
+      -
+        - **name**: expiration_days
+        - **notes**: must be null for evidence; CHECK enforces
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, coalesce(project_id,'00000000-0000-0000-0000-000000000000'))
+    - **name**: storage_lifecycle_policies
+    - **purpose**: Storage lifecycle defaults and per-project overrides; renders s3-lifecycle.json.
+    - **relations**:
+      - projects.id
+      - tenants.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: environment
+        - **notes**: dev, demo, staging, prod
+        - **type**: text
+      -
+        - **name**: release_version
+        - **type**: text
+      -
+        - **name**: commit_sha
+        - **type**: text
+      -
+        - **name**: image_digest
+        - **notes**: signed image
+        - **type**: text
+      -
+        - **name**: deployed_at
+        - **type**: timestamptz
+      -
+        - **name**: rollback_of_id
+        - **notes**: nullable self FK
+        - **type**: uuid
+      -
+        - **name**: migration_head
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (environment, deployed_at desc)
+    - **name**: deployment_info
+    - **purpose**: Deployed release and environment record for version endpoint and change log.
+    - **relations**:
+      - self via rollback_of_id
+      - dependency_inventory.release_version
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: usage_date
+        - **type**: date
+      -
+        - **name**: metric
+        - **notes**: storage_gb, jobs_run, job_seconds, ai_calls, api_calls
+        - **type**: text
+      -
+        - **name**: quantity
+        - **type**: numeric
+      -
+        - **name**: estimated_cost_aud
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, usage_date, metric)
+    - **name**: tenant_usage_daily
+    - **purpose**: Per-tenant cost and usage reporting for storage, jobs and AI calls.
+    - **relations**:
+      - tenants.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: sandbox tenant
+        - **type**: uuid
+      -
+        - **name**: bundle_id
+        - **notes**: FK tenant_config_bundles
+        - **type**: uuid
+      -
+        - **name**: requested_by
+        - **type**: uuid
+      -
+        - **name**: job_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, created_at desc)
+    - **name**: sandbox_resets
+    - **purpose**: UAT sandbox tenant seeding and reset history.
+    - **relations**:
+      - tenant_config_bundles.id
+      - jobs.id

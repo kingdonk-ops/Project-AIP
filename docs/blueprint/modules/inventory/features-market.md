@@ -1,0 +1,37 @@
+# Stock, consumables & materials — Feature scout
+
+
+- **abilities seen in market**:
+  - Append-only stock movement ledger with receipt, issue, transfer, waste and adjustment
+  - Multiple storage locations such as container, store and laydown with per-location balances
+  - Batch, lot and serial tracking with expiry dates and certificate attachment
+  - Barcode or QR scanning for receipts and issues on mobile
+  - Reorder points that raise requisitions or tasks
+  - Cycle counts and stocktake reconciliation with variance reporting
+  - Reservation of stock against work packages
+  - Cost allocation of issued material to cost codes or work packages
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Real quantity decrement on issuance with negative-stock prevention
+    - **why**: This is the deferred item that turns the ledger into true inventory. Without it, live stock levels cannot be trusted.
+  -
+    - **effort**: M
+    - **feature**: QR labels per batch with scan-to-issue on mobile
+    - **why**: Field crews issue coatings and consumables by scanning a label. It lowers data entry errors and speeds up batch capture to the task.
+  -
+    - **effort**: M
+    - **feature**: Mix and pot-life tracking for two-pack coatings
+    - **why**: Coating remediation depends on mixed batch time, pot life and ambient conditions. Capturing these against an application on an asset supports CUI quality records.
+  -
+    - **effort**: S
+    - **feature**: Forward and reverse batch trace report
+    - **why**: From a failed batch, list every asset and task it was applied to, and from an asset list every batch used. This is a clear audit benefit.
+  -
+    - **effort**: S
+    - **feature**: Stocktake with variance approval
+    - **why**: Counts need a controlled adjustment with reason and approver, preserving the append-only ledger.
+  -
+    - **effort**: S
+    - **feature**: Expired or quarantined batch hard-block on issuance
+    - **why**: Extends the use-by logic so out-of-date material cannot be issued to a task, consistent with the certificate expiry block.

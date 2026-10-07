@@ -1,0 +1,37 @@
+# Supplier catalogue, requisitions & POs — Feature scout
+
+
+- **abilities seen in market**:
+  - Punch-out and cXML/API catalogue integration with supplier-hosted catalogues
+  - Price-list import with diff preview, effective dates and approval before publish
+  - Requisition approval routing by value, cost code and category thresholds
+  - Blanket or framework orders with release call-offs and remaining-value tracking
+  - Goods receipt with partial deliveries, over/under tolerance and returns
+  - Automated two- and three-way matching with tolerance rules and exception queues
+  - Vendor onboarding with prequalification, insurance and bank-detail verification
+  - Accounting export to ERP with PO, invoice and payment status sync
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Price-list import review queue showing per-line diffs, % change flags and effective-from dates, with scheduled and email-ingested files
+    - **why**: Delivers the owner's 'as automated as possible' catalogue updates while preventing silent price errors.
+  -
+    - **effort**: M
+    - **feature**: Three-way match with tolerance rules and an exception queue linking PO, docket and invoice on one record
+    - **why**: Matches the owner's described outcome: seeing PO, delivery docket and invoice together.
+  -
+    - **effort**: S
+    - **feature**: Vendor bank-detail change control: dual approval and call-back verification log
+    - **why**: Mitigates invoice fraud flagged by the security advisor.
+  -
+    - **effort**: M
+    - **feature**: Link PO lines to cost items, scope tasks and asset nodes, and capture material certs (MTRs, batch numbers) on goods receipt
+    - **why**: Feeds the traceability graph so received coatings, insulation and consumables trace to the work they were used on.
+  -
+    - **effort**: M
+    - **feature**: Accounting export (Xero, MYOB, CSV) of approved POs and matched invoices
+    - **why**: Avoids building accounting while closing the loop with finance teams.
+  -
+    - **effort**: S
+    - **feature**: Supplier eligibility gate: block PO issue when vendor insurance or accreditation certificate is expired
+    - **why**: Reuses AIP's certificate hard-block pattern for suppliers.

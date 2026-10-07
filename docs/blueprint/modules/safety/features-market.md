@@ -1,0 +1,38 @@
+# Safety & HSE — Feature scout
+
+
+- **abilities seen in market**:
+  - Quick mobile incident, near miss and observation capture with photos
+  - Configurable risk matrices and risk-scored actions
+  - Investigation forms with root cause and contributing factors
+  - Permit to work with isolation, hazard and competency checks
+  - JSA/JHA, toolbox talk attendance and sign-on
+  - Lagging and leading indicator dashboards with hours-worked normalisation
+  - Regulator notification tracking with deadlines
+  - Field-level masking and restricted visibility for injury data
+  - Integration or import from the customer's own HSE system
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: Inbound link or reference to the client's or employer's HSE system record
+    - **why**: Kaefer likely has an existing HSE system. Storing a reference and status avoids double entry and competing records.
+  -
+    - **effort**: S
+    - **feature**: Asset and scope context on observations (for example CUI hazards, asbestos in insulation, confined space)
+    - **why**: Ties hazards to the assets being worked on and shows them in the scope pack.
+  -
+    - **effort**: M
+    - **feature**: Stop-work flag that places a hold on linked tasks or ITP steps
+    - **why**: Makes a safety stop operationally visible and enforceable in the inspection flow.
+  -
+    - **effort**: L
+    - **feature**: Permit to work with competency gate and simultaneous-operations conflict view
+    - **why**: Reuses the competency gate and is the main reason to enable the advanced pack on live plant.
+  -
+    - **effort**: M
+    - **feature**: Regulator notification clock with jurisdiction rules (WA, NZ, UK)
+    - **why**: Notifiable timelines differ by region and missing them has legal cost.
+  -
+    - **effort**: S
+    - **feature**: Hours-worked feed from resources for rate calculations
+    - **why**: TRIR and LTIFR need accurate exposure hours, so reuse crew data rather than manual entry.

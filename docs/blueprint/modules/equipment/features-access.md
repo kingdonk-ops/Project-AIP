@@ -1,0 +1,311 @@
+# Equipment & fleet — Feature filler
+
+
+- **detail sections**:
+  - Identity and ownership
+  - Current status and project
+  - Calibration certificates and validity
+  - Eligibility gate status
+  - Maintenance schedule and service history
+  - Pre-start and inspection history
+  - Usage on inspections (what it measured)
+  - Hire and charge history
+  - Linked asset
+  - Documents
+  - Activity and audit
+- **notifications**:
+  - Calibration expiring in 30, 14 and 7 days
+  - Calibration expired and instrument blocked
+  - Service due or overdue
+  - Pre-start failed
+  - Equipment transferred
+  - Hire period ending
+  - Instrument blocked from inspection attempt
+- **settings**:
+  - Equipment types and required attributes
+  - Calibration reminder lead times
+  - Calibration enforcement mode per type
+  - Pre-start template mapping
+  - Maintenance interval defaults
+  - Hire rate cards and charging rules
+  - Telemetry hooks (disabled in v1)
+  - Terminology keys
+- **tables**:
+  -
+    - **bulk actions**:
+      - Assign to project
+      - Change status
+      - Export register
+      - Schedule maintenance
+      - Request calibration
+    - **columns**:
+      - Equipment ID
+      - Name
+      - Type (plant, vehicle, instrument)
+      - Make and model
+      - Serial or rego
+      - Ownership (owned, hired)
+      - Current project
+      - Status
+      - Calibration due
+      - Next service due
+      - Eligibility
+    - **create form**:
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Make and model
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Serial number or registration
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Ownership
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Hire company and period
+        - **required**: false
+        - **type**: company picker and dates
+      -
+        - **field**: Home project
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Calibration required
+        - **required**: false
+        - **type**: checkbox
+      -
+        - **field**: Calibration interval
+        - **required**: false
+        - **type**: number of months
+      -
+        - **field**: Linked asset (optional)
+        - **required**: false
+        - **type**: asset picker
+      -
+        - **field**: Hire charge rate
+        - **required**: false
+        - **type**: number with unit
+    - **empty state**: No equipment registered. Add plant, vehicles and test instruments, or import a list.
+    - **filters**:
+      - Type
+      - Ownership
+      - Status
+      - Project
+      - Calibration status (valid, due soon, expired)
+      - Service overdue
+      - Hire company
+    - **name**: Equipment register
+    - **row actions**:
+      - Open
+      - Edit
+      - Add calibration certificate
+      - Start pre-start check
+      - Raise maintenance work order
+      - Transfer project
+      - Retire
+    - **search**: ID, name, serial, registration or make
+    - **sort**:
+      - Equipment ID
+      - Calibration due
+      - Next service due
+      - Status
+  -
+    - **bulk actions**:
+      - Export
+      - Notify owners of expiring certificates
+    - **columns**:
+      - Equipment
+      - Certificate number
+      - Calibrated by
+      - Issue date
+      - Expiry date
+      - Status
+      - File
+    - **create form**:
+      -
+        - **field**: Equipment
+        - **required**: true
+        - **type**: equipment picker
+      -
+        - **field**: Certificate number
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Laboratory
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Issue date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Expiry date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Certificate file
+        - **required**: true
+        - **type**: file upload
+    - **empty state**: No calibration certificates. Upload one so instruments can be used on inspections.
+    - **filters**:
+      - Status
+      - Expiry range
+      - Laboratory
+      - Equipment type
+    - **name**: Calibration certificates
+    - **row actions**:
+      - Open
+      - Download
+      - Supersede with new certificate
+    - **search**: Certificate number, equipment or laboratory
+    - **sort**:
+      - Expiry date
+      - Issue date
+      - Equipment
+  -
+    - **bulk actions**:
+      - Generate work orders
+      - Pause selected
+    - **columns**:
+      - Equipment
+      - Task
+      - Interval (days or hours)
+      - Last done
+      - Next due
+      - Status
+      - Work order
+    - **create form**:
+      -
+        - **field**: Equipment
+        - **required**: true
+        - **type**: equipment picker
+      -
+        - **field**: Task
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Interval type
+        - **required**: true
+        - **type**: select (days, hours)
+      -
+        - **field**: Interval value
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Last done
+        - **required**: false
+        - **type**: date
+    - **empty state**: No maintenance schedules set.
+    - **filters**:
+      - Status
+      - Due within
+      - Equipment type
+    - **name**: Maintenance schedules
+    - **row actions**:
+      - Edit
+      - Mark done
+      - Raise work order
+      - Pause
+    - **search**: Equipment or task
+    - **sort**:
+      - Next due
+      - Equipment
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Date
+      - Equipment
+      - Template
+      - Performed by
+      - Result
+      - Defects raised
+    - **create form**:
+      -
+        - **field**: Equipment
+        - **required**: true
+        - **type**: equipment picker
+      -
+        - **field**: Template
+        - **required**: true
+        - **type**: form template picker
+    - **empty state**: No pre-start checks recorded. Assign a template to start daily checks.
+    - **filters**:
+      - Result
+      - Date range
+      - Template
+      - Equipment type
+    - **name**: Pre-start and plant checks
+    - **row actions**:
+      - Open
+      - Raise defect
+      - Re-run check
+    - **search**: Equipment or performer
+    - **sort**:
+      - Date
+      - Result
+  -
+    - **bulk actions**:
+      - Approve charges
+      - Export statement
+    - **columns**:
+      - Period
+      - Equipment
+      - From project
+      - To project
+      - Days or hours
+      - Rate
+      - Amount
+      - Status
+    - **create form**:
+      -
+        - **field**: Equipment
+        - **required**: true
+        - **type**: equipment picker
+      -
+        - **field**: Charged project
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Period
+        - **required**: true
+        - **type**: date range
+      -
+        - **field**: Rate
+        - **required**: true
+        - **type**: number
+    - **empty state**: No hire charges generated yet.
+    - **filters**:
+      - Period
+      - Project
+      - Status
+    - **name**: Hire charges
+    - **row actions**:
+      - Open
+      - Adjust
+      - Approve
+    - **search**: Equipment or project
+    - **sort**:
+      - Period
+      - Amount
+- **walkthrough**:
+  - Equipment manager adds an instrument with serial number, type and calibration interval.
+  - Calibration certificate is uploaded with laboratory, issue and expiry dates.
+  - Eligibility gate marks the instrument as valid until the expiry date.
+  - The instrument is assigned to a project and appears in the inspection picker.
+  - A technician selects the instrument when recording a measurement on an inspection.
+  - If the certificate has expired, the gate blocks selection and explains why.
+  - Daily pre-start checks run from form templates; a failed check sets status to unavailable and raises a defect.
+  - Maintenance schedules generate work orders when due and the equipment is shown as unavailable while under service.
+  - Hire days from the diary plant list feed charge statements to projects.
+  - Before expiry, the owner is reminded and a replacement certificate supersedes the old one.

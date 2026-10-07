@@ -1,0 +1,37 @@
+# Audit trail, activity & timeline — Feature scout
+
+
+- **abilities seen in market**:
+  - Append-only event log with actor, timestamp, before/after values and source IP or device
+  - Per-record history tabs with field-level diffs
+  - Cross-module project timeline with filters by module, person and asset
+  - Separate security log for sign-ins, permission changes and exports
+  - Export of audit data for auditors with integrity verification
+  - Retention policies and legal hold overriding purge
+  - Review of delegated or impersonated actions flagged distinctly
+  - SIEM forwarding of audit events
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Offline verifier tool and signed export manifest
+    - **why**: Lets an auditor or tribunal verify the hash chain without trusting the platform, which strengthens dispute evidence.
+  -
+    - **effort**: M
+    - **feature**: Distinct security audit stream with SIEM forwarding
+    - **why**: Rio Tinto and government-style customers expect auth, permission and export events delivered to their monitoring tools.
+  -
+    - **effort**: S
+    - **feature**: Field-level change history with reason-for-change on controlled records
+    - **why**: Quality records such as inspection results and certificates need a recorded reason when changed after submission, supporting ISO 9001 audits.
+  -
+    - **effort**: S
+    - **feature**: Asset-subtree activity rollup with 'who touched this asset' view
+    - **why**: Matches the asset-centric model, so inspectors see history for a unit and everything beneath it in one feed.
+  -
+    - **effort**: S
+    - **feature**: Flag on-behalf-of, force-unlock and override events
+    - **why**: Highlights the exceptions an auditor wants to sample first, such as gate overrides and expiry bypasses.
+  -
+    - **effort**: M
+    - **feature**: Legal hold manager with scope by project or asset subtree and hold register
+    - **why**: Makes purge and recycle bin behaviour demonstrable and defensible, with who placed and released each hold.

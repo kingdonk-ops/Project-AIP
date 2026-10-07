@@ -1,0 +1,184 @@
+# Site diary & field reports — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Project members with diary.view; create needs diary.create; bulk send and export need diary.report.
+    - **actions**:
+      - Create today's diary
+      - Open day
+      - Export sealed days as PDF bundle
+      - Send daily field report
+      - Remind contributors
+      - Saved views
+    - **layout**: Full-width DataTable with a filter bar, a month strip above the table and a right-hand preview drawer.
+    - **name**: Diary register
+    - **purpose**: List all diary days with status, seal state and key counts.
+    - **route**: /projects/:projectId/diary
+    - **sections**:
+      - Filter bar (date range, site, status, shift)
+      - Diary days table (date, site, status, weather, workforce, plant, delays, events, amendments, sealed at/by)
+      - Missing-day indicators
+      - Bulk action bar
+  -
+    - **access**: Supervisors and site engineers with diary.create.
+    - **actions**:
+      - Create
+      - Create and open
+      - Cancel
+    - **layout**: Modal or narrow single-column form.
+    - **name**: Open diary day
+    - **purpose**: Create a diary day for a site and date.
+    - **route**: /projects/:projectId/diary/new
+    - **sections**:
+      - Project, site, date, shift
+      - Copy labour and plant from previous day option
+      - Duplicate-day warning
+  -
+    - **access**: View: diary.view. Edit entries while open: diary.edit or field grant. Seal: designated signer roles. Addenda: diary.amend.
+    - **actions**:
+      - Add entry
+      - Supersede entry
+      - Attach media
+      - Link RSW, inspection or incident
+      - Prefill from resources and equipment
+      - Submit for seal
+      - Countersign
+      - Seal day
+      - Download sealed PDF
+      - Verify seal
+      - Add addendum after seal
+      - Preview report
+    - **layout**: Sticky header with status and seal badge. Left section navigator, centre scrolling sections, right rail for links and contributors.
+    - **name**: Diary day detail
+    - **purpose**: Record the day and move it through submit and seal.
+    - **route**: /projects/:projectId/diary/:date
+    - **sections**:
+      - Header (date, project, site, status, seal state)
+      - Weather (auto-fetched, source, override)
+      - Labour on site
+      - Plant on site
+      - Events
+      - Instructions received
+      - Delays (cause, hours)
+      - Deliveries from logistics
+      - Photos, video and drone captures
+      - Linked RSWs, inspections and incidents of the day
+      - Contributors and sign-offs
+      - Seal and verification (hash, timestamp, signer, PDF)
+      - Amendments
+      - Daily field report preview
+      - Activity and audit
+  -
+    - **access**: Seal signer roles only, with MFA step-up.
+    - **actions**:
+      - Sign
+      - Countersign
+      - Seal
+      - Return to open
+    - **layout**: Stepper with checklist on the left and read-only PDF preview on the right.
+    - **name**: Sign-off and seal
+    - **purpose**: Review completeness, sign and seal the day.
+    - **route**: /projects/:projectId/diary/:date/seal
+    - **sections**:
+      - Required-sections checklist
+      - Outstanding contributor submissions
+      - Signer and countersigner panel
+      - Seal payload preview with hash
+      - Trusted timestamp result
+  -
+    - **access**: diary.view; add addendum needs diary.amend.
+    - **actions**:
+      - Add addendum
+      - Export chain
+      - Verify chain hash
+    - **layout**: Timeline with side-by-side original and superseding entries.
+    - **name**: Amendments and supersede history
+    - **purpose**: Show the supersede chain and post-seal addenda.
+    - **route**: /projects/:projectId/diary/:date/amendments
+    - **sections**:
+      - Chain of entries with author, time, reason
+      - Diff view
+      - Addenda list with signer
+  -
+    - **access**: diary.report; clients view via the portal if shared.
+    - **actions**:
+      - Generate
+      - Send
+      - Resend
+      - Download PDF
+    - **layout**: Two-pane list and preview.
+    - **name**: Daily field reports
+    - **purpose**: Preview, send and track client daily reports.
+    - **route**: /projects/:projectId/diary/reports
+    - **sections**:
+      - Report list by date and send status
+      - Template preview
+      - Distribution list and delivery log
+  -
+    - **access**: diary.view.
+    - **actions**:
+      - Open day
+      - Create missing day
+      - Switch site or shift
+    - **layout**: Month calendar with colour-coded days.
+    - **name**: Diary calendar
+    - **purpose**: See completeness and seal state across the month.
+    - **route**: /projects/:projectId/diary/calendar
+    - **sections**:
+      - Day cells (open, submitted, sealed, missing)
+      - Legend
+      - Delay and incident markers
+  -
+    - **access**: Project admin with diary.configure.
+    - **actions**:
+      - Save
+      - Reset to defaults
+      - Preview report template
+    - **layout**: Tabbed settings form.
+    - **name**: Diary settings
+    - **purpose**: Configure cut-offs, required sections, weather, access defaults and seal rules.
+    - **route**: /projects/:projectId/diary/settings
+    - **sections**:
+      - Cut-off and auto-seal time
+      - Required sections
+      - Weather provider and override rules
+      - Entry categories and delay causes
+      - Field access defaults (expiry, PIN length, device binding)
+      - Seal signers and countersign
+      - Report template and distribution
+      - Retention and legal hold
+      - Prefill sources
+      - Terminology keys
+  -
+    - **access**: Full users, or PIN/magic-link principals with a diary grant for named projects. No access to other modules.
+    - **actions**:
+      - Add note
+      - Take photo
+      - Record delay
+      - Submit my contribution
+      - Sync now
+      - Resolve conflict
+    - **layout**: Single-column PWA with a bottom tab bar, large touch targets and a sync status chip.
+    - **name**: Mobile diary (field and offline)
+    - **purpose**: Quick capture by supervisors and PIN or magic-link contributors.
+    - **route**: /m/diary/:date
+    - **sections**:
+      - Today card
+      - Section tiles (weather, labour, plant, events, delays, photos)
+      - Camera and media capture
+      - Offline queue and conflict list
+  -
+    - **access**: Holders of a valid single-use link.
+    - **actions**:
+      - Confirm and enter
+      - Request new link
+    - **layout**: Minimal centred page on the separate portal origin.
+    - **name**: Field link landing
+    - **purpose**: Confirm magic-link or PIN entry safely.
+    - **route**: /field/access/:token
+    - **sections**:
+      - Project and scope of access
+      - PIN entry
+      - Device binding notice
+      - Confirm button (POST)

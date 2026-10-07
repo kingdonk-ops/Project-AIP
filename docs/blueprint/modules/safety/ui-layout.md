@@ -1,0 +1,192 @@
+# Safety & HSE — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: safety.view for the basic register. Reporting is open to all site users. Injury fields appear only with safety.sensitive.read.
+    - **actions**:
+      - Quick report
+      - Open
+      - Investigate
+      - Add corrective action
+      - Mark notifiable
+      - Close
+      - Export (masked)
+      - Assign investigator
+    - **layout**: DataTable with a filter bar, a Quick report button and a bulk action bar.
+    - **name**: Incident register
+    - **purpose**: List incidents, near misses and observations with severity, risk and notifiable status.
+    - **route**: /projects/:projectId/safety
+    - **sections**:
+      - Filters (type, severity, status, site, notifiable, date range, risk band)
+      - Table (report no., type, date and time, site, asset, severity, risk score, status, notifiable, reporter)
+      - Bulk action bar
+      - Empty state
+  -
+    - **access**: Any authenticated site user. Restricted fields are shown only to HSE roles.
+    - **actions**:
+      - Save draft
+      - Submit
+      - Attach photo
+    - **layout**: Single-column form with a sticky save bar. It has a simplified mobile variant.
+    - **name**: Report incident or observation
+    - **purpose**: Capture a report with photos, location, asset and risk scoring.
+    - **route**: /projects/:projectId/safety/new
+    - **sections**:
+      - Type, date and time
+      - Site and asset
+      - Description and photos
+      - Likelihood and consequence with live risk band
+      - People involved (masked)
+      - Injury details (restricted)
+      - Immediate actions
+  -
+    - **access**: Reporter sees their own submission. HSE roles see all. Masked fields are server-side filtered, and legal hold blocks deletion.
+    - **actions**:
+      - Advance workflow
+      - Edit risk score
+      - Assign investigator
+      - Add corrective action
+      - Mark notifiable
+      - Record regulator notification
+      - Close
+    - **layout**: Header with the WorkflowBar. The body is tabbed and a regulator timeline banner sits above when the report is notifiable.
+    - **name**: Incident detail and investigation
+    - **purpose**: Review a report, assess risk, investigate, manage corrective actions and the regulator timeline.
+    - **route**: /projects/:projectId/safety/:reportId
+    - **sections**:
+      - Summary and classification
+      - Risk assessment
+      - Location, asset and diary link
+      - People involved (masked)
+      - Injury and health details (restricted)
+      - Photos and evidence
+      - Investigation
+      - Corrective actions
+      - Regulator notification timeline
+      - Audit trail
+  -
+    - **access**: safety.view. Close follows the issues module rules.
+    - **actions**:
+      - Open action
+      - Reassign
+      - Close
+      - Export
+    - **layout**: Table with a board toggle.
+    - **name**: Corrective actions
+    - **purpose**: Show actions raised from safety reports, using the shared issues and CAPA engine.
+    - **route**: /projects/:projectId/safety/actions
+    - **sections**:
+      - Filters (owner, status, overdue, source)
+      - Actions table
+      - Board view
+  -
+    - **access**: safety.kpi.view
+    - **actions**:
+      - Change period
+      - Export
+      - Open source records
+    - **layout**: Dashboard with KPI tiles and trend charts.
+    - **name**: HSE KPIs
+    - **purpose**: Show TRIR, LTIFR and observation rate with the hours worked source.
+    - **route**: /projects/:projectId/safety/kpis
+    - **sections**:
+      - KPI tiles (TRIR, LTIFR, observations per 200k hours)
+      - Trend charts
+      - Hours worked source and gaps
+      - Leading versus lagging indicators
+  -
+    - **access**: Site with HSE Advanced enabled. Permit authorities have safety.permit.manage.
+    - **actions**:
+      - Create permit
+      - Issue
+      - Suspend
+      - Close
+      - Check holder competency
+    - **layout**: Register table with a status board toggle.
+    - **name**: Permits to work (advanced)
+    - **purpose**: Issue and track permits where HSE Advanced is enabled for the site.
+    - **route**: /projects/:projectId/safety/advanced/permits
+    - **sections**:
+      - Filters (type, status, expiring)
+      - Permit table
+      - Board view
+  -
+    - **access**: Site with HSE Advanced enabled. Supervisors can create, all workers can sign.
+    - **actions**:
+      - Create JSA
+      - Record toolbox talk
+      - Capture attendance
+      - Export
+    - **layout**: Two tabs, each with a list and a form built on the form renderer.
+    - **name**: JSAs and toolbox talks (advanced)
+    - **purpose**: Record JSA/JHA documents and toolbox talks with attendance.
+    - **route**: /projects/:projectId/safety/advanced/jsa
+    - **sections**:
+      - JSA list
+      - Toolbox talk list with attendance
+      - Attendance capture
+  -
+    - **access**: Site with HSE Advanced enabled. HSE roles manage.
+    - **actions**:
+      - Issue PPE
+      - Return
+      - Export
+    - **layout**: Table with a quick issue drawer.
+    - **name**: PPE issue register (advanced)
+    - **purpose**: Track PPE issued to people.
+    - **route**: /projects/:projectId/safety/advanced/ppe
+    - **sections**:
+      - PPE issue table
+      - Issue drawer
+  -
+    - **access**: Site with HSE Advanced enabled. HSE auditors.
+    - **actions**:
+      - Plan audit
+      - Run checklist
+      - Raise corrective action
+    - **layout**: List with audit detail built on the audit shell.
+    - **name**: HSE audits (advanced)
+    - **purpose**: Run HSE audits using templates and track findings.
+    - **route**: /projects/:projectId/safety/advanced/audits
+    - **sections**:
+      - Audit list
+      - Checklist
+      - Findings and CAPA
+  -
+    - **access**: Tenant admin or safety.settings.manage
+    - **actions**:
+      - Toggle advanced pack for a site
+      - Edit matrix
+      - Save
+    - **layout**: Settings page with sections and a site switch table.
+    - **name**: Safety settings
+    - **purpose**: Configure the risk matrix, incident types, notifiable rules, masking roles and the advanced pack per site.
+    - **route**: /settings/safety
+    - **sections**:
+      - Enable HSE Advanced per site
+      - Risk matrix definition
+      - Incident types and severities
+      - Notifiable criteria and deadlines
+      - Field masking roles
+      - Hours worked source
+      - Retention and legal hold
+      - Escalation recipients
+  -
+    - **access**: Any authenticated site user. Submissions are idempotent on sync.
+    - **actions**:
+      - Capture photo
+      - Submit
+      - Save offline
+      - Add detail later
+    - **layout**: Mobile full-screen form with a large photo button and a bottom submit bar.
+    - **name**: Mobile quick report
+    - **purpose**: Log an incident, near miss or observation in a few taps, working offline.
+    - **route**: /m/safety/quick-report
+    - **sections**:
+      - Type selector
+      - Photo capture
+      - Location and asset (auto-filled where possible)
+      - Short description
+      - Quick risk score
+      - Offline sync indicator

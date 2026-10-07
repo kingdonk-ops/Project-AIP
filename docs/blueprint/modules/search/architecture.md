@@ -1,0 +1,120 @@
+# Search, retrieval & saved views — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/search/__init__.py
+    - **purpose**: Module registration, router, permissions
+  -
+    - **path**: backend/app/modules/search/models.py
+    - **purpose**: SearchIndexEntry (with ACL tags, embedding), IndexingJob, QueryLog, RetrievalQuery, ResultSetSnapshot, ExportBundle, SavedView
+  -
+    - **path**: backend/app/modules/search/schemas.py
+    - **purpose**: Pydantic schemas
+  -
+    - **path**: backend/app/modules/search/router.py
+    - **purpose**: Endpoints for search, retrieval, saved views, bundles
+  -
+    - **path**: backend/app/modules/search/indexer.py
+    - **purpose**: Domain-event driven indexing with a per-record-type adapter registry
+  -
+    - **path**: backend/app/modules/search/adapters/
+    - **purpose**: One small adapter per record type mapping a record to text, tags and ACL
+  -
+    - **path**: backend/app/modules/search/query_fts.py
+    - **purpose**: Postgres full-text query with permission and tenant predicates inside SQL
+  -
+    - **path**: backend/app/modules/search/query_vector.py
+    - **purpose**: pgvector semantic query and rank fusion, enabled when AI is on
+  -
+    - **path**: backend/app/modules/search/tag_matcher.py
+    - **purpose**: Tag-aware fuzzy and pattern matching for asset tags, line numbers and spool marks
+  -
+    - **path**: backend/app/modules/search/synonyms.py
+    - **purpose**: Terminology-driven synonym expansion
+  -
+    - **path**: backend/app/modules/search/service_retrieval.py
+    - **purpose**: Deterministic party, date, reference and record-type retrieval
+  -
+    - **path**: backend/app/modules/search/service_bundle.py
+    - **purpose**: Evidence bundle with index, hash manifest, chain of custody and legal hold marker
+  -
+    - **path**: backend/app/modules/search/service_saved_views.py
+    - **purpose**: Saved view CRUD, parameters, scope and list/count/tile evaluation
+  -
+    - **path**: backend/app/modules/search/lifecycle.py
+    - **purpose**: Embedding deletion on source deletion, offboarding, crypto-shredding and hold rules
+  -
+    - **path**: backend/migrations/versions/xxxx_search.py
+    - **purpose**: Tables, GIN and pgvector indexes, RLS
+  -
+    - **path**: backend/tests/modules/search/
+    - **purpose**: Leak tests per role and party, embedding deletion, exact-filter determinism
+- **change isolation**: Indexing a new record type means adding one adapter and its ACL mapping. Permission filtering, ranking and saved view logic stay untouched.
+- **config not code**:
+  - Searchable fields and weights per record type
+  - Tenant synonym dictionary
+  - Tag patterns and wildcard rules per asset code scheme
+  - Party restriction rules
+  - Embedding enablement flag and provider
+  - Saved view scopes and parameter definitions
+  - Retention and hold rules for bundles
+- **events consumed**:
+  - asset.* (created, updated, deleted)
+  - document.ocr_completed / document.deleted
+  - inspection.*, ncr.*, task.*, rfi.*, submittal.*, comment.*, meeting.transcript_ready
+  - permission.changed (re-tag ACL)
+  - tenant.offboarded / record.purged (delete embeddings)
+  - legal_hold.placed / released
+  - terminology.changed (refresh synonyms)
+- **events emitted**:
+  - search.export_created
+  - saved_view.changed
+  - search.index_lag_alert
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/search/routes.tsx
+    - **purpose**: Routes
+  -
+    - **path**: frontend/src/modules/search/components/HeaderSearch.tsx
+    - **purpose**: Header search with deep links
+  -
+    - **path**: frontend/src/modules/search/components/CommandBar.tsx
+    - **purpose**: Keyboard command bar
+  -
+    - **path**: frontend/src/modules/search/pages/GlobalSearch.tsx
+    - **purpose**: Results with facets, subtree and project filters, preview, recents
+  -
+    - **path**: frontend/src/modules/search/pages/StructuredFinder.tsx
+    - **purpose**: Party, date, reference and asset finder with timeline view
+  -
+    - **path**: frontend/src/modules/search/pages/BundleBuilder.tsx
+    - **purpose**: Export and bundle builder for commercial roles
+  -
+    - **path**: frontend/src/modules/search/pages/SavedViews.tsx
+    - **purpose**: Saved views manager and sharing
+  -
+    - **path**: frontend/src/modules/search/components/SavedViewPicker.tsx
+    - **purpose**: Reusable picker used by dashboard tiles and lists
+  -
+    - **path**: frontend/src/modules/search/api.ts
+    - **purpose**: Generated client hooks
+- **public api**:
+  - GET /search?q=&types=&asset=&project=&ndt_method=
+  - GET /search/suggest (command bar and recents)
+  - POST /search/retrieve (party, date window, reference, record types)
+  - POST /search/bundles (index, hashes, chain of custody)
+  - GET/POST/PATCH /saved-views
+  - GET /saved-views/{id}/evaluate?params=&mode=list|count
+  - POST /saved-views/{id}/share
+  - GET /search/query-log (admin/audit permission)
+- **reuses shared**:
+  - Permission/policy service (predicate builder used inside SQL)
+  - Terminology dictionary
+  - Document OCR output from uploads pipeline
+  - Worker job queue
+  - AI gateway (embeddings, with data-processor controls)
+  - Audit outbox (query and export logging)
+  - Signing/hash utilities (bundle manifest)
+  - Contacts (party resolution)
+  - Reporting tiles

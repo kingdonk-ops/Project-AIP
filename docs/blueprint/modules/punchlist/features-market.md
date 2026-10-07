@@ -1,0 +1,38 @@
+# Punch list & defects liability — Feature scout
+
+
+- **abilities seen in market**:
+  - Fast mobile capture with photo, location pin and voice description
+  - Plan-based and asset-tree-based location
+  - Verification by someone other than the assignee with evidence
+  - Grouping and filtering by area, trade, responsible company and due date
+  - Bulk assign, bulk close and bulk export to PDF or spreadsheet
+  - Ball-in-court and automatic reminders to responsible parties
+  - Defects liability tracking with warranty periods and retention linkage
+  - Walkdown mode with progress by area
+  - Category and priority configuration with client-specific terminology
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: Punch items as a lightweight issue type on the existing model
+    - **why**: AIP has issues and corrective actions. Adding a punch kind with its own terms, quick capture and verify-before-close avoids a duplicate module.
+  -
+    - **effort**: M
+    - **feature**: Asset-tree and drawing dual location
+    - **why**: Linking each item to the asset and optionally a drawing pin keeps history on the asset, which is the product's advantage over drawing-only tools.
+  -
+    - **effort**: M
+    - **feature**: Walkdown mode with area progress
+    - **why**: Sequential area walk with fast capture and a completion tally suits remediation close-out and handover.
+  -
+    - **effort**: M
+    - **feature**: Defects liability period and retention release gate
+    - **why**: Period dates per contract with a rule that retention release requires all items verified ties quality to commercial outcome.
+  -
+    - **effort**: S
+    - **feature**: Verification by independent user with evidence
+    - **why**: Preventing self-closure and requiring photo evidence gives credible close-out records for clients.
+  -
+    - **effort**: S
+    - **feature**: Export per area or contractor for handover
+    - **why**: Generating punch lists as PDF and spreadsheet by area or responsible party supports practical completion meetings and transmittals.

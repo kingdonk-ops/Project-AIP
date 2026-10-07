@@ -1,0 +1,467 @@
+# Markup, viewer & plan room — Data model & schema
+
+
+- **notes**: Annotations use JSONB, with XFDF import/export as an optional adapter. GPS metadata stripping is a tenant policy at ingest. Overlay reads go through source modules' permission checks. Flattened exports are append-only. Pins carry forward between revisions with needs_review flagged for moved geometry.
+- **reuses existing**:
+  - documents/document_versions
+  - assets
+  - inspection_responses (existing media annotations JSONB migrated to annotations)
+  - issues
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: document_version_id
+        - **notes**: FK document_versions
+        - **type**: uuid
+      -
+        - **name**: page_number
+        - **type**: int
+      -
+        - **name**: sheet_name
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: width
+        - **notes**: Drawing coordinate space
+        - **type**: numeric
+      -
+        - **name**: height
+        - **type**: numeric
+      -
+        - **name**: scale_ratio
+        - **notes**: nullable
+        - **type**: numeric
+      -
+        - **name**: asset_id
+        - **notes**: nullable; area or asset link
+        - **type**: uuid
+      -
+        - **name**: tiles_key
+        - **notes**: Tile set storage prefix, nullable
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (document_version_id, page_number)
+      - (tenant_id, asset_id)
+    - **name**: drawing_sheets
+    - **purpose**: Page of a document version rendered as a drawing, with scale and asset or area link.
+    - **relations**:
+      - document_versions
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: sheet_id
+        - **type**: uuid
+      -
+        - **name**: point_a
+        - **notes**: x,y
+        - **type**: jsonb
+      -
+        - **name**: point_b
+        - **type**: jsonb
+      -
+        - **name**: real_distance
+        - **type**: numeric
+      -
+        - **name**: unit
+        - **type**: text
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, sheet_id)
+    - **name**: scale_calibrations
+    - **purpose**: Calibration of on-drawing measurements per sheet.
+    - **relations**:
+      - drawing_sheets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: document_version_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: layer_kind
+        - **notes**: markup|pins|photos|custom
+        - **type**: text
+      -
+        - **name**: default_visible
+        - **type**: boolean
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, document_version_id)
+    - **name**: markup_layers
+    - **purpose**: Markup layer per document version.
+    - **relations**:
+      - document_versions
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK; client-generated for offline
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: document_version_id
+        - **type**: uuid
+      -
+        - **name**: layer_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: sheet_id
+        - **notes**: nullable for photos
+        - **type**: uuid
+      -
+        - **name**: page
+        - **type**: int
+      -
+        - **name**: type
+        - **notes**: cloud|arrow|text|dimension|freehand|stamp
+        - **type**: text
+      -
+        - **name**: geometry
+        - **notes**: Drawing coordinates
+        - **type**: jsonb
+      -
+        - **name**: style
+        - **notes**: colour, stroke
+        - **type**: jsonb
+      -
+        - **name**: text_content
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: open|resolved
+        - **type**: text
+      -
+        - **name**: stamp_template_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: stamp_hash
+        - **notes**: Document hash shown on stamp, nullable
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: thread_id
+        - **notes**: Comments thread, nullable
+        - **type**: uuid
+      -
+        - **name**: author_id
+        - **type**: uuid
+      -
+        - **name**: resolved_by
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: resolved_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **notes**: Offline edits
+        - **type**: int
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, document_version_id, page)
+      - (tenant_id, asset_id)
+      - (tenant_id, status)
+    - **name**: annotations
+    - **purpose**: Vector annotations on a file version (PDF page or photo); non-destructive.
+    - **relations**:
+      - document_versions
+      - drawing_sheets
+      - markup_layers
+      - assets
+      - comments threads
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: label_key
+        - **notes**: Terminology key
+        - **type**: text
+      -
+        - **name**: design
+        - **notes**: Shape, text, colour
+        - **type**: jsonb
+      -
+        - **name**: show_user
+        - **type**: boolean
+      -
+        - **name**: show_time
+        - **type**: boolean
+      -
+        - **name**: show_hash
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+    - **name**: stamp_templates
+    - **purpose**: Stamp library (approved, rejected, custom).
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: sheet_id
+        - **type**: uuid
+      -
+        - **name**: item_type
+        - **notes**: defect|photo|inspection|ncr|note|asset
+        - **type**: text
+      -
+        - **name**: source_module
+        - **type**: text
+      -
+        - **name**: source_id
+        - **notes**: Polymorphic; permission checked per source
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: x
+        - **type**: numeric
+      -
+        - **name**: y
+        - **type**: numeric
+      -
+        - **name**: geometry
+        - **notes**: Optional area
+        - **type**: jsonb
+      -
+        - **name**: severity
+        - **notes**: Colour key, nullable
+        - **type**: text
+      -
+        - **name**: layer_key
+        - **type**: text
+      -
+        - **name**: needs_review
+        - **notes**: Flag after revision carry-forward
+        - **type**: boolean
+      -
+        - **name**: carried_from_id
+        - **notes**: Previous pin, nullable
+        - **type**: uuid
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, sheet_id)
+      - (tenant_id, source_module, source_id)
+      - (tenant_id, asset_id)
+    - **name**: overlay_items
+    - **purpose**: Positioned pins on a drawing sheet referencing source records; writes position only.
+    - **relations**:
+      - drawing_sheets
+      - assets
+      - inspections
+      - issues
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: document_version_id
+        - **notes**: Photo version
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: inspection_response_id
+        - **notes**: FK inspection_responses, nullable
+        - **type**: uuid
+      -
+        - **name**: pair_id
+        - **notes**: Before/after pairing group, nullable
+        - **type**: uuid
+      -
+        - **name**: pair_role
+        - **notes**: before|after, nullable
+        - **type**: text
+      -
+        - **name**: x
+        - **type**: numeric
+      -
+        - **name**: y
+        - **type**: numeric
+      -
+        - **name**: note
+        - **type**: text
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, document_version_id)
+      - (tenant_id, pair_id)
+      - (tenant_id, asset_id)
+    - **name**: photo_note_pins
+    - **purpose**: Pins, arrows and notes on photos, with before/after pairing.
+    - **relations**:
+      - document_versions
+      - assets
+      - inspection_responses
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: source_version_id
+        - **type**: uuid
+      -
+        - **name**: output_version_id
+        - **notes**: New document_version, nullable until produced
+        - **type**: uuid
+      -
+        - **name**: sha256
+        - **type**: text
+      -
+        - **name**: trigger
+        - **notes**: approval|publication|transmittal
+        - **type**: text
+      -
+        - **name**: approval_instance_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, source_version_id)
+    - **name**: markup_flattened_exports
+    - **purpose**: Record of sealed flattened copies produced on approval or publication (append-only).
+    - **relations**:
+      - document_versions
+      - approval_instances

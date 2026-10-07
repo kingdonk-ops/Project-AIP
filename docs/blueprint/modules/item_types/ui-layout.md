@@ -1,0 +1,129 @@
+# Content types, item types & attributes — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Tenant admin (config.manage).
+    - **actions**:
+      - Create
+      - Open
+      - Edit
+      - Reorder
+      - Show or hide in navigation
+      - Delete if unused
+    - **layout**: Sortable table with a create drawer.
+    - **name**: Content types
+    - **purpose**: Define record kinds that generate navigation and registers.
+    - **route**: /admin/content-types
+    - **sections**:
+      - Table: name, icon, sort order, nav entry, item types count, assets count
+      - Filters: nav visible, system or custom
+  -
+    - **access**: Tenant admin.
+    - **actions**:
+      - Edit
+      - Add category
+      - Add item type
+    - **layout**: Header and tabs.
+    - **name**: Content type detail
+    - **purpose**: Drill into the categories and item types of one content type.
+    - **route**: /admin/content-types/:id
+    - **sections**:
+      - Definition
+      - Default attribute schema
+      - Categories
+      - Item types
+      - Register preview
+  -
+    - **access**: Tenant admin; publishing may need approval.
+    - **actions**:
+      - Add or reorder attribute
+      - Save draft
+      - Publish new version
+      - Deprecate
+    - **layout**: Two-pane editor with an attribute list and a live form preview.
+    - **name**: Item type editor
+    - **purpose**: Edit attribute schema and behaviour of an item type.
+    - **route**: /admin/item-types/:id
+    - **sections**:
+      - Definition: name, content type, category, parent
+      - Attribute schema, own and inherited
+      - Conditional and calculated attributes
+      - Units and tolerances
+      - Component settings
+      - Auto-create ITP/inspection
+      - Status set mapping
+      - Assets using this type
+      - Terminology
+  -
+    - **access**: Tenant admin.
+    - **actions**:
+      - Preview migration
+      - Publish
+      - Roll forward
+      - Export diff
+    - **layout**: Version timeline and a side-by-side diff with impact counts.
+    - **name**: Schema versions and migration preview
+    - **purpose**: See history and the impact of schema changes.
+    - **route**: /admin/item-types/:id/versions
+    - **sections**:
+      - Version list
+      - Diff
+      - Impact on existing assets and completed inspections
+      - Conflicts
+  -
+    - **access**: Tenant admin.
+    - **actions**:
+      - Create
+      - Edit
+      - Delete unused
+    - **layout**: Table with a create drawer.
+    - **name**: Item categories
+    - **purpose**: Group item types and set applicability (Any/Item/Module).
+    - **route**: /admin/categories
+    - **sections**:
+      - Table: name, content type, applicable for, item types, updated
+  -
+    - **access**: Tenant admin.
+    - **actions**:
+      - Create
+      - Edit
+      - Merge
+      - Retire
+    - **layout**: Table with a detail drawer and merge suggestions.
+    - **name**: Attributes registry
+    - **purpose**: Manage shared, reusable attributes.
+    - **route**: /admin/attributes
+    - **sections**:
+      - Attribute list: label, field type, unit, used in
+      - Merge suggestions
+      - Usage
+  -
+    - **access**: Tenant admin.
+    - **actions**:
+      - Add status
+      - Map
+      - Save
+    - **layout**: List of sets with a mapping grid.
+    - **name**: Status set editor
+    - **purpose**: Map local statuses to neutral lifecycle states.
+    - **route**: /admin/status-sets
+    - **sections**:
+      - Status sets
+      - Mapping to neutral states
+      - Usage
+  -
+    - **access**: Tenant admin.
+    - **actions**:
+      - Preview
+      - Import
+      - Update
+    - **layout**: Card gallery with a preview and import dialog.
+    - **name**: Starter packs
+    - **purpose**: Import NDT/CUI, welding, insulation and coating packs.
+    - **route**: /admin/starter-packs
+    - **sections**:
+      - Available packs
+      - Pack contents preview
+      - Import history
+      - Update available

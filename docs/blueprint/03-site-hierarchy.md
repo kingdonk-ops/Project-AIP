@@ -1,0 +1,71 @@
+# Site hierarchy (navigation)
+
+
+- **nav**:
+  -
+    - **items**:
+      - Home / My Work
+      - Notifications
+      - Schedule
+      - Approvals inbox
+    - **section**: Work
+  -
+    - **items**:
+      - Asset tree
+      - Content-type registers (generated: Assets, Staff, Vehicles, Equipment, Consumables, RSW)
+      - Components & certificates
+    - **section**: Assets
+  -
+    - **items**:
+      - Inspections & ITPs
+      - Issues & NCRs
+      - Punch list
+      - Quality roll-up
+    - **section**: Quality
+  -
+    - **items**:
+      - Site diary
+      - Documents & plan room
+      - Reports
+      - Transmittals
+      - RFIs & submittals
+    - **section**: Field & Records
+  -
+    - **items**:
+      - Dashboards
+      - Global search
+      - Audit & activity
+    - **section**: Insight
+  -
+    - **items**:
+      - Organisation
+      - Users
+      - Roles
+      - Teams
+      - SSO & SCIM
+      - Terminology
+      - Content types
+      - Item types & attributes
+      - Workflows & rules
+      - Templates
+      - Notifications
+      - Integrations
+      - Retention & legal hold
+      - Audit log
+      - Billing
+    - **section**: Settings (admin, permission-gated)
+  -
+    - **items**:
+      - Scope bar (tenant/org/project/team/asset subtree)
+      - Global search
+      - Notifications bell
+      - Help
+      - Profile menu
+    - **section**: Header utilities
+  -
+    - **items**:
+      - Today
+      - Capture
+      - Inspections
+      - Sync
+    - **section**: Mobile tabs

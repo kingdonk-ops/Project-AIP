@@ -1,0 +1,127 @@
+# Inbound capture & connectors — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: app/modules/ingestion/router.py
+    - **purpose**: Connector, mailbox, channel, filing-queue and dashboard endpoints plus signed webhook receiver
+  -
+    - **path**: app/modules/ingestion/models.py
+    - **purpose**: Connector, ImportRun, ImportedFile, InboundMailbox, RawMessage, ParsedMessage, CaptureChannel with tenant_id and RLS
+  -
+    - **path**: app/modules/ingestion/schemas.py
+    - **purpose**: Pydantic request/response models feeding the OpenAPI client
+  -
+    - **path**: app/modules/ingestion/service.py
+    - **purpose**: Connector lifecycle, run now, pause, retry, file/reject draft actions
+  -
+    - **path**: app/modules/ingestion/connectors/
+    - **purpose**: Few adapters: watched_folder, s3, sharepoint, email (SES and Graph behind one interface)
+  -
+    - **path**: app/modules/ingestion/email_parser.py
+    - **purpose**: EML parse, Message-ID/References threading, HTML sanitise, attachment extraction
+  -
+    - **path**: app/modules/ingestion/sender_trust.py
+    - **purpose**: Alias allow-list, domain verification, SPF/DKIM/DMARC evaluation, unverified marking
+  -
+    - **path**: app/modules/ingestion/recognisers/mill_cert.py
+    - **purpose**: Heat number, grade and standard extraction from OCR text producing certificate candidates
+  -
+    - **path**: app/modules/ingestion/suggest.py
+    - **purpose**: Filing suggestions from sender and filename patterns
+  -
+    - **path**: app/modules/ingestion/agent_api.py
+    - **purpose**: Outbound-only agent enrol, poll and push endpoints with allow-listed destinations
+  -
+    - **path**: app/modules/ingestion/webhook_auth.py
+    - **purpose**: HMAC verification, replay window, per-tenant/alias rate limit
+  -
+    - **path**: app/modules/ingestion/jobs.py
+    - **purpose**: Scheduled connector runs, ageing alert job, retries
+  -
+    - **path**: app/modules/ingestion/permissions.py
+    - **purpose**: Registers ingestion.* permissions in the catalogue
+  -
+    - **path**: app/modules/ingestion/module.yaml
+    - **purpose**: Manifest: feature flag (off by default), events, permissions, nav
+  -
+    - **path**: alembic/versions/xxxx_ingestion.py
+    - **purpose**: Tables, RLS policies, indexes on content hash
+- **change isolation**: New connector types are one adapter file plus a manifest entry; email transport (SES vs Graph) is swapped behind the connector interface. Pipeline behaviour changes land in uploads, not here.
+- **config not code**:
+  - Per-tenant module flag (default off)
+  - Connector type settings, schedules, path filters
+  - File-type allow-list, max size, source-copy retention per connector
+  - Alias-to-project mapping and allowed senders
+  - Sender trust policy (SPF/DKIM/DMARC requirement)
+  - Rate limits
+  - Recogniser patterns and field mappings
+  - Ageing alert thresholds
+  - UI labels via terms keys
+- **events consumed**:
+  - upload.completed
+  - upload.rejected
+  - document.created
+  - project.archived
+  - tenant.module_toggled
+- **events emitted**:
+  - connector.run_completed
+  - connector.failed
+  - inbound_email.received
+  - ingestion.item_drafted
+  - ingestion.item_filed
+  - ingestion.item_rejected
+  - ingestion.sender_unverified
+  - certificate.candidate_proposed
+- **frontend files**:
+  -
+    - **path**: web/src/modules/ingestion/routes.tsx
+    - **purpose**: Route registration under Documents and Records
+  -
+    - **path**: web/src/modules/ingestion/ConnectorList.tsx
+    - **purpose**: Connector list with health, pause, run now
+  -
+    - **path**: web/src/modules/ingestion/SetupWizard.tsx
+    - **purpose**: Connector setup with test connection
+  -
+    - **path**: web/src/modules/ingestion/RunLog.tsx
+    - **purpose**: Run log with failures and duplicates
+  -
+    - **path**: web/src/modules/ingestion/FilingQueue.tsx
+    - **purpose**: Draft items with suggested project/asset/type/thread; file or reject
+  -
+    - **path**: web/src/modules/ingestion/ImportQueue.tsx
+    - **purpose**: Unmatched items and mapping/review screen
+  -
+    - **path**: web/src/modules/ingestion/MailboxSettings.tsx
+    - **purpose**: Aliases, allowed senders, trust display
+  -
+    - **path**: web/src/modules/ingestion/Dashboard.tsx
+    - **purpose**: Quarantined, failed, unfiled counts with ageing
+  -
+    - **path**: web/src/modules/ingestion/api.ts
+    - **purpose**: Generated client wrapper and query hooks
+- **public api**:
+  - POST/GET/PATCH /ingestion/connectors
+  - POST /ingestion/connectors/{id}/test | run | pause | retry
+  - GET /ingestion/runs
+  - GET /ingestion/filing-queue
+  - POST /ingestion/filing-queue/{id}/file | reject | assign
+  - POST /ingestion/eml (upload .eml)
+  - GET/POST /ingestion/mailboxes and aliases
+  - POST /ingestion/hooks/{channel_id} (signed webhook)
+  - GET /ingestion/dashboard
+  - Agent: POST /ingestion/agent/enrol, GET /ingestion/agent/manifest, POST /ingestion/agent/files
+- **reuses shared**:
+  - uploads quarantine/ClamAV/magic-byte/OCR pipeline
+  - documents service and file_versions
+  - jobs/scheduler runner
+  - notifications service
+  - secrets manager wrapper
+  - audit outbox
+  - permissions policy service
+  - terms dictionary
+  - search indexer
+  - egress allow-list and SSRF guard
+  - components certificate-candidate intake
+  - report/legal-hold retention service

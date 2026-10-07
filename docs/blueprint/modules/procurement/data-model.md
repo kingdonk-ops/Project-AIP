@@ -1,0 +1,895 @@
+# Supplier catalogue, requisitions & POs — Data model & schema
+
+
+- **notes**: Eligibility gate reads certificates for the vendor and blocks PO issue when expired. Price columns are redacted via a view_commercial_values permission, and RLS ensures price lists are never visible across tenants. Cost_items is removed, so cost_code/wbs/ctr are plain text. Uploads go through quarantine. Punch-out and PDF import are not designed. Emits requisition.submitted and goods.received.
+- **reuses existing**:
+  - assets
+  - documents
+  - certificates
+  - tasks
+  - consumable_issuances (receipts feed inventory ledger)
+  - approvals engine
+  - comments
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: organisation_id
+        - **notes**: FK contacts_organisations, unique per tenant
+        - **type**: uuid
+      -
+        - **name**: abn
+        - **notes**: or regional equivalent
+        - **type**: text
+      -
+        - **name**: payment_terms_days
+        - **type**: int
+      -
+        - **name**: status
+        - **notes**: active, on_hold, blocked
+        - **type**: text
+      -
+        - **name**: accreditation_required
+        - **notes**: drives the eligibility gate
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, organisation_id) where deleted_at is null
+      - (tenant_id, status)
+    - **name**: vendors
+    - **purpose**: Vendor master extending a contacts organisation with commercial terms.
+    - **relations**:
+      - contacts_organisations
+      - certificates (vendor insurance/accreditation via subject_type='vendor')
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: vendor_id
+        - **notes**: FK vendors
+        - **type**: uuid
+      -
+        - **name**: new_details_encrypted
+        - **notes**: field-level encrypted, never logged in plain
+        - **type**: jsonb
+      -
+        - **name**: old_details_hash
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: requested, callback_pending, approved, rejected
+        - **type**: text
+      -
+        - **name**: requested_by
+        - **notes**: user
+        - **type**: uuid
+      -
+        - **name**: approval_instance_id
+        - **notes**: approvals engine; approver must differ from requester
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, vendor_id, created_at desc)
+    - **name**: vendor_bank_change_requests
+    - **purpose**: Bank detail change control with dual approval and call-back verification.
+    - **relations**:
+      - vendors
+      - approvals engine instance
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: change_request_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: called_by
+        - **notes**: user
+        - **type**: uuid
+      -
+        - **name**: phone_called
+        - **notes**: must be from vendor master, not the request
+        - **type**: text
+      -
+        - **name**: outcome
+        - **notes**: verified, failed, no_answer
+        - **type**: text
+      -
+        - **name**: notes
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only: REVOKE UPDATE/DELETE
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, change_request_id)
+    - **name**: vendor_bank_callback_log
+    - **purpose**: Append-only call-back verification log.
+    - **relations**:
+      - vendor_bank_change_requests
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: vendor_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: item_code
+        - **type**: text
+      -
+        - **name**: sku
+        - **type**: text
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: spec
+        - **type**: jsonb
+      -
+        - **name**: uom
+        - **type**: text
+      -
+        - **name**: lead_time_days
+        - **type**: int
+      -
+        - **name**: search_tsv
+        - **notes**: generated tsvector column
+        - **type**: text
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: sync_version
+        - **notes**: user add/edit may occur offline
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, vendor_id, item_code) where deleted_at is null
+      - GIN(search_tsv)
+    - **name**: catalog_items
+    - **purpose**: Supplier catalogue items.
+    - **relations**:
+      - vendors
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: vendor_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: currency
+        - **notes**: ISO 4217 from ref_packs
+        - **type**: text
+      -
+        - **name**: valid_from
+        - **type**: date
+      -
+        - **name**: valid_to
+        - **notes**: null = open
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: draft, published, superseded
+        - **type**: text
+      -
+        - **name**: import_job_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, vendor_id, valid_from)
+    - **name**: price_lists
+    - **purpose**: Validity-dated price list headers.
+    - **relations**:
+      - vendors
+      - import_jobs
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: price_list_id
+        - **type**: uuid
+      -
+        - **name**: catalog_item_id
+        - **type**: uuid
+      -
+        - **name**: min_qty
+        - **notes**: default 1
+        - **type**: numeric
+      -
+        - **name**: unit_price
+        - **notes**: redacted for subcontractor roles
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(price_list_id, catalog_item_id, min_qty)
+      - (tenant_id, catalog_item_id)
+    - **name**: price_list_tiers
+    - **purpose**: Price per item with quantity tiers.
+    - **relations**:
+      - price_lists
+      - catalog_items
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: catalog_item_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(user_id, catalog_item_id)
+    - **name**: catalog_favourites
+    - **purpose**: Per-user favourites.
+    - **relations**:
+      - catalog_items
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: vendor_id
+        - **type**: uuid
+      -
+        - **name**: source
+        - **notes**: upload, scheduled, email
+        - **type**: text
+      -
+        - **name**: document_id
+        - **notes**: FK documents; file passes quarantine pipeline first
+        - **type**: uuid
+      -
+        - **name**: mapping_template_id
+        - **notes**: shared import mapping
+        - **type**: uuid
+      -
+        - **name**: schedule_cron
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: parsing, in_review, published, rejected, failed
+        - **type**: text
+      -
+        - **name**: flag_threshold_pct
+        - **type**: numeric
+      -
+        - **name**: reviewed_by
+        - **type**: uuid
+      -
+        - **name**: published_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status)
+      - (tenant_id, vendor_id, created_at desc)
+    - **name**: import_jobs
+    - **purpose**: Price file import runs (upload, schedule, email-ingested).
+    - **relations**:
+      - vendors
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: import_job_id
+        - **type**: uuid
+      -
+        - **name**: catalog_item_id
+        - **notes**: null for new items
+        - **type**: uuid
+      -
+        - **name**: item_code
+        - **type**: text
+      -
+        - **name**: old_price
+        - **type**: numeric
+      -
+        - **name**: new_price
+        - **type**: numeric
+      -
+        - **name**: pct_change
+        - **type**: numeric
+      -
+        - **name**: flagged
+        - **type**: boolean
+      -
+        - **name**: effective_from
+        - **type**: date
+      -
+        - **name**: decision
+        - **notes**: pending, accept, reject
+        - **type**: text
+      -
+        - **name**: raw_row
+        - **type**: jsonb
+    - **indexes**:
+      - (import_job_id, flagged)
+      - (tenant_id, import_job_id, decision)
+    - **name**: import_diff_lines
+    - **purpose**: Per-line staged diffs for review before publish.
+    - **relations**:
+      - import_jobs
+      - catalog_items
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: number
+        - **notes**: tenant sequence
+        - **type**: text
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: requested_by
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: cart, submitted, approved, rejected, converted
+        - **type**: text
+      -
+        - **name**: required_date
+        - **type**: date
+      -
+        - **name**: approval_instance_id
+        - **type**: uuid
+      -
+        - **name**: submitted_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, number)
+      - (tenant_id, project_id, status)
+    - **name**: requisitions
+    - **purpose**: Requisition submitted to accounts.
+    - **relations**:
+      - projects
+      - approvals engine
+      - comments thread
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: requisition_id
+        - **type**: uuid
+      -
+        - **name**: catalog_item_id
+        - **notes**: nullable for free-text
+        - **type**: uuid
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: qty
+        - **type**: numeric
+      -
+        - **name**: uom
+        - **type**: text
+      -
+        - **name**: est_unit_price
+        - **notes**: redacted
+        - **type**: numeric
+      -
+        - **name**: asset_id
+        - **notes**: optional FK assets
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: optional FK tasks
+        - **type**: uuid
+      -
+        - **name**: cost_code
+        - **notes**: plain text; cost_items removed
+        - **type**: text
+      -
+        - **name**: wbs
+        - **type**: text
+      -
+        - **name**: ctr
+        - **type**: text
+    - **indexes**:
+      - (requisition_id)
+      - (tenant_id, asset_id)
+    - **name**: requisition_lines
+    - **purpose**: Requisition lines.
+    - **relations**:
+      - requisitions
+      - catalog_items
+      - assets
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: po_number
+        - **type**: text
+      -
+        - **name**: vendor_id
+        - **type**: uuid
+      -
+        - **name**: requisition_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: optional
+        - **type**: uuid
+      -
+        - **name**: delivery_address
+        - **type**: text
+      -
+        - **name**: required_date
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: draft, issued, part_received, received, closed
+        - **type**: text
+      -
+        - **name**: currency
+        - **type**: text
+      -
+        - **name**: fx_rate
+        - **notes**: stamped from ref_packs
+        - **type**: numeric
+      -
+        - **name**: fx_source
+        - **type**: text
+      -
+        - **name**: fx_effective_date
+        - **type**: date
+      -
+        - **name**: total_ex_tax
+        - **notes**: redacted
+        - **type**: numeric
+      -
+        - **name**: tax_total
+        - **type**: numeric
+      -
+        - **name**: issued_at
+        - **type**: timestamptz
+      -
+        - **name**: issued_document_id
+        - **notes**: signed/issued PO file
+        - **type**: uuid
+      -
+        - **name**: approval_instance_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, po_number)
+      - (tenant_id, status)
+      - partial (tenant_id, status) where status in ('issued','part_received')
+    - **name**: purchase_orders
+    - **purpose**: Purchase orders.
+    - **relations**:
+      - vendors
+      - requisitions
+      - projects
+      - assets
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: po_id
+        - **type**: uuid
+      -
+        - **name**: line_no
+        - **type**: int
+      -
+        - **name**: catalog_item_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: qty_ordered
+        - **type**: numeric
+      -
+        - **name**: qty_received
+        - **notes**: maintained from receipts
+        - **type**: numeric
+      -
+        - **name**: uom
+        - **type**: text
+      -
+        - **name**: unit_price
+        - **notes**: redacted
+        - **type**: numeric
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: scope task
+        - **type**: uuid
+      -
+        - **name**: cost_code
+        - **notes**: text link
+        - **type**: text
+      -
+        - **name**: wbs
+        - **type**: text
+      -
+        - **name**: ctr
+        - **type**: text
+    - **indexes**:
+      - unique(po_id, line_no)
+      - (tenant_id, asset_id)
+      - (tenant_id, task_id)
+    - **name**: po_lines
+    - **purpose**: PO lines linked to work and assets.
+    - **relations**:
+      - purchase_orders
+      - catalog_items
+      - assets
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: po_id
+        - **type**: uuid
+      -
+        - **name**: received_by
+        - **type**: uuid
+      -
+        - **name**: received_at
+        - **type**: timestamptz
+      -
+        - **name**: docket_number
+        - **type**: text
+      -
+        - **name**: docket_document_id
+        - **type**: uuid
+      -
+        - **name**: delivery_booking_id
+        - **notes**: logistics, nullable
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **notes**: captured offline at site
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, po_id)
+    - **name**: goods_receipts
+    - **purpose**: Receipt events against a PO (supports partials).
+    - **relations**:
+      - purchase_orders
+      - documents
+      - logistics bookings
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: receipt_id
+        - **type**: uuid
+      -
+        - **name**: po_line_id
+        - **type**: uuid
+      -
+        - **name**: qty_received
+        - **type**: numeric
+      -
+        - **name**: batch_no
+        - **type**: text
+      -
+        - **name**: serial_no
+        - **type**: text
+      -
+        - **name**: heat_no
+        - **notes**: MTR heat number
+        - **type**: text
+      -
+        - **name**: mtr_document_id
+        - **notes**: FK documents; handed to components module
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: copied from PO line so history follows the asset
+        - **type**: uuid
+      -
+        - **name**: stock_movement_id
+        - **notes**: link to inventory receipt
+        - **type**: uuid
+    - **indexes**:
+      - (receipt_id)
+      - (tenant_id, batch_no)
+      - (tenant_id, heat_no)
+    - **name**: goods_receipt_lines
+    - **purpose**: Received quantities with batch/serial and MTR link.
+    - **relations**:
+      - goods_receipts
+      - po_lines
+      - documents
+      - inventory stock movement
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: po_id
+        - **type**: uuid
+      -
+        - **name**: vendor_id
+        - **type**: uuid
+      -
+        - **name**: invoice_number
+        - **type**: text
+      -
+        - **name**: invoice_date
+        - **type**: date
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: subtotal
+        - **type**: numeric
+      -
+        - **name**: tax
+        - **type**: numeric
+      -
+        - **name**: total
+        - **type**: numeric
+      -
+        - **name**: match_status
+        - **notes**: pending, matched, exception, overridden
+        - **type**: text
+      -
+        - **name**: match_detail
+        - **notes**: variances per line
+        - **type**: jsonb
+      -
+        - **name**: override_by
+        - **type**: uuid
+      -
+        - **name**: override_reason
+        - **type**: text
+      -
+        - **name**: exported_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, vendor_id, invoice_number)
+      - (tenant_id, match_status)
+    - **name**: supplier_invoices
+    - **purpose**: Supplier invoice and match outcome on one record.
+    - **relations**:
+      - purchase_orders
+      - vendors
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: vendor_id
+        - **notes**: nullable = default
+        - **type**: uuid
+      -
+        - **name**: qty_tolerance_pct
+        - **type**: numeric
+      -
+        - **name**: price_tolerance_pct
+        - **type**: numeric
+      -
+        - **name**: abs_tolerance
+        - **type**: numeric
+    - **indexes**:
+      - (tenant_id, vendor_id)
+    - **name**: match_tolerances
+    - **purpose**: Three-way match tolerance rules.
+    - **relations**:
+      - vendors
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: format
+        - **notes**: xero, myob, csv
+        - **type**: text
+      -
+        - **name**: entity_ids
+        - **notes**: PO and invoice ids included
+        - **type**: jsonb
+      -
+        - **name**: document_id
+        - **notes**: output file
+        - **type**: uuid
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, created_at desc)
+    - **name**: accounting_exports
+    - **purpose**: Export runs to Xero, MYOB or CSV.
+    - **relations**:
+      - documents

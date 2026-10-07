@@ -1,0 +1,130 @@
+# Integrations & webhooks — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/integrations/router_public.py
+    - **purpose**: Versioned /api/v1 system-to-system surface: OAuth2 client credentials, idempotency keys, rate limits
+  -
+    - **path**: backend/app/modules/integrations/router_admin.py
+    - **purpose**: Connectors, subscriptions, destinations, API keys, feeds, delivery log, health
+  -
+    - **path**: backend/app/modules/integrations/models.py
+    - **purpose**: Connector, Subscription, DeliveryLog, IcalFeedToken, ApiClient, ApiKey, ApiUsageLog, ApprovedDestination, FieldMappingSet, ConflictRuleSet, SyncState, IntegrationAuditEntry
+  -
+    - **path**: backend/app/modules/integrations/schemas.py
+    - **purpose**: Pydantic models and event payload schemas per version
+  -
+    - **path**: backend/app/modules/integrations/dispatcher.py
+    - **purpose**: Event subscription matching, redaction by audience, enqueue delivery jobs
+  -
+    - **path**: backend/app/modules/integrations/delivery.py
+    - **purpose**: HMAC signing, retry with backoff, replay, delivery log
+  -
+    - **path**: backend/app/modules/integrations/destinations.py
+    - **purpose**: Approval workflow, allowlist and SSRF checks (DNS resolution, private ranges blocked)
+  -
+    - **path**: backend/app/modules/integrations/redaction.py
+    - **purpose**: Audience and team visibility profiles, summary-only mode
+  -
+    - **path**: backend/app/modules/integrations/channels/
+    - **purpose**: Teams, Slack, email digest and signed-webhook adapters (Telegram not included pending owner decision)
+  -
+    - **path**: backend/app/modules/integrations/ical.py
+    - **purpose**: iCal feeds with token validation; tokens revoked on user deactivation
+  -
+    - **path**: backend/app/modules/integrations/connectors/base.py
+    - **purpose**: Connector interface for mapping, transformation, conflict rules, bulk and incremental sync
+  -
+    - **path**: backend/app/modules/integrations/connectors/eam_generic.py
+    - **purpose**: Generic EAM sync engine; SAP PM and Maximo adapters plug in as thin per-customer packages
+  -
+    - **path**: backend/app/modules/integrations/sync.py
+    - **purpose**: Asset and work order sync with client register as master for tags; push-back of results
+  -
+    - **path**: backend/app/modules/integrations/secrets.py
+    - **purpose**: References to the secrets manager and rotation hooks; no credentials stored in the database
+  -
+    - **path**: backend/app/modules/integrations/jobs.py
+    - **purpose**: Delivery, sync and health-check jobs
+  -
+    - **path**: backend/app/modules/integrations/manifest.py
+    - **purpose**: Registers permissions, event catalogue, tokens and export contract
+  -
+    - **path**: backend/app/modules/integrations/tests/
+    - **purpose**: Signature, SSRF, redaction, replay, scope and tenant isolation tests
+- **change isolation**: A new destination type or event is an adapter or catalogue entry inside this module. A customer-specific SAP PM or Maximo adapter is a separate plug-in package using the connector base, so core code does not change.
+- **config not code**:
+  - Subscriptions and event filters
+  - Redaction profiles
+  - Destination allowlist
+  - Field mappings and transformations
+  - Conflict rules
+  - Rate limits and retry schedule
+  - Channel enablement per tenant (Telegram off)
+  - API key scopes
+  - Notification text via terminology tokens
+  - Sync schedule
+- **events consumed**:
+  - All catalogued domain events (ncr.raised, inspection.signed_off, approval.rejected, deadline.due and others) via subscriptions
+  - user.deactivated (revoke feed tokens and keys)
+  - asset.changed and workorder.changed (for sync)
+  - project.archived (pause connectors)
+  - tenant.legal_hold.changed
+- **events emitted**:
+  - integration.delivery.failed
+  - integration.delivery.succeeded
+  - integration.destination.approved
+  - integration.destination.revoked
+  - integration.sync.completed
+  - integration.sync.conflict
+  - integration.api_key.created
+  - integration.api_key.revoked
+  - integration.health.degraded
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/integrations/ConnectorSetup.tsx
+    - **purpose**: Per-project connector configuration
+  -
+    - **path**: frontend/src/modules/integrations/SubscriptionMatrix.tsx
+    - **purpose**: Events by destination
+  -
+    - **path**: frontend/src/modules/integrations/DeliveryLog.tsx
+    - **purpose**: Attempts, status, response, replay
+  -
+    - **path**: frontend/src/modules/integrations/HealthPage.tsx
+    - **purpose**: Failed delivery queue and alerts
+  -
+    - **path**: frontend/src/modules/integrations/DestinationAdmin.tsx
+    - **purpose**: Approval and allowlist
+  -
+    - **path**: frontend/src/modules/integrations/ApiKeys.tsx
+    - **purpose**: Keys, scopes and usage
+  -
+    - **path**: frontend/src/modules/integrations/FieldMapping.tsx
+    - **purpose**: Mapping and conflict resolution
+  -
+    - **path**: frontend/src/modules/integrations/api.ts
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - /api/v1/* versioned REST surface with OpenAPI, OAuth2 client credentials, Idempotency-Key header and rate limits
+  - POST /oauth/token (client credentials)
+  - CRUD /api/v1/integrations/connectors, /subscriptions, /destinations, /api-keys
+  - POST /api/v1/integrations/destinations/{id}/approve
+  - GET /api/v1/integrations/deliveries and POST /deliveries/{id}/replay
+  - GET /api/v1/integrations/health
+  - GET /ical/{token}.ics
+  - POST /api/v1/integrations/connectors/{id}/sync
+  - GET and PUT field mapping and conflict rules
+- **reuses shared**:
+  - Domain event bus and event catalogue
+  - Jobs and queue runner with retry
+  - Policy and authorisation service (API scopes by project and module)
+  - Notification channels from the comments module
+  - Audit trail
+  - Secrets manager
+  - Redaction and masking service
+  - Rate limiting middleware
+  - Terminology dictionary for notification text
+  - Asset and scope services for sync
+  - Import and export contract for bulk sync

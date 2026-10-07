@@ -1,0 +1,92 @@
+# Architecture & module boundaries — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: services/api/app/modules/_template/
+    - **purpose**: Standard module template: router.py, service.py (published interface), models.py, schemas.py, events.py, permissions.py, manifest.yaml, tests/
+  -
+    - **path**: services/api/app/platform/events/outbox.py
+    - **purpose**: Transactional outbox writer; domain event inserted in the same transaction as the state change
+  -
+    - **path**: services/api/app/platform/events/dispatcher.py
+    - **purpose**: Worker process that polls domain_events with SKIP LOCKED, fans out to subscribers, retries, dead-letters
+  -
+    - **path**: services/api/app/platform/events/registry.py
+    - **purpose**: Typed event catalogue (name, version, Pydantic payload) and subscriber registration
+  -
+    - **path**: services/api/app/platform/modules/registry.py
+    - **purpose**: Loads module manifests, mounts routers, checks declared dependencies
+  -
+    - **path**: services/api/app/platform/feature_flags.py
+    - **purpose**: Per-tenant flag lookup (BIM, AI, deferred modules) used as a router guard
+  -
+    - **path**: services/api/app/platform/context.py
+    - **purpose**: Request context carrying tenant_id, project_id, actor and asset subtree scope
+  -
+    - **path**: services/api/.importlinter
+    - **purpose**: import-linter contracts: modules may import only other modules' service/schemas/events public packages; layers across the 8 contexts
+  -
+    - **path**: services/api/app/worker/main.py
+    - **purpose**: Separate worker entrypoint (queue consumers, outbox dispatcher, scheduled jobs)
+  -
+    - **path**: services/sidecar/
+    - **purpose**: Python sidecar boundary for IFC/CAD/OCR only, called via job queue and signed callbacks
+  -
+    - **path**: migrations/versions/xxxx_domain_events.sql
+    - **purpose**: domain_events outbox table with tenant_id, RLS, partial index on unpublished rows
+  -
+    - **path**: docs/adr/0001-continue-aip.md
+    - **purpose**: ADR: modular monolith, retire TS rebuild, entity registry pattern
+  -
+    - **path**: docs/architecture/module-map.md
+    - **purpose**: Generated map of 8 contexts, modules, events and dependencies
+  -
+    - **path**: tools/new_module.py
+    - **purpose**: Scaffolder that creates a module from the template
+- **change isolation**: A new or changed module edits only its own folder and manifest; cross-module effects are added as event subscribers, not imports. Boundary lint in CI fails any reach into another module's internals.
+- **config not code**:
+  - Module manifests (YAML)
+  - Per-tenant feature flags
+  - Event-to-subscriber routing table
+  - Outbox retry/backoff and batch size
+  - import-linter contracts
+  - Enabled modules per tenant and region
+- **events consumed**:
+  - tenancy.tenant.provisioned (seed default flags and modules)
+  - every module's domain events (routed to timeline, notifications, search, deadlines, evidence subscribers)
+- **events emitted**:
+  - platform.module.enabled
+  - platform.module.disabled
+  - platform.event.dead_lettered
+  - platform.feature_flag.changed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/_template/
+    - **purpose**: Module template: routes.tsx, api.ts, components/, hooks/, index.ts as the only export surface
+  -
+    - **path**: frontend/src/app/moduleRegistry.ts
+    - **purpose**: Registers module routes, nav entries and permission requirements from each module's manifest
+  -
+    - **path**: frontend/.dependency-cruiser.cjs
+    - **purpose**: Frontend boundary rules: modules import only other modules' index.ts
+  -
+    - **path**: frontend/src/platform/featureFlags.tsx
+    - **purpose**: useFeature() hook and gate component driven by tenant flags
+- **public api**:
+  - ModuleManifest: id, context, depends_on, emits, consumes, permissions, feature_flag
+  - publish_event(session, name, payload, entity_ref) -> event_id
+  - subscribe(event_name, handler, idempotency_key_fn)
+  - is_feature_enabled(tenant_id, flag) -> bool
+  - GET /api/v1/platform/modules (enabled modules and nav for current tenant)
+  - GET /api/v1/platform/events/dead-letter (admin) and POST .../retry
+  - Entity registry contract: content type > category > item type > record
+- **reuses shared**:
+  - Audit log (subscriber on outbox)
+  - Notification service
+  - Search indexer
+  - Workflow engine (single status model)
+  - Form-schema engine
+  - Rules engine
+  - File pipeline
+  - RLS tenant context from the database module

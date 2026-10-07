@@ -1,0 +1,511 @@
+# Prefab & off-site manufacture — Data model & schema
+
+
+- **notes**: Gates reuse the RSW completion gate and certificate hard-block, with no gate tables. Overrides are logged in audit. witness_required is a nullable flag awaiting the owner's decision on witness notification. Install slot planning against crane and laydown is limited to simple windows. Procurement and inventory links are omitted until those modules exist.
+- **reuses existing**:
+  - assets
+  - entity_types
+  - inspections
+  - inspection_responses
+  - issues
+  - documents
+  - certificates
+  - disciplines
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: label_key
+        - **notes**: terminology
+        - **type**: text
+      -
+        - **name**: entity_type_id
+        - **notes**: asset class for destination
+        - **type**: uuid
+      -
+        - **name**: itp_template_id
+        - **type**: uuid
+      -
+        - **name**: handover_checklist_def
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, code) unique
+    - **name**: prefab_unit_types
+    - **purpose**: Unit type with default stage template
+    - **relations**:
+      - entity_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: unit_type_id
+        - **type**: uuid
+      -
+        - **name**: sequence
+        - **type**: int
+      -
+        - **name**: stage_key
+        - **notes**: fabrication/QA/pack/dispatch/transport/receipt/installation
+        - **type**: text
+      -
+        - **name**: depends_on_sequence
+        - **type**: int[]
+      -
+        - **name**: hold_point
+        - **type**: boolean
+      -
+        - **name**: witness_required
+        - **notes**: deferred option
+        - **type**: boolean
+      -
+        - **name**: gate_rule
+        - **notes**: JSONLogic
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (unit_type_id, sequence) unique
+    - **name**: prefab_stage_templates
+    - **purpose**: Ordered stages per unit type
+    - **relations**:
+      - prefab_unit_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: unit's own asset node
+        - **type**: uuid
+      -
+        - **name**: unit_type_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: mark_no
+        - **type**: text
+      -
+        - **name**: revision
+        - **type**: text
+      -
+        - **name**: destination_asset_id
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **notes**: generated ITP
+        - **type**: uuid
+      -
+        - **name**: design_release_status
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: pipeline
+        - **type**: text
+      -
+        - **name**: sequence
+        - **type**: int
+      -
+        - **name**: qr_code
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, mark_no, revision) unique
+      - (asset_id)
+      - (destination_asset_id)
+      - (tenant_id, status)
+    - **name**: prefab_units
+    - **purpose**: Off-site manufactured unit
+    - **relations**:
+      - assets
+      - inspections
+      - prefab_unit_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: unit_id
+        - **type**: uuid
+      -
+        - **name**: stage_template_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: denormalised
+        - **type**: uuid
+      -
+        - **name**: sequence
+        - **type**: int
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: started_at
+        - **type**: timestamptz
+      -
+        - **name**: completed_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (unit_id, sequence) unique
+    - **name**: prefab_production_stages
+    - **purpose**: Stage instances per unit
+    - **relations**:
+      - prefab_units
+      - prefab_stage_templates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: shipment_no
+        - **type**: text
+      -
+        - **name**: carrier_ref
+        - **type**: text
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: eta
+        - **type**: timestamptz
+      -
+        - **name**: dispatched_at
+        - **type**: timestamptz
+      -
+        - **name**: received_at
+        - **type**: timestamptz
+      -
+        - **name**: packing_list_document_id
+        - **notes**: documents
+        - **type**: uuid
+      -
+        - **name**: label_code
+        - **notes**: QR/barcode
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, shipment_no) unique
+      - (tenant_id, status)
+    - **name**: prefab_shipments
+    - **purpose**: Transport load
+    - **relations**:
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: shipment_id
+        - **type**: uuid
+      -
+        - **name**: unit_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (shipment_id, unit_id) unique
+      - (unit_id)
+    - **name**: prefab_shipment_units
+    - **purpose**: Units on a shipment
+    - **relations**:
+      - prefab_shipments
+      - prefab_units
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: shipment_id
+        - **type**: uuid
+      -
+        - **name**: event_type
+        - **type**: text
+      -
+        - **name**: location
+        - **type**: geography
+      -
+        - **name**: occurred_at
+        - **type**: timestamptz
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (shipment_id, occurred_at)
+    - **name**: prefab_shipment_events
+    - **purpose**: Append-only transport status events
+    - **relations**:
+      - prefab_shipments
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: unit_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: shipment_id
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **notes**: inspections
+        - **type**: uuid
+      -
+        - **name**: result
+        - **notes**: pass/damaged/reject
+        - **type**: text
+      -
+        - **name**: damage_photo_ids
+        - **notes**: documents
+        - **type**: jsonb
+      -
+        - **name**: issue_id
+        - **notes**: auto NCR in issues
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (unit_id)
+      - (issue_id)
+    - **name**: prefab_receipt_checks
+    - **purpose**: Receipt inspection result per unit
+    - **relations**:
+      - prefab_units
+      - inspections
+      - issues
+      - prefab_shipments
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: unit_id
+        - **type**: uuid
+      -
+        - **name**: destination_asset_id
+        - **type**: uuid
+      -
+        - **name**: planned_start
+        - **type**: timestamptz
+      -
+        - **name**: planned_end
+        - **type**: timestamptz
+      -
+        - **name**: installed_at
+        - **type**: timestamptz
+      -
+        - **name**: signed_off_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (unit_id)
+      - (planned_start)
+    - **name**: prefab_install_slots
+    - **purpose**: Planned installation window
+    - **relations**:
+      - prefab_units
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: unit_id
+        - **type**: uuid
+      -
+        - **name**: component_id
+        - **notes**: components module
+        - **type**: uuid
+      -
+        - **name**: material_id
+        - **type**: uuid
+      -
+        - **name**: heat_number
+        - **type**: text
+      -
+        - **name**: certificate_id
+        - **notes**: MTR cert
+        - **type**: uuid
+      -
+        - **name**: quantity
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (unit_id)
+      - (tenant_id, heat_number)
+    - **name**: prefab_unit_bom_lines
+    - **purpose**: Unit BOM linked to traceability
+    - **relations**:
+      - prefab_units
+      - components
+      - certificates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: unit_id
+        - **type**: uuid
+      -
+        - **name**: item_key
+        - **notes**: MDR/doc type
+        - **type**: text
+      -
+        - **name**: required
+        - **type**: boolean
+      -
+        - **name**: document_id
+        - **notes**: nullable until supplied
+        - **type**: uuid
+      -
+        - **name**: verified_by
+        - **type**: uuid
+      -
+        - **name**: verified_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (unit_id, item_key) unique
+    - **name**: prefab_unit_handover_items
+    - **purpose**: Per-unit handover document checklist
+    - **relations**:
+      - prefab_units
+      - documents

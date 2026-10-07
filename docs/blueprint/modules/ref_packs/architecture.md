@@ -1,0 +1,102 @@
+# Regional reference data packs — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/ref_packs/models.py
+    - **purpose**: ReferenceLibrary, ReferenceItem, Currency, ExchangeRate, StandardsMap, TenantPackEnablement, ProjectPackPin, JurisdictionSetting
+  -
+    - **path**: backend/app/modules/ref_packs/schemas.py
+    - **purpose**: Pydantic schemas
+  -
+    - **path**: backend/app/modules/ref_packs/router.py
+    - **purpose**: Library, enablement, pin, upgrade preview, rates endpoints
+  -
+    - **path**: backend/app/modules/ref_packs/service.py
+    - **purpose**: Enable, import, version, pin per project
+  -
+    - **path**: backend/app/modules/ref_packs/upgrade_preview.py
+    - **purpose**: Diff of new pack version against pinned records and affected references
+  -
+    - **path**: backend/app/modules/ref_packs/licensed_import.py
+    - **purpose**: Customer-loaded licensed content with licence flag, tenant-owned, never shared
+  -
+    - **path**: backend/app/modules/ref_packs/standards_map.py
+    - **purpose**: Link standard clauses to checklist items and acceptance criteria
+  -
+    - **path**: backend/app/modules/ref_packs/fx.py
+    - **purpose**: Exchange rate lookup returning rate, source and effective date for stamping on records
+  -
+    - **path**: backend/app/modules/ref_packs/jurisdiction.py
+    - **purpose**: Bundle application: terminology, tax, holidays, formats; enable a market in one step
+  -
+    - **path**: backend/app/modules/ref_packs/events.py
+    - **purpose**: Emitters
+  -
+    - **path**: backend/app/modules/ref_packs/permissions.py
+    - **purpose**: Permission keys
+  -
+    - **path**: backend/app/modules/ref_packs/seed/packs/au_wa/
+    - **purpose**: Data-only starter pack: AUD, AS/NZS and AS 2885 and CUI reference structures, WA holidays and defaults (no licensed content)
+  -
+    - **path**: backend/migrations/versions/xxxx_ref_packs.py
+    - **purpose**: Migration with RLS; shipped global packs separated from tenant-owned content
+  -
+    - **path**: backend/tests/modules/ref_packs/
+    - **purpose**: Pinning, licence isolation, upgrade preview, FX stamping tests
+- **change isolation**: Adding a region or standard is a new data pack with no code change. Consumers use only the picker and resolve_reference, so pack structure changes stay in this module. Open priority on cost references is handled by shipping the structure only, keeping the cost-reference side deferrable without rework.
+- **config not code**:
+  - Everything: packs are data
+  - Enabled packs per tenant
+  - Pinned versions per project
+  - Licence flags
+  - Tax rates and date/number formats
+  - Holiday lists
+  - Exchange rate source setting
+  - Standards-to-checklist mappings
+- **events consumed**:
+  - project.created (default pins from tenant region)
+  - tenant.created (default jurisdiction)
+- **events emitted**:
+  - pack.enabled
+  - pack.version_pinned
+  - pack.upgrade_available
+  - jurisdiction.applied
+  - exchange_rate.updated
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/ref_packs/pages/LibraryManager.tsx
+    - **purpose**: Enable, import, version, licence
+  -
+    - **path**: frontend/src/modules/ref_packs/pages/CurrencySettings.tsx
+    - **purpose**: Currencies and rate source
+  -
+    - **path**: frontend/src/modules/ref_packs/pages/UpgradePreview.tsx
+    - **purpose**: Preview of pack version change
+  -
+    - **path**: frontend/src/modules/ref_packs/components/ReferencePicker.tsx
+    - **purpose**: Picker used inside other modules, e.g. clause citation on forms
+  -
+    - **path**: frontend/src/modules/ref_packs/api.ts
+    - **purpose**: Generated client wrapper
+  -
+    - **path**: frontend/src/modules/ref_packs/routes.tsx
+    - **purpose**: Route and nav registration
+- **public api**:
+  - GET /reference-libraries and POST /reference-libraries/{id}/enable
+  - POST /reference-libraries/import (licensed)
+  - GET /reference-items?library=&q=
+  - PUT /projects/{id}/pack-pins and GET upgrade-preview
+  - GET/PUT /currencies and /exchange-rates
+  - GET/PUT /standards-map
+  - POST /jurisdictions/{id}/apply
+  - resolve_reference(item_id, project_id) and get_fx_rate(from, to, date) read interfaces
+- **reuses shared**:
+  - Terminology dictionary receives vocabulary from jurisdiction bundle
+  - Import mapping component
+  - Tenancy and RLS for licensed content ownership
+  - Calendar service in tasks receives public holidays
+  - Forms and ITP template designer consumes standards map
+  - Audit trail
+  - Permissions catalogue
+  - Search index

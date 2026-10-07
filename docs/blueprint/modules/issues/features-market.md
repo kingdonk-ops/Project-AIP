@@ -1,0 +1,38 @@
+# Issues, NCRs & corrective actions — Feature scout
+
+
+- **abilities seen in market**:
+  - Configurable issue types, severities and workflows by project
+  - Auto-raised issues from failed inspection items with source step, asset and photo carried across
+  - Root cause analysis tools such as 5-why and fishbone, with cause categories for trend reporting
+  - Corrective and preventive action tracking with effectiveness verification
+  - Ball-in-court assignment and SLA timers with escalation
+  - Subcontractor response and evidence submission through a portal
+  - Hold flag on the related ITP step or asset until closure
+  - Cost and time impact capture linked to variations
+  - Trend analytics by cause, contractor, asset class and discipline
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: NCR hold flag on ITP step and asset
+    - **why**: Open NCRs should block the related hold point or release until dispositioned, enforcing quality at the system level.
+  -
+    - **effort**: M
+    - **feature**: Disposition workflow with engineering approval
+    - **why**: Use-as-is and repair dispositions normally need engineer and client sign-off. A defined approval path with sealed records meets contract needs.
+  -
+    - **effort**: S
+    - **feature**: Root cause categories and trend reports
+    - **why**: Structured cause codes allow reporting by welder, procedure, supplier or environment, turning NCRs into improvement data.
+  -
+    - **effort**: S
+    - **feature**: Overdue and SLA notifications with escalation
+    - **why**: Deferred. Timers on assessment, action and verification stop issues stalling and support client KPIs.
+  -
+    - **effort**: M
+    - **feature**: Admin-configurable types, severities and workflows
+    - **why**: Different customers use different NCR vocabularies and severity scales. Configuration is essential for multi-market use.
+  -
+    - **effort**: S
+    - **feature**: Per-issue attachments with photo markup
+    - **why**: Deferred. Annotated evidence on the defect and closeout is basic expectation and supports disputes.

@@ -1,0 +1,154 @@
+# Equipment & fleet — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: equipment.view; edit needs equipment.manage.
+    - **actions**:
+      - Add equipment
+      - Open
+      - Assign to project
+      - Change status
+      - Schedule maintenance
+      - Request calibration
+      - Export register
+    - **layout**: DataTable with a type tab strip and a detail drawer.
+    - **name**: Equipment register
+    - **purpose**: List plant, vehicles and instruments with eligibility state.
+    - **route**: /equipment
+    - **sections**:
+      - Tabs (all, plant, vehicle, instrument)
+      - Filters (type, project, status, calibration, ownership)
+      - Register table (ID, name, type, make/model, serial, ownership, project, status, calibration due, next service, eligibility)
+      - Bulk action bar
+  -
+    - **access**: equipment.manage.
+    - **actions**:
+      - Save
+      - Save and add calibration certificate
+      - Cancel
+    - **layout**: Form driven by the content-type definition.
+    - **name**: Add equipment
+    - **purpose**: Register new equipment.
+    - **route**: /equipment/new
+    - **sections**:
+      - Type and identity
+      - Ownership and hire details
+      - Calibration requirement and interval
+      - Hire charge rate
+      - Linked asset (optional)
+  -
+    - **access**: equipment.view; actions per permission.
+    - **actions**:
+      - Edit
+      - Upload calibration certificate
+      - Transfer to project
+      - Run pre-start
+      - Schedule service
+      - Mark out of service
+      - Create work order
+    - **layout**: Header with eligibility badge and tabbed body.
+    - **name**: Equipment detail
+    - **purpose**: Full record with calibration, service and usage.
+    - **route**: /equipment/:id
+    - **sections**:
+      - Identity and ownership
+      - Current status and project
+      - Calibration certificates and validity
+      - Eligibility gate status
+      - Maintenance schedule and service history
+      - Pre-start and inspection history
+      - Usage on inspections
+      - Hire and charge history
+      - Linked asset
+      - Documents
+      - Activity and audit
+  -
+    - **access**: equipment.manage.
+    - **actions**:
+      - Save
+      - Cancel
+    - **layout**: Same form as create with change-reason field.
+    - **name**: Edit equipment
+    - **purpose**: Change details and settings.
+    - **route**: /equipment/:id/edit
+    - **sections**:
+      - Identity
+      - Ownership and hire
+      - Calibration settings
+      - Linked asset
+  -
+    - **access**: equipment.view; schedule needs equipment.maintain.
+    - **actions**:
+      - Schedule service
+      - Record service
+      - Reschedule
+    - **layout**: Calendar with a list toggle.
+    - **name**: Maintenance calendar
+    - **purpose**: See services and calibrations due.
+    - **route**: /equipment/maintenance
+    - **sections**:
+      - Calendar of due and overdue items
+      - Filters by type and project
+      - Overdue list
+  -
+    - **access**: equipment.view; clearing needs equipment.maintain.
+    - **actions**:
+      - Open submission
+      - Run pre-start
+      - Raise task or NCR
+      - Clear failure
+    - **layout**: DataTable with status filters.
+    - **name**: Pre-start checks
+    - **purpose**: Review pre-start submissions and failures.
+    - **route**: /equipment/prestarts
+    - **sections**:
+      - Submissions table
+      - Failed checks tab
+      - Template mapping
+  -
+    - **access**: equipment.charges with commercial permission.
+    - **actions**:
+      - Generate charges
+      - Adjust line
+      - Export statement
+    - **layout**: Summary cards over a charges table.
+    - **name**: Hire charge statement
+    - **purpose**: Review internal hire charges by project.
+    - **route**: /equipment/charges
+    - **sections**:
+      - Period selector
+      - Charges by project
+      - Charge lines (days, rate, total)
+  -
+    - **access**: equipment.configure.
+    - **actions**:
+      - Save
+      - Edit rate card
+    - **layout**: Tabbed settings.
+    - **name**: Equipment settings
+    - **purpose**: Configure types, calibration enforcement and rates.
+    - **route**: /equipment/settings
+    - **sections**:
+      - Types and attributes
+      - Calibration lead times and enforcement mode
+      - Pre-start template mapping
+      - Maintenance defaults
+      - Hire rate cards
+      - Terminology keys
+  -
+    - **access**: Field users with equipment.view and equipment.prestart.
+    - **actions**:
+      - Scan
+      - Run pre-start
+      - Report defect
+      - View calibration
+    - **layout**: Mobile list with QR or barcode scan, large status chips, and offline-ready pre-start forms.
+    - **name**: Mobile equipment
+    - **purpose**: Scan, pre-start and check calibration in the field.
+    - **route**: /m/equipment
+    - **sections**:
+      - Scan bar
+      - My equipment
+      - Calibration status card
+      - Pre-start form

@@ -1,0 +1,314 @@
+# Inspections, ITPs & hold points — Feature filler
+
+
+- **detail sections**:
+  - Header (number, asset, template revision, status, workflow bar)
+  - Eligibility banner (signer credentials, instrument calibration, material use-by)
+  - Questions and answers (append-only responses with history)
+  - ITP steps with hold/witness/review/surveillance points
+  - Multi-party sign-off chips with authentication strength
+  - Linked scope tasks and downstream blocks
+  - Evidence (photos, markup, measurements, instruments used)
+  - Issues raised from failed answers
+  - Scheduling and bookings
+  - Related inspections grouped by discipline
+  - Review history and comments
+  - Report (generated on approval)
+  - Audit trail
+- **notifications**:
+  - Inspection assigned (to assignee)
+  - Booking invitation, change and cancellation (to inspector and customer)
+  - Reminder before scheduled inspection (to attendees)
+  - Witness point approaching (to witness party)
+  - Hold point awaiting release (to authorised releaser)
+  - Submitted for review (to next reviewer)
+  - Rejected and resent (to assignee)
+  - Inspection approved and report ready (to participants)
+  - Hold released and downstream tasks unblocked (to task owners)
+  - Inspection overdue (to assignee and supervisor)
+  - Programme due soon (to scheduler)
+  - Eligibility failure blocking a step (to supervisor)
+- **settings**:
+  - Workflow stages and reviewer roles per kind
+  - Client review default and rules
+  - Point types and behaviour (hold blocks, witness notifies)
+  - Minimum notice period for witness and hold points
+  - Reminder timings
+  - Sign-off rules and minimum authentication strength
+  - Override permissions and reason requirement
+  - Programme triggers and lead times
+  - Competency-based assignment rules
+  - Auto-raise issue rules and default severity
+  - Autosave and discard behaviour
+  - Report auto-generation and template mapping
+  - Renamable terms (inspection, ITP, hold point)
+  - Calendar integration options
+- **tables**:
+  -
+    - **bulk actions**:
+      - Assign selected
+      - Approve selected (where permitted)
+      - Reject/resend selected
+      - Reschedule selected
+      - Export register
+      - Generate reports
+    - **columns**:
+      - Inspection no.
+      - Template (revision)
+      - Kind
+      - Asset
+      - Project/site
+      - Discipline
+      - Status
+      - Assignee
+      - Due date
+      - Sign-offs (x of y)
+      - Open issues
+      - Updated
+    - **create form**:
+      -
+        - **field**: Template
+        - **required**: true
+        - **type**: template reference
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset reference
+      -
+        - **field**: Linked scope task
+        - **required**: false
+        - **type**: task reference
+      -
+        - **field**: Assignee
+        - **required**: false
+        - **type**: user reference
+      -
+        - **field**: Due date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Client review required
+        - **required**: false
+        - **type**: boolean
+      -
+        - **field**: Notes
+        - **required**: false
+        - **type**: long text
+    - **empty state**: No inspections match. Create one from a template against an asset, or let a scope task generate it.
+    - **filters**:
+      - Status
+      - Kind (inspection/ITP/RFI)
+      - Project/site
+      - Asset subtree
+      - Discipline
+      - Assignee
+      - Due date range
+      - Needs client review
+      - Has failed answers
+      - Overdue
+    - **name**: Inspection Register
+    - **row actions**:
+      - Open
+      - Assign/reassign
+      - Start
+      - Submit for review
+      - Approve
+      - Reject
+      - Re-inspect
+      - Schedule
+      - Open report
+      - View audit
+    - **search**: Inspection number, asset tag/name, template name, assignee
+    - **sort**:
+      - Due date
+      - Updated
+      - Status
+      - Asset
+      - Inspection no.
+  -
+    - **bulk actions**:
+      - Approve selected
+      - Send back selected
+    - **columns**:
+      - Inspection no.
+      - Asset
+      - Stage (inspector/supervisor/client)
+      - Submitted by
+      - Submitted at
+      - Age
+      - Failed answers
+    - **empty state**: Nothing waiting for your review.
+    - **filters**:
+      - Stage
+      - Project
+      - Submitted by
+      - Age over X days
+    - **name**: Review Queue
+    - **row actions**:
+      - Review (with next/previous)
+      - Approve
+      - Reject
+    - **search**: Inspection number or asset
+    - **sort**:
+      - Age (default oldest)
+      - Stage
+  -
+    - **bulk actions**:
+      - Notify witnesses for selected
+      - Export steps
+    - **columns**:
+      - Step no.
+      - Description
+      - Point type (hold/witness/review/surveillance)
+      - Linked task
+      - Responsible party
+      - Status
+      - Signed by
+      - Released at
+      - Eligibility
+    - **empty state**: This ITP has no steps. Add steps in the template and create a new revision.
+    - **filters**:
+      - Point type
+      - Status
+      - Responsible party
+      - Blocked
+    - **name**: ITP Steps (per ITP instance)
+    - **row actions**:
+      - Execute step
+      - Sign off
+      - Release hold
+      - Waive witness (with reason)
+      - Raise issue
+      - View linked task
+    - **search**: Step description
+    - **sort**:
+      - Step no.
+      - Status
+  -
+    - **bulk actions**:
+      - Pause selected
+      - Resume selected
+      - Generate due inspections now
+    - **columns**:
+      - Programme
+      - Template
+      - Scope (assets)
+      - Frequency
+      - Trigger (calendar/cert expiry/issue/ad hoc)
+      - Next due
+      - Last completed
+      - Status
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Template
+        - **required**: true
+        - **type**: template reference
+      -
+        - **field**: Assets or asset subtree
+        - **required**: true
+        - **type**: asset multi-reference
+      -
+        - **field**: Trigger
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Frequency
+        - **required**: false
+        - **type**: interval
+      -
+        - **field**: First due date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Default assignee/team
+        - **required**: false
+        - **type**: user/team reference
+      -
+        - **field**: Lead time
+        - **required**: false
+        - **type**: number (days)
+    - **empty state**: No recurring programmes. Create one to generate inspections on a calendar, certificate expiry or issue trigger.
+    - **filters**:
+      - Trigger
+      - Status
+      - Project
+      - Overdue
+    - **name**: Inspection Programmes
+    - **row actions**:
+      - Edit
+      - Pause/resume
+      - Generate now
+      - View inspections
+      - Delete
+    - **search**: Programme or asset
+    - **sort**:
+      - Next due
+      - Name
+  -
+    - **bulk actions**:
+      - Send reminders
+      - Cancel selected
+    - **columns**:
+      - Inspection
+      - Asset
+      - Date/time
+      - Inspector
+      - Customer attendee
+      - Notice given
+      - Status (proposed/confirmed/rescheduled/cancelled/attended)
+    - **create form**:
+      -
+        - **field**: Inspection or ITP step
+        - **required**: true
+        - **type**: reference
+      -
+        - **field**: Proposed date/time
+        - **required**: true
+        - **type**: datetime
+      -
+        - **field**: Inspector
+        - **required**: true
+        - **type**: user reference
+      -
+        - **field**: Customer invitees
+        - **required**: false
+        - **type**: contact multi-reference
+      -
+        - **field**: Location notes
+        - **required**: false
+        - **type**: text
+    - **empty state**: No bookings. Schedule an inspection or witness point to invite the customer and inspector.
+    - **filters**:
+      - Status
+      - Date range
+      - Inspector
+      - Customer
+      - Project
+    - **name**: Inspection Bookings (Schedule)
+    - **row actions**:
+      - Confirm
+      - Reschedule
+      - Cancel
+      - Mark attended
+      - Add to calendar
+    - **search**: Inspection number, asset or attendee
+    - **sort**:
+      - Date/time
+      - Status
+- **walkthrough**:
+  - A scope task becomes ready and generates an ITP (or a user creates an inspection from a template against an asset).
+  - The supervisor assigns it, with competency matches shown; the assignee is notified.
+  - Customer and inspector book a witness or hold point through the calendar and invitations are sent.
+  - The inspector opens the inspection, possibly offline, and the eligibility banner checks their credentials, instrument calibration and material use-by.
+  - If anything is invalid the step is hard-blocked, with an audited override path where permitted.
+  - The inspector completes the answers and takes photos; failed answers raise issues automatically.
+  - At a hold point, work is blocked until the authorised party signs and releases; witness points notify but do not block.
+  - Each signatory signs in turn and chips show their name, time and authentication strength.
+  - The inspector submits; the inspection moves to inspector review, then supervisor review, then client review if required.
+  - Reviewers approve or reject with reason; rejected items return to the assignee for resend.
+  - On final approval, the report PDF is generated and the downstream tasks unlock.
+  - If needed, a re-inspection is created and the next programme due date is recalculated.

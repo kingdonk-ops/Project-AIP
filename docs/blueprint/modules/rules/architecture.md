@@ -1,0 +1,103 @@
+# Rules & validation engine — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/rules/__init__.py
+    - **purpose**: Registration and exported evaluate() interface
+  -
+    - **path**: backend/app/modules/rules/models.py
+    - **purpose**: rule_set (versioned), rule, requirement, validation_run, validation_finding, waiver
+  -
+    - **path**: backend/app/modules/rules/schemas.py
+    - **purpose**: Rule, rule set, run result schemas
+  -
+    - **path**: backend/app/modules/rules/router.py
+    - **purpose**: Rule authoring, test panel, run and waiver endpoints
+  -
+    - **path**: backend/app/modules/rules/evaluator.py
+    - **purpose**: Sandboxed JSONLogic/CEL evaluator with whitelisted operators, no I/O, time and size limits
+  -
+    - **path**: backend/app/modules/rules/context_providers.py
+    - **purpose**: Registry through which modules expose read-only data to rules (certificate validity, open issues) without cross-imports
+  -
+    - **path**: backend/app/modules/rules/service.py
+    - **purpose**: Rule set versioning, publishing, scoping per tenant/project, waiver handling
+  -
+    - **path**: backend/app/modules/rules/gate.py
+    - **purpose**: Interface used by workflow guards, forms and report pre-flight; returns block/warn findings
+  -
+    - **path**: backend/app/modules/rules/requirements.py
+    - **purpose**: Requirements register (entity-attribute-constraint triplets) and compile to rules
+  -
+    - **path**: backend/app/modules/rules/jobs.py
+    - **purpose**: Bulk validation runs on the job queue
+  -
+    - **path**: backend/app/modules/rules/permissions.py
+    - **purpose**: Permission keys
+  -
+    - **path**: backend/alembic/versions/rules_0001_init.py
+    - **purpose**: Migration with RLS
+  -
+    - **path**: backend/tests/modules/rules/
+    - **purpose**: Evaluator safety, determinism, versioning and isolation tests
+- **change isolation**: New checks are rule data; new data sources are added as one context provider registration. The evaluator stays frozen and modules call only gate.evaluate, so adding rules never touches workflow, forms or report code.
+- **config not code**:
+  - rule sets, expressions, messages and severities
+  - assignment of rule sets to record types, projects and workflow transitions
+  - requirement triplets
+  - waiver policy and who may waive
+  - sample records for test panel
+- **events consumed**:
+  - workflow.transition.requested
+  - report.preflight.requested
+  - form.submit.requested
+  - import.batch.staged
+  - certificate.status.changed
+- **events emitted**:
+  - validation.passed
+  - validation.failed
+  - validation.waived
+  - rule_set.published
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/rules/index.ts
+    - **purpose**: Route registration
+  -
+    - **path**: frontend/src/modules/rules/pages/RuleSetEditor.tsx
+    - **purpose**: Rule set list and editor with version history
+  -
+    - **path**: frontend/src/modules/rules/pages/RunResults.tsx
+    - **purpose**: Findings grouped by severity with jump-to-record and waiver
+  -
+    - **path**: frontend/src/modules/rules/pages/RequirementsRegister.tsx
+    - **purpose**: Requirements triplets register
+  -
+    - **path**: frontend/src/modules/rules/components/RuleTestPanel.tsx
+    - **purpose**: Evaluate a rule against a sample record
+  -
+    - **path**: frontend/src/modules/rules/components/ExpressionBuilder.tsx
+    - **purpose**: Structured expression builder and raw view
+  -
+    - **path**: frontend/src/modules/rules/api/
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - evaluate(rule_set_key, record_type, record, context) -> findings[] (in-process interface)
+  - POST /rules/evaluate
+  - POST /rules/test
+  - GET/POST /rules/rule-sets
+  - POST /rules/rule-sets/{id}/publish
+  - GET/POST /rules/rule-sets/{id}/rules
+  - POST /rules/runs
+  - GET /rules/runs/{id}
+  - POST /rules/findings/{id}/waive
+  - GET/POST /rules/requirements
+- **reuses shared**:
+  - workflow engine (guard hook)
+  - form designer (field validation hook)
+  - eligibility gate (validity data via context provider)
+  - job queue
+  - audit trail
+  - notifications
+  - terminology dictionary for messages
+  - permissions policy service

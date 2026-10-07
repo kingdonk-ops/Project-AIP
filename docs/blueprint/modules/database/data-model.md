@@ -1,0 +1,169 @@
+# Database & schema conventions — Data model & schema
+
+
+- **notes**: Convention table checklist: uuid PK, tenant_id with FORCE RLS, created_at/updated_at, sync_version on offline-edited tables (client_generated_id unique per tenant), deleted_at, asset_id where history follows the asset. Partition responses, audit, sync_operations and activity by time. Add a promoted-attribute mechanism (generated columns or expression indexes) through item_types rather than here. Closure table is rejected for now, ltree is built. Hash chaining lives in the audit module.
+- **reuses existing**:
+  - assets
+  - inspections
+  - inspection_responses
+  - issues
+  - documents
+  - certificates
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: table_name
+        - **type**: text
+      -
+        - **name**: convention
+        - **notes**: tenant_id, rls, sync_version, soft_delete, created_at
+        - **type**: text
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: approved_by
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (table_name, convention)
+    - **name**: schema_convention_exceptions
+    - **purpose**: Approved exceptions to the table conventions (e.g. global reference tables) read by the CI convention check.
+    - **relations**:
+      - none (platform-level)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: commit_sha
+        - **type**: text
+      -
+        - **name**: tables_total
+        - **type**: int
+      -
+        - **name**: tables_missing_controls
+        - **type**: int
+      -
+        - **name**: report
+        - **notes**: per-table results
+        - **type**: jsonb
+      -
+        - **name**: artefact_key
+        - **notes**: object store key
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (created_at desc)
+      - btree (commit_sha)
+    - **name**: rls_coverage_reports
+    - **purpose**: Output of the CI RLS and schema-drift check retained as SOC 2 evidence.
+    - **relations**:
+      - linked to security evidence_items
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: scope_type
+        - **notes**: record, asset, project
+        - **type**: text
+      -
+        - **name**: scope_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **notes**: nullable, used when scope_type = record
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: nullable; hold applies to subtree via ltree
+        - **type**: uuid
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: placed_by
+        - **type**: uuid
+      -
+        - **name**: placed_at
+        - **type**: timestamptz
+      -
+        - **name**: released_by
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: released_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **notes**: only released_* changes
+        - **type**: timestamptz
+    - **indexes**:
+      - btree (tenant_id, scope_type, scope_id) WHERE released_at IS NULL
+      - btree (tenant_id, asset_id) WHERE released_at IS NULL
+    - **name**: legal_holds
+    - **purpose**: Legal-hold flag at record, asset or project level that blocks purge and crypto-shred.
+    - **relations**:
+      - assets.id
+      - projects.id
+      - users.id
+  -
+    - **fields**:
+      -
+        - **name**: history_id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: <entity>_id
+        - **notes**: original PK
+        - **type**: uuid
+      -
+        - **name**: valid_from
+        - **type**: timestamptz
+      -
+        - **name**: valid_to
+        - **notes**: null = current
+        - **type**: timestamptz
+      -
+        - **name**: snapshot
+        - **notes**: row image
+        - **type**: jsonb
+      -
+        - **name**: sync_version
+        - **notes**: version captured
+        - **type**: int
+      -
+        - **name**: changed_by
+        - **type**: uuid
+    - **indexes**:
+      - btree (tenant_id, <entity>_id, valid_from desc)
+      - gist on tstzrange(valid_from, valid_to) for as-at queries
+    - **name**: history_tables (pattern)
+    - **purpose**: Per-entity <table>_history rows for as-at queries (e.g. assets_history, issues_history); template, not one table.
+    - **relations**:
+      - parent entity table

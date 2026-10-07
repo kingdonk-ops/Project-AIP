@@ -1,0 +1,374 @@
+# Inspections, ITPs & hold points — Data model & schema
+
+
+- **notes**: Extend existing inspections with template_revision_id (pinned), kind, programme_id, itp_parent_id, sync_version, client_review_required. inspection_responses stays append-only; current value is latest row per (inspection_id, field_key) via view, with client_id for idempotent push. Hold gating is enforced in task completion service reading itp_steps.
+- **reuses existing**:
+  - inspections
+  - inspection_responses
+  - assets
+  - tasks
+  - documents
+  - disciplines
+  - issues
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **notes**: FK inspections (ITP instance)
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: denormalised
+        - **type**: uuid
+      -
+        - **name**: seq
+        - **type**: int
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: point_type
+        - **notes**: hold|witness|review|surveillance
+        - **type**: text
+      -
+        - **name**: acceptance_criteria
+        - **type**: text
+      -
+        - **name**: task_id
+        - **notes**: FK tasks, scope task
+        - **type**: uuid
+      -
+        - **name**: blocks_task_id
+        - **notes**: downstream task gated by hold
+        - **type**: uuid
+      -
+        - **name**: child_inspection_id
+        - **notes**: inspection run for step
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: pending|ready|in_progress|released|waived|rejected
+        - **type**: text
+      -
+        - **name**: hold_flag_issue_id
+        - **notes**: FK issues, NCR hold
+        - **type**: uuid
+      -
+        - **name**: released_at
+        - **type**: timestamptz
+      -
+        - **name**: notice_hours
+        - **notes**: witness notice period
+        - **type**: int
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, inspection_id, seq)
+      - (tenant_id, task_id)
+      - (tenant_id, blocks_task_id) where point_type='hold'
+      - (tenant_id, asset_id)
+    - **name**: itp_steps
+    - **purpose**: Steps of an ITP-kind inspection with point type and task link.
+    - **relations**:
+      - inspections
+      - tasks
+      - issues
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **type**: uuid
+      -
+        - **name**: itp_step_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: signatory_role
+        - **notes**: inspector|supervisor|client|third_party
+        - **type**: text
+      -
+        - **name**: signer_user_id
+        - **type**: uuid
+      -
+        - **name**: signer_company_id
+        - **notes**: FK contacts/companies
+        - **type**: uuid
+      -
+        - **name**: decision
+        - **notes**: approve|reject|witnessed|waived
+        - **type**: text
+      -
+        - **name**: auth_strength
+        - **notes**: password|mfa|pin|pades
+        - **type**: text
+      -
+        - **name**: eligibility_result
+        - **notes**: snapshot from eligibility check
+        - **type**: jsonb
+      -
+        - **name**: content_hash
+        - **notes**: hash of responses+revision at signing
+        - **type**: text
+      -
+        - **name**: prev_hash
+        - **notes**: chain
+        - **type**: text
+      -
+        - **name**: comment
+        - **type**: text
+      -
+        - **name**: signed_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only; REVOKE UPDATE/DELETE
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, inspection_id, signed_at)
+      - (tenant_id, signer_user_id)
+      - (tenant_id, asset_id)
+    - **name**: inspection_signoffs
+    - **purpose**: Append-only multi-party sign-offs with identity, auth strength and document hash.
+    - **relations**:
+      - inspections
+      - itp_steps
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **type**: uuid
+      -
+        - **name**: itp_step_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: scheduled_start
+        - **type**: timestamptz
+      -
+        - **name**: scheduled_end
+        - **type**: timestamptz
+      -
+        - **name**: location_note
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: proposed|confirmed|rescheduled|cancelled|done
+        - **type**: text
+      -
+        - **name**: notice_met
+        - **type**: boolean
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, scheduled_start)
+      - (tenant_id, inspection_id)
+    - **name**: inspection_bookings
+    - **purpose**: Customer/inspector scheduling with invitations and notice periods.
+    - **relations**:
+      - inspections
+      - itp_steps
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: booking_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: contact_id
+        - **notes**: external contact
+        - **type**: uuid
+      -
+        - **name**: role
+        - **notes**: inspector|customer|witness
+        - **type**: text
+      -
+        - **name**: response
+        - **notes**: pending|accepted|declined
+        - **type**: text
+      -
+        - **name**: reminded_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, booking_id)
+      - (tenant_id, user_id, response)
+    - **name**: booking_attendees
+    - **purpose**: Invitees and responses per booking.
+    - **relations**:
+      - inspection_bookings
+      - users
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **notes**: FK form_templates
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: asset_path_scope
+        - **notes**: subtree applicability
+        - **type**: ltree
+      -
+        - **name**: entity_type_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: trigger_type
+        - **notes**: calendar|cert_expiry|issue|ad_hoc
+        - **type**: text
+      -
+        - **name**: frequency
+        - **notes**: interval spec
+        - **type**: jsonb
+      -
+        - **name**: last_done_at
+        - **type**: timestamptz
+      -
+        - **name**: next_due_date
+        - **notes**: computed
+        - **type**: date
+      -
+        - **name**: lead_days
+        - **type**: int
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, next_due_date) where active
+      - GIST (asset_path_scope)
+      - (tenant_id, asset_id)
+    - **name**: inspection_programmes
+    - **purpose**: Recurring inspection programmes per asset or asset type.
+    - **relations**:
+      - form_templates
+      - assets
+      - entity_types
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **type**: uuid
+      -
+        - **name**: assignee_id
+        - **type**: uuid
+      -
+        - **name**: assigned_by
+        - **type**: uuid
+      -
+        - **name**: competency_ok
+        - **notes**: at assignment
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, inspection_id)
+      - (tenant_id, assignee_id)
+    - **name**: inspection_assignments
+    - **purpose**: Assignment history informed by competency.
+    - **relations**:
+      - inspections
+      - users

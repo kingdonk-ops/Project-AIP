@@ -1,0 +1,484 @@
+# Change orders, variations & MOC (basic) — Data model & schema
+
+
+- **notes**: Types and stage names are config rows; labels via terminology keys. Approval via the workflow engine. Commercial columns are gated by view_commercial_values. Contract forms are handled by per-contract notice configs only; AS4000/NEC/FIDIC templates can be later seed data. Emits changeorder.submitted and changeorder.approved.
+- **reuses existing**:
+  - assets
+  - inspection_responses
+  - issues
+  - documents
+  - disciplines
+  - tasks
+  - consumable_issuances
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: number
+        - **type**: text
+      -
+        - **name**: change_type
+        - **notes**: config-driven key; labels from terminology
+        - **type**: text
+      -
+        - **name**: source_type
+        - **notes**: notice, instruction, rfi, inspection_finding, phone_log, other
+        - **type**: text
+      -
+        - **name**: source_id
+        - **notes**: polymorphic ref
+        - **type**: uuid
+      -
+        - **name**: inspection_response_id
+        - **notes**: for discovered condition
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: stage
+        - **notes**: notice, request, order, measured, final_account
+        - **type**: text
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: cost_impact
+        - **notes**: redacted
+        - **type**: numeric
+      -
+        - **name**: time_impact_days
+        - **type**: numeric
+      -
+        - **name**: contract_ref
+        - **notes**: free text until contracts register exists
+        - **type**: text
+      -
+        - **name**: approval_instance_id
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(tenant_id, number)
+      - (tenant_id, project_id, stage)
+      - (tenant_id, asset_id)
+    - **name**: change_records
+    - **purpose**: Single change model with type (change order, variation, MOC, discovered condition).
+    - **relations**:
+      - projects
+      - assets
+      - inspection_responses
+      - issues
+      - documents (attachments)
+      - approvals engine
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: change_id
+        - **type**: uuid
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: cost_code
+        - **type**: text
+      -
+        - **name**: qty
+        - **type**: numeric
+      -
+        - **name**: uom
+        - **type**: text
+      -
+        - **name**: rate
+        - **notes**: redacted
+        - **type**: numeric
+      -
+        - **name**: amount
+        - **notes**: redacted
+        - **type**: numeric
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **type**: uuid
+    - **indexes**:
+      - (change_id)
+      - (tenant_id, asset_id)
+    - **name**: change_lines
+    - **purpose**: Priced lines on a change.
+    - **relations**:
+      - change_records
+      - assets
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: change_id
+        - **type**: uuid
+      -
+        - **name**: from_stage
+        - **type**: text
+      -
+        - **name**: to_stage
+        - **type**: text
+      -
+        - **name**: actor_id
+        - **type**: uuid
+      -
+        - **name**: note
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (change_id, created_at)
+    - **name**: change_stage_history
+    - **purpose**: Append-only lifecycle timeline.
+    - **relations**:
+      - change_records
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: contract_ref
+        - **type**: text
+      -
+        - **name**: clause_label
+        - **type**: text
+      -
+        - **name**: start_event
+        - **type**: text
+      -
+        - **name**: period_days
+        - **type**: int
+      -
+        - **name**: calendar_type
+        - **notes**: calendar or working days
+        - **type**: text
+      -
+        - **name**: warn_before_days
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, contract_ref)
+    - **name**: contract_notice_configs
+    - **purpose**: Notice periods per contract reference.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: change_id
+        - **type**: uuid
+      -
+        - **name**: config_id
+        - **type**: uuid
+      -
+        - **name**: started_at
+        - **type**: timestamptz
+      -
+        - **name**: deadline_at
+        - **type**: timestamptz
+      -
+        - **name**: state
+        - **notes**: running, warning, expired, satisfied
+        - **type**: text
+      -
+        - **name**: task_id
+        - **notes**: linked task for escalation
+        - **type**: uuid
+      -
+        - **name**: satisfied_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, state, deadline_at)
+      - (change_id)
+    - **name**: notice_clocks
+    - **purpose**: Running notice clock per change.
+    - **relations**:
+      - change_records
+      - contract_notice_configs
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: change_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: work_date
+        - **type**: date
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: diary_entry_id
+        - **notes**: source
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: draft, submitted, signed
+        - **type**: text
+      -
+        - **name**: signed_record_id
+        - **notes**: signing module sealed record
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, work_date)
+      - (change_id)
+    - **name**: daywork_sheets
+    - **purpose**: Daywork sheet with client signature.
+    - **relations**:
+      - change_records
+      - diary entries
+      - signing records
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: daywork_id
+        - **type**: uuid
+      -
+        - **name**: line_type
+        - **notes**: labour, plant, material
+        - **type**: text
+      -
+        - **name**: resource_id
+        - **notes**: crew member or equipment
+        - **type**: uuid
+      -
+        - **name**: consumable_issuance_id
+        - **notes**: FK consumable_issuances
+        - **type**: uuid
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: hours
+        - **type**: numeric
+      -
+        - **name**: qty
+        - **type**: numeric
+      -
+        - **name**: uom
+        - **type**: text
+      -
+        - **name**: rate
+        - **notes**: redacted
+        - **type**: numeric
+    - **indexes**:
+      - (daywork_id)
+    - **name**: daywork_lines
+    - **purpose**: Labour, plant and material lines.
+    - **relations**:
+      - daywork_sheets
+      - consumable_issuances
+      - resources
+      - equipment
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: change_id
+        - **notes**: unique
+        - **type**: uuid
+      -
+        - **name**: stage
+        - **notes**: proposal, technical_review, risk_review, approval, implementation, close_out
+        - **type**: text
+      -
+        - **name**: risk_rating
+        - **type**: text
+      -
+        - **name**: proposal
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique(change_id)
+    - **name**: moc_records
+    - **purpose**: MOC detail for a change of type MOC.
+    - **relations**:
+      - change_records
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: moc_id
+        - **type**: uuid
+      -
+        - **name**: discipline_id
+        - **notes**: FK disciplines
+        - **type**: uuid
+      -
+        - **name**: question
+        - **type**: text
+      -
+        - **name**: required_role_id
+        - **notes**: reviewer role
+        - **type**: uuid
+      -
+        - **name**: response
+        - **type**: text
+      -
+        - **name**: reviewed_by
+        - **type**: uuid
+      -
+        - **name**: reviewed_at
+        - **type**: timestamptz
+      -
+        - **name**: is_open_action
+        - **notes**: gate before close-out
+        - **type**: boolean
+      -
+        - **name**: action_task_id
+        - **notes**: FK tasks
+        - **type**: uuid
+    - **indexes**:
+      - (moc_id)
+      - (tenant_id, moc_id) where is_open_action
+    - **name**: moc_checklist_items
+    - **purpose**: Instantiated checklist per discipline.
+    - **relations**:
+      - moc_records
+      - disciplines
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: discipline_id
+        - **type**: uuid
+      -
+        - **name**: items
+        - **notes**: questions and required roles
+        - **type**: jsonb
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, discipline_id)
+    - **name**: moc_checklist_templates
+    - **purpose**: Per-discipline checklist templates.
+    - **relations**:
+      - disciplines

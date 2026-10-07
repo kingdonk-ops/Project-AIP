@@ -1,0 +1,234 @@
+# Regional reference data packs — Feature filler
+
+
+- **detail sections**:
+  - Library profile and licence
+  - Items
+  - Standards map
+  - Versions
+  - Projects pinned
+  - Jurisdiction settings (tax, holidays, date and number formats, terminology)
+  - Usage
+- **notifications**:
+  - New pack version available
+  - Upgrade approved or kept pinned
+  - Import completed or failed
+  - Referenced item removed in new version
+  - Licence flag changed
+  - Exchange rate stale
+- **settings**:
+  - Enabled packs
+  - Default region and currency
+  - Exchange rate source and refresh
+  - Licence acknowledgement text
+  - Pinning policy per project
+  - Jurisdiction bundle
+  - Terminology pack
+  - Update notification preference (undecided)
+- **tables**:
+  -
+    - **bulk actions**:
+      - Enable
+      - Disable
+    - **columns**:
+      - Name
+      - Region
+      - Source
+      - Version
+      - Licence
+      - Enabled
+      - Projects pinned
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Region
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Source
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Licence flag
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Licence acknowledgement
+        - **required**: true
+        - **type**: checkbox
+    - **empty state**: No packs enabled. Enable the AU-WA starter pack.
+    - **filters**:
+      - Region
+      - Enabled
+      - Licence type
+      - Shipped or customer-loaded
+    - **name**: Reference libraries
+    - **row actions**:
+      - Open
+      - Enable
+      - Disable
+      - Import licensed content
+      - Create version
+      - Upgrade preview
+    - **search**: Name, region, source
+    - **sort**:
+      - Name
+      - Region
+      - Version
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Code
+      - Description
+      - Unit
+      - Region
+      - Version
+      - Status
+    - **create form**:
+      -
+        - **field**: Code
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Unit
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Region
+        - **required**: true
+        - **type**: select
+    - **empty state**: No items in this pack.
+    - **filters**:
+      - Library
+      - Region
+      - Status
+      - Version
+    - **name**: Reference items
+    - **row actions**:
+      - Edit
+      - View usage
+    - **search**: Code, description
+    - **sort**:
+      - Code
+      - Description
+  -
+    - **bulk actions**:
+      - Remove mappings
+    - **columns**:
+      - Standard code
+      - Clause
+      - Checklist item or requirement
+      - Template
+      - Version
+    - **create form**:
+      -
+        - **field**: Standard code
+        - **required**: true
+        - **type**: reference picker
+      -
+        - **field**: Clause
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Checklist item
+        - **required**: true
+        - **type**: template item picker
+      -
+        - **field**: Acceptance criteria note
+        - **required**: false
+        - **type**: text
+    - **empty state**: No standards mapped to checklist items.
+    - **filters**:
+      - Standard (AS/NZS, AS 2885, ISO, API, ASTM)
+      - Template
+      - Unmapped only
+    - **name**: Standards map
+    - **row actions**:
+      - Edit
+      - Remove
+    - **search**: Standard code, clause, checklist text
+    - **sort**:
+      - Standard code
+  -
+    - **bulk actions**:
+      - Deactivate
+    - **columns**:
+      - Currency
+      - Rate
+      - Rate date
+      - Source
+      - Active
+    - **create form**:
+      -
+        - **field**: Currency code
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Rate
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Rate date
+        - **required**: true
+        - **type**: date
+      -
+        - **field**: Source
+        - **required**: true
+        - **type**: text
+    - **empty state**: Only the base currency (AUD) is set.
+    - **filters**:
+      - Active
+      - Source
+    - **name**: Currencies and exchange rates
+    - **row actions**:
+      - Edit
+      - Add rate
+    - **search**: Currency code
+    - **sort**:
+      - Currency
+      - Rate date
+  -
+    - **columns**:
+      - Version
+      - Date
+      - Changes
+      - Projects pinned
+      - Status
+    - **create form**:
+      -
+        - **field**: Version label
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Change notes
+        - **required**: false
+        - **type**: text
+    - **empty state**: Only the initial version exists.
+    - **filters**:
+      - Status
+    - **name**: Pack versions
+    - **row actions**:
+      - Upgrade preview
+      - Export diff
+    - **search**: Version
+    - **sort**:
+      - Date
+- **walkthrough**:
+  - A tenant admin opens the library manager.
+  - They enable the AU-WA starter pack, which sets AUD, WA holidays and formats.
+  - They confirm the licence acknowledgement and upload their own licensed content.
+  - They map columns, validate and confirm, with rollback available.
+  - They map standards clauses to ITP checklist items.
+  - A project admin pins the project to a pack version.
+  - A new pack version is published.
+  - The admin opens the upgrade preview showing added, changed and removed items and affected records.
+  - The project approves the upgrade or keeps the pin.
+  - Inspectors cite the governing clause from the picker and priced records capture the rate source and date.

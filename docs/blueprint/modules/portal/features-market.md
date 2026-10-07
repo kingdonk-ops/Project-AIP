@@ -1,0 +1,37 @@
+# Client & subcontractor portal — Feature scout
+
+
+- **abilities seen in market**:
+  - Separate external experience with a 'needs my action' inbox
+  - Granular sharing by project, asset subtree, module and action
+  - Client review and counter-signature of inspections and hold points
+  - Subcontractor responses to NCRs and RFIs with evidence upload
+  - Shared document views with watermarking and download controls
+  - Invitation approval and access expiry at project close
+  - Branded portal per client with its own vocabulary
+  - Audit of every external view and action
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Hold-point witness booking: client sees upcoming hold/witness points and confirms attendance or waives with notice period
+    - **why**: Rio Tinto-type clients witness critical points; notice-and-waive timing is a daily workflow in ITP practice.
+  -
+    - **effort**: M
+    - **feature**: Share packs: time-limited, read-only bundles of reports and certificates for an asset or scope
+    - **why**: Lets Kaefer send evidence to clients or regulators without creating full portal accounts.
+  -
+    - **effort**: S
+    - **feature**: Per-client branding and terminology applied to the portal and notification emails
+    - **why**: Uses the terminology layer to present client language and logo, helping adoption.
+  -
+    - **effort**: M
+    - **feature**: Subcontractor onboarding gate requiring valid company and personnel certificates before they can submit work
+    - **why**: Applies the certificate hard-block to external parties, reducing compliance risk.
+  -
+    - **effort**: M
+    - **feature**: Client-side asset condition dashboard (read-only) with defect trends by area
+    - **why**: Gives clients a reason to log in regularly and reflects asset-integrity reporting needs.
+  -
+    - **effort**: S
+    - **feature**: Download watermarking and view-only mode with per-grant download policy
+    - **why**: Protects client-confidential drawings and Kaefer proprietary procedures.

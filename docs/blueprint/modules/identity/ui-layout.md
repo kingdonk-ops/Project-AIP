@@ -1,0 +1,188 @@
+# Users, sign-in & SSO — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Public; SSO-managed users cannot use password.
+    - **actions**:
+      - Continue
+      - Sign in with SSO
+      - Request magic link
+      - Enter MFA code
+      - Recover access
+    - **layout**: Centred card with tenant brand (e.g. Kaefer red); SSO redirect when the domain is claimed.
+    - **name**: Sign in
+    - **purpose**: Entry point for all user classes, with organisation disambiguation.
+    - **route**: /login
+    - **sections**:
+      - Email entry
+      - SSO redirect
+      - Password + MFA
+      - Magic link/PIN request
+      - Organisation chooser
+  -
+    - **access**: Holder of an unexpired single-use token.
+    - **actions**:
+      - Confirm and continue
+      - Cancel
+    - **layout**: Minimal card with scope summary.
+    - **name**: Magic link confirm
+    - **purpose**: POST confirmation page so mail scanners don't consume tokens.
+    - **route**: /auth/link/:token
+    - **sections**:
+      - Scope and project summary
+      - Device binding notice
+      - PIN entry
+  -
+    - **access**: Invited person.
+    - **actions**:
+      - Accept
+      - Set password
+      - Enrol MFA
+    - **layout**: Single-column wizard.
+    - **name**: Accept invite
+    - **purpose**: Accept invitation and set up credentials.
+    - **route**: /invite/:token
+    - **sections**:
+      - Invite summary
+      - Set password
+      - MFA enrolment
+  -
+    - **access**: Own profile for any signed-in user.
+    - **actions**:
+      - Edit
+      - Capture signature
+      - Add MFA method
+      - Revoke session
+      - Download recovery codes
+    - **layout**: Tabbed detail page.
+    - **name**: Profile
+    - **purpose**: Manage contact details, competencies, signature, MFA, sessions and notification preferences.
+    - **route**: /profile
+    - **sections**:
+      - Profile and contact
+      - Competencies and signature image
+      - Sign-in methods and MFA
+      - Sessions and devices
+      - Notification preferences
+  -
+    - **access**: Tenant admin and user-admin permission; project admins limited to their project.
+    - **actions**:
+      - Invite
+      - Edit
+      - Deactivate
+      - Revoke sessions
+      - Reset MFA
+      - Resend invite
+      - Export
+    - **layout**: Register with filter bar and right detail drawer for access scope.
+    - **name**: User directory
+    - **purpose**: Manage users across classes with MFA and SCIM status.
+    - **route**: /settings/users
+    - **sections**:
+      - User table
+      - Detail drawer (profile, roles and scope, sessions, SCIM linkage, sponsor, audit)
+      - Invite blade
+  -
+    - **access**: Tenant admin.
+    - **actions**:
+      - Open admin portal
+      - Enforce SSO
+      - Map group
+      - Retry sync
+    - **layout**: Status panels plus settings form; link to WorkOS admin portal.
+    - **name**: SSO and SCIM
+    - **purpose**: Configure SSO enforcement, domain claims and monitor SCIM sync.
+    - **route**: /settings/identity/sso-scim
+    - **sections**:
+      - SSO connection status
+      - Domain claims and enforcement
+      - SCIM sync status and errors
+      - Group-to-role mapping
+  -
+    - **access**: Tenant admin; security admin.
+    - **actions**:
+      - Save
+      - Reset to default
+    - **layout**: Settings form grouped by user class.
+    - **name**: MFA and session policy
+    - **purpose**: Set MFA, session lifetime, magic link and password policies per user class.
+    - **route**: /settings/identity/policies
+    - **sections**:
+      - MFA by role and class
+      - Idle and absolute timeouts
+      - Token lifetimes
+      - Magic link TTL and lockout
+      - Password policy
+  -
+    - **access**: Tenant admin and security admin.
+    - **actions**:
+      - Revoke
+      - Revoke selected
+    - **layout**: Register table.
+    - **name**: Active sessions
+    - **purpose**: View and revoke sessions across users.
+    - **route**: /settings/identity/sessions
+    - **sections**:
+      - Sessions table (User, Device, IP, Started, Last active)
+  -
+    - **access**: Tenant admin with integrations permission.
+    - **actions**:
+      - Create
+      - Rotate
+      - Revoke
+      - View audit
+    - **layout**: Register with create blade showing the secret once.
+    - **name**: API keys and clients
+    - **purpose**: Manage scoped, expiring API keys and OAuth clients.
+    - **route**: /settings/identity/api-keys
+    - **sections**:
+      - Keys table
+      - Scope picker
+      - Per-key audit
+  -
+    - **access**: Tenant admin and sponsors for their own accounts.
+    - **actions**:
+      - Reconfirm
+      - Extend
+      - Expire now
+      - Change sponsor
+    - **layout**: Register with expiry filters.
+    - **name**: External accounts
+    - **purpose**: Track sponsors, expiry and re-confirmation of external users.
+    - **route**: /settings/identity/external
+    - **sections**:
+      - External accounts table
+      - Sponsor and expiry
+      - Reconfirmation queue
+  -
+    - **access**: Designated break-glass requesters and approvers.
+    - **actions**:
+      - Request
+      - Approve
+      - Deny
+      - End early
+    - **layout**: Request list with approval blade.
+    - **name**: Break-glass and login-as
+    - **purpose**: Request and approve time-boxed elevation with dual approval.
+    - **route**: /settings/identity/break-glass
+    - **sections**:
+      - Active grants
+      - Pending requests
+      - Audit trail
+  -
+    - **access**: Field and external users with device binding.
+    - **actions**:
+      - Select user
+      - Enter PIN
+      - Lock
+      - Switch user
+    - **layout**: Full-screen numeric keypad with large keys and user tiles.
+    - **name**: Field PIN sign-in and quick-switch (mobile)
+    - **purpose**: Fast sign-in on shared devices with auto-lock.
+    - **route**: /m/login
+    - **sections**:
+      - User tiles
+      - PIN pad
+      - Lock state
+      - Offline sign-in notice

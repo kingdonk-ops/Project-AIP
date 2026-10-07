@@ -1,0 +1,132 @@
+# E-signatures & tamper-evident records — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Named signers and delegates; competency gate checked per signer
+    - **actions**:
+      - Review and sign
+      - Decline
+      - Delegate
+      - Sign selected (routine types only)
+    - **layout**: Table with filters and a review panel.
+    - **name**: Signer inbox
+    - **purpose**: Signatures waiting for the user.
+    - **route**: /signing/inbox
+    - **sections**:
+      - Filters (status, meaning, record type, due)
+      - Inbox table (record, meaning, requested by, required by, auth needed, status)
+      - Document review panel
+  -
+    - **access**: Assigned signer with valid in-date certificate where required
+    - **actions**:
+      - Sign
+      - Decline with reason
+      - Delegate
+      - Save for later
+    - **layout**: Document viewer with a right panel showing hash, meaning, consent statement and competency result.
+    - **name**: Sign document
+    - **purpose**: Review the exact document version and apply an attestation.
+    - **route**: /signing/sign/:requirementId
+    - **sections**:
+      - Document and hash
+      - Consent statement
+      - Competency check
+      - Step-up authentication
+      - Signature block preview
+  -
+    - **access**: signing.request; void needs signing.manage
+    - **actions**:
+      - Remind
+      - Void
+      - Verify
+      - View
+    - **layout**: Table with row drawer.
+    - **name**: Signature requests
+    - **purpose**: Track requests raised by the user or project.
+    - **route**: /signing/requests
+    - **sections**:
+      - Requests table (record, version hash, signers, order, status, created)
+      - Request detail drawer
+  -
+    - **access**: signing.request
+    - **actions**:
+      - Send request
+      - Save draft
+      - Cancel
+    - **layout**: Stepper form.
+    - **name**: Signature request setup
+    - **purpose**: Create a requirement against a document version.
+    - **route**: /signing/requests/new
+    - **sections**:
+      - Document version picker
+      - Signers and order
+      - Meaning
+      - Step-up policy
+      - Provider (in-app, DocuSign, Adobe)
+  -
+    - **access**: signing.audit; auditors read-only
+    - **actions**:
+      - Verify
+      - Export evidence bundle
+      - View manifest
+      - Filter
+    - **layout**: Table with filter bar and detail drawer.
+    - **name**: Attestation register
+    - **purpose**: Searchable append-only register of attestations with validity state.
+    - **route**: /signing/attestations
+    - **sections**:
+      - Table (signer, record, meaning, auth strength, device time, server time, hash, valid)
+      - Manifest view
+      - Audit chain position
+  -
+    - **access**: Anyone with a valid token; rate-limited, no tenant data beyond the signature
+    - **actions**:
+      - Verify file
+      - Download manifest
+      - Download verifier instructions
+    - **layout**: Minimal public page served from the separate portal domain.
+    - **name**: Public verification page
+    - **purpose**: Let third parties verify a signed PDF without logging in.
+    - **route**: /verify/:token
+    - **sections**:
+      - Upload or token lookup
+      - Verification result
+      - Signer and time details
+      - Manifest download
+  -
+    - **access**: Assigned signers; offline allowed only for permitted types
+    - **actions**:
+      - Sign
+      - Decline
+      - Queue offline attestation
+    - **layout**: Mobile review screen with signature step and offline banner.
+    - **name**: Mobile signing
+    - **purpose**: Sign on site including offline attestations with deferred sealing.
+    - **route**: /m/signing
+    - **sections**:
+      - Pending signatures
+      - Document summary and hash
+      - Step-up prompt
+      - Offline queue status
+  -
+    - **access**: signing.admin; Object Lock changes need security admin sign-off
+    - **actions**:
+      - Save
+      - Test provider
+      - Add consent statement
+    - **layout**: Tabbed settings.
+    - **name**: Signing settings
+    - **purpose**: Configure meanings, consent text, step-up, providers, keys and retention.
+    - **route**: /settings/signing
+    - **sections**:
+      - Signature meanings
+      - Consent statement library
+      - Step-up policy per record type
+      - Provider connections
+      - KMS key and seal config
+      - Retention and Object Lock
+      - Trusted time source
+      - Offline signing
+      - Bulk signing allowed types
+      - Terminology labels

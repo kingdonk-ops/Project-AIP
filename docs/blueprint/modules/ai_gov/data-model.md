@@ -1,0 +1,490 @@
+# AI governance & data controls — Data model & schema
+
+
+- **notes**: The gateway evaluates kill switch, tenant opt-in, restrictions (inherited feature/project/client/document), budget and region before any call. Call log retention follows the source data's access controls and legal-hold rules. Embedding storage belongs to the search module but must honour ai_restriction. Whether siloed deployment and per-tenant KMS are included is undecided; add kms_key_ref to the register or tenancy tables only if chosen.
+- **reuses existing**:
+  - documents
+  - assets
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: platform tenant for global entries; RLS
+        - **type**: uuid
+      -
+        - **name**: feature_code
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: provider
+        - **notes**: e.g. bedrock
+        - **type**: text
+      -
+        - **name**: model_id
+        - **type**: text
+      -
+        - **name**: region
+        - **notes**: ap-southeast-2
+        - **type**: text
+      -
+        - **name**: data_categories
+        - **notes**: what data is sent
+        - **type**: jsonb
+      -
+        - **name**: retention_terms
+        - **type**: text
+      -
+        - **name**: training_use_terms
+        - **type**: text
+      -
+        - **name**: zero_retention_evidence_doc_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: effective_from
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **notes**: append-only; new version supersedes
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (feature_code, version)
+    - **name**: ai_register_entry
+    - **purpose**: Versioned data-flow register of feature, provider, model, region and retention terms.
+    - **relations**:
+      - documents.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: feature_code
+        - **type**: text
+      -
+        - **name**: enabled
+        - **notes**: default false
+        - **type**: boolean
+      -
+        - **name**: register_entry_id
+        - **notes**: FK ai_register_entry, version accepted
+        - **type**: uuid
+      -
+        - **name**: enabled_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, feature_code)
+    - **name**: ai_tenant_feature_setting
+    - **purpose**: Per-tenant opt-in per feature, default off.
+    - **relations**:
+      - ai_register_entry.id
+      - users.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: scope_type
+        - **notes**: feature|project|client|document
+        - **type**: text
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: client_org_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: nullable, FK documents
+        - **type**: uuid
+      -
+        - **name**: feature_code
+        - **notes**: nullable means all
+        - **type**: text
+      -
+        - **name**: prohibits_ai
+        - **notes**: inherits down to documents
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, scope_type)
+      - (tenant_id, client_org_id)
+      - (tenant_id, document_id)
+    - **name**: ai_restriction
+    - **purpose**: Per feature, project or client AI restrictions including the client-prohibits-AI flag.
+    - **relations**:
+      - projects.id
+      - documents.id
+      - companies (contacts)
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: platform tenant for global rows
+        - **type**: uuid
+      -
+        - **name**: applies_to
+        - **notes**: platform|tenant|feature
+        - **type**: text
+      -
+        - **name**: target_tenant_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: feature_code
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: engaged
+        - **type**: boolean
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: changed_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only history; latest row wins
+        - **type**: timestamptz
+    - **indexes**:
+      - (applies_to, target_tenant_id, feature_code, created_at desc)
+    - **name**: ai_kill_switch
+    - **purpose**: Platform or tenant kill switch state, enforced server-side.
+    - **relations**:
+      - users.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: feature_code
+        - **type**: text
+      -
+        - **name**: register_entry_id
+        - **notes**: FK ai_register_entry
+        - **type**: uuid
+      -
+        - **name**: prompt_ref
+        - **notes**: encrypted S3 object key or redacted text
+        - **type**: text
+      -
+        - **name**: response_ref
+        - **type**: text
+      -
+        - **name**: tool_calls
+        - **type**: jsonb
+      -
+        - **name**: redaction_summary
+        - **notes**: counts by type
+        - **type**: jsonb
+      -
+        - **name**: outcome
+        - **notes**: ok|blocked|error
+        - **type**: text
+      -
+        - **name**: blocked_reason
+        - **type**: text
+      -
+        - **name**: input_tokens
+        - **type**: int
+      -
+        - **name**: output_tokens
+        - **type**: int
+      -
+        - **name**: retain_until
+        - **notes**: retention rule
+        - **type**: date
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, created_at desc)
+      - (tenant_id, feature_code, created_at)
+      - (retain_until)
+    - **name**: ai_call_log
+    - **purpose**: Append-only log of prompts, responses and tool calls.
+    - **relations**:
+      - users.id
+      - ai_register_entry.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: call_log_id
+        - **notes**: FK ai_call_log
+        - **type**: uuid
+      -
+        - **name**: source_entity_type
+        - **type**: text
+      -
+        - **name**: source_entity_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable, FK assets
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (call_log_id)
+      - (tenant_id, source_entity_type, source_entity_id)
+    - **name**: ai_citation
+    - **purpose**: Links from an AI answer to the source records it relied on.
+    - **relations**:
+      - ai_call_log.id
+      - assets.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: call_log_id
+        - **notes**: FK ai_call_log
+        - **type**: uuid
+      -
+        - **name**: target_entity_type
+        - **notes**: minutes, ncr_text, summary
+        - **type**: text
+      -
+        - **name**: target_entity_id
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: drafted|accepted|rejected|edited
+        - **type**: text
+      -
+        - **name**: decided_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: decided_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **notes**: status only moves forward from drafted
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, target_entity_type, target_entity_id)
+      - (tenant_id, status)
+    - **name**: ai_output_label
+    - **purpose**: Tags AI-drafted content and records human acceptance before it enters a sealed record.
+    - **relations**:
+      - ai_call_log.id
+      - users.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: usage_date
+        - **type**: date
+      -
+        - **name**: feature_code
+        - **type**: text
+      -
+        - **name**: calls
+        - **type**: int
+      -
+        - **name**: input_tokens
+        - **notes**: use bigint if volumes require
+        - **type**: int
+      -
+        - **name**: output_tokens
+        - **type**: int
+      -
+        - **name**: cost_aud
+        - **notes**: numeric(12,4)
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, usage_date, feature_code)
+    - **name**: ai_usage
+    - **purpose**: Daily metering of usage and cost per tenant and feature.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: feature_code
+        - **notes**: nullable means tenant-wide
+        - **type**: text
+      -
+        - **name**: monthly_cap_aud
+        - **type**: numeric
+      -
+        - **name**: hard_stop
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, feature_code) where deleted_at is null
+    - **name**: ai_budget
+    - **purpose**: Monthly budget caps per tenant, optionally per feature.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: platform tenant; RLS
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: vector
+        - **notes**: document|comment|email|transcript
+        - **type**: text
+      -
+        - **name**: payload_ref
+        - **notes**: fixture path
+        - **type**: text
+      -
+        - **name**: expected_behaviour
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (vector)
+    - **name**: redteam_case
+    - **purpose**: Prompt-injection and abuse test cases.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: case_id
+        - **notes**: FK redteam_case
+        - **type**: uuid
+      -
+        - **name**: commit_sha
+        - **type**: text
+      -
+        - **name**: passed
+        - **type**: boolean
+      -
+        - **name**: detail
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (case_id, created_at desc)
+    - **name**: redteam_result
+    - **purpose**: Append-only results of each red-team run per case.
+    - **relations**:
+      - redteam_case.id

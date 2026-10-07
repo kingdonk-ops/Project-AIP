@@ -1,0 +1,128 @@
+# Service & maintenance — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/service/__init__.py
+    - **purpose**: Module registration, router, permissions
+  -
+    - **path**: backend/app/modules/service/models.py
+    - **purpose**: ServiceContract, SlaTarget, Ticket, SlaPauseInterval, WorkOrder, WorkOrderTask, PreventiveSchedule, CampaignTemplate, CampaignStage, Campaign
+  -
+    - **path**: backend/app/modules/service/schemas.py
+    - **purpose**: Pydantic schemas
+  -
+    - **path**: backend/app/modules/service/router.py
+    - **purpose**: Endpoints for contracts, tickets, work orders, schedules, campaigns, timeline
+  -
+    - **path**: backend/app/modules/service/service_contracts.py
+    - **purpose**: Contract and SLA target management
+  -
+    - **path**: backend/app/modules/service/service_tickets.py
+    - **purpose**: Ticket lifecycle and SLA clock with pause/resume and reason capture
+  -
+    - **path**: backend/app/modules/service/service_workorders.py
+    - **purpose**: Work order lifecycle, labour, materials, sign-off, source tracking
+  -
+    - **path**: backend/app/modules/service/service_pm.py
+    - **purpose**: Preventive schedule and condition-based next-due recalculation; hands recurring checks to inspection programmes (E4-S1)
+  -
+    - **path**: backend/app/modules/service/service_campaigns.py
+    - **purpose**: Campaign templates, stage gates and ITP binding
+  -
+    - **path**: backend/app/modules/service/service_assignment.py
+    - **purpose**: Technician assignment via the eligibility gate
+  -
+    - **path**: backend/app/modules/service/service_timeline.py
+    - **purpose**: Asset history timeline as a merged read view, no separate store
+  -
+    - **path**: backend/app/modules/service/handlers.py
+    - **purpose**: Consumers: inspection findings, defects, handover accepted
+  -
+    - **path**: backend/app/modules/service/jobs.py
+    - **purpose**: SLA breach checks and PM due scans
+  -
+    - **path**: backend/migrations/versions/xxxx_service.py
+    - **purpose**: Tables, tenant_id, RLS
+  -
+    - **path**: backend/tests/modules/service/
+    - **purpose**: SLA clock, auto-WO threshold, eligibility and isolation tests
+- **change isolation**: New campaign types, thresholds and pause reasons are config records. Scheduling logic stays in the shared inspection programme engine, so changes to recurrence land there and service only maps results to work orders.
+- **config not code**:
+  - Severity threshold for auto work orders (per tenant, client or asset class)
+  - SLA pause reason list
+  - SLA targets and priority matrix
+  - Campaign templates (stages, gates, ITP bindings)
+  - PM frequencies and interval rules by asset class and condition
+  - Terminology for contract, SLA and campaign
+  - Work order form templates
+- **events consumed**:
+  - handover.accepted (service assets, baseline)
+  - inspection.finding_recorded (threshold check)
+  - inspection.completed (recalculate next due)
+  - defect.liability_raised
+  - certificate.expired (invalidate assignments)
+  - asset.created
+- **events emitted**:
+  - ticket.created
+  - ticket.sla_breached
+  - ticket.paused / ticket.resumed
+  - workorder.created
+  - workorder.assigned
+  - workorder.completed
+  - pm.due
+  - campaign.stage_completed
+  - campaign.completed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/service/routes.tsx
+    - **purpose**: Routes
+  -
+    - **path**: frontend/src/modules/service/pages/TicketQueue.tsx
+    - **purpose**: Ticket queue with SLA countdown
+  -
+    - **path**: frontend/src/modules/service/pages/WorkOrderDetail.tsx
+    - **purpose**: Work order detail with embedded form completion
+  -
+    - **path**: frontend/src/modules/service/pages/PmCalendar.tsx
+    - **purpose**: PM calendar by asset subtree
+  -
+    - **path**: frontend/src/modules/service/pages/CampaignDesigner.tsx
+    - **purpose**: Campaign template designer
+  -
+    - **path**: frontend/src/modules/service/pages/CampaignProgress.tsx
+    - **purpose**: Campaign progress view
+  -
+    - **path**: frontend/src/modules/service/pages/AssetHistory.tsx
+    - **purpose**: Asset history timeline
+  -
+    - **path**: frontend/src/modules/service/pages/ContractSetup.tsx
+    - **purpose**: Service contract and SLA setup
+  -
+    - **path**: frontend/src/modules/service/api.ts
+    - **purpose**: Generated client hooks
+- **public api**:
+  - GET/POST /service/contracts
+  - GET/POST /service/tickets
+  - POST /service/tickets/{id}/pause and /resume (reason required)
+  - GET/POST /service/work-orders
+  - POST /service/work-orders/{id}/assign (eligibility checked)
+  - POST /service/work-orders/{id}/sign-off
+  - GET/POST /service/pm-schedules
+  - GET /service/pm-calendar?asset_id=&subtree=true
+  - GET/POST /service/campaign-templates
+  - POST /service/campaigns (instantiate from template on assets)
+  - GET /assets/{id}/history
+- **reuses shared**:
+  - Inspection programmes (E4-S1) and ITP engine
+  - Eligibility/certificate gate
+  - Gate engine (RSW completion gate pattern for stage gates)
+  - Asset hierarchy
+  - Form engine (work order forms)
+  - Task engine
+  - Resources and equipment modules
+  - Contacts
+  - Notifications and deadlines
+  - Audit timeline merge
+  - Terminology dictionary
+  - Procurement and change hooks

@@ -1,0 +1,151 @@
+# Dashboards & KPI reporting — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Project members; tiles show 'restricted' without access
+    - **actions**:
+      - Edit layout
+      - Drill into register
+      - Add tile
+      - Switch dashboard
+    - **layout**: KPI strip top, configurable tile grid, heatmap panel
+    - **name**: Project Dashboard
+    - **purpose**: KPI strip, tile grid and asset heatmap
+    - **route**: /projects/:pid/dashboard
+    - **sections**:
+      - KPI strip
+      - Tile grid (saved view tiles)
+      - Asset heatmap
+      - Restricted placeholders
+  -
+    - **access**: Portfolio roles
+    - **actions**:
+      - Filter projects
+      - Drill down
+    - **layout**: Same grid with project comparison table
+    - **name**: Portfolio Dashboard
+    - **purpose**: Cross-project roll-up
+    - **route**: /portfolio
+    - **sections**:
+      - Portfolio KPIs
+      - Project table
+      - Tiles
+  -
+    - **access**: Owner; shared edit with dashboards.manage
+    - **actions**:
+      - Add/resize tile
+      - Bind saved view
+      - Save/share
+    - **layout**: Canvas with tile library sidebar
+    - **name**: Dashboard Editor
+    - **purpose**: Drag/resize canvas and tile configuration
+    - **route**: /dashboards/:id/edit
+    - **sections**:
+      - Tile library
+      - Canvas
+      - Tile settings
+  -
+    - **access**: reporting.view
+    - **actions**:
+      - Change period
+      - Export
+    - **layout**: Chart grid with period selector
+    - **name**: Trend Views
+    - **purpose**: Snapshot trends and period comparison
+    - **route**: /projects/:pid/reports/trends
+    - **sections**:
+      - Metric selector
+      - Charts
+      - Comparison
+  -
+    - **access**: reporting.view with inspection scope
+    - **actions**:
+      - Filter
+      - Drill to inspection
+      - Export
+    - **layout**: Filter bar, charts, drill-down table
+    - **name**: CUI/NDT Analytics
+    - **purpose**: Finding analytics by asset, system, severity and area
+    - **route**: /projects/:pid/reports/cui-ndt
+    - **sections**:
+      - Filters
+      - Charts
+      - Findings table
+  -
+    - **access**: reporting.view
+    - **actions**:
+      - Expand
+      - Open handover item
+    - **layout**: Tree with score bars and component breakdown
+    - **name**: Handover Readiness by Subtree
+    - **purpose**: Readiness score by asset subtree
+    - **route**: /projects/:pid/reports/readiness
+    - **sections**:
+      - Tree with scores
+      - Score breakdown
+      - Weights note
+  -
+    - **access**: reporting.view; manage with reporting.manage
+    - **actions**:
+      - Open builder
+      - Generate
+    - **layout**: Card/list grid
+    - **name**: Template Library
+    - **purpose**: Browse report templates
+    - **route**: /reports/templates
+    - **sections**:
+      - Templates
+      - Categories
+  -
+    - **access**: reporting.generate
+    - **actions**:
+      - Generate
+      - Schedule
+      - Sign off
+      - Export PDF/Excel
+    - **layout**: Parameters left, preview right
+    - **name**: Report Builder
+    - **purpose**: Set parameters, preview, generate and schedule
+    - **route**: /reports/templates/:id/build
+    - **sections**:
+      - Parameters
+      - Preview
+      - Schedule and recipients
+  -
+    - **access**: reporting.view
+    - **actions**:
+      - Download
+      - Verify hash
+      - Resend
+    - **layout**: Table with detail drawer
+    - **name**: Run History and Distribution
+    - **purpose**: Immutable outputs with hash and distribution log
+    - **route**: /reports/runs
+    - **sections**:
+      - Runs
+      - Hash and file
+      - Recipients
+  -
+    - **access**: Own subscriptions; rules need reporting.manage
+    - **actions**:
+      - Create rule
+      - Subscribe
+    - **layout**: Rule list with editor
+    - **name**: Alerts and Subscriptions
+    - **purpose**: Threshold alerts and digests
+    - **route**: /settings/reporting/alerts
+    - **sections**:
+      - Rules
+      - Subscriptions
+  -
+    - **access**: Project members
+    - **actions**:
+      - Drill down
+    - **layout**: Stacked KPI cards
+    - **name**: Mobile Dashboard
+    - **purpose**: Condensed KPIs
+    - **route**: /m/dashboard
+    - **sections**:
+      - KPI cards
+      - Top tiles

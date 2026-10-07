@@ -1,0 +1,33 @@
+# Schedule & look-ahead (basic) — Feature scout
+
+
+- **abilities seen in market**:
+  - Calendar view of due inspections, scope dates and expiries
+  - Rolling look-ahead of two to six weeks with filters by discipline or area
+  - Weekly work plan with commitments and percent plan complete
+  - Constraint logs with owner and due date
+  - Import of activities from external scheduling tools
+  - Calendar subscription via iCal feeds
+  - Email or push reminders for upcoming and overdue items
+  - Baseline comparison and delay reason codes
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: Authenticated iCal feed per user and per project
+    - **why**: Delivers the deferred calendar export so inspectors see their due work in the calendar they already use.
+  -
+    - **effort**: M
+    - **feature**: Reminder rules for due inspections, mandated dates and expiries
+    - **why**: Reminders are already deferred and are the simplest way to turn a calendar into action.
+  -
+    - **effort**: S
+    - **feature**: Filters by asset subtree, discipline and assignee
+    - **why**: Asset-centric users need to see look-ahead for one area or unit, which uses the existing ltree hierarchy.
+  -
+    - **effort**: M
+    - **feature**: CSV import of activity dates linked to scopes
+    - **why**: Teams that live in an external scheduler can bring dates in without a full integration, keeping this module basic.
+  -
+    - **effort**: S
+    - **feature**: Missed-commitment reason codes
+    - **why**: A simple reason list when planned work slips gives delay evidence for variations without building full Last Planner.

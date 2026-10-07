@@ -1,0 +1,33 @@
+# Temporary works register — Feature scout
+
+
+- **abilities seen in market**:
+  - Register by category and risk class with coordinator ownership
+  - Design brief, design, independent check and approval stages
+  - Permit to load, permit to use and permit to strike
+  - Designer and checker independence enforced
+  - Periodic inspection scheduling (scaffold tags) with overdue alerts
+  - Competency checks for designer, checker and coordinator
+  - Linking to drawings, calculations and affected work
+  - Hold flags blocking dependent work until permitted
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Scaffold tag status linked to scope tasks as a work gate
+    - **why**: Insulation removal and CUI inspection need valid access, so tasks should show red when the tag is expired or missing.
+  -
+    - **effort**: S
+    - **feature**: Scaffold handover certificate and weekly inspection as inspection kinds
+    - **why**: Reuses the inspection engine and keeps scaffold records in the same evidence trail.
+  -
+    - **effort**: S
+    - **feature**: Loading class and capacity fields with insulation or equipment load warnings
+    - **why**: Remediation loads (removed lagging, tools) can exceed scaffold ratings and need to be recorded.
+  -
+    - **effort**: M
+    - **feature**: Modification and dismantle requests that re-trigger inspection
+    - **why**: Altered scaffolds are a common failure point and must reset the permit state.
+  -
+    - **effort**: S
+    - **feature**: Expiry and overdue dashboard with notifications to coordinator and supervisor
+    - **why**: Prevents lapsed inspections without manual chasing.

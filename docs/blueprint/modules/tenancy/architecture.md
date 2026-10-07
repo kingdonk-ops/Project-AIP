@@ -1,0 +1,101 @@
+# Tenancy, organisations & data residency — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/tenancy/__init__.py
+    - **purpose**: Module boundary; exports only the public service and dependency functions
+  -
+    - **path**: backend/app/modules/tenancy/models.py
+    - **purpose**: Tenant, Organisation (type: owner/client/subcontractor), TenantSettings, TenantModule, DeploymentRegion, OrgAssetShare
+  -
+    - **path**: backend/app/modules/tenancy/schemas.py
+    - **purpose**: Pydantic schemas for tenant, org and settings
+  -
+    - **path**: backend/app/modules/tenancy/context.py
+    - **purpose**: Request tenant context resolution from the verified token; contextvar holder
+  -
+    - **path**: backend/app/modules/tenancy/rls.py
+    - **purpose**: Session hook executing SET LOCAL app.tenant_id per transaction; fails closed if unset; non-owner, non-BYPASSRLS DB role
+  -
+    - **path**: backend/app/modules/tenancy/policies.py
+    - **purpose**: Helpers generating CREATE POLICY and FORCE RLS SQL, used by migrations
+  -
+    - **path**: backend/app/modules/tenancy/service.py
+    - **purpose**: Tenant and org lifecycle, module enablement, client-org asset sharing rules
+  -
+    - **path**: backend/app/modules/tenancy/router.py
+    - **purpose**: Admin and tenant-settings endpoints
+  -
+    - **path**: backend/app/modules/tenancy/offboarding.py
+    - **purpose**: Export, legal-hold check and KMS key schedule-deletion (crypto-shred) workflow
+  -
+    - **path**: backend/app/modules/tenancy/keys.py
+    - **purpose**: Tenant-scoped key builders for Redis, queue, S3 prefix and search index names
+  -
+    - **path**: backend/alembic/versions/xxxx_tenant_id_rls_backfill.py
+    - **purpose**: Adds tenant_id to every AIP table, backfills it, enables FORCE RLS and creates policies
+  -
+    - **path**: backend/tests/tenancy/test_isolation.py
+    - **purpose**: Testcontainers cross-tenant and IDOR suite, generated from the route and table catalogue; CI gate
+  -
+    - **path**: backend/tests/tenancy/test_rls_catalog.py
+    - **purpose**: Asserts every table has tenant_id, RLS enabled and forced, with no BYPASSRLS role
+- **change isolation**: New tenant-scoped tables only need a call to the shared RLS policy helper and a catalogue test entry; no tenancy code changes. Residency stacks and silos change in IaC variables, not in this module.
+- **config not code**:
+  - Tenant branding, logo and colours
+  - Enabled-module list per tenant
+  - Retention defaults per record type
+  - Region and deployment mode (pooled or siloed) per tenant
+  - Client-org sharing rules per asset class
+  - Terminology overrides
+  - KMS key aliases and bucket names per silo (IaC variables)
+- **events consumed**:
+  - identity.user_provisioned (assign to tenant and org)
+  - identity.user_deprovisioned
+  - documents.legal_hold_set (blocks shredding)
+  - ops.deployment_registered
+- **events emitted**:
+  - tenant.created
+  - tenant.settings_changed
+  - tenant.module_toggled
+  - organisation.created
+  - organisation.asset_shared
+  - organisation.asset_unshared
+  - tenant.offboarding_started
+  - tenant.keys_shredded
+- **frontend files**:
+  -
+    - **path**: frontend/src/features/tenancy/TenantSettingsPage.tsx
+    - **purpose**: Branding, enabled modules, retention defaults
+  -
+    - **path**: frontend/src/features/tenancy/OrganisationsPage.tsx
+    - **purpose**: Owner and client organisations list and detail
+  -
+    - **path**: frontend/src/features/tenancy/AssetSharingPanel.tsx
+    - **purpose**: Configure which client orgs can see a shared asset record and which fields
+  -
+    - **path**: frontend/src/features/tenancy/OffboardingWizard.tsx
+    - **purpose**: Export, legal-hold check, crypto-shred confirmation
+  -
+    - **path**: frontend/src/features/tenancy/api.ts
+    - **purpose**: Generated OpenAPI client wrappers and hooks
+- **public api**:
+  - GET/PATCH /tenant/settings
+  - GET/POST/PATCH /organisations
+  - POST /organisations/{id}/asset-shares
+  - GET /tenant/modules and PUT /tenant/modules/{key}
+  - POST /tenant/offboarding (start, status, confirm shred)
+  - Python: current_tenant() dependency
+  - Python: tenant_session() transaction wrapper
+  - Python: tenant_key(kind, *parts) key builder
+  - Python: is_module_enabled(tenant, module)
+- **reuses shared**:
+  - Database conventions: RLS policy generator, migration base and naming
+  - Audit trail: writes tenant and sharing changes
+  - Permissions catalogue and policy service: tenant scope is evaluated first
+  - Terminology dictionary: per-tenant vocabulary storage
+  - Job runner: offboarding and export jobs
+  - Data import/export engine: offboarding export
+  - Storage service: tenant S3 prefixes and KMS key resolution
+  - Event bus

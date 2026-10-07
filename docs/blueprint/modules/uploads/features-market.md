@@ -1,0 +1,37 @@
+# Upload & file processing pipeline — Feature scout
+
+
+- **abilities seen in market**:
+  - Resumable chunked uploads that continue after dropped connections
+  - Presigned direct-to-storage upload with a confirm step
+  - Malware scanning and file-type validation before release
+  - Thumbnail, preview and page-image generation
+  - Large CAD, PDF and image support with progress UI
+  - Upload queue with retry on mobile
+  - EXIF handling including optional GPS stripping
+  - Storage quotas and file-size policies per tenant or project
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Capture-time metadata preservation: store original device timestamp, GPS (where permitted) and a capture hash separately from the sanitised public copy
+    - **why**: Inspection photos are evidence; keeping provenance metadata privately while stripping it from shared copies balances evidence value and privacy.
+  -
+    - **effort**: M
+    - **feature**: Offline upload queue with priority, bandwidth rules (Wi-Fi only for video) and visible per-file state
+    - **why**: Field users on poor links need confidence that evidence photos will arrive and which are still pending.
+  -
+    - **effort**: M
+    - **feature**: Content-hash deduplication across a tenant with reference counting
+    - **why**: Saves storage and flags the same photo or certificate reused across different records, which is also an integrity signal.
+  -
+    - **effort**: S
+    - **feature**: Per-file-type policy table (allowed types, max size, scan depth, preview behaviour) editable by tenant admins within platform limits
+    - **why**: Different customers allow different file types; configuration avoids code changes and keeps hardening consistent.
+  -
+    - **effort**: M
+    - **feature**: Rescan on signature-database update for stored files, with automatic quarantine of newly detected items
+    - **why**: Files that were clean at upload may later be identified as malicious; this closes the gap for long-retained records.
+  -
+    - **effort**: L
+    - **feature**: Specialist previews for NDT and survey formats (DICOM-like radiography, point-cloud thumbnails, spreadsheets of thickness readings)
+    - **why**: Asset-integrity teams handle non-standard files; previewing them without conversion by users improves review speed.

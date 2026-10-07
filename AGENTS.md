@@ -1,0 +1,70 @@
+# Agent operating manual
+
+This repo is built by AI coding agents, one small task at a time. The product blueprint is
+2.5 MB, so **never read all of it**. It is split so you read only what your task needs.
+
+## The loop (one task per branch)
+
+1. **Pick a task**
+   ```bash
+   python3 tools/next_task.py          # next ready task + the exact files to read
+   python3 tools/next_task.py --all    # every ready task, when several agents run in parallel
+   ```
+   Or take the task ID you were given. Never start a task whose dependencies aren't `done`.
+2. **Claim it.** In [`tracking/BOARD.md`](tracking/BOARD.md), set its status to `in-progress`
+   and put your branch name in the notes column.
+3. **Read only this, in order**
+   1. `tracking/tasks/<ID>.md`: the task spec (files, steps, acceptance, tests)
+   2. [`docs/blueprint/07-task-conventions.md`](docs/blueprint/07-task-conventions.md): definition of done
+   3. [`docs/adr/README.md`](docs/adr/README.md): skim the index, then read ADRs naming your task or module
+   4. `docs/blueprint/modules/<module>/README.md`: module overview
+   5. *Only if a step needs it:* `architecture.md`, `data-model.md` or `routes.md` in that module
+      folder, or a numbered reference file listed in [`docs/blueprint/INDEX.md`](docs/blueprint/INDEX.md)
+4. **Build it test-first.** Turn the spec's `tests` block into failing tests, then code until green.
+   Use real Postgres via Testcontainers. Never mock the database.
+5. **Verify.** Run lint, typecheck, unit and integration tests, and `python3 tools/next_task.py --check`.
+6. **Record progress**
+   - `tracking/BOARD.md`: status → `review` when the PR opens, → `done` when it merges.
+   - `tracking/PROGRESS.md`: add one log line (date, task, PR, one-sentence outcome).
+   - If you made a decision no ADR covers, add an ADR (copy `docs/adr/0000-template.md`).
+   - If you discovered work that isn't on the board, add a `todo` row and a task file
+     (copy `tracking/tasks/_TEMPLATE.md`). Don't silently widen your own task.
+7. **Open a PR** with the template. One task per PR. Branch: `p<phase>/<module>-<short-desc>`.
+
+## When documents disagree
+
+1. ADRs in `docs/adr/` (the latest accepted one wins)
+2. Owner decisions: `docs/blueprint/01-decisions.md`
+3. Task spec: `tracking/tasks/<ID>.md`
+4. Module docs: `docs/blueprint/modules/<module>/*`
+5. Advisor text: `docs/blueprint/02-advisor-summaries.md`, `advice-*.md`
+
+Parts of the blueprint were written for the old Python/FastAPI AIP codebase. **This repo is a
+greenfield TypeScript rebuild.** If a doc mentions Alembic, arq, Celery, SQLAlchemy, Pydantic,
+FastAPI, `services/api/app/...` or `frontend/src/...`, translate it using the ADRs.
+There is no AIP code in this repo. "Port from AIP" means *re-implement the behaviour the spec
+describes*, proven by golden tests.
+
+## Status values
+
+`todo` · `in-progress` · `review` · `done` · `blocked` (say why in notes) · `dropped` (say why)
+
+## Hard rules
+
+- Every table has `tenant_id`, a uuid PK, timestamps, soft delete (except append-only tables) and `FORCE ROW LEVEL SECURITY`.
+- No hard-coded user-facing labels. Use terminology keys.
+- Authorisation goes only through the policy service plus RLS, denying by default.
+- Files go only through the upload pipeline. AI calls go only through the AI gateway.
+- Never build the removed modules `cost_items` and `cases`.
+- No secrets in the repo. No real customer data outside AWS staging/production.
+- OpenConstructionERP (AGPL) is a feature reference only. Copy no code from it.
+
+## Regenerating the split blueprint
+
+The 2.5 MB source blueprint isn't committed. When the owner issues a new version, run:
+```bash
+python3 tools/split_blueprint.py path/to/product-blueprint.md
+```
+This rewrites `docs/blueprint/` and the generated task files. It never touches `tracking/BOARD.md`,
+`tracking/PROGRESS.md`, ADRs or reviews. When you edit a task file, add
+`<!-- hand-edited: reason -->` under its title so regeneration keeps your version.

@@ -1,0 +1,163 @@
+# Tasks, deadlines & my work — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/tasks/models.py
+    - **purpose**: Task, ChecklistItem, Deadline, EscalationLog, Delegation, AutoTaskRule, RecurringTemplate, DeadlinePolicy, ProjectCalendar, Holiday, Shutdown; all tenant_id with RLS and sync_version
+  -
+    - **path**: backend/app/modules/tasks/schemas.py
+    - **purpose**: Pydantic request/response models feeding the generated OpenAPI client
+  -
+    - **path**: backend/app/modules/tasks/router.py
+    - **purpose**: Endpoints for tasks, my-work, deadlines, delegations, policies, analytics
+  -
+    - **path**: backend/app/modules/tasks/service.py
+    - **purpose**: Task CRUD, checklist, quick-add, deadline actions (acknowledge, reassign, extend with reason, resolve)
+  -
+    - **path**: backend/app/modules/tasks/my_work.py
+    - **purpose**: Aggregates approvals, signs, overdue, mentions and expiries into one queue via source adapters
+  -
+    - **path**: backend/app/modules/tasks/deadlines.py
+    - **purpose**: Register, upsert and resolve deadlines from source events; idempotent by source type and id
+  -
+    - **path**: backend/app/modules/tasks/sweep.py
+    - **purpose**: Scheduled job: finds due and overdue, applies grace using calendar, notifies owner, escalates to manager once
+  -
+    - **path**: backend/app/modules/tasks/calendar.py
+    - **purpose**: Working-day and roster-aware date arithmetic using project calendar, regional holidays, shutdowns
+  -
+    - **path**: backend/app/modules/tasks/delegation.py
+    - **purpose**: Resolves delegate for approvals and sign-offs by date range; audited
+  -
+    - **path**: backend/app/modules/tasks/auto_rules.py
+    - **purpose**: Maps consumed events to task creation using configured rules
+  -
+    - **path**: backend/app/modules/tasks/recurrence.py
+    - **purpose**: Materialises recurring task templates per asset subtree
+  -
+    - **path**: backend/app/modules/tasks/analytics.py
+    - **purpose**: Overdue and ageing queries by source module, team, escalation level; export
+  -
+    - **path**: backend/app/modules/tasks/events.py
+    - **purpose**: Event handlers and emitters; event name constants
+  -
+    - **path**: backend/app/modules/tasks/permissions.py
+    - **purpose**: Registers permission keys in the catalogue
+  -
+    - **path**: backend/app/modules/tasks/sync.py
+    - **purpose**: Offline cursor-pull and idempotent-push handlers for tasks and checklist completion
+  -
+    - **path**: backend/app/modules/tasks/seed/defaults.json
+    - **purpose**: Default policies, auto-task rules, term keys
+  -
+    - **path**: backend/migrations/versions/xxxx_tasks.py
+    - **purpose**: Alembic migration with RLS policies
+  -
+    - **path**: backend/tests/modules/tasks/
+    - **purpose**: Unit, isolation/IDOR, sweep idempotency and calendar tests
+- **change isolation**: New deadline sources or auto-task triggers are an event subscription plus a rule or adapter row in this module; the source module only emits events or calls register_deadline. Sweep and calendar logic change only in sweep.py and calendar.py. The job runner (Python scheduler vs BullMQ) is hidden behind sweep.py so the open question does not affect the rest.
+- **config not code**:
+  - Grace period and escalation manager per deadline type
+  - Auto-task rules
+  - Recurring task templates
+  - Project calendars, regional holidays, shutdown periods
+  - Roster patterns (FIFO/DIDO)
+  - Task priorities and statuses labels
+  - Terminology keys (Task, Deadline, My Work)
+  - Which deadline types are enabled
+- **events consumed**:
+  - inspection.hold_point_reached
+  - inspection.rejected
+  - inspection.due
+  - ncr.opened
+  - certificate.expiring
+  - calibration.due
+  - approval.assigned
+  - approval.completed
+  - mention.created
+  - rfi.issued
+  - submittal.issued
+  - meeting.action_created
+  - voice.draft_created
+  - punch.item_raised
+  - interface.item_due
+  - schedule.commitment_set
+  - moc.action_created
+  - changeorder.submitted
+  - source record closed events (resolve matching deadline)
+- **events emitted**:
+  - task.created
+  - task.completed
+  - deadline.registered
+  - deadline.overdue
+  - deadline.escalated
+  - deadline.extended
+  - deadline.resolved
+  - delegation.activated
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/tasks/pages/MyWork.tsx
+    - **purpose**: Home queue with inline Approve, Open, Sign
+  -
+    - **path**: frontend/src/modules/tasks/pages/MyTasks.tsx
+    - **purpose**: Personal tasks and deadlines
+  -
+    - **path**: frontend/src/modules/tasks/pages/TaskBoard.tsx
+    - **purpose**: Project and asset-subtree board
+  -
+    - **path**: frontend/src/modules/tasks/pages/OverdueBoard.tsx
+    - **purpose**: Team and project overdue board
+  -
+    - **path**: frontend/src/modules/tasks/pages/Analytics.tsx
+    - **purpose**: Ageing analytics with export
+  -
+    - **path**: frontend/src/modules/tasks/pages/PolicyAdmin.tsx
+    - **purpose**: Grace, escalation and auto-task rule admin
+  -
+    - **path**: frontend/src/modules/tasks/pages/DelegationSettings.tsx
+    - **purpose**: Out-of-office routing
+  -
+    - **path**: frontend/src/modules/tasks/components/QuickAdd.tsx
+    - **purpose**: Quick-add task entry
+  -
+    - **path**: frontend/src/modules/tasks/components/DueSoonWidget.tsx
+    - **purpose**: Extends existing dashboard Due soon
+  -
+    - **path**: frontend/src/modules/tasks/components/DeadlineActions.tsx
+    - **purpose**: Acknowledge, reassign, extend with reason, resolve
+  -
+    - **path**: frontend/src/modules/tasks/offline/queue.ts
+    - **purpose**: Dexie queued task actions with photo attachments
+  -
+    - **path**: frontend/src/modules/tasks/api.ts
+    - **purpose**: Wrapper around generated client with TanStack Query hooks
+  -
+    - **path**: frontend/src/modules/tasks/routes.tsx
+    - **purpose**: Route and nav registration
+- **public api**:
+  - GET /my-work
+  - POST/GET/PATCH /tasks
+  - POST /tasks/{id}/checklist
+  - GET /deadlines
+  - POST /deadlines/{id}/acknowledge|reassign|extend|resolve
+  - register_deadline(source_type, source_id, asset_id, owner, due_at, type) service interface for other modules
+  - resolve_deadline(source_type, source_id)
+  - create_task(source link) service interface
+  - GET/PUT /delegations
+  - GET/PUT /task-policies and /auto-task-rules
+  - GET /tasks/analytics/overdue (export)
+  - GET/PUT /project-calendars
+  - sync pull/push for tasks
+- **reuses shared**:
+  - Notification service for reminders and escalation
+  - Approvals/state engine for approvals awaiting me and status workflow
+  - Rules engine for auto-task rules
+  - Comments and attachments services
+  - Documents/uploads pipeline for task photos
+  - Audit/timeline for extensions and escalations
+  - Permissions catalogue and policy service
+  - Terminology dictionary
+  - Offline sync protocol
+  - Job scheduler already used by AIP
+  - Reporting for overdue counts

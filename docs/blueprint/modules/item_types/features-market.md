@@ -1,0 +1,37 @@
+# Content types, item types & attributes — Feature scout
+
+
+- **abilities seen in market**:
+  - Configurable record types with custom fields and validation rules
+  - Field-level conditional visibility and calculated fields
+  - Versioned schemas with migration of existing data
+  - Reusable attribute libraries and industry starter packs
+  - Defaults inherited from parent types
+  - Per-type lifecycle states and permissions
+  - Reference fields to other records with scoped pickers
+  - Schema change impact preview
+- **suggestions**:
+  -
+    - **effort**: L
+    - **feature**: Item-type schema versioning with a migration preview when attribute types change
+    - **why**: AIP defers editable attribute types; versioning protects existing assets and completed inspections.
+  -
+    - **effort**: M
+    - **feature**: Starter packs for NDT/CUI, welding, insulation and coating item types and attributes
+    - **why**: Speeds onboarding of new customers and encodes the owner's domain expertise as a product asset.
+  -
+    - **effort**: M
+    - **feature**: Conditional and calculated attributes via sandboxed expressions (for example remaining life from thickness and corrosion rate)
+    - **why**: Integrity engineers need derived values; sandboxed expressions avoid arbitrary scripts.
+  -
+    - **effort**: M
+    - **feature**: Per-item-type custom status sets mapped to neutral lifecycle states
+    - **why**: Lets markets name statuses locally while reporting and gates rely on stable states.
+  -
+    - **effort**: S
+    - **feature**: Units and tolerances on measurement attributes with out-of-range flags
+    - **why**: Standardises thickness, temperature and dimension capture and feeds the rules engine.
+  -
+    - **effort**: M
+    - **feature**: Type inheritance (a base 'Pipe' type extended into 'Insulated Pipe')
+    - **why**: Reduces duplication of attribute schemas across similar equipment types.

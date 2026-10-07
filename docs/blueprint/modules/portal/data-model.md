@@ -1,0 +1,490 @@
+# Client & subcontractor portal — Data model & schema
+
+
+- **notes**: Subcontractor evidence uploads go through the uploads module and comments, not new tables. The onboarding gate reads certificates via eligibility. Policy evaluation uses an external-user class, with portal_grants as the data source, enforced in query filters and RLS. portal_audit_events also mirrors into the main audit chain.
+- **reuses existing**:
+  - inspections
+  - issues
+  - documents
+  - certificates
+  - assets
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: contact_id
+        - **notes**: FK contacts
+        - **type**: uuid
+      -
+        - **name**: company_id
+        - **notes**: FK companies
+        - **type**: uuid
+      -
+        - **name**: email
+        - **notes**: citext, unique per tenant
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: invited/pending_approval/active/suspended/expired
+        - **type**: text
+      -
+        - **name**: invited_by
+        - **notes**: internal user
+        - **type**: uuid
+      -
+        - **name**: approved_by
+        - **notes**: named internal owner
+        - **type**: uuid
+      -
+        - **name**: approved_at
+        - **type**: timestamptz
+      -
+        - **name**: external_idp_subject
+        - **notes**: nullable, for later WorkOS SSO
+        - **type**: text
+      -
+        - **name**: expires_at
+        - **notes**: auto-expire at project close
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, email) where deleted_at is null
+      - (tenant_id, company_id)
+    - **name**: portal_users
+    - **purpose**: External identities linked to contact and company; separate from internal users.
+    - **relations**:
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: portal_user_id
+        - **type**: uuid
+      -
+        - **name**: kind
+        - **notes**: magic_link/pin
+        - **type**: text
+      -
+        - **name**: token_hash
+        - **notes**: never store plaintext
+        - **type**: text
+      -
+        - **name**: expires_at
+        - **notes**: short TTL
+        - **type**: timestamptz
+      -
+        - **name**: consumed_at
+        - **notes**: single use; set on POST confirm
+        - **type**: timestamptz
+      -
+        - **name**: failed_attempts
+        - **notes**: PIN lockout
+        - **type**: int
+      -
+        - **name**: locked_until
+        - **type**: timestamptz
+      -
+        - **name**: device_fingerprint_hash
+        - **notes**: device binding
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (token_hash)
+      - (portal_user_id, kind, expires_at)
+    - **name**: portal_credentials
+    - **purpose**: Hashed single-use magic link tokens and PINs.
+    - **relations**:
+      - portal_users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: portal_user_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: root of subtree, nullable
+        - **type**: uuid
+      -
+        - **name**: asset_path
+        - **notes**: denormalised from assets for fast subtree match
+        - **type**: ltree
+      -
+        - **name**: module
+        - **notes**: inspections/documents/issues/reports...
+        - **type**: text
+      -
+        - **name**: actions
+        - **notes**: array: view, comment, countersign, respond, upload, witness
+        - **type**: jsonb
+      -
+        - **name**: download_policy
+        - **notes**: view_only/watermarked/download
+        - **type**: text
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_reason
+        - **notes**: project_closed/scim/manual
+        - **type**: text
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (portal_user_id, project_id) where revoked_at is null
+      - gist (asset_path)
+      - (tenant_id, project_id)
+    - **name**: portal_grants
+    - **purpose**: Explicit sharing: project, asset subtree, module and action with download policy.
+    - **relations**:
+      - portal_users
+      - projects
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: portal_user_id
+        - **type**: uuid
+      -
+        - **name**: session_hash
+        - **type**: text
+      -
+        - **name**: device_fingerprint_hash
+        - **type**: text
+      -
+        - **name**: ip
+        - **type**: text
+      -
+        - **name**: user_agent
+        - **type**: text
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (session_hash)
+      - (portal_user_id, expires_at)
+    - **name**: portal_sessions
+    - **purpose**: Sessions on the portal origin with own policy.
+    - **relations**:
+      - portal_users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: portal_user_id
+        - **type**: uuid
+      -
+        - **name**: grant_id
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: view/download/countersign/respond/upload/waive/confirm
+        - **type**: text
+      -
+        - **name**: entity_type
+        - **type**: text
+      -
+        - **name**: entity_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: history follows asset
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: ip
+        - **type**: text
+      -
+        - **name**: metadata
+        - **type**: jsonb
+      -
+        - **name**: prev_hash
+        - **notes**: hash chain
+        - **type**: text
+      -
+        - **name**: row_hash
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: REVOKE UPDATE/DELETE for app role
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, created_at)
+      - (asset_id, created_at)
+      - (portal_user_id, created_at)
+    - **name**: portal_audit_events
+    - **purpose**: Append-only record of every external view, download and action, hash-chained.
+    - **relations**:
+      - portal_users
+      - portal_grants
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: access_token_hash
+        - **type**: text
+      -
+        - **name**: download_policy
+        - **type**: text
+      -
+        - **name**: expires_at
+        - **type**: timestamptz
+      -
+        - **name**: revoked_at
+        - **type**: timestamptz
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (access_token_hash)
+      - (tenant_id, expires_at)
+    - **name**: share_packs
+    - **purpose**: Time-limited read-only bundles usable without a full account.
+    - **relations**:
+      - projects
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: share_pack_id
+        - **type**: uuid
+      -
+        - **name**: entity_type
+        - **notes**: document/certificate/report
+        - **type**: text
+      -
+        - **name**: entity_id
+        - **type**: uuid
+      -
+        - **name**: revision_id
+        - **notes**: pinned revision
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (share_pack_id)
+    - **name**: share_pack_items
+    - **purpose**: Contents of a share pack, pinned to specific revisions.
+    - **relations**:
+      - share_packs
+      - documents
+      - certificates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: company_id
+        - **notes**: client company
+        - **type**: uuid
+      -
+        - **name**: logo_document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: terminology_overrides
+        - **type**: jsonb
+      -
+        - **name**: email_footer
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, company_id)
+    - **name**: client_branding
+    - **purpose**: Per-client logo and terminology for portal and emails.
+    - **relations**:
+      - contacts companies
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **notes**: FK inspections
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: portal_user_id
+        - **type**: uuid
+      -
+        - **name**: response
+        - **notes**: confirmed/waived
+        - **type**: text
+      -
+        - **name**: notice_given_hours
+        - **notes**: validated against notice period
+        - **type**: int
+      -
+        - **name**: note
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (inspection_id)
+      - (portal_user_id, created_at)
+    - **name**: witness_responses
+    - **purpose**: Client confirm or waive responses on hold/witness points.
+    - **relations**:
+      - inspections
+      - portal_users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS, unique
+        - **type**: uuid
+      -
+        - **name**: enabled
+        - **notes**: default false
+        - **type**: boolean
+      -
+        - **name**: session_ttl_minutes
+        - **type**: int
+      -
+        - **name**: magic_link_ttl_minutes
+        - **type**: int
+      -
+        - **name**: pin_max_attempts
+        - **type**: int
+      -
+        - **name**: default_waive_notice_hours
+        - **notes**: overridable per ITP point or client
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id)
+    - **name**: portal_settings
+    - **purpose**: Per-tenant toggle, rate limits, session policy, notice defaults.

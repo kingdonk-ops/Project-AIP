@@ -1,0 +1,560 @@
+# AI assistant & agents — Data model & schema
+
+
+- **notes**: Writes only happen through ai_proposed_changes, applied by the user's own API call, and each apply is also written to audit_log. Tools run under the caller's identity, so no service-account tables exist. Prompts are logged in ai_runs and ai_messages, with agents_enabled as a per-tenant switch so agent shipping can be decided later. Retention of prompts follows records retention and legal hold, and redacted content is stored where the gateway redacts.
+- **reuses existing**:
+  - assets
+  - documents
+  - certificates
+  - issues
+  - inspections
+  - tasks
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: tenant_id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: enabled
+        - **type**: boolean
+      -
+        - **name**: agents_enabled
+        - **notes**: answers the open agents question
+        - **type**: boolean
+      -
+        - **name**: kill_switch
+        - **type**: boolean
+      -
+        - **name**: allowed_models
+        - **type**: jsonb
+      -
+        - **name**: region
+        - **notes**: AU
+        - **type**: text
+      -
+        - **name**: spend_cap_monthly
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - PK tenant_id
+    - **name**: ai_tenant_settings
+    - **purpose**: Per-tenant opt-in, kill switch and model policy
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: scope subtree, nullable
+        - **type**: uuid
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id, updated_at desc)
+    - **name**: ai_chat_sessions
+    - **purpose**: Chat session
+    - **relations**:
+      - users
+      - projects
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: session_id
+        - **type**: uuid
+      -
+        - **name**: role
+        - **notes**: user/assistant/tool
+        - **type**: text
+      -
+        - **name**: content
+        - **type**: text
+      -
+        - **name**: citations
+        - **notes**: record refs
+        - **type**: jsonb
+      -
+        - **name**: answer_card
+        - **notes**: filters, counts, time range
+        - **type**: jsonb
+      -
+        - **name**: model
+        - **type**: text
+      -
+        - **name**: input_tokens
+        - **type**: int
+      -
+        - **name**: output_tokens
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (session_id, created_at)
+    - **name**: ai_messages
+    - **purpose**: Messages with citations and answer cards, append-only
+    - **relations**:
+      - ai_chat_sessions
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: null for platform default, or use per-tenant copy
+        - **type**: uuid
+      -
+        - **name**: tool_key
+        - **type**: text
+      -
+        - **name**: mode
+        - **notes**: read/write
+        - **type**: text
+      -
+        - **name**: required_permission
+        - **notes**: permissions catalogue key
+        - **type**: text
+      -
+        - **name**: scope
+        - **type**: jsonb
+      -
+        - **name**: enabled
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, tool_key) unique
+    - **name**: ai_tool_registry
+    - **purpose**: Tool definitions with read/write flag and scope
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: system_prompt_ref
+        - **notes**: versioned prompt id
+        - **type**: text
+      -
+        - **name**: tool_keys
+        - **type**: text[]
+      -
+        - **name**: max_steps
+        - **type**: int
+      -
+        - **name**: max_tokens
+        - **type**: int
+      -
+        - **name**: max_spend
+        - **type**: numeric
+      -
+        - **name**: enabled
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, name) unique
+    - **name**: ai_agent_definitions
+    - **purpose**: Bounded agent definitions
+    - **relations**:
+      - ai_tool_registry
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: tools run as this user
+        - **type**: uuid
+      -
+        - **name**: session_id
+        - **type**: uuid
+      -
+        - **name**: agent_id
+        - **type**: uuid
+      -
+        - **name**: prompt
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: running/stopped/done/capped/failed
+        - **type**: text
+      -
+        - **name**: step_count
+        - **type**: int
+      -
+        - **name**: input_tokens
+        - **type**: int
+      -
+        - **name**: output_tokens
+        - **type**: int
+      -
+        - **name**: cost
+        - **type**: numeric
+      -
+        - **name**: output
+        - **type**: jsonb
+      -
+        - **name**: started_at
+        - **type**: timestamptz
+      -
+        - **name**: finished_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id, started_at desc)
+      - (tenant_id, status)
+    - **name**: ai_runs
+    - **purpose**: Agent or chat run record
+    - **relations**:
+      - users
+      - ai_chat_sessions
+      - ai_agent_definitions
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: run_id
+        - **type**: uuid
+      -
+        - **name**: message_id
+        - **type**: uuid
+      -
+        - **name**: step
+        - **type**: int
+      -
+        - **name**: tool_key
+        - **type**: text
+      -
+        - **name**: arguments
+        - **type**: jsonb
+      -
+        - **name**: result_summary
+        - **notes**: record refs, counts
+        - **type**: jsonb
+      -
+        - **name**: denied
+        - **notes**: permission denial
+        - **type**: boolean
+      -
+        - **name**: untrusted_flagged
+        - **notes**: injection screen hit
+        - **type**: boolean
+      -
+        - **name**: duration_ms
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (run_id, step)
+      - (tenant_id, tool_key, created_at)
+    - **name**: ai_tool_calls
+    - **purpose**: Append-only log of tool calls
+    - **relations**:
+      - ai_runs
+      - ai_messages
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: run_id
+        - **type**: uuid
+      -
+        - **name**: proposed_for_user_id
+        - **type**: uuid
+      -
+        - **name**: target_table
+        - **type**: text
+      -
+        - **name**: target_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: action
+        - **type**: text
+      -
+        - **name**: diff
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: proposed/applied/discarded/failed
+        - **type**: text
+      -
+        - **name**: decided_by
+        - **type**: uuid
+      -
+        - **name**: decided_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status)
+      - (target_table, target_id)
+    - **name**: ai_proposed_changes
+    - **purpose**: Human-applied change proposals
+    - **relations**:
+      - ai_runs
+      - assets
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: kind
+        - **notes**: certificate/mtr/ncr_draft
+        - **type**: text
+      -
+        - **name**: source_document_id
+        - **type**: uuid
+      -
+        - **name**: source_issue_or_inspection_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: extracted
+        - **notes**: heat no, grade, expiry; or draft body
+        - **type**: jsonb
+      -
+        - **name**: confidence
+        - **type**: jsonb
+      -
+        - **name**: verification_status
+        - **notes**: unverified/verified/rejected
+        - **type**: text
+      -
+        - **name**: verified_by
+        - **type**: uuid
+      -
+        - **name**: verified_at
+        - **type**: timestamptz
+      -
+        - **name**: resulting_record_id
+        - **notes**: certificate or issue created after approval
+        - **type**: uuid
+      -
+        - **name**: run_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, verification_status)
+      - (source_document_id)
+    - **name**: ai_extraction_results
+    - **purpose**: Certificate, MTR and NCR draft extraction awaiting human verification
+    - **relations**:
+      - documents
+      - certificates
+      - issues
+      - assets
+      - ai_runs
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: null for platform sets
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: cases
+        - **notes**: question, expected records
+        - **type**: jsonb
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, name, version) unique
+    - **name**: ai_eval_sets
+    - **purpose**: Evaluation question sets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: eval_set_id
+        - **type**: uuid
+      -
+        - **name**: model
+        - **type**: text
+      -
+        - **name**: prompt_version
+        - **type**: text
+      -
+        - **name**: score
+        - **type**: numeric
+      -
+        - **name**: details
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (eval_set_id, created_at)
+    - **name**: ai_eval_results
+    - **purpose**: Append-only eval runs per model or prompt change
+    - **relations**:
+      - ai_eval_sets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: run_id
+        - **type**: uuid
+      -
+        - **name**: model
+        - **type**: text
+      -
+        - **name**: provider
+        - **type**: text
+      -
+        - **name**: region
+        - **type**: text
+      -
+        - **name**: data_classes
+        - **notes**: what categories were sent
+        - **type**: text[]
+      -
+        - **name**: redactions
+        - **type**: int
+      -
+        - **name**: input_tokens
+        - **type**: int
+      -
+        - **name**: output_tokens
+        - **type**: int
+      -
+        - **name**: cost
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, created_at)
+      - (tenant_id, model, created_at)
+    - **name**: ai_usage_records
+    - **purpose**: Per-tenant data-flow and usage ledger
+    - **relations**:
+      - ai_runs
+      - users

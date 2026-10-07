@@ -1,0 +1,128 @@
+# Change orders, variations & MOC (basic) — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Project members with change.view. Commercial values need change.view_commercial_values.
+    - **actions**:
+      - Create change
+      - Open
+      - Filter
+      - Export
+      - Save view
+    - **layout**: Toggle between a DataTable and a stage pipeline (notice, request, order, measured, final account).
+    - **name**: Change Register
+    - **purpose**: Register of all change records, using tenant-labelled types (change order, variation, MOC, discovered condition).
+    - **route**: /projects/:projectId/changes
+    - **sections**:
+      - View toggle
+      - Filters (type, status, asset, notice clock state)
+      - Pipeline columns
+      - Register table with time-bar warning chips
+  -
+    - **access**: Users with change.create
+    - **actions**:
+      - Save draft
+      - Submit
+      - Link source record
+    - **layout**: FormRenderer page, prefilled when launched from a source record.
+    - **name**: Create Change
+    - **purpose**: Raise a change from a notice, instruction, RFI or inspection finding.
+    - **route**: /projects/:projectId/changes/new
+    - **sections**:
+      - Type and source
+      - Description
+      - Asset picker
+      - Time and cost impact
+      - Contract reference and notice start event
+      - Attachments and photos
+  -
+    - **access**: change.view for viewing. Approval requires change.approve. Commercial values are redacted without permission.
+    - **actions**:
+      - Edit
+      - Submit
+      - Approve
+      - Reject
+      - Add line
+      - Generate confirmation letter
+      - Advance stage
+    - **layout**: Header with a WorkflowBar and notice clock badge. Tabs: Overview, Lines, Daywork, Links, Timeline, Approvals.
+    - **name**: Change Detail
+    - **purpose**: Full record with timeline, lines, notice clock, links and approvals.
+    - **route**: /projects/:projectId/changes/:id
+    - **sections**:
+      - Header and status
+      - Notice clock panel
+      - Change lines table (cost-code text fields)
+      - Linked correspondence, diary, phone log and RFIs
+      - Attachments
+      - Timeline
+      - Approval trail
+  -
+    - **access**: Supervisors and site leads with change.daywork
+    - **actions**:
+      - Pull from diary and ledger
+      - Edit lines
+      - Capture signature
+      - Submit
+    - **layout**: Stepper form that works on tablet and mobile.
+    - **name**: Daywork Sheet Capture
+    - **purpose**: Build a daywork sheet from field records and capture the client signature.
+    - **route**: /projects/:projectId/changes/:id/daywork/new
+    - **sections**:
+      - Source pull (crew, hours, consumables, plant)
+      - Editable lines
+      - Client signature pad
+      - Summary
+  -
+    - **access**: Required reviewers and MOC owners with change.moc
+    - **actions**:
+      - Complete checklist item
+      - Sign review
+      - Raise action
+      - Advance stage
+      - Close out (blocked while actions are open)
+    - **layout**: Stage stepper (proposal, technical review, risk review, approval, implementation, close-out) with checklist panels.
+    - **name**: MOC Detail
+    - **purpose**: Management of change review, checklists and close-out gate.
+    - **route**: /projects/:projectId/moc/:id
+    - **sections**:
+      - Stage stepper
+      - Checklist by discipline (engineering, integrity, HSE)
+      - Required reviewer roles and sign-off status
+      - Open actions list (gate before close-out)
+      - Linked documents
+  -
+    - **access**: Tenant or project admins with change.admin
+    - **actions**:
+      - Add type
+      - Edit notice period
+      - Edit checklist template
+      - Preview workflow
+    - **layout**: Settings tabs.
+    - **name**: Change Settings
+    - **purpose**: Configure types, workflow, notice periods and MOC checklist templates.
+    - **route**: /settings/change
+    - **sections**:
+      - Change types and labels (via terminology keys)
+      - Lifecycle workflow
+      - Contract notice period configuration
+      - MOC checklist templates per discipline
+      - Confirmation letter template
+  -
+    - **access**: Field users with change.create
+    - **actions**:
+      - Save draft change
+      - Attach photo
+      - Record voice note
+      - Queue offline
+    - **layout**: Mobile single-column form with a camera-first flow and offline queue.
+    - **name**: Mobile Verbal Instruction and Discovered Condition
+    - **purpose**: Quick field capture of a verbal instruction or a discovered condition with photos.
+    - **route**: /m/changes/capture
+    - **sections**:
+      - Type picker
+      - Voice note or text
+      - Photos
+      - Asset picker
+      - Instructing person

@@ -1,0 +1,126 @@
+# Certificates, competency & calibration gate — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: Compliance admins, supervisors; people see their own
+    - **actions**:
+      - Add certificate
+      - Export
+      - Send renewal reminder
+      - Mark superseded
+      - Assign renewal owner
+    - **layout**: Data table with RAG status column and filters.
+    - **name**: Compliance register
+    - **purpose**: All certificates, calibrations, permits and use-by items.
+    - **route**: /compliance
+    - **sections**:
+      - Filters (type, owner, status, flag)
+      - Table
+      - Summary counts by flag
+  -
+    - **access**: Supervisors, project managers, compliance admins
+    - **actions**:
+      - Open
+      - Remind
+      - Assign renewal owner
+      - Export
+    - **layout**: Grouped list with date buckets; suppressed items hidden.
+    - **name**: Expiring-soon feed
+    - **purpose**: Prioritised expiries grouped by window and owner.
+    - **route**: /compliance/expiring
+    - **sections**:
+      - Red/amber groups
+      - Owner and project grouping
+      - Suppression indicator toggle
+  -
+    - **access**: Compliance admins; owners may submit for approval
+    - **actions**:
+      - Save
+      - Save and add another
+      - Cancel
+    - **layout**: Form with document upload.
+    - **name**: Add certificate
+    - **purpose**: Create a certificate for an owner entity.
+    - **route**: /compliance/new
+    - **sections**:
+      - Type, owner, number
+      - Issued/expiry
+      - Issuer
+      - Document
+  -
+    - **access**: Compliance admins, owner, supervisors
+    - **actions**:
+      - Edit
+      - Supersede
+      - Replace document
+      - Request override
+    - **layout**: Header with RAG chip; tabs.
+    - **name**: Certificate detail
+    - **purpose**: Status, history and reliance.
+    - **route**: /compliance/:id
+    - **sections**:
+      - Summary
+      - Linked document preview
+      - Renewal/supersede history
+      - Reminder history
+      - Items relying on this certificate
+      - Availability and suppression state
+      - Eligibility result
+      - Audit trail
+  -
+    - **access**: Supervisors, quality managers
+    - **actions**:
+      - Drill into person
+      - Export
+      - Assign training
+    - **layout**: Matrix grid with colour cells and sticky headers.
+    - **name**: Competency matrix
+    - **purpose**: People vs template/category requirements.
+    - **route**: /compliance/matrix
+    - **sections**:
+      - Filters (team, project, discipline)
+      - Matrix
+      - Gap summary
+  -
+    - **access**: Approver role (quality manager)
+    - **actions**:
+      - Approve
+      - Reject
+      - Set max duration
+    - **layout**: Queue table with approval drawer.
+    - **name**: Override requests
+    - **purpose**: Audited override approvals.
+    - **route**: /compliance/overrides
+    - **sections**:
+      - Pending requests
+      - Reason and scope
+      - Decision history
+  -
+    - **access**: The person, supervisors, admins
+    - **actions**:
+      - Add
+      - Renew
+    - **layout**: Profile tab.
+    - **name**: Person qualifications
+    - **purpose**: Credentials per person.
+    - **route**: /people/:id/qualifications
+    - **sections**:
+      - Certificates list
+      - Discipline gating status
+  -
+    - **access**: Tenant admin
+    - **actions**:
+      - Edit
+      - Save
+    - **layout**: Settings cards.
+    - **name**: Compliance settings
+    - **purpose**: Types, windows and block rules.
+    - **route**: /settings/compliance
+    - **sections**:
+      - Certificate types
+      - Amber/red windows
+      - Hard-block per type
+      - Override policy
+      - Suppression rule
+      - Discipline gating

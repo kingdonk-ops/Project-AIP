@@ -1,0 +1,164 @@
+# Report engine & published records — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: report.template.view. Authoring needs report.template.manage.
+    - **actions**:
+      - Create template
+      - Edit
+      - Preview with live data
+      - Duplicate
+      - Publish new version
+      - Archive
+      - Export JSON
+    - **layout**: DataTable with a filter bar and bulk action bar.
+    - **name**: Report templates
+    - **purpose**: List versioned report templates by record type, variant, orientation and client.
+    - **route**: /settings/reports/templates
+    - **sections**:
+      - Filters (record type, variant, orientation, client, status)
+      - Table (name, record type, variant, orientation, version, client, status, updated)
+      - Empty state
+  -
+    - **access**: report.template.manage. Templates are sanitised on save.
+    - **actions**:
+      - Add or reorder section
+      - Map field
+      - Preview with record
+      - Save draft
+      - Publish new version
+      - Revert to version
+    - **layout**: Three-pane designer with a section outline on the left, a canvas in the centre and a properties panel on the right. A live-data preview pane sits on the canvas toggle.
+    - **name**: Report template designer
+    - **purpose**: Build a template from sections, map fields to slots, style it and preview it against real records.
+    - **route**: /settings/reports/templates/:templateId
+    - **sections**:
+      - Section outline and blocks (tables, photos, charts, signature block)
+      - Field mapping panel
+      - Styling and branding
+      - Orientation and page settings
+      - Live-data preview with record picker
+      - Version history
+      - Pre-flight rule set binding
+      - Domain blocks (thickness map, CUI condition, DFT chart)
+  -
+    - **access**: report.view. Download of client variants follows project and client scope.
+    - **actions**:
+      - Open report
+      - Download selected
+      - Add to data book
+      - Export register CSV
+      - Open source record
+      - Republish as superseding
+    - **layout**: Searchable DataTable with a filter sidebar and a preview drawer.
+    - **name**: Report register
+    - **purpose**: Search issued reports with number, revision, source record and supersession.
+    - **route**: /reports/register
+    - **sections**:
+      - Search and filters (client, record type, status, date)
+      - Table (report no., revision, title, source record, template and version, client, generated, status, supersedes)
+      - PDF preview drawer
+      - Supersession chain
+  -
+    - **access**: report.publish and the signer role for the record type. External recipients receive portal links.
+    - **actions**:
+      - Run pre-flight
+      - Choose variant
+      - Select recipients
+      - Sign and publish
+      - Cancel
+    - **layout**: Modal wizard with steps for preview, pre-flight, recipients and confirm.
+    - **name**: Publish dialog
+    - **purpose**: Preview, pre-flight, sign and distribute a record to a named recipient list.
+    - **route**: Embedded: publish dialog on a source record
+    - **sections**:
+      - PDF preview
+      - Pre-flight results from the rules engine
+      - Variant and template selection
+      - Recipient set picker validated against the project directory
+      - Signer and seal summary
+      - Link expiry
+  -
+    - **access**: report.publish or report.audit.view
+    - **actions**:
+      - Verify seal
+      - Resend link
+      - Extend or revoke link
+      - Republish superseding version
+      - Download manifest
+    - **layout**: Table with a detail drawer.
+    - **name**: Published history and receipts
+    - **purpose**: Show published records with hash, recipients, delivery status and access log.
+    - **route**: /reports/published
+    - **sections**:
+      - Published records table
+      - Delivery receipts per recipient
+      - Access log
+      - Hash and manifest verification
+      - Supersession chain
+  -
+    - **access**: report.manage or tenant admin
+    - **actions**:
+      - Retry
+      - Cancel
+      - Open record
+    - **layout**: Table with status filters.
+    - **name**: Render jobs
+    - **purpose**: Monitor render and distribution jobs and retry failures.
+    - **route**: /reports/jobs
+    - **sections**:
+      - Job list (record, template, status, duration)
+      - Error detail
+  -
+    - **access**: report.databook.manage
+    - **actions**:
+      - Add items
+      - Reorder
+      - Set cover sheet
+      - Compile
+      - Download
+      - Publish as record
+    - **layout**: Two-pane builder with a source picker on the left and an ordered book outline on the right, plus a preview.
+    - **name**: Data book compiler
+    - **purpose**: Assemble reports and documents into an ordered data book with bookmarks and cover sheets.
+    - **route**: /projects/:projectId/databooks
+    - **sections**:
+      - Source picker (reports, documents, certificates)
+      - Per-asset ordering outline
+      - Cover sheets and index settings
+      - Compile status
+      - Preview
+  -
+    - **access**: Tenant admin or report.settings.manage
+    - **actions**:
+      - Edit and save
+      - Preview numbering
+    - **layout**: Settings page with sections.
+    - **name**: Report settings
+    - **purpose**: Configure numbering, defaults, link expiry, branding and renderer.
+    - **route**: /settings/reports
+    - **sections**:
+      - Numbering and revision rules per client
+      - Default templates per record type
+      - Auto-generate on approval
+      - Link expiry defaults
+      - Branding per tenant and client
+      - Renderer selection
+      - Pre-flight rule set
+      - Retention for published records
+      - Allowed external recipient domains
+  -
+    - **access**: Named external recipient with a valid link. Access is logged as a delivery receipt.
+    - **actions**:
+      - Confirm and download
+      - Verify seal
+    - **layout**: Minimal branded page on the separate portal origin, with a confirm button before the download.
+    - **name**: Portal report download
+    - **purpose**: Let external recipients view and download a published report through an expiring authenticated link.
+    - **route**: /portal/reports/:linkToken
+    - **sections**:
+      - Report title, number and revision
+      - Superseded warning if applicable
+      - Download button
+      - Seal verification info

@@ -1,0 +1,105 @@
+# Roles, permissions & teams — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/access/router.py
+    - **purpose**: Roles, overrides, teams, visibility rules, delegations, effective-access, reviews
+  -
+    - **path**: backend/app/modules/access/models.py
+    - **purpose**: Tables: permission, role, role_permission, role_assignment (project/team/subtree scope), user_override, team, team_member, visibility_rule, field_mask, discipline_grant, delegation
+  -
+    - **path**: backend/app/modules/access/catalogue.py
+    - **purpose**: Permission catalogue loader aggregating each module's permissions.py registrations
+  -
+    - **path**: backend/app/modules/access/policy.py
+    - **purpose**: The single policy service: tenant, org, project, team, discipline and asset-subtree evaluation, deny by default
+  -
+    - **path**: backend/app/modules/access/rls.py
+    - **purpose**: Session-context setup (SET LOCAL app.tenant_id and principal scope) and RLS/query-filter helpers; fails closed
+  -
+    - **path**: backend/app/modules/access/subtree.py
+    - **purpose**: ltree inheritance with explicit exclusions
+  -
+    - **path**: backend/app/modules/access/masking.py
+    - **purpose**: Field masking per party, applied at serialisation by policy
+  -
+    - **path**: backend/app/modules/access/qualified_signoff.py
+    - **purpose**: Discipline/method sign-off check against the eligibility gate
+  -
+    - **path**: backend/app/modules/access/delegation.py
+    - **purpose**: Time-boxed acting-in-role
+  -
+    - **path**: backend/app/modules/access/explain.py
+    - **purpose**: Effective-access explorer logic
+  -
+    - **path**: backend/app/modules/access/scim_mapping.py
+    - **purpose**: SCIM groups to teams/roles; blocks implicit tenant admin
+  -
+    - **path**: backend/app/modules/access/reviews.py
+    - **purpose**: Quarterly access review and matrix export; change-approval hooks
+  -
+    - **path**: backend/app/modules/access/migrations/
+    - **purpose**: Alembic migrations
+- **change isolation**: A new module adds a permissions.py with its abilities and gains enforcement, tests and matrix coverage automatically. Changing how visibility is evaluated happens only in policy.py and rls.py, so no module edits are needed.
+- **config not code**:
+  - Roles and their permission sets
+  - Per-user overrides and project role matrices
+  - Team definitions and visibility rules
+  - Field mask policies per party type
+  - SCIM group mappings
+  - Delegation limits and review cadence
+  - Whether overrides and custom role changes need approval (workflow route)
+- **events consumed**:
+  - user.deactivated (remove memberships, end delegations, reassign)
+  - user.created (apply default role from SCIM mapping)
+  - projects.project.created (default project roles)
+  - assets.node.moved (recompute subtree grants)
+  - eligibility.certificate.expired (qualified sign-off invalidation)
+  - tenancy.organisation.changed
+- **events emitted**:
+  - team.membership_changed
+  - role.assignment_changed
+  - access.override_changed
+  - access.delegation_started / ended
+  - access.review_exported
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/access/UsersRoles.tsx
+    - **purpose**: Users & Roles with per-project permission matrix
+  -
+    - **path**: frontend/src/modules/access/TeamsPage.tsx
+    - **purpose**: Team list, members and visibility rules
+  -
+    - **path**: frontend/src/modules/access/VisibilityRuleBuilder.tsx
+    - **purpose**: Rule builder with preview of what the team can see
+  -
+    - **path**: frontend/src/modules/access/EffectiveAccessExplorer.tsx
+    - **purpose**: Why a user can or cannot act on a record
+  -
+    - **path**: frontend/src/modules/access/AccessReview.tsx
+    - **purpose**: Review and matrix export
+  -
+    - **path**: frontend/src/modules/access/useCan.ts
+    - **purpose**: Hook used by all modules to hide or disable actions; mirrors server policy
+  -
+    - **path**: frontend/src/modules/access/DelegationDialog.tsx
+    - **purpose**: Create time-boxed delegation
+- **public api**:
+  - Python: policy.check(principal, ability, resource), policy.scope_filter(principal, entity), policy.mask(principal, entity, row)
+  - Python: require(ability) FastAPI dependency
+  - GET/POST/PATCH/DELETE /roles, /role-assignments, /overrides
+  - GET/POST/PATCH/DELETE /teams, /teams/{id}/members, /teams/{id}/visibility-rules
+  - POST /delegations
+  - GET /access/effective?user=&record=
+  - GET /access/matrix/export
+  - GET /access/reviews
+  - TS: useCan(ability, resource)
+- **reuses shared**:
+  - Audit service for all privilege changes
+  - Outbox/event bus
+  - Redis permission cache (tenant-prefixed, invalidated on events)
+  - Asset ltree from assets module for subtree scope
+  - Eligibility gate for qualified sign-off
+  - Identity SCIM events
+  - Terms dictionary for role and ability names

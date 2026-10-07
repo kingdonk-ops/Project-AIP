@@ -1,0 +1,121 @@
+# Prefab & off-site manufacture — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/prefab/__init__.py
+    - **purpose**: Module registration, router, permissions
+  -
+    - **path**: backend/app/modules/prefab/models.py
+    - **purpose**: PrefabUnit, UnitType, StageTemplate, ProductionStage, Shipment/TransportLoad, ReceiptCheck, InstallationSlot, UnitBomLine, UnitHandoverChecklist
+  -
+    - **path**: backend/app/modules/prefab/schemas.py
+    - **purpose**: Pydantic schemas
+  -
+    - **path**: backend/app/modules/prefab/router.py
+    - **purpose**: Endpoints for units, stages, shipments, receipt, installation, reports
+  -
+    - **path**: backend/app/modules/prefab/service_units.py
+    - **purpose**: Unit registration, revision, status pipeline
+  -
+    - **path**: backend/app/modules/prefab/service_stages.py
+    - **purpose**: Instantiate stages and generated ITP from stage template via the inspection engine
+  -
+    - **path**: backend/app/modules/prefab/service_gates.py
+    - **purpose**: Release-for-dispatch and release-for-install gates composing shared gate and certificate hard-block
+  -
+    - **path**: backend/app/modules/prefab/service_shipping.py
+    - **purpose**: Shipments, loads, packing list, QR/barcode label generation, status events
+  -
+    - **path**: backend/app/modules/prefab/service_receipt.py
+    - **purpose**: Receipt inspection, damage photos, auto-NCR
+  -
+    - **path**: backend/app/modules/prefab/service_install.py
+    - **purpose**: Installation sign-off, create/update destination asset and carry history
+  -
+    - **path**: backend/app/modules/prefab/service_reports.py
+    - **purpose**: Off-site delivery inspection list/report and handover document completeness
+  -
+    - **path**: backend/app/modules/prefab/handlers.py
+    - **purpose**: Event consumers
+  -
+    - **path**: backend/migrations/versions/xxxx_prefab.py
+    - **purpose**: Tables, tenant_id, RLS
+  -
+    - **path**: backend/tests/modules/prefab/
+    - **purpose**: Gate blocking, auto-ITP, asset carry-over and isolation tests
+- **change isolation**: New unit types such as pods or modules are stage templates and checklists, not code. Gate rules reuse shared gate definitions; only shipping or install logic changes touch this module.
+- **config not code**:
+  - Unit types and stage templates (sequence, hold points, dependencies)
+  - Gate conditions per unit type
+  - Handover document checklist per unit type
+  - Label layouts
+  - Status names and terminology
+  - Witness notification rules, if accepted
+- **events consumed**:
+  - inspection.signed_off / inspection.failed
+  - ncr.opened / ncr.closed
+  - certificate.expired
+  - document.revision_approved
+  - component.certificate_linked
+  - asset.created
+- **events emitted**:
+  - prefab.unit_created
+  - prefab.stage_completed
+  - prefab.dispatch_released
+  - prefab.shipment_dispatched
+  - prefab.receipt_completed
+  - prefab.damage_found
+  - prefab.unit_installed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/prefab/routes.tsx
+    - **purpose**: Routes
+  -
+    - **path**: frontend/src/modules/prefab/pages/UnitRegister.tsx
+    - **purpose**: Unit register with status pipeline
+  -
+    - **path**: frontend/src/modules/prefab/pages/ProductionBoard.tsx
+    - **purpose**: Production and sequence board
+  -
+    - **path**: frontend/src/modules/prefab/pages/DeliveryTracker.tsx
+    - **purpose**: Delivery and install tracker
+  -
+    - **path**: frontend/src/modules/prefab/pages/DeliveryInspectionReport.tsx
+    - **purpose**: Off-site delivery inspection list and report
+  -
+    - **path**: frontend/src/modules/prefab/pages/HandoverCompleteness.tsx
+    - **purpose**: Handover completeness view per unit
+  -
+    - **path**: frontend/src/modules/prefab/offline/receiptQueue.ts
+    - **purpose**: Offline receipt and scan actions registered with the shared sync layer
+  -
+    - **path**: frontend/src/modules/prefab/api.ts
+    - **purpose**: Generated client hooks
+- **public api**:
+  - GET/POST /prefab/units
+  - POST /prefab/units/{id}/revise
+  - GET /prefab/units/{id}/stages
+  - POST /prefab/units/{id}/stages/{stage}/complete
+  - POST /prefab/units/{id}/release-dispatch (gate checked)
+  - POST /prefab/units/{id}/release-install (gate checked)
+  - GET/POST /prefab/shipments
+  - GET /prefab/shipments/{id}/labels
+  - POST /prefab/shipments/{id}/receipt
+  - POST /prefab/units/{id}/install
+  - GET /prefab/reports/delivery-inspection
+  - GET /prefab/units/{id}/handover-checklist
+  - GET/POST /prefab/stage-templates
+- **reuses shared**:
+  - Inspection and ITP engine
+  - Gate engine and certificate hard-block
+  - Asset hierarchy
+  - Traceability graph (BOM, heat numbers, MTRs)
+  - Issues/NCR module
+  - Documents
+  - Offline sync layer
+  - Uploads pipeline (damage photos)
+  - Report engine
+  - Notifications
+  - Terminology dictionary
+  - Barcode/QR label rendering via report engine

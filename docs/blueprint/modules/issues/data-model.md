@@ -1,0 +1,326 @@
+# Issues, NCRs & corrective actions — Data model & schema
+
+
+- **notes**: Extend existing issues with issue_type_id, severity_id, source_inspection_id, source_response_id, itp_step_id, due_date, responsible_user_id, responsible_company_id, sync_version. Extend corrective_actions with kind (corrective|preventive), task_id for linked CAPA, owner, due_date, status. Overdue detection index: (tenant_id, due_date) where status not closed. Portal scoping through issues.responsible_company_id with RLS/policy filters.
+- **reuses existing**:
+  - issues
+  - corrective_actions (issues module)
+  - tasks
+  - documents
+  - assets
+  - inspections
+  - inspection_responses
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: is_ncr
+        - **notes**: enables ncr_details
+        - **type**: boolean
+      -
+        - **name**: default_due_days
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+    - **name**: issue_types
+    - **purpose**: Admin-configurable issue types with SLA defaults.
+    - **relations**:
+      - issues.issue_type_id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: code
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: rank
+        - **type**: int
+      -
+        - **name**: sla_days
+        - **type**: int
+      -
+        - **name**: blocks_itp_step
+        - **notes**: raises hold flag
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+    - **name**: issue_severities
+    - **purpose**: Configurable severities with rank and SLA.
+    - **relations**:
+      - issues.severity_id
+  -
+    - **fields**:
+      -
+        - **name**: issue_id
+        - **notes**: PK and FK issues
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: category
+        - **notes**: material|workmanship|design
+        - **type**: text
+      -
+        - **name**: disposition
+        - **notes**: use_as_is|rework|repair|reject
+        - **type**: text
+      -
+        - **name**: disposition_by
+        - **type**: uuid
+      -
+        - **name**: disposition_at
+        - **type**: timestamptz
+      -
+        - **name**: component_id
+        - **notes**: FK components (batch/installer traceability)
+        - **type**: uuid
+      -
+        - **name**: responsible_company_id
+        - **type**: uuid
+      -
+        - **name**: cost_impact
+        - **notes**: numeric(14,2)
+        - **type**: numeric
+      -
+        - **name**: currency
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, category)
+      - (tenant_id, component_id)
+    - **name**: ncr_details
+    - **purpose**: 1:1 NCR extension of an issue.
+    - **relations**:
+      - issues
+      - components
+      - contacts/companies
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: issue_id
+        - **type**: uuid
+      -
+        - **name**: method
+        - **notes**: five_why|category|fishbone
+        - **type**: text
+      -
+        - **name**: category
+        - **type**: text
+      -
+        - **name**: analysis
+        - **notes**: whys list
+        - **type**: jsonb
+      -
+        - **name**: summary
+        - **type**: text
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, issue_id)
+    - **name**: root_causes
+    - **purpose**: Root cause analysis entries per NCR (5-why or category).
+    - **relations**:
+      - issues
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: field_key
+        - **type**: text
+      -
+        - **name**: condition
+        - **notes**: JSONLogic on answer
+        - **type**: jsonb
+      -
+        - **name**: issue_type_id
+        - **type**: uuid
+      -
+        - **name**: severity_id
+        - **type**: uuid
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, template_id, field_key) where active
+    - **name**: issue_raise_rules
+    - **purpose**: Maps failed template answers to issue type and severity.
+    - **relations**:
+      - form_templates
+      - issue_types
+      - issue_severities
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: issue_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: from_status
+        - **type**: text
+      -
+        - **name**: to_status
+        - **type**: text
+      -
+        - **name**: actor_id
+        - **type**: uuid
+      -
+        - **name**: comment
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, issue_id, created_at)
+    - **name**: issue_status_history
+    - **purpose**: Append-only workflow transitions.
+    - **relations**:
+      - issues
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: issue_id
+        - **type**: uuid
+      -
+        - **name**: corrective_action_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **type**: uuid
+      -
+        - **name**: kind
+        - **notes**: evidence|closeout_proof|photo
+        - **type**: text
+      -
+        - **name**: markup
+        - **notes**: annotation layer
+        - **type**: jsonb
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, issue_id)
+    - **name**: issue_attachments
+    - **purpose**: Link issues to released documents/media with optional markup.
+    - **relations**:
+      - issues
+      - corrective_actions
+      - documents

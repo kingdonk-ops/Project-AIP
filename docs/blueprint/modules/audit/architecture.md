@@ -1,0 +1,120 @@
+# Audit trail, activity & timeline — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/audit/__init__.py
+    - **purpose**: Module registration, router, audit-specific permissions
+  -
+    - **path**: backend/app/modules/audit/models.py
+    - **purpose**: AuditLog, SecurityAuditEvent, AnchorRecord, LegalHold, HoldRegister, ExportManifest; recycle bin view over soft-deleted records
+  -
+    - **path**: backend/app/modules/audit/writer.py
+    - **purpose**: Universal audit writer: captures changes via SQLAlchemy hooks and consumes the outbox, so modules need not emit
+  -
+    - **path**: backend/app/modules/audit/chain.py
+    - **purpose**: Hash chaining with prior hash and per-tenant chain heads
+  -
+    - **path**: backend/app/modules/audit/anchor.py
+    - **purpose**: Periodic anchoring of chain heads to S3 Object Lock
+  -
+    - **path**: backend/app/modules/audit/service_timeline.py
+    - **purpose**: Per-record, asset-subtree and project timeline queries with permission filtering and cursor pagination
+  -
+    - **path**: backend/app/modules/audit/service_security_stream.py
+    - **purpose**: Separate security stream and SIEM forwarding
+  -
+    - **path**: backend/app/modules/audit/service_holds.py
+    - **purpose**: Legal hold manager and hold register
+  -
+    - **path**: backend/app/modules/audit/service_recycle.py
+    - **purpose**: Recycle bin listing, restore and purge honouring holds
+  -
+    - **path**: backend/app/modules/audit/service_export.py
+    - **purpose**: Audit export with signed manifest and verification
+  -
+    - **path**: backend/app/modules/audit/verifier/
+    - **purpose**: Standalone offline verifier tool, no platform dependency
+  -
+    - **path**: backend/app/modules/audit/router.py
+    - **purpose**: HTTP endpoints
+  -
+    - **path**: backend/app/modules/audit/jobs.py
+    - **purpose**: Anchoring, SIEM forwarding and purge jobs
+  -
+    - **path**: backend/migrations/versions/xxxx_audit.py
+    - **purpose**: Append-only tables, REVOKE UPDATE/DELETE for app role, separate writer role, RLS
+  -
+    - **path**: backend/tests/modules/audit/
+    - **purpose**: Chain integrity, tamper, role-grant, hold-vs-purge and visibility tests
+- **change isolation**: New modules get audit coverage automatically via the universal writer; only a summary-key entry is added. Chain and anchor logic is isolated here and changes rarely.
+- **config not code**:
+  - Audit read and export permissions in the catalogue
+  - Anchoring interval
+  - Recycle bin retention days
+  - Retention policy per record class
+  - SIEM destination
+  - Summary key text per tenant terminology
+  - Which fields require reason-for-change
+- **events consumed**:
+  - All domain events via outbox
+  - auth.* and permission.changed (security stream)
+  - export.performed
+  - gate.override / force_unlock / on_behalf_of flags
+  - record.soft_deleted
+- **events emitted**:
+  - audit.anchor_published
+  - legal_hold.placed
+  - legal_hold.released
+  - audit.export_created
+  - recycle.purged
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/audit/routes.tsx
+    - **purpose**: Routes
+  -
+    - **path**: frontend/src/modules/audit/components/ActivityTab.tsx
+    - **purpose**: Reusable activity tab for asset, inspection and project
+  -
+    - **path**: frontend/src/modules/audit/pages/ProjectTimeline.tsx
+    - **purpose**: Project timeline with module, person, subtree and date filters
+  -
+    - **path**: frontend/src/modules/audit/pages/AssetHistory.tsx
+    - **purpose**: Who touched this asset view
+  -
+    - **path**: frontend/src/modules/audit/pages/SecurityAudit.tsx
+    - **purpose**: Security audit view
+  -
+    - **path**: frontend/src/modules/audit/pages/AuditExport.tsx
+    - **purpose**: Export and verification
+  -
+    - **path**: frontend/src/modules/audit/pages/LegalHolds.tsx
+    - **purpose**: Legal hold register
+  -
+    - **path**: frontend/src/modules/audit/pages/RecycleBin.tsx
+    - **purpose**: Recycle bin with days remaining
+  -
+    - **path**: frontend/src/modules/audit/api.ts
+    - **purpose**: Generated client hooks
+- **public api**:
+  - GET /audit/timeline?project=&asset=&subtree=&module=&actor=&from=&to=&cursor=
+  - GET /audit/records/{type}/{id}/events
+  - GET /audit/security-events
+  - POST /audit/exports
+  - GET /audit/exports/{id}/manifest
+  - POST /audit/verify (chain range)
+  - GET/POST /audit/legal-holds
+  - POST /audit/legal-holds/{id}/release
+  - GET /audit/recycle-bin
+  - POST /audit/recycle-bin/{id}/restore
+  - POST /audit/events/{id}/supersede (correction with reason)
+- **reuses shared**:
+  - Domain-event outbox
+  - Database conventions (append-only tables, separate roles)
+  - Signing/tamper-evident engine (attestations, manifest signing)
+  - Permission/policy service (audit read permission)
+  - Comments and notifications
+  - Asset hierarchy (subtree rollup)
+  - Terminology dictionary (summary keys)
+  - Data export utility
+  - Object storage client (S3 Object Lock)

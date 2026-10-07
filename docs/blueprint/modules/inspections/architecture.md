@@ -1,0 +1,124 @@
+# Inspections, ITPs & hold points — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/inspections/router.py
+    - **purpose**: Inspection CRUD, transitions, register queries, bulk actions, review queue
+  -
+    - **path**: backend/app/modules/inspections/models.py
+    - **purpose**: inspections, inspection_responses (append-only), signoffs, itp_steps, step_results, bookings, programmes
+  -
+    - **path**: backend/app/modules/inspections/schemas.py
+    - **purpose**: Pydantic models and response payloads
+  -
+    - **path**: backend/app/modules/inspections/service_run.py
+    - **purpose**: Create from template revision (pinned), autosave, append-only answers, discard, re_inspect
+  -
+    - **path**: backend/app/modules/inspections/service_itp.py
+    - **purpose**: ITP steps, point types (hold, witness, review, surveillance), hold release, task linkage
+  -
+    - **path**: backend/app/modules/inspections/service_signoff.py
+    - **purpose**: Multi-party sign-off with auth strength and document hash; calls eligibility check first
+  -
+    - **path**: backend/app/modules/inspections/service_booking.py
+    - **purpose**: Customer/inspector scheduling, invitations, reminders, reschedule, notice periods
+  -
+    - **path**: backend/app/modules/inspections/service_programmes.py
+    - **purpose**: Programme frequency, next-due calculation, triggers (calendar, cert expiry, issue, ad hoc)
+  -
+    - **path**: backend/app/modules/inspections/workflow_def.py
+    - **purpose**: Lifecycle registered as workflow definition: draft to completed incl. optional client review
+  -
+    - **path**: backend/app/modules/inspections/handlers_offline.py
+    - **purpose**: Registers sync handlers and conflict rules (answers append-only)
+  -
+    - **path**: backend/app/modules/inspections/events.py
+    - **purpose**: Event definitions
+  -
+    - **path**: backend/app/modules/inspections/tests/
+    - **purpose**: Lifecycle, hold gating, sign-off, programme and RBAC matrix tests
+- **change isolation**: Review chain and approval changes land in workflow_def and tenant workflow config, not in service code. New trigger types or point types are added in service_programmes or service_itp without touching forms or eligibility.
+- **config not code**:
+  - Lifecycle states and review chain per tenant/project (workflow definition)
+  - Point types, notice periods, reminder offsets
+  - Programme frequencies and trigger rules
+  - Which steps require client sign-off
+  - Required auth strength per signatory role
+  - Inspection category to discipline mapping
+  - Terminology (Inspection, ITP, Hold point) via terms dictionary
+- **events consumed**:
+  - task.created (spawn ITP/inspections)
+  - template.published
+  - certificate.status_changed (programme triggers, re-check)
+  - issue.closed (release hold flag)
+  - issue.hold_raised (block step)
+  - workflow.step_completed
+  - competency.changed (assignment suggestions)
+- **events emitted**:
+  - inspection.created
+  - inspection.assigned
+  - inspection.submitted
+  - inspection.rejected
+  - inspection.completed
+  - inspection.step_signed
+  - hold_point.released
+  - witness_point.notified
+  - inspection.booking_changed
+  - inspection.programme_due
+  - inspection.answer_failed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/inspections/pages/InspectionRegister.tsx
+    - **purpose**: Cross-asset register, filters, bulk assign/approve
+  -
+    - **path**: frontend/src/modules/inspections/pages/InspectionView.tsx
+    - **purpose**: Full-page inspection, grouped related inspections by discipline
+  -
+    - **path**: frontend/src/modules/inspections/pages/ReviewQueue.tsx
+    - **purpose**: Next/previous review flow
+  -
+    - **path**: frontend/src/modules/inspections/pages/ProgrammesPage.tsx
+    - **purpose**: Programme setup and due list
+  -
+    - **path**: frontend/src/modules/inspections/pages/SchedulingCalendar.tsx
+    - **purpose**: Calendar, invitations, reschedule
+  -
+    - **path**: frontend/src/modules/inspections/components/ItpStepList.tsx
+    - **purpose**: Steps with hold/witness badges and linked tasks
+  -
+    - **path**: frontend/src/modules/inspections/components/SignatoryChips.tsx
+    - **purpose**: Signatories with auth strength
+  -
+    - **path**: frontend/src/modules/inspections/components/EligibilityBanner.tsx
+    - **purpose**: Per-step validity banner from eligibility service
+  -
+    - **path**: frontend/src/modules/inspections/mobile/StepExecution.tsx
+    - **purpose**: Offline-capable step execution with photos and signature
+  -
+    - **path**: frontend/src/modules/inspections/index.ts
+    - **purpose**: Public exports
+- **public api**:
+  - GET/POST /api/v1/inspections
+  - GET/PATCH /api/v1/inspections/{id}
+  - POST /api/v1/inspections/{id}/transitions
+  - POST /api/v1/inspections/{id}/responses (append)
+  - POST /api/v1/inspections/{id}/re-inspect
+  - POST /api/v1/inspections/bulk
+  - GET /api/v1/inspections/review-queue
+  - POST /api/v1/itp-steps/{id}/release-hold
+  - POST /api/v1/inspection-steps/{id}/signoffs
+  - GET/POST /api/v1/inspection-bookings
+  - GET/POST /api/v1/inspection-programmes
+  - GET /api/v1/assets/{id}/inspections (read model)
+- **reuses shared**:
+  - Workflow & approvals engine (review chain)
+  - Form engine and shared evaluator
+  - Eligibility gate service
+  - Report engine (PDF on approval)
+  - Signing service (hash seal)
+  - Notifications and tasks modules
+  - Scheduling/calendar utilities
+  - Permission service with asset-subtree scope
+  - Audit writer
+  - Offline handler registry

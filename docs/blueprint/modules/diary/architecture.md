@@ -1,0 +1,120 @@
+# Site diary & field reports — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/diary/models.py
+    - **purpose**: DiaryDay, DiaryEntry (typed, append-only), DiaryAttachment link, DiarySeal reference; all carry tenant_id and project_id with RLS
+  -
+    - **path**: backend/app/modules/diary/schemas.py
+    - **purpose**: Pydantic request/response schemas, entry-type payload validation from config
+  -
+    - **path**: backend/app/modules/diary/service.py
+    - **purpose**: Open day, add entry, supersede entry (never edit), prefill, request seal, addendum after seal
+  -
+    - **path**: backend/app/modules/diary/router.py
+    - **purpose**: REST endpoints for full users
+  -
+    - **path**: backend/app/modules/diary/field_router.py
+    - **purpose**: Restricted endpoints for PIN/magic-link principals, scoped by per-project module grant
+  -
+    - **path**: backend/app/modules/diary/prefill.py
+    - **purpose**: Reads resources, equipment and logistics via their public APIs to prefill labour, plant and deliveries
+  -
+    - **path**: backend/app/modules/diary/weather.py
+    - **purpose**: Weather provider adapter, result stored as an entry with source and fetch time
+  -
+    - **path**: backend/app/modules/diary/report.py
+    - **purpose**: Builds the seal payload and daily client field report data set for the report engine
+  -
+    - **path**: backend/app/modules/diary/handlers.py
+    - **purpose**: Event subscribers for links to RSWs, inspections and incidents
+  -
+    - **path**: backend/app/modules/diary/permissions.py
+    - **purpose**: Registers diary.* permissions in the permissions catalogue
+  -
+    - **path**: backend/app/modules/diary/seed/entry_types.json
+    - **purpose**: Default entry types, sections and field definitions (config)
+  -
+    - **path**: backend/migrations/diary/
+    - **purpose**: Module Alembic migrations, including REVOKE UPDATE/DELETE on sealed tables for the app role
+  -
+    - **path**: backend/tests/diary/
+    - **purpose**: Seal immutability, supersede chain, PIN scope, RLS isolation and permission-matrix tests
+- **change isolation**: New entry types, sections or report layouts land in seed config and report templates only. Seal mechanics change in the signing engine, not here, and the diary only supplies the payload.
+- **config not code**:
+  - Entry types, sections and required fields per tenant or project
+  - Seal cut-off time, timezone and required signers
+  - Weather provider and fields captured
+  - Which modules and entry types a PIN grant may contribute
+  - Field report layout and distribution list
+  - Retention period and legal hold rules
+  - Labels via the terminology dictionary
+- **events consumed**:
+  - safety.incident_reported
+  - inspection.completed
+  - scope.task_completed
+  - logistics.delivery_received
+  - equipment.hire_day_recorded
+  - resources.assignment_started
+  - voice.draft_confirmed
+  - signing.seal_completed
+  - signing.seal_failed
+  - uploads.file_released
+  - uploads.file_rejected
+- **events emitted**:
+  - diary.day_opened
+  - diary.entry_added
+  - diary.entry_superseded
+  - diary.day_submitted_for_seal
+  - diary.day_sealed
+  - diary.addendum_added
+  - diary.delay_recorded
+  - diary.verbal_instruction_recorded
+  - diary.field_report_published
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/diary/pages/DiaryDayPage.tsx
+    - **purpose**: Date-based page with weather, labour, plant, events, instructions, delays, photos sections
+  -
+    - **path**: frontend/src/modules/diary/pages/SealReviewPage.tsx
+    - **purpose**: Day-end review, sign-off and seal
+  -
+    - **path**: frontend/src/modules/diary/pages/AmendmentView.tsx
+    - **purpose**: Superseded entries and addenda shown as a linked history
+  -
+    - **path**: frontend/src/modules/diary/pages/FieldContributePage.tsx
+    - **purpose**: Minimal PIN/magic-link entry screen
+  -
+    - **path**: frontend/src/modules/diary/components/
+    - **purpose**: EntryCard, LinkedRecordPicker, AttachmentStrip, SealBadge
+  -
+    - **path**: frontend/src/modules/diary/offline/diaryQueue.ts
+    - **purpose**: Offline entry queue with client-generated IDs, registered with the shared sync engine
+  -
+    - **path**: frontend/src/modules/diary/api.ts
+    - **purpose**: Generated client wrappers and TanStack Query hooks
+- **public api**:
+  - GET /projects/{id}/diary/days?from=&to=
+  - GET /projects/{id}/diary/days/{date}
+  - POST /projects/{id}/diary/days/{date}/entries
+  - POST /diary/entries/{id}/supersede
+  - POST /projects/{id}/diary/days/{date}/seal
+  - POST /diary/days/{id}/addenda
+  - GET /diary/days/{id}/seal (verification data and hash chain)
+  - POST /projects/{id}/diary/days/{date}/links
+  - POST /field/diary/entries (PIN/magic-link principal)
+  - GET /projects/{id}/diary/field-report/{date}
+  - Python interface: DiaryQuery.get_day(project_id, date) for claims evidence and reporting
+- **reuses shared**:
+  - Signing and seal engine (hash chain, PAdES, RFC 3161, S3 Object Lock anchor)
+  - Report engine (sealed PDF and client field report)
+  - Identity and scoped bearer credential service for PIN/magic link
+  - Policy service and permissions catalogue
+  - Upload quarantine and release pipeline
+  - Offline sync engine (cursor pull, idempotent push, sync_version)
+  - Event bus and outbox
+  - Audit trail
+  - Notifications
+  - Terminology service
+  - Search indexer

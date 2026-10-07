@@ -1,0 +1,103 @@
+# Terminology dictionary & localisation — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/terms/router.py
+    - **purpose**: Dictionary, override, pack, glossary, alias and locale settings endpoints
+  -
+    - **path**: backend/app/modules/terms/models.py
+    - **purpose**: Tables: term_key, term_override (level, key, locale), term_pack, term_pack_version, glossary_entry, term_alias, locale_settings
+  -
+    - **path**: backend/app/modules/terms/resolver.py
+    - **purpose**: Fallback chain resolution: platform default, market pack, tenant, client, project; cached
+  -
+    - **path**: backend/app/modules/terms/icu.py
+    - **purpose**: ICU message formatting for server-side PDFs and emails from the shared JSON pack
+  -
+    - **path**: backend/app/modules/terms/packs.py
+    - **purpose**: Pack import/export, versioning, diff, dry-run usage preview, rollback
+  -
+    - **path**: backend/app/modules/terms/units.py
+    - **purpose**: Canonical SI storage and display conversion (mm/in, bar/psi, C/F)
+  -
+    - **path**: backend/app/modules/terms/aliases.py
+    - **purpose**: Alias mapping for search and import headers
+  -
+    - **path**: backend/app/modules/terms/lint.py
+    - **purpose**: Coverage linter for hard-coded strings in backend templates and API
+  -
+    - **path**: backend/app/modules/terms/defaults/en-AU.json
+    - **purpose**: Platform default dictionary
+  -
+    - **path**: backend/app/modules/terms/packs_builtin/
+    - **purpose**: Market packs (AU mining, NZ, UK, Asia)
+  -
+    - **path**: backend/app/modules/terms/permissions.py
+    - **purpose**: Catalogue entries for dictionary admin
+  -
+    - **path**: backend/app/modules/terms/migrations/
+    - **purpose**: Alembic migrations
+- **change isolation**: Renaming or adding a market is a pack import with no deployment. Adding a new key means one entry in the default JSON, and the resolver, lint and admin screens need no changes.
+- **config not code**:
+  - All label text, status names and record-type names
+  - Market packs and client/project overrides
+  - Glossary entries and aliases
+  - Locale, date/number formats and display units per tenant and project
+  - Internal status codes remain code; only their display names are config
+- **events consumed**:
+  - tenancy.tenant.created (seed default market pack)
+  - tenancy.client.created (enable client override level)
+  - projects.project.created (inherit locale settings)
+  - item_types.type.renamed (sync names as tenant data keys)
+  - identity.user.deactivated (no action; listed for completeness only)
+- **events emitted**:
+  - terms.override.changed
+  - terms.pack.activated
+  - terms.pack.rolled_back
+  - terms.locale_settings.changed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/terms/i18n.ts
+    - **purpose**: i18next setup with ICU plugin and runtime bundle loader scoped by tenant, client, project
+  -
+    - **path**: frontend/src/modules/terms/useTerm.ts
+    - **purpose**: t() hook and Term component, used by all modules
+  -
+    - **path**: frontend/src/modules/terms/admin/DictionaryScreen.tsx
+    - **purpose**: Search keys, preview, override
+  -
+    - **path**: frontend/src/modules/terms/admin/PackManager.tsx
+    - **purpose**: Import/export, diff, dry-run, version history, rollback
+  -
+    - **path**: frontend/src/modules/terms/admin/HardcodedReport.tsx
+    - **purpose**: Untranslated or hard-coded string report
+  -
+    - **path**: frontend/src/modules/terms/admin/GlossaryScreen.tsx
+    - **purpose**: Glossary management
+  -
+    - **path**: frontend/src/modules/terms/admin/LocaleUnitsSettings.tsx
+    - **purpose**: Tenant and project locale, date, number and unit settings
+  -
+    - **path**: frontend/src/modules/terms/GlossaryTooltip.tsx
+    - **purpose**: Tooltip for abbreviations from the glossary
+  -
+    - **path**: frontend/eslint-rules/no-hardcoded-labels.js
+    - **purpose**: CI lint rule failing on hard-coded user-facing strings
+- **public api**:
+  - GET /terms/bundle?locale=&project_id=&client_id= (resolved bundle, ETag)
+  - GET/PUT/DELETE /terms/overrides
+  - POST /terms/packs/import, GET /terms/packs/{id}/export
+  - POST /terms/packs/{id}/dry-run, POST /terms/packs/{id}/activate, POST /terms/packs/{id}/rollback
+  - GET/POST /terms/glossary
+  - GET/POST /terms/aliases
+  - GET/PUT /terms/locale-settings
+  - Python: terms.resolve(key, ctx), terms.render(template_key, params, ctx), units.to_display(value, quantity, ctx), units.to_canonical()
+  - TS: t(), <Term/>, formatDate(), formatQuantity()
+- **reuses shared**:
+  - Policy service for admin abilities
+  - Audit service for override and pack changes
+  - Outbox/event bus
+  - Cache layer (Redis, tenant-prefixed)
+  - Report engine consumes this module's render API; it is not duplicated there
+  - Search alias hook and import mapper use aliases from here

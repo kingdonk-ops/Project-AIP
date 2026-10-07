@@ -1,0 +1,200 @@
+# Markup, viewer & plan room — Feature filler
+
+
+- **detail sections**:
+  - Canvas and toolbar
+  - Comments panel
+  - Versions
+  - Approval
+  - Layers
+  - Scale calibration
+  - Linked asset and records
+  - Export history
+- **notifications**:
+  - Mentioned in markup
+  - Reply on thread
+  - Thread resolved or reopened
+  - Pins need review after new revision
+  - Flattened copy ready
+- **settings**:
+  - Stamp library
+  - Markup tools enabled
+  - Default colours per status
+  - Strip GPS from photos
+  - Scale presets
+  - Layer visibility defaults per role
+  - Flatten on approval
+  - Offline drawing set rules
+  - Terminology labels
+- **tables**:
+  -
+    - **bulk actions**:
+      - Open together
+      - Export flattened copy
+    - **columns**:
+      - File
+      - Type (PDF/photo)
+      - Revision
+      - Asset
+      - Open markups
+      - Last markup
+    - **empty state**: No drawings or photos here. Upload files in the Document Library.
+    - **filters**:
+      - Project
+      - Asset
+      - File type
+      - Has open markups
+      - Revision
+    - **name**: Viewer file list
+    - **row actions**:
+      - Open
+      - Export flattened copy
+      - Compare revisions
+    - **search**: File name, asset
+    - **sort**:
+      - Last markup
+      - Name
+  -
+    - **bulk actions**:
+      - Resolve
+      - Reopen
+    - **columns**:
+      - Markup
+      - Type
+      - Page
+      - Author
+      - Status
+      - Replies
+      - Created
+    - **create form**:
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: tool select
+      -
+        - **field**: Geometry
+        - **required**: true
+        - **type**: canvas
+      -
+        - **field**: Comment
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Linked asset
+        - **required**: false
+        - **type**: asset picker
+    - **empty state**: No markups on this file. Choose a tool and draw.
+    - **filters**:
+      - Status
+      - Author
+      - Type
+      - Page
+      - Date
+    - **name**: Markup threads
+    - **row actions**:
+      - Go to
+      - Reply
+      - Resolve
+      - Delete (own)
+    - **search**: Comment text, author
+    - **sort**:
+      - Created
+      - Status
+      - Page
+  -
+    - **bulk actions**:
+      - Flag for review after revision change
+      - Carry forward to new revision
+    - **columns**:
+      - Pin
+      - Source module
+      - Record
+      - Asset
+      - Severity
+      - Status
+      - Date
+    - **create form**:
+      -
+        - **field**: Pin type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Position
+        - **required**: true
+        - **type**: canvas
+      -
+        - **field**: Asset
+        - **required**: true
+        - **type**: asset picker
+      -
+        - **field**: Linked record
+        - **required**: false
+        - **type**: record picker
+    - **empty state**: No pins on this sheet. Place an asset pin or add one from an inspection or defect.
+    - **filters**:
+      - Layer (defects, photos, inspections, notes)
+      - Date
+      - Status
+      - Severity
+      - Asset
+    - **name**: Plan room pins
+    - **row actions**:
+      - Open record in drawer
+      - Move
+      - Relink asset
+      - Remove pin
+    - **search**: Record number, asset
+    - **sort**:
+      - Date
+      - Severity
+  -
+    - **bulk actions**:
+      - Activate
+      - Deactivate
+    - **columns**:
+      - Name
+      - Type
+      - Text
+      - Created by
+      - Active
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Text/image
+        - **required**: true
+        - **type**: text/image
+      -
+        - **field**: Show who/when/hash
+        - **required**: false
+        - **type**: boolean
+    - **empty state**: No custom stamps. Approved and Rejected are provided by default.
+    - **filters**:
+      - Type
+      - Active
+    - **name**: Stamp library
+    - **row actions**:
+      - Edit
+      - Duplicate
+      - Deactivate
+    - **search**: Name
+    - **sort**:
+      - Name
+- **walkthrough**:
+  - Open a PDF or photo from the file list or from an inspection.
+  - Calibrate scale on drawings.
+  - Pick a tool and mark up.
+  - Link a markup or pin to an asset.
+  - Add a comment and mention colleagues.
+  - Toggle layers to see defect, photo and inspection pins.
+  - Click a pin to open its record in the side drawer.
+  - Resolve threads when addressed.
+  - For a new revision, run overlay comparison and decide on each carried-forward pin.
+  - On approval, export the flattened sealed copy.
+  - The source file stays unchanged.

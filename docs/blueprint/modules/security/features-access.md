@@ -1,0 +1,442 @@
+# Security & compliance programme — Feature filler
+
+
+- **detail sections**:
+  - Threat model
+  - Control detail and mappings
+  - Evidence history
+  - Risk treatment
+  - Data classification rules
+  - Tenant IP allow-list and session policy
+  - Trust pack documents
+  - Compliance programme timeline
+- **notifications**:
+  - Control evidence overdue (owner)
+  - Quarterly access review due (reviewer)
+  - Restore test overdue (security lead)
+  - Breach logged and NDB deadline approaching (security lead)
+  - Pen-test high finding open at release (release manager)
+  - Bulk export or anomalous access alert (tenant admin)
+  - Provenance entry pending review (legal reviewer)
+- **settings**:
+  - Control framework mappings
+  - Evidence collection schedule
+  - Review cadence
+  - Data classification tags and masking rules
+  - Tenant IP allow-list
+  - Session timeout and MFA policy
+  - Breach notification contacts
+  - Vulnerability severity SLAs
+  - Recording-consent rules
+- **tables**:
+  -
+    - **bulk actions**:
+      - Assign owner
+      - Export control matrix
+    - **columns**:
+      - Control ID
+      - Name
+      - SOC 2 ref
+      - ISO 27001 ref
+      - ISM ref
+      - APP ref
+      - Owner
+      - Evidence status
+      - Proven/specified
+    - **create form**:
+      -
+        - **field**: Control name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: textarea
+      -
+        - **field**: Framework mappings
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Owner
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Test or evidence source
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Frequency
+        - **required**: true
+        - **type**: select
+    - **empty state**: No controls defined. Import the baseline control set.
+    - **filters**:
+      - Framework
+      - Owner
+      - Evidence status
+      - Proven or specified only
+    - **name**: Controls
+    - **row actions**:
+      - View evidence
+      - Add evidence
+      - Edit mapping
+      - Mark not applicable
+    - **search**: Control ID, name, framework reference
+    - **sort**:
+      - Control ID
+      - Evidence status
+      - Owner
+  -
+    - **bulk actions**:
+      - Download selected
+      - Mark reviewed
+    - **columns**:
+      - Evidence
+      - Control
+      - Source (CI job/screenshot/export)
+      - Collected
+      - Period
+      - Collector
+      - Status
+    - **create form**:
+      -
+        - **field**: Control
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: File or link
+        - **required**: true
+        - **type**: file
+      -
+        - **field**: Period covered
+        - **required**: true
+        - **type**: date range
+      -
+        - **field**: Notes
+        - **required**: false
+        - **type**: textarea
+    - **empty state**: No evidence collected yet.
+    - **filters**:
+      - Control
+      - Source type
+      - Period
+      - Status
+    - **name**: Evidence items
+    - **row actions**:
+      - View
+      - Replace
+      - Mark reviewed
+    - **search**: Evidence name, control
+    - **sort**:
+      - Collected
+      - Control
+  -
+    - **bulk actions**:
+      - Assign owner
+      - Export
+    - **columns**:
+      - Risk
+      - Likelihood
+      - Impact
+      - Score
+      - Treatment
+      - Owner
+      - Due
+      - Status
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Likelihood
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Impact
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Treatment
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Owner
+        - **required**: true
+        - **type**: user picker
+      -
+        - **field**: Due date
+        - **required**: false
+        - **type**: date
+    - **empty state**: No risks recorded.
+    - **filters**:
+      - Status
+      - Owner
+      - Score band
+    - **name**: Risk register
+    - **row actions**:
+      - Edit
+      - Accept
+      - Link control
+      - Close
+    - **search**: Risk title
+    - **sort**:
+      - Score (desc)
+      - Due
+  -
+    - **columns**:
+      - Review
+      - Quarter
+      - Scope
+      - Reviewer
+      - Users reviewed
+      - Revoked
+      - Status
+      - Signed off
+    - **create form**:
+      -
+        - **field**: Quarter
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Scope (tenant/admin/privileged)
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Reviewer
+        - **required**: true
+        - **type**: user picker
+    - **empty state**: No access reviews. Start the first quarterly review.
+    - **filters**:
+      - Quarter
+      - Status
+      - Scope
+    - **name**: Access reviews
+    - **row actions**:
+      - Open
+      - Sign off
+      - Export
+    - **search**: Reviewer, scope
+    - **sort**:
+      - Quarter (desc)
+      - Status
+  -
+    - **columns**:
+      - Date
+      - System
+      - Backup used
+      - Result
+      - RTO achieved
+      - RPO achieved
+      - Tester
+      - Evidence
+    - **create form**:
+      -
+        - **field**: System
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Backup timestamp
+        - **required**: true
+        - **type**: datetime
+      -
+        - **field**: Result
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Time to restore (min)
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: Evidence file
+        - **required**: true
+        - **type**: file
+    - **empty state**: No restore tests recorded.
+    - **filters**:
+      - Result
+      - System
+      - Quarter
+    - **name**: Restore tests
+    - **row actions**:
+      - View report
+      - Attach evidence
+    - **search**: System, tester
+    - **sort**:
+      - Date (desc)
+  -
+    - **columns**:
+      - Incident
+      - Detected
+      - Type
+      - Personal data involved
+      - Serious harm assessment
+      - NDB clock
+      - Notified
+      - Status
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Detected at
+        - **required**: true
+        - **type**: datetime
+      -
+        - **field**: Description
+        - **required**: true
+        - **type**: textarea
+      -
+        - **field**: Data types affected
+        - **required**: true
+        - **type**: multi-select
+      -
+        - **field**: Tenants affected
+        - **required**: false
+        - **type**: multi-select
+    - **empty state**: No incidents recorded.
+    - **filters**:
+      - Status
+      - Type
+      - NDB required
+    - **name**: Breach register
+    - **row actions**:
+      - Open
+      - Assess
+      - Record notification
+      - Close
+    - **search**: Incident title
+    - **sort**:
+      - Detected (desc)
+      - Status
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Data item
+      - Classification
+      - System
+      - Region
+      - Purpose
+      - Retention
+      - Sub-processor
+      - AI use allowed
+    - **create form**:
+      -
+        - **field**: Data item
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Classification
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: System
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Region
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Retention rule
+        - **required**: true
+        - **type**: text
+    - **empty state**: Data map is empty.
+    - **filters**:
+      - Classification
+      - Region
+      - Sub-processor
+    - **name**: Data map
+    - **row actions**:
+      - Edit
+      - View flows
+    - **search**: Data item, system
+    - **sort**:
+      - Classification
+      - Data item
+  -
+    - **bulk actions**:
+      - Assign owner
+    - **columns**:
+      - Finding
+      - Severity
+      - Component
+      - Found
+      - Due
+      - Owner
+      - Status
+    - **create form**:
+      -
+        - **field**: Title
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Severity
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Component
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Remediation plan
+        - **required**: false
+        - **type**: textarea
+    - **empty state**: No findings. A pen test is required before first customer go-live.
+    - **filters**:
+      - Severity
+      - Status
+      - Owner
+    - **name**: Pen-test findings
+    - **row actions**:
+      - Update status
+      - Accept risk
+      - Retest
+    - **search**: Finding title
+    - **sort**:
+      - Severity
+      - Due
+  -
+    - **columns**:
+      - Entry
+      - Reference source
+      - Purpose
+      - Author
+      - Date
+      - Reviewed by legal
+    - **create form**:
+      -
+        - **field**: Feature built
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Reference consulted (functional only)
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Own spec link
+        - **required**: true
+        - **type**: url
+    - **empty state**: No provenance entries.
+    - **filters**:
+      - Reviewed
+      - Author
+    - **name**: Provenance log
+    - **row actions**:
+      - View
+      - Mark reviewed
+    - **search**: Entry text
+    - **sort**:
+      - Date
+- **walkthrough**:
+  - Security lead imports the baseline control set mapped to SOC 2, ISO 27001, ISM and APP.
+  - Each control is assigned an owner and an evidence source.
+  - CI jobs and exports feed evidence items automatically.
+  - The dashboard marks controls as proven or specified only.
+  - Quarterly, the lead opens an Access review and assigns reviewers.
+  - Reviewers confirm or revoke access and sign off.
+  - A restore test is run and its result recorded with evidence.
+  - A suspected incident is logged in the Breach register.
+  - The NDB assessment is completed and the notification clock tracked.
+  - Before go-live, pen-test findings are tracked; open highs block release.
+  - The trust pack is exported for the Kaefer/Rio Tinto security review.

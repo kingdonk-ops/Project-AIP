@@ -1,0 +1,38 @@
+# Workflow & approvals engine — Feature scout
+
+
+- **abilities seen in market**:
+  - Workflow definitions as data with states, transitions, roles and guards
+  - Ordered, parallel and conditional approval steps
+  - Delegation and out-of-office reassignment
+  - Escalation on overdue steps with reminders
+  - An approvals inbox with batch actions
+  - Threshold-based routing, for example by value
+  - Instance timelines showing who approved and when
+  - Recall and resubmit with history preserved
+  - Per-project workflow overrides and versioned definitions
+- **suggestions**:
+  -
+    - **effort**: L
+    - **feature**: Migration of the hardcoded inspection lifecycle onto the generic engine
+    - **why**: Proves the engine on the most important flow and removes the scaffolding, with existing records mapped to the new definitions.
+  -
+    - **effort**: M
+    - **feature**: Workflow definition versioning with in-flight instances pinned to their version
+    - **why**: Changing a route mid-project must not corrupt open approvals, which is a common audit concern.
+  -
+    - **effort**: M
+    - **feature**: Re-authentication or PIN confirmation on critical transitions
+    - **why**: Hold point release and final sign-off carry legal weight, so recording stronger auth for these steps supports tamper-evidence.
+  -
+    - **effort**: S
+    - **feature**: Delegation with date range and audit visibility
+    - **why**: Inspectors and engineers go on roster break, and approvals must not stall while the record shows who acted on whose behalf.
+  -
+    - **effort**: M
+    - **feature**: Dry-run simulator for a route
+    - **why**: Admins can test a definition against sample records before activating it, reducing misconfiguration.
+  -
+    - **effort**: S
+    - **feature**: Qualification guard on approver steps
+    - **why**: A step can require the approver to hold a valid competency, linking the engine to the eligibility gate.

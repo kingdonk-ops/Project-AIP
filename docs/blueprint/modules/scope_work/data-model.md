@@ -1,0 +1,433 @@
+# Scopes of work (RSW), disciplines & tasks — Data model & schema
+
+
+- **notes**: The existing disciplines, tasks and consumable_issuances tables are reused; this module adds the RSW-specific layer (rsw_disciplines, scope_tasks, hours, delays) and reconciles with the existing tasks table by migrating rather than duplicating, if scope_tasks overlaps. Access methods vocabulary needs reconciling (Ground, Rope Access, Scaffold, MEWP/Ladder) and is data in scope_vocabularies. The gate reads state via module interfaces; evaluations are stored for audit.
+- **reuses existing**:
+  - assets
+  - disciplines
+  - tasks
+  - inspections
+  - consumable_issuances
+  - documents
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK; existing
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: asset the RSW belongs to
+        - **type**: uuid
+      -
+        - **name**: rsw_number
+        - **notes**: from numbering scheme
+        - **type**: text
+      -
+        - **name**: revision
+        - **type**: int
+      -
+        - **name**: location
+        - **type**: text
+      -
+        - **name**: corrosion_environment
+        - **type**: text
+      -
+        - **name**: observation
+        - **type**: text
+      -
+        - **name**: remedial_works
+        - **type**: text
+      -
+        - **name**: notification_no
+        - **type**: text
+      -
+        - **name**: mandated_completion_date
+        - **type**: date
+      -
+        - **name**: priority
+        - **notes**: P1-P4, config-driven
+        - **type**: text
+      -
+        - **name**: computed_deadline
+        - **notes**: from priority rule, deferred
+        - **type**: date
+      -
+        - **name**: work_order
+        - **type**: text
+      -
+        - **name**: order_no
+        - **type**: text
+      -
+        - **name**: ctr
+        - **type**: text
+      -
+        - **name**: wbs
+        - **type**: text
+      -
+        - **name**: tier
+        - **type**: text
+      -
+        - **name**: estimated_hours
+        - **type**: numeric
+      -
+        - **name**: metres_to_scan
+        - **type**: numeric
+      -
+        - **name**: access_method
+        - **notes**: vocabulary key
+        - **type**: text
+      -
+        - **name**: inspection_technique
+        - **notes**: vocabulary key
+        - **type**: text
+      -
+        - **name**: procedure_refs
+        - **notes**: ISO, P&ID document ids
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: lifecycle state
+        - **type**: text
+      -
+        - **name**: progress_pct
+        - **notes**: cached roll-up
+        - **type**: numeric
+      -
+        - **name**: completed_at
+        - **notes**: set only when the gate passes
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (project_id, rsw_number, revision)
+      - (tenant_id, asset_id)
+      - (project_id, status, priority)
+      - (wbs)
+    - **name**: rsws
+    - **purpose**: Return-to-Service Worksheet; extends the existing AIP RSW table.
+    - **relations**:
+      - projects
+      - assets
+      - disciplines via rsw_disciplines
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: rsw_id
+        - **type**: uuid
+      -
+        - **name**: discipline_id
+        - **notes**: FK disciplines
+        - **type**: uuid
+      -
+        - **name**: sequence
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (rsw_id, discipline_id) where deleted_at is null
+      - (rsw_id, sequence)
+    - **name**: rsw_disciplines
+    - **purpose**: Disciplines instantiated on an RSW with sequence (links to the existing disciplines table).
+    - **relations**:
+      - rsws
+      - disciplines
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: rsw_id
+        - **type**: uuid
+      -
+        - **name**: rsw_discipline_id
+        - **type**: uuid
+      -
+        - **name**: component_asset_id
+        - **notes**: FK assets, several tasks can share
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: sequence
+        - **type**: int
+      -
+        - **name**: requires_itp
+        - **type**: boolean
+      -
+        - **name**: requires_inspection
+        - **type**: boolean
+      -
+        - **name**: requires_rfi
+        - **type**: boolean
+      -
+        - **name**: requires_consumables
+        - **type**: boolean
+      -
+        - **name**: itp_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: inspection_id
+        - **notes**: FK inspections, nullable
+        - **type**: uuid
+      -
+        - **name**: rfi_id
+        - **notes**: nullable, rfi_submittals
+        - **type**: uuid
+      -
+        - **name**: hold_point_id
+        - **notes**: unique hold-point link per task
+        - **type**: uuid
+      -
+        - **name**: cost_item_id
+        - **notes**: nullable cost code mapping
+        - **type**: uuid
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (rsw_discipline_id, sequence)
+      - (component_asset_id)
+      - unique (hold_point_id) where hold_point_id is not null
+      - (tenant_id, requires_itp) where itp_id is null and requires_itp
+    - **name**: scope_tasks
+    - **purpose**: Ordered task chain per discipline with requirement flags; extends existing task structure.
+    - **relations**:
+      - rsws
+      - rsw_disciplines
+      - assets
+      - inspections
+      - consumable_issuances
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: rsw_id
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: entry_date
+        - **type**: date
+      -
+        - **name**: planned_hours
+        - **notes**: 0.5 steps
+        - **type**: numeric
+      -
+        - **name**: earned_hours
+        - **type**: numeric
+      -
+        - **name**: actual_hours
+        - **type**: numeric
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (rsw_id, entry_date)
+    - **name**: rsw_hours
+    - **purpose**: Planned vs earned and actual hours (PV/EV).
+    - **relations**:
+      - rsws
+      - scope_tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: rsw_id
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: entry_date
+        - **type**: date
+      -
+        - **name**: delay_hours
+        - **notes**: 0.5 steps
+        - **type**: numeric
+      -
+        - **name**: reason_key
+        - **notes**: Weather, Access, Permit, SIMOPS, Equipment; config vocabulary
+        - **type**: text
+      -
+        - **name**: note
+        - **type**: text
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (rsw_id)
+      - (tenant_id, reason_key, entry_date)
+    - **name**: rsw_delay_records
+    - **purpose**: Delay hours with reason.
+    - **relations**:
+      - rsws
+      - scope_tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: vocab
+        - **notes**: delay_reason/access_method/technique/priority
+        - **type**: text
+      -
+        - **name**: key
+        - **notes**: stable; label via terms
+        - **type**: text
+      -
+        - **name**: label
+        - **type**: text
+      -
+        - **name**: sort_order
+        - **type**: int
+      -
+        - **name**: config
+        - **notes**: e.g. priority deadline days
+        - **type**: jsonb
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, vocab, key)
+    - **name**: scope_vocabularies
+    - **purpose**: Tenant-editable vocabularies (delay reasons, access methods, techniques, priorities).
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: rsw_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: passed
+        - **type**: boolean
+      -
+        - **name**: blockers
+        - **notes**: unaccepted requirements per task
+        - **type**: jsonb
+      -
+        - **name**: actor_user_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: no updates
+        - **type**: timestamptz
+    - **indexes**:
+      - (rsw_id, created_at)
+    - **name**: rsw_gate_evaluations
+    - **purpose**: Append-only record of completion gate evaluations and what blocked.
+    - **relations**:
+      - rsws

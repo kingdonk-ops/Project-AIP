@@ -1,0 +1,376 @@
+# E-signatures & tamper-evident records — Data model & schema
+
+
+- **notes**: Attestations, seals and anchors are append-only (REVOKE UPDATE/DELETE for app role). Voids and corrections are superseding rows. Retention periods must be set before enabling Object Lock compliance mode. Per-tenant chain sequence needs serialised insert (advisory lock). Competency check queries certificates by discipline and validity at signing time.
+- **reuses existing**:
+  - documents/document_versions
+  - certificates
+  - disciplines
+  - inspections
+  - users (profile signature image)
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **notes**: inspection|diary|document|handover...
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: document_version_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: content_hash
+        - **notes**: SHA-256 being signed
+        - **type**: text
+      -
+        - **name**: signer_user_id
+        - **notes**: nullable if by role
+        - **type**: uuid
+      -
+        - **name**: signer_role_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: discipline_id
+        - **notes**: Competency link, nullable
+        - **type**: uuid
+      -
+        - **name**: sign_order
+        - **type**: int
+      -
+        - **name**: meaning
+        - **notes**: author|review|approve
+        - **type**: text
+      -
+        - **name**: stepup_policy
+        - **notes**: none|mfa|pin
+        - **type**: text
+      -
+        - **name**: consent_statement_id
+        - **type**: uuid
+      -
+        - **name**: provider
+        - **notes**: in_app|docusign|adobe
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: requested|signed|declined|void
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **notes**: Offline sign-off
+        - **type**: int
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, record_type, record_id)
+      - (tenant_id, signer_user_id, status)
+    - **name**: signature_requirements
+    - **purpose**: Required signatures for a record or document version.
+    - **relations**:
+      - document_versions
+      - assets
+      - disciplines
+      - signing_consent_statements
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK; client-generated for offline
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: requirement_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: record_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: signer_id
+        - **type**: uuid
+      -
+        - **name**: auth_method
+        - **type**: text
+      -
+        - **name**: auth_strength
+        - **type**: text
+      -
+        - **name**: ip_address
+        - **type**: text
+      -
+        - **name**: device_time
+        - **notes**: Offline capture
+        - **type**: timestamptz
+      -
+        - **name**: server_time
+        - **notes**: Verified
+        - **type**: timestamptz
+      -
+        - **name**: time_source
+        - **notes**: Trusted time authority reference
+        - **type**: text
+      -
+        - **name**: document_sha256
+        - **type**: text
+      -
+        - **name**: statement_text
+        - **notes**: Snapshot of consent wording
+        - **type**: text
+      -
+        - **name**: certificate_id
+        - **notes**: Competency evidence, nullable
+        - **type**: uuid
+      -
+        - **name**: supersedes_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: voided_by_id
+        - **notes**: Void entry reference, nullable
+        - **type**: uuid
+      -
+        - **name**: seq
+        - **notes**: Per-tenant chain sequence
+        - **type**: bigint
+      -
+        - **name**: prev_hash
+        - **type**: text
+      -
+        - **name**: entry_hash
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, seq)
+      - (tenant_id, record_type, record_id)
+      - (tenant_id, document_sha256)
+    - **name**: signing_attestations
+    - **purpose**: Append-only hash-chained attestations.
+    - **relations**:
+      - signature_requirements
+      - certificates
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: document_version_id
+        - **notes**: Sealed output version
+        - **type**: uuid
+      -
+        - **name**: source_sha256
+        - **type**: text
+      -
+        - **name**: sealed_sha256
+        - **type**: text
+      -
+        - **name**: kms_key_ref
+        - **type**: text
+      -
+        - **name**: ltv_included
+        - **type**: boolean
+      -
+        - **name**: object_lock_until
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: sealed_at
+        - **type**: timestamptz
+      -
+        - **name**: deferred
+        - **notes**: Offline deferred seal
+        - **type**: boolean
+      -
+        - **name**: voided_at
+        - **notes**: Set via void entry, nullable
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, document_version_id)
+      - (tenant_id, sealed_sha256)
+    - **name**: signing_seals
+    - **purpose**: PAdES seal records for sealed PDFs (append-only).
+    - **relations**:
+      - document_versions
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **type**: text
+      -
+        - **name**: meaning
+        - **type**: text
+      -
+        - **name**: market
+        - **notes**: AU|NZ|UK|ASIA
+        - **type**: text
+      -
+        - **name**: text
+        - **type**: text
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, record_type, meaning, market, active)
+    - **name**: signing_consent_statements
+    - **purpose**: Consent and meaning statement library per record type and market.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: requirement_id
+        - **type**: uuid
+      -
+        - **name**: provider
+        - **type**: text
+      -
+        - **name**: external_id
+        - **type**: text
+      -
+        - **name**: status
+        - **type**: text
+      -
+        - **name**: signed_artifact_sha256
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: signer_auth_method
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: webhook_verified_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (provider, external_id)
+      - (tenant_id, requirement_id)
+    - **name**: signing_provider_envelopes
+    - **purpose**: External e-signature provider references.
+    - **relations**:
+      - signature_requirements
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: seal_id
+        - **type**: uuid
+      -
+        - **name**: token_hash
+        - **type**: text
+      -
+        - **name**: expires_at
+        - **notes**: nullable
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (token_hash)
+    - **name**: signing_verification_tokens
+    - **purpose**: Token-based public verification links (hashed).
+    - **relations**:
+      - signing_seals
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: chain
+        - **notes**: attestations|audit|diary
+        - **type**: text
+      -
+        - **name**: head_seq
+        - **type**: bigint
+      -
+        - **name**: head_hash
+        - **type**: text
+      -
+        - **name**: anchor_ref
+        - **notes**: S3 object version or TSA token
+        - **type**: text
+      -
+        - **name**: anchored_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, chain, head_seq)
+    - **name**: signing_chain_anchors
+    - **purpose**: Periodic anchoring of hash-chain heads to S3 Object Lock or timestamp authority (append-only).

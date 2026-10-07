@@ -1,0 +1,304 @@
+# Stock, consumables & materials — Feature filler
+
+
+- **detail sections**:
+  - Item summary and unit
+  - Stock by location
+  - Batches with use-by and certificates
+  - Movement history (append-only)
+  - Task issuances and application records
+  - Traceability links (assets, inspections)
+  - Reorder and requisitions
+  - Use-by reminder status
+  - Activity and audit
+- **notifications**:
+  - Stock below reorder point
+  - Batch use-by approaching
+  - Batch expired
+  - Issue exceeds on-hand quantity
+  - Reconciliation variance above threshold
+  - Goods received
+  - Requisition suggested
+- **settings**:
+  - Units and conversions
+  - Reorder rules per item
+  - Use-by reminder lead times
+  - Allow negative stock (default off)
+  - Variance tolerance
+  - Required certificate on receipt
+  - Locations and default location per project
+  - Correction permissions
+  - Terminology keys
+- **tables**:
+  -
+    - **bulk actions**:
+      - Create requisition for selected
+      - Export stock
+      - Start reconciliation count
+    - **columns**:
+      - Item
+      - Unit
+      - Location
+      - On hand
+      - Reserved
+      - Reorder point
+      - Batch or heat count
+      - Earliest use-by
+      - Stock status
+      - Reminder state
+    - **create form**:
+      -
+        - **field**: Item (from Consumables or Materials type)
+        - **required**: true
+        - **type**: item picker
+      -
+        - **field**: Unit
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Location
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Reorder point
+        - **required**: false
+        - **type**: number
+      -
+        - **field**: Use-by tracking
+        - **required**: false
+        - **type**: checkbox
+      -
+        - **field**: Opening quantity
+        - **required**: false
+        - **type**: number
+    - **empty state**: No stock items yet. Add consumables or receive a delivery to start the ledger.
+    - **filters**:
+      - Location
+      - Stock status
+      - Below reorder point
+      - Use-by within
+      - Item type
+      - Project
+    - **name**: Stock levels
+    - **row actions**:
+      - Open
+      - Receive
+      - Issue
+      - Transfer
+      - Record waste
+      - Adjust
+      - View movements
+    - **search**: Item name, batch number or heat number
+    - **sort**:
+      - Item
+      - On hand
+      - Earliest use-by
+      - Location
+  -
+    - **bulk actions**:
+      - Export movements
+    - **columns**:
+      - Date and time
+      - Type (receipt, issue, transfer, waste, adjustment)
+      - Item
+      - Batch
+      - Quantity
+      - From
+      - To
+      - Task or asset
+      - Reference (PO, docket)
+      - By
+    - **create form**:
+      -
+        - **field**: Movement type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Item
+        - **required**: true
+        - **type**: item picker
+      -
+        - **field**: Batch or heat
+        - **required**: false
+        - **type**: batch picker or text
+      -
+        - **field**: Quantity
+        - **required**: true
+        - **type**: number
+      -
+        - **field**: From location
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: To location
+        - **required**: false
+        - **type**: select
+      -
+        - **field**: Scope task or asset
+        - **required**: false
+        - **type**: record picker
+      -
+        - **field**: Reference (PO or docket)
+        - **required**: false
+        - **type**: text
+      -
+        - **field**: Reason
+        - **required**: false
+        - **type**: text
+    - **empty state**: No movements recorded.
+    - **filters**:
+      - Type
+      - Item
+      - Location
+      - Date range
+      - Task
+      - User
+      - Batch
+    - **name**: Stock movements
+    - **row actions**:
+      - Open
+      - Correct (adds reversing movement)
+      - View linked task or receipt
+    - **search**: Item, batch, reference or user
+    - **sort**:
+      - Date and time
+      - Item
+      - Quantity
+  -
+    - **bulk actions**:
+      - Mark unavailable
+      - Export
+    - **columns**:
+      - Item
+      - Batch or heat number
+      - Supplier
+      - Received
+      - Use-by
+      - Quantity remaining
+      - Certificate
+      - Status
+    - **create form**:
+      -
+        - **field**: Item
+        - **required**: true
+        - **type**: item picker
+      -
+        - **field**: Batch or heat number
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Supplier
+        - **required**: false
+        - **type**: company picker
+      -
+        - **field**: Use-by date
+        - **required**: false
+        - **type**: date
+      -
+        - **field**: Certificate
+        - **required**: false
+        - **type**: file upload
+    - **empty state**: No batches recorded. Batches are created when goods are received.
+    - **filters**:
+      - Item
+      - Supplier
+      - Use-by status
+      - Has certificate
+      - Status
+    - **name**: Batches
+    - **row actions**:
+      - Open
+      - Attach certificate
+      - Mark unavailable
+      - View applications
+    - **search**: Batch or heat number, supplier
+    - **sort**:
+      - Use-by
+      - Received
+      - Item
+  -
+    - **bulk actions**:
+      - Deactivate selected
+    - **columns**:
+      - Name
+      - Site
+      - Type (store, laydown, container, vehicle)
+      - Items held
+      - Status
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Site
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Linked laydown zone
+        - **required**: false
+        - **type**: select
+    - **empty state**: No stock locations defined.
+    - **filters**:
+      - Site
+      - Type
+      - Status
+    - **name**: Locations
+    - **row actions**:
+      - Edit
+      - View stock
+      - Deactivate
+    - **search**: Location name
+    - **sort**:
+      - Name
+      - Items held
+  -
+    - **bulk actions**:
+      - Export variance report
+    - **columns**:
+      - Count ref
+      - Location
+      - Counted by
+      - Date
+      - Lines
+      - Variance lines
+      - Status
+    - **create form**:
+      -
+        - **field**: Location
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Items to count
+        - **required**: true
+        - **type**: all or selected
+    - **empty state**: No counts yet.
+    - **filters**:
+      - Location
+      - Status
+      - Date range
+    - **name**: Reconciliation counts
+    - **row actions**:
+      - Open
+      - Approve adjustments
+      - Close
+    - **search**: Count ref or location
+    - **sort**:
+      - Date
+      - Variance lines
+- **walkthrough**:
+  - Goods arrive and the receiver opens the booking or PO and records quantities, batch and use-by against the docket.
+  - The receipt creates movements into the chosen location and attaches the batch certificate.
+  - Stock levels update and any item below reorder point is flagged.
+  - A technician opens an RSW task that requires consumables and selects an issuance.
+  - The technician picks item and batch, enters the quantity and confirms; an issue movement is written against the task.
+  - The RSW completion gate sees the issuance and satisfies the requires-consumables check.
+  - Batch and heat numbers link into the traceability graph for the asset and inspection.
+  - Waste or transfers are recorded as separate movements with a reason.
+  - Mistakes are corrected with a reversing movement; original lines remain.
+  - Periodic reconciliation counts compare physical to ledger and post approved adjustments.
+  - Use-by reminders fire for in-stock items only and are suppressed when out of stock or unavailable.

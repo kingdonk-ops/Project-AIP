@@ -1,0 +1,138 @@
+# Traceability graph: components, materials & certificates — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: traceability.view; create and quarantine need specific permissions.
+    - **actions**:
+      - Create via certificate upload
+      - Quarantine batch
+      - Request OCR review
+      - Link document
+      - Export
+    - **layout**: Prominent search bar with a DataTable and filters.
+    - **name**: Material and certificate passports
+    - **purpose**: Search-first register of material passports.
+    - **route**: /quality/passports
+    - **sections**:
+      - Search by heat, batch, certificate or serial
+      - Table: passport no., material, certificate type, certificate no., heat/batch, supplier, status, used count, valid until
+      - Filters: certificate type, status, supplier
+  -
+    - **access**: passport.create; reviewers need passport.review.
+    - **actions**:
+      - Correct fields
+      - Save passport
+      - Reject
+      - Request second review
+    - **layout**: Split view with the document viewer on the left and the extracted-fields form on the right.
+    - **name**: New passport with OCR review
+    - **purpose**: Upload a scanned certificate and review extracted fields.
+    - **route**: /quality/passports/new
+    - **sections**:
+      - Upload
+      - Extracted fields with confidence
+      - Cross-check results
+      - Material details
+  -
+    - **access**: traceability.view; actions per permission.
+    - **actions**:
+      - Quarantine
+      - Release quarantine
+      - Export evidence pack
+      - Link usage
+    - **layout**: Header with tabs and a certificate viewer.
+    - **name**: Passport detail
+    - **purpose**: Certificate, genealogy and quarantine for one heat or batch.
+    - **route**: /quality/passports/:id
+    - **sections**:
+      - Summary
+      - Certificate viewer and OCR cross-check
+      - Traceability graph
+      - Forward genealogy
+      - Backward genealogy
+      - Validity snapshots
+      - Linked inspections, ITPs, NCRs
+      - Documents
+      - Quarantine history
+      - Activity
+  -
+    - **access**: Permission-aware; nodes outside the user's scope are shown masked or hidden.
+    - **actions**:
+      - Expand node
+      - Filter
+      - Open record
+      - Export graph
+      - Start impact analysis
+    - **layout**: Full-width graph canvas with a filter panel and node detail drawer, plus a table fallback.
+    - **name**: Traceability graph view
+    - **purpose**: Interactive chain for an asset, task, batch, person or instrument.
+    - **route**: /trace/:type/:id
+    - **sections**:
+      - Graph canvas
+      - Filters by type and depth
+      - Node details with validity snapshot
+      - Table view
+  -
+    - **access**: weld.view; edit by weld.edit.
+    - **actions**:
+      - Filter
+      - Open joint
+      - Export
+      - Create inspection request
+    - **layout**: Toggle between table and drawing overlay, with a filter bar.
+    - **name**: Weld map and joint register
+    - **purpose**: Track joints with welder, WPS, batch and NDT metrics.
+    - **route**: /quality/weld-map
+    - **sections**:
+      - Joint table: welder, WPS, consumable batch, NDT percentage and status, repair count, rejection rate
+      - Drawing view with clickable joints
+      - Analytics tab: repair rate by welder, WPS and batch
+  -
+    - **access**: Inspectors and QA with request permissions.
+    - **actions**:
+      - Assign
+      - Accept or reject
+      - Open inspection
+      - Export
+    - **layout**: Queue table with a status board toggle.
+    - **name**: Inspection request queue
+    - **purpose**: Work the queue of MIR, WIR, IR and hidden-works requests.
+    - **route**: /quality/inspection-requests
+    - **sections**:
+      - Queue with SLA indicators
+      - Acceptance criteria panel
+      - Linked records
+  -
+    - **access**: quarantine.manage; view for QA.
+    - **actions**:
+      - Raise NCRs
+      - Notify owners
+      - Release
+      - Export report
+      - Generate evidence pack
+    - **layout**: Summary banner and grouped affected-items tables.
+    - **name**: Quarantine impact report
+    - **purpose**: Show every affected component, task and inspection.
+    - **route**: /quality/quarantine/:id
+    - **sections**:
+      - Trigger (heat, batch or instrument)
+      - Affected components
+      - Affected tasks
+      - Affected inspections
+      - NCRs raised
+      - Evidence pack
+  -
+    - **access**: Internal field users with synced scope.
+    - **actions**:
+      - Scan
+      - Link to task
+      - Flag problem
+    - **layout**: Single-column cards with a scan button.
+    - **name**: Mobile traceability lookup
+    - **purpose**: Check batch, welder or instrument validity in the field.
+    - **route**: /m/trace/:id
+    - **sections**:
+      - Scan or search
+      - Validity status
+      - Linked records

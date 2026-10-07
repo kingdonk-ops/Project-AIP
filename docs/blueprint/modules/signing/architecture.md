@@ -1,0 +1,126 @@
+# E-signatures & tamper-evident records — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: modules/signing/router.py
+    - **purpose**: Routes for requirements, sign, decline, void, verify, evidence bundle
+  -
+    - **path**: modules/signing/service.py
+    - **purpose**: Signature request orchestration, invalidation on content change
+  -
+    - **path**: modules/signing/attestation.py
+    - **purpose**: Create hash-chained attestation (signer, auth strength, IP, times, SHA-256, consent text)
+  -
+    - **path**: modules/signing/models.py
+    - **purpose**: SignatureRequirement, Attestation (append-only), ProviderEnvelope, ConsentStatement
+  -
+    - **path**: modules/signing/schemas.py
+    - **purpose**: Pydantic models
+  -
+    - **path**: modules/signing/seal.py
+    - **purpose**: pyHanko PAdES sealing with KMS keys and LTV, runs as a job
+  -
+    - **path**: modules/signing/providers/base.py
+    - **purpose**: Provider interface
+  -
+    - **path**: modules/signing/providers/docusign.py
+    - **purpose**: DocuSign adapter with webhook verification
+  -
+    - **path**: modules/signing/providers/adobe.py
+    - **purpose**: Adobe Sign adapter
+  -
+    - **path**: modules/signing/competency.py
+    - **purpose**: Calls eligibility gate to check signer certificate for discipline
+  -
+    - **path**: modules/signing/verify.py
+    - **purpose**: Verification logic and token-based public verify endpoint
+  -
+    - **path**: modules/signing/bundle.py
+    - **purpose**: Evidence bundle: PDF, manifest, hash list, verifier script
+  -
+    - **path**: modules/signing/offline.py
+    - **purpose**: Deferred sealing and device vs server time reconciliation
+  -
+    - **path**: modules/signing/migrations/
+    - **purpose**: Alembic migrations with REVOKE UPDATE/DELETE on append-only tables
+  -
+    - **path**: modules/signing/tests/
+    - **purpose**: Seal, tamper, replay and tenant tests
+  -
+    - **path**: modules/signing/module.yaml
+    - **purpose**: Manifest
+- **change isolation**: Signing providers and sealing sit behind interfaces, so a new provider or time authority is one adapter file. Legal wording and retention are configuration, so jurisdiction changes do not touch code.
+- **config not code**:
+  - Consent and meaning statement library per record type and market
+  - Step-up policy per signature requirement
+  - Retention periods and Object Lock mode per record type
+  - Trusted time authority endpoint
+  - Enabled external providers and credentials references
+  - Signature block layout and labels
+  - Which record types require signing
+- **events consumed**:
+  - approval.completed
+  - report.published
+  - diary.closed
+  - document.version_added
+  - inspection.hold_point_release_requested
+  - sync.attestation_pushed
+  - legal_hold.changed
+  - certificate.status_changed
+- **events emitted**:
+  - signing.requested
+  - signing.completed
+  - signing.declined
+  - signing.voided
+  - signing.sealed
+  - signing.invalidated
+- **frontend files**:
+  -
+    - **path**: features/signing/pages/SignerInbox.tsx
+    - **purpose**: Pending signature requests
+  -
+    - **path**: features/signing/pages/RequestSetup.tsx
+    - **purpose**: Configure signers, order, meaning
+  -
+    - **path**: features/signing/pages/AttestationRegister.tsx
+    - **purpose**: Register with verification
+  -
+    - **path**: features/signing/pages/ManifestView.tsx
+    - **purpose**: Signature manifest
+  -
+    - **path**: features/signing/pages/PublicVerify.tsx
+    - **purpose**: Token-based verification page
+  -
+    - **path**: features/signing/components/SignDialog.tsx
+    - **purpose**: Consent text, step-up, sign action
+  -
+    - **path**: features/signing/components/SignatureBlock.tsx
+    - **purpose**: Visible signature block for reports
+  -
+    - **path**: features/signing/offline/queueSignature.ts
+    - **purpose**: Offline attestation capture via sync client
+  -
+    - **path**: features/signing/api.ts
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - POST /signing/requirements
+  - POST /signing/requirements/{id}/sign
+  - POST /signing/requirements/{id}/decline|void
+  - GET /signing/attestations?record_id
+  - GET /signing/verify/{token}
+  - POST /signing/documents/{version_id}/verify
+  - GET /signing/bundles/{record_id}
+  - POST /signing/providers/{name}/webhook
+  - GET/PUT /signing/consent-statements
+- **reuses shared**:
+  - Audit trail hash chain and anchoring
+  - Auth step-up service
+  - Eligibility gate (signer competency)
+  - Report engine and PDF service
+  - KMS key service
+  - Storage service with S3 Object Lock
+  - Approvals engine for routing
+  - Offline sync protocol
+  - Terminology dictionary
+  - Notifications

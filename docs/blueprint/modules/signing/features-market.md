@@ -1,0 +1,37 @@
+# E-signatures & tamper-evident records — Feature scout
+
+
+- **abilities seen in market**:
+  - Multi-party signing with defined order and signer meaning (author, reviewer, approver)
+  - Step-up authentication before signing high-value records
+  - Visible signature blocks stamped on PDFs with date, name and role
+  - Embedded cryptographic seals with long-term validation data so signatures stay verifiable after certificates expire
+  - Public or token-based verification pages that recompute document hashes
+  - Trusted timestamping from an independent time authority
+  - Decline, void and delegate flows with reasons and full history
+  - Bulk signing of routine records such as daily diaries or batches of inspections
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: Signature meaning and consent statement library, configurable per record type and market
+    - **why**: Hold-point release, witness and final approval carry different legal weight. Tenant-editable statements let Kaefer and later customers match contract wording without code changes.
+  -
+    - **effort**: M
+    - **feature**: Step-up re-authentication policy per signature requirement (for example MFA or PIN re-entry for hold points and certificate sign-off)
+    - **why**: Prevents a stolen session from releasing a hold point and gives auditors evidence of authentication strength on critical sign-offs.
+  -
+    - **effort**: M
+    - **feature**: Signature invalidation on content change: any edit after signing voids the seal and forces a superseding version and re-sign
+    - **why**: Keeps inspection and ITP records defensible and matches the superseding-entry rule already planned.
+  -
+    - **effort**: L
+    - **feature**: Offline-captured sign-off with deferred sealing: capture the attestation and device time on site, then record both the device time and the server-verified time when sync completes
+    - **why**: Remote LNG and mining sites lose connectivity; signers should not wait for coverage, and the record must show honestly when the signature actually occurred.
+  -
+    - **effort**: M
+    - **feature**: Signed evidence bundle export: PDF, attestation manifest, hash list and verification instructions in one package, with an independent verifier script
+    - **why**: Clients and disputes teams need proof that survives outside the platform, which supports claims and handover packs.
+  -
+    - **effort**: M
+    - **feature**: Signer delegation and competency link: only users with a valid, in-date certificate for the discipline can sign a given hold point
+    - **why**: Ties the existing certificate expiry hard-block to signing, a distinctive asset-integrity control.

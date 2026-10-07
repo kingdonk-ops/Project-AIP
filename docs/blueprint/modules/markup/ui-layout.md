@@ -1,0 +1,142 @@
+# Markup, viewer & plan room — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: markup.view; files limited by document scope
+    - **actions**:
+      - Open
+      - Open together
+      - Compare revisions
+      - Export flattened copy
+    - **layout**: Left pane file list with filters, ready to open a canvas in the centre.
+    - **name**: Viewer file list
+    - **purpose**: Browse drawings and photos with markup state.
+    - **route**: /viewer
+    - **sections**:
+      - Filters (project, asset, type, open markups, revision)
+      - File table (file, type, revision, asset, open markups, last markup)
+  -
+    - **access**: markup.view to read; markup.create to annotate; stamps and flatten need markup.approve
+    - **actions**:
+      - Draw markup
+      - Reply
+      - Resolve or reopen
+      - Delete own markup
+      - Calibrate scale
+      - Apply stamp
+      - Link asset
+      - Request approval
+      - Flatten on approval
+    - **layout**: Three panes: file list, canvas with top toolbar, side panel with tabs for comments, versions and approval.
+    - **name**: Markup viewer
+    - **purpose**: View and annotate a PDF or photo.
+    - **route**: /viewer/:versionId
+    - **sections**:
+      - Canvas and toolbar (cloud, arrow, text, dimension, freehand, stamp)
+      - Markup threads panel
+      - Versions
+      - Approval
+      - Layers
+      - Scale calibration
+      - Linked asset and records
+      - Export history
+  -
+    - **access**: markup.create; GPS stripped by default
+    - **actions**:
+      - Add pin
+      - Add arrow or text
+      - Pair before and after
+      - Save
+      - Export flattened
+    - **layout**: Full-screen canvas with minimal toolbar and a side drawer.
+    - **name**: Photo markup
+    - **purpose**: Mark up site photos with arrows, pins and text, with before and after pairing.
+    - **route**: /viewer/photo/:mediaId
+    - **sections**:
+      - Canvas
+      - Pins and notes
+      - Before and after pairing
+      - Linked inspection or asset
+  -
+    - **access**: markup.view; each layer shown only if the user can see the source module; placing pins needs markup.pin
+    - **actions**:
+      - Place pin
+      - Link pin to asset
+      - Open record
+      - Compare revisions
+      - Carry forward or flag pins
+      - Filter
+    - **layout**: Full-screen canvas, layer panel on the left, pin detail popover and record side drawer.
+    - **name**: Plan room
+    - **purpose**: Full-screen drawing with defect, photo, inspection and note pins.
+    - **route**: /assets/plan-room
+    - **sections**:
+      - Layer toggles (pins, markups, photos)
+      - Area filter by date and status
+      - Pin table (pin, source module, record, asset, severity, status, date)
+      - Revision overlay control
+      - Record side drawer
+  -
+    - **access**: markup.view; carry-forward needs markup.pin
+    - **actions**:
+      - Carry forward pins
+      - Flag for review
+      - Swap revisions
+    - **layout**: Overlay canvas with opacity slider and a pin review list.
+    - **name**: Revision overlay comparison
+    - **purpose**: Compare two drawing revisions and review pin carry-forward.
+    - **route**: /viewer/:versionId/compare
+    - **sections**:
+      - Overlay controls
+      - Pins needing review list
+  -
+    - **access**: markup.admin
+    - **actions**:
+      - Create
+      - Edit
+      - Disable
+      - Delete
+    - **layout**: List with template editor and live preview.
+    - **name**: Stamp library admin
+    - **purpose**: Manage approved, rejected and custom stamp templates.
+    - **route**: /settings/markup/stamps
+    - **sections**:
+      - Stamp list
+      - Template editor (text, colour, who/when/hash fields)
+      - Preview
+  -
+    - **access**: markup.admin
+    - **actions**:
+      - Save
+      - Reset
+    - **layout**: Tabbed settings form.
+    - **name**: Markup settings
+    - **purpose**: Control tools, colours, layers, GPS policy, flattening and offline drawing sets.
+    - **route**: /settings/markup
+    - **sections**:
+      - Tools enabled
+      - Status colours
+      - Pin types and severity colours
+      - Layer defaults per role
+      - Strip GPS
+      - Scale presets
+      - Flatten triggers
+      - Offline drawing set rules
+      - Terminology labels
+  -
+    - **access**: markup.create; drawings must be cached for the scope
+    - **actions**:
+      - Place pin
+      - Annotate
+      - Capture photo
+      - Sync later
+    - **layout**: Mobile full-screen canvas with bottom toolbar and bottom-sheet pin detail.
+    - **name**: Mobile plan and photo markup
+    - **purpose**: Offline-capable drawing viewing, pin placement and photo markup in the field.
+    - **route**: /m/plans/:sheetId
+    - **sections**:
+      - Cached drawing set
+      - Pin placement
+      - Photo capture and markup
+      - Sync status

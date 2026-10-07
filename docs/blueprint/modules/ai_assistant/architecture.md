@@ -1,0 +1,126 @@
+# AI assistant & agents — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/ai_assistant/router.py
+    - **purpose**: Endpoints for chat sessions, messages, proposals, agent runs, extraction and drafts, tool admin and usage
+  -
+    - **path**: backend/app/modules/ai_assistant/models.py
+    - **purpose**: ChatSession, Message, ToolCallLog, ProposedChange, AgentDefinition, ToolRegistryEntry, Run, EvalSet, EvalResult, ExtractionResult, AiUsageRecord; all carry tenant_id with RLS
+  -
+    - **path**: backend/app/modules/ai_assistant/schemas.py
+    - **purpose**: Pydantic request and response models, answer card and citation shapes
+  -
+    - **path**: backend/app/modules/ai_assistant/service.py
+    - **purpose**: Chat orchestration: checks tenant opt-in and kill switch, builds context, calls gateway, attaches citations and answer card
+  -
+    - **path**: backend/app/modules/ai_assistant/agent_loop.py
+    - **purpose**: Bounded reason, call tool, observe loop with step, token and spend caps and a stop control
+  -
+    - **path**: backend/app/modules/ai_assistant/tools/registry.py
+    - **purpose**: Tool registry with read or write flag and scope. Tools are thin wrappers over other modules' service APIs
+  -
+    - **path**: backend/app/modules/ai_assistant/tools/wrappers.py
+    - **purpose**: Read-only tool adapters (search, inspections, ITP, RFI, NCR, tasks, documents, reporting) executed with the caller's identity, never a service account
+  -
+    - **path**: backend/app/modules/ai_assistant/proposals.py
+    - **purpose**: Create proposals with target, diff and status; apply by calling the normal module API under the user's identity after confirmation
+  -
+    - **path**: backend/app/modules/ai_assistant/extraction.py
+    - **purpose**: Certificate and MTR extraction and NCR draft producers; output is always unverified until a human approves
+  -
+    - **path**: backend/app/modules/ai_assistant/untrusted.py
+    - **purpose**: Wraps retrieved text as untrusted data, runs injection screening, strips instructions so retrieved content cannot steer tool choice
+  -
+    - **path**: backend/app/modules/ai_assistant/evals.py
+    - **purpose**: Domain evaluation runner triggered by model or prompt change; stores results
+  -
+    - **path**: backend/app/modules/ai_assistant/jobs.py
+    - **purpose**: Background jobs for agent runs, extraction and eval runs
+  -
+    - **path**: backend/app/modules/ai_assistant/manifest.py
+    - **purpose**: Registers permissions, events, terminology tokens, export contract and menu entries
+  -
+    - **path**: backend/app/modules/ai_assistant/tests/
+    - **purpose**: Permission-matrix, tenant isolation, prompt-injection (documents and correspondence), proposal-apply and cost-limit tests
+- **change isolation**: Adding a tool means adding a wrapper and a registry entry that calls an existing module service; no other module changes. Model or provider changes land in the gateway and the eval set only.
+- **config not code**:
+  - Per-tenant opt-in and kill switch
+  - Allowed models and regions per tenant
+  - Tool enablement and scope per role
+  - Step limit, token limit and spend caps
+  - Redaction profiles
+  - Evaluation set questions and pass thresholds
+  - Injection screening rules
+  - Answer card labels and prompt vocabulary via terminology tokens
+  - Extraction field schemas for certificate and MTR types
+  - Whether agents are enabled (read-only by default)
+- **events consumed**:
+  - tenant.ai_policy.changed
+  - permission.changed
+  - user.deactivated
+  - document.uploaded (queue extraction when enabled)
+  - inspection.finding.recorded (offer NCR draft)
+  - term.changed (refresh vocabulary used in prompts and answers)
+- **events emitted**:
+  - ai.run.started
+  - ai.run.completed
+  - ai.run.stopped
+  - ai.proposal.created
+  - ai.proposal.applied
+  - ai.proposal.discarded
+  - ai.extraction.ready_for_verification
+  - ai.extraction.verified
+  - ai.draft.created
+  - ai.injection.flagged
+  - ai.kill_switch.changed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/ai_assistant/ChatPanel.tsx
+    - **purpose**: Chat with source links and answer cards showing filters, record counts and time range
+  -
+    - **path**: frontend/src/modules/ai_assistant/ProposedChangeCard.tsx
+    - **purpose**: Target record, diff and status with approve or discard
+  -
+    - **path**: frontend/src/modules/ai_assistant/HistoryView.tsx
+    - **purpose**: Past chats and runs
+  -
+    - **path**: frontend/src/modules/ai_assistant/AgentRunConsole.tsx
+    - **purpose**: Step trace with start and stop
+  -
+    - **path**: frontend/src/modules/ai_assistant/ToolPermissionAdmin.tsx
+    - **purpose**: Admin of which tools are enabled and for whom
+  -
+    - **path**: frontend/src/modules/ai_assistant/UsageDashboard.tsx
+    - **purpose**: Per-tenant usage and data-flow view: which data went to which model and region
+  -
+    - **path**: frontend/src/modules/ai_assistant/VerificationScreens.tsx
+    - **purpose**: Extraction and draft verification with side-by-side source scan
+  -
+    - **path**: frontend/src/modules/ai_assistant/api.ts
+    - **purpose**: Client generated from OpenAPI plus hooks
+- **public api**:
+  - POST /api/v1/ai/chats and POST /api/v1/ai/chats/{id}/messages
+  - GET /api/v1/ai/chats and GET /api/v1/ai/chats/{id}
+  - GET /api/v1/ai/proposals and POST /api/v1/ai/proposals/{id}/apply or /discard
+  - POST /api/v1/ai/runs, GET /api/v1/ai/runs/{id}, POST /api/v1/ai/runs/{id}/stop
+  - GET and PATCH /api/v1/ai/tools (admin)
+  - POST /api/v1/ai/extractions, GET /api/v1/ai/extractions/{id}, POST /api/v1/ai/extractions/{id}/verify
+  - POST /api/v1/ai/drafts/ncr
+  - GET /api/v1/ai/usage
+  - POST /api/v1/ai/evals/run and GET /api/v1/ai/evals/results
+  - PUT /api/v1/ai/settings (tenant opt-in and kill switch)
+- **reuses shared**:
+  - LLM gateway (AU-region endpoints, routing, redaction, logging, kill switch), built as a thin shared service
+  - AI governance controls
+  - Policy and authorisation service
+  - Search and retrieval engine
+  - Audit trail and activity timeline
+  - Terminology dictionary
+  - Upload and file-processing pipeline
+  - Jobs and queue runner
+  - Rules and validation engine for draft checks
+  - Approvals engine for human verification
+  - Eligibility gate (consumes verified certificate data)
+  - Reporting engine for count tools

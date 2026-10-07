@@ -1,0 +1,238 @@
+# Form & template designer — Feature filler
+
+
+- **detail sections**:
+  - Designer canvas (sections, grid/tabular layouts, drag and drop fields)
+  - Field properties (type, label, unit, limits, expiry flag, reference target)
+  - Conditional logic (visible_if / required_if condition builder)
+  - Calculated fields and validation rules (field and row level)
+  - Repeating tables with per-row validation
+  - Layout and print preview
+  - Mobile preview with offline behaviour
+  - Template settings (kind, competency, frequency, ITP step point types)
+  - Revision history and compare
+  - Usage (inspections, programmes, report mappings)
+  - Report slot mapping
+  - Test console (run expressions with sample data)
+- **notifications**:
+  - Draft submitted for approval (to approvers)
+  - Revision approved or rejected (to author)
+  - Template retired while inspections are in flight (to admins and owners)
+  - Validation expression failing tests (to author)
+  - Template deleted or restored (to admins)
+  - Shared list changed affecting templates (to template owners)
+- **settings**:
+  - Template approval required and approver roles
+  - Allowed field types per tenant
+  - Expression language limits (max depth, functions allowed, execution time)
+  - Default units and unit sets by market
+  - Reusable option lists and category taxonomy
+  - Revision retention and archive rules
+  - Template kinds enabled and renamable labels
+  - Mandatory fields on template create (competency, frequency)
+  - Layout defaults (columns, print size)
+  - Starter template packs enabled
+  - Block publish when tests fail
+- **tables**:
+  -
+    - **bulk actions**:
+      - Archive selected
+      - Export selected (JSON)
+      - Retire selected
+      - Change category
+      - Restore deleted
+    - **columns**:
+      - Name
+      - Kind (inspection/ITP/RFI)
+      - Category
+      - Current revision
+      - Status (draft/approved/retired)
+      - Required competency
+      - Default frequency
+      - Used in (count)
+      - Updated
+      - Owner
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Kind
+        - **required**: true
+        - **type**: dropdown (inspection/ITP/RFI)
+      -
+        - **field**: Category/discipline
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Description
+        - **required**: false
+        - **type**: long text
+      -
+        - **field**: Required competency
+        - **required**: false
+        - **type**: multi-select
+      -
+        - **field**: Default frequency
+        - **required**: false
+        - **type**: dropdown/interval
+      -
+        - **field**: Start from
+        - **required**: false
+        - **type**: dropdown (blank/clone/import)
+    - **empty state**: No templates yet. Create one from scratch, clone a starter (coating ITR, UTT survey, vehicle pre-start, bolt torque) or import a file.
+    - **filters**:
+      - Kind
+      - Status
+      - Category/discipline
+      - Required competency
+      - Owner
+      - Deleted (show archived)
+    - **name**: Template Library
+    - **row actions**:
+      - Open designer
+      - Preview
+      - Clone
+      - New draft revision
+      - Approve
+      - Retire
+      - Export
+      - Delete/Restore
+      - View usage
+    - **search**: Name, category, field label or code
+    - **sort**:
+      - Name
+      - Updated
+      - Status
+      - Usage count
+  -
+    - **bulk actions**:
+      - Compare two selected
+      - Export selected
+    - **columns**:
+      - Revision
+      - Status
+      - Author
+      - Created
+      - Approved by
+      - Approved on
+      - Change note
+      - In-flight inspections
+    - **empty state**: No revisions. Save the first draft to start history.
+    - **filters**:
+      - Status
+      - Author
+      - Date range
+    - **name**: Revision History
+    - **row actions**:
+      - Open
+      - Compare
+      - Restore as new draft
+      - Approve
+      - Retire
+      - Export
+    - **search**: Change note or author
+    - **sort**:
+      - Revision (default newest)
+      - Approved on
+  -
+    - **bulk actions**:
+      - Archive selected
+      - Export selected
+    - **columns**:
+      - Name
+      - Type
+      - Options count
+      - Unit set
+      - Used in templates
+      - Updated
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Type
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Options
+        - **required**: false
+        - **type**: list
+      -
+        - **field**: Units
+        - **required**: false
+        - **type**: dropdown
+    - **empty state**: No shared lists. Create reusable dropdowns and unit sets for use across templates.
+    - **filters**:
+      - Type
+      - Unit set
+      - In use
+    - **name**: Field Types & Shared Option Lists
+    - **row actions**:
+      - Edit
+      - Clone
+      - View usage
+      - Archive
+    - **search**: Name or option value
+    - **sort**:
+      - Name
+      - Used in
+      - Updated
+  -
+    - **bulk actions**:
+      - Run tests on selected
+      - Archive selected
+    - **columns**:
+      - Name
+      - Kind (formula/validation)
+      - Expression
+      - Test status
+      - Used in
+      - Updated
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Kind
+        - **required**: true
+        - **type**: dropdown
+      -
+        - **field**: Expression (JSONLogic/CEL)
+        - **required**: true
+        - **type**: expression builder
+      -
+        - **field**: Sample inputs
+        - **required**: false
+        - **type**: JSON
+    - **empty state**: No reusable expressions. Add formulas such as corrosion rate or DFT average.
+    - **filters**:
+      - Kind
+      - Test status
+      - Used in template
+    - **name**: Calculation & Validation Library
+    - **row actions**:
+      - Edit
+      - Test with sample values
+      - Clone
+      - View usage
+    - **search**: Name or expression text
+    - **sort**:
+      - Name
+      - Updated
+- **walkthrough**:
+  - Admin opens the Template Library and chooses Create, picking kind and category.
+  - They add sections and drag fields into them, choosing grid or table layout where needed.
+  - They configure each field: type, unit, limits, required state and any expiry flag.
+  - They add visible_if and required_if conditions through the condition builder.
+  - They add calculated fields (for example DFT average, corrosion rate) using the restricted formula editor and test with sample values.
+  - They add field and row validation rules in the sandboxed expression language and see errors in the test console.
+  - For ITP kinds, they define steps with hold, witness, review or surveillance points and link them to scope task types.
+  - They set the required competency and default frequency, then preview on web and mobile.
+  - They submit the draft for approval; an approver reviews the diff and approves, freezing the revision.
+  - Templates sync to devices; new inspections use the latest approved revision.
+  - Inspections already started keep their original revision; admins see in-flight counts when retiring an old revision.
+  - Admin maps form fields to report slots so the report is produced on approval.

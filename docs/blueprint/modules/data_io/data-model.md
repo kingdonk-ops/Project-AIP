@@ -1,0 +1,543 @@
+# Data import, export & backup — Data model & schema
+
+
+- **notes**: Import never writes tables directly; it calls each module's service, so import_batch_items record changes made via those services. Legal hold is checked before rollback and before any overwrite. Export reads only through registered contracts and under the requester's permissions with masking, so no cross-tenant path exists. Tenant exports include the audit chain and a manifest with checksums. restore_requests is conditional on the open decision; exclude it from the first migration unless the owner approves restore. Dual approval is expressed as required_approvals, so the open question is policy configuration, not schema. Scheduled exports are not modelled; a schedule table can be added later. Project scope is supported in export_sets via the scope column. Files are stored via the uploads pipeline with the S3 storage_key. Import batches should record the asset_id of affected records where relevant.
+- **reuses existing**:
+  - assets
+  - documents
+  - entity_types
+  - inspections
+  - inspection_responses
+  - issues
+  - certificates
+  - tasks
+  - consumable_issuances
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: target_entity
+        - **notes**: asset_tree | asset | weld | component | other registered contract key
+        - **type**: text
+      -
+        - **name**: mode
+        - **notes**: create | update_by_key
+        - **type**: text
+      -
+        - **name**: key_field
+        - **notes**: for update_by_key, e.g. tag
+        - **type**: text
+      -
+        - **name**: document_id
+        - **notes**: FK documents; uploaded file via quarantine pipeline
+        - **type**: uuid
+      -
+        - **name**: file_sha256
+        - **type**: text
+      -
+        - **name**: mapping
+        - **notes**: column to field mapping
+        - **type**: jsonb
+      -
+        - **name**: status
+        - **notes**: uploaded | validating | dry_run_ready | committing | committed | failed | rolled_back | cancelled
+        - **type**: text
+      -
+        - **name**: dry_run_result
+        - **notes**: counts, hierarchy preview summary, orphans, duplicates
+        - **type**: jsonb
+      -
+        - **name**: row_count
+        - **type**: int
+      -
+        - **name**: error_count
+        - **type**: int
+      -
+        - **name**: import_batch_id
+        - **notes**: FK import_batches, set on commit
+        - **type**: uuid
+      -
+        - **name**: requested_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: committed_by
+        - **type**: uuid
+      -
+        - **name**: committed_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status, created_at desc)
+      - (tenant_id, requested_by)
+    - **name**: import_jobs
+    - **purpose**: An import request: uploaded file, mapping, mode, dry-run result and status.
+    - **relations**:
+      - documents
+      - import_batches
+      - users
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: import_job_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: row_number
+        - **type**: int
+      -
+        - **name**: column_name
+        - **type**: text
+      -
+        - **name**: code
+        - **notes**: duplicate_tag | orphan_parent | invalid_type | formula_injection | permission
+        - **type**: text
+      -
+        - **name**: message
+        - **type**: text
+      -
+        - **name**: raw_value
+        - **notes**: neutralised
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (import_job_id, row_number)
+      - (tenant_id, import_job_id, code)
+    - **name**: import_row_errors
+    - **purpose**: Row-level validation errors for dry run and commit, supporting fix-and-reimport.
+    - **relations**:
+      - import_jobs
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: target_entity
+        - **type**: text
+      -
+        - **name**: created_count
+        - **type**: int
+      -
+        - **name**: updated_count
+        - **type**: int
+      -
+        - **name**: rollback_state
+        - **notes**: none | blocked_legal_hold | blocked_downstream | rolled_back | partial
+        - **type**: text
+      -
+        - **name**: rollback_block_reason
+        - **type**: text
+      -
+        - **name**: rolled_back_by
+        - **type**: uuid
+      -
+        - **name**: rolled_back_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, created_at desc)
+      - (tenant_id, rollback_state)
+    - **name**: import_batches
+    - **purpose**: Committed set of changes from one import, enabling whole-batch rollback.
+    - **relations**:
+      - import_jobs
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: import_batch_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: entity
+        - **notes**: registered contract key
+        - **type**: text
+      -
+        - **name**: record_id
+        - **notes**: id of created or updated record
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: nullable FK assets; history follows asset
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: created | updated
+        - **type**: text
+      -
+        - **name**: before_values
+        - **notes**: null for creates
+        - **type**: jsonb
+      -
+        - **name**: after_hash
+        - **notes**: detect later edits before rollback
+        - **type**: text
+      -
+        - **name**: rolled_back
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (import_batch_id)
+      - (tenant_id, entity, record_id)
+      - (tenant_id, asset_id)
+    - **name**: import_batch_items
+    - **purpose**: Per-record change log within a batch, with prior values for undo of updates.
+    - **relations**:
+      - import_batches
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: scope
+        - **notes**: register | project | asset_subtree | tenant | handover_data_book
+        - **type**: text
+      -
+        - **name**: register_key
+        - **notes**: nullable
+        - **type**: text
+      -
+        - **name**: root_asset_id
+        - **notes**: FK assets for subtree/handover
+        - **type**: uuid
+      -
+        - **name**: root_path
+        - **notes**: snapshot of subtree path
+        - **type**: ltree
+      -
+        - **name**: format
+        - **notes**: xlsx | csv | json | package
+        - **type**: text
+      -
+        - **name**: include_files
+        - **type**: boolean
+      -
+        - **name**: include_audit_chain
+        - **type**: boolean
+      -
+        - **name**: status
+        - **notes**: requested | pending_approval | approved | rejected | generating | ready | expired | failed | revoked
+        - **type**: text
+      -
+        - **name**: requested_by
+        - **type**: uuid
+      -
+        - **name**: required_approvals
+        - **notes**: 1 or 2; policy-driven, dual for tenant scope (open question)
+        - **type**: int
+      -
+        - **name**: step_up_verified_at
+        - **notes**: MFA step-up evidence
+        - **type**: timestamptz
+      -
+        - **name**: manifest
+        - **notes**: per-file path, size, sha256, schema version, row counts
+        - **type**: jsonb
+      -
+        - **name**: manifest_sha256
+        - **type**: text
+      -
+        - **name**: storage_key
+        - **notes**: S3 key
+        - **type**: text
+      -
+        - **name**: encryption_key_ref
+        - **notes**: tenant KMS key reference
+        - **type**: text
+      -
+        - **name**: size_bytes
+        - **type**: numeric
+      -
+        - **name**: expires_at
+        - **notes**: download window
+        - **type**: timestamptz
+      -
+        - **name**: legal_hold_snapshot
+        - **notes**: records whether held data was included
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status, created_at desc)
+      - (tenant_id, requested_by, created_at desc) for rate limiting
+      - (expires_at) where status='ready'
+    - **name**: export_sets
+    - **purpose**: A register, project, asset-subtree, handover or tenant export with manifest, key reference and expiry.
+    - **relations**:
+      - assets
+      - projects
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: export_set_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: approver_id
+        - **notes**: FK users; must differ from requester
+        - **type**: uuid
+      -
+        - **name**: decision
+        - **notes**: approved | rejected
+        - **type**: text
+      -
+        - **name**: comment
+        - **type**: text
+      -
+        - **name**: step_up_verified_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (export_set_id, approver_id)
+      - (tenant_id, created_at)
+    - **name**: export_approvals
+    - **purpose**: Append-only approval decisions for exports (supports single or dual approval).
+    - **relations**:
+      - export_sets
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: export_set_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **type**: uuid
+      -
+        - **name**: ip
+        - **type**: text
+      -
+        - **name**: bytes_served
+        - **type**: numeric
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, export_set_id)
+      - (tenant_id, user_id, created_at desc)
+    - **name**: export_downloads
+    - **purpose**: Append-only log of each download of an export for audit and volume anomaly alerts.
+    - **relations**:
+      - export_sets
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: nullable; null = platform-wide; RLS allows read of null rows
+        - **type**: uuid
+      -
+        - **name**: module_id
+        - **type**: text
+      -
+        - **name**: entity_key
+        - **type**: text
+      -
+        - **name**: schema_version
+        - **type**: int
+      -
+        - **name**: json_schema
+        - **notes**: documented schema, field descriptions, masking flags
+        - **type**: jsonb
+      -
+        - **name**: importable
+        - **notes**: whether import and update-by-key are allowed
+        - **type**: boolean
+      -
+        - **name**: key_fields
+        - **notes**: allowed update-by-key fields
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'), module_id, entity_key, schema_version)
+    - **name**: export_contracts
+    - **purpose**: Documented export schema per module version, registered from code at deploy; referenced by manifests.
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: actor_user_id
+        - **type**: uuid
+      -
+        - **name**: action
+        - **notes**: import.committed, batch.rolled_back, export.requested, export.approved, export.downloaded, etc.
+        - **type**: text
+      -
+        - **name**: target_type
+        - **type**: text
+      -
+        - **name**: target_id
+        - **type**: uuid
+      -
+        - **name**: detail
+        - **type**: jsonb
+      -
+        - **name**: prev_hash
+        - **type**: text
+      -
+        - **name**: entry_hash
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, created_at desc)
+      - (tenant_id, target_type, target_id)
+    - **name**: data_io_audit_entries
+    - **purpose**: Append-only hash-chained audit of imports, exports, approvals, downloads and rollbacks (REVOKE UPDATE/DELETE for app role).
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS; target tenant must equal source manifest tenant
+        - **type**: uuid
+      -
+        - **name**: source_export_set_id
+        - **notes**: FK export_sets
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: uploaded | verified | preview_ready | approved | restoring | done | failed
+        - **type**: text
+      -
+        - **name**: manifest_verified
+        - **notes**: checksums and audit chain verified
+        - **type**: boolean
+      -
+        - **name**: conflict_report
+        - **type**: jsonb
+      -
+        - **name**: user_mapping
+        - **notes**: source user to users.id; unmapped blocked
+        - **type**: jsonb
+      -
+        - **name**: requested_by
+        - **type**: uuid
+      -
+        - **name**: approved_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, status)
+    - **name**: restore_requests
+    - **purpose**: Optional (create only if restore is approved by owner): restore preview with conflict report and user mapping.
+    - **relations**:
+      - export_sets
+      - users

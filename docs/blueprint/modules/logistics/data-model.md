@@ -1,0 +1,395 @@
+# Site logistics & mobilisation — Data model & schema
+
+
+- **notes**: Slot capacity is checked in a transaction using a lock on (gate_id, slot_start) to avoid overbooking. Supplier endpoints expose only booking and line columns, never PO prices. Arrival emits an event; procurement and inventory create goods receipt and stock movements, so no stock tables are here.
+- **reuses existing**:
+  - assets
+  - certificates
+  - documents
+  - projects
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects
+        - **type**: uuid
+      -
+        - **name**: target_start_date
+        - **notes**: synced from project start
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: not_ready|at_risk|ready
+        - **type**: text
+      -
+        - **name**: rollup
+        - **notes**: cached blocking counts
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, project_id) where deleted_at is null
+    - **name**: readiness_plans
+    - **purpose**: Mobilisation readiness plan per project
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: plan_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: area
+        - **notes**: permits|inductions|establishment|utilities|access
+        - **type**: text
+      -
+        - **name**: title
+        - **type**: text
+      -
+        - **name**: is_hard_blocker
+        - **notes**: config-driven
+        - **type**: boolean
+      -
+        - **name**: owner_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: due_date
+        - **type**: date
+      -
+        - **name**: status
+        - **notes**: open|in_progress|done|na
+        - **type**: text
+      -
+        - **name**: certificate_id
+        - **notes**: FK certificates; nullable, for permits/inductions
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: FK documents evidence
+        - **type**: uuid
+      -
+        - **name**: completed_at
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, plan_id, area)
+      - (tenant_id, status, due_date)
+      - (tenant_id, certificate_id)
+    - **name**: readiness_items
+    - **purpose**: Checklist item grouped by area
+    - **relations**:
+      - readiness_plans
+      - certificates
+      - documents
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: location
+        - **notes**: point
+        - **type**: geography
+      -
+        - **name**: slot_minutes
+        - **type**: int
+      -
+        - **name**: slot_capacity
+        - **notes**: vehicles per slot
+        - **type**: int
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+    - **name**: gates
+    - **purpose**: Site gates
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: gate_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: day_of_week
+        - **notes**: 0-6, null for date override
+        - **type**: int
+      -
+        - **name**: override_date
+        - **notes**: closure or special hours
+        - **type**: date
+      -
+        - **name**: opens_at
+        - **notes**: null = closed
+        - **type**: time
+      -
+        - **name**: closes_at
+        - **type**: time
+      -
+        - **name**: capacity_override
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, gate_id, day_of_week)
+      - (tenant_id, gate_id, override_date)
+    - **name**: gate_hours
+    - **purpose**: Opening hours and exceptions per gate
+    - **relations**:
+      - gates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: FK assets; area served
+        - **type**: uuid
+      -
+        - **name**: boundary
+        - **notes**: polygon
+        - **type**: geography
+      -
+        - **name**: capacity_note
+        - **type**: text
+      -
+        - **name**: capacity_m2
+        - **type**: numeric
+      -
+        - **name**: plan_document_id
+        - **notes**: FK documents site plan
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id)
+      - GIST (boundary)
+      - (tenant_id, asset_id)
+    - **name**: laydown_zones
+    - **purpose**: Laydown areas on site plan
+    - **relations**:
+      - assets
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: gate_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: laydown_zone_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: purchase_order_id
+        - **notes**: FK procurement
+        - **type**: uuid
+      -
+        - **name**: supplier_contact_id
+        - **notes**: FK contacts/companies
+        - **type**: uuid
+      -
+        - **name**: slot_start
+        - **type**: timestamptz
+      -
+        - **name**: slot_end
+        - **type**: timestamptz
+      -
+        - **name**: vehicle_rego
+        - **type**: text
+      -
+        - **name**: driver_name
+        - **type**: text
+      -
+        - **name**: expected_docket_no
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: requested|confirmed|arrived|received|rejected|cancelled|no_show
+        - **type**: text
+      -
+        - **name**: arrived_at
+        - **type**: timestamptz
+      -
+        - **name**: docket_document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: requested_via
+        - **notes**: internal|portal|magic_link
+        - **type**: text
+      -
+        - **name**: notes
+        - **type**: text
+      -
+        - **name**: created_by
+        - **notes**: nullable for external
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, gate_id, slot_start)
+      - (tenant_id, purchase_order_id)
+      - (tenant_id, status, slot_start)
+    - **name**: delivery_bookings
+    - **purpose**: Delivery slot booking linked to PO
+    - **relations**:
+      - gates
+      - laydown_zones
+      - POs
+      - contacts
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: booking_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: po_line_id
+        - **notes**: FK procurement PO line
+        - **type**: uuid
+      -
+        - **name**: description
+        - **notes**: no commercial data exposed to suppliers beyond this
+        - **type**: text
+      -
+        - **name**: expected_qty
+        - **type**: numeric
+      -
+        - **name**: unit
+        - **type**: text
+      -
+        - **name**: received_qty
+        - **type**: numeric
+      -
+        - **name**: requires_cert
+        - **notes**: material cert required on arrival
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, booking_id)
+      - (tenant_id, po_line_id)
+    - **name**: delivery_booking_lines
+    - **purpose**: Materials expected per booking, linked to PO lines
+    - **relations**:
+      - delivery_bookings
+      - PO lines

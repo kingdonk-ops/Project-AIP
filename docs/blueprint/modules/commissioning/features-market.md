@@ -1,0 +1,37 @@
+# Commissioning — Feature scout
+
+
+- **abilities seen in market**:
+  - System and subsystem boundaries drawn over the asset or tag register
+  - Checklist sets by discipline and phase (mechanical completion, pre-commissioning, commissioning)
+  - Completion percentage and readiness by system with outstanding-item lists
+  - Punch categories (A/B/C) controlling what blocks a milestone
+  - Certificate generation at each gate (MCC, RFC, RFSU) with sign-offs
+  - Loop and tag-based checks with bulk update
+  - Handover dossier built from completed checks
+  - Walkdown mode on mobile with markups
+- **suggestions**:
+  -
+    - **effort**: S
+    - **feature**: Punch category rules that decide which open items block each gate
+    - **why**: Category A blocks commissioning while B can follow, and the gate must reflect that exactly.
+  -
+    - **effort**: M
+    - **feature**: Gate certificates (mechanical completion, ready for commissioning) as sealed report templates
+    - **why**: Ties readiness to a signed, verifiable record usable in handover.
+  -
+    - **effort**: L
+    - **feature**: System boundary markup on P&IDs or isometrics linked to asset nodes
+    - **why**: Clarifies scope disputes and shows which assets belong to which system.
+  -
+    - **effort**: M
+    - **feature**: Bulk check completion by tag set with evidence requirement
+    - **why**: Large systems have hundreds of similar tags, and per-tag entry is too slow.
+  -
+    - **effort**: S
+    - **feature**: Readiness score weighting by check type and risk
+    - **why**: A flat percentage hides critical outstanding items.
+  -
+    - **effort**: M
+    - **feature**: Re-open and re-test logic when an asset changes after sign-off
+    - **why**: Prevents stale readiness when later remediation touches a completed system.

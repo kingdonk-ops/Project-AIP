@@ -1,0 +1,100 @@
+# Quality roll-up & audits — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/qms/__init__.py
+    - **purpose**: Module registration, router mount, permission and event declarations
+  -
+    - **path**: backend/app/modules/qms/models.py
+    - **purpose**: Owned tables only: audit, audit_finding, management_review, quality_objective, copq_category; all with tenant_id and RLS
+  -
+    - **path**: backend/app/modules/qms/schemas.py
+    - **purpose**: Pydantic request/response models, exported to OpenAPI
+  -
+    - **path**: backend/app/modules/qms/router.py
+    - **purpose**: HTTP endpoints for audit register, findings and read-only roll-up queries
+  -
+    - **path**: backend/app/modules/qms/service.py
+    - **purpose**: Audit lifecycle, finding-to-issue linking, COPQ categorisation
+  -
+    - **path**: backend/app/modules/qms/rollup_queries.py
+    - **purpose**: Read-only SQL views/queries over inspections, ITPs, issues and punch items (no copied data); first-time pass rate, ITP completion, COPQ
+  -
+    - **path**: backend/app/modules/qms/kpi_definitions.py
+    - **purpose**: Registers QMS KPI providers with the reporting layer
+  -
+    - **path**: backend/app/modules/qms/handlers.py
+    - **purpose**: Event consumers (e.g. issue closed updates finding status)
+  -
+    - **path**: backend/app/modules/qms/permissions.py
+    - **purpose**: Permission keys added to the permissions catalogue
+  -
+    - **path**: backend/alembic/versions/qms_0001_init.py
+    - **purpose**: Migration for owned tables, RLS policies and indexes
+  -
+    - **path**: backend/tests/modules/qms/
+    - **purpose**: Roll-up correctness, tenant isolation and permission matrix tests
+- **change isolation**: New metrics land in rollup_queries.py and kpi_definitions.py; new audit types are templates and workflow config. Source modules are never altered because qms only reads their data through published query interfaces.
+- **config not code**:
+  - COPQ categories and rework cost rates
+  - KPI definitions and thresholds
+  - audit types and checklists (form templates)
+  - finding severity scale
+  - audit/finding workflow definitions
+  - ISO 9001 clause mapping list
+  - dashboard tile layout
+- **events consumed**:
+  - inspection.approved
+  - inspection.rejected
+  - issue.created
+  - issue.closed
+  - punch.item.closed
+  - hold_point.released
+- **events emitted**:
+  - qms.audit.scheduled
+  - qms.audit.completed
+  - qms.finding.raised
+  - qms.finding.closed
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/qms/index.ts
+    - **purpose**: Route and nav registration
+  -
+    - **path**: frontend/src/modules/qms/pages/QualityDashboard.tsx
+    - **purpose**: Dashboard composed of reporting-layer tiles
+  -
+    - **path**: frontend/src/modules/qms/pages/AuditRegister.tsx
+    - **purpose**: Audit list, planner and status
+  -
+    - **path**: frontend/src/modules/qms/pages/AuditDetail.tsx
+    - **purpose**: Audit detail with findings and raise-issue action
+  -
+    - **path**: frontend/src/modules/qms/pages/CopqReport.tsx
+    - **purpose**: Cost of poor quality breakdown by category, discipline and period
+  -
+    - **path**: frontend/src/modules/qms/components/PassRateTable.tsx
+    - **purpose**: First-time pass rate by discipline, inspector or subcontractor
+  -
+    - **path**: frontend/src/modules/qms/api/
+    - **purpose**: Generated client wrappers and TanStack Query hooks
+- **public api**:
+  - GET /qms/rollup/summary?project&asset_subtree&period
+  - GET /qms/rollup/first-time-pass?group_by=discipline|inspector|company
+  - GET /qms/rollup/copq?group_by
+  - GET/POST /qms/audits
+  - GET/PATCH /qms/audits/{id}
+  - POST /qms/audits/{id}/findings
+  - POST /qms/findings/{id}/raise-issue
+  - GET/POST /qms/objectives
+  - GET/POST /qms/management-reviews
+- **reuses shared**:
+  - reporting/KPI tile layer
+  - issues and corrective-action engine
+  - workflow engine for audit and finding states
+  - inspections data (read-only)
+  - audit trail
+  - notifications
+  - report engine for ISO 9001 evidence packs
+  - terminology dictionary
+  - permissions policy service

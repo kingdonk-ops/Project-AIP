@@ -1,0 +1,140 @@
+# RFIs & submittals — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: rfi.view; external parties see only items shared with them
+    - **actions**:
+      - Raise
+      - Export
+      - Bulk assign
+      - Open
+    - **layout**: DataTable with a filter bar and saved views; the title uses the tenant label (RFI, TQ, Query).
+    - **name**: RFI register
+    - **purpose**: List RFIs with ageing and asset-subtree filters.
+    - **route**: /rfis
+    - **sections**:
+      - Filters (subtree, status, discipline, ball-in-court)
+      - Table with ageing column
+      - Disambiguation prefix versus Request for Inspection
+  -
+    - **access**: rfi.create
+    - **actions**:
+      - Save draft
+      - Raise
+      - Cancel
+    - **layout**: Form with an attachment and photo markup panel.
+    - **name**: RFI form
+    - **purpose**: Create or edit an RFI.
+    - **route**: /rfis/new
+    - **sections**:
+      - Question
+      - Discipline, asset(s) and package
+      - Drawing and document references
+      - Due date
+      - Cost and schedule impact flags
+      - Attachments with markup
+  -
+    - **access**: Parties on the RFI; respond needs rfi.respond; convert needs change.create
+    - **actions**:
+      - Assign
+      - Respond
+      - Accept or reject
+      - Close
+      - Convert to variation candidate
+    - **layout**: Header with WorkflowBar, main thread, right rail with references and CommentPanel.
+    - **name**: RFI detail
+    - **purpose**: Track the question, response thread and outcome.
+    - **route**: /rfis/:id
+    - **sections**:
+      - Question and response thread
+      - Drawing cross-references
+      - Impact estimate
+      - Linked inspections affected
+      - Activity
+  -
+    - **access**: submittal.view
+    - **actions**:
+      - Create
+      - Import from spreadsheet (if enabled)
+      - Export
+      - Open
+    - **layout**: DataTable with filters and an ageing column.
+    - **name**: Submittal register
+    - **purpose**: List submittals with type, review status and ageing.
+    - **route**: /submittals
+    - **sections**:
+      - Filters by type, spec, status and asset subtree
+      - Table with revision and required-by date
+      - Overdue indicators
+  -
+    - **access**: Assigned reviewers; submit by owning party
+    - **actions**:
+      - Review
+      - Return with code
+      - Resubmit
+      - Close
+    - **layout**: Split view: document viewer left, review form and code selector right.
+    - **name**: Review workspace
+    - **purpose**: Review a submittal beside the document viewer.
+    - **route**: /submittals/:id/review
+    - **sections**:
+      - Viewer with markup
+      - Review steps and reviewer
+      - Outcome code selector
+      - Linked gate effects
+  -
+    - **access**: submittal.view
+    - **actions**:
+      - Select revisions
+      - Download comparison
+    - **layout**: Side-by-side with a revision picker and a change summary.
+    - **name**: Resubmission comparison
+    - **purpose**: Compare revisions of a submittal.
+    - **route**: /submittals/:id/compare
+    - **sections**:
+      - Revision selector
+      - Document diff
+      - Review history
+  -
+    - **access**: Asset view permission
+    - **actions**:
+      - Open item
+      - Raise RFI for this asset
+    - **layout**: Tab on the asset node with a gate impact banner.
+    - **name**: Asset-node panel
+    - **purpose**: Show open RFIs and submittals on an asset and their effect on pending inspections.
+    - **route**: /assets/:id/rfis-submittals
+    - **sections**:
+      - Open RFIs
+      - Open submittals
+      - Blocking gates on inspections and tasks
+  -
+    - **access**: rfi.analytics or project manager
+    - **actions**:
+      - Filter
+      - Export
+    - **layout**: Dashboard with charts and a filter bar.
+    - **name**: Response-time analytics
+    - **purpose**: Analyse response times by party, discipline and area.
+    - **route**: /rfis/analytics
+    - **sections**:
+      - Response time by party
+      - By discipline and asset area
+      - Ageing distribution
+  -
+    - **access**: Tenant admin or module admin
+    - **actions**:
+      - Edit
+      - Add code or type
+      - Add gate rule
+    - **layout**: Settings tabs.
+    - **name**: RFI and submittal settings
+    - **purpose**: Configure labels, numbering, review codes, submittal types and gate rules.
+    - **route**: /admin/rfi-submittals
+    - **sections**:
+      - Label and numbering
+      - Review codes and accepted flags
+      - Submittal types and approval routes
+      - Gate rules
+      - Overdue thresholds

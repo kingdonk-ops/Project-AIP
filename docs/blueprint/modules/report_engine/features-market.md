@@ -1,0 +1,38 @@
+# Report engine & published records — Feature scout
+
+
+- **abilities seen in market**:
+  - Template-driven reports with sections, field mapping and repeating tables
+  - Multiple output variants per record (internal, client, certificate)
+  - Landscape and mixed orientation with page headers, footers and revision blocks
+  - Auto-generation on approval and batch generation
+  - Report register with metadata and search
+  - Data book and dossier compilation with table of contents and bookmarks
+  - Per-client branding and numbering schemes
+  - Preview with live data and template versioning
+  - Re-render with pinned template version for reproducibility
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Pin each issued report to the template and data version used
+    - **why**: Lets you reproduce an issued report exactly years later, which matters for records retention and disputes.
+  -
+    - **effort**: S
+    - **feature**: Client-specific report numbering and revision sequence rules
+    - **why**: Clients like Rio Tinto expect their document numbering, and supersession must be clear.
+  -
+    - **effort**: M
+    - **feature**: Thickness map, CUI condition and coating DFT chart blocks
+    - **why**: Domain visuals (heat maps by grid, readings vs minimum wall) differentiate the output for asset integrity work.
+  -
+    - **effort**: L
+    - **feature**: Data book compiler with bookmarked index, cover sheets and per-asset ordering
+    - **why**: Handover packs are a major deliverable and are tedious to assemble manually.
+  -
+    - **effort**: S
+    - **feature**: Expiring authenticated download links with delivery receipts for distribution
+    - **why**: Avoids leaks from emailed attachments and proves delivery.
+  -
+    - **effort**: S
+    - **feature**: Report QA pre-flight that runs the rules engine before generation
+    - **why**: Stops issuing a report with missing readings or unsigned points.

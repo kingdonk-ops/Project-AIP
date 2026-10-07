@@ -1,0 +1,221 @@
+# AI governance & data controls — Feature filler
+
+
+- **detail sections**:
+  - Feature data flow and version history
+  - Redaction rules
+  - Permission-aware retrieval settings
+  - Agent tool policy (read-only default)
+  - Citation and confidence rules
+  - AI-drafted content labelling and acceptance
+  - Kill switch state
+  - Budget and usage
+- **notifications**:
+  - Feature enabled or disabled for tenant
+  - Kill switch activated
+  - Budget threshold 80% and 100%
+  - Red-team case failed in CI
+  - Register entry version changed
+  - Blocked unsupported answer spike
+- **settings**:
+  - Per-feature opt-in
+  - Platform kill switch
+  - Region and model endpoint per feature
+  - Redaction rules
+  - Client prohibits AI inheritance
+  - Prompt and response log retention
+  - Budget caps
+  - Agent write confirmation policy
+  - Citation requirement threshold
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export pack (PDF/JSON)
+    - **columns**:
+      - Feature
+      - Provider
+      - Model
+      - Region
+      - Retention
+      - Training use
+      - Zero-retention evidence
+      - Version
+      - Status
+    - **create form**:
+      -
+        - **field**: Feature
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Provider
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Model
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Region
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Retention terms
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Training-use terms
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Evidence file
+        - **required**: false
+        - **type**: file
+    - **empty state**: No AI data flows registered. No feature can call a model until it has an entry.
+    - **filters**:
+      - Feature
+      - Provider
+      - Region
+      - Status
+    - **name**: AI data-flow register
+    - **row actions**:
+      - View
+      - New version
+      - Retire
+      - Attach evidence
+    - **search**: Feature, provider and model
+    - **sort**:
+      - Feature
+      - Version
+      - Last reviewed
+  -
+    - **bulk actions**:
+      - Disable selected
+    - **columns**:
+      - Feature
+      - Enabled
+      - Scope restrictions
+      - Client prohibits AI
+      - Budget cap
+      - Changed by
+    - **create form**:
+      -
+        - **field**: Feature
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Enabled
+        - **required**: true
+        - **type**: toggle
+      -
+        - **field**: Projects or clients excluded
+        - **required**: false
+        - **type**: multi-select
+      -
+        - **field**: Monthly budget cap
+        - **required**: false
+        - **type**: number
+    - **empty state**: All AI features are off. Enable a feature after reviewing its data flow.
+    - **filters**:
+      - Enabled
+      - Restricted
+    - **name**: Tenant AI settings
+    - **row actions**:
+      - Toggle
+      - Edit restrictions
+    - **search**: Feature
+    - **sort**:
+      - Feature
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Time
+      - User
+      - Feature
+      - Prompt
+      - Response
+      - Tool calls
+      - Citations
+      - Blocked
+    - **empty state**: No AI activity logged.
+    - **filters**:
+      - Feature
+      - User
+      - Project
+      - Blocked
+      - Date range
+    - **name**: AI audit log
+    - **row actions**:
+      - View detail
+      - Open source records
+    - **search**: User, feature and text
+    - **sort**:
+      - Time
+  -
+    - **bulk actions**:
+      - Export
+    - **columns**:
+      - Month
+      - Feature
+      - Calls
+      - Tokens
+      - Cost
+      - Budget used %
+    - **empty state**: No usage recorded.
+    - **filters**:
+      - Month
+      - Feature
+    - **name**: Usage and cost
+    - **row actions**:
+      - View breakdown
+    - **search**: Feature
+    - **sort**:
+      - Month
+      - Cost
+  -
+    - **bulk actions**:
+      - Run selected
+    - **columns**:
+      - Case
+      - Vector (document, comment, email)
+      - Last result
+      - Last run
+    - **create form**:
+      -
+        - **field**: Name
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Vector
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Payload
+        - **required**: true
+        - **type**: text
+      -
+        - **field**: Expected behaviour
+        - **required**: true
+        - **type**: text
+    - **empty state**: No red-team cases defined.
+    - **filters**:
+      - Vector
+      - Result
+    - **name**: Red-team cases
+    - **row actions**:
+      - Run
+      - Edit
+    - **search**: Case
+    - **sort**:
+      - Last run
+- **walkthrough**:
+  - Platform admin registers a feature's data flow with provider, model, region and retention evidence.
+  - Reviewer approves the register entry.
+  - Tenant admin opens AI settings; all features are off.
+  - Admin enables one feature for chosen projects, excluding clients that prohibit AI.
+  - A user invokes the feature; the gateway checks the kill switch, tenant opt-in, and project and client flags.
+  - Retrieval runs under the user's permissions and the redaction step removes personal data and rates.
+  - The model call goes to the AU-region endpoint.
+  - The answer must cite source records or it is blocked.
+  - AI-drafted text is labelled and waits for human acceptance before entering a sealed record.
+  - Admin reviews the audit log and usage dashboard and exports the data-flow pack for a client security review.

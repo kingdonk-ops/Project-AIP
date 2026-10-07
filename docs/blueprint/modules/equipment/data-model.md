@@ -1,0 +1,357 @@
+# Equipment & fleet — Data model & schema
+
+
+- **notes**: Calibration certificates stay in certificates (built, §40); this module holds no copy. availability_status is a cached result of the eligibility gate, which remains the decision point. Pre-start results are inspections/inspection_responses, not new tables. Instrument-to-measurement traceability uses asset_id on measurements in the traceability graph. Telemetry deferred; hour_meter is a placeholder.
+- **reuses existing**:
+  - assets
+  - entity_types
+  - certificates
+  - inspections
+  - inspection_responses
+  - documents
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets (Equipment/Vehicles type); unique; history follows asset
+        - **type**: uuid
+      -
+        - **name**: category
+        - **notes**: instrument|plant|vehicle|tool; from config
+        - **type**: text
+      -
+        - **name**: ownership
+        - **notes**: owned|hired
+        - **type**: text
+      -
+        - **name**: hire_company_id
+        - **notes**: FK contacts/companies
+        - **type**: uuid
+      -
+        - **name**: hire_start
+        - **type**: date
+      -
+        - **name**: hire_end
+        - **type**: date
+      -
+        - **name**: rego
+        - **type**: text
+      -
+        - **name**: serial_no
+        - **type**: text
+      -
+        - **name**: requires_calibration
+        - **notes**: from category config
+        - **type**: boolean
+      -
+        - **name**: availability_status
+        - **notes**: available|blocked_calibration|blocked_prestart|in_service|retired
+        - **type**: text
+      -
+        - **name**: status_reason
+        - **notes**: computed via eligibility gate
+        - **type**: text
+      -
+        - **name**: linked_client_asset_id
+        - **notes**: optional FK assets
+        - **type**: uuid
+      -
+        - **name**: current_project_id
+        - **type**: uuid
+      -
+        - **name**: hour_meter
+        - **notes**: telemetry later
+        - **type**: numeric
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, asset_id)
+      - (tenant_id, category, availability_status)
+      - (tenant_id, current_project_id)
+    - **name**: equipment_profiles
+    - **purpose**: Extension on an Equipment/Vehicle content-type item (item is an assets row)
+    - **relations**:
+      - assets
+      - contacts
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: interval_type
+        - **notes**: days|hours|km
+        - **type**: text
+      -
+        - **name**: interval_value
+        - **type**: int
+      -
+        - **name**: lead_time_days
+        - **notes**: reminder
+        - **type**: int
+      -
+        - **name**: last_done_at
+        - **type**: date
+      -
+        - **name**: last_done_meter
+        - **type**: numeric
+      -
+        - **name**: next_due_date
+        - **notes**: computed
+        - **type**: date
+      -
+        - **name**: next_due_meter
+        - **type**: numeric
+      -
+        - **name**: work_order_template
+        - **notes**: for service module
+        - **type**: jsonb
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, next_due_date) where is_active
+      - (tenant_id, asset_id)
+    - **name**: maintenance_schedules
+    - **purpose**: Recurring maintenance rules
+    - **relations**:
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets
+        - **type**: uuid
+      -
+        - **name**: schedule_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: work_order_id
+        - **notes**: FK service module
+        - **type**: uuid
+      -
+        - **name**: performed_at
+        - **type**: date
+      -
+        - **name**: performed_by
+        - **notes**: person or vendor
+        - **type**: text
+      -
+        - **name**: meter_reading
+        - **type**: numeric
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: cost
+        - **type**: numeric
+      -
+        - **name**: document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: created_by
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: corrections via new record
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, asset_id, performed_at desc)
+    - **name**: service_records
+    - **purpose**: Append-only service history
+    - **relations**:
+      - assets
+      - maintenance_schedules
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: category
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: optional override
+        - **type**: uuid
+      -
+        - **name**: basis
+        - **notes**: day|hour|week
+        - **type**: text
+      -
+        - **name**: rate
+        - **type**: numeric
+      -
+        - **name**: currency
+        - **type**: text
+      -
+        - **name**: valid_from
+        - **type**: date
+      -
+        - **name**: valid_to
+        - **type**: date
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, category, valid_from)
+    - **name**: hire_rates
+    - **purpose**: Internal hire rate table
+    - **relations**:
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: period_start
+        - **type**: date
+      -
+        - **name**: period_end
+        - **type**: date
+      -
+        - **name**: quantity
+        - **notes**: days/hours
+        - **type**: numeric
+      -
+        - **name**: rate_id
+        - **notes**: FK hire_rates
+        - **type**: uuid
+      -
+        - **name**: rate_snapshot
+        - **type**: numeric
+      -
+        - **name**: amount
+        - **type**: numeric
+      -
+        - **name**: status
+        - **notes**: draft|posted
+        - **type**: text
+      -
+        - **name**: reverses_id
+        - **notes**: self FK for corrections once posted
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, period_start)
+      - (tenant_id, asset_id, period_start)
+    - **name**: hire_charges
+    - **purpose**: Internal charges to projects
+    - **relations**:
+      - assets
+      - projects
+      - hire_rates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: category
+        - **type**: text
+      -
+        - **name**: form_template_id
+        - **notes**: FK forms module template
+        - **type**: uuid
+      -
+        - **name**: frequency
+        - **notes**: per_use|daily|weekly
+        - **type**: text
+      -
+        - **name**: pass_criteria
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, category)
+    - **name**: equipment_prestart_templates
+    - **purpose**: Maps equipment category to a form template and pass criteria
+    - **relations**:
+      - forms templates

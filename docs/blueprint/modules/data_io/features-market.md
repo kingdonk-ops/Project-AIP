@@ -1,0 +1,37 @@
+# Data import, export & backup — Feature scout
+
+
+- **abilities seen in market**:
+  - Import wizards with templates, column mapping and dry-run validation
+  - Row-level error reports with fix-and-reimport
+  - Bulk update of existing records by key, not only create
+  - Hierarchical imports preserving parent-child structure
+  - Export of any list in CSV, Excel and JSON honouring permissions
+  - Scheduled exports to storage
+  - Full tenant export with manifest and checksums
+  - Import history with rollback
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Asset tree import with parent resolution, code rules and preview of the resulting hierarchy
+    - **why**: Clients supply equipment lists with tags and parents. A tree preview catches orphans and duplicate tags before commit.
+  -
+    - **effort**: M
+    - **feature**: Update-by-key mode for bulk edits of assets, welds and components
+    - **why**: Remediation data changes constantly in spreadsheets, so editing existing records at scale saves rework.
+  -
+    - **effort**: M
+    - **feature**: Import batches with rollback of the whole batch
+    - **why**: Lets admins undo a bad load cleanly, protecting register integrity.
+  -
+    - **effort**: S
+    - **feature**: Export manifests with checksums and a documented schema per module
+    - **why**: Supports no-lock-in claims and lets customers or auditors verify completeness.
+  -
+    - **effort**: S
+    - **feature**: Step-up MFA, approval and encryption for tenant exports
+    - **why**: Full exports are an exfiltration route, so they need controls customers can evidence.
+  -
+    - **effort**: M
+    - **feature**: Handover data book export per asset subtree with structured data and linked files
+    - **why**: EPC clients require organised closeout packages, and this reuses the same export contract.

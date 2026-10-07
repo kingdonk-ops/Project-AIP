@@ -1,0 +1,99 @@
+# Temporary works register — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/temporary_works/__init__.py
+    - **purpose**: Registration and permission/event declarations
+  -
+    - **path**: backend/app/modules/temporary_works/models.py
+    - **purpose**: tw_item (category, risk class, asset link), tw_design, tw_check, tw_permit (load/strike), tw_inspection_schedule
+  -
+    - **path**: backend/app/modules/temporary_works/schemas.py
+    - **purpose**: API schemas
+  -
+    - **path**: backend/app/modules/temporary_works/router.py
+    - **purpose**: Register, design/check and permit endpoints
+  -
+    - **path**: backend/app/modules/temporary_works/service.py
+    - **purpose**: Item lifecycle, independence check (designer != checker), schedule generation
+  -
+    - **path**: backend/app/modules/temporary_works/workflow_defs.py
+    - **purpose**: Seed workflow definitions (brief, design, check, permit to load, in use, permit to strike) loaded into the workflow engine
+  -
+    - **path**: backend/app/modules/temporary_works/holds.py
+    - **purpose**: Creates and releases hold flags on linked ITP steps and scope tasks
+  -
+    - **path**: backend/app/modules/temporary_works/handlers.py
+    - **purpose**: Scheduled inspection creation and scope-link reactions
+  -
+    - **path**: backend/alembic/versions/temporary_works_0001_init.py
+    - **purpose**: Migration with RLS
+  -
+    - **path**: backend/tests/modules/temporary_works/
+    - **purpose**: Independence, permit gating, hold and isolation tests
+- **change isolation**: Stage, frequency and competency changes are workflow and config edits. The module code is limited to the item register, the independence rule and hold flag creation, so inspection or scope changes do not touch it.
+- **config not code**:
+  - categories and risk classes
+  - workflow stages and approval roles (BS 5975 default, renamable)
+  - inspection frequency per category (e.g. weekly scaffold)
+  - required competencies per role
+  - permit templates
+  - terminology for market variants
+- **events consumed**:
+  - scope.access_requirement.set
+  - inspection.completed
+  - certificate.status.changed
+  - document.revision.issued
+  - schedule.tick.daily
+- **events emitted**:
+  - tw.item.created
+  - tw.design.checked
+  - tw.permit_to_load.issued
+  - tw.permit_to_strike.issued
+  - tw.inspection.overdue
+  - tw.hold.set
+  - tw.hold.released
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/temporary_works/index.ts
+    - **purpose**: Route registration
+  -
+    - **path**: frontend/src/modules/temporary_works/pages/TwRegister.tsx
+    - **purpose**: Register with stage chips and status board
+  -
+    - **path**: frontend/src/modules/temporary_works/pages/TwItemDetail.tsx
+    - **purpose**: Design, check, permits, inspections and linked scopes
+  -
+    - **path**: frontend/src/modules/temporary_works/pages/OverdueView.tsx
+    - **purpose**: Expiring and overdue inspections and permits
+  -
+    - **path**: frontend/src/modules/temporary_works/components/PermitForm.tsx
+    - **purpose**: Permit sign-off form rendered from templates
+  -
+    - **path**: frontend/src/modules/temporary_works/components/ScopeLinkPicker.tsx
+    - **purpose**: Link item to scopes requiring access
+  -
+    - **path**: frontend/src/modules/temporary_works/api/
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - GET/POST /temporary-works/items
+  - GET/PATCH /temporary-works/items/{id}
+  - POST /temporary-works/items/{id}/design
+  - POST /temporary-works/items/{id}/check
+  - POST /temporary-works/items/{id}/permits/load
+  - POST /temporary-works/items/{id}/permits/strike
+  - POST /temporary-works/items/{id}/links/scopes
+  - GET /temporary-works/overdue
+- **reuses shared**:
+  - workflow engine for stages and role-gated approvals
+  - inspection engine for periodic scaffold inspections
+  - eligibility gate for designer, checker and coordinator competency
+  - scopes of work module for access links and holds
+  - documents for drawings and calculations
+  - form designer for permit forms
+  - signing for permit sign-off
+  - notifications
+  - audit trail
+  - reporting tiles
+  - terminology dictionary

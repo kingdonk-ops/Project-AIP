@@ -1,0 +1,99 @@
+# Security & compliance programme — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/security/__init__.py
+    - **purpose**: Module boundary and public exports
+  -
+    - **path**: backend/app/modules/security/models.py
+    - **purpose**: ControlRecord, EvidenceItem, AccessReview, RestoreTestRecord, DataMapEntry, BreachIncident, ProvenanceEntry
+  -
+    - **path**: backend/app/modules/security/controls.py
+    - **purpose**: Control catalogue mapped to SOC 2, ISO 27001, IRAP and APP; evidence links
+  -
+    - **path**: backend/app/modules/security/access_review.py
+    - **purpose**: Quarterly review generator from user, role and team data; records sign-off
+  -
+    - **path**: backend/app/modules/security/breach.py
+    - **purpose**: NDB breach assessment record and notification clock tracking
+  -
+    - **path**: backend/app/modules/security/masking.py
+    - **purpose**: Field-level masking policy for incident and health data, applied by serializers
+  -
+    - **path**: backend/app/modules/security/headers.py
+    - **purpose**: Security headers, CSP and separate file-domain middleware
+  -
+    - **path**: backend/app/modules/security/router.py
+    - **purpose**: Admin-only endpoints for evidence, reviews and breach records
+  -
+    - **path**: docs/security/threat-model.md
+    - **purpose**: Threat model for PIN/magic links, portal, inbound, legal records and AI
+  -
+    - **path**: docs/security/provenance-log.md
+    - **purpose**: AGPL clean-room provenance log for OpenConstructionERP references
+  -
+    - **path**: .github/workflows/security.yml
+    - **purpose**: SBOM, dependency and secret scanning, Trivy, image signing gates
+  -
+    - **path**: backend/tests/security/test_permission_matrix.py
+    - **purpose**: Permission-matrix and deny-by-default tests generated from the catalogue
+  -
+    - **path**: backend/tests/security/test_prod_build_strip.py
+    - **purpose**: Asserts dev tooling (admin fixtures, architecture_map, module_builder, pipelines, compliance DSL) is absent from production images
+- **change isolation**: A new framework control or retention rule is a data change in the control catalogue. Scanner or gate changes land only in the CI workflows. Masking changes land in field policies, not in the owning modules.
+- **config not code**:
+  - Control-to-framework mappings
+  - Retention rules per record type
+  - Masking policies per field
+  - Access review cadence and reviewers
+  - Breach notification templates
+  - Recording-consent wording per region
+  - CI scanner thresholds and allow-lists
+  - Compliance certification target dates
+- **events consumed**:
+  - identity.mfa_changed
+  - identity.user_deprovisioned
+  - ops.restore_test_completed
+  - ops.deploy_promoted
+  - audit.chain_anchored
+  - ai_gov.register_changed
+  - uploads.quarantine_rejected
+- **events emitted**:
+  - security.access_review_due
+  - security.access_review_completed
+  - security.breach_logged
+  - security.restore_test_recorded
+  - security.evidence_expiring
+- **frontend files**:
+  -
+    - **path**: frontend/src/features/security/ComplianceDashboard.tsx
+    - **purpose**: Control status and evidence overview for admins
+  -
+    - **path**: frontend/src/features/security/AccessReviewPage.tsx
+    - **purpose**: Quarterly access review workflow
+  -
+    - **path**: frontend/src/features/security/BreachRegisterPage.tsx
+    - **purpose**: Breach incident log and NDB assessment
+  -
+    - **path**: frontend/src/features/security/MaskedField.tsx
+    - **purpose**: UI component honouring masking policy and reveal permission
+  -
+    - **path**: frontend/src/features/security/api.ts
+    - **purpose**: Generated API client
+- **public api**:
+  - GET /security/controls and POST /security/evidence
+  - POST /security/access-reviews and PATCH /security/access-reviews/{id}
+  - POST /security/restore-tests
+  - GET/POST /security/breaches
+  - GET /security/data-map
+  - Python: mask(field_policy, value, viewer) helper
+  - Python: strip_exif_gps(file) helper (delegates to the upload pipeline)
+- **reuses shared**:
+  - Audit trail (hash-chained)
+  - Permissions catalogue and policy service
+  - Job runner: scheduled review and evidence reminders
+  - Notifications engine
+  - Report engine: evidence packs
+  - Task engine: remediation tasks
+  - Terminology dictionary

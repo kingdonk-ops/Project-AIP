@@ -1,0 +1,90 @@
+# Schedule & look-ahead (basic) — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: modules/schedule/router.py
+    - **purpose**: FastAPI routes for calendar, look-ahead, weekly plan, iCal feed
+  -
+    - **path**: modules/schedule/service.py
+    - **purpose**: Aggregates due items from other modules' public APIs into calendar entries
+  -
+    - **path**: modules/schedule/models.py
+    - **purpose**: WeeklyPlan, Commitment, ReminderSubscription tables (tenant_id, project_id, optional asset_id)
+  -
+    - **path**: modules/schedule/schemas.py
+    - **purpose**: Pydantic request/response models feeding the generated OpenAPI client
+  -
+    - **path**: modules/schedule/ical.py
+    - **purpose**: iCal serialiser and signed per-user feed token handling
+  -
+    - **path**: modules/schedule/subscribers.py
+    - **purpose**: Event handlers that refresh calendar projections and schedule reminders
+  -
+    - **path**: modules/schedule/permissions.py
+    - **purpose**: Registers schedule.view, schedule.plan, schedule.export in the permissions catalogue
+  -
+    - **path**: modules/schedule/migrations/
+    - **purpose**: Alembic migrations with RLS policies
+  -
+    - **path**: modules/schedule/tests/
+    - **purpose**: Unit, tenant-isolation and permission-matrix tests
+  -
+    - **path**: modules/schedule/module.yaml
+    - **purpose**: Module manifest: permissions, events, nav entry, default terms
+- **change isolation**: The calendar is a read-only projection over other modules' APIs and events, so new item sources are added in service.py and module.yaml only. Last Planner extensions (constraints, PPC) would add new tables and routes without touching existing ones.
+- **config not code**:
+  - Look-ahead window defaults (2-6 weeks)
+  - Which item sources appear on the calendar and their colours
+  - Reminder lead times per item type
+  - Whether weekly commitments are enabled per project
+  - Week start day and working calendar
+  - Labels for calendar item types
+- **events consumed**:
+  - inspection.due_changed
+  - inspection.completed
+  - scope.mandated_date_changed
+  - scope.completed
+  - certificate.expiring
+  - certificate.renewed
+  - crew.assignment_changed
+  - task.created
+- **events emitted**:
+  - schedule.commitment_completed
+  - schedule.weekly_plan_published
+  - schedule.reminder_due
+- **frontend files**:
+  -
+    - **path**: features/schedule/pages/SchedulePage.tsx
+    - **purpose**: Calendar and look-ahead container with filters
+  -
+    - **path**: features/schedule/components/CalendarView.tsx
+    - **purpose**: Month/week calendar of inspections, mandated dates, expiries
+  -
+    - **path**: features/schedule/components/LookaheadBoard.tsx
+    - **purpose**: 2-6 week look-ahead grouped by crew or discipline
+  -
+    - **path**: features/schedule/components/WeeklyPlan.tsx
+    - **purpose**: Optional commitments with done tick-off
+  -
+    - **path**: features/schedule/components/ExportDialog.tsx
+    - **purpose**: iCal link and reminder settings
+  -
+    - **path**: features/schedule/api.ts
+    - **purpose**: Generated client wrappers and TanStack Query hooks
+- **public api**:
+  - GET /schedule/calendar?from&to&project_id&asset_id&type
+  - GET /schedule/lookahead?weeks=2..6
+  - GET/POST/PATCH /schedule/weekly-plans
+  - POST/PATCH /schedule/weekly-plans/{id}/commitments
+  - GET /schedule/ical/{token}.ics
+  - POST /schedule/reminders
+  - GET /schedule/items/due (read-only for dashboards)
+- **reuses shared**:
+  - Notifications and reminder scheduler
+  - Tasks engine (commitments create tasks)
+  - Permission/policy service with asset-subtree scope
+  - Terminology dictionary
+  - Saved views and filters
+  - Dashboard/KPI widgets
+  - Background job runner

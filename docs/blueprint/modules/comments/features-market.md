@@ -1,0 +1,37 @@
+# Comments, mentions & notifications — Feature scout
+
+
+- **abilities seen in market**:
+  - Threaded comments on any record with @mentions and resolve
+  - Comment pins on drawings, PDFs and photos
+  - In-app notification centre with unread counts
+  - Email and mobile push notifications with per-user preferences
+  - Daily or weekly digests that batch low-priority events
+  - Notifications driven by domain events such as assignment, overdue and expiry
+  - Visibility scoping so external parties only see their own threads
+  - Reply by email into the thread
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Comment visibility classes (internal, shared with client, shared with subcontractor) set per comment with clear on-screen badges
+    - **why**: Prevents commercial or safety-sensitive remarks leaking to other parties, a core requirement for multi-party EPC projects.
+  -
+    - **effort**: M
+    - **feature**: Asset-level discussion history: a combined thread view on an asset node that rolls up comments from its inspections, NCRs and RFIs
+    - **why**: Differentiates from document-centric tools and answers what has been said about this vessel or line over time.
+  -
+    - **effort**: M
+    - **feature**: Notification rules by asset subtree, discipline and severity (for example any failed inspection under Unit 3 notifies the QA lead)
+    - **why**: Reduces noise and gets the right people informed using the asset hierarchy that sets this product apart.
+  -
+    - **effort**: S
+    - **feature**: Quiet hours and site-shift awareness with escalation for critical items (hold point waiting, expired certificate)
+    - **why**: Shift workers need alerts aligned to rosters, while truly critical events still reach someone.
+  -
+    - **effort**: S
+    - **feature**: Comment conversion actions: turn a comment into a task, issue or corrective action with a back-link
+    - **why**: Stops decisions getting lost in threads and keeps follow-up traceable.
+  -
+    - **effort**: S
+    - **feature**: Edit history and superseding comments visible to admins, with legal-hold protection
+    - **why**: Comments can become claims evidence; edits must never silently overwrite what was originally said.

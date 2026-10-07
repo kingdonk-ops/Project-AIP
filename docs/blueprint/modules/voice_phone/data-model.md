@@ -1,0 +1,480 @@
+# Voice notes & phone log — Data model & schema
+
+
+- **notes**: Phase decision (P3 vs P4) does not affect schema. Call recording is gated by call_recording_enabled, default off, pending the consent model. Confirmed notes and calls are append-only: REVOKE UPDATE/DELETE on phone_calls, phone_call_parties, voice_consent_records and voice_note_edits, and enforce a trigger blocking updates to voice_notes once confirmed apart from audio deletion fields. Audit entries on audio deletion go to the shared audit table. Audio retention default is an open question and is stored as config.
+- **reuses existing**:
+  - assets
+  - documents
+  - tasks
+  - issues
+  - users
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: FK projects
+        - **type**: uuid
+      -
+        - **name**: captured_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: captured_at
+        - **notes**: device time, may be offline
+        - **type**: timestamptz
+      -
+        - **name**: client_uuid
+        - **notes**: idempotency key for offline push, unique per tenant
+        - **type**: uuid
+      -
+        - **name**: audio_file_id
+        - **notes**: FK documents/files; nullable after audio deletion or for typed notes
+        - **type**: uuid
+      -
+        - **name**: audio_deleted_at
+        - **notes**: set by retention job or early deletion
+        - **type**: timestamptz
+      -
+        - **name**: duration_sec
+        - **type**: int
+      -
+        - **name**: consent_record_id
+        - **notes**: FK voice_consent_records
+        - **type**: uuid
+      -
+        - **name**: transcript
+        - **notes**: untrusted input; never executed
+        - **type**: text
+      -
+        - **name**: transcript_edited
+        - **notes**: user-corrected version; edits in voice_note_edits
+        - **type**: text
+      -
+        - **name**: provider
+        - **notes**: speech provider
+        - **type**: text
+      -
+        - **name**: region
+        - **notes**: AU by default
+        - **type**: text
+      -
+        - **name**: model
+        - **type**: text
+      -
+        - **name**: transcription_status
+        - **notes**: queued|processing|completed|failed|deferred
+        - **type**: text
+      -
+        - **name**: prompt_version_id
+        - **notes**: FK AI register prompt version
+        - **type**: uuid
+      -
+        - **name**: proposed_type
+        - **notes**: diary_note|defect|task, from config
+        - **type**: text
+      -
+        - **name**: extracted_fields
+        - **notes**: editable draft payload
+        - **type**: jsonb
+      -
+        - **name**: suggested_asset_id
+        - **notes**: FK assets; suggestion only
+        - **type**: uuid
+      -
+        - **name**: suggested_scope_id
+        - **notes**: FK RSW scope; suggestion only
+        - **type**: uuid
+      -
+        - **name**: confirmation_status
+        - **notes**: draft|confirmed|discarded|expired
+        - **type**: text
+      -
+        - **name**: confirmed_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: confirmed_at
+        - **type**: timestamptz
+      -
+        - **name**: result_entity_type
+        - **notes**: diary_entry|issue|task
+        - **type**: text
+      -
+        - **name**: result_entity_id
+        - **notes**: link to created record
+        - **type**: uuid
+      -
+        - **name**: draft_expires_at
+        - **notes**: from tenant config
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **notes**: offline edited
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete, only while draft
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, confirmation_status, captured_at desc)
+      - (tenant_id, captured_by, confirmation_status)
+      - unique (tenant_id, client_uuid)
+      - (tenant_id, audio_deleted_at) where audio_file_id is not null
+      - (tenant_id, suggested_asset_id)
+    - **name**: voice_notes
+    - **purpose**: Captured voice or typed note with transcript and AI draft state. Nothing becomes a record until a human confirms.
+    - **relations**:
+      - assets via suggested_asset_id
+      - projects
+      - users
+      - tasks/issues/diary via result_entity
+      - voice_consent_records
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: voice_note_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: edited_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: edited_at
+        - **type**: timestamptz
+      -
+        - **name**: target
+        - **notes**: transcript|draft_field
+        - **type**: text
+      -
+        - **name**: before_value
+        - **type**: jsonb
+      -
+        - **name**: after_value
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **notes**: no update/delete grant
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, voice_note_id, edited_at)
+    - **name**: voice_note_edits
+    - **purpose**: Append-only edit history of transcript and draft fields
+    - **relations**:
+      - voice_notes
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: person who accepted
+        - **type**: uuid
+      -
+        - **name**: notice_text
+        - **notes**: exact text shown
+        - **type**: text
+      -
+        - **name**: notice_version
+        - **type**: text
+      -
+        - **name**: jurisdiction
+        - **notes**: e.g. AU-WA
+        - **type**: text
+      -
+        - **name**: rule_applied
+        - **notes**: snapshot of rule
+        - **type**: jsonb
+      -
+        - **name**: accepted
+        - **type**: boolean
+      -
+        - **name**: accepted_at
+        - **type**: timestamptz
+      -
+        - **name**: other_parties_notified
+        - **notes**: for recorded calls
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, user_id, accepted_at)
+    - **name**: voice_consent_records
+    - **purpose**: Append-only record of consent notice shown and accepted, per recording or call
+    - **relations**:
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: logged_by
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: call_at
+        - **type**: timestamptz
+      -
+        - **name**: direction
+        - **notes**: inbound|outbound
+        - **type**: text
+      -
+        - **name**: duration_sec
+        - **type**: int
+      -
+        - **name**: summary
+        - **type**: text
+      -
+        - **name**: instruction_given
+        - **type**: text
+      -
+        - **name**: is_verbal_instruction
+        - **notes**: flag; drives change and claims
+        - **type**: boolean
+      -
+        - **name**: flag_reason
+        - **notes**: keyword match or manual
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: FK assets, nullable
+        - **type**: uuid
+      -
+        - **name**: package_id
+        - **notes**: FK scope/work package
+        - **type**: uuid
+      -
+        - **name**: voice_note_id
+        - **notes**: optional source
+        - **type**: uuid
+      -
+        - **name**: recorded
+        - **type**: boolean
+      -
+        - **name**: consent_record_id
+        - **notes**: required when recorded
+        - **type**: uuid
+      -
+        - **name**: supersedes_id
+        - **notes**: self FK; correction chain
+        - **type**: uuid
+      -
+        - **name**: superseded_by_id
+        - **notes**: denormalised pointer
+        - **type**: uuid
+      -
+        - **name**: change_record_id
+        - **notes**: link to change module
+        - **type**: uuid
+      -
+        - **name**: confirmation_status
+        - **notes**: none|requested|received
+        - **type**: text
+      -
+        - **name**: confirmation_task_id
+        - **notes**: FK tasks
+        - **type**: uuid
+      -
+        - **name**: confirmation_correspondence_id
+        - **notes**: FK transmittals/correspondence
+        - **type**: uuid
+      -
+        - **name**: client_uuid
+        - **notes**: offline idempotency
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, call_at desc)
+      - (tenant_id, is_verbal_instruction, call_at desc) where is_verbal_instruction
+      - (tenant_id, asset_id)
+      - (tenant_id, supersedes_id)
+      - unique (tenant_id, client_uuid)
+    - **name**: phone_calls
+    - **purpose**: Phone call and verbal instruction log. Locked on save; corrected only by superseding records.
+    - **relations**:
+      - assets
+      - tasks
+      - contacts via phone_call_parties
+      - change records
+      - voice_consent_records
+      - self supersedes
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: phone_call_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: contact_id
+        - **notes**: FK contacts, nullable
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: internal party
+        - **type**: uuid
+      -
+        - **name**: free_text_name
+        - **notes**: if no contact
+        - **type**: text
+      -
+        - **name**: role
+        - **notes**: caller|callee|participant
+        - **type**: text
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, phone_call_id)
+      - (tenant_id, contact_id)
+    - **name**: phone_call_parties
+    - **purpose**: Parties to a call, via contacts
+    - **relations**:
+      - phone_calls
+      - contacts
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: unique
+        - **type**: uuid
+      -
+        - **name**: ai_opt_in
+        - **notes**: mirrors ai_gov opt-in
+        - **type**: boolean
+      -
+        - **name**: provider_region
+        - **notes**: default AU
+        - **type**: text
+      -
+        - **name**: audio_retention_days
+        - **notes**: null = delete after transcription; default undecided (open question)
+        - **type**: int
+      -
+        - **name**: delete_audio_after_transcription
+        - **type**: boolean
+      -
+        - **name**: max_recording_sec
+        - **type**: int
+      -
+        - **name**: draft_expiry_days
+        - **type**: int
+      -
+        - **name**: allowed_draft_types
+        - **notes**: types and field mappings
+        - **type**: jsonb
+      -
+        - **name**: consent_rules
+        - **notes**: per-jurisdiction text and rules
+        - **type**: jsonb
+      -
+        - **name**: instruction_keywords
+        - **type**: jsonb
+      -
+        - **name**: instruction_recipients
+        - **notes**: commercial lead
+        - **type**: jsonb
+      -
+        - **name**: call_recording_enabled
+        - **notes**: default false
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id)
+    - **name**: voice_settings
+    - **purpose**: Per-tenant config: opt-in, region, retention, draft types, keywords, consent rules
+    - **relations**:
+      - ai_gov tenant opt-in
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: term
+        - **type**: text
+      -
+        - **name**: category
+        - **notes**: ndt|cui|coating|custom
+        - **type**: text
+      -
+        - **name**: boost
+        - **type**: numeric
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, lower(term)) where deleted_at is null
+    - **name**: voice_vocabulary_terms
+    - **purpose**: Custom vocabulary for NDT, CUI, coatings
+    - **relations**:
+      - asset tags added at runtime from assets

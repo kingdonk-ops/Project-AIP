@@ -1,0 +1,82 @@
+# Database & schema conventions — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: docs/spec/01-database-schema.sql
+    - **purpose**: Reference schema for all contexts
+  -
+    - **path**: docs/spec/02-erd.md
+    - **purpose**: ERD per bounded context
+  -
+    - **path**: docs/conventions/schema-conventions.md
+    - **purpose**: Rules: uuid PK, tenant_id, project_id, optional asset_id, timestamps, sync_version, deleted_at, naming
+  -
+    - **path**: migrations/versions/
+    - **purpose**: Forward-only raw-SQL Alembic migrations, expand/contract pattern
+  -
+    - **path**: migrations/templates/new_table.sql.tpl
+    - **purpose**: Standard table template including tenant_id, FORCE RLS policy, indexes and grants
+  -
+    - **path**: migrations/roles.sql
+    - **purpose**: Roles: migrator (owner), app (non-owner, no BYPASSRLS), readonly, append-only grants with REVOKE UPDATE/DELETE
+  -
+    - **path**: services/api/app/platform/db/session.py
+    - **purpose**: Async session factory issuing SET LOCAL app.tenant_id per transaction; fails closed if unset
+  -
+    - **path**: services/api/app/platform/db/base.py
+    - **purpose**: Declarative mixins: TenantMixin, TimestampMixin, SyncVersionMixin, SoftDeleteMixin, AssetScopedMixin
+  -
+    - **path**: services/api/app/platform/db/concurrency.py
+    - **purpose**: Optimistic concurrency helper returning 409 on sync_version mismatch
+  -
+    - **path**: services/api/app/platform/db/ltree.py
+    - **purpose**: ltree path helpers (move subtree, ancestors, descendants)
+  -
+    - **path**: services/api/app/platform/db/jsonb_schema.py
+    - **purpose**: Validates JSONB attributes against per-type schema
+  -
+    - **path**: tools/ci/check_schema_conventions.py
+    - **purpose**: CI check failing on any table missing tenant_id, RLS policy, FORCE RLS, or required indexes
+  -
+    - **path**: tests/db/test_rls_isolation.py
+    - **purpose**: Testcontainers cross-tenant and IDOR tests across every table
+  -
+    - **path**: tests/db/test_migrations_updownup.py
+    - **purpose**: Up-down-up migration test plus production-size snapshot run
+- **change isolation**: New tables come from the migration template and mixins, so tenant_id, RLS and sync columns are never hand-written; CI blocks drift. Convention changes land in the mixins, the template and the CI checker only.
+- **config not code**:
+  - Per-type JSONB attribute schemas
+  - Retention periods and legal-hold policy
+  - Soft-delete recycle bin retention window
+  - Index and partition settings per environment
+  - Region-specific database endpoints
+- **events consumed**:
+  - tenancy.tenant.provisioned (create tenant row defaults)
+  - tenancy.tenant.offboarded (retention and purge schedule)
+  - security.legal_hold.applied (block purge)
+- **events emitted**:
+  - platform.schema.migration_applied
+  - platform.record.soft_deleted
+  - platform.record.restored
+  - platform.sync.conflict_detected
+- **frontend files**:
+  -
+    - **path**: frontend/src/platform/concurrency/conflict.ts
+    - **purpose**: Handles 409 sync_version conflicts and surfaces a merge or reload prompt
+  -
+    - **path**: frontend/src/platform/concurrency/ConflictDialog.tsx
+    - **purpose**: Shared conflict-resolution dialog
+- **public api**:
+  - Mixins and helpers: TenantMixin, SyncVersionMixin, SoftDeleteMixin
+  - tenant_session(tenant_id) async context manager
+  - update_with_version(model, id, expected_version, changes) -> 409 on mismatch
+  - ltree helpers: subtree(asset_id), ancestors(asset_id), move(asset_id, new_parent)
+  - validate_attributes(item_type_id, payload)
+  - Views: inspection_current_responses
+  - CI command: check_schema_conventions
+- **reuses shared**:
+  - Audit log append-only tables
+  - domain_events outbox from arch
+  - Tenant context from tenancy
+  - JSONB schema validator shared with item_types and forms

@@ -1,0 +1,99 @@
+# Voice notes & phone log — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/voice_phone/models.py
+    - **purpose**: VoiceNote (audio ref, transcript, proposed type, extracted fields, status), PhoneCall, ConsentRecord
+  -
+    - **path**: backend/app/modules/voice_phone/schemas.py
+    - **purpose**: Schemas for notes, drafts, calls and confirmation payloads
+  -
+    - **path**: backend/app/modules/voice_phone/service.py
+    - **purpose**: Capture, request transcription, build draft, confirm or discard, log call
+  -
+    - **path**: backend/app/modules/voice_phone/drafting.py
+    - **purpose**: Calls the AI gateway with a registered prompt to propose type and fields; drafting only, no tool actions
+  -
+    - **path**: backend/app/modules/voice_phone/consent.py
+    - **purpose**: Consent prompt text and jurisdiction rule lookup, stores acceptance
+  -
+    - **path**: backend/app/modules/voice_phone/router.py
+    - **purpose**: REST endpoints
+  -
+    - **path**: backend/app/modules/voice_phone/handlers.py
+    - **purpose**: Transcription-complete and retention-expiry handlers
+  -
+    - **path**: backend/app/modules/voice_phone/permissions.py
+    - **purpose**: voice.* permissions
+  -
+    - **path**: backend/app/modules/voice_phone/seed/consent_rules.json
+    - **purpose**: Per-jurisdiction consent rules (config)
+  -
+    - **path**: backend/migrations/voice_phone/
+    - **purpose**: Module migrations
+  -
+    - **path**: backend/tests/voice_phone/
+    - **purpose**: No-save-without-confirm, opt-in enforcement, retention deletion, RLS tests
+- **change isolation**: Provider, prompt or model changes land in the AI gateway config and the drafting prompt only. A new draft target type adds a mapping entry and one create call to the target module's public API.
+- **config not code**:
+  - Consent notice text and jurisdiction rules
+  - Tenant AI opt-in and speech provider region
+  - Raw audio retention period
+  - Draft target types and field mappings
+  - Extraction prompt versions in the AI register
+  - Verbal instruction keywords and flag rules
+- **events consumed**:
+  - ai.transcription_completed
+  - ai.transcription_failed
+  - uploads.file_released
+  - retention.audio_due
+  - ai_gov.tenant_optin_changed
+- **events emitted**:
+  - voice.note_captured
+  - voice.transcription_requested
+  - voice.draft_ready
+  - voice.draft_confirmed
+  - voice.draft_discarded
+  - voice.call_logged
+  - voice.verbal_instruction_flagged
+  - voice.audio_purged
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/voice_phone/pages/CapturePage.tsx
+    - **purpose**: Record or type a note with consent prompt
+  -
+    - **path**: frontend/src/modules/voice_phone/pages/DraftReviewPage.tsx
+    - **purpose**: Editable draft fields, asset suggestion, confirm or discard
+  -
+    - **path**: frontend/src/modules/voice_phone/pages/PhoneLogPage.tsx
+    - **purpose**: Call log list and entry form with verbal instruction flag
+  -
+    - **path**: frontend/src/modules/voice_phone/components/
+    - **purpose**: Recorder, ConsentDialog, DraftFieldEditor
+  -
+    - **path**: frontend/src/modules/voice_phone/offline/audioQueue.ts
+    - **purpose**: Deferred audio upload via shared sync engine
+  -
+    - **path**: frontend/src/modules/voice_phone/api.ts
+    - **purpose**: Generated client hooks
+- **public api**:
+  - POST /projects/{id}/voice-notes (audio or text)
+  - GET /voice-notes/{id}
+  - PATCH /voice-notes/{id}/draft
+  - POST /voice-notes/{id}/confirm
+  - POST /voice-notes/{id}/discard
+  - POST /projects/{id}/phone-calls
+  - GET /projects/{id}/phone-calls?flag=verbal_instruction
+  - GET /voice/consent-notice?jurisdiction=
+  - Python interface: confirmed drafts call the target module's public create API, never its tables
+- **reuses shared**:
+  - Shared speech-to-text pipeline (also used by meetings)
+  - AI gateway and governance (register, opt-in, region lock, call logging)
+  - Upload quarantine pipeline
+  - Retention and legal hold engine
+  - Event bus and outbox
+  - Policy service
+  - Audit trail
+  - Terminology service
+  - Offline sync engine

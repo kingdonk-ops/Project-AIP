@@ -1,0 +1,329 @@
+# Temporary works register — Data model & schema
+
+
+- **notes**: Periodic scaffold inspections are normal inspections linked via last_inspection_id, not a separate table. Workflow stages (BS 5975 default) are workflow definitions, not columns. Competency checks for designer, checker and coordinator go through the certificates gate. Add a deferred trigger so tw_checks.checker_id cannot equal the design's designer_id.
+- **reuses existing**:
+  - assets
+  - inspections
+  - documents
+  - certificates
+  - tasks
+  - disciplines
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: reference
+        - **type**: text
+      -
+        - **name**: category
+        - **notes**: scaffold/propping/excavation support; config
+        - **type**: text
+      -
+        - **name**: risk_class
+        - **notes**: configured
+        - **type**: text
+      -
+        - **name**: description
+        - **type**: text
+      -
+        - **name**: asset_id
+        - **notes**: asset being accessed/supported
+        - **type**: uuid
+      -
+        - **name**: location
+        - **notes**: nullable
+        - **type**: geography
+      -
+        - **name**: coordinator_id
+        - **notes**: TW coordinator, FK users
+        - **type**: uuid
+      -
+        - **name**: status
+        - **notes**: workflow stage
+        - **type**: text
+      -
+        - **name**: design_brief_document_id
+        - **notes**: nullable FK documents
+        - **type**: uuid
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, project_id, reference) unique
+      - (tenant_id, asset_id)
+      - (tenant_id, status)
+      - GIST (location)
+    - **name**: tw_items
+    - **purpose**: Register of temporary works items.
+    - **relations**:
+      - projects
+      - assets
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: tw_item_id
+        - **notes**: FK tw_items
+        - **type**: uuid
+      -
+        - **name**: revision
+        - **type**: int
+      -
+        - **name**: designer_id
+        - **notes**: FK users; competency checked via certificates
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: FK documents (drawings/calcs)
+        - **type**: uuid
+      -
+        - **name**: submitted_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, tw_item_id, revision) unique
+    - **name**: tw_designs
+    - **purpose**: Design records for an item.
+    - **relations**:
+      - tw_items
+      - documents
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: tw_design_id
+        - **notes**: FK tw_designs
+        - **type**: uuid
+      -
+        - **name**: checker_id
+        - **notes**: FK users; must differ from designer (trigger comparing to design.designer_id)
+        - **type**: uuid
+      -
+        - **name**: outcome
+        - **notes**: accepted/rejected/comments
+        - **type**: text
+      -
+        - **name**: comments
+        - **type**: text
+      -
+        - **name**: signoff_id
+        - **notes**: nullable signing record
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: append-only
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, tw_design_id)
+    - **name**: tw_checks
+    - **purpose**: Independent check records; append-only. Independence enforced by service and a DB check.
+    - **relations**:
+      - tw_designs
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: tw_item_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: permit_kind
+        - **notes**: load/strike
+        - **type**: text
+      -
+        - **name**: issued_by
+        - **notes**: FK users (coordinator)
+        - **type**: uuid
+      -
+        - **name**: issued_at
+        - **type**: timestamptz
+      -
+        - **name**: conditions
+        - **type**: text
+      -
+        - **name**: max_load
+        - **notes**: nullable
+        - **type**: numeric
+      -
+        - **name**: status
+        - **notes**: issued/cancelled/superseded
+        - **type**: text
+      -
+        - **name**: signoff_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: no edits; changes are new rows
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, tw_item_id, permit_kind, issued_at desc)
+    - **name**: tw_permits
+    - **purpose**: Permit to load and permit to strike; issue and cancellation are append-only events.
+    - **relations**:
+      - tw_items
+      - users
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: tw_item_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: frequency_days
+        - **notes**: from category config
+        - **type**: int
+      -
+        - **name**: inspection_template_id
+        - **notes**: FK form template
+        - **type**: uuid
+      -
+        - **name**: next_due
+        - **type**: date
+      -
+        - **name**: last_inspection_id
+        - **notes**: nullable FK inspections
+        - **type**: uuid
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, next_due) WHERE is_active
+      - (tenant_id, tw_item_id)
+    - **name**: tw_inspection_schedules
+    - **purpose**: Periodic inspection schedule that generates inspections.
+    - **relations**:
+      - tw_items
+      - inspections
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: tw_item_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: scope_id
+        - **notes**: FK RSW scope
+        - **type**: uuid
+      -
+        - **name**: task_id
+        - **notes**: nullable FK tasks
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, tw_item_id, scope_id) unique
+      - (tenant_id, scope_id)
+    - **name**: tw_scope_links
+    - **purpose**: Links scopes/tasks needing scaffold or access to a TW item.
+    - **relations**:
+      - tw_items
+      - tasks
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **type**: uuid
+      -
+        - **name**: tw_item_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: blocked_type
+        - **notes**: inspection_step/task
+        - **type**: text
+      -
+        - **name**: blocked_id
+        - **type**: uuid
+      -
+        - **name**: released_by_permit_id
+        - **notes**: nullable FK tw_permits
+        - **type**: uuid
+      -
+        - **name**: released_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, blocked_type, blocked_id) WHERE released_at IS NULL
+      - (tenant_id, tw_item_id)
+    - **name**: tw_holds
+    - **purpose**: Hold flags blocking ITP steps or tasks until a permit is issued.
+    - **relations**:
+      - tw_items
+      - tw_permits

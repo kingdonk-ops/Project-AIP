@@ -1,0 +1,37 @@
+# Database & schema conventions — Feature scout
+
+
+- **abilities seen in market**:
+  - Tenant key and row-level security on every table with CI enforcement
+  - Temporal or history tables for point-in-time reconstruction of records
+  - Append-only evidence tables with hash chaining
+  - Configurable fields stored as validated JSON with indexed promotion of hot fields
+  - Soft delete with legal-hold override and retention-driven purge
+  - Zero-downtime expand/contract migrations with rollback rehearsal
+  - Idempotency keys and client-generated IDs for offline writes
+  - Bulk-load and large-table partitioning by tenant or time
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Extend sync_version optimistic concurrency to inspections, issues, certificates and scopes, with 409 conflict payloads carrying the current record
+    - **why**: Currently only assets enforce it; concurrent edits on field and office devices will otherwise silently overwrite.
+  -
+    - **effort**: L
+    - **feature**: As-at queries: view of an asset and its inspection state at a past date, backed by history tables
+    - **why**: Answers 'what did we know about this pipe on date X', which is central to disputes, audits and CUI re-inspection decisions.
+  -
+    - **effort**: M
+    - **feature**: Partition high-volume tables (responses, audit, sync_operations, activity) by time with automated partition management
+    - **why**: Keeps queries and restores fast as 5,000 users and years of evidence accumulate.
+  -
+    - **effort**: M
+    - **feature**: Hot-attribute promotion: admin-flagged JSONB attributes get generated columns or expression indexes
+    - **why**: Makes filters on wall loss, coating type or insulation class fast without schema changes per customer.
+  -
+    - **effort**: S
+    - **feature**: Schema-drift and RLS-coverage report as a CI artefact retained as SOC 2 evidence
+    - **why**: Turns a build check into audit proof that every table is tenant-protected.
+  -
+    - **effort**: M
+    - **feature**: Legal-hold flag at record, asset or project level that blocks purge and crypto-shred jobs
+    - **why**: Needed to satisfy the records retention and legal hold commitments in the brief.

@@ -1,0 +1,124 @@
+# Data import, export & backup — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/data_io/router.py
+    - **purpose**: Import, export, batch, manifest and tenant export endpoints
+  -
+    - **path**: backend/app/modules/data_io/models.py
+    - **purpose**: ImportJob, ImportBatch, ExportSet, ApprovalRecord, RestoreRequest (only if restore is approved); all with tenant_id and RLS
+  -
+    - **path**: backend/app/modules/data_io/schemas.py
+    - **purpose**: Mapping, dry-run result, row-error and manifest models
+  -
+    - **path**: backend/app/modules/data_io/import_service.py
+    - **purpose**: Parse, validate, dry-run and commit using create or update-by-key through each module's own service; never writes tables directly
+  -
+    - **path**: backend/app/modules/data_io/parsers.py
+    - **purpose**: Excel and CSV parsing with size limits and formula-injection neutralisation
+  -
+    - **path**: backend/app/modules/data_io/tree_import.py
+    - **purpose**: Asset tree parent resolution, code rules, orphan and duplicate tag detection, hierarchy preview
+  -
+    - **path**: backend/app/modules/data_io/batches.py
+    - **purpose**: Batch history and whole-batch rollback, blocked by legal hold
+  -
+    - **path**: backend/app/modules/data_io/export_service.py
+    - **purpose**: Register and tenant export in Excel, CSV and JSON using the registered export contracts, honouring permissions and masking
+  -
+    - **path**: backend/app/modules/data_io/export_registry.py
+    - **purpose**: Registry where modules declare their export contract and schema so new modules join exports automatically
+  -
+    - **path**: backend/app/modules/data_io/manifest.py
+    - **purpose**: Manifest with checksums, per-module documented schema and audit chain verification data
+  -
+    - **path**: backend/app/modules/data_io/tenant_export.py
+    - **purpose**: Step-up MFA, single or dual approval, tenant-key encryption, expiring download links, rate limit and volume anomaly alerts
+  -
+    - **path**: backend/app/modules/data_io/handover_export.py
+    - **purpose**: Asset-subtree data book export reusing the export contract
+  -
+    - **path**: backend/app/modules/data_io/jobs.py
+    - **purpose**: Async import and export jobs
+  -
+    - **path**: backend/app/modules/data_io/module_manifest.py
+    - **purpose**: Registers permissions, events and menu entries
+  -
+    - **path**: backend/app/modules/data_io/tests/
+    - **purpose**: Dry-run parity, rollback, formula injection, RLS, permission masking, legal hold and download expiry tests
+- **change isolation**: New modules join exports by registering a contract and schema, with no change to this module. New file formats or approval policies are changes to parsers or configuration only.
+- **config not code**:
+  - Import size and row limits
+  - Column mapping templates
+  - Code rules for asset tags
+  - Single or dual approval policy per export type
+  - Download expiry and rate limits
+  - Anomaly thresholds
+  - Export formats enabled
+  - Export schema documentation per module
+  - Column and template names via terminology tokens
+- **events consumed**:
+  - tenant.legal_hold.changed
+  - user.deactivated (invalidate pending exports)
+  - module.registered (pick up new export contracts)
+  - term.changed (column headers and templates)
+- **events emitted**:
+  - import.dry_run.completed
+  - import.committed
+  - import.failed
+  - import.batch.rolled_back
+  - export.requested
+  - export.approved
+  - export.ready
+  - export.downloaded
+  - export.expired
+  - export.anomaly.flagged
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/data_io/ImportWizard.tsx
+    - **purpose**: Template, upload, mapping, dry run, errors, commit
+  -
+    - **path**: frontend/src/modules/data_io/TreeImportPreview.tsx
+    - **purpose**: Hierarchy preview with orphans and duplicates flagged
+  -
+    - **path**: frontend/src/modules/data_io/ImportHistory.tsx
+    - **purpose**: History and batch rollback
+  -
+    - **path**: frontend/src/modules/data_io/ExportPage.tsx
+    - **purpose**: Scope picker and format choice
+  -
+    - **path**: frontend/src/modules/data_io/TenantExportRequest.tsx
+    - **purpose**: Request, approval and download with expiry
+  -
+    - **path**: frontend/src/modules/data_io/HandoverExport.tsx
+    - **purpose**: Data book export from an asset subtree
+  -
+    - **path**: frontend/src/modules/data_io/api.ts
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - POST /api/v1/imports (upload) and GET /api/v1/imports/{id}
+  - POST /api/v1/imports/{id}/dry-run and /commit
+  - GET /api/v1/imports/{id}/errors
+  - GET /api/v1/import-templates/{module}
+  - POST /api/v1/import-batches/{id}/rollback
+  - GET /api/v1/import-batches
+  - POST /api/v1/exports (register or scope, format)
+  - GET /api/v1/exports/{id} and download
+  - POST /api/v1/tenant-exports, POST /tenant-exports/{id}/approve, GET download
+  - GET /api/v1/exports/{id}/manifest
+  - GET /api/v1/export-schemas/{module}
+  - POST /api/v1/handover-exports
+- **reuses shared**:
+  - Jobs and queue runner
+  - Policy and authorisation service
+  - Masking and redaction service
+  - Audit trail and hash chain
+  - Rules and validation engine for row validation
+  - Object storage and signed URL service
+  - MFA step-up from identity
+  - Approvals engine for export approval
+  - Terminology dictionary for template and header names
+  - Notification channels for alerts
+  - Each module's own create and update services
+  - Report engine for handover data book rendering

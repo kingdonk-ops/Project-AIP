@@ -1,0 +1,148 @@
+# User-authored playbooks — Data model & schema
+
+
+- **notes**: The module is removed, so these tables belong to the documents module. Controlled procedures should be a documents type or flag plus a Markdown content column on the revision, not a new table. Acknowledgements are append-only. A new revision resets the requirement automatically because acknowledgements are keyed to the revision, with no update needed. Eligibility consumes acknowledgements through a certificate link or direct rule; which task types apply is configuration in required_for_task_types. Whether procedures pass through an approval route before becoming current is undecided; the approvals engine can be attached without schema change. Terminology tokens are resolved at render time, so no data is duplicated per market. Guide and procedure visibility reuse the document project and team scoping.
+- **reuses existing**:
+  - documents
+  - certificates
+  - disciplines
+  - tasks
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: document_revision_id
+        - **notes**: FK to the existing document revisions table
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: acknowledged_at
+        - **type**: timestamptz
+      -
+        - **name**: method
+        - **notes**: in_app | pin | magic_link_portal
+        - **type**: text
+      -
+        - **name**: certificate_id
+        - **notes**: nullable FK certificates; competency evidence link
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (document_revision_id, user_id)
+      - (tenant_id, user_id, acknowledged_at desc)
+      - (tenant_id, document_id)
+    - **name**: document_acknowledgements
+    - **purpose**: Append-only record that a person has read and acknowledged a specific controlled procedure revision; can link to a competency record. Stored in the documents module (no cases module or tables).
+    - **relations**:
+      - documents
+      - document revisions
+      - users
+      - certificates
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable
+        - **type**: uuid
+      -
+        - **name**: document_id
+        - **notes**: FK documents
+        - **type**: uuid
+      -
+        - **name**: audience
+        - **notes**: roles, teams, disciplines, or user ids
+        - **type**: jsonb
+      -
+        - **name**: due_days
+        - **notes**: optional; drives ack_overdue event only if enabled
+        - **type**: int
+      -
+        - **name**: competency_type
+        - **notes**: nullable; certificate type that an acknowledgement evidences
+        - **type**: text
+      -
+        - **name**: required_for_task_types
+        - **notes**: task types where eligibility checks this acknowledgement (open question; config only)
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (document_id) where deleted_at is null
+      - (tenant_id, project_id)
+    - **name**: document_ack_requirements
+    - **purpose**: Configures which procedures require acknowledgement and by whom, so status can show who has and has not acknowledged the current revision.
+    - **relations**:
+      - documents
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: nullable; project override beats tenant default
+        - **type**: uuid
+      -
+        - **name**: screen_key
+        - **notes**: stable route/context key
+        - **type**: text
+      -
+        - **name**: document_id
+        - **notes**: FK documents; Markdown with terminology tokens
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, coalesce(project_id,'00000000-0000-0000-0000-000000000000'), screen_key) where deleted_at is null
+    - **name**: help_guide_mappings
+    - **purpose**: Maps a screen or context key to a guide document so the shell help button opens contextual help.
+    - **relations**:
+      - documents

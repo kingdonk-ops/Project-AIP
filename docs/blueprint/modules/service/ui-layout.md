@@ -1,0 +1,155 @@
+# Service & maintenance — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: service.view; manage with service.manage
+    - **actions**:
+      - Create ticket
+      - Assign
+      - Pause/resume SLA with reason
+      - Convert to work order
+    - **layout**: Register table with SLA countdown column, saved view tabs and filter bar
+    - **name**: Ticket Queue
+    - **purpose**: Triage tickets with SLA countdowns
+    - **route**: /service/tickets
+    - **sections**:
+      - Saved view tabs
+      - Ticket table with priority and SLA clock
+      - Quick-create drawer
+  -
+    - **access**: service.view; edit with service.manage
+    - **actions**:
+      - Pause/resume with reason
+      - Escalate
+      - Close
+    - **layout**: Header with clock, two-column body
+    - **name**: Ticket Detail
+    - **purpose**: Ticket context, SLA clock and pause history
+    - **route**: /service/tickets/:ticketId
+    - **sections**:
+      - Asset and contact
+      - SLA clock and pause intervals
+      - Linked work orders
+      - Activity
+  -
+    - **access**: service.view
+    - **actions**:
+      - Create
+      - Filter
+      - Export
+    - **layout**: Register with subtree filter and source facets
+    - **name**: Work Order Register
+    - **purpose**: List work orders by source, status and asset subtree
+    - **route**: /service/work-orders
+    - **sections**:
+      - Filters
+      - Table
+      - Bulk actions
+  -
+    - **access**: service.view; execute for assigned technicians; sign-off with service.signoff
+    - **actions**:
+      - Assign eligible technician
+      - Complete form
+      - Add labour/material
+      - Sign off
+    - **layout**: Tabbed detail: Overview, Tasks, Labour and Materials, Forms, Sign-off
+    - **name**: Work Order Detail
+    - **purpose**: Execute and sign off work with tasks, labour, materials and forms
+    - **route**: /service/work-orders/:woId
+    - **sections**:
+      - Source finding with photos and recommended repair
+      - Task list
+      - Labour and materials
+      - Embedded form completion
+      - Technician assignment with eligibility check
+      - Sign-off
+  -
+    - **access**: service.view; edit with service.plan
+    - **actions**:
+      - Create schedule
+      - Reschedule
+      - Generate inspection/WO
+    - **layout**: Calendar (month/week) with asset tree filter on left
+    - **name**: PM Calendar
+    - **purpose**: Plan preventive and recurring inspections by asset subtree
+    - **route**: /service/pm
+    - **sections**:
+      - Asset subtree selector
+      - Calendar of due items
+      - Schedule list view
+      - Interval rules panel
+  -
+    - **access**: service.configure
+    - **actions**:
+      - Add/reorder stage
+      - Bind ITP
+      - Publish
+    - **layout**: Ordered stage builder with property panel
+    - **name**: Campaign Template Designer
+    - **purpose**: Define stages, gates and ITP binding
+    - **route**: /service/campaigns/templates/:id
+    - **sections**:
+      - Stage list (strip, inspect, repair, reinsulate, recoat)
+      - Gate rules
+      - ITP binding
+      - Terminology labels
+  -
+    - **access**: service.view
+    - **actions**:
+      - Advance stage
+      - Open ITP
+      - Raise WO
+    - **layout**: Matrix of assets by stage with status cells
+    - **name**: Campaign Progress
+    - **purpose**: Track campaign stage progress per asset
+    - **route**: /service/campaigns/:campaignId
+    - **sections**:
+      - Stage matrix
+      - Gate status
+      - Blockers
+  -
+    - **access**: Asset view permission within scope
+    - **actions**:
+      - Filter
+      - Open source record
+      - Export
+    - **layout**: Vertical timeline with module filters and baseline pinned
+    - **name**: Asset History Timeline
+    - **purpose**: Merged construction, handover baseline, inspection and work order history
+    - **route**: /assets/:assetId/history
+    - **sections**:
+      - Baseline card
+      - Timeline events
+      - Filters
+  -
+    - **access**: service.configure
+    - **actions**:
+      - Create/edit contract
+      - Set SLA
+      - Configure thresholds
+    - **layout**: Register plus form with SLA target table
+    - **name**: Service Contracts and SLA Setup
+    - **purpose**: Manage contracts, scope and SLA targets, pause reasons and thresholds
+    - **route**: /service/contracts
+    - **sections**:
+      - Contract list
+      - Terms and scope
+      - SLA targets
+      - Pause reason list
+      - Auto-WO severity threshold
+  -
+    - **access**: Assigned technicians; offline support pending open decision
+    - **actions**:
+      - Complete task
+      - Capture photo
+      - Submit
+    - **layout**: Single-column stepper with sticky footer
+    - **name**: Mobile Work Order
+    - **purpose**: Field execution of work orders
+    - **route**: /m/service/work-orders/:woId
+    - **sections**:
+      - Tasks
+      - Photos
+      - Form
+      - Sign-off

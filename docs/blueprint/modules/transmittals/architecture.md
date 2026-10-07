@@ -1,0 +1,124 @@
+# Transmittals & correspondence — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: modules/transmittals/router.py
+    - **purpose**: Routes for transmittals, correspondence, notices, imports, clauses
+  -
+    - **path**: modules/transmittals/service.py
+    - **purpose**: Compose, issue (lock versions), reissue/supersede, acknowledge, chase
+  -
+    - **path**: modules/transmittals/models.py
+    - **purpose**: Transmittal, Line, Recipient, Acknowledgement, CorrespondenceItem, CrossRef, ClauseEntry, ExternalImport
+  -
+    - **path**: modules/transmittals/schemas.py
+    - **purpose**: Pydantic models
+  -
+    - **path**: modules/transmittals/numbering.py
+    - **purpose**: Numbering pattern generator from tenant config
+  -
+    - **path**: modules/transmittals/cover.py
+    - **purpose**: Requests transmittal cover PDF with per-file SHA-256 from the report engine
+  -
+    - **path**: modules/transmittals/notices.py
+    - **purpose**: Contract notice clock: time bars, tasks, warnings
+  -
+    - **path**: modules/transmittals/import_external.py
+    - **purpose**: CSV/forwarded email import as read-only records
+  -
+    - **path**: modules/transmittals/portal.py
+    - **purpose**: Recipient confirmation endpoints for external portal links
+  -
+    - **path**: modules/transmittals/subscribers.py
+    - **purpose**: Handles inbound.email_received, document events, overdue timers
+  -
+    - **path**: modules/transmittals/migrations/
+    - **purpose**: Alembic migrations, RLS, immutability triggers on issued records
+  -
+    - **path**: modules/transmittals/tests/
+    - **purpose**: Immutability, time bar, restriction and tenant tests
+  -
+    - **path**: modules/transmittals/module.yaml
+    - **purpose**: Manifest
+- **change isolation**: Issuing logic and immutability are confined to service.py and DB triggers, while capture, PDF and portal access go through shared services. New notice types or reason codes are configuration rows.
+- **config not code**:
+  - Numbering patterns
+  - Reason codes and statuses
+  - Distribution groups
+  - Contract clause library and time bars
+  - Notice and letter templates with merge fields
+  - Chaser intervals
+  - Commercial restriction rules
+  - Import column mappings
+- **events consumed**:
+  - inbound.email_received
+  - document.version_added
+  - contact.updated
+  - task.completed
+  - project.archived
+- **events emitted**:
+  - transmittal.issued
+  - transmittal.acknowledged
+  - transmittal.overdue
+  - transmittal.superseded
+  - correspondence.received
+  - notice.due
+- **frontend files**:
+  -
+    - **path**: features/transmittals/pages/TransmittalRegister.tsx
+    - **purpose**: Register
+  -
+    - **path**: features/transmittals/pages/ComposeWizard.tsx
+    - **purpose**: Files, recipients, purpose
+  -
+    - **path**: features/transmittals/pages/TransmittalDetail.tsx
+    - **purpose**: Acknowledgement tracker and supersede chain
+  -
+    - **path**: features/transmittals/pages/CorrespondenceRegister.tsx
+    - **purpose**: Filters and threads
+  -
+    - **path**: features/transmittals/pages/CorrespondenceDetail.tsx
+    - **purpose**: Thread and links
+  -
+    - **path**: features/transmittals/pages/NoticeTracker.tsx
+    - **purpose**: Due notices
+  -
+    - **path**: features/transmittals/pages/ClauseAdmin.tsx
+    - **purpose**: Clause library and templates
+  -
+    - **path**: features/transmittals/pages/ExternalImport.tsx
+    - **purpose**: Import wizard
+  -
+    - **path**: features/transmittals/components/DocumentPicker.tsx
+    - **purpose**: Revision-locking picker
+  -
+    - **path**: features/transmittals/components/RecipientView.tsx
+    - **purpose**: Portal acknowledge/respond
+  -
+    - **path**: features/transmittals/api.ts
+    - **purpose**: Generated client and hooks
+- **public api**:
+  - POST /transmittals and POST /transmittals/{id}/issue
+  - POST /transmittals/{id}/reissue
+  - POST /transmittals/{id}/acknowledge
+  - POST /transmittals/{id}/respond
+  - GET /transmittals?asset_id&status
+  - GET /transmittals/{id}/proof
+  - CRUD /correspondence and POST /correspondence/{id}/flag-notice
+  - POST /correspondence/{id}/assign-response
+  - GET /notices/due
+  - CRUD /clauses and /notice-templates
+  - POST /transmittals/import
+- **reuses shared**:
+  - Document library (version locking)
+  - Contacts and companies
+  - Report engine (cover PDF)
+  - Inbound capture connectors
+  - Tasks engine
+  - Notifications and reminders
+  - Client and subcontractor portal (magic link access)
+  - Permission/policy service (commercial restriction)
+  - Audit trail
+  - Terminology dictionary
+  - Search index service

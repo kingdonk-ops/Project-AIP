@@ -1,0 +1,122 @@
+# Traceability graph: components, materials & certificates — Architecture & code structure
+
+
+- **backend files**:
+  -
+    - **path**: backend/app/modules/components/models.py
+    - **purpose**: EntityLink (typed edge with validity snapshot columns), MaterialPassport, MaterialUsage, AcceptanceCriteria, InspectionRequest, QuarantineAction
+  -
+    - **path**: backend/app/modules/components/schemas.py
+    - **purpose**: Pydantic models for passports, graph and impact reports
+  -
+    - **path**: backend/app/modules/components/router.py
+    - **purpose**: Passport, usage, graph, quarantine, weld map and evidence pack endpoints
+  -
+    - **path**: backend/app/modules/components/links.py
+    - **purpose**: Create typed links from reference fields, freezing validity snapshots at time of use
+  -
+    - **path**: backend/app/modules/components/graph.py
+    - **purpose**: Forward and backward genealogy by recursive CTE with depth and type filters, permission-aware
+  -
+    - **path**: backend/app/modules/components/passports.py
+    - **purpose**: Material passport lifecycle for EN 10204, CE/UKCA, heat and batch
+  -
+    - **path**: backend/app/modules/components/cert_extraction.py
+    - **purpose**: Orchestrates OCR extraction via ingestion/uploads, then human review and heat and grade cross-check
+  -
+    - **path**: backend/app/modules/components/quarantine.py
+    - **purpose**: Batch or instrument quarantine, impact listing, NCR raising
+  -
+    - **path**: backend/app/modules/components/weld_map.py
+    - **purpose**: Joint register query with welder, WPS, batch, NDT and repair metrics
+  -
+    - **path**: backend/app/modules/components/analytics.py
+    - **purpose**: Welder, WPS and batch repair-rate queries for reporting
+  -
+    - **path**: backend/app/modules/components/evidence_pack.py
+    - **purpose**: Request a bookmarked PDF/ZIP with hash manifest from report engine and signing
+  -
+    - **path**: backend/app/modules/components/events.py
+    - **purpose**: Event payloads and handlers
+  -
+    - **path**: backend/migrations/versions/xxxx_components.py
+    - **purpose**: Schema, link indexes, RLS; link table design to be confirmed against per-relationship FKs
+  -
+    - **path**: backend/tests/modules/components/
+    - **purpose**: Genealogy, snapshot immutability and quarantine impact tests
+- **change isolation**: New link types or certificate kinds are configuration rows. The link-table versus explicit-FK decision stays hidden behind links.py and graph.py so callers do not change.
+- **config not code**:
+  - link types and allowed source-target pairs
+  - certificate types and required fields
+  - acceptance criteria templates
+  - quarantine reasons
+  - weld map columns
+  - NDT percentage rules
+  - evidence pack contents
+- **events consumed**:
+  - inspection.approved or rejected
+  - scope_task.completed (link component, welder, WPS, consumables)
+  - eligibility.validity_evaluated (snapshot source)
+  - stock.issued
+  - document.published (certificate files)
+  - upload.released (OCR trigger)
+  - asset.merged (re-point links)
+  - procurement.delivery_received
+- **events emitted**:
+  - link.created
+  - material_passport.created or verified
+  - material.used
+  - batch.quarantined
+  - instrument.quarantined
+  - ncr.requested_from_quarantine
+  - evidence_pack.requested
+  - inspection_request.created
+- **frontend files**:
+  -
+    - **path**: frontend/src/modules/components/pages/PassportSearch.tsx
+    - **purpose**: Search-first material and certificate passports
+  -
+    - **path**: frontend/src/modules/components/pages/PassportDetail.tsx
+    - **purpose**: Passport with graph and certificate viewer
+  -
+    - **path**: frontend/src/modules/components/TraceabilityTab.tsx
+    - **purpose**: Reusable tab mounted on any record
+  -
+    - **path**: frontend/src/modules/components/GraphView.tsx
+    - **purpose**: Graph visualisation with type and depth filters
+  -
+    - **path**: frontend/src/modules/components/pages/WeldMap.tsx
+    - **purpose**: Joint register, tabular and drawing-based
+  -
+    - **path**: frontend/src/modules/components/pages/InspectionRequests.tsx
+    - **purpose**: Request queue
+  -
+    - **path**: frontend/src/modules/components/pages/QuarantineImpact.tsx
+    - **purpose**: Impact report and action
+  -
+    - **path**: frontend/src/modules/components/pages/CertReview.tsx
+    - **purpose**: OCR extraction human review
+  -
+    - **path**: frontend/src/modules/components/api.ts
+    - **purpose**: Generated client wrappers
+- **public api**:
+  - GET /traceability/{type}/{id}?direction=&depth=&types=
+  - GET/POST /material-passports
+  - POST /material-usage
+  - GET /search/chain?heat=&welder=&serial= (via search module)
+  - POST /quarantine (batch, rod batch or instrument) and GET /quarantine/{id}/impact
+  - GET /weld-map?asset=
+  - GET/POST /inspection-requests
+  - POST /material-passports/{id}/extract and /review
+  - POST /traceability/evidence-pack
+  - Python service: record_link(source, target, type, validity)
+- **reuses shared**:
+  - eligibility gate for validity at time of use
+  - uploads and OCR pipeline
+  - report engine and signing for evidence packs
+  - search index
+  - issues module for NCRs
+  - central policy service
+  - audit trail
+  - rules engine for cross-check
+  - item-type reference fields

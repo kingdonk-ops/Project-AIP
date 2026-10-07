@@ -1,0 +1,37 @@
+# Dashboards & KPI reporting — Feature scout
+
+
+- **abilities seen in market**:
+  - Configurable dashboards with drag and resize widgets, per-widget filters and drill-through
+  - KPI snapshots stored over time for trend lines and period comparisons
+  - Heatmaps and status rollups by asset hierarchy or area
+  - Scheduled report distribution as PDF or Excel with recipients and run history
+  - Report templates with parameters, preview and branded layouts
+  - Row-level security applied to every aggregate so counts never leak
+  - Embedded analytics or BI connectors via governed datasets
+  - Threshold alerts when a KPI crosses a limit
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Nightly KPI snapshot table with trend charts
+    - **why**: Live counts cannot show whether the QA backlog or CUI findings are improving. Snapshots enable week-on-week trends and client progress reporting.
+  -
+    - **effort**: M
+    - **feature**: CUI and NDT finding analytics by asset, coating or insulation system, severity and area
+    - **why**: General construction reporting is weak here. Remediation clients want to see findings, repairs and residual risk across the asset tree.
+  -
+    - **effort**: M
+    - **feature**: Handover readiness score per asset subtree
+    - **why**: Combines ITP completion, open NCRs, certificates and documents into one measure that EPC teams use to chase closeout.
+  -
+    - **effort**: M
+    - **feature**: Report templates with immutable generated outputs and content hash
+    - **why**: Issued reports become evidence. Hashing and storing them in documents supports disputes and audits and ties into signing.
+  -
+    - **effort**: S
+    - **feature**: Threshold alerts and subscription digests per role
+    - **why**: Pushes issues like expiring certificates or overdue hold points to the right person without them opening a dashboard.
+  -
+    - **effort**: S
+    - **feature**: Read-model parity tests proving dashboards equal register counts under each role
+    - **why**: Prevents permission leaks and mismatches between a tile count and the drilled-into list, which erode trust quickly.

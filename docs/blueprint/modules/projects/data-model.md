@@ -1,0 +1,584 @@
+# Projects, sites & classification — Data model & schema
+
+
+- **notes**: Tenant defaults with project overrides is the recommended settings split; project_settings holds only overrides. Projects serve as campaigns for now (no separate work-pack table); add a nullable parent_project_id later if needed. Every other module's tables carry project_id referencing projects. Waivers of closeout checks should also write to the audit module.
+- **reuses existing**:
+  - assets
+  - documents
+  - certificates
+  - issues
+  - inspections
+- **tables**:
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS, FORCE ROW LEVEL SECURITY
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: code
+        - **notes**: unique per tenant
+        - **type**: text
+      -
+        - **name**: location
+        - **notes**: Point, 4326
+        - **type**: geography
+      -
+        - **name**: timezone
+        - **notes**: IANA name
+        - **type**: text
+      -
+        - **name**: is_system
+        - **notes**: hidden system site
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **notes**: soft delete
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+      - gist (location)
+    - **name**: sites
+    - **purpose**: Physical sites under a tenant, with GPS; one hidden system site per project for the hierarchy.
+    - **relations**:
+      - projects.site_id -> sites.id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: code
+        - **notes**: e.g. L592, ICHTHYS-KIPS; unique per tenant
+        - **type**: text
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: client_company_id
+        - **notes**: FK contacts companies module
+        - **type**: uuid
+      -
+        - **name**: site_id
+        - **notes**: FK sites
+        - **type**: uuid
+      -
+        - **name**: classification_id
+        - **notes**: FK work_type_classifications, nullable
+        - **type**: uuid
+      -
+        - **name**: template_id
+        - **notes**: FK project_templates, nullable
+        - **type**: uuid
+      -
+        - **name**: region
+        - **notes**: AU/NZ/UK/Asia preset key
+        - **type**: text
+      -
+        - **name**: timezone
+        - **notes**: overrides tenant default
+        - **type**: text
+      -
+        - **name**: currency
+        - **notes**: ISO 4217
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: draft/active/closing/archived
+        - **type**: text
+      -
+        - **name**: closed_at
+        - **notes**: set when archive gate passes
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **notes**: offline-edited
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, code) where deleted_at is null
+      - (tenant_id, status)
+      - (tenant_id, client_company_id)
+    - **name**: projects
+    - **purpose**: Scoped campaign of work referencing assets many-to-many.
+    - **relations**:
+      - sites
+      - work_type_classifications
+      - project_templates
+      - contacts companies
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **notes**: unique FK
+        - **type**: uuid
+      -
+        - **name**: units
+        - **notes**: unit system overrides
+        - **type**: jsonb
+      -
+        - **name**: calendar
+        - **notes**: working days, holidays
+        - **type**: jsonb
+      -
+        - **name**: retention_overrides
+        - **notes**: must not go below legal hold
+        - **type**: jsonb
+      -
+        - **name**: enabled_modules
+        - **notes**: array of module keys
+        - **type**: jsonb
+      -
+        - **name**: terminology_overrides
+        - **notes**: term key -> label, layered over tenant terms
+        - **type**: jsonb
+      -
+        - **name**: validation_rule_set_ids
+        - **notes**: array of rule set uuids
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (project_id)
+    - **name**: project_settings
+    - **purpose**: Per-project overrides of tenant defaults (resolve tenant default then override).
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: record_type
+        - **notes**: inspection, ncr, rfi, etc.
+        - **type**: text
+      -
+        - **name**: prefix
+        - **type**: text
+      -
+        - **name**: pattern
+        - **notes**: e.g. {prefix}-{seq:05}
+        - **type**: text
+      -
+        - **name**: next_seq
+        - **notes**: increment atomically (UPDATE ... RETURNING)
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (project_id, record_type)
+    - **name**: project_numbering_schemes
+    - **purpose**: Per-project record numbering with client prefixes.
+    - **relations**:
+      - projects
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **notes**: FK assets
+        - **type**: uuid
+      -
+        - **name**: include_subtree
+        - **notes**: scope covers descendants via ltree
+        - **type**: boolean
+      -
+        - **name**: baseline_status
+        - **notes**: baseline/added/removed
+        - **type**: text
+      -
+        - **name**: baselined_at
+        - **notes**: nullable until baseline frozen
+        - **type**: timestamptz
+      -
+        - **name**: sync_version
+        - **type**: int
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (project_id, asset_id) where deleted_at is null
+      - (tenant_id, asset_id)
+    - **name**: project_assets
+    - **purpose**: Scope baseline: current many-to-many link of assets to projects.
+    - **relations**:
+      - projects
+      - assets
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: asset_id
+        - **type**: uuid
+      -
+        - **name**: change_type
+        - **notes**: added/removed/subtree_changed
+        - **type**: text
+      -
+        - **name**: reason
+        - **type**: text
+      -
+        - **name**: change_order_id
+        - **notes**: FK change module, nullable
+        - **type**: uuid
+      -
+        - **name**: actor_user_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **notes**: no updated_at, no deletes
+        - **type**: timestamptz
+    - **indexes**:
+      - (project_id, created_at)
+      - (asset_id)
+    - **name**: project_asset_changes
+    - **purpose**: Append-only scope-change history for baseline vs current and variations.
+    - **relations**:
+      - projects
+      - assets
+      - change orders
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: user_id
+        - **notes**: FK users
+        - **type**: uuid
+      -
+        - **name**: role_id
+        - **notes**: FK roles (access module)
+        - **type**: uuid
+      -
+        - **name**: team_id
+        - **notes**: nullable FK teams
+        - **type**: uuid
+      -
+        - **name**: starts_on
+        - **type**: date
+      -
+        - **name**: ends_on
+        - **type**: date
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (project_id, user_id, role_id) where deleted_at is null
+      - (tenant_id, user_id)
+    - **name**: project_members
+    - **purpose**: Project-scoped membership and roles.
+    - **relations**:
+      - projects
+      - users
+      - roles
+      - teams
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: company_id
+        - **notes**: FK contacts companies
+        - **type**: uuid
+      -
+        - **name**: contact_id
+        - **notes**: nullable FK contacts
+        - **type**: uuid
+      -
+        - **name**: party_role
+        - **notes**: client/principal_contractor/subcontractor/third_party_inspector
+        - **type**: text
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (project_id, party_role)
+      - (tenant_id, company_id)
+    - **name**: project_participants
+    - **purpose**: Participant directory with party role driving portal grants, visibility and routing.
+    - **relations**:
+      - projects
+      - contacts
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: key
+        - **notes**: stable key; label via terms
+        - **type**: text
+      -
+        - **name**: route_definition
+        - **notes**: classifier questions and routing
+        - **type**: jsonb
+      -
+        - **name**: requirement_bundle
+        - **notes**: approvals, ITP template ids, document types, workflow ids
+        - **type**: jsonb
+      -
+        - **name**: version
+        - **type**: int
+      -
+        - **name**: is_active
+        - **type**: boolean
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (tenant_id, key) where deleted_at is null
+    - **name**: work_type_classifications
+    - **purpose**: Tenant-configured work types with route definition and requirement bundle.
+    - **relations**:
+      - projects.classification_id
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: from_classification_id
+        - **type**: uuid
+      -
+        - **name**: to_classification_id
+        - **type**: uuid
+      -
+        - **name**: classifier_values
+        - **type**: jsonb
+      -
+        - **name**: impact_preview
+        - **notes**: added/removed requirements
+        - **type**: jsonb
+      -
+        - **name**: actor_user_id
+        - **type**: uuid
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (project_id, created_at)
+    - **name**: project_classification_events
+    - **purpose**: Append-only record of classification changes, impact previews and recalculations.
+    - **relations**:
+      - projects
+      - work_type_classifications
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: name
+        - **type**: text
+      -
+        - **name**: classification_id
+        - **notes**: FK
+        - **type**: uuid
+      -
+        - **name**: itp_template_ids
+        - **notes**: array
+        - **type**: jsonb
+      -
+        - **name**: form_template_ids
+        - **notes**: array
+        - **type**: jsonb
+      -
+        - **name**: roles
+        - **notes**: default membership roles
+        - **type**: jsonb
+      -
+        - **name**: approval_chains
+        - **notes**: array of route ids
+        - **type**: jsonb
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+      -
+        - **name**: deleted_at
+        - **type**: timestamptz
+    - **indexes**:
+      - (tenant_id, classification_id)
+    - **name**: project_templates
+    - **purpose**: Project/campaign templates by work type.
+    - **relations**:
+      - work_type_classifications
+  -
+    - **fields**:
+      -
+        - **name**: id
+        - **notes**: PK
+        - **type**: uuid
+      -
+        - **name**: tenant_id
+        - **notes**: RLS
+        - **type**: uuid
+      -
+        - **name**: project_id
+        - **type**: uuid
+      -
+        - **name**: check_key
+        - **notes**: e.g. open_holds, open_ncrs, expiring_certs
+        - **type**: text
+      -
+        - **name**: status
+        - **notes**: open/passed/waived
+        - **type**: text
+      -
+        - **name**: open_count
+        - **type**: int
+      -
+        - **name**: waived_by
+        - **notes**: user
+        - **type**: uuid
+      -
+        - **name**: waiver_reason
+        - **type**: text
+      -
+        - **name**: evaluated_at
+        - **type**: timestamptz
+      -
+        - **name**: created_at
+        - **type**: timestamptz
+      -
+        - **name**: updated_at
+        - **type**: timestamptz
+    - **indexes**:
+      - unique (project_id, check_key)
+    - **name**: project_closeout_items
+    - **purpose**: Closeout checklist instances generated from checks registered by other modules; gates archive.
+    - **relations**:
+      - projects

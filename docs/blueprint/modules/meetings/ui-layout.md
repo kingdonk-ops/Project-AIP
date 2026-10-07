@@ -1,0 +1,105 @@
+# Meetings & AI minutes — Page & layout designer
+
+
+- **pages**:
+  -
+    - **access**: meetings.view; create needs meetings.create
+    - **actions**:
+      - Create meeting
+      - Create series
+      - Use agenda template
+      - Open
+    - **layout**: List with a calendar toggle and filters.
+    - **name**: Meeting list and planner
+    - **purpose**: Plan and find meetings, including recurring series.
+    - **route**: /meetings
+    - **sections**:
+      - Upcoming and past meetings
+      - Series
+      - Filters by type, project and package
+  -
+    - **access**: Attendees can read; chair and secretary edit; recording needs tenant opt-in
+    - **actions**:
+      - Add agenda item
+      - Pull open items
+      - Record or upload audio
+      - Request draft
+      - Publish minutes
+      - Create tasks from actions
+    - **layout**: Tabbed page with a status header and WorkflowBar.
+    - **name**: Meeting detail
+    - **purpose**: Manage agenda, attendees, recording, minutes and actions in one place.
+    - **route**: /meetings/:id
+    - **sections**:
+      - Agenda items with linked RFIs, interfaces and NCRs
+      - Attendees, apologies and consent state
+      - Recording and upload
+      - AI-drafted minutes
+      - Decisions
+      - Actions and carried-forward items
+      - Distribution and acknowledgement
+  -
+    - **access**: Chair or secretary; blocked or paused if an attendee declines consent
+    - **actions**:
+      - Record
+      - Pause
+      - Stop
+      - Dictate
+      - Tag agenda item
+    - **layout**: Full-screen mobile-first view with a consent gate, a large record control and a notes pane.
+    - **name**: Live capture
+    - **purpose**: Record audio and take quick notes during the meeting, including offline.
+    - **route**: /meetings/:id/capture
+    - **sections**:
+      - Consent notice and per-attendee state
+      - Recorder with level meter
+      - Quick notes tied to agenda items
+      - Upload status
+  -
+    - **access**: Chair and delegate; nothing is published without confirmation
+    - **actions**:
+      - Accept or edit item
+      - Play source segment
+      - Link asset
+      - Correct attendee contribution
+      - Publish and sign
+    - **layout**: Split view: transcript with highlights on one side, editable minutes with suggested decisions and actions on the other.
+    - **name**: Minutes review editor
+    - **purpose**: Let the chair verify the AI draft against the transcript before publishing.
+    - **route**: /meetings/:id/minutes/review
+    - **sections**:
+      - Transcript with audio playback
+      - Suggested decisions and actions with source highlights
+      - Asset, NCR and RFI link suggestions
+      - AI-draft banner
+  -
+    - **access**: Presenter; attendees via scoped PIN or QR credentials limited to this meeting
+    - **actions**:
+      - Sign on
+      - Add non-user attendee
+      - Close and sign record
+    - **layout**: Kiosk-style mobile screen with a QR display and a PIN pad, then a signed attendance summary.
+    - **name**: Toolbox-talk sign-on
+    - **purpose**: Quick attendance sign-on by PIN or QR, offline-capable.
+    - **route**: /meetings/toolbox/:id
+    - **sections**:
+      - Talk summary
+      - Sign-on entry
+      - Attendee list
+  -
+    - **access**: Tenant admin and AI governance owner
+    - **actions**:
+      - Enable or disable recording
+      - Edit templates
+      - Edit hints
+      - Set retention
+    - **layout**: Settings tabs.
+    - **name**: Meeting settings
+    - **purpose**: Configure agenda templates, vocabulary hints, retention and provider.
+    - **route**: /admin/meetings
+    - **sections**:
+      - Recording opt-in
+      - Provider and region
+      - Agenda templates
+      - Vocabulary hints per project
+      - Audio retention and legal hold

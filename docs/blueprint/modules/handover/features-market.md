@@ -1,0 +1,37 @@
+# Handover, data books & submissions — Feature scout
+
+
+- **abilities seen in market**:
+  - Closeout checklists with live status from inspections, punch and documents
+  - Automated data book (MDR) compilation with indexes and bookmarks
+  - Per-system or per-asset handover packs with completeness scoring
+  - Configurable submission templates and field mappings
+  - Immutable issued packs with revision history
+  - Client review cycle with comments and resubmission
+  - Asset register export for client EAM import
+  - Retention and warranty milestones triggered by acceptance
+- **suggestions**:
+  -
+    - **effort**: M
+    - **feature**: Completeness engine: compare required ITP and document list per asset class against actual signed records and show gaps by subtree
+    - **why**: Reveals missing evidence early rather than at the closeout crunch.
+  -
+    - **effort**: L
+    - **feature**: Data book auto-assembly from asset tree with hyperlinked index, certificates, weld maps, NDT reports and coating records
+    - **why**: Directly delivers AIP's ITP/MDR goal and removes weeks of manual compilation.
+  -
+    - **effort**: M
+    - **feature**: Client-specific MDR structure templates (folder numbering, doc codes, naming rules) as configuration
+    - **why**: Each client mandates its own data book format; configuration enables new customers quickly.
+  -
+    - **effort**: M
+    - **feature**: Asset register handover export mapped to client EAM import formats (CSV/Excel templates with field mapping)
+    - **why**: Lets the client load inspected assets and baseline condition data into their maintenance system.
+  -
+    - **effort**: S
+    - **feature**: Baseline condition snapshot per asset at handover (wall loss, coating condition, CUI findings) carried into service
+    - **why**: Gives the first reference point for future inspection intervals and trend analysis.
+  -
+    - **effort**: M
+    - **feature**: Resubmission tracking with diff of changed documents between pack revisions
+    - **why**: Speeds client review cycles and shows what changed.

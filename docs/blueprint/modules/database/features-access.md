@@ -1,0 +1,221 @@
+# Database & schema conventions — Feature filler
+
+
+- **detail sections**:
+  - Table definition and columns
+  - Conventions applied (mixins)
+  - RLS policy and grants
+  - Indexes
+  - Sync and concurrency behaviour
+  - History and as-at support
+  - Retention and legal hold
+  - ERD context
+- **notifications**:
+  - Convention check failed in CI (developers)
+  - Partition creation failing (platform admin)
+  - Legal hold placed or released (project admins)
+  - Record purge scheduled (admin)
+  - Concurrency conflict resolved (user, in-app dialog)
+- **settings**:
+  - Soft-delete retention days
+  - Recycle bin purge schedule
+  - Partition interval per table
+  - Hot-attribute approval required
+  - Slow-query threshold
+  - Database roles and grants reference (read-only)
+- **tables**:
+  -
+    - **bulk actions**:
+      - Export coverage report
+      - Re-run checks
+    - **columns**:
+      - Table
+      - Bounded context
+      - tenant_id
+      - RLS enabled
+      - FORCE RLS
+      - Required indexes
+      - Append-only grants
+      - Sync columns
+      - Last checked
+    - **empty state**: No coverage report yet. It is produced by the CI job.
+    - **filters**:
+      - Context
+      - Failing a check
+      - Append-only
+      - Partitioned
+    - **name**: Table convention coverage
+    - **row actions**:
+      - View policy
+      - View indexes
+      - View exceptions
+    - **search**: Table name
+    - **sort**:
+      - Table
+      - Failing checks (desc)
+  -
+    - **bulk actions**:
+      - Restore selected
+      - Permanently delete selected (blocked under hold)
+    - **columns**:
+      - Record type
+      - Record ref
+      - Asset
+      - Project
+      - Deleted by
+      - Deleted at
+      - Legal hold
+      - Purge date
+    - **empty state**: The recycle bin is empty. Deleted records are kept here until purged.
+    - **filters**:
+      - Record type
+      - Project
+      - Deleted by
+      - Legal hold
+      - Date range
+    - **name**: Recycle bin
+    - **row actions**:
+      - Restore
+      - View
+      - Purge
+    - **search**: Record reference, name
+    - **sort**:
+      - Deleted at
+      - Record type
+      - Purge date
+  -
+    - **bulk actions**:
+      - Release selected
+    - **columns**:
+      - Hold ID
+      - Scope level (record/asset/project)
+      - Target
+      - Reason
+      - Placed by
+      - Placed
+      - Released
+      - Status
+    - **create form**:
+      -
+        - **field**: Scope level
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Target record, asset or project
+        - **required**: true
+        - **type**: picker
+      -
+        - **field**: Reason
+        - **required**: true
+        - **type**: textarea
+      -
+        - **field**: Matter reference
+        - **required**: false
+        - **type**: text
+    - **empty state**: No legal holds in place.
+    - **filters**:
+      - Scope level
+      - Status
+      - Placed by
+    - **name**: Legal holds
+    - **row actions**:
+      - View affected records
+      - Release
+      - Edit reason
+    - **search**: Reason, target name
+    - **sort**:
+      - Placed
+      - Status
+  -
+    - **bulk actions**:
+      - Approve selected
+      - Remove selected
+    - **columns**:
+      - Item type
+      - Attribute
+      - Data type
+      - Index type
+      - Status
+      - Requested by
+    - **create form**:
+      -
+        - **field**: Item type
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Attribute
+        - **required**: true
+        - **type**: select
+      -
+        - **field**: Index type (generated column/expression index)
+        - **required**: true
+        - **type**: select
+    - **empty state**: No attributes promoted. All attribute filters use the JSONB index.
+    - **filters**:
+      - Status
+      - Item type
+      - Index type
+    - **name**: Hot attributes
+    - **row actions**:
+      - Promote
+      - Demote
+      - View query plan
+    - **search**: Attribute, item type
+    - **sort**:
+      - Item type
+      - Status
+  -
+    - **columns**:
+      - Revision
+      - Description
+      - Applied
+      - Up-down-up test
+      - Expand/contract phase
+      - Author
+    - **empty state**: No migrations recorded.
+    - **filters**:
+      - Phase
+      - Test result
+    - **name**: Migrations
+    - **row actions**:
+      - View SQL
+      - View CI run
+    - **search**: Revision, description
+    - **sort**:
+      - Applied (desc)
+  -
+    - **bulk actions**:
+      - Create next partitions
+    - **columns**:
+      - Table
+      - Strategy
+      - Partitions
+      - Oldest
+      - Newest
+      - Size
+      - Next to create
+    - **empty state**: No partitioned tables configured.
+    - **filters**:
+      - Table
+      - Needs attention
+    - **name**: Partition manager
+    - **row actions**:
+      - View partitions
+      - Detach (blocked for evidence)
+      - Create partition
+    - **search**: Table name
+    - **sort**:
+      - Size (desc)
+      - Table
+- **walkthrough**:
+  - Developer writes a migration from the standard new-table template.
+  - CI runs the convention check for tenant_id, RLS, FORCE RLS, indexes and grants.
+  - CI runs the migration up-down-up test and the cross-tenant IDOR suite on Testcontainers.
+  - The RLS coverage report is saved as an artefact.
+  - Migrator applies the migration; the app role connects as non-owner without BYPASSRLS.
+  - Each request sets app.tenant_id with SET LOCAL and fails closed if unset.
+  - Admin soft-deletes a record and it appears in the recycle bin.
+  - Admin places a legal hold on a project; purge actions are blocked.
+  - Admin restores a deleted record from the bin.
+  - Admin flags a JSONB attribute as hot and the index is created.
+  - User opens an asset in as-at mode to view its past state.
