@@ -33,7 +33,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [ARCH-04](tasks/ARCH-04.md) | Request context carrying tenant, project, actor and asset scope | arch | S | ARCH-01 | done | PR #7 |
 | [STACK-02](tasks/STACK-02.md) | Capability interfaces and adapter selection | stack | M | ARCH-01 | done | PR #12 |
 | [STACK-04](tasks/STACK-04.md) | Licence allow-list and CycloneDX SBOM in CI | stack | S | ARCH-01 | done | PR #14 |
-| [STACK-05](tasks/STACK-05.md) | Platform version endpoint and docker-compose stack | stack | M | STACK-02 | todo | |
+| [STACK-05](tasks/STACK-05.md) | Platform version endpoint and docker-compose stack | stack | M | STACK-02 | review | branch claude/p0-stack-05 (PR pending) |
 | [OPS-04](tasks/OPS-04.md) | Health endpoints and structured logging with PII scrubber | ops | S | ARCH-01 | done | PR #15 |
 | [IDENTITY-01](tasks/IDENTITY-01.md) | Keycloak dev realm in compose + OIDC broker login + login_directory | identity | M | ARCH-01, STACK-05 | todo |  |
 | [DESIGN-01](tasks/DESIGN-01.md) | Design tokens, ui package (Radix/shadcn), axe lint | design | M | ARCH-01 | blocked | branch claude/p0-design-01; the config-protection hook blocks writing packages/ui/eslint.config.mjs (owner action, see OPEN-QUESTIONS) |

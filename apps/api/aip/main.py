@@ -13,7 +13,8 @@ principal and project membership; the default resolvers deny everyone.
 Observability (OPS-04): ``RequestIdMiddleware`` is the outermost middleware (request id, JSON
 request log line); logs are JSON on stdout with the PII scrubber; OpenTelemetry tracing starts when
 ``OTEL_EXPORTER_OTLP_ENDPOINT`` is set. ``/api/v1/health/live`` and ``/api/v1/health/ready`` come
-from ``aip.modules.ops.health`` and are mounted here, outside the module registry.
+from ``aip.modules.ops.health`` and are mounted here, outside the module registry, as is
+``/api/v1/platform/version`` (STACK-05, ``aip.platform.version``).
 """
 
 import os
@@ -40,6 +41,7 @@ from aip.platform.modules.registry import load_modules
 from aip.platform.modules.routes import create_router as create_modules_router
 from aip.platform.observability.logging import RequestIdMiddleware, configure_logging
 from aip.platform.observability.otel import init_tracing
+from aip.platform.version import router as version_router
 
 
 class HealthResponse(BaseModel):
@@ -83,6 +85,8 @@ def create_app(
 
     # OPS-04 probes, mounted outside the module registry so AIP_DISABLED_MODULES cannot drop them.
     v1.include_router(health_router)
+    # STACK-05: build, commit and dependency versions (also outside the registry).
+    v1.include_router(version_router)
 
     if env == "test":
         # ARCH-04: test-only echo of the request context. Never mounted outside AIP_ENV=test.
