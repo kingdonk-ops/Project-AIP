@@ -164,9 +164,9 @@ def main(src):
             r"### ([A-Z]+-\d+) (.*) \((.*), (XS|S|M|L|XL)\)", thead).groups()
         mid = name_to_id.get(mname, slug(mname))
         body = "\n".join(tbody).strip()
-        deps = re.findall(r"^  - ([A-Z_]+-\d+)$", body.split("- **files**")[0], re.M)
+        deps = re.findall(r"^  - ([A-Z_]+-\d+)$", body.split("- **files**")[0], re.MULTILINE)
         phase = module_phase.get(mid, "?")
-        tasks.append(dict(id=tid, title=ttitle, module=mid, size=size, deps=deps, phase=phase))
+        tasks.append({"id": tid, "title": ttitle, "module": mid, "size": size, "deps": deps, "phase": phase})
         out = TASKS / f"{tid}.md"
         if out.exists() and "hand-" in out.read_text()[:400]:
             continue  # marked hand-written / hand-edited: keep the curated version

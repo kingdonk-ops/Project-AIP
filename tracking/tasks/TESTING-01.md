@@ -16,6 +16,15 @@
 3. ADRs: [0001](../../docs/adr/0001-greenfield-python-backend.md) (pytest / testcontainers-python), [0002](../../docs/adr/0002-data-access-and-migrations.md) (roles, `with_tenant`, NULLIF fail-closed policy), [0004](../../docs/adr/0004-repository-layout.md) (`apps/api/tests/`, `apps/api/migrations/`)
 4. Only if the step needs it: `architecture.md` / `data-model.md` in the module folder
 
+## Environment note (added 2026-10-07)
+
+The Docker daemon is **not** available in Claude Code cloud sessions, so Testcontainers can't start there.
+The fixture must use Testcontainers when Docker is reachable (GitHub CI) and otherwise connect to
+`AIP_TEST_DATABASE_URL`. `.claude/hooks/session-start.sh` provides a local Postgres 16 with ltree, pg_trgm,
+pgcrypto and pgvector 0.6 under a superuser `aip_test`. Create a fresh database per test session (e.g.
+`aip_test_<uuid>` via `CREATE DATABASE ... TEMPLATE template0`) so runs don't share state. Add a unit test for the
+selection logic: Docker reachable → container; not reachable and URL set → URL; neither → a clear error.
+
 ## Spec
 
 Every backend integration test runs against real Postgres 16 (ltree, pg_trgm, pgvector, pgcrypto) as `aip_app` — a non-owner, non-BYPASSRLS role — with a transaction-scoped tenant setting that fails closed. Never mock the database.

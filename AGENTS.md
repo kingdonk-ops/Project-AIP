@@ -29,7 +29,11 @@ This repo is built by AI coding agents, one small task at a time. The product bl
    - If you made a decision no ADR covers, add an ADR (copy `docs/adr/0000-template.md`).
    - If you discovered work that isn't on the board, add a `todo` row and a task file
      (copy `tracking/tasks/_TEMPLATE.md`). Don't silently widen your own task.
-7. **Open a PR** with the template. One task per PR. Branch: `p<phase>/<module>-<short-desc>`.
+7. **Open a PR** with the template. One task per PR. Branch: `p<phase>/<module>-<short-desc>` (or the session's
+   assigned branch, one task at a time).
+8. **Merge policy (owner, 2026-10-07):** the coordinating agent merges a PR once CI is green and a review agent
+   reports no blocking findings. The owner reviews merged work in batches. Never merge with red CI or an
+   unresolved blocking finding.
 
 ## When documents disagree
 

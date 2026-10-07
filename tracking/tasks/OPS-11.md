@@ -19,7 +19,7 @@
 
 ## Spec
 
-Deploy the M0 stack to the owner's Coolify server so the walking skeleton runs somewhere real, without
+Deploy the M0 stack to the owner's Coolify server (**bytedock.io**; owner, 2026-10-07) so the walking skeleton runs somewhere real, without
 building the AWS pipeline yet (owner decision 2026-10-07). AWS staging (OPS-07/09/10) comes later, before real data.
 
 - **files**:
