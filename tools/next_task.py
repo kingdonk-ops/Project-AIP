@@ -27,8 +27,8 @@ def parse():
             continue
         # Columns after ID: Title | Module | Size | Depends on | Status | PR / notes
         title, module, size, deps, status = [c.strip() for c in m.group(2).split("|")][:5]
-        tasks.append(dict(id=m.group(1), title=title, module=module.strip("`"), size=size,
-                          deps=re.findall(TASK_ID, deps), status=status.strip("`* ").lower(), line=n))
+        tasks.append({"id": m.group(1), "title": title, "module": module.strip("`"), "size": size,
+                      "deps": re.findall(TASK_ID, deps), "status": status.strip("`* ").lower(), "line": n})
     return tasks
 
 

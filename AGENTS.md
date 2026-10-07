@@ -29,7 +29,11 @@ This repo is built by AI coding agents, one small task at a time. The product bl
    - If you made a decision no ADR covers, add an ADR (copy `docs/adr/0000-template.md`).
    - If you discovered work that isn't on the board, add a `todo` row and a task file
      (copy `tracking/tasks/_TEMPLATE.md`). Don't silently widen your own task.
-7. **Open a PR** with the template. One task per PR. Branch: `p<phase>/<module>-<short-desc>`.
+7. **Open a PR** with the template. One task per PR. Branch: `p<phase>/<module>-<short-desc>` (or the session's
+   assigned branch, one task at a time).
+8. **Merge policy (owner, 2026-10-07):** the coordinating agent merges a PR once CI is green and a review agent
+   reports no blocking findings. The owner reviews merged work in batches. Never merge with red CI or an
+   unresolved blocking finding.
 
 ## When documents disagree
 
@@ -43,6 +47,16 @@ This repo is built by AI coding agents, one small task at a time. The product bl
 codebase is not used: don't look for it or ask for it. "Port from AIP" means *implement the behaviour the
 blueprint describes*, proven by golden tests. If a doc mentions NestJS, Kysely, BullMQ, arq, Celery, Next.js,
 `services/...`, `backend/...` or `frontend/...`, translate it with the table in ADR 0001.
+
+## Web testing (owner, 2026-10-07: the coordinating agent writes, runs and monitors it)
+
+- **Write:** every task that adds or changes a user-facing page ships Playwright tests in `e2e/` for its main journey,
+  one cross-tenant check (the other tenant sees nothing / gets 404), and an axe accessibility check. Projects: desktop
+  Chromium, mobile Chrome, iPad WebKit; the field PWA also runs offline (`context.setOffline`).
+- **Gate:** e2e runs in CI on every PR and must be green before merge (merge policy above).
+- **Monitor:** after each deploy to the Coolify demo (OPS-11), the coordinating agent runs the e2e suite against the live
+  URL (`E2E_BASE_URL`). A failure becomes a `todo` fix task on the board (`QA-<n>`) and is reported to the owner.
+  Never skip, disable or quarantine a failing test to get green.
 
 ## Shared test fixtures (use these names everywhere)
 
