@@ -30,7 +30,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [DATABASE-08](tasks/DATABASE-08.md) | Alembic env, migrator role, baseline revision + extensions | database | M | ARCH-01 | done | PR #9 |
 | [ARCH-02](tasks/ARCH-02.md) | Module registry and dependency check | arch | S | ARCH-01 | done | PR #8 |
 | [ARCH-03](tasks/ARCH-03.md) | Import-boundary lint and manifest CI check | arch | S | ARCH-01 | todo |  |
-| [ARCH-04](tasks/ARCH-04.md) | Request context carrying tenant, project, actor and asset scope | arch | S | ARCH-01 | review | PR #7 |
+| [ARCH-04](tasks/ARCH-04.md) | Request context carrying tenant, project, actor and asset scope | arch | S | ARCH-01 | done | PR #7 |
 | [STACK-02](tasks/STACK-02.md) | Capability interfaces and adapter selection | stack | M | ARCH-01 | todo |  |
 | [STACK-04](tasks/STACK-04.md) | Licence allow-list and CycloneDX SBOM in CI | stack | S | ARCH-01 | todo |  |
 | [STACK-05](tasks/STACK-05.md) | Platform version endpoint and docker-compose stack | stack | M | STACK-02 | todo | |
