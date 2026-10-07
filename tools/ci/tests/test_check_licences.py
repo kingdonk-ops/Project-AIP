@@ -245,6 +245,45 @@ class DocumentTests(unittest.TestCase):
         gs = {"type": "application", "name": "gs", "version": "10"}
         self.assertEqual(len(self.violations("image-api.cdx.json", gs)), 1)
 
+    def test_system_rule_denies_non_spdx_agpl_and_sspl_spellings(self) -> None:
+        spellings = [
+            "AGPLv3",
+            "agplv3+",
+            "GNU Affero General Public License v3",
+            "(AGPL-3.0",
+            "MIT OR AGPL-3.0-only",
+            "SSPL",
+            "Server Side Public License, v 1",
+        ]
+        for spelling in spellings:
+            with self.subTest(licence=spelling):
+                pkg = component("daemon", None, purl="pkg:deb/debian/daemon@1")
+                pkg["licenses"] = [{"license": {"name": spelling}}]
+                self.assertEqual(len(self.violations("image-api.cdx.json", pkg)), 1)
+                pkg["licenses"] = [{"expression": spelling}]
+                self.assertEqual(len(self.violations("image-api.cdx.json", pkg)), 1)
+
+    def test_committed_system_deny_has_loose_agpl_sspl_patterns(self) -> None:
+        deny = self.policy["system_packages"]["deny"]
+        for pattern in ["*AGPL*", "*Affero*", "*SSPL*", "*Server Side Public*"]:
+            self.assertIn(pattern, deny)
+
+    def test_system_rule_applies_only_in_image_sboms(self) -> None:
+        crate = component("gpl-crate", "GPL-3.0-only", purl="pkg:cargo/gpl-crate@1.0.0")
+        gomod = component("gpl-mod", "GPL-2.0-only", purl="pkg:golang/example.com/gpl-mod@1")
+        generic = component("gpl-bin", "GPL-3.0-only", purl="pkg:generic/gpl-bin@1")
+        binary = {
+            "type": "application",
+            "name": "gpl-tool",
+            "version": "1",
+            "licenses": [{"license": {"id": "GPL-3.0-only"}}],
+        }
+        for name in ["python.cdx.json", "js.cdx.json"]:
+            with self.subTest(sbom=name):
+                found = self.violations(name, crate, gomod, generic, binary)
+                self.assertEqual(len(found), 4)
+        self.assertEqual(self.violations("image-api.cdx.json", crate, gomod, generic, binary), [])
+
     def test_file_and_os_components_are_ignored(self) -> None:
         file_ = {"type": "file", "name": "/usr/lib/x.so"}
         os_ = {"type": "operating-system", "name": "debian", "version": "13"}

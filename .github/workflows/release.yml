@@ -3,13 +3,15 @@ name: release
 # STACK-04: on a version tag, build the shipped images, write CycloneDX SBOMs for the Python
 # dependencies, the pnpm workspace and every image, block the release on a licence-policy
 # violation (config/licence-policy.json, ADR 0009/0011), and attach the SBOMs to the GitHub release.
+# The `sbom` job runs read-only; only the small `release` job can write.
+# Third-party actions are pinned by commit SHA (verified with `git ls-remote ... refs/tags/<tag>`).
 
 on:
   push:
     tags: ["v*"]
 
 permissions:
-  contents: write # create the release and upload its assets
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -19,15 +21,29 @@ jobs:
   sbom:
     name: SBOMs and licence policy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       SYFT_VERSION: v1.33.0
+    outputs:
+      artefact: ${{ steps.tag.outputs.artefact }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Sanitise the tag
+        id: tag
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          safe="${REF_NAME//[^A-Za-z0-9_.-]/-}"
+          echo "safe=$safe" >> "$GITHUB_OUTPUT"
+          echo "artefact=sbom-$safe" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@v5
         with:
           python-version-file: .python-version
-      - uses: astral-sh/setup-uv@v6
-      - uses: pnpm/action-setup@v4
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -35,7 +51,7 @@ jobs:
       - name: Install JS workspace
         run: pnpm install --frozen-lockfile
       - name: Install syft
-        uses: anchore/sbom-action/download-syft@v0
+        uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           syft-version: ${{ env.SYFT_VERSION }}
 
@@ -44,13 +60,15 @@ jobs:
 
       - name: Build images
         id: images
+        env:
+          SAFE_TAG: ${{ steps.tag.outputs.safe }}
         # Every image we ship: infra/docker/<name>.Dockerfile -> <name>, apps/api/Dockerfile -> api,
         # apps/sandbox/<worker>/Dockerfile -> sandbox-<worker> (LGPL review applies to sandbox-*).
         run: |
           set -euo pipefail
           specs=()
           build() {
-            local name="$1" dockerfile="$2" tag="aip-$1:${GITHUB_REF_NAME}"
+            local name="$1" dockerfile="$2" tag="aip-$1:${SAFE_TAG}"
             echo "::group::docker build $name ($dockerfile)"
             docker build -f "$dockerfile" -t "$tag" .
             echo "::endgroup::"
@@ -79,23 +97,36 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-${{ github.ref_name }}
+          name: ${{ steps.tag.outputs.artefact }}
           path: dist/sbom/*.cdx.json
           if-no-files-found: warn
 
       - name: Licence policy (blocks the release on a violation)
         run: python3 tools/ci/check_licences.py dist/sbom/*.cdx.json
 
-      - name: Attach SBOMs to the release
+  release:
+    name: Attach SBOMs to the release
+    needs: sbom
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release and upload its assets
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.sbom.outputs.artefact }}
+          path: sbom
+      - name: Create the release and upload the SBOMs
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          ls sbom/*.cdx.json
           if ! gh release view "$TAG" >/dev/null 2>&1; then
             prerelease=()
             case "$TAG" in *-*) prerelease=(--prerelease) ;; esac
             gh release create "$TAG" --verify-tag --generate-notes "${prerelease[@]}"
           fi
-          gh release upload "$TAG" dist/sbom/*.cdx.json --clobber
+          gh release upload "$TAG" sbom/*.cdx.json --clobber
           gh release view "$TAG" --json assets --jq '.assets[].name'

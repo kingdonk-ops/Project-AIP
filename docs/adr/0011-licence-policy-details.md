@@ -31,6 +31,12 @@ Running the STACK-04 check against the real SBOMs showed three gaps:
   cargo/golang modules compiled into third-party binaries) are mere aggregation: they ship unmodified
   and our code does not link them. For these only AGPL-*, SSPL-* and a named denylist (Ghostscript,
   libgs, MuPDF, PyMuPDF, OCRmyPDF) are denied. The named denylist applies to every SBOM.
+  - *Scope (review of PR #14):* this looser rule applies only in container image SBOMs
+    (`system_packages.sboms`, i.e. `image-*.cdx.json`). In `python.cdx.json` and `js.cdx.json`
+    a cargo, golang, generic or no-purl component gets the full policy, so GPL there still fails.
+  - AGPL and SSPL are matched in any spelling (`*AGPL*`, `*Affero*`, `*SSPL*`,
+    `*Server Side Public*`, case-insensitive), including malformed expressions, and an `OR`
+    branch cannot rescue an AGPL/SSPL system package.
 - Several licence entries on one component must all pass (conservative AND), because CycloneDX does
   not say whether a list means AND or OR. Use an SPDX `OR` expression for a real dual licence.
 - Our own packages (`aip`, `@aip/*`) are skipped.

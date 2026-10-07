@@ -62,9 +62,10 @@
   },
   "first_party": ["aip", "@aip/*"],
   "system_packages": {
-    "$comment": "Components found in container images that are not our language dependencies: OS packages (deb/apk/rpm/alpm), binaries without a package URL or with pkg:generic, and crates/modules compiled into third-party binaries (cargo/golang, e.g. uv in the migrator image; syft reads no licence for them). Base-distribution packages such as bash or glibc are GPL/LGPL, shipped unmodified and not linked into our code, so here only AGPL, SSPL and the named packages are denied (ADR 0011). deny_names applies to every component in every SBOM.",
+    "$comment": "Applies only in SBOMs matching `sboms` (container images), to components that are not our language dependencies: OS packages (deb/apk/rpm/alpm), binaries without a package URL or with pkg:generic, and crates/modules compiled into third-party binaries (cargo/golang, e.g. uv in the migrator image; syft reads no licence for them). Base-distribution packages such as bash or glibc are GPL/LGPL, shipped unmodified and not linked into our code, so here only AGPL, SSPL (in any spelling; patterns match case-insensitively) and the named packages are denied (ADR 0011). deny_names applies to every component in every SBOM.",
+    "sboms": ["image-*.cdx.json"],
     "purl_types": ["deb", "apk", "rpm", "alpm", "generic", "cargo", "golang"],
-    "deny": ["AGPL-*", "SSPL-*"],
+    "deny": ["AGPL-*", "SSPL-*", "*AGPL*", "*Affero*", "*SSPL*", "*Server Side Public*"],
     "deny_names": [
       "ghostscript",
       "ghostscript-*",

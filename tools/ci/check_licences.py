@@ -11,7 +11,8 @@ Every component's licences are classified as allow, review or deny:
 - several licence entries on one component must all pass (conservative AND);
 - `review` licences (LGPL) pass only in SBOMs whose file name matches `review_allowed_sboms`
   (the sandbox images);
-- OS packages and binaries in container images use the narrower `system_packages` rule;
+- OS packages and binaries in container image SBOMs (`system_packages.sboms`) use the narrower
+  `system_packages` rule; in other SBOMs they get the full policy;
 - `system_packages.deny_names` (Ghostscript, MuPDF, ...) is denied everywhere;
 - `first_party` components (our own packages) are skipped.
 
@@ -89,7 +90,8 @@ def load_policy(path: Path) -> Policy:
     system = policy.setdefault("system_packages", {})
     if not isinstance(system, dict):
         raise PolicyError(f"{path}: `system_packages` must be an object")
-    for key in ("purl_types", "deny", "deny_names"):
+    system.setdefault("sboms", ["image-*.cdx.json"])
+    for key in ("sboms", "purl_types", "deny", "deny_names"):
         if not isinstance(system.setdefault(key, []), list):
             raise PolicyError(f"{path}: `system_packages.{key}` must be a list")
     exceptions = policy.setdefault("exceptions", [])
@@ -203,6 +205,10 @@ def _evaluate(text: str, policy: Policy, system: bool) -> Verdict:
     resolved = _resolve_alias(text, policy)
     if not resolved:
         return "allow" if system else "deny"
+    if system and any(_matches(t, policy["system_packages"]["deny"]) for t in (text, resolved)):
+        # Loose patterns (*AGPL*, *Affero*, ...) catch non-SPDX and malformed spellings, and
+        # an OR branch cannot rescue an AGPL/SSPL system package.
+        return "deny"
     try:
         return _Parser(TOKEN.findall(resolved), lambda lic: judge(lic, policy)).parse()  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
     except ValueError:
@@ -296,8 +302,10 @@ def _check_component(
     label = f"{name}@{version}" if version else name
     licence = component_licence(entry, policy)
     purl_type = _purl_type(entry)
-    system = (purl_type in policy["system_packages"]["purl_types"]) or (
-        purl_type is None and entry.get("type") not in LANGUAGE_TYPES
+    # The loose system rule applies only inside container image SBOMs (ADR 0011).
+    system = _matches(sbom_name, policy["system_packages"]["sboms"]) and (
+        purl_type in policy["system_packages"]["purl_types"]
+        or (purl_type is None and entry.get("type") not in LANGUAGE_TYPES)
     )
 
     if _matches(str(entry.get("name", "")), policy["system_packages"]["deny_names"]):
