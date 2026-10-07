@@ -1,4 +1,4 @@
-# ADR 0011: Runtime database roles are created by the cluster bootstrap, not by revisions
+# ADR 0012: Runtime database roles are created by the cluster bootstrap, not by revisions
 
 - **Status:** accepted
 - **Date:** 2026-10-07

@@ -2,7 +2,7 @@
 -- connected to the application database (Testcontainers fixture, compose init, RDS bootstrap
 -- runbook). Idempotent: safe to run again.
 --
--- Roles are cluster objects, so they are created here and not by Alembic revisions (ADR 0011):
+-- Roles are cluster objects, so they are created here and not by Alembic revisions (ADR 0012):
 --   aip_owner     migrator; owns the database, schemas and every table. Used only by aip-db.
 --   aip_app       the API. LOGIN, not an owner of anything, no BYPASSRLS: RLS always applies.
 --   aip_jobs      the worker (Procrastinate tables and outbox publish columns, granted later).

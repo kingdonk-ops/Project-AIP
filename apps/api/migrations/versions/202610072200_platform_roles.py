@@ -1,6 +1,6 @@
 """platform_roles
 
-DATABASE-02 / ADR 0002 / ADR 0011: the runtime roles aip_app, aip_jobs and aip_readonly.
+DATABASE-02 / ADR 0002 / ADR 0012: the runtime roles aip_app, aip_jobs and aip_readonly.
 
 Roles are cluster objects, so db/bootstrap/00_cluster.sql (run by a superuser) creates them;
 aip_owner has no CREATEROLE. This revision is re-runnable on any cluster: it checks, with

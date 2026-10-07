@@ -55,3 +55,10 @@ Make the tenant boundary a database property: non-owner roles, one `with_tenant`
   - **unit**:
     - `with_tenant("not-a-uuid")` raises `InvalidTenantError` before any connection is acquired (engine stub asserts no checkout).
     - `render_template("tenant_table", table="x", columns="name text")` output contains `FORCE ROW LEVEL SECURITY`, `NULLIF(current_setting('app.tenant_id', true), '')::uuid` and `WITH CHECK`.
+
+## Carried forward from the DATABASE-08 review (PR #9, non-blocking)
+
+- Add `REVOKE CONNECT ON DATABASE ... FROM PUBLIC` in `db/bootstrap/00_cluster.sql` now that runtime roles exist.
+- Migration lint (`aip/platform/db/migrator/lint.py`): scan dollar-quoted bodies (a `DO $$ ... DROP TABLE ... $$` block bypasses the destructive-change rules) or forbid `DO` blocks outside the baseline; require `# contract:` on or just above the offending `op.execute` rather than anywhere in the file; handle `E'...'` escape strings; flag module-level statements other than imports, assignments, docstring and the two defs; require one statement per `op.execute` inside `autocommit_block`.
+- `snapshot.py`: strip `--`/`SET`/`\restrict` lines only outside `$$` bodies.
+- Document that the production `aip_owner` password is set via the secrets flow with statement logging off (or pre-hashed SCRAM).
