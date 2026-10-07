@@ -1,6 +1,5 @@
-# ACCESS-01 — Permission catalogue from manifests + PolicyService.can + Nest guard (deny by default)
-
-<!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
+# ACCESS-01 — Permission catalogue from manifests + PolicyService.can + FastAPI access dependencies (deny by default)
+<!-- hand-edited: converted to Python backend per ADR 0001 (2026-10-07) -->
 
 | Field | Value |
 |---|---|
@@ -14,54 +13,60 @@
 
 1. [`docs/blueprint/07-task-conventions.md`](../../docs/blueprint/07-task-conventions.md)
 2. [`docs/blueprint/modules/access/README.md`](../../docs/blueprint/modules/access/README.md)
-3. ADRs: [0004](../../docs/adr/0004-repository-layout.md) (`packages/permissions`, manifests), [0005](../../docs/adr/0005-identity-architecture.md) (principal kinds), [0002](../../docs/adr/0002-data-access-and-migrations.md)
+3. ADRs: [0001](../../docs/adr/0001-greenfield-python-backend.md), [0004](../../docs/adr/0004-repository-layout.md) (`aip/platform/access`, `manifest.toml`, import-linter, `packages/contracts`), [0005](../../docs/adr/0005-identity-architecture.md) (principal kinds), [0002](../../docs/adr/0002-data-access-and-migrations.md)
 4. Only if the step needs it: [`data-model.md`](../../docs/blueprint/modules/access/data-model.md) (table `permission`)
 
 ## Spec
 
-Build one deny-by-default authorisation layer: a permission catalogue assembled from module manifests, an in-process `PolicyService.can(principal, action, resource)` fed by pluggable grant providers, and a global Nest guard that refuses any route without an explicit access declaration.
+Build one deny-by-default authorisation layer in the FastAPI backend: a permission catalogue assembled from module manifests, an in-process `PolicyService.can(principal, action, resource)` fed by pluggable grant providers, and FastAPI access dependencies plus a startup check that refuse any route without an explicit access declaration.
+
+The runtime pieces every module uses live in `aip/platform/access/` (platform never imports modules). The `permission` table, its sync and the abilities route live in the `access` module.
 
 - **files**:
-  - db/migrations/<timestamp>_access_permission_catalogue.sql
-  - apps/api/src/modules/access/manifest.json
-  - apps/api/src/modules/access/catalogue/catalogue.ts
-  - apps/api/src/modules/access/catalogue/catalogue-sync.ts
-  - apps/api/src/modules/access/policy/policy.service.ts
-  - apps/api/src/modules/access/policy/grant-provider.ts
-  - apps/api/src/modules/access/policy/decorators.ts
-  - apps/api/src/modules/access/policy/access.guard.ts
-  - apps/api/src/modules/access/abilities.controller.ts
-  - apps/api/src/modules/access/api.ts
-  - packages/permissions/src/catalogue.generated.ts
-  - tools/gen-permissions.ts
-  - apps/api/src/modules/access/tests/
+  - apps/api/migrations/versions/<rev>_access_permission_catalogue.py
+  - apps/api/aip/platform/access/__init__.py
+  - apps/api/aip/platform/access/catalogue.py
+  - apps/api/aip/platform/access/policy.py
+  - apps/api/aip/platform/access/grants.py
+  - apps/api/aip/platform/access/dependencies.py
+  - apps/api/aip/platform/access/route_check.py
+  - apps/api/aip/platform/access/tests/
+  - apps/api/aip/modules/access/manifest.toml
+  - apps/api/aip/modules/access/repository.py
+  - apps/api/aip/modules/access/service.py
+  - apps/api/aip/modules/access/routes.py
+  - apps/api/aip/modules/access/schemas.py
+  - apps/api/aip/modules/access/api.py
+  - apps/api/aip/modules/access/tests/
+  - packages/contracts/src/permissions.generated.ts
+  - tools/gen_permissions.py
 - **steps**:
-  - 1. Each manifest permission entry is `{code, description, privileged?}`. The code must match `^<moduleId>\.[a-z][a-z0-9_]*\.(read|create|update|delete|approve|sign|manage|export)$`. `catalogue.ts` builds the catalogue from the ARCH-02 registry at boot. An invalid or duplicate code stops boot with a message naming the module and code.
-  - 2. Migration for the global reference table `permission`: code text PK, module_id, description, is_privileged bool, deprecated_at timestamptz NULL, updated_at. It has no tenant_id and no RLS, and `aip_app` gets SELECT only. Writes go only through SECURITY DEFINER `access_sync_permissions(p_catalogue jsonb)`, which upserts the codes and sets `deprecated_at` on codes that are no longer declared (never deletes). `catalogue-sync.ts` calls it once at boot.
-  - 3. `tools/gen-permissions.ts` writes `packages/permissions/src/catalogue.generated.ts`, containing a `PermissionCode` string-literal union and a `PERMISSIONS` const with the privileged flags, for typed use in the API and web. A CI step fails if regenerating changes the file.
-  - 4. `PolicyService.can(principal, action, resource?)` returns `Decision {allowed, reason:'granted'|'no_grant'|'unknown_permission'|'inactive_principal'|'provider_error', matchedGrant?}`. Grants come from registered `GrantProvider`s (their union); each grant is `{permission, scope:{type:'tenant'} | {type:'project', projectId}}`. Matching rules: a tenant grant matches any resource in the principal's tenant; a project grant matches only when `resource.projectId` is equal; a resource without a projectId matches only tenant grants; any other scope type never matches (fail closed). An unknown action is denied and logged. A provider that throws gives a denial. An `api_client` principal (IDENTITY-06) is allowed exactly when the action is in its scopes. Grants are memoised per request only; ACCESS-04 adds the cross-request cache. Also export `assertCan` (throws 403 `{code:'FORBIDDEN', permission}`) and `filterAllowed`.
-  - 5. Decorators `@Public()` (no session), `@Authenticated()` (session, no permission) and `@Requires(code, {resource?: (req) => Resource})`. The global `access.guard.ts` runs after IDENTITY's session guard. A route with none of the three is denied at runtime, and a boot check (Nest DiscoveryService) fails boot listing every such route. `@Requires` with a code not in the catalogue also fails boot.
-  - 6. `GET /api/v1/access/me/abilities?projectId=` (`@Authenticated`) returns `{permissions: PermissionCode[]}`, which the UI uses to hide actions. Add `access.role.read`, `access.role.manage` (privileged), `access.role_assignment.read`, `access.role_assignment.manage` (privileged), `access.team.manage` and `access.matrix.export` to the access manifest.
+  - 1. Each `manifest.toml` permission entry is a `[[permissions]]` table `{code, description, privileged = false}`. The code must match `^<module_id>\.[a-z][a-z0-9_]*\.(read|create|update|delete|approve|sign|manage|export)$`. `catalogue.py` builds the catalogue from the ARCH-02 module registry when `create_app()` runs. An invalid or duplicate code raises at startup with a message naming the module and code.
+  - 2. Alembic revision (raw SQL) for the global reference table `permission`: code text PK, module_id, description, is_privileged bool, deprecated_at timestamptz NULL, updated_at. It has no tenant_id and no RLS, and `aip_app` gets SELECT only. Writes go only through SECURITY DEFINER `access_sync_permissions(p_catalogue jsonb)`, which upserts the codes and sets `deprecated_at` on codes that are no longer declared (never deletes). `modules/access/service.py` calls it once from the app lifespan startup hook.
+  - 3. `tools/gen_permissions.py` loads the catalogue (no database needed) and writes `packages/contracts/src/permissions.generated.ts`, containing a `PermissionCode` string-literal union and a `PERMISSIONS` const with the privileged flags, sorted by code, for typed use in the web apps. The abilities response model also types `permissions` as that enum so `packages/api-client` carries it. A CI step fails if regenerating changes the file.
+  - 4. `PolicyService.can(principal, action, resource=None)` returns the frozen dataclass `Decision(allowed, reason: Literal['granted','no_grant','unknown_permission','inactive_principal','provider_error'], matched_grant=None)`. Grants come from registered `GrantProvider` `Protocol` implementations (their union); each grant is `Grant(permission, scope=TenantScope() | ProjectScope(project_id))`. Matching rules: a tenant grant matches any resource in the principal's tenant; a project grant matches only when `resource.project_id` is equal; a resource without a project_id matches only tenant grants; any other scope type never matches (fail closed). An unknown action is denied and logged. A provider that raises gives a denial. An `api_client` principal (IDENTITY-06) is allowed exactly when the action is in its scopes. Grants are memoised per request only (on the request context from ARCH-04); ACCESS-04 adds the cross-request cache. Also export `assert_can` (raises `Forbidden`, rendered as 403 `{code:'FORBIDDEN', permission}`) and `filter_allowed`.
+  - 5. Access declarations in `dependencies.py`: `public()` (no session), `authenticated()` (session, no permission) and `requires(code, resource=None)` where `resource` is a callable `(Request) -> Resource`. Each is used as `dependencies=[Depends(...)]` on the route and tags the route's dependant with an access marker. `requires` runs after IDENTITY's principal dependency. Install `AccessCheckedRoute` (a custom `APIRoute` class set as the default `route_class`) so a route whose dependant carries no marker returns 403 at runtime. `route_check.py` walks `app.routes` at startup and raises listing every `METHOD path` without a marker, and every `requires` code missing from the catalogue.
+  - 6. `GET /api/v1/access/me/abilities?projectId=` (`authenticated()`) returns `{permissions: PermissionCode[]}`, which the UI uses to hide actions. Add `access.role.read`, `access.role.manage` (privileged), `access.role_assignment.read`, `access.role_assignment.manage` (privileged), `access.team.manage` and `access.matrix.export` to the access `manifest.toml`. Add an import-linter contract that `aip.platform.access` imports nothing from `aip.modules`.
 - **acceptance**:
-  - Every route carries `@Public`, `@Authenticated` or `@Requires`. Otherwise boot fails, and the route is denied at runtime.
-  - With no grant provider registered, every `@Requires` route returns 403.
+  - Every route carries `public()`, `authenticated()` or `requires()`. Otherwise `create_app()` fails, and the route is denied at runtime.
+  - With no grant provider registered, every `requires()` route returns 403.
   - The `permission` table mirrors the manifests, and removed codes are deprecated, never deleted.
-  - `packages/permissions` is regenerated deterministically and CI catches drift.
-- **tests**:
+  - `packages/contracts/src/permissions.generated.ts` is regenerated deterministically and CI catches drift.
+- **tests** (pytest; integration uses testcontainers-python Postgres and `httpx.AsyncClient`):
   - **unit**:
-    - `can(user with tenant grant 'assets.asset.read', 'assets.asset.read', {projectId:'p1'})` is allowed.
+    - `can(user with tenant grant 'assets.asset.read', 'assets.asset.read', Resource(project_id='p1'))` is allowed.
     - A project grant on p1 checked against a resource in p2 is denied with `no_grant`.
-    - A project grant checked against a resource with no projectId is denied.
-    - A grant provider that throws gives a denial with `provider_error`.
+    - A project grant checked against a resource with no project_id is denied.
+    - A grant provider that raises gives a denial with `provider_error`.
     - `can(..., 'ghost.thing.read')` is denied with `unknown_permission`.
-    - Manifest code `Assets.Read` fails validation.
+    - Manifest code `Assets.Read` fails validation naming the module.
     - An api_client with scopes `['assets.asset.read']` is allowed `assets.asset.read` and denied `assets.asset.create`.
   - **integration**:
-    - Boot with a fixture module whose controller has an undecorated `GET /api/v1/fixture/unguarded`. Expected: boot fails and the error contains `GET /api/v1/fixture/unguarded`.
-    - A fixture manifest declaring `fixture.item.read` twice. Expected: boot fails with `duplicate permission fixture.item.read`.
-    - Boot with `{fixture.item.read, fixture.item.create}`, then reboot without `fixture.item.create`. Expected: that row still exists with `deprecated_at` set.
+    - `create_app()` with a fixture module whose router has an undecorated `GET /api/v1/fixture/unguarded`. Expected: startup raises and the error contains `GET /api/v1/fixture/unguarded`.
+    - A fixture `manifest.toml` declaring `fixture.item.read` twice. Expected: startup raises `duplicate permission fixture.item.read`.
+    - Start with `{fixture.item.read, fixture.item.create}`, then restart without `fixture.item.create`. Expected: that row still exists with `deprecated_at` set.
     - As `aip_app`, `INSERT INTO permission ...`. Expected: permission denied.
-    - A fixture route with `@Requires('fixture.item.read')` called by a principal with no grants. Expected: 403 `{code:'FORBIDDEN', permission:'fixture.item.read'}`. With a fake provider granting it. Expected: 200.
-    - Run `gen-permissions` twice. Expected: identical output.
+    - A fixture route with `requires('fixture.item.read')` called by a principal with no grants. Expected: 403 `{code:'FORBIDDEN', permission:'fixture.item.read'}`. With a fake provider granting it. Expected: 200.
+    - Run `python tools/gen_permissions.py` twice. Expected: byte-identical output.
   - **e2e**:
-    - Playwright on compose: signed-in alice with no roles calls `GET /api/v1/me`, which returns 200 (`@Authenticated`). `GET /api/v1/access/me/abilities` returns 200 `{permissions:[]}`. A `@Requires` route returns 403.
+    - Playwright on compose: signed-in alice with no roles calls `GET /api/v1/me`, which returns 200 (`authenticated()`). `GET /api/v1/access/me/abilities` returns 200 `{permissions:[]}`. A `requires()` route returns 403.

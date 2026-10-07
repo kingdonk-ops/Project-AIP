@@ -1,4 +1,5 @@
 # ARCH-03 — Import-boundary lint and manifest CI check
+<!-- hand-edited: converted to Python backend per ADR 0001 (2026-10-07) -->
 
 | Field | Value |
 |---|---|
@@ -12,35 +13,47 @@
 
 1. [`docs/blueprint/07-task-conventions.md`](../../docs/blueprint/07-task-conventions.md)
 2. [`docs/blueprint/modules/arch/README.md`](../../docs/blueprint/modules/arch/README.md)
-3. Any ADR in [`docs/adr/`](../../docs/adr/) that names this task or module
-4. Only if the step needs it: `architecture.md` / `data-model.md` in the module folder
+3. ADRs: [0004](../../docs/adr/0004-repository-layout.md) (import-linter rules, ESLint boundaries, rejected paths), [0001](../../docs/adr/0001-greenfield-python-backend.md) (import-linter replaces dependency-cruiser), [0002](../../docs/adr/0002-data-access-and-migrations.md)
 
 ## Spec
 
-Make module isolation a CI gate.
+Make module isolation and the ADR 0004 layout a required CI gate: import-linter for the Python API, ESLint boundaries for the TypeScript apps, and a manifest check.
 
 - **depends on**:
   - ARCH-01
 - **files**:
-  - .dependency-cruiser.cjs
-  - tools/ci/check-manifests.ts
+  - apps/api/pyproject.toml (`[tool.importlinter]` contracts)
+  - tools/ci/importlinter_contracts.py (custom contract type `module_public_api`)
+  - tools/ci/check_manifests.py
+  - tools/ci/check_layout.py
+  - packages/config-eslint/index.js (shared ESLint config with `eslint-plugin-boundaries`)
   - .github/workflows/ci.yml
+  - apps/api/tests/arch/test_import_contracts.py
+  - apps/api/tests/arch/test_check_manifests.py
+  - apps/api/tests/arch/test_check_layout.py
+  - apps/api/tests/arch/fixtures/ (`deep_import/` package with its own `.importlinter`, `platform_imports_module/`, `undeclared_event/`, `clean/`)
 - **steps**:
-  - 1. Configure dependency-cruiser rules: a module may import another module only via modules/<x>/api.ts, and nothing in platform/ may import modules/*.
-  - 2. Add a rule that apps/web may import only packages/* and generated client code, never apps/api.
-  - 3. check-manifests verifies that every permission, event and term key used in a module's code appears in its manifest.
-  - 4. Wire both checks into the CI workflow and mark them as required.
-  - 5. Add fixture modules that violate each rule, used only by the lint tests.
+  - 1. Write the custom import-linter contract `module_public_api` (contract name `no-deep-module-import`): for any import from `aip.modules.<x>.*` to `aip.modules.<y>.*` with x ≠ y, the target must be `aip.modules.<y>` or `aip.modules.<y>.api`. Report each violation as `importer -> imported`.
+  - 2. Add a `forbidden` contract `platform-never-imports-modules`: `aip.platform` may not import `aip.modules`.
+  - 3. In `packages/config-eslint`, configure boundaries so `apps/*` never import other `apps/*` and may import only `packages/*` (including the generated `packages/api-client`). Every app's ESLint config extends it.
+  - 4. `tools/ci/check_manifests.py` parses each module's Python files with `ast` and collects string-literal first arguments of `require_permission(...)`, `emit(...)` (second argument: event name) and `term(...)`. Each must appear in that module's `manifest.toml` (`permissions`, `events`, `term_keys`). Output one error per missing item, exit 1 if any.
+  - 5. `tools/ci/check_layout.py` fails on any top-level `backend/`, `frontend/` or `services/` path, any `*.ts`, `*.tsx` or `package.json` under `apps/api/`, and any `*.py` under `packages/` (ADR 0004 consequence).
+  - 6. Wire `lint-imports`, `check_manifests.py`, `check_layout.py` and `pnpm -r lint` into `.github/workflows/ci.yml` as a `boundaries` job and mark it required in the branch-protection notes of the PR.
+  - 7. Add fixture packages that violate each rule, used only by the tests and excluded from the real contracts.
 - **acceptance**:
-  - Importing modules/b/service.ts from module a fails lint with a rule name.
-  - Importing modules/b/api.ts passes.
-  - A permission string used in code but absent from the manifest fails check-manifests.
+  - Importing `aip.modules.b.service` from module a fails `lint-imports` naming `no-deep-module-import`.
+  - Importing `aip.modules.b.api` (or `from aip.modules import b`) passes.
+  - A permission string used in code but absent from the manifest fails `check_manifests.py`.
+  - Adding `backend/x.py` or `apps/api/foo.ts` fails `check_layout.py`.
 - **tests**:
-  - **e2e**:
-    - Open a throwaway PR that adds a deep import. Expected: the CI lint job fails and the merge is blocked.
-  - **integration**:
-    - Run depcruise on the violating fixture. Expected: exit code 1 and exactly 1 violation of the 'no-deep-module-import' rule.
-    - Run depcruise on the real repo. Expected: exit code 0.
   - **unit**:
-    - check-manifests on a fixture with an undeclared event 'x.y.z' returns one error naming that event.
-    - check-manifests on a clean fixture returns an empty list.
+    - `check_manifests` on the `undeclared_event` fixture (code calls `emit(conn, "x.y.z", 1, ...)`, manifest has no events) returns exactly one error naming `x.y.z`.
+    - `check_manifests` on the `clean` fixture returns an empty list.
+    - `check_layout` on a file list `["services/sidecar/main.py"]` returns one error naming `services/`.
+  - **integration**:
+    - Run `lint-imports --config apps/api/tests/arch/fixtures/deep_import/.importlinter`. Expected: exit 1 and exactly one broken contract, `no-deep-module-import`.
+    - Run `lint-imports --config apps/api/tests/arch/fixtures/platform_imports_module/.importlinter`. Expected: exit 1, contract `platform-never-imports-modules` broken.
+    - Run `uv run lint-imports` on the real repo. Expected: exit 0.
+    - Add `import x from "../../web/src/main"` in a temp file under `apps/portal/src`; `pnpm --filter portal lint`. Expected: non-zero with a boundaries error.
+  - **e2e**:
+    - Open a throwaway PR that adds a deep import. Expected: the `boundaries` CI job fails and the merge is blocked.
