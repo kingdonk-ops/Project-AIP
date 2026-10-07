@@ -11,8 +11,9 @@
 
   All ok: 200 ``{"status": "ok", "checks": {...}}``; any failure: 503 with
   ``{"status": "fail", "checks": {"db": "ok", "redis": "fail: ...", "migrations": "ok"}}``.
-  Failure text names only the error class (or the revision mismatch); details go to the log,
-  because the endpoint is unauthenticated.
+  Failure text is only the error class, ``timeout``, ``... not set`` or ``not at head``;
+  details (exceptions, both revision sets) go to the log, because the endpoint is
+  unauthenticated.
 
 - ``GET /api/v1/health``: the original ARCH-01 probe, kept as an alias of ``live``.
 
@@ -48,8 +49,18 @@ DEFAULT_TIMEOUT = 2.0
 logger = structlog.stdlib.get_logger(__name__)
 
 
+NOT_AT_HEAD = "not at head"
+
+
 class CheckFailedError(Exception):
-    """A check failure whose message is safe to return from the endpoint."""
+    """A check failure whose message is safe to return from the endpoint.
+
+    ``detail`` is logged server-side only.
+    """
+
+    def __init__(self, message: str, **detail: str) -> None:
+        super().__init__(message)
+        self.detail = detail
 
 
 def _libpq_url(url: str) -> str:
@@ -125,14 +136,18 @@ class ReadinessChecker:
             try:
                 rows = await conn.fetch(f"select version_num from {table}")
             except asyncpg.UndefinedTableError:
-                raise CheckFailedError("no alembic_version table") from None
+                raise CheckFailedError(
+                    NOT_AT_HEAD, db_revisions="none (no alembic_version table)"
+                ) from None
         finally:
             await conn.close()
         current = frozenset(str(row[0]) for row in rows)
         if current != heads:
+            # Revisions go to the server log only; the unauthenticated endpoint says "not at head".
             raise CheckFailedError(
-                f"database at {','.join(sorted(current)) or 'none'}, "
-                f"code expects {','.join(sorted(heads))}"
+                NOT_AT_HEAD,
+                db_revisions=",".join(sorted(current)) or "none",
+                code_heads=",".join(sorted(heads)),
             )
 
     async def _run_one(self, name: str, check: Callable[[], Awaitable[None]]) -> str:
@@ -142,7 +157,7 @@ class ReadinessChecker:
             logger.warning("readiness check timed out", check=name, timeout_s=self.timeout)
             return "fail: timeout"
         except CheckFailedError as exc:
-            logger.warning("readiness check failed", check=name, reason=str(exc))
+            logger.warning("readiness check failed", check=name, reason=str(exc), **exc.detail)
             return f"fail: {exc}"
         except Exception as exc:
             logger.warning("readiness check failed", check=name, exc_info=True)

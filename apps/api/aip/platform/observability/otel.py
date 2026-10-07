@@ -5,6 +5,11 @@ AWS, a local collector in compose); otherwise ``init_tracing`` does nothing and 
 The exporter speaks OTLP over HTTP to ``<endpoint>/v1/traces`` unless
 ``OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`` names the full URL. ``OTEL_SERVICE_NAME`` defaults to
 ``aip-api``. Health probes are not traced.
+
+Spans carry no user data: the server-request hook strips the query string from the URL attributes
+(``http.url``, ``url.full``, ``http.target``) and redacts ``url.query``, Redis spans carry only the
+command name with ``?`` for each argument, and SQLAlchemy spans carry the statement text with
+placeholders, never bound parameters.
 """
 
 from __future__ import annotations
@@ -12,6 +17,7 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from fastapi import FastAPI
 from opentelemetry import trace
@@ -28,6 +34,9 @@ from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
     SpanExporter,
 )
+from opentelemetry.trace import Span
+
+from aip.platform.observability.scrub import REDACTED
 
 __all__ = ["ENDPOINT_ENV", "TracingHandle", "init_tracing"]
 
@@ -36,6 +45,24 @@ TRACES_ENDPOINT_ENV = "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
 SERVICE_NAME_ENV = "OTEL_SERVICE_NAME"
 DEFAULT_SERVICE_NAME = "aip-api"
 EXCLUDED_URLS = "/api/v1/health"
+_URL_ATTRIBUTES = ("http.url", "url.full", "http.target")
+_QUERY_ATTRIBUTE = "url.query"
+
+
+def strip_query_hook(span: Span, scope: Mapping[str, Any]) -> None:
+    """FastAPI ``server_request_hook``: drop the query string from the span's URL attributes.
+
+    Query strings can hold tokens, PINs or personal data, and span attributes leave the process.
+    """
+    if not span.is_recording():
+        return
+    attributes: Mapping[str, object] = getattr(span, "attributes", None) or {}
+    for key in _URL_ATTRIBUTES:
+        value = attributes.get(key)
+        if isinstance(value, str) and "?" in value:
+            span.set_attribute(key, value.split("?", 1)[0])
+    if attributes.get(_QUERY_ATTRIBUTE):
+        span.set_attribute(_QUERY_ATTRIBUTE, REDACTED)
 
 
 @dataclass
@@ -86,11 +113,18 @@ def init_tracing(
     if set_global:
         trace.set_tracer_provider(provider)
 
-    FastAPIInstrumentor.instrument_app(app, tracer_provider=provider, excluded_urls=EXCLUDED_URLS)
+    FastAPIInstrumentor.instrument_app(
+        app,
+        tracer_provider=provider,
+        excluded_urls=EXCLUDED_URLS,
+        server_request_hook=strip_query_hook,
+    )
     SQLAlchemyInstrumentor().instrument(  # pyright: ignore[reportUnknownMemberType]
         tracer_provider=provider
     )
+    # sanitize_query=True: argument values never reach the span. Current releases always sanitise
+    # ("SET ? ?") and ignore the flag; it keeps older releases that honour it safe too.
     RedisInstrumentor().instrument(  # pyright: ignore[reportUnknownMemberType]
-        tracer_provider=provider
+        tracer_provider=provider, sanitize_query=True
     )
     return TracingHandle(app=app, provider=provider)

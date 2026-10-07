@@ -82,12 +82,33 @@ def test_scrub_masks_sensitive_keys_recursively_and_case_insensitively() -> None
         ("GET /x?a=1&password=hunter2&b=2", "hunter2"),
         ("callback?access_token=s3cr3t", "s3cr3t"),
         ("contact Alice.Smith+tag@kaefer.test now", "Alice.Smith+tag@kaefer.test"),
+        ("Authorization: Basic dXNlcjpodW50ZXIy", "dXNlcjpodW50ZXIy"),
+        ('Authorization: Digest username="u", response="6629fae49393"', "6629fae49393"),
+        ("Cookie: sid=s3ss10n; theme=dark", "s3ss10n"),
+        ("Set-Cookie: sid=s3ss10n; HttpOnly; Secure", "s3ss10n"),
+        ("POST /field/unlock?user=1&pin=4821", "4821"),
+        ('body={"pin": "4821", "ok": 1}', "4821"),
+        ('body={"pin": 4821, "ok": 1}', "4821"),
+        ("kwargs={'password': 'hunter2', 'n': 1}", "hunter2"),
+        ('{"Authorization": "Bearer-ish opaque"}', "opaque"),
+        ('{"refresh_token":"r3fr3sh"}', "r3fr3sh"),
+        ("{'secret': 'shh'}", "shh"),
     ],
 )
 def test_scrub_strings(raw: str, secret: str) -> None:
     out = scrub(raw)
     assert isinstance(out, str)
     assert secret not in out
+
+
+def test_scrub_leaves_lookalike_words_alone() -> None:
+    assert scrub("spin=3 basic ok") == "spin=3 basic ok"
+    assert scrub('{"pinned": "yes"}') == '{"pinned": "yes"}'
+
+
+def test_scrub_masks_cookie_keys() -> None:
+    out = scrub({"Cookie": "sid=abc", "set-cookie": "sid=abc; Secure", "path": "/x"})
+    assert out == {"Cookie": REDACTED, "set-cookie": REDACTED, "path": "/x"}
 
 
 def test_scrub_walks_lists_and_tuples_and_keeps_scalars() -> None:
@@ -187,6 +208,60 @@ async def test_logs_inside_a_request_carry_request_id_and_stdlib_is_routed(
     assert stdlib_line["logger"] == "aip.test.stdlib"
 
 
+async def test_unhandled_exception_is_500_with_request_id_and_logged(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    app = make_app()
+
+    @app.get("/api/v1/_ops_test/boom")
+    async def boom() -> dict[str, str]:  # pyright: ignore[reportUnusedFunction]
+        raise RuntimeError("boom for eve@acme.test")
+
+    capsys.readouterr()
+    async with client(app) as c:
+        r = await c.get(
+            "/api/v1/_ops_test/boom",
+            headers={"Authorization": "Bearer token-alice", "X-Request-ID": "rid-boom-ops"},
+        )
+    assert r.status_code == 500
+    assert r.headers["x-request-id"] == "rid-boom-ops"
+    assert r.json() == {"detail": "Internal Server Error"}
+    out = capsys.readouterr().out
+    assert "eve@acme.test" not in out
+    lines = json_lines(out)
+    failure = next(ln for ln in lines if ln["event"] == "unhandled exception")
+    assert failure["request_id"] == "rid-boom-ops"
+    assert failure["level"] == "error"
+    assert "RuntimeError" in failure["exception"]
+    request = next(ln for ln in lines if ln["event"] == "request")
+    assert request["status"] == 500
+    assert request["request_id"] == "rid-boom-ops"
+
+
+def test_sqlalchemy_engine_logger_is_pinned_to_warning(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("AIP_LOG_LEVEL", "DEBUG")
+    configure_logging()
+    try:
+        engine_logger = logging.getLogger("sqlalchemy.engine")
+        assert engine_logger.getEffectiveLevel() >= logging.WARNING
+        assert not engine_logger.isEnabledFor(logging.INFO)
+        # echo=True sets INFO on the per-engine child logger: the handler still drops it.
+        child = logging.getLogger("sqlalchemy.engine.Engine")
+        child.setLevel(logging.INFO)
+        capsys.readouterr()
+        child.info("[generated] ('b0und-param',)")
+        child.warning("engine warning")
+        out = capsys.readouterr().out
+        assert "b0und-param" not in out
+        assert "engine warning" in out
+    finally:
+        logging.getLogger("sqlalchemy.engine.Engine").setLevel(logging.NOTSET)
+        monkeypatch.delenv("AIP_LOG_LEVEL")
+        configure_logging()
+
+
 def test_configure_logging_is_idempotent() -> None:
     configure_logging()
     configure_logging()
@@ -244,7 +319,10 @@ async def test_ready_ok_then_503_when_redis_stops(
 
 
 async def test_ready_503_when_database_is_behind_head(
-    migrated_db: FreshDb, redis_server: RedisServer, migrations_copy: Path
+    migrated_db: FreshDb,
+    redis_server: RedisServer,
+    migrations_copy: Path,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     from aip.platform.db.migrator import new
 
@@ -261,8 +339,12 @@ async def test_ready_503_when_database_is_behind_head(
         r = await c.get(READY)
     assert r.status_code == 503
     checks = r.json()["checks"]
-    assert checks["migrations"].startswith("fail")
-    assert "209901010000" in checks["migrations"]
+    # Revisions are not disclosed on the unauthenticated endpoint, only in the server log.
+    assert checks["migrations"] == "fail: not at head"
+    logged = [ln for ln in json_lines(capsys.readouterr().out) if ln.get("check") == "migrations"]
+    assert logged
+    assert "209901010000" in logged[0]["code_heads"]
+    assert "202610071200" in logged[0]["db_revisions"]
     assert checks["db"] == "ok"
     assert checks["redis"] == "ok"
 
@@ -329,11 +411,45 @@ async def test_tracing_exports_request_spans_when_endpoint_is_set() -> None:
     assert handle is not None
     try:
         async with client(app) as c:
-            r = await c.get("/api/v1/_ops_test/traced")
+            r = await c.get("/api/v1/_ops_test/traced?token=qs-s3cret&email=eve@acme.test")
             await c.get(LIVE)  # health probes are not traced
         assert r.status_code == 200
-        names = [s.name for s in exporter.get_finished_spans()]
+        spans = exporter.get_finished_spans()
+        names = [s.name for s in spans]
         assert any("/api/v1/_ops_test/traced" in n for n in names)
         assert not any("/health" in n for n in names)
+        attrs = " ".join(str(v) for s in spans for v in (s.attributes or {}).values())
+        assert "/api/v1/_ops_test/traced" in attrs
+        assert "qs-s3cret" not in attrs
+        assert "eve@acme.test" not in attrs
+    finally:
+        handle.shutdown()
+
+
+async def test_redis_spans_do_not_carry_values(redis_server: RedisServer) -> None:
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+    from redis.asyncio import Redis
+
+    from aip.platform.observability.otel import init_tracing
+
+    exporter = InMemorySpanExporter()
+    handle = init_tracing(
+        FastAPI(),
+        environ={"OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318"},
+        span_exporter=exporter,
+        set_global=False,
+    )
+    assert handle is not None
+    try:
+        r = Redis.from_url(redis_server.url)
+        try:
+            await r.set("session:k", "v4lue-s3cret")  # pyright: ignore[reportUnknownMemberType]
+        finally:
+            await r.aclose()
+        spans = exporter.get_finished_spans()
+        assert spans, "redis call was not traced"
+        attrs = " ".join(str(v) for s in spans for v in (s.attributes or {}).values())
+        assert "SET" in attrs
+        assert "v4lue-s3cret" not in attrs
     finally:
         handle.shutdown()

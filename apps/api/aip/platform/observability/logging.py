@@ -15,10 +15,16 @@ last before rendering, so no line holds a raw email address, bearer token or sec
 3. return it in the ``X-Request-ID`` response header;
 4. log one ``request`` line (method, path without the query string, status, duration) when the
    response finishes. That line is written while the inner request-context middleware still has
-   the tenant context set, so it carries ``tenant_id`` for authenticated requests.
+   the tenant context set, so it carries ``tenant_id`` for authenticated requests;
+5. on an unhandled exception, log ``unhandled exception`` with the traceback while the request id
+   is still bound and, if no response has started, answer 500 ``{"detail": "Internal Server
+   Error"}`` itself (with ``X-Request-ID``) instead of re-raising to Starlette's
+   ``ServerErrorMiddleware``, which would build the 500 outside this middleware.
 
 ``uvicorn.access`` is silenced because the ``request`` line replaces it with a request id and
-without the client address or query string.
+without the client address or query string. ``sqlalchemy.engine`` is pinned to ``WARNING`` and the
+handler drops its records below ``WARNING``: its INFO/DEBUG lines (``echo=True``) contain SQL bound
+parameters, which can hold any user data.
 """
 
 from __future__ import annotations
@@ -32,6 +38,7 @@ from typing import Any
 
 import structlog
 from starlette.datastructures import Headers, MutableHeaders
+from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from structlog.typing import Processor
 
@@ -49,7 +56,10 @@ __all__ = [
 LOG_LEVEL_ENV = "AIP_LOG_LEVEL"
 _UVICORN_LOGGERS = ("uvicorn", "uvicorn.error", "uvicorn.access", "uvicorn.asgi")
 
+_SQL_ENGINE_LOGGER = "sqlalchemy.engine"
+
 access_logger = structlog.stdlib.get_logger("aip.access")
+error_logger = structlog.stdlib.get_logger("aip.errors")
 
 
 def add_request_context(
@@ -65,10 +75,21 @@ def add_request_context(
     return event_dict
 
 
+def _no_sql_parameters(record: logging.LogRecord) -> bool:
+    """Drop ``sqlalchemy.engine`` records below WARNING (they carry bound parameters)."""
+    name = record.name
+    is_engine = name == _SQL_ENGINE_LOGGER or name.startswith(_SQL_ENGINE_LOGGER + ".")
+    return not (is_engine and record.levelno < logging.WARNING)
+
+
 class _StdoutHandler(logging.Handler):
     """Writes to whatever ``sys.stdout`` is at emit time (so pytest's ``capsys`` sees it)."""
 
     _aip_handler = True
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.addFilter(_no_sql_parameters)
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
@@ -136,6 +157,9 @@ def configure_logging(level: str | int | None = None) -> None:
         uv_logger.handlers.clear()
         uv_logger.propagate = True
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+    # Never log SQL bound parameters: SQLAlchemy emits them at INFO/DEBUG on this logger (and on
+    # per-engine children when echo=True, which the handler filter above also drops).
+    logging.getLogger(_SQL_ENGINE_LOGGER).setLevel(logging.WARNING)
 
 
 class RequestIdMiddleware:
@@ -150,6 +174,7 @@ class RequestIdMiddleware:
         request_id = request_id_from(Headers(scope=scope))
         started = time.perf_counter()
         status: int | None = None
+        started_response = False
         logged = False
 
         def log_request(status_code: int) -> None:
@@ -166,8 +191,9 @@ class RequestIdMiddleware:
             )
 
         async def send_with_request_id(message: Message) -> None:
-            nonlocal status
+            nonlocal status, started_response
             if message["type"] == "http.response.start":
+                started_response = True
                 status = int(message["status"])
                 MutableHeaders(scope=message)[REQUEST_ID_HEADER] = request_id
             await send(message)
@@ -179,6 +205,16 @@ class RequestIdMiddleware:
             with structlog.contextvars.bound_contextvars(request_id=request_id):
                 try:
                     await self.app(scope, receive, send_with_request_id)
+                except Exception:
+                    error_logger.exception(
+                        "unhandled exception", method=scope.get("method"), path=scope.get("path")
+                    )
+                    if started_response:
+                        # Too late for a 500: let the server abort the connection.
+                        log_request(status or 500)
+                        raise
+                    response = JSONResponse({"detail": "Internal Server Error"}, status_code=500)
+                    await response(scope, receive, send_with_request_id)
                 except BaseException:
                     log_request(status or 500)
                     raise
