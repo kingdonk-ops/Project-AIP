@@ -1,0 +1,27 @@
+{
+  "name": "@aip/config-eslint",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared ESLint flat config: TypeScript rules plus eslint-plugin-boundaries (ARCH-03, ADR 0004).",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "lint": "eslint --config index.js .",
+    "test": "node --test"
+  },
+  "peerDependencies": {
+    "eslint": "^10.0.0"
+  },
+  "dependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint-plugin-boundaries": "^7.2.0",
+    "globals": "^17.13.0",
+    "typescript-eslint": "^8.71.1"
+  },
+  "devDependencies": {
+    "eslint": "^10.12.0"
+  }
+}

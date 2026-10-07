@@ -2,5 +2,12 @@
   "name": "@aip/field",
   "version": "0.0.0",
   "private": true,
-  "description": "Field PWA (Vite + React, offline-first). Placeholder: no build yet."
+  "description": "Field PWA (Vite + React, offline-first). Placeholder: no build yet.",
+  "scripts": {
+    "lint": "eslint --no-error-on-unmatched-pattern --config node_modules/@aip/config-eslint/index.js ."
+  },
+  "devDependencies": {
+    "@aip/config-eslint": "workspace:*",
+    "eslint": "^10.12.0"
+  }
 }
