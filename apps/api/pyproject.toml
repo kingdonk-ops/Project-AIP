@@ -9,9 +9,16 @@ dependencies = [
     "asyncpg>=0.30",
     "fastapi>=0.115",
     "httpx>=0.27",
-    "pydantic>=2.9",
+    "opentelemetry-exporter-otlp-proto-http>=1.45.1",
+    "opentelemetry-instrumentation-fastapi>=0.66b1",
+    "opentelemetry-instrumentation-redis>=0.66b1",
+    "opentelemetry-instrumentation-sqlalchemy>=0.66b1",
+    "opentelemetry-sdk>=1.45.1",
     "pydantic-settings>=2.6",
+    "pydantic>=2.9",
+    "redis>=8.1.0",
     "sqlalchemy[asyncio]>=2.0,<2.1",
+    "structlog>=26.1.0",
     "uvicorn[standard]>=0.32",
 ]
 
@@ -25,9 +32,9 @@ dev = [
     "httpx>=0.27",
     "ruff>=0.8",
     "pyright>=1.1.390",
-    "testcontainers[postgres]>=4.8",
-    "types-aioboto3[s3]>=13.2",
     "pypdf>=5.1",
+    "testcontainers[postgres,redis]>=4.8",
+    "types-aioboto3[s3]>=13.2",
 ]
 
 [build-system]

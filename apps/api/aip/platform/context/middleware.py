@@ -6,7 +6,8 @@ inside ``use_context``.
 
 Per request:
 
-1. read ``X-Request-Id`` when it is safe, otherwise generate one; echo it on every response;
+1. reuse the request id the outer ``RequestIdMiddleware`` (OPS-04) already set; standalone, read
+   ``X-Request-Id`` when it is safe, otherwise generate a UUIDv7; echo it on every response;
 2. ask the injected ``PrincipalResolver`` for the verified principal (ADR 0005);
 3. if ``X-Project-Id`` is sent, require a valid UUID (400), an authenticated caller (401) and
    membership per the injected ``ProjectMembershipResolver`` (403); if either resolver raises,
@@ -19,17 +20,22 @@ Per request:
 from __future__ import annotations
 
 import logging
-import uuid
 from uuid import UUID
 
 from starlette.datastructures import Headers, MutableHeaders
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from aip.platform.context.context import SAFE_REQUEST_ID, RequestContext, use_context
+from aip.platform.context.context import (
+    SAFE_REQUEST_ID,
+    RequestContext,
+    current_request_id,
+    new_request_id,
+    use_context,
+)
 from aip.platform.context.resolvers import Principal, PrincipalResolver, ProjectMembershipResolver
 
-__all__ = ["REQUEST_ID_HEADER", "RequestContextMiddleware"]
+__all__ = ["REQUEST_ID_HEADER", "RequestContextMiddleware", "request_id_from"]
 
 REQUEST_ID_HEADER = "x-request-id"
 PROJECT_ID_HEADER = "x-project-id"
@@ -37,11 +43,12 @@ PROJECT_ID_HEADER = "x-project-id"
 logger = logging.getLogger(__name__)
 
 
-def _request_id(headers: Headers) -> str:
+def request_id_from(headers: Headers) -> str:
+    """The safe ``X-Request-Id`` sent by the caller, or a new UUIDv7."""
     given = headers.get(REQUEST_ID_HEADER)
     if given is not None and SAFE_REQUEST_ID.fullmatch(given):
         return given
-    return uuid.uuid4().hex
+    return new_request_id()
 
 
 class RequestContextMiddleware:
@@ -62,7 +69,7 @@ class RequestContextMiddleware:
             return
 
         headers = Headers(scope=scope)
-        request_id = _request_id(headers)
+        request_id = current_request_id() or request_id_from(headers)
 
         async def send_with_request_id(message: Message) -> None:
             if message["type"] == "http.response.start":
