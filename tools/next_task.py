@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BOARD = ROOT / "tracking" / "BOARD.md"
 STATUSES = {"todo", "in-progress", "review", "done", "blocked", "dropped"}
-TASK_ID = r"[A-Z][A-Z0-9]*-\d+[a-z]?"
+TASK_ID = r"[A-Z][A-Z0-9]*-[A-Z]?\d+[a-z]?"  # e.g. ARCH-01, PLAN-R1
 ROW = re.compile(r"^\|\s*\[?(" + TASK_ID + r")\]?(?:\([^)]*\))?\s*\|(.*)\|\s*$")
 
 
