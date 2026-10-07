@@ -1,0 +1,19 @@
+# ARCH-03 fixture: the real repo's contracts, rooted at deep_app.
+[importlinter]
+root_packages =
+    deep_app
+contract_types =
+    module_public_api: tools.ci.importlinter_contracts.ModulePublicApiContract
+
+[importlinter:contract:no-deep-module-import]
+name = no-deep-module-import
+type = module_public_api
+modules = deep_app.modules
+
+[importlinter:contract:platform-never-imports-modules]
+name = platform-never-imports-modules
+type = forbidden
+source_modules =
+    deep_app.platform
+forbidden_modules =
+    deep_app.modules

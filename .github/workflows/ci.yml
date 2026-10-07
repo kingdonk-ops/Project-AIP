@@ -143,20 +143,41 @@ jobs:
       - name: Web build output exists
         run: test -f apps/web/dist/index.html
 
+  # ARCH-03: a required status check in branch protection. Module boundaries and repo layout.
+  boundaries:
+    name: boundaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: |
+          uv sync --all-packages --frozen
+          pnpm install --frozen-lockfile
+      - name: Python import contracts (no-deep-module-import, platform-never-imports-modules)
+        run: uv run lint-imports --no-cache
+      - name: Module manifests declare the permissions, events and term keys their code uses
+        run: python3 tools/ci/check_manifests.py
+      - name: Repository layout (ADR 0004)
+        run: python3 tools/ci/check_layout.py
+      - name: ESLint boundaries (apps never import other apps)
+        run: pnpm -r lint
+
   layout:
     name: Repository layout (ADR 0004)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: No backend/, frontend/, services/ and no TypeScript under apps/api
-        run: |
-          set -e
-          for d in backend frontend services; do
-            if [ -e "$d" ]; then echo "forbidden path: $d/"; exit 1; fi
-          done
-          if git ls-files 'apps/api' | grep -qE '\.(ts|tsx|mts|cts)$'; then
-            echo "TypeScript under apps/api"; exit 1
-          fi
       - name: Alembic is the only migration path (DATABASE-08)
         run: |
           set -e

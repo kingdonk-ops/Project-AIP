@@ -14,3 +14,4 @@ build/
 coverage/
 .vite/
 .claude/worktrees/
+.import_linter_cache/

@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-07 · ARCH-03 · (PR pending) · Module boundaries are a CI gate: import-linter contracts `no-deep-module-import` (custom `module_public_api`) and `platform-never-imports-modules`, `check_manifests.py`, `check_layout.py` and shared `@aip/config-eslint` boundaries (apps never import apps), run in a `boundaries` job and `make check`.
 
 - 2026-10-07 · DATABASE-08 · (PR pending) · `apps/api/migrations/versions/` is the single schema authority: async Alembic env (asyncpg, `aip_meta.alembic_version`, advisory lock, refuses any role but `aip_owner`), idempotent `db/bootstrap/00_cluster.sql`, baseline `202610071200` installing ltree/pgcrypto/pg_trgm/citext/btree_gist and asserting vector, `aip-db` CLI (migrate, new, lint, snapshot, check-schema), committed `db/schema.snapshot.sql`, non-root migrator image, and a CI `db` job plus a pgvector service container for the Python tests; SECURITY-01 marked done (PR #6).
 - 2026-10-07 · SECURITY-01 · (PR pending) · `docs/security/threat-model.md` covers the six required threat areas (assets, STRIDE threats, ADR-cited controls, residual risk, open items keyed to the security review's top risks) and `docs/security/provenance-log.md` records AIP as not read or copied and no OpenConstructionERP viewed yet (legal advice `LEGAL-TBD`), enforced by stdlib `tools/ci/check_security_docs.py` in CI `docs` job and `make check-docs`; STACK-01 marked done (PR #5).
