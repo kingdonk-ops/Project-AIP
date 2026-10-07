@@ -375,3 +375,40 @@ jobs:
         run: python3 tools/ci/check_security_docs.py
       - name: Unit and integration tests for the security docs checker
         run: python3 -m unittest tools/ci/test_check_security_docs.py
+
+  licences:
+    name: Licence policy and SBOMs (STACK-04)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Licence checker tests
+        run: python3 -m unittest tools/ci/tests/test_check_licences.py tools/ci/tests/test_sbom_fill_licences.py
+      - name: Install JS workspace
+        run: pnpm install --frozen-lockfile
+      - name: Python and JS SBOMs (images are scanned in release.yml)
+        run: |
+          for attempt in 1 2 3; do
+            if tools/sbom.sh; then exit 0; fi
+            echo "tools/sbom.sh failed (attempt $attempt); retrying"
+            sleep $((attempt * 20))
+          done
+          exit 1
+      - name: Licence policy
+        run: python3 tools/ci/check_licences.py dist/sbom/*.cdx.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sbom
+          path: dist/sbom/*.cdx.json
+          if-no-files-found: warn

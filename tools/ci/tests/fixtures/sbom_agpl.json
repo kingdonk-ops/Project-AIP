@@ -1,0 +1,15 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {"component": {"type": "application", "name": "fixture-app", "version": "0.0.0"}},
+  "components": [
+    {
+      "type": "library",
+      "name": "fixture-agpl",
+      "version": "1.0.0",
+      "purl": "pkg:pypi/fixture-agpl@1.0.0",
+      "licenses": [{"license": {"id": "AGPL-3.0-only"}}]
+    }
+  ]
+}
