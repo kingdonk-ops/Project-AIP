@@ -75,3 +75,16 @@ jobs:
           if git ls-files 'apps/api' | grep -qE '\.(ts|tsx|mts|cts)$'; then
             echo "TypeScript under apps/api"; exit 1
           fi
+
+  docs:
+    name: ADR record and version pins (STACK-01)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Check ADRs, errata marker and versions table
+        run: python3 tools/ci/check_adrs.py
+      - name: Unit and integration tests for the checker
+        run: python3 -m unittest tools/ci/test_check_adrs.py

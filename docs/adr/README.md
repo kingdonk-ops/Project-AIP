@@ -1,7 +1,8 @@
 # Architecture decision records
 
 ADRs override the blueprint (see precedence in [AGENTS.md](../../AGENTS.md)). Copy
-[0000-template.md](0000-template.md) to add one.
+[0000-template.md](0000-template.md) to add one. Every ADR needs `- **Status:**` and `- **Date:**`
+bullets and a row here; `tools/ci/check_adrs.py` enforces this in CI (`make check-docs`).
 
 | ADR | Decision | Status |
 |---|---|---|
