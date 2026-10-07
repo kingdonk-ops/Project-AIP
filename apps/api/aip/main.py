@@ -21,9 +21,12 @@ from collections.abc import Iterable
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
+from pydantic import BaseModel
 
 from aip.modules.ops.health import ReadinessChecker
 from aip.modules.ops.health import router as health_router
+from aip.platform.capabilities import validate_capability_settings
 from aip.platform.context import (
     ContextMissingError,
     DenyAllMembershipResolver,
@@ -39,6 +42,20 @@ from aip.platform.observability.logging import RequestIdMiddleware, configure_lo
 from aip.platform.observability.otel import init_tracing
 
 
+class HealthResponse(BaseModel):
+    """Body of GET /api/v1/health. Changing it changes the generated client (STACK-03)."""
+
+    status: str
+
+
+def operation_id(route: APIRoute) -> str:
+    """Stable OpenAPI operation ids, ``<first tag>_<function name>`` (STACK-03).
+
+    The generated client names its hooks after these (``platform_health`` -> ``usePlatformHealth``).
+    """
+    return f"{route.tags[0]}_{route.name}" if route.tags else route.name
+
+
 def create_app(
     modules_package: str | None = None,
     disabled_modules: Iterable[str] | None = None,
@@ -50,14 +67,21 @@ def create_app(
     tracing: bool = True,
 ) -> FastAPI:
     configure_logging()
+    validate_capability_settings()  # unknown OBJECT_STORE / PDF_RENDERER stops startup (STACK-02)
     modules = load_modules(modules_package, disabled_modules)
     env = os.environ.get("AIP_ENV", "") if env is None else env
 
-    app = FastAPI(title="AIP API", version="0.1.0")
+    app = FastAPI(title="AIP API", version="0.1.0", generate_unique_id_function=operation_id)
 
     app.state.readiness = readiness or ReadinessChecker.from_env()
 
     v1 = APIRouter(prefix="/api/v1")
+
+    @v1.get("/health", tags=["platform"])
+    def health() -> HealthResponse:  # pyright: ignore[reportUnusedFunction]
+        return HealthResponse(status="ok")
+
+    # OPS-04 probes, mounted outside the module registry so AIP_DISABLED_MODULES cannot drop them.
     v1.include_router(health_router)
 
     if env == "test":

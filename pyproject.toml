@@ -9,6 +9,7 @@ dev = [
     "httpx>=0.27",
     "ruff>=0.8",
     "pyright>=1.1.390",
+    "import-linter>=2.15",
 ]
 
 [tool.ruff]
@@ -27,8 +28,8 @@ known-first-party = ["aip"]
 pythonVersion = "3.12"
 venvPath = "."
 venv = ".venv"
-include = ["apps/api/aip", "apps/api/tests", "tools/new_module.py", "tools/gen_module_map.py", "tools/tests", "tools/ci"]
-exclude = ["**/__pycache__", "**/node_modules", "apps/api/aip/modules/_template"]
+include = ["apps/api/aip", "apps/api/tests", "tools/new_module.py", "tools/gen_module_map.py", "tools/tests", "tools/ci", "tools/codegen"]
+exclude = ["**/__pycache__", "**/node_modules", "apps/api/aip/modules/_template", "apps/api/tests/arch/fixtures"]
 typeCheckingMode = "standard"
 strict = ["apps/api/aip/platform"]
 extraPaths = ["apps/api"]
@@ -41,3 +42,22 @@ pythonpath = ["apps/api"]
 norecursedirs = [".venv", "node_modules", "_template", ".*"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+# Import boundaries (ARCH-03, ADR 0004). Run from the repo root: `uv run lint-imports`
+# (the custom contract type is loaded from tools/ci via the cwd on sys.path).
+[tool.importlinter]
+root_packages = ["aip"]
+contract_types = ["module_public_api: tools.ci.importlinter_contracts.ModulePublicApiContract"]
+
+[[tool.importlinter.contracts]]
+id = "no-deep-module-import"
+name = "no-deep-module-import"
+type = "module_public_api"
+modules = "aip.modules"
+
+[[tool.importlinter.contracts]]
+id = "platform-never-imports-modules"
+name = "platform-never-imports-modules"
+type = "forbidden"
+source_modules = ["aip.platform"]
+forbidden_modules = ["aip.modules"]

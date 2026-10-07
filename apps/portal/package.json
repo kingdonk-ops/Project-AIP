@@ -2,5 +2,12 @@
   "name": "@aip/portal",
   "version": "0.0.0",
   "private": true,
-  "description": "External portal (Vite + React, own origin and session). Placeholder: no build yet."
+  "description": "External portal (Vite + React, own origin and session). Placeholder: no build yet.",
+  "scripts": {
+    "lint": "eslint --no-error-on-unmatched-pattern --config node_modules/@aip/config-eslint/index.js ."
+  },
+  "devDependencies": {
+    "@aip/config-eslint": "workspace:*",
+    "eslint": "^10.12.0"
+  }
 }

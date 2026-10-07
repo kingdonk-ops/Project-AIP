@@ -4,6 +4,9 @@
  */
 const enAU = {
   "app.title": "AIP",
+  "health.label": "API status",
+  "health.loading": "Checking…",
+  "health.unavailable": "Unavailable",
 } as const;
 
 export type TermKey = keyof typeof enAU;

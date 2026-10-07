@@ -182,12 +182,6 @@ async def live() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@router.get("", include_in_schema=False)
-async def health() -> dict[str, str]:
-    """ARCH-01 alias of ``live``."""
-    return {"status": "ok"}
-
-
 @router.get("/ready", responses={503: {"description": "A dependency check failed"}})
 async def ready(request: Request) -> JSONResponse:
     checker: ReadinessChecker = request.app.state.readiness

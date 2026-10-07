@@ -7,7 +7,7 @@ Regenerate with `uv run python tools/gen_module_map.py`.
 
 | Order | Module | Context | Depends on |
 |---|---|---|---|
-| | none yet | | |
+| 1 | `ops` | platform | none |
 
 ## Dependencies
 
@@ -15,4 +15,5 @@ An arrow `a --> b` means module a depends on b.
 
 ```mermaid
 graph TD
+    ops
 ```
