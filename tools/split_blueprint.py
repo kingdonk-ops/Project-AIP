@@ -96,9 +96,9 @@ def main(src):
     write(BP / "03-site-hierarchy.md", "# Site hierarchy (navigation)\n\n" + "\n".join(sec("Site hierarchy")))
     write(BP / "04-code-layout.md",
           "# Folders, files and shared code\n\n"
-          "> WARNING: this section was written for the Python/FastAPI AIP codebase. The owner chose a\n"
-          "> TypeScript rebuild (NestJS + Next.js). Map Python files to the TypeScript module template\n"
-          "> from task ARCH-01 (`apps/api/src/modules/<name>/`). See `docs/adr/0001-*.md`.\n\n"
+          "> NOTE: this section describes the old AIP codebase, which is NOT used. The backend is a greenfield\n"
+          "> Python build; the canonical module layout is `apps/api/aip/modules/<name>/` in ADR 0004 and the\n"
+          "> frontends are Vite apps. Where this text differs (paths, `services/api/app`, `frontend/`), ADR 0004 wins.\n\n"
           + "\n".join(sec("Folders, files")))
     write(BP / "05-access-matrix.md", "# Accounts, profiles and access matrix\n\n" + "\n".join(sec("Accounts, profiles")))
     bo = "\n".join(build)
@@ -107,7 +107,7 @@ def main(src):
     write(BP / "07-task-conventions.md",
           "# Task conventions (definition of done)\n\n"
           "Every agent follows these on every task. Where a line conflicts with an ADR in `docs/adr/`, "
-          "the ADR wins (e.g. migrations are TypeScript, not Alembic — ADR 0002).\n\n" + bo[ci:])
+          "the ADR wins (e.g. Alembic revisions live in `apps/api/migrations/versions/` and are forward-only — ADR 0002).\n\n" + bo[ci:])
 
     # Modules
     mod_index, name_to_id = [], {}

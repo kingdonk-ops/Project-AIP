@@ -14,8 +14,8 @@ work for PIN, portal or API users. See docs/reviews/02-identity-login.md.
 ## Decision
 
 - **Keycloak = federation broker only.** It handles SAML 2.0 / OIDC to customer IdPs (Kaefer, Rio Tinto), with
-  one realm for tenants and one for platform operators. The app consumes it via `openid-client`.
-- **The NestJS app issues every session and credential:**
+  one realm for tenants and one for platform operators. The app consumes it via `authlib`.
+- **The FastAPI backend issues every session and credential:**
 
 | Account type | Credential | Session |
 |---|---|---|
@@ -26,14 +26,14 @@ work for PIN, portal or API users. See docs/reviews/02-identity-login.md.
 | API client | OAuth2 client credentials | ES256 JWT, 15 min |
 
 - **Tenant resolution happens before login**, using a non-RLS `login_directory` (email domain or tenant slug),
-  then everything runs in `withTenant`.
-- **SCIM 2.0 server built in NestJS.** Deprovisioning revokes sessions, devices, links and clients in one
+  then everything runs in `with_tenant`.
+- **SCIM 2.0 server built in the FastAPI backend.** Deprovisioning revokes sessions, devices, links and clients in one
   transaction. Target: ≤ 60 s, tested against the Entra ID and Okta validators.
-- Libraries: `openid-client` v6, `jose`, `@node-rs/argon2`, `otplib`, `@simplewebauthn/server`,
-  `rate-limiter-flexible`, `@keycloak/keycloak-admin-client`.
+- Libraries (Python backend, ADR 0001): `authlib` (OIDC client), `joserfc` (JWT/JWKS), `argon2-cffi`,
+  `pyotp`, `webauthn` (py_webauthn), `limits` (rate limiting), `python-keycloak` (admin API).
 - Ignore WorkOS references in the module docs.
 
 ## Consequences
 
 Browsers never hold JWTs, so revocation is immediate. If the owner drops Keycloak, SAML moves in-app
-(`@node-saml/node-saml`) and only the broker layer changes.
+(`pysaml2`) and only the broker layer changes.

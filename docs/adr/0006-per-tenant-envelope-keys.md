@@ -1,23 +1,27 @@
-# ADR 0006: Per-tenant KMS envelope keys
+# ADR 0006: One AWS KMS key per tenant
 
-- **Status:** proposed: reverses the decision "Shared key with tenant prefixes". **Owner to confirm**
-- **Date:** 2026-10-07
-- **Affects:** tenancy, data_io, documents, signing, security; TENANCY-02, TENANCY-07
+- **Status:** proposed. This reverses the decision "Shared key with tenant prefixes". **Owner to confirm.**
+- **Date:** 2026-10-07 (revised: the first version's app-held data keys could not crypto-shred S3 objects)
+- **Affects:** tenancy, data_io, documents, signing, uploads, security; TENANCY-02, TENANCY-07, UPLOADS-01
 
 ## Context
 
-The security, SaaS, data and enterprise reviewers all flagged the shared key as incompatible with
-crypto-shred offboarding (TENANCY-07), per-tenant export encryption, future customer-managed keys and
-the IRAP / Rio Tinto vendor-risk story. Per-tenant data keys cost very little on AWS KMS.
+Reviewers flagged the shared key as incompatible with crypto-shred offboarding, per-tenant exports and the
+IRAP / Rio Tinto story. The stack review ([08](../reviews/08-stack-decision.md)) found a flaw in the first fix.
+SSE-KMS encrypts S3 objects under the KMS key named in each request. A data key held by the app plays no
+part in that, so deleting it leaves the tenant's files readable.
 
 ## Decision
 
-- One KMS key per environment wraps **one data key per tenant** (envelope encryption). S3 uses SSE-KMS
-  with a `tenant_id` encryption context.
-- Crypto-shred deletes the tenant's wrapped data key, **only after** a legal-hold check passes. Legal hold always wins.
-- Tenant key prefixes for Redis, queues, S3 and search (TENANCY-02) remain as a second isolation layer.
-- Customer-managed keys (BYOK) are a later Enterprise option.
+- **One customer-managed KMS key per tenant**, created at provisioning. The cost is about USD 1 per month per tenant.
+- **Uploads:** presigned PUTs set `x-amz-server-side-encryption-aws-kms-key-id` to the tenant's key. A bucket policy per
+  tenant prefix rejects any other key.
+- **Field-level encrypted columns:** data keys are wrapped by the same tenant key.
+- **Crypto-shred:** legal-hold check → schedule key deletion (7–30 day window) → deletion certificate. Legal hold always wins.
+- **Documented limits:** RDS rows are deleted, not shredded. Automated backups age out within PITR retention
+  (≤ 35 days). Manual snapshots follow a purge procedure.
+- Tenant key prefixes for Redis, queues, S3 and search remain as a second isolation layer. BYOK is a later Enterprise option.
 
 ## Consequences
 
-TENANCY-07 and data_io exports use the tenant data key. Dev/Coolify uses a local KMS stub.
+TENANCY-05 provisioning creates the key. UPLOADS-01 enforces it. Dev and Coolify use LocalStack KMS.

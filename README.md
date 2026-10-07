@@ -8,9 +8,10 @@ and main contractors. The first customer is Kaefer on Rio Tinto remediation proj
 
 ## Stack (see [ADRs](docs/adr/README.md))
 
-TypeScript end to end: Node 22 · NestJS · Kysely · PostgreSQL (pooled tenancy, FORCE RLS) · Redis + BullMQ ·
-Next.js (desktop) · Vite PWA (field, offline) · Vite (client portal) · Keycloak (SSO broker) · Gotenberg ·
-Python sidecar for IFC/CAD/OCR · AWS ECS Fargate Sydney (Coolify for dev/demo) · OpenTofu.
+Greenfield build (the old AIP code is not used). **Backend:** Python 3.12 · FastAPI · SQLAlchemy Core · Alembic ·
+PostgreSQL (pooled tenancy, FORCE RLS) · Procrastinate jobs · Redis (cache only) · sandboxed Python workers for
+IFC/OCR/PDF signing. **Frontends:** TypeScript · Vite + React (web, offline field PWA, client portal).
+**Platform:** Keycloak (SSO broker) · Gotenberg · AWS ECS Fargate Sydney (Coolify for dev/demo) · OpenTofu.
 
 ## Repository map
 
@@ -34,10 +35,10 @@ Python sidecar for IFC/CAD/OCR · AWS ECS Fargate Sydney (Coolify for dev/demo) 
 | Identity & login | Feasible if Keycloak only brokers SSO and the app issues all sessions; build SCIM in-app | [02](docs/reviews/02-identity-login.md) |
 | SaaS platform | Excellent tenancy and config design; scope far too big; billing and entitlements missing | [03](docs/reviews/03-saas.md) |
 | Enterprise readiness | Engineering controls good; DPA, SLA, sub-processors, DR and evidence clock missing | [04](docs/reviews/04-enterprise.md) |
-| Data-tier stack | Python-era decisions (Alembic, arq) contradict the TS rebuild; use Kysely + SQL migrations + BullMQ | [05](docs/reviews/05-stack-data.md) |
-| App stack | Sound stack; fix path chaos; offline field PWA should be a Vite app, not Next.js | [06](docs/reviews/06-stack-typescript.md) |
+| Data-tier stack | RLS/pooling patterns still apply; its TypeScript tool picks are superseded by review 08 and the Python-backend decision | [05](docs/reviews/05-stack-data.md) |
+| App stack | Frontend and offline guidance still applies (Vite PWA, Dexie); backend parts superseded by review 08 | [06](docs/reviews/06-stack-typescript.md) |
 | Development lead | P0 not executable as written; walking skeleton first; 40+ missing P0 tasks | [07](docs/reviews/07-delivery.md) |
-| Stack & architecture | Mostly keep; audit AIP before committing to the TS rebuild; switch to a Postgres job queue, Vite SPAs, per-tenant KMS keys | [08](docs/reviews/08-stack-decision.md) |
+| Stack & architecture | Mostly keep; Python backend + TS frontends; Postgres job queue, Vite SPAs, per-tenant KMS keys (adopted) | [08](docs/reviews/08-stack-decision.md) |
 
 What we did about it: ADRs 0001–0008 resolve the contradictions, the board is ordered into waves starting
 with an M0 walking skeleton, and owner decisions still needed are listed in OPEN-QUESTIONS.

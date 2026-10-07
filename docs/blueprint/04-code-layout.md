@@ -1,8 +1,8 @@
 # Folders, files and shared code
 
-> WARNING: this section was written for the Python/FastAPI AIP codebase. The owner chose a
-> TypeScript rebuild (NestJS + Next.js). Map Python files to the TypeScript module template
-> from task ARCH-01 (`apps/api/src/modules/<name>/`). See `docs/adr/0001-*.md`.
+> NOTE: this section describes the old AIP codebase, which is NOT used. The backend is a greenfield
+> Python build; the canonical module layout is `apps/api/aip/modules/<name>/` in ADR 0004 and the
+> frontends are Vite apps. Where this text differs (paths, `services/api/app`, `frontend/`), ADR 0004 wins.
 
 
 - **module template**:

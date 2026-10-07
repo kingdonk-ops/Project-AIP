@@ -14,7 +14,7 @@
 
 1. [`docs/blueprint/07-task-conventions.md`](../../docs/blueprint/07-task-conventions.md)
 2. [`docs/blueprint/modules/arch/README.md`](../../docs/blueprint/modules/arch/README.md)
-3. ADRs: [0007](../../docs/adr/0007-mvp-scope-and-strangler.md) (R1 scope; this task's mandate), [0001](../../docs/adr/0001-typescript-greenfield-rebuild.md) (name translation table), [0002](../../docs/adr/0002-data-access-and-migrations.md), [0004](../../docs/adr/0004-repository-layout.md). Skim the rest for decisions that touch R1 modules.
+3. ADRs: [0007](../../docs/adr/0007-mvp-scope-and-strangler.md) (R1 scope; this task's mandate), [0001](../../docs/adr/0001-greenfield-python-backend.md) (name translation table), [0002](../../docs/adr/0002-data-access-and-migrations.md), [0004](../../docs/adr/0004-repository-layout.md). Skim the rest for decisions that touch R1 modules.
 4. [`docs/reviews/07-delivery.md`](../../docs/reviews/07-delivery.md): the section "Just-in-time task generation process for later phases" (the process to follow) and the "Moved out of P0" row of "P0 execution waves"
 5. Per R1 module, when you generate its tasks: `docs/blueprint/modules/<m>/README.md` and `data-model.md` only. **Never** use `docs/blueprint/04-code-layout.md` (AIP-era), and never copy `architecture.md` paths verbatim, because they are Python. Translate them with the ADR 0001 table.
 

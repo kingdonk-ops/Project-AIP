@@ -1,23 +1,29 @@
-# ADR 0003: BullMQ for jobs, Postgres outbox for events, HTTP contract for the sidecar
+# ADR 0003: Procrastinate (Postgres) for jobs; Postgres outbox; sandboxed Python workers
 
-- **Status:** accepted (supersedes "Redis queue (arq or Celery)"; matches the brief's BullMQ)
-- **Date:** 2026-10-07
-- **Affects:** ops, arch; ARCH-05..07, OPS-01..03, TENANCY-02, STACK-02, STACK-05
+- **Status:** accepted; **owner to confirm**. The owner's decision text said "Redis queue (arq or Celery)". The stack review recommends a
+  Postgres-backed queue so that jobs are enqueued in the same transaction as the data change.
+- **Date:** 2026-10-07 (revised for the Python backend; the first version chose BullMQ)
+- **Affects:** ops, arch; ARCH-05..07, OPS-01..03, TENANCY-02, STACK-02, STACK-05, UPLOADS-02, AUDIT-03
 
 ## Decision
 
-- **Queue: BullMQ on Redis**, consumed by `apps/worker`. Postgres `jobs` tables (OPS-01) hold the
-  state of record. BullMQ is only the transport.
-- **Queues per job class** (`pdf`, `import`, `notify`, `outbox`, ...), **not per tenant**. Fairness comes from
-  per-tenant concurrency and rate caps. Every payload carries `tenant_id`, and handlers re-enter `withTenant`.
-- **Domain events:** transactional outbox `domain_events`, written in the same transaction as the change.
-  The dispatcher polls with `FOR UPDATE SKIP LOCKED` and enqueues with `jobId = event_id` (idempotent).
-  Retries and dead letters are recorded in Postgres. This closes the open question in `modules/arch/README.md`.
-- **Sidecar:** `services/sidecar` (Python, uv, FastAPI) uses an async job-id HTTP API, called only
-  from BullMQ jobs. JSON Schemas are generated from `packages/contracts`, with contract tests in CI. It runs
-  with no egress, non-root, on a read-only filesystem.
-- Gotenberg and sidecar work run in separate worker pools.
+- **Jobs: Procrastinate** (Postgres-backed, asyncio).
+  - **Atomic enqueue:** jobs are enqueued inside the same `with_tenant` transaction as the domain change, so both commit or neither does.
+  - **One state store:** job state lives in Postgres, so backups and point-in-time recovery cover it.
+  - **Payloads:** every payload carries `tenant_id`, and handlers re-enter `with_tenant`.
+- **Queues per job class** (`default`, `pdf`, `scan`, `import`, `outbox`), not per tenant.
+  - Per-tenant fairness comes from a concurrency cap checked when a job is taken (a custom lock).
+  - Gotenberg and sandbox work run in separate worker processes.
+- **Domain events:** the transactional outbox table `domain_events` is the system of record for audit, timeline and replay.
+  - A dispatcher job reads it with `FOR UPDATE SKIP LOCKED` and fans out to subscribers.
+  - Retries and dead letters are recorded in Postgres.
+- **Redis** is kept only for cache, rate limits, the session cache and SSE pub/sub. It is never used for durable work.
+- **Sandboxed workers:** `apps/sandbox/` holds hardened Python images for IFC, OCR, PDF signing and image processing.
+  - **Restrictions:** no network egress, non-root, read-only filesystem, CPU, memory and time caps.
+  - **Invocation:** a Procrastinate job runs them as one-shot containers (ECS RunTask; `docker run` in dev), passing files by S3 key.
+  - **Shared code:** they use the same Python codebase as the API.
+- **Tripwire:** if queue load passes about 15% of database CPU, or about 200 jobs per second, move transport to SQS and keep the outbox.
 
 ## Consequences
 
-OPS-02 becomes "BullMQ runner and handler registry". No arq, no Celery.
+OPS-02 becomes "Procrastinate worker and handler registry". There is no Redis durability or backup story to certify.

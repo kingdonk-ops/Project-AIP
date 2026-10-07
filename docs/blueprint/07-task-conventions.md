@@ -1,6 +1,6 @@
 # Task conventions (definition of done)
 
-Every agent follows these on every task. Where a line conflicts with an ADR in `docs/adr/`, the ADR wins (e.g. migrations are TypeScript, not Alembic — ADR 0002).
+Every agent follows these on every task. Where a line conflicts with an ADR in `docs/adr/`, the ADR wins (e.g. Alembic revisions live in `apps/api/migrations/versions/` and are forward-only — ADR 0002).
 
 - **task conventions**:
   - Branch per task from main, named phase/module-short-description (e.g. p1/inspections-hold-points); small PRs, one module folder plus at most one migration.

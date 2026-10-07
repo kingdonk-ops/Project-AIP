@@ -39,11 +39,10 @@ This repo is built by AI coding agents, one small task at a time. The product bl
 4. Module docs: `docs/blueprint/modules/<module>/*`
 5. Advisor text: `docs/blueprint/02-advisor-summaries.md`, `advice-*.md`
 
-Parts of the blueprint were written for the old Python/FastAPI AIP codebase. **This repo is a
-greenfield TypeScript rebuild.** If a doc mentions Alembic, arq, Celery, SQLAlchemy, Pydantic,
-FastAPI, `services/api/app/...` or `frontend/src/...`, translate it using the ADRs.
-There is no AIP code in this repo. "Port from AIP" means *re-implement the behaviour the spec
-describes*, proven by golden tests.
+**This repo is a greenfield build: Python backend (FastAPI), TypeScript frontends (Vite).** The old AIP
+codebase is not used: don't look for it or ask for it. "Port from AIP" means *implement the behaviour the
+blueprint describes*, proven by golden tests. If a doc mentions NestJS, Kysely, BullMQ, arq, Celery, Next.js,
+`services/...`, `backend/...` or `frontend/...`, translate it with the table in ADR 0001.
 
 ## Status values
 
