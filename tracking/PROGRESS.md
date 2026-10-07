@@ -19,4 +19,5 @@ task on the board generates the next phase's task files from its module docs.
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
 
+- 2026-10-07 · DOCS-01 · #1 · Board of 103 tasks in waves (M0 = waves 0–5); 44 new P0 specs for identity, access, projects, design, audit, approvals, uploads, ops, ENT-01 and PLAN-R1; stack decision review (08) added, rebuild-vs-Python question open.
 - 2026-10-07 · SETUP · — · Blueprint split into 64 module folders, 559 page specs and 59 task files; seven-specialist review panel run; ADRs recorded; board, agent workflow and CI board check created.

@@ -19,7 +19,7 @@
 
 ## Spec
 
-Make a user-bound upload session the only way in. The server issues a short-lived presigned POST into a tenant-prefixed quarantine key, and the signed policy enforces size, content type and key, so the app is never in the byte path (tag: harden — replaces AIP local `app/storage.py` and `/media/presign`).
+Make a user-bound upload session the only way in. The server issues a short-lived presigned POST into a tenant-prefixed quarantine key, and the signed policy enforces size, content type and key, so the app is never in the byte path (tag: harden — replaces AIP's local-disk storage and its `/media/presign` flow).
 
 - **files**:
   - db/migrations/<timestamp>_uploads_sessions.sql

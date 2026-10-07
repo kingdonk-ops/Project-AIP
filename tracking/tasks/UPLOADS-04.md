@@ -51,7 +51,7 @@ For released images, write a sanitised shared copy (GPS stripped by project poli
     - Enqueues `uploads.sandbox` on queue `uploads-sandbox` and waits for its result through a BullMQ flow (parent/child).
   - 3. The sandbox job (`sandbox-job.ts`, run by `uploads-sandbox.processor.ts` in the `worker-sandbox` pool) receives **only URLs and the policy**: no DB, KMS or AWS credentials.
     - It uses `sharp` with `limitInputPixels: 100_000_000`, `failOn: 'error'` and `.rotate()` to apply the orientation.
-    - It writes the sanitised full image with all EXIF, XMP and IPTC metadata removed (or with only GPS removed when the policy is `keep`, which keeps GPS) and 320 and 1280 px WebP thumbnails.
+    - It writes the sanitised full image with all EXIF, XMP and IPTC metadata removed, except that the GPS tags are kept when the policy is `keep`. It also writes 320 and 1280 px WebP thumbnails, which never carry metadata.
     - It returns `{exif: {capturedAt, gps?, make, model}, outputs}`.
     - It has a 60 s timeout.
   - 4. The `worker-sandbox` compose service and the Fargate task note: non-root uid 10001, `read_only: true`, tmpfs `/tmp`, `mem_limit: 512m`, `cpus: 1`, and only an `internal: true` network that reaches the object store. It has no internet egress.

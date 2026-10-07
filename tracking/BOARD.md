@@ -109,10 +109,10 @@ RLS isolation proven in CI, deployed to AWS staging.
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [ACCESS-03](tasks/ACCESS-03.md) | Scope tables and RLS project predicates; policy/RLS parity tests | access | M | ACCESS-02 | todo |  |
+| [ACCESS-03](tasks/ACCESS-03.md) | Scope tables and RLS project predicates; policy/RLS parity tests | access | M | ACCESS-02, PROJECTS-01 | todo |  |
 | [ACCESS-04](tasks/ACCESS-04.md) | Teams, membership, cache-invalidation event | access | M | ACCESS-02, ARCH-07 | todo |  |
 | [PROJECTS-03](tasks/PROJECTS-03.md) | Project membership, header switcher, X-Project-Id enforcement | projects | M | ACCESS-02, ARCH-04 | todo |  |
-| [IDENTITY-04](tasks/IDENTITY-04.md) | Invite/accept, local Argon2id password + TOTP/WebAuthn MFA | identity | M | IDENTITY-03, STACK-02 | todo |  |
+| [IDENTITY-04](tasks/IDENTITY-04.md) | Invite/accept, local Argon2id password + TOTP/WebAuthn MFA | identity | M | ACCESS-01, IDENTITY-03, STACK-02 | todo |  |
 | [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01 | todo |  |
 | [UPLOADS-02](tasks/UPLOADS-02.md) | Scan worker: ClamAV, magic bytes, caps, fail-closed release | uploads | M | ARCH-05, OPS-02, UPLOADS-01 | todo |  |
 | [UPLOADS-03](tasks/UPLOADS-03.md) | Resumable S3 multipart uploads | uploads | M | UPLOADS-01 | todo |  |
@@ -131,7 +131,7 @@ RLS isolation proven in CI, deployed to AWS staging.
 | [APPROVALS-05](tasks/APPROVALS-05.md) | Inspection lifecycle preset + golden tests (needs AIP lifecycle spec) | approvals | M | APPROVALS-02, TERMS-01 | todo |  |
 | [UPLOADS-04](tasks/UPLOADS-04.md) | EXIF/GPS policy + thumbnails in sandboxed worker | uploads | M | UPLOADS-02 | todo |  |
 | [UPLOADS-05](tasks/UPLOADS-05.md) | Per-file-type policy table + storage quota counters | uploads | S | UPLOADS-02 | todo |  |
-| [IDENTITY-05](tasks/IDENTITY-05.md) | SCIM 2.0 server; deprovision revokes everything in one transaction | identity | M | ARCH-05, IDENTITY-03 | todo |  |
+| [IDENTITY-05](tasks/IDENTITY-05.md) | SCIM 2.0 server; deprovision revokes everything in one transaction | identity | M | ACCESS-01, ARCH-05, IDENTITY-03 | todo |  |
 | [ACCESS-05](tasks/ACCESS-05.md) | Users & Roles UI, permission matrix page and export | access | M | ACCESS-02, DESIGN-03 | todo |  |
 | [PROJECTS-04](tasks/PROJECTS-04.md) | Work-type classification + project settings overrides | projects | M | PROJECTS-01, TERMS-02 | todo |  |
 | [AUDIT-03](tasks/AUDIT-03.md) | Chain verifier CLI + S3 Object Lock anchoring job | audit | M | AUDIT-01, OPS-02, OPS-07 | todo |  |
