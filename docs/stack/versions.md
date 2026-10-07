@@ -14,9 +14,13 @@ first task must use, and that task updates its row.
 | SQLAlchemy | 2.0.54 | `uv.lock` (`sqlalchemy[asyncio]>=2.0,<2.1` in `apps/api/pyproject.toml`; ADR 0002: Core, not ORM) | stay on 2.0.x; major by ADR |
 | asyncpg | 0.32.0 | `uv.lock` (`asyncpg>=0.30`) | lockfile refresh |
 | Alembic | 1.20.0 | `uv.lock` (`alembic>=1.14,<2`; DATABASE-08) | stay on 1.x; major by ADR |
+| structlog | 26.1.0 | `uv.lock` (`structlog>=26.1.0`; OPS-04 JSON logging) | lockfile refresh |
+| redis-py | 8.1.0 | `uv.lock` (`redis>=8.1.0`; MIT client for the OPS-04 readiness `PING`) | lockfile refresh |
+| OpenTelemetry SDK and OTLP/HTTP exporter | 1.45.1 | `uv.lock` (`opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-http` `>=1.45.1`; OPS-04) | lockfile refresh; upgrade with the instrumentation packages |
+| OpenTelemetry instrumentation (FastAPI, SQLAlchemy, Redis) | 0.66b1 | `uv.lock` (`opentelemetry-instrumentation-*` `>=0.66b1`; OPS-04) | upgrade together with the SDK |
 | Procrastinate | current stable major (not yet added) | `uv.lock` once the first jobs task adds it (ADR 0003) | major by ADR |
 | PostgreSQL | 16 | `pgvector/pgvector:pg16` image in CI (`ci.yml` `python` and `db` service containers) and the Testcontainers fixture (DATABASE-08); compose arrives with STACK-05 | major by ADR with a migration rehearsal |
-| Testcontainers (Python) | 4.15.0 | `uv.lock` (dev group `testcontainers[postgres]>=4.8` in `apps/api/pyproject.toml`) | lockfile refresh |
+| Testcontainers (Python) | 4.15.0 | `uv.lock` (dev group `testcontainers[postgres,redis]>=4.8` in `apps/api/pyproject.toml`; OPS-04 Redis tests use `valkey/valkey:8-alpine`, BSD-3) | lockfile refresh |
 | uv (migrator image) | 0.11.32 | `infra/docker/migrator.Dockerfile` (`ghcr.io/astral-sh/uv:0.11.32`) | bump with the local uv |
 | ruff | 0.16.10 | `uv.lock` (dev group `ruff>=0.8`) | lockfile refresh; fix new lint findings in the same PR |
 | pyright | 1.1.414 | `uv.lock` (dev group `pyright>=1.1.390`) | lockfile refresh |

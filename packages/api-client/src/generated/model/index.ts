@@ -2,3 +2,4 @@
 
 export * from './healthResponse';
 export * from './moduleInfo';
+export * from './platformLive200';

@@ -1,0 +1,11 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+# OPS-04: the health probes live in health.py and are mounted by aip.main outside the registry,
+# so AIP_DISABLED_MODULES can never remove them; routes.router is intentionally empty.
+id = "ops"
+context = "platform"
+depends_on = []
+permissions = []
+events = []
+subscribes = []
+settings = []
+term_keys = []

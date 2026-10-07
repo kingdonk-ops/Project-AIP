@@ -71,6 +71,53 @@
         ]
       }
     },
+    "/api/v1/health/live": {
+      "get": {
+        "operationId": "platform_live",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Platform Live",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Live",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "operationId": "platform_ready",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "description": "A dependency check failed"
+          }
+        },
+        "summary": "Ready",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
     "/api/v1/platform/modules": {
       "get": {
         "operationId": "platform_list_modules",
