@@ -120,6 +120,113 @@ jobs:
           test "$uid" != "0"
           docker run --rm --network host -e DATABASE_MIGRATOR_URL aip-migrator:ci
 
+  # STACK-05: the local compose stack, end to end. Also the compose checks OPS-04 (ready probe)
+  # and STACK-02 (render, store, download) deferred to this task.
+  compose:
+    name: Compose stack (up --wait, non-root, version, ready probe, render-store-download)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COMPOSE: docker compose -f infra/docker-compose.yml
+      GIT_SHA: ${{ github.sha }}
+      BUILD_ID: ci-${{ github.run_id }}-${{ github.run_attempt }}
+      AIP_IMAGE_TAG: ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compose version
+        run: docker compose version
+      - name: Compose file is valid
+        run: |
+          $COMPOSE config --quiet
+          $COMPOSE --profile sandbox config --quiet
+      - name: Pull third-party images
+        run: $COMPOSE pull --ignore-buildable --quiet
+      - name: Build images (api, worker, migrator, web, sandbox)
+        run: $COMPOSE --profile sandbox build
+      - name: Start the stack and wait until every service is healthy (180 s)
+        run: timeout 240 $COMPOSE up --detach --wait --wait-timeout 180
+      - name: Migrator exited 0
+        run: |
+          cid=$($COMPOSE ps --all --quiet migrator)
+          code=$(docker inspect --format '{{.State.ExitCode}}' "$cid")
+          echo "migrator exit code: $code"
+          test "$code" = "0"
+      - name: OPS-04 ready probe returns 200 (the compose healthcheck's probe)
+        run: |
+          curl -fsS --max-time 10 http://localhost:8000/api/v1/health/ready | tee ready.json
+          python3 -c 'import json; b = json.load(open("ready.json")); assert b["status"] == "ok", b'
+      - name: api and worker run as UID 10001
+        run: |
+          for svc in api worker; do
+            uid=$($COMPOSE exec -T "$svc" id -u)
+            echo "$svc uid=$uid"
+            test "$uid" = "10001"
+          done
+      - name: No container runs as root
+        run: |
+          fail=0
+          for cid in $($COMPOSE ps --quiet); do
+            name=$(docker inspect --format '{{.Name}}' "$cid")
+            uids=$(docker top "$cid" -eo uid | tail -n +2 | sort -u | tr '\n' ' ')
+            echo "$name: process uids = $uids"
+            for uid in $uids; do
+              if [ "$uid" = "0" ]; then echo "::error::$name runs a process as root"; fail=1; fi
+            done
+          done
+          exit $fail
+      - name: Sandbox image runs non-root with no network
+        run: |
+          uid=$(docker run --rm --network none --read-only "aip-sandbox:$AIP_IMAGE_TAG" id -u)
+          echo "sandbox uid=$uid"
+          test "$uid" != "0"
+      - name: GET /api/v1/platform/version reports the built commit, Python 3.12 and Postgres 16
+        run: |
+          curl -fsS --max-time 10 http://localhost:8000/api/v1/platform/version | tee version.json
+          python3 - <<'EOF'
+          import json, os
+          body = json.load(open("version.json"))
+          deps = body["dependencies"]
+          assert body["commit"] == os.environ["GIT_SHA"], body
+          assert body["build"] == os.environ["BUILD_ID"], body
+          assert deps["python"].startswith("3.12"), deps
+          assert deps["postgres"].startswith("16"), deps
+          EOF
+      - name: Image label carries the commit
+        run: |
+          label=$(docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "aip-api:$AIP_IMAGE_TAG")
+          test "$label" = "$GIT_SHA"
+      - name: Web serves the app and proxies /api
+        run: |
+          curl -fsS --max-time 10 http://localhost:8080/ | grep -q '<div id="root">'
+          curl -fsS --max-time 10 http://localhost:8080/api/v1/platform/version > /dev/null
+      - name: STACK-02 render, store and download inside the api container
+        run: $COMPOSE exec -T api python - < infra/docker/smoke_render_store.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install
+        run: uv sync --all-packages --frozen
+      - name: STACK-02 e2e against the stack (fixture report text contains FX-0001)
+        env:
+          AIP_TEST_RUSTFS_URL: http://localhost:9000
+          AIP_TEST_RUSTFS_ACCESS_KEY: rustfs_dev_only
+          AIP_TEST_RUSTFS_SECRET_KEY: rustfs_dev_only_secret
+          AIP_TEST_GOTENBERG_URL: http://localhost:3000
+        run: >-
+          uv run pytest -q -p no:cacheprovider
+          "apps/api/tests/platform/capabilities/test_gotenberg.py::test_render_store_and_download_report"
+      - name: Stack state and logs
+        if: failure()
+        run: |
+          $COMPOSE ps --all
+          $COMPOSE logs --no-color --timestamps --tail 300
+      - name: Tear down
+        if: always()
+        run: $COMPOSE --profile sandbox down --volumes --remove-orphans
+
   typescript:
     name: TypeScript (lint, typecheck, build, test)
     runs-on: ubuntu-latest

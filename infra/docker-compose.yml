@@ -1,0 +1,302 @@
+# Local development stack (STACK-05). Run from the repository root:
+#
+#   docker compose -f infra/docker-compose.yml up --build --wait     # healthy within 3 minutes
+#   curl localhost:8000/api/v1/platform/version
+#   docker compose -f infra/docker-compose.yml down -v               # stop and drop the volumes
+#
+# Every value has an obviously fake local default, so the stack starts with no .env file. To
+# override, copy .env.example to .env and pass `--env-file .env` (compose looks for .env next to
+# this file, in infra/, not in the repository root). Never put a real credential in either file.
+#
+# Hardening (step 2): images built from this repo run as UID 10001 with a read-only root
+# filesystem, a tmpfs /tmp, no capabilities and no-new-privileges. Third-party images run as their
+# own non-root users. Published ports bind to 127.0.0.1 only.
+#
+# Licences: every image is permissive (ADR 0009). Valkey (BSD-3) stands in for Redis, whose
+# server licence is no longer permissive. LocalStack is pinned to 4.4.0, the last line that runs
+# S3 and KMS without an account token (the `aws` profile; not started by default).
+
+name: aip
+
+x-app-hardening: &app-hardening
+  user: "10001:10001"
+  read_only: true
+  tmpfs:
+    - /tmp:size=64m,mode=1777
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+
+x-api-build: &api-build
+  context: ..
+  dockerfile: apps/api/Dockerfile
+  args:
+    GIT_SHA: ${GIT_SHA:-unknown}
+    BUILD_ID: ${BUILD_ID:-dev}
+
+# Settings shared by the API, the worker and the one-shot jobs that use the API image.
+x-app-env: &app-env
+  AIP_ENV: ${AIP_ENV:-development}
+  # Until DATABASE-02 adds the aip_app and aip_jobs roles, the dev stack connects as aip_owner.
+  DATABASE_URL: ${DATABASE_URL:-postgresql://aip_owner:aip_owner_dev_only@postgres:5432/aip}
+  DATABASE_JOBS_URL: ${DATABASE_JOBS_URL:-postgresql://aip_owner:aip_owner_dev_only@postgres:5432/aip}
+  REDIS_URL: ${REDIS_URL:-redis://valkey:6379/0}
+  OBJECT_STORE: ${OBJECT_STORE:-minio}
+  OBJECT_STORE_BUCKET: ${OBJECT_STORE_BUCKET:-aip}
+  OBJECT_STORE_ENDPOINT_URL: ${OBJECT_STORE_ENDPOINT_URL:-http://rustfs:9000}
+  OBJECT_STORE_REGION: ${OBJECT_STORE_REGION:-us-east-1}
+  OBJECT_STORE_ACCESS_KEY_ID: ${OBJECT_STORE_ACCESS_KEY_ID:-rustfs_dev_only}
+  OBJECT_STORE_SECRET_ACCESS_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:-rustfs_dev_only_secret}
+  PDF_RENDERER: ${PDF_RENDERER:-gotenberg}
+  GOTENBERG_URL: ${GOTENBERG_URL:-http://gotenberg:3000}
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+
+services:
+  postgres:
+    # Postgres 16 with pgvector; ltree, pgcrypto and pg_trgm ship with it. No PostGIS (ADR 0002).
+    image: pgvector/pgvector:0.8.7-pg16-bookworm
+    user: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_dev_only}
+      POSTGRES_DB: ${POSTGRES_DB:-aip}
+      # Read by docker/postgres/init/10-aip-bootstrap.sh on the first start only.
+      AIP_OWNER_PASSWORD: ${AIP_OWNER_PASSWORD:-aip_owner_dev_only}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak_dev_only}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ../db/bootstrap:/aip/bootstrap:ro
+    ports:
+      - "127.0.0.1:${AIP_POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      # Over TCP: the entrypoint's init-time server listens on the socket only, so a socket probe
+      # would report healthy before the real server accepts the migrator's connection.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    security_opt: ["no-new-privileges:true"]
+
+  valkey:
+    # Cache, rate limits, session cache and SSE pub/sub only; never durable work (ADR 0003).
+    image: valkey/valkey:8.1.10-alpine
+    user: valkey
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:${AIP_VALKEY_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    security_opt: ["no-new-privileges:true"]
+
+  rustfs:
+    # S3-compatible object store (Apache-2.0), driven by the `minio` ObjectStore adapter (STACK-02).
+    image: rustfs/rustfs:1.0.1
+    user: rustfs
+    environment:
+      RUSTFS_ACCESS_KEY: ${OBJECT_STORE_ACCESS_KEY_ID:-rustfs_dev_only}
+      RUSTFS_SECRET_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:-rustfs_dev_only_secret}
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+    volumes:
+      - rustfs-data:/data
+    ports:
+      - "127.0.0.1:${AIP_RUSTFS_PORT:-9000}:9000"
+      - "127.0.0.1:${AIP_RUSTFS_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    security_opt: ["no-new-privileges:true"]
+
+  gotenberg:
+    # HTML to PDF (Chromium), the `gotenberg` PdfRenderer adapter (STACK-02).
+    image: gotenberg/gotenberg:8.37.0
+    user: gotenberg
+    ports:
+      - "127.0.0.1:${AIP_GOTENBERG_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    security_opt: ["no-new-privileges:true"]
+
+  keycloak:
+    # Identity broker (ADR 0005), pinned to 26.x with its own database. The realm in
+    # keycloak/import is a placeholder; IDENTITY-01 adds clients and the tenant IdPs.
+    image: quay.io/keycloak/keycloak:26.7.5
+    user: "1000"
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak_dev_only}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-keycloak_admin_dev_only}
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_PORT: "8080"
+    volumes:
+      - ./keycloak/import:/opt/keycloak/data/import:ro
+    ports:
+      - "127.0.0.1:${AIP_KEYCLOAK_PORT:-8180}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # The image has no curl: ask the management port (9000) over bash's /dev/tcp.
+      test:
+        - CMD
+        - bash
+        - -c
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000 &&
+          printf "GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 &&
+          head -n 1 <&3 | grep -q " 200"
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    security_opt: ["no-new-privileges:true"]
+
+  migrator:
+    # One-shot `aip-db migrate` as aip_owner (DATABASE-08). api and worker start only after it
+    # exits 0.
+    <<: *app-hardening
+    build:
+      context: ..
+      dockerfile: infra/docker/migrator.Dockerfile
+    image: aip-migrator:${AIP_IMAGE_TAG:-dev}
+    environment:
+      DATABASE_MIGRATOR_URL: ${DATABASE_MIGRATOR_URL:-postgresql://aip_owner:aip_owner_dev_only@postgres:5432/aip}
+      PYTHONDONTWRITEBYTECODE: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  object-store-init:
+    # One-shot: creates the dev bucket in RustFS (idempotent).
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    command: ["python", "/opt/aip/create_bucket.py"]
+    environment: *app-env
+    volumes:
+      - ./docker/create_bucket.py:/opt/aip/create_bucket.py:ro
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    command: ["uvicorn", "aip.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+    environment: *app-env
+    ports:
+      - "127.0.0.1:${AIP_API_PORT:-8000}:8000"
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      object-store-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      gotenberg:
+        condition: service_healthy
+    healthcheck:
+      # The same probe ECS uses (OPS-04): Postgres, Valkey and migrations at head.
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/v1/health/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  worker:
+    # Same image as the API. A stub until OPS-02 adds the Procrastinate worker; it then becomes
+    # `procrastinate --app=aip.platform.jobs.app.app worker`.
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    init: true
+    command:
+      - sh
+      - -c
+      - 'echo "worker stub - the Procrastinate worker arrives with OPS-02" && exec sleep infinity'
+    environment: *app-env
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import aip"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  web:
+    # The built web app on nginx; /api is proxied to the api service.
+    <<: *app-hardening
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    image: aip-web:${AIP_IMAGE_TAG:-dev}
+    environment:
+      NGINX_ENTRYPOINT_QUIET_LOGS: "1"
+    ports:
+      - "127.0.0.1:${AIP_WEB_PORT:-8080}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  sandbox:
+    # Hardened base image for the sandboxed workers (ADR 0003). Built, never left running:
+    #   docker compose -f infra/docker-compose.yml --profile sandbox build sandbox
+    #   docker run --rm --network none --read-only --user 10001 aip-sandbox:dev <command>
+    <<: *app-hardening
+    profiles: [sandbox]
+    build:
+      context: ..
+      dockerfile: apps/sandbox/Dockerfile
+    image: aip-sandbox:${AIP_IMAGE_TAG:-dev}
+    network_mode: none
+    restart: "no"
+
+  localstack:
+    # S3 + KMS emulator for the `s3` adapter and per-tenant keys (ADR 0006, proposed). Optional:
+    #   docker compose -f infra/docker-compose.yml --profile aws up -d localstack
+    image: localstack/localstack:4.4.0
+    profiles: [aws]
+    environment:
+      SERVICES: s3,kms
+      AWS_DEFAULT_REGION: ap-southeast-2
+    ports:
+      - "127.0.0.1:${AIP_LOCALSTACK_PORT:-4566}:4566"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  postgres-data:
+  rustfs-data:
