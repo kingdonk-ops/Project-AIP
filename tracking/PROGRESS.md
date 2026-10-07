@@ -19,6 +19,7 @@ task on the board generates the next phase's task files from its module docs.
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
 
+- 2026-10-07 · ARCH-01 · (PR pending) · ADR 0004 skeleton in place: uv workspace with FastAPI `aip` package (health route, `ModuleManifest`, `_template` module), `tools/new_module.py` scaffolder, pnpm workspace with a Vite + React + TanStack Router web shell, `make check` and CI.
 - 2026-10-07 · IDENTITY-07 (spec) · — · Sign-off assurance decided (ADR 0010): one quick check at signing, per-tenant minimum, countersign fallback; APPROVALS-02 wired to it.
 - 2026-10-07 · DOCS-01 · #1 · Owner chose Python backend, AIP code not used: ADRs 0001–0007 revised; 44 M0 specs converted to FastAPI/SQLAlchemy/Alembic/Procrastinate + Vite; depends-on synced from board; shared fixtures and permission-code rule fixed.
 - 2026-10-07 · DOCS-01 · #1 · Board of 103 tasks in waves (M0 = waves 0–5); 44 new P0 specs for identity, access, projects, design, audit, approvals, uploads, ops, ENT-01 and PLAN-R1; stack decision review (08) added, rebuild-vs-Python question open.

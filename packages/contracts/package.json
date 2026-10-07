@@ -1,0 +1,6 @@
+{
+  "name": "@aip/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "JSON Schemas (sync protocol, events, form/rule/workflow) and JSONLogic golden vectors. Placeholder until the owning tasks add content."
+}

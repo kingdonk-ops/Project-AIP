@@ -21,7 +21,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [DOCS-01](tasks/DOCS-01.md) | Board, ADRs, agent workflow, conventions fixes | arch | S | — | done | setup PR |
 | [STACK-01](tasks/STACK-01.md) | Stack ADRs and reconciliation record | stack | S | — | todo | ADRs 0001-0008 drafted; finalise once owner answers OPEN-QUESTIONS.md |
 | [SECURITY-01](tasks/SECURITY-01.md) | Threat model and AGPL provenance log | security | XS | — | todo | |
-| [ARCH-01](tasks/ARCH-01.md) | Monorepo skeleton and module template | arch | M | — | todo | |
+| [ARCH-01](tasks/ARCH-01.md) | Monorepo skeleton and module template | arch | M | — | review | branch claude/festive-cerf-euolrf |
 
 ### Wave 1
 
