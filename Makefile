@@ -19,7 +19,10 @@ check-ts:
 	pnpm -r build
 	pnpm -r test
 
-# STACK-01: ADR record, errata marker and version pins. Stdlib only (no uv/pnpm needed).
+# STACK-01: ADR record, errata marker and version pins; SECURITY-01: threat model and provenance log.
+# Stdlib only (no uv/pnpm needed).
 check-docs:
 	python3 tools/ci/check_adrs.py
 	python3 -m unittest tools/ci/test_check_adrs.py
+	python3 tools/ci/check_security_docs.py
+	python3 -m unittest tools/ci/test_check_security_docs.py

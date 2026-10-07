@@ -19,6 +19,7 @@ task on the board generates the next phase's task files from its module docs.
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
 
+- 2026-10-07 · SECURITY-01 · (PR pending) · `docs/security/threat-model.md` covers the six required threat areas (assets, STRIDE threats, ADR-cited controls, residual risk, open items keyed to the security review's top risks) and `docs/security/provenance-log.md` records AIP as not read or copied and no OpenConstructionERP viewed yet (legal advice `LEGAL-TBD`), enforced by stdlib `tools/ci/check_security_docs.py` in CI `docs` job and `make check-docs`; STACK-01 marked done (PR #5).
 - 2026-10-07 · STACK-01 · (PR pending) · ADR statuses verified against owner answers (0001–0005, 0009, 0010 accepted; 0006–0008 owner to confirm), errata block appended to `01-decisions.md`, `docs/stack/versions.md` with `.python-version` 3.12 / `.nvmrc` 22 pins from the lockfiles, and stdlib `tools/ci/check_adrs.py` lint wired into CI (`docs` job) and `make check`.
 - 2026-10-07 · ARCH-01 · (PR pending) · ADR 0004 skeleton in place: uv workspace with FastAPI `aip` package (health route, `ModuleManifest`, `_template` module), `tools/new_module.py` scaffolder, pnpm workspace with a Vite + React + TanStack Router web shell, `make check` and CI.
 - 2026-10-07 · IDENTITY-07 (spec) · — · Sign-off assurance decided (ADR 0010): one quick check at signing, per-tenant minimum, countersign fallback; APPROVALS-02 wired to it.
