@@ -12,6 +12,7 @@ from collections.abc import Iterable
 
 from fastapi import APIRouter, FastAPI
 
+from aip.platform.capabilities import validate_capability_settings
 from aip.platform.modules.registry import load_modules
 from aip.platform.modules.routes import create_router as create_modules_router
 
@@ -19,6 +20,7 @@ from aip.platform.modules.routes import create_router as create_modules_router
 def create_app(
     modules_package: str | None = None, disabled_modules: Iterable[str] | None = None
 ) -> FastAPI:
+    validate_capability_settings()  # unknown OBJECT_STORE / PDF_RENDERER stops startup (STACK-02)
     modules = load_modules(modules_package, disabled_modules)
 
     app = FastAPI(title="AIP API", version="0.1.0")
