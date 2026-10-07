@@ -32,7 +32,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [ARCH-03](tasks/ARCH-03.md) | Import-boundary lint and manifest CI check | arch | S | ARCH-01 | done | PR #11 |
 | [ARCH-04](tasks/ARCH-04.md) | Request context carrying tenant, project, actor and asset scope | arch | S | ARCH-01 | done | PR #7 |
 | [STACK-02](tasks/STACK-02.md) | Capability interfaces and adapter selection | stack | M | ARCH-01 | done | PR #12 |
-| [STACK-04](tasks/STACK-04.md) | Licence allow-list and CycloneDX SBOM in CI | stack | S | ARCH-01 | todo |  |
+| [STACK-04](tasks/STACK-04.md) | Licence allow-list and CycloneDX SBOM in CI | stack | S | ARCH-01 | done | PR #14 |
 | [STACK-05](tasks/STACK-05.md) | Platform version endpoint and docker-compose stack | stack | M | STACK-02 | todo | |
 | [OPS-04](tasks/OPS-04.md) | Health endpoints and structured logging with PII scrubber | ops | S | ARCH-01 | done | PR #15 |
 | [IDENTITY-01](tasks/IDENTITY-01.md) | Keycloak dev realm in compose + OIDC broker login + login_directory | identity | M | ARCH-01, STACK-05 | todo |  |

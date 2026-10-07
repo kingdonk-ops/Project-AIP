@@ -1,0 +1,19 @@
+{
+  "$comment": "Fixture for tools/ci/tests/test_check_licences.py. The exception expires 2099-01-31; the test runs with --today 2099-01-01, i.e. 30 days before expiry.",
+  "allow": ["MIT", "Apache-2.0"],
+  "review": ["LGPL-*"],
+  "review_allowed_sboms": ["image-sandbox-*.cdx.json"],
+  "deny": ["GPL-*", "AGPL-*", "SSPL-*"],
+  "aliases": {"License :: OSI Approved :: Apache Software License": "Apache-2.0"},
+  "first_party": [],
+  "system_packages": {"purl_types": ["deb"], "deny": ["AGPL-*", "SSPL-*"], "deny_names": []},
+  "exceptions": [
+    {
+      "component": "fixture-agpl",
+      "licence": "AGPL-3.0-only",
+      "reason": "Test fixture: exception expiring in 30 days.",
+      "approver": "fixture-owner",
+      "expires": "2099-01-31"
+    }
+  ]
+}

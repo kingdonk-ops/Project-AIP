@@ -1,0 +1,33 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {"component": {"type": "application", "name": "fixture-app", "version": "0.0.0"}},
+  "components": [
+    {
+      "type": "library",
+      "name": "fixture-mit",
+      "version": "1.0.0",
+      "purl": "pkg:pypi/fixture-mit@1.0.0",
+      "licenses": [{"license": {"id": "MIT"}}]
+    },
+    {
+      "type": "library",
+      "group": "@fixture",
+      "name": "dual",
+      "version": "2.0.0",
+      "purl": "pkg:npm/%40fixture/dual@2.0.0",
+      "licenses": [{"expression": "MIT OR GPL-3.0-only"}]
+    },
+    {
+      "type": "library",
+      "name": "fixture-classifier",
+      "version": "3.0.0",
+      "purl": "pkg:pypi/fixture-classifier@3.0.0",
+      "licenses": [
+        {"license": {"id": "Apache-2.0"}},
+        {"license": {"name": "License :: OSI Approved :: Apache Software License"}}
+      ]
+    }
+  ]
+}
