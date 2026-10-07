@@ -17,6 +17,7 @@ from types import TracebackType
 from uuid import UUID
 
 __all__ = [
+    "SAFE_REQUEST_ID",
     "ContextMissingError",
     "RequestContext",
     "get_context",
@@ -27,6 +28,10 @@ __all__ = [
 # An ltree path: dot-separated labels of letters, digits, underscore and hyphen (PostgreSQL 16+).
 _LTREE_PATH = re.compile(r"^[A-Za-z0-9_-]{1,1000}(\.[A-Za-z0-9_-]{1,1000})*$")
 
+# A request id is accepted from outside (X-Request-Id header, job payload) only when it matches
+# this: it cannot forge log lines (no whitespace/newlines) or bloat headers (max 128 chars).
+SAFE_REQUEST_ID = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+
 
 class ContextMissingError(LookupError):
     """Raised when code that needs a tenant context runs outside one."""
@@ -34,6 +39,13 @@ class ContextMissingError(LookupError):
 
 @dataclass(frozen=True, slots=True)
 class RequestContext:
+    """Who is acting, for which tenant/project, and which assets they may touch.
+
+    ``asset_path_scope`` lists the ltree asset paths (and their subtrees) the actor may access.
+    An EMPTY ``asset_path_scope`` means NO asset access - it is never "unrestricted". Code that
+    filters by asset must deny when the scope is empty, not skip the filter.
+    """
+
     tenant_id: UUID
     request_id: str
     project_id: UUID | None = None

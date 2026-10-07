@@ -12,13 +12,14 @@ import anyio.to_thread
 import pytest
 
 from aip.platform.context import (
+    SAFE_REQUEST_ID,
     ContextMissingError,
     RequestContext,
     get_context,
     run_with_context,
     use_context,
 )
-from aip.platform.jobs.context import tenant_job
+from aip.platform.jobs import TenantMismatchError, tenant_job
 
 T1 = UUID("00000000-0000-4000-8000-000000000001")
 T2 = UUID("00000000-0000-4000-8000-000000000002")
@@ -154,3 +155,68 @@ def test_tenant_job_wraps_sync_handlers() -> None:
     assert handler(tenant_id=str(T2)) == T2
     with pytest.raises(ContextMissingError):
         handler()
+
+
+@pytest.mark.parametrize("bad", ["req\nforged-log-line", "x" * 200, "has space"])
+async def test_tenant_job_replaces_unsafe_request_id(bad: str) -> None:
+    @tenant_job
+    async def handler(**payload: Any) -> str:
+        return get_context().request_id
+
+    rid = await handler(tenant_id=str(T1), request_id=bad)
+    assert rid != bad
+    assert rid.startswith("job-")
+    assert SAFE_REQUEST_ID.fullmatch(rid)
+
+
+async def test_tenant_job_keeps_safe_request_id() -> None:
+    @tenant_job
+    async def handler(**payload: Any) -> str:
+        return get_context().request_id
+
+    assert await handler(tenant_id=str(T1), request_id="req-abc.1:2") == "req-abc.1:2"
+
+
+async def test_tenant_job_refuses_to_switch_tenant() -> None:
+    ran = False
+
+    @tenant_job
+    async def handler(**payload: Any) -> None:
+        nonlocal ran
+        ran = True
+
+    async with use_context(ctx(T1)):
+        with pytest.raises(TenantMismatchError):
+            await handler(tenant_id=str(T2))
+    assert ran is False
+    assert issubclass(TenantMismatchError, ContextMissingError)
+
+
+def test_sync_tenant_job_refuses_to_switch_tenant() -> None:
+    ran = False
+
+    @tenant_job
+    def handler(**payload: Any) -> None:
+        nonlocal ran
+        ran = True
+
+    with use_context(ctx(T1)), pytest.raises(TenantMismatchError):
+        handler(tenant_id=str(T2))
+    assert ran is False
+
+
+async def test_tenant_job_same_tenant_proceeds() -> None:
+    @tenant_job
+    async def handler(**payload: Any) -> UUID:
+        return get_context().tenant_id
+
+    async with use_context(ctx(T1)):
+        assert await handler(tenant_id=str(T1)) == T1
+
+
+async def test_tenant_job_asset_scope_is_empty_meaning_no_asset_access() -> None:
+    @tenant_job
+    async def handler(**payload: Any) -> tuple[str, ...]:
+        return get_context().asset_path_scope
+
+    assert await handler(tenant_id=str(T1)) == ()

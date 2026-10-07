@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
@@ -199,3 +200,66 @@ async def test_e2e_authenticated_call_is_audited_with_request_id(
     assert sink.records == [
         {"action": "widget.created", "tenant_id": str(ids.tenant_a), "request_id": request_id}
     ]
+
+
+class ExplodingPrincipalResolver:
+    async def resolve(self, headers: Mapping[str, str]) -> Principal | None:
+        raise RuntimeError("identity backend down")
+
+
+class ExplodingMembershipResolver:
+    async def is_member(self, *, tenant_id: UUID, actor_id: UUID | None, project_id: UUID) -> bool:
+        raise RuntimeError("membership backend down")
+
+
+async def test_principal_resolver_failure_is_500_with_request_id(
+    membership_resolver: Any, caplog: pytest.LogCaptureFixture
+) -> None:
+    app = make_app(ExplodingPrincipalResolver(), membership_resolver)
+    with caplog.at_level(logging.ERROR):
+        async with client(app) as c:
+            r = await c.get(DEBUG, headers={"X-Request-Id": "rid-boom-1"})
+    assert r.status_code == 500
+    assert r.headers["x-request-id"] == "rid-boom-1"
+    assert "identity backend down" not in r.text
+    assert any(
+        rec.levelno == logging.ERROR and "rid-boom-1" in rec.getMessage() for rec in caplog.records
+    )
+
+
+async def test_membership_resolver_failure_is_500_with_request_id(
+    ids: Any, principal_resolver: Any, caplog: pytest.LogCaptureFixture
+) -> None:
+    app = make_app(principal_resolver, ExplodingMembershipResolver())
+    with caplog.at_level(logging.ERROR):
+        async with client(app) as c:
+            r = await c.get(
+                DEBUG,
+                headers={
+                    "Authorization": "Bearer token-alice",
+                    "X-Project-Id": str(ids.project_a1),
+                    "X-Request-Id": "rid-boom-2",
+                },
+            )
+    assert r.status_code == 500
+    assert r.headers["x-request-id"] == "rid-boom-2"
+    assert any(
+        rec.levelno == logging.ERROR and "rid-boom-2" in rec.getMessage() for rec in caplog.records
+    )
+
+
+@pytest.mark.parametrize("aip_env", [None, "prod"])
+async def test_default_create_app_has_no_debug_route(
+    aip_env: str | None,
+    monkeypatch: pytest.MonkeyPatch,
+    principal_resolver: Any,
+    membership_resolver: Any,
+) -> None:
+    if aip_env is None:
+        monkeypatch.delenv("AIP_ENV", raising=False)
+    else:
+        monkeypatch.setenv("AIP_ENV", aip_env)
+    app = create_app(principal_resolver=principal_resolver, membership_resolver=membership_resolver)
+    async with client(app) as c:
+        r = await c.get(DEBUG, headers={"Authorization": "Bearer token-alice"})
+    assert r.status_code == 404

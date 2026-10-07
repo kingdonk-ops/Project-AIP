@@ -9,14 +9,16 @@ Per request:
 1. read ``X-Request-Id`` when it is safe, otherwise generate one; echo it on every response;
 2. ask the injected ``PrincipalResolver`` for the verified principal (ADR 0005);
 3. if ``X-Project-Id`` is sent, require a valid UUID (400), an authenticated caller (401) and
-   membership per the injected ``ProjectMembershipResolver`` (403);
+   membership per the injected ``ProjectMembershipResolver`` (403); if either resolver raises,
+   the error is logged with the request id and the request is rejected with 500 (still
+   carrying ``X-Request-Id``);
 4. run the app inside ``use_context``. With no principal, no context is set: anything that
    calls ``get_context()`` then raises ``ContextMissingError``, which the app maps to 401.
 """
 
 from __future__ import annotations
 
-import re
+import logging
 import uuid
 from uuid import UUID
 
@@ -24,21 +26,20 @@ from starlette.datastructures import Headers, MutableHeaders
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from aip.platform.context.context import RequestContext, use_context
-from aip.platform.context.resolvers import PrincipalResolver, ProjectMembershipResolver
+from aip.platform.context.context import SAFE_REQUEST_ID, RequestContext, use_context
+from aip.platform.context.resolvers import Principal, PrincipalResolver, ProjectMembershipResolver
 
 __all__ = ["REQUEST_ID_HEADER", "RequestContextMiddleware"]
 
 REQUEST_ID_HEADER = "x-request-id"
 PROJECT_ID_HEADER = "x-project-id"
 
-# Accept caller-supplied ids only when they cannot forge log lines or bloat headers.
-_SAFE_REQUEST_ID = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+logger = logging.getLogger(__name__)
 
 
 def _request_id(headers: Headers) -> str:
     given = headers.get(REQUEST_ID_HEADER)
-    if given is not None and _SAFE_REQUEST_ID.fullmatch(given):
+    if given is not None and SAFE_REQUEST_ID.fullmatch(given):
         return given
     return uuid.uuid4().hex
 
@@ -81,7 +82,13 @@ class RequestContextMiddleware:
                 await reject(400, "X-Project-Id must be a UUID")
                 return
 
-        principal = await self.principal_resolver.resolve(headers)
+        principal: Principal | None
+        try:
+            principal = await self.principal_resolver.resolve(headers)
+        except Exception:
+            logger.exception("principal resolver failed (request_id=%s)", request_id)
+            await reject(500, "Internal Server Error")
+            return
         if principal is None:
             if project_id is not None:
                 await reject(401, "Not authenticated")
@@ -89,11 +96,20 @@ class RequestContextMiddleware:
             await self.app(scope, receive, send_with_request_id)
             return
 
-        if project_id is not None and not await self.membership_resolver.is_member(
-            tenant_id=principal.tenant_id, actor_id=principal.actor_id, project_id=project_id
-        ):
-            await reject(403, "Not a member of this project")
-            return
+        if project_id is not None:
+            try:
+                is_member = await self.membership_resolver.is_member(
+                    tenant_id=principal.tenant_id,
+                    actor_id=principal.actor_id,
+                    project_id=project_id,
+                )
+            except Exception:
+                logger.exception("membership resolver failed (request_id=%s)", request_id)
+                await reject(500, "Internal Server Error")
+                return
+            if not is_member:
+                await reject(403, "Not a member of this project")
+                return
 
         ctx = RequestContext(
             tenant_id=principal.tenant_id,

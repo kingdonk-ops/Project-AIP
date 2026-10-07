@@ -1,6 +1,7 @@
 """Request context: tenant, project, actor and asset scope for the current work (ARCH-04)."""
 
 from aip.platform.context.context import (
+    SAFE_REQUEST_ID,
     ContextMissingError,
     RequestContext,
     get_context,
@@ -17,6 +18,7 @@ from aip.platform.context.resolvers import (
 )
 
 __all__ = [
+    "SAFE_REQUEST_ID",
     "ContextMissingError",
     "DenyAllMembershipResolver",
     "DenyAllPrincipalResolver",
