@@ -16,3 +16,4 @@ bullets and a row here; `tools/ci/check_adrs.py` enforces this in CI (`make chec
 | [0008](0008-entitlements-and-commercial-model.md) | One entitlement service; sales-led; contract billing at launch | proposed |
 | [0009](0009-ocr-and-licensing.md) | Only permissive open-source or AWS services; OCR = Tesseract + pypdfium2, Textract optional | accepted |
 | [0010](0010-signoff-assurance.md) | Sign-off assurance: one quick check at signing (passkey, device+PIN, TOTP or IdP MFA), per-tenant minimum, countersign fallback | accepted |
+| [0011](0011-licence-policy-details.md) | Licence check details: more permissive licences allowed; image OS packages judged as aggregation (AGPL/SSPL/Ghostscript still denied) | proposed |

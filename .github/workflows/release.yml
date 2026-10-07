@@ -1,0 +1,101 @@
+name: release
+
+# STACK-04: on a version tag, build the shipped images, write CycloneDX SBOMs for the Python
+# dependencies, the pnpm workspace and every image, block the release on a licence-policy
+# violation (config/licence-policy.json, ADR 0009/0011), and attach the SBOMs to the GitHub release.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # create the release and upload its assets
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sbom:
+    name: SBOMs and licence policy
+    runs-on: ubuntu-latest
+    env:
+      SYFT_VERSION: v1.33.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install JS workspace
+        run: pnpm install --frozen-lockfile
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@v0
+        with:
+          syft-version: ${{ env.SYFT_VERSION }}
+
+      - name: Licence checker tests
+        run: python3 -m unittest tools/ci/tests/test_check_licences.py
+
+      - name: Build images
+        id: images
+        # Every image we ship: infra/docker/<name>.Dockerfile -> <name>, apps/api/Dockerfile -> api,
+        # apps/sandbox/<worker>/Dockerfile -> sandbox-<worker> (LGPL review applies to sandbox-*).
+        run: |
+          set -euo pipefail
+          specs=()
+          build() {
+            local name="$1" dockerfile="$2" tag="aip-$1:${GITHUB_REF_NAME}"
+            echo "::group::docker build $name ($dockerfile)"
+            docker build -f "$dockerfile" -t "$tag" .
+            echo "::endgroup::"
+            specs+=("$name=docker:$tag")
+          }
+          shopt -s nullglob
+          for f in infra/docker/*.Dockerfile; do build "$(basename "$f" .Dockerfile)" "$f"; done
+          if [ -f apps/api/Dockerfile ]; then build api apps/api/Dockerfile; fi
+          for f in apps/sandbox/*/Dockerfile; do build "sandbox-$(basename "$(dirname "$f")")" "$f"; done
+          echo "specs=${specs[*]}" >> "$GITHUB_OUTPUT"
+
+      - name: Write SBOMs (tools/sbom.sh)
+        env:
+          IMAGE_SPECS: ${{ steps.images.outputs.specs }}
+        run: |
+          # Registry and npm lookups can flake; retry with backoff.
+          for attempt in 1 2 3; do
+            # shellcheck disable=SC2086 # IMAGE_SPECS is a space-separated list
+            if tools/sbom.sh $IMAGE_SPECS; then exit 0; fi
+            echo "tools/sbom.sh failed (attempt $attempt); retrying"
+            sleep $((attempt * 20))
+          done
+          exit 1
+
+      - name: Keep SBOMs as a workflow artefact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.ref_name }}
+          path: dist/sbom/*.cdx.json
+          if-no-files-found: warn
+
+      - name: Licence policy (blocks the release on a violation)
+        run: python3 tools/ci/check_licences.py dist/sbom/*.cdx.json
+
+      - name: Attach SBOMs to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            prerelease=()
+            case "$TAG" in *-*) prerelease=(--prerelease) ;; esac
+            gh release create "$TAG" --verify-tag --generate-notes "${prerelease[@]}"
+          fi
+          gh release upload "$TAG" dist/sbom/*.cdx.json --clobber
+          gh release view "$TAG" --json assets --jq '.assets[].name'
