@@ -1,0 +1,26 @@
+{
+  "name": "@aip/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed API client generated from apps/api OpenAPI (openapi-typescript + orval TanStack Query). Never hand-edited: run `pnpm --filter api-client generate`.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "node ./scripts/generated.mjs clean && openapi-typescript ./openapi.json --output ./src/generated/schema.ts && orval --config ./orval.config.ts && node ./scripts/generated.mjs header",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0"
+  },
+  "devDependencies": {
+    "@aip/config-ts": "workspace:*",
+    "@tanstack/react-query": "^5.104.1",
+    "@types/react": "^19.3.0",
+    "openapi-typescript": "^7.13.0",
+    "orval": "^8.40.0",
+    "react": "^19.3.0",
+    "typescript": "~6.0.3"
+  }
+}

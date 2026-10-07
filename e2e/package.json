@@ -1,0 +1,18 @@
+{
+  "name": "@aip/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright end-to-end tests (AGENTS.md: web testing). Run with `pnpm --filter e2e test:e2e`.",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@aip/config-ts": "workspace:*",
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "typescript": "~6.0.3"
+  }
+}

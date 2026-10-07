@@ -16,6 +16,8 @@ from collections.abc import Iterable
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
+from pydantic import BaseModel
 
 from aip.platform.capabilities import validate_capability_settings
 from aip.platform.context import (
@@ -31,6 +33,20 @@ from aip.platform.modules.registry import load_modules
 from aip.platform.modules.routes import create_router as create_modules_router
 
 
+class HealthResponse(BaseModel):
+    """Body of GET /api/v1/health. Changing it changes the generated client (STACK-03)."""
+
+    status: str
+
+
+def operation_id(route: APIRoute) -> str:
+    """Stable OpenAPI operation ids, ``<first tag>_<function name>`` (STACK-03).
+
+    The generated client names its hooks after these (``platform_health`` -> ``usePlatformHealth``).
+    """
+    return f"{route.tags[0]}_{route.name}" if route.tags else route.name
+
+
 def create_app(
     modules_package: str | None = None,
     disabled_modules: Iterable[str] | None = None,
@@ -43,13 +59,13 @@ def create_app(
     modules = load_modules(modules_package, disabled_modules)
     env = os.environ.get("AIP_ENV", "") if env is None else env
 
-    app = FastAPI(title="AIP API", version="0.1.0")
+    app = FastAPI(title="AIP API", version="0.1.0", generate_unique_id_function=operation_id)
 
     v1 = APIRouter(prefix="/api/v1")
 
     @v1.get("/health", tags=["platform"])
-    def health() -> dict[str, str]:  # pyright: ignore[reportUnusedFunction]
-        return {"status": "ok"}
+    def health() -> HealthResponse:  # pyright: ignore[reportUnusedFunction]
+        return HealthResponse(status="ok")
 
     if env == "test":
         # ARCH-04: test-only echo of the request context. Never mounted outside AIP_ENV=test.
