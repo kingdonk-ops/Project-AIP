@@ -1,0 +1,6 @@
+# Fixture: emits x.y.z but declares no events.
+id = "undeclared_event"
+context = "fixtures"
+permissions = []
+events = []
+term_keys = []

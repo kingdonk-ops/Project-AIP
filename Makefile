@@ -1,11 +1,18 @@
 # `make check` runs every backend and frontend gate (ARCH-01). CI runs the same commands.
-.PHONY: check check-py check-ts check-docs check-client generate-client e2e install
+.PHONY: check check-py check-ts check-docs check-boundaries check-client generate-client e2e install
 
 install:
 	uv sync --all-packages --frozen
 	pnpm install --frozen-lockfile
 
-check: check-py check-ts check-docs
+check: check-py check-ts check-docs check-boundaries
+
+# ARCH-03: module import boundaries (import-linter; run from the repo root so tools/ci is
+# importable), manifest coverage and the ADR 0004 layout. ESLint boundaries run in check-ts.
+check-boundaries:
+	uv run lint-imports --no-cache
+	python3 tools/ci/check_manifests.py
+	python3 tools/ci/check_layout.py
 
 check-py:
 	uv run ruff check
