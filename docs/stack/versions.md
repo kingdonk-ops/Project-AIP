@@ -33,3 +33,6 @@ first task must use, and that task updates its row.
 | TanStack Router | 1.170.41 | `pnpm-lock.yaml` (`@tanstack/react-router ^1.170.41`) | lockfile refresh |
 | Vitest | 5.0.3 | `pnpm-lock.yaml` (`^5.0.3`) | stay on the major |
 | Playwright | current stable (not yet added) | `pnpm-lock.yaml` once the first e2e task adds `@playwright/test` | lockfile refresh; browsers pinned by the same version |
+| cyclonedx-bom (`cyclonedx-py`) | 7.5.0 | `tools/sbom.sh` `CYCLONEDX_BOM_VERSION` (run with `uvx`; Apache-2.0) | bump in a dedicated PR; re-run `make sbom` |
+| cdxgen | 12.8.5 | `tools/sbom.sh` `CDXGEN_VERSION` (run with `npx`; Apache-2.0) | bump in a dedicated PR; re-run `make sbom` |
+| syft | 1.33.0 | `.github/workflows/release.yml` `SYFT_VERSION` (Apache-2.0) | bump in a dedicated PR |

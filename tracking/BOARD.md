@@ -29,14 +29,14 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 |---|---|---|---|---|---|---|
 | [DATABASE-08](tasks/DATABASE-08.md) | Alembic env, migrator role, baseline revision + extensions | database | M | ARCH-01 | done | PR #9 |
 | [ARCH-02](tasks/ARCH-02.md) | Module registry and dependency check | arch | S | ARCH-01 | done | PR #8 |
-| [ARCH-03](tasks/ARCH-03.md) | Import-boundary lint and manifest CI check | arch | S | ARCH-01 | review | branch claude/p0-arch-03 |
+| [ARCH-03](tasks/ARCH-03.md) | Import-boundary lint and manifest CI check | arch | S | ARCH-01 | done | PR #11 |
 | [ARCH-04](tasks/ARCH-04.md) | Request context carrying tenant, project, actor and asset scope | arch | S | ARCH-01 | done | PR #7 |
-| [STACK-02](tasks/STACK-02.md) | Capability interfaces and adapter selection | stack | M | ARCH-01 | review | branch claude/p0-stack-02 |
-| [STACK-04](tasks/STACK-04.md) | Licence allow-list and CycloneDX SBOM in CI | stack | S | ARCH-01 | todo |  |
+| [STACK-02](tasks/STACK-02.md) | Capability interfaces and adapter selection | stack | M | ARCH-01 | done | PR #12 |
+| [STACK-04](tasks/STACK-04.md) | Licence allow-list and CycloneDX SBOM in CI | stack | S | ARCH-01 | done | PR #14 |
 | [STACK-05](tasks/STACK-05.md) | Platform version endpoint and docker-compose stack | stack | M | STACK-02 | todo | |
-| [OPS-04](tasks/OPS-04.md) | Health endpoints and structured logging with PII scrubber | ops | S | ARCH-01 | review | branch claude/p0-ops-04 (PR pending) |
+| [OPS-04](tasks/OPS-04.md) | Health endpoints and structured logging with PII scrubber | ops | S | ARCH-01 | done | PR #15 |
 | [IDENTITY-01](tasks/IDENTITY-01.md) | Keycloak dev realm in compose + OIDC broker login + login_directory | identity | M | ARCH-01, STACK-05 | todo |  |
-| [DESIGN-01](tasks/DESIGN-01.md) | Design tokens, ui package (Radix/shadcn), axe lint | design | M | ARCH-01 | in-progress | branch claude/p0-design-01 |
+| [DESIGN-01](tasks/DESIGN-01.md) | Design tokens, ui package (Radix/shadcn), axe lint | design | M | ARCH-01 | blocked | branch claude/p0-design-01; the config-protection hook blocks writing packages/ui/eslint.config.mjs (owner action, see OPEN-QUESTIONS) |
 
 ### Wave 2
 
@@ -44,7 +44,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 |---|---|---|---|---|---|---|
 | [DATABASE-02](tasks/DATABASE-02.md) | Roles, session helper and fail-closed tenant context | database | M | DATABASE-08 | todo | |
 | [TESTING-02](tasks/TESTING-02.md) | Schema guard: tenant_id and RLS on every table | testing | S | DATABASE-02 | todo | |
-| [STACK-03](tasks/STACK-03.md) | Generated typed API client with drift check | stack | M | ARCH-01 | review | branch claude/p0-stack-03 |
+| [STACK-03](tasks/STACK-03.md) | Generated typed API client with drift check | stack | M | ARCH-01 | done | PR #13 |
 | [DESIGN-02](tasks/DESIGN-02.md) | App shell (header, nav rail, scope bar) + login/logout | design | M | DESIGN-01, IDENTITY-01 | todo |  |
 
 ### Wave 3

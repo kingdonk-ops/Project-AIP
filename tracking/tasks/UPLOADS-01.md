@@ -81,3 +81,11 @@ Make a user-bound upload session the only way in. The server issues a short-live
     - `expireStaleSessions(now + 16 min)` → the session becomes `expired`, and confirm → 409.
   - **e2e**:
     - Playwright API project on the compose stack. The `kaefer-demo` user creates a session, uploads `e2e/fixtures/photo.jpg` via the presigned form and confirms → `GET status` returns `uploaded`. A `tenant-b` user replaying the same presigned fields with a changed key → rejected, and nothing is written outside `tenant/<A>/quarantine/<token>`.
+
+## Carried forward from the STACK-02 review (PR #12, non-blocking)
+
+- Validate presign expiry: `1 <= expires_s <= 604800`, with a lower policy cap for PUT (e.g. 900 s); add a unit test.
+- Adapters should assert `key.startswith("tenant/")` at runtime (`ObjectKey` is only a `NewType`); `tenant_key()` should also reject control characters and `%`-encoded dots or slashes.
+- `parse_adapter_config()`: NFKC-normalise keys; add `pass`, `pwd`, `auth`, `authorization`, `bearer`, `jwt`, `signature`, `sas`, `dsn`, `connection_string`, `cookie`; reject URL values with userinfo.
+- Decide whether a KMS key is mandatory on RustFS/Coolify (needs KMS configured there; ADR 0006 covers LocalStack only). `presign_put` returns `PresignedRequest(method, url, headers)` because SSE-KMS headers are signed; the client must send them.
+- Gotenberg: run with a Chromium deny/allow list and no route to internal services or metadata (HTML can fetch URLs); sanitise or template HTML in callers; `trust_env=False`; stream-limit the error body; consider a `max_bytes` on `get()`; fail when exactly one of the S3 access/secret keys is set.
