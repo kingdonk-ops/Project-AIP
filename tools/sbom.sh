@@ -31,6 +31,9 @@ uv pip install --quiet --python "$WORK/venv/bin/python" --no-deps --require-hash
 uvx --from "cyclonedx-bom==$CYCLONEDX_BOM_VERSION" cyclonedx-py environment \
   --pyproject "$ROOT/apps/api/pyproject.toml" --spec-version 1.6 --output-reproducible \
   -o "$OUT/python.cdx.json" "$WORK/venv/bin/python"
+# cyclonedx-py drops the free-text `License:` field; fill gaps from each package's own METADATA.
+python3 "$ROOT/tools/ci/sbom_fill_licences.py" "$OUT/python.cdx.json" \
+  "$("$WORK/venv/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
 
 echo "sbom: pnpm workspace -> $OUT/js.cdx.json"
 # cyclonedx-npm does not read pnpm lockfiles. FETCH_LICENSE fills licences from the registry.

@@ -56,7 +56,7 @@ jobs:
           syft-version: ${{ env.SYFT_VERSION }}
 
       - name: Licence checker tests
-        run: python3 -m unittest tools/ci/tests/test_check_licences.py
+        run: python3 -m unittest tools/ci/tests/test_check_licences.py tools/ci/tests/test_sbom_fill_licences.py
 
       - name: Build images
         id: images

@@ -37,7 +37,7 @@ check-docs:
 	python3 -m unittest tools/ci/test_check_security_docs.py
 	python3 tools/ci/check_generated_header.py
 	python3 -m unittest tools/ci/test_check_generated_header.py
-	python3 -m unittest tools/ci/tests/test_check_licences.py
+	python3 -m unittest tools/ci/tests/test_check_licences.py tools/ci/tests/test_sbom_fill_licences.py
 
 # STACK-03: regenerate the typed API client from the FastAPI schema, and the CI drift check
 # (fails on uncommitted changes under packages/api-client).

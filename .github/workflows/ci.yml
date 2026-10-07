@@ -286,7 +286,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - name: Licence checker tests
-        run: python3 -m unittest tools/ci/tests/test_check_licences.py
+        run: python3 -m unittest tools/ci/tests/test_check_licences.py tools/ci/tests/test_sbom_fill_licences.py
       - name: Install JS workspace
         run: pnpm install --frozen-lockfile
       - name: Python and JS SBOMs (images are scanned in release.yml)
