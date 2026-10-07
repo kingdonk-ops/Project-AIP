@@ -1,6 +1,6 @@
 # ADR 0004: Repository layout: Python API and worker, three Vite TypeScript apps
 
-- **Status:** accepted. Moving from Next.js to Vite for all three apps follows the stack review; **owner to confirm**.
+- **Status:** accepted (owner, 2026-10-07: Vite for all three apps; supersedes the original Next.js decision).
 - **Date:** 2026-10-07 (revised for the Python backend)
 - **Affects:** every task's `files` list; ARCH-01, ARCH-03, STACK-03, STACK-05, TERMS-08, design, offline, portal
 
