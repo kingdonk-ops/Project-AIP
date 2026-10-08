@@ -21,7 +21,21 @@ if TYPE_CHECKING:  # fixtures come from conftest.py; this import is for type hin
 REPO_ROOT = Path(__file__).resolve().parents[5]
 
 BASELINE = "202610071200"
-HEAD = "202610080454"  # IDENTITY-01 identity_login_directory
+
+
+def _code_head() -> str:
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    from aip.platform.db.migrator import alembic_ini
+
+    head = ScriptDirectory.from_config(Config(str(alembic_ini()))).get_current_head()
+    assert head is not None
+    return head
+
+
+# The newest committed revision; later revisions (OPS-01, ...) move it past the baseline.
+HEAD = _code_head()
 EXTENSIONS = {"ltree", "pgcrypto", "pg_trgm", "citext", "btree_gist", "vector"}
 OWNER_ERROR = "migrator must run as aip_owner"
 

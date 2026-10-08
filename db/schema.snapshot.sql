@@ -61,9 +61,53 @@ CREATE TABLE aip_meta.alembic_version (
 
 ALTER TABLE aip_meta.alembic_version OWNER TO aip_owner;
 
+-- Name: COLUMN jobs.attempts; Type: ACL; Schema: public
+GRANT UPDATE(attempts) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: COLUMN jobs.error; Type: ACL; Schema: public
+GRANT UPDATE(error) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: COLUMN jobs.procrastinate_job_id; Type: ACL; Schema: public
+GRANT UPDATE(procrastinate_job_id) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: COLUMN jobs.result_ref; Type: ACL; Schema: public
+GRANT UPDATE(result_ref) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: COLUMN jobs.status; Type: ACL; Schema: public
+GRANT UPDATE(status) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: COLUMN jobs.updated_at; Type: ACL; Schema: public
+GRANT UPDATE(updated_at) ON TABLE public.jobs TO aip_jobs;
+
 -- Name: FUNCTION identity_resolve_login(p_kind text, p_key public.citext); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) TO aip_app;
+
+-- Name: TABLE job_events; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.job_events TO aip_app;
+GRANT SELECT,INSERT ON TABLE public.job_events TO aip_jobs;
+GRANT SELECT ON TABLE public.job_events TO aip_readonly;
+
+-- Name: TABLE jobs; Type: ACL; Schema: public
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.jobs TO aip_app;
+GRANT SELECT ON TABLE public.jobs TO aip_readonly;
+GRANT SELECT ON TABLE public.jobs TO aip_jobs;
+
+-- Name: job_events pk_job_events; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.job_events
+    ADD CONSTRAINT pk_job_events PRIMARY KEY (id);
+
+-- Name: job_events uq_job_events_job_id_seq; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.job_events
+    ADD CONSTRAINT uq_job_events_job_id_seq UNIQUE (job_id, seq);
+
+-- Name: jobs pk_jobs; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.jobs
+    ADD CONSTRAINT pk_jobs PRIMARY KEY (id);
+
+-- Name: jobs uq_jobs_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.jobs
+    ADD CONSTRAINT uq_jobs_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: login_directory login_directory_pkey; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.login_directory
@@ -72,6 +116,10 @@ ALTER TABLE ONLY public.login_directory
 -- Name: login_directory uq_login_directory_kind_key; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.login_directory
     ADD CONSTRAINT uq_login_directory_kind_key UNIQUE (kind, key);
+
+-- Name: job_events fk_job_events_job_id_tenant_id_jobs; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.job_events
+    ADD CONSTRAINT fk_job_events_job_id_tenant_id_jobs FOREIGN KEY (job_id, tenant_id) REFERENCES public.jobs(id, tenant_id);
 
 -- Name: identity_resolve_login(text, public.citext); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) RETURNS TABLE(tenant_id uuid, idp_alias text)
@@ -85,8 +133,84 @@ CREATE FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) 
 
 ALTER FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) OWNER TO aip_owner;
 
+-- Name: ix_job_events_tenant_id_occurred_at; Type: INDEX; Schema: public
+CREATE INDEX ix_job_events_tenant_id_occurred_at ON public.job_events USING btree (tenant_id, occurred_at);
+
+-- Name: ix_jobs_correlation_id; Type: INDEX; Schema: public
+CREATE INDEX ix_jobs_correlation_id ON public.jobs USING btree (correlation_id);
+
+-- Name: ix_jobs_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_jobs_tenant_id ON public.jobs USING btree (tenant_id);
+
+-- Name: ix_jobs_tenant_id_requested_by_created_at; Type: INDEX; Schema: public
+CREATE INDEX ix_jobs_tenant_id_requested_by_created_at ON public.jobs USING btree (tenant_id, requested_by, created_at DESC) WHERE (deleted_at IS NULL);
+
+-- Name: ix_jobs_tenant_id_status; Type: INDEX; Schema: public
+CREATE INDEX ix_jobs_tenant_id_status ON public.jobs USING btree (tenant_id, status) WHERE (deleted_at IS NULL);
+
 -- Name: ix_login_directory_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_login_directory_tenant_id ON public.login_directory USING btree (tenant_id);
+
+-- Name: uq_jobs_tenant_id_job_type_idempotency_key; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs USING btree (tenant_id, job_type, idempotency_key) WHERE (idempotency_key IS NOT NULL);
+
+-- Name: job_events tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.job_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: jobs tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.jobs USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: job_events; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.job_events ENABLE ROW LEVEL SECURITY;
+
+-- Name: jobs; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
+
+-- Name: job_events; Type: TABLE; Schema: public
+CREATE TABLE public.job_events (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    job_id uuid NOT NULL,
+    seq integer NOT NULL,
+    from_status text,
+    to_status text NOT NULL,
+    detail jsonb DEFAULT '{}'::jsonb NOT NULL,
+    occurred_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_job_events_from_status CHECK ((from_status = ANY (ARRAY['queued'::text, 'running'::text, 'succeeded'::text, 'failed'::text, 'cancelled'::text]))),
+    CONSTRAINT ck_job_events_seq CHECK ((seq >= 1)),
+    CONSTRAINT ck_job_events_to_status CHECK ((to_status = ANY (ARRAY['queued'::text, 'running'::text, 'succeeded'::text, 'failed'::text, 'cancelled'::text])))
+);
+
+ALTER TABLE ONLY public.job_events FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.job_events OWNER TO aip_owner;
+
+-- Name: jobs; Type: TABLE; Schema: public
+CREATE TABLE public.jobs (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    job_type text NOT NULL,
+    status text DEFAULT 'queued'::text NOT NULL,
+    idempotency_key text,
+    correlation_id uuid NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    result_ref text,
+    error text,
+    requested_by uuid,
+    procrastinate_job_id bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_jobs_attempts CHECK ((attempts >= 0)),
+    CONSTRAINT ck_jobs_idempotency_key CHECK ((idempotency_key <> ''::text)),
+    CONSTRAINT ck_jobs_job_type CHECK ((job_type <> ''::text)),
+    CONSTRAINT ck_jobs_status CHECK ((status = ANY (ARRAY['queued'::text, 'running'::text, 'succeeded'::text, 'failed'::text, 'cancelled'::text])))
+);
+
+ALTER TABLE ONLY public.jobs FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.jobs OWNER TO aip_owner;
 
 -- Name: login_directory; Type: TABLE; Schema: public
 CREATE TABLE public.login_directory (

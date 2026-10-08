@@ -49,3 +49,7 @@ CI fails when any table in the migrated schema lacks `tenant_id`, `ENABLE` and `
   - **unit**:
     - The allow-list parser rejects `{table: x, reason: ""}` with `AllowlistError` naming `x`.
     - Violation formatting for two tables produces two lines sorted by table name.
+
+## Carried forward from IDENTITY-01 (non-blocking)
+
+- Add `login_directory` to the cross-tenant test's allow-list of global (no-RLS) tables, and assert that `aip_app` has no table privileges on it, only EXECUTE on `identity_resolve_login`.

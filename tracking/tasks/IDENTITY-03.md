@@ -107,3 +107,7 @@ After Keycloak signs a staff user in, the FastAPI backend issues every browser s
   - **e2e**:
     - Playwright on compose: sign in as alice through the shell login and reload. Expected: still signed in. Sign in from a second browser context. In the first context's Active sessions page, click "Sign out" on the other session. Expected: the second context's next navigation lands on `/login`.
     - Click Logout. Expected: `GET /api/v1/me` returns 401 and both cookies are cleared. Start sign-in again as carol. Expected: Keycloak shows the password form rather than signing her in silently.
+
+## Carried forward from IDENTITY-01 (non-blocking)
+
+- `jwcrypto` (pulled in for Keycloak token checks) is LGPL-3.0. That is allowed as an unmodified, dynamically imported library (ADR 0011), but record it in the licence notes, or replace it with a permissive JOSE library (e.g. `joserfc`, BSD) when this task touches token handling.

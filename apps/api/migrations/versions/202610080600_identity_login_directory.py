@@ -10,15 +10,15 @@ through the SECURITY DEFINER function ``identity_resolve_login``.
 - ``aip_app`` comes from the cluster bootstrap (ADR 0012); 202610072200 checks it exists.
 - Dev rows come from ``python -m aip.modules.identity.seeds``, not from this revision.
 
-Revision ID: 202610080454
-Revises: 202610072200
-Create Date: 2026-10-08 04:54:00+00:00
+Revision ID: 202610080600
+Revises: 202610080510
+Create Date: 2026-10-08 06:00:00+00:00
 """
 
 from alembic import op
 
-revision: str = "202610080454"
-down_revision: str | None = "202610072200"
+revision: str = "202610080600"
+down_revision: str | None = "202610080510"
 branch_labels = None
 depends_on = None
 
@@ -38,7 +38,7 @@ def upgrade() -> None:
     CREATE INDEX ix_login_directory_tenant_id ON login_directory (tenant_id);
     REVOKE ALL ON TABLE login_directory FROM PUBLIC;
     """)
-    # contract: 202610080454 - SECURITY DEFINER on purpose (ADR 0005): the only read path for
+    # contract: 202610080600 - SECURITY DEFINER on purpose (ADR 0005): the only read path for
     # aip_app, owned by aip_owner, fixed search_path, one parameterised SELECT, EXECUTE to aip_app.
     op.execute("""
     CREATE FUNCTION identity_resolve_login(p_kind text, p_key citext)
