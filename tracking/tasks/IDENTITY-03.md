@@ -110,4 +110,4 @@ After Keycloak signs a staff user in, the FastAPI backend issues every browser s
 
 ## Carried forward from IDENTITY-01 (non-blocking)
 
-- `jwcrypto` (pulled in for Keycloak token checks) is LGPL-3.0. That is allowed as an unmodified, dynamically imported library (ADR 0011), but record it in the licence notes, or replace it with a permissive JOSE library (e.g. `joserfc`, BSD) when this task touches token handling.
+- `jwcrypto` (LGPL-3.0) arrives transitively through `python-keycloak`, used for the admin/seed client; our own token checks use `joserfc` (BSD). LGPL is allowed as an unmodified, imported library (ADR 0011), but record it in the licence notes, or drop `python-keycloak` for plain admin REST calls when this task touches the admin client.
