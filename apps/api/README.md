@@ -36,3 +36,17 @@ uv run aip-db check-schema   # migrated schema vs the declared SQLAlchemy Core t
 `GET /api/v1/health/live` never touches a dependency. `ready` returns 503 naming the failing check, and
 each check is bounded by 2 s. Every response carries `X-Request-ID` (the caller's when safe, else a
 UUIDv7), and every request logs one `request` line with `request_id` (and `tenant_id` when authenticated).
+
+## Image, local stack and version endpoint (STACK-05)
+
+`apps/api/Dockerfile` builds one image for the API and the worker (multi-stage with uv, UID 10001).
+`infra/docker-compose.yml` runs the whole stack; every variable is listed in `/.env.example`.
+
+```bash
+GIT_SHA=$(git rev-parse HEAD) docker compose -f infra/docker-compose.yml up --build --wait
+curl localhost:8000/api/v1/platform/version   # build, commit and dependency versions
+```
+
+`GET /api/v1/platform/version` reports `BUILD_ID` and `GIT_SHA` (baked into the image), library versions
+from `importlib.metadata`, the Python version and Postgres `SHOW server_version` (`"unavailable"` when the
+database is down; still 200).

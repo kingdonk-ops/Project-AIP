@@ -1,6 +1,6 @@
 """SQLAlchemy Core declarations for the ops job records (OPS-01, ADR 0002).
 
-Created only by the Alembic revision ``202610072151_ops_jobs``; ``aip-db check-schema`` compares
+Created only by the Alembic revision ``202610080510_ops_jobs``; ``aip-db check-schema`` compares
 these declarations with the migrated database. ``jobs`` is tenant-scoped with soft delete;
 ``job_events`` is append-only (no ``updated_at``/``deleted_at``; UPDATE and DELETE are revoked).
 """

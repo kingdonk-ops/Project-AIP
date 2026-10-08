@@ -1,97 +1,79 @@
 """OPS-01: job records (``jobs``, ``job_events``) and the job service.
 
-Integration tests run on real Postgres as ``aip_app`` inside a transaction that sets
-``app.tenant_id`` (the ADR 0002 contract ``with_tenant`` implements; DATABASE-02 builds the helper
-itself, so these tests open the transaction directly).
+Integration tests run on real Postgres (DATABASE-02 fixtures: the cluster bootstrap creates
+``aip_app``/``aip_jobs``) as ``aip_app`` or ``aip_jobs`` inside ``with_tenant``.
 """
 
 from __future__ import annotations
 
 import contextlib
 import uuid
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Callable
+from contextlib import AbstractAsyncContextManager
+from dataclasses import dataclass
 from uuid import UUID
 
-import asyncpg  # pyright: ignore[reportMissingTypeStubs]
 import pytest
-from sqlalchemy import NullPool, text
+from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncConnection
 from tests.conftest import ALICE_ID, TENANT_A_ID, TENANT_B_ID
-from tests.platform.db.conftest import FreshDb, execute, fetch, with_db
+from tests.platform.db.conftest import APP, JOBS, FreshDb
 
 from aip.modules.ops import api as ops
 from aip.platform.context import RequestContext, use_context
-
-# Throwaway test credentials for the login roles DATABASE-02 owns; not secrets.
-ROLE_PASSWORDS = {"aip_app": "aip_app_test_only", "aip_jobs": "aip_jobs_test_only"}
-
+from aip.platform.db.engine import EngineSettings, create_app_engine
+from aip.platform.db.session import with_tenant
 
 # --- fixtures ---------------------------------------------------------------------------------
 
 
-@pytest.fixture
-def app_roles(pg_superuser_url: str) -> Iterator[None]:
-    """Make sure the DATABASE-02 roles ``aip_app`` and ``aip_jobs`` exist for this test.
+@dataclass(frozen=True)
+class RoleDb:
+    """Connections to the test database as one runtime role.
 
-    Stand-in until DATABASE-02's bootstrap creates them: roles this fixture creates are dropped
-    after the test database is gone, so other tests (the schema snapshot) never see them.
+    ``tx(tenant)`` is ``with_tenant`` under a request context for that tenant acting as alice;
+    ``no_tenant()`` is a bare transaction with no tenant set (to prove RLS fails closed).
     """
-    created: list[str] = []
-    for role, password in ROLE_PASSWORDS.items():
-        if not fetch(pg_superuser_url, "SELECT 1 FROM pg_roles WHERE rolname = $1", role):
-            with contextlib.suppress(asyncpg.DuplicateObjectError):
-                execute(
-                    pg_superuser_url,
-                    f"CREATE ROLE {role} LOGIN NOSUPERUSER NOBYPASSRLS PASSWORD '{password}'",
-                )
-                created.append(role)
-        else:
-            execute(pg_superuser_url, f"ALTER ROLE {role} PASSWORD '{password}'")
-    yield
-    for role in created:
-        with contextlib.suppress(asyncpg.PostgresError):
-            execute(pg_superuser_url, f"DROP ROLE IF EXISTS {role}")
 
-
-@pytest.fixture
-def jobs_db(app_roles: None, migrated_db: FreshDb) -> FreshDb:
-    """A database migrated to head after ``aip_app`` / ``aip_jobs`` exist (grants applied)."""
-    return migrated_db
-
-
-def _engine(db: FreshDb, role: str) -> AsyncEngine:
-    url = with_db(db.superuser_url, db.name, role, ROLE_PASSWORDS[role])
-    return create_async_engine(
-        url.replace("postgresql://", "postgresql+asyncpg://", 1), poolclass=NullPool
-    )
-
-
-@pytest.fixture
-async def app_engine(jobs_db: FreshDb) -> AsyncIterator[AsyncEngine]:
-    engine = _engine(jobs_db, "aip_app")
-    yield engine
-    await engine.dispose()
-
-
-@pytest.fixture
-async def jobs_engine(jobs_db: FreshDb) -> AsyncIterator[AsyncEngine]:
-    engine = _engine(jobs_db, "aip_jobs")
-    yield engine
-    await engine.dispose()
+    tx: Callable[[UUID], AbstractAsyncContextManager[AsyncConnection]]
+    no_tenant: Callable[[], AbstractAsyncContextManager[AsyncConnection]]
 
 
 @contextlib.asynccontextmanager
-async def tenant_tx(engine: AsyncEngine, tenant_id: UUID) -> AsyncIterator[AsyncConnection]:
-    """One transaction with ``app.tenant_id`` set locally, as ``with_tenant`` does (ADR 0002)."""
-    ctx = RequestContext(
-        tenant_id=tenant_id, request_id=f"test-{uuid.uuid4().hex}", actor_id=ALICE_ID
-    )
-    async with use_context(ctx), engine.begin() as conn:
-        await conn.execute(
-            text("SELECT set_config('app.tenant_id', :t, true)"), {"t": str(tenant_id)}
+async def _role_db(db: FreshDb, role: str) -> AsyncIterator[RoleDb]:
+    engine = create_app_engine(EngineSettings(url=db.role_url(role)))
+
+    @contextlib.asynccontextmanager
+    async def tx(tenant_id: UUID) -> AsyncIterator[AsyncConnection]:
+        ctx = RequestContext(
+            tenant_id=tenant_id, request_id=f"test-{uuid.uuid4().hex}", actor_id=ALICE_ID
         )
-        yield conn
+        async with use_context(ctx), with_tenant(ctx, engine=engine) as conn:
+            yield conn
+
+    try:
+        yield RoleDb(tx=tx, no_tenant=engine.begin)
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture
+def jobs_db(migrated_db: FreshDb) -> FreshDb:
+    """A bootstrapped database (the runtime roles exist) migrated to head."""
+    return migrated_db
+
+
+@pytest.fixture
+async def app(jobs_db: FreshDb) -> AsyncIterator[RoleDb]:
+    async with _role_db(jobs_db, APP) as role_db:
+        yield role_db
+
+
+@pytest.fixture
+async def jobs(jobs_db: FreshDb) -> AsyncIterator[RoleDb]:
+    async with _role_db(jobs_db, JOBS) as role_db:
+        yield role_db
 
 
 # --- unit -------------------------------------------------------------------------------------
@@ -162,12 +144,12 @@ def test_non_uuid_request_id_is_not_used_as_correlation_id() -> None:
 # --- integration ------------------------------------------------------------------------------
 
 
-async def test_create_job_twice_with_same_key_gives_one_row(app_engine: AsyncEngine) -> None:
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+async def test_create_job_twice_with_same_key_gives_one_row(app: RoleDb) -> None:
+    async with app.tx(TENANT_A_ID) as conn:
         first = await ops.create_job(
             conn, job_type="report.render", payload={"n": 1}, idempotency_key="k1"
         )
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+    async with app.tx(TENANT_A_ID) as conn:
         second = await ops.create_job(
             conn, job_type="report.render", payload={"n": 2}, idempotency_key="k1"
         )
@@ -184,12 +166,12 @@ async def test_create_job_twice_with_same_key_gives_one_row(app_engine: AsyncEng
     assert first.correlation_id.version == 7
 
 
-async def test_same_key_in_another_tenant_is_a_separate_job(app_engine: AsyncEngine) -> None:
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+async def test_same_key_in_another_tenant_is_a_separate_job(app: RoleDb) -> None:
+    async with app.tx(TENANT_A_ID) as conn:
         job_a = await ops.create_job(
             conn, job_type="report.render", payload={}, idempotency_key="k1"
         )
-    async with tenant_tx(app_engine, TENANT_B_ID) as conn:
+    async with app.tx(TENANT_B_ID) as conn:
         job_b = await ops.create_job(
             conn, job_type="report.render", payload={}, idempotency_key="k1"
         )
@@ -200,19 +182,19 @@ async def test_same_key_in_another_tenant_is_a_separate_job(app_engine: AsyncEng
     assert visible == [job_b.id]  # RLS: tenant B never sees tenant A's job
 
 
-async def test_jobs_without_key_are_never_deduplicated(app_engine: AsyncEngine) -> None:
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+async def test_jobs_without_key_are_never_deduplicated(app: RoleDb) -> None:
+    async with app.tx(TENANT_A_ID) as conn:
         one = await ops.create_job(conn, job_type="report.render", payload={})
         two = await ops.create_job(conn, job_type="report.render", payload={})
     assert one.id != two.id
 
 
-async def test_queued_running_succeeded_writes_ordered_events(app_engine: AsyncEngine) -> None:
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+async def test_queued_running_succeeded_writes_ordered_events(app: RoleDb) -> None:
+    async with app.tx(TENANT_A_ID) as conn:
         job = await ops.create_job(conn, job_type="report.render", payload={})
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+    async with app.tx(TENANT_A_ID) as conn:
         running = await ops.transition(conn, job.id, ops.JobStatus.RUNNING)
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+    async with app.tx(TENANT_A_ID) as conn:
         done = await ops.transition(
             conn, job.id, ops.JobStatus.SUCCEEDED, detail={"pages": 3}, result_ref="s3://k"
         )
@@ -236,14 +218,14 @@ async def test_queued_running_succeeded_writes_ordered_events(app_engine: AsyncE
     assert rows[2].detail == {"pages": 3}
 
 
-async def test_terminal_job_cannot_change_state(app_engine: AsyncEngine) -> None:
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+async def test_terminal_job_cannot_change_state(app: RoleDb) -> None:
+    async with app.tx(TENANT_A_ID) as conn:
         job = await ops.create_job(conn, job_type="report.render", payload={})
         await ops.transition(conn, job.id, ops.JobStatus.CANCELLED)
     with pytest.raises(ops.InvalidTransition):
-        async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+        async with app.tx(TENANT_A_ID) as conn:
             await ops.transition(conn, job.id, ops.JobStatus.RUNNING)
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+    async with app.tx(TENANT_A_ID) as conn:
         status = (
             await conn.execute(text("SELECT status FROM jobs WHERE id = :id"), {"id": job.id})
         ).scalar_one()
@@ -252,45 +234,45 @@ async def test_terminal_job_cannot_change_state(app_engine: AsyncEngine) -> None
     assert events == 2
 
 
-async def test_transition_of_another_tenants_job_is_not_found(app_engine: AsyncEngine) -> None:
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+async def test_transition_of_another_tenants_job_is_not_found(app: RoleDb) -> None:
+    async with app.tx(TENANT_A_ID) as conn:
         job = await ops.create_job(conn, job_type="report.render", payload={})
     with pytest.raises(ops.JobNotFound):
-        async with tenant_tx(app_engine, TENANT_B_ID) as conn:
+        async with app.tx(TENANT_B_ID) as conn:
             await ops.transition(conn, job.id, ops.JobStatus.RUNNING)
 
 
-async def test_app_role_cannot_update_or_delete_job_events(app_engine: AsyncEngine) -> None:
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+async def test_app_role_cannot_update_or_delete_job_events(app: RoleDb) -> None:
+    async with app.tx(TENANT_A_ID) as conn:
         await ops.create_job(conn, job_type="report.render", payload={})
     with pytest.raises(DBAPIError, match="permission denied"):
-        async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+        async with app.tx(TENANT_A_ID) as conn:
             await conn.execute(text("UPDATE job_events SET detail = '{}'"))
     with pytest.raises(DBAPIError, match="permission denied"):
-        async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+        async with app.tx(TENANT_A_ID) as conn:
             await conn.execute(text("DELETE FROM job_events"))
 
 
-async def test_missing_tenant_context_fails_closed(app_engine: AsyncEngine) -> None:
+async def test_missing_tenant_context_fails_closed(app: RoleDb) -> None:
     with pytest.raises(DBAPIError):
-        async with app_engine.begin() as conn:
+        async with app.no_tenant() as conn:
             await ops.create_job(conn, job_type="report.render", payload={})
 
 
 async def test_jobs_role_runs_transitions_but_cannot_rewrite_jobs(
-    app_engine: AsyncEngine, jobs_engine: AsyncEngine
+    app: RoleDb, jobs: RoleDb
 ) -> None:
-    async with tenant_tx(app_engine, TENANT_A_ID) as conn:
+    async with app.tx(TENANT_A_ID) as conn:
         job = await ops.create_job(conn, job_type="report.render", payload={"a": 1})
-    async with tenant_tx(jobs_engine, TENANT_A_ID) as conn:
+    async with jobs.tx(TENANT_A_ID) as conn:
         await ops.transition(conn, job.id, ops.JobStatus.RUNNING)
         failed = await ops.transition(conn, job.id, ops.JobStatus.FAILED, error="boom")
     assert failed.error == "boom"
     with pytest.raises(DBAPIError, match="permission denied"):
-        async with tenant_tx(jobs_engine, TENANT_A_ID) as conn:
+        async with jobs.tx(TENANT_A_ID) as conn:
             await conn.execute(text("UPDATE jobs SET payload = '{}'"))
     with pytest.raises(DBAPIError, match="permission denied"):
-        async with tenant_tx(jobs_engine, TENANT_A_ID) as conn:
+        async with jobs.tx(TENANT_A_ID) as conn:
             await conn.execute(text("INSERT INTO jobs (id) VALUES (gen_random_uuid())"))
 
 

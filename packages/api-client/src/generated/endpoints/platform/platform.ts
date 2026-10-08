@@ -17,7 +17,8 @@ import type {
 import type {
   HealthResponse,
   ModuleInfo,
-  PlatformLive200
+  PlatformLive200,
+  VersionResponse
 } from '../../model';
 
 
@@ -511,6 +512,125 @@ export function usePlatformListModules<TData = Awaited<ReturnType<typeof platfor
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getPlatformListModulesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type platformVersionResponse200 = {
+  data: VersionResponse
+  status: 200
+}
+
+export type platformVersionResponseSuccess = (platformVersionResponse200) & {
+  headers: Headers;
+};
+;
+
+export type platformVersionResponse = (platformVersionResponseSuccess)
+
+export const getPlatformVersionUrl = () => {
+
+
+
+
+  return `/api/v1/platform/version`
+}
+
+/**
+ * @summary Version
+ */
+export const platformVersion = async ( options?: RequestInit): Promise<platformVersionResponse> => {
+
+  const res = await fetch(getPlatformVersionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: platformVersionResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as platformVersionResponse
+}
+
+
+
+
+
+export const getPlatformVersionQueryKey = () => {
+    return [
+    `/api/v1/platform/version`
+    ] as const;
+    }
+
+
+export const getPlatformVersionQueryOptions = <TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPlatformVersionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformVersion>>> = ({ signal }) => platformVersion({ ...(signal ? { signal } : {}), ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PlatformVersionQueryResult = NonNullable<Awaited<ReturnType<typeof platformVersion>>>
+export type PlatformVersionQueryError = unknown
+
+
+export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformVersion>>,
+          TError,
+          Awaited<ReturnType<typeof platformVersion>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformVersion>>,
+          TError,
+          Awaited<ReturnType<typeof platformVersion>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Version
+ */
+
+export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPlatformVersionQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

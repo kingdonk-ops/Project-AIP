@@ -1,3 +1,11 @@
+-- Name: SCHEMA aip_meta; Type: ACL; Schema: -
+GRANT USAGE ON SCHEMA aip_meta TO aip_app;
+
+-- Name: SCHEMA public; Type: ACL; Schema: -
+GRANT USAGE ON SCHEMA public TO aip_app;
+GRANT USAGE ON SCHEMA public TO aip_jobs;
+GRANT USAGE ON SCHEMA public TO aip_readonly;
+
 -- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -
 COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiST';
 
@@ -39,6 +47,9 @@ CREATE SCHEMA aip_meta;
 
 ALTER SCHEMA aip_meta OWNER TO aip_owner;
 
+-- Name: TABLE alembic_version; Type: ACL; Schema: aip_meta
+GRANT SELECT ON TABLE aip_meta.alembic_version TO aip_app;
+
 -- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: aip_meta
 ALTER TABLE ONLY aip_meta.alembic_version
     ADD CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num);
@@ -50,17 +61,45 @@ CREATE TABLE aip_meta.alembic_version (
 
 ALTER TABLE aip_meta.alembic_version OWNER TO aip_owner;
 
--- Name: job_events job_events_pkey; Type: CONSTRAINT; Schema: public
+-- Name: COLUMN jobs.attempts; Type: ACL; Schema: public
+GRANT UPDATE(attempts) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: COLUMN jobs.error; Type: ACL; Schema: public
+GRANT UPDATE(error) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: COLUMN jobs.procrastinate_job_id; Type: ACL; Schema: public
+GRANT UPDATE(procrastinate_job_id) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: COLUMN jobs.result_ref; Type: ACL; Schema: public
+GRANT UPDATE(result_ref) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: COLUMN jobs.status; Type: ACL; Schema: public
+GRANT UPDATE(status) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: COLUMN jobs.updated_at; Type: ACL; Schema: public
+GRANT UPDATE(updated_at) ON TABLE public.jobs TO aip_jobs;
+
+-- Name: TABLE job_events; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.job_events TO aip_app;
+GRANT SELECT,INSERT ON TABLE public.job_events TO aip_jobs;
+GRANT SELECT ON TABLE public.job_events TO aip_readonly;
+
+-- Name: TABLE jobs; Type: ACL; Schema: public
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.jobs TO aip_app;
+GRANT SELECT ON TABLE public.jobs TO aip_readonly;
+GRANT SELECT ON TABLE public.jobs TO aip_jobs;
+
+-- Name: job_events pk_job_events; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
-    ADD CONSTRAINT job_events_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT pk_job_events PRIMARY KEY (id);
 
 -- Name: job_events uq_job_events_job_id_seq; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
     ADD CONSTRAINT uq_job_events_job_id_seq UNIQUE (job_id, seq);
 
--- Name: jobs jobs_pkey; Type: CONSTRAINT; Schema: public
+-- Name: jobs pk_jobs; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.jobs
-    ADD CONSTRAINT jobs_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT pk_jobs PRIMARY KEY (id);
 
 -- Name: jobs uq_jobs_id_tenant_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.jobs
@@ -75,6 +114,9 @@ CREATE INDEX ix_job_events_tenant_id_occurred_at ON public.job_events USING btre
 
 -- Name: ix_jobs_correlation_id; Type: INDEX; Schema: public
 CREATE INDEX ix_jobs_correlation_id ON public.jobs USING btree (correlation_id);
+
+-- Name: ix_jobs_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_jobs_tenant_id ON public.jobs USING btree (tenant_id);
 
 -- Name: ix_jobs_tenant_id_requested_by_created_at; Type: INDEX; Schema: public
 CREATE INDEX ix_jobs_tenant_id_requested_by_created_at ON public.jobs USING btree (tenant_id, requested_by, created_at DESC) WHERE (deleted_at IS NULL);

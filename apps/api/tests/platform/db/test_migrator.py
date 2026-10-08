@@ -54,9 +54,9 @@ def test_new_renders_a_lint_clean_revision_from_the_template(migrations_copy: Pa
     from aip.platform.db.migrator import lint
 
     path = new.create_revision(
-        "add_widgets", config_path=migrations_copy, now=datetime(2026, 10, 7, 13, 0, tzinfo=UTC)
+        "add_widgets", config_path=migrations_copy, now=datetime(2026, 10, 8, 13, 0, tzinfo=UTC)
     )
-    assert path.name == "202610071300_add_widgets.py"
+    assert path.name == "202610081300_add_widgets.py"
     text = path.read_text(encoding="utf-8")
     assert f'down_revision: str | None = "{HEAD}"' in text
     assert 'raise NotImplementedError("forward-only")' in text
@@ -64,7 +64,7 @@ def test_new_renders_a_lint_clean_revision_from_the_template(migrations_copy: Pa
 
     with pytest.raises(new.RevisionExistsError):
         new.create_revision(
-            "other", config_path=migrations_copy, now=datetime(2026, 10, 7, 13, 0, tzinfo=UTC)
+            "other", config_path=migrations_copy, now=datetime(2026, 10, 8, 13, 0, tzinfo=UTC)
         )
 
 
@@ -107,6 +107,55 @@ def test_normalise_strips_pg_dump_version_and_is_deterministic() -> None:
     assert snapshot.normalise_dump(dump) == once
     assert snapshot.normalise_dump(once) == once
     assert once.endswith("\n")
+
+
+def test_normalise_keeps_comment_and_set_lines_inside_function_bodies() -> None:
+    dump = "\n".join(
+        [
+            "SET client_encoding = 'UTF8';",
+            "--",
+            "-- Name: f(); Type: FUNCTION; Schema: public; Owner: aip_owner",
+            "--",
+            "",
+            "CREATE FUNCTION public.f() RETURNS void",
+            "    LANGUAGE plpgsql",
+            "    AS $_$",
+            "BEGIN",
+            "-- keep me: part of the function",
+            "SET LOCAL statement_timeout = '1s';",
+            "  PERFORM 1;",
+            "END",
+            "$_$;",
+            "",
+            "SET default_table_access_method = heap;",
+            "-- dropped again once the body is closed",
+        ]
+    )
+    once = snapshot.normalise_dump(dump)
+    assert "-- keep me: part of the function" in once
+    assert "SET LOCAL statement_timeout = '1s';" in once
+    assert "SET client_encoding" not in once
+    assert "SET default_table_access_method" not in once
+    assert "dropped again" not in once
+    assert snapshot.normalise_dump(once) == once
+
+
+def test_normalise_ignores_dollar_quotes_inside_single_quoted_strings() -> None:
+    dump = "\n".join(
+        [
+            "-- Name: t; Type: TABLE; Schema: public; Owner: aip_owner",
+            "CREATE TABLE public.t (",
+            "    price text DEFAULT 'costs $$ dear, it''s'::text",
+            ");",
+            "SET default_table_access_method = heap;",
+            "-- a dump comment that must still be dropped",
+        ]
+    )
+    once = snapshot.normalise_dump(dump)
+    assert "SET default_table_access_method" not in once
+    assert "a dump comment" not in once
+    assert "costs $$ dear, it''s" in once
+    assert snapshot.normalise_dump(once) == once
 
 
 def test_declared_metadata_is_a_single_shared_instance() -> None:
@@ -159,18 +208,18 @@ def test_concurrent_migrations_serialise_on_the_advisory_lock(empty_db: FreshDb)
     procs = [empty_db.aip_db_popen("migrate") for _ in range(2)]
     results = [p.communicate(timeout=120) for p in procs]
     assert [p.returncode for p in procs] == [0, 0], results
-    applied = sum(1 for _, err in results if f"-> {BASELINE}" in err)
+    applied = sum(1 for _, err in results if f"-> {HEAD}" in err)
     assert applied == 1, results
     assert _version(empty_db) == [HEAD]
 
 
-def test_failing_revision_rolls_back_and_keeps_the_baseline(
+def test_failing_revision_rolls_back_and_keeps_the_previous_head(
     empty_db: FreshDb, migrations_copy: Path
 ) -> None:
     versions = migrations_copy.parent / "migrations" / "versions"
-    (versions / "202610071300_boom.py").write_text(
+    (versions / "209901010000_boom.py").write_text(
         '"""boom"""\n\nfrom alembic import op\n\n'
-        'revision: str = "202610071300"\n'
+        'revision: str = "209901010000"\n'
         f'down_revision: str | None = "{HEAD}"\n'
         "branch_labels = None\ndepends_on = None\n\n\n"
         "def upgrade() -> None:\n"

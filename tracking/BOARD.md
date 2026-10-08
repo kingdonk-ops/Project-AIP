@@ -33,7 +33,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [ARCH-04](tasks/ARCH-04.md) | Request context carrying tenant, project, actor and asset scope | arch | S | ARCH-01 | done | PR #7 |
 | [STACK-02](tasks/STACK-02.md) | Capability interfaces and adapter selection | stack | M | ARCH-01 | done | PR #12 |
 | [STACK-04](tasks/STACK-04.md) | Licence allow-list and CycloneDX SBOM in CI | stack | S | ARCH-01 | done | PR #14 |
-| [STACK-05](tasks/STACK-05.md) | Platform version endpoint and docker-compose stack | stack | M | STACK-02 | todo | |
+| [STACK-05](tasks/STACK-05.md) | Platform version endpoint and docker-compose stack | stack | M | STACK-02 | review | branch claude/p0-stack-05 (PR pending) |
 | [OPS-04](tasks/OPS-04.md) | Health endpoints and structured logging with PII scrubber | ops | S | ARCH-01 | done | PR #15 |
 | [IDENTITY-01](tasks/IDENTITY-01.md) | Keycloak dev realm in compose + OIDC broker login + login_directory | identity | M | ARCH-01, STACK-05 | todo |  |
 | [DESIGN-01](tasks/DESIGN-01.md) | Design tokens, ui package (Radix/shadcn), axe lint | design | M | ARCH-01 | blocked | branch claude/p0-design-01; the config-protection hook blocks writing packages/ui/eslint.config.mjs (owner action, see OPEN-QUESTIONS) |
@@ -42,7 +42,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [DATABASE-02](tasks/DATABASE-02.md) | Roles, session helper and fail-closed tenant context | database | M | DATABASE-08 | todo | |
+| [DATABASE-02](tasks/DATABASE-02.md) | Roles, session helper and fail-closed tenant context | database | M | DATABASE-08 | review | branch claude/p0-database-02 (PR pending) |
 | [TESTING-02](tasks/TESTING-02.md) | Schema guard: tenant_id and RLS on every table | testing | S | DATABASE-02 | todo | |
 | [STACK-03](tasks/STACK-03.md) | Generated typed API client with drift check | stack | M | ARCH-01 | done | PR #13 |
 | [DESIGN-02](tasks/DESIGN-02.md) | App shell (header, nav rail, scope bar) + login/logout | design | M | DESIGN-01, IDENTITY-01 | todo |  |
@@ -57,7 +57,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [ARCH-05](tasks/ARCH-05.md) | domain_events outbox table and writer | arch | M | ARCH-04, DATABASE-02 | todo |  |
 | [DATABASE-04](tasks/DATABASE-04.md) | Base repository helpers: concurrency, ltree, soft delete, JSONB validation | database | M | DATABASE-02 | todo |  |
 | [TERMS-01](tasks/TERMS-01.md) | Terms schema, default en-AU dictionary and loader | terms | M | DATABASE-02 | todo | |
-| [OPS-01](tasks/OPS-01.md) | Job tables and service | ops | M | DATABASE-08 | review | branch claude/p0-ops-01 (PR pending); grants to aip_app/aip_jobs skipped until DATABASE-02 roles exist at migrate time |
+| [OPS-01](tasks/OPS-01.md) | Job tables and service | ops | M | DATABASE-08 | review | branch claude/p0-ops-01, PR #17 |
 
 ### Wave 4
 

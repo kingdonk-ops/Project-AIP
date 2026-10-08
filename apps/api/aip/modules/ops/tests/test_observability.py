@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any
 import httpx
 import pytest
 import structlog
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from fastapi import FastAPI
 from tests.conftest import (
     ALICE_ID,
@@ -21,7 +23,7 @@ from tests.conftest import (
 )
 
 from aip.main import create_app
-from aip.modules.ops.health import ReadinessChecker
+from aip.modules.ops.health import DEFAULT_ALEMBIC_CONFIG, ReadinessChecker
 from aip.platform.context import Principal
 from aip.platform.observability.logging import configure_logging
 from aip.platform.observability.scrub import REDACTED, scrub
@@ -49,18 +51,6 @@ def make_app(readiness: ReadinessChecker | None = None, **kwargs: Any) -> FastAP
 
 def client(app: FastAPI) -> httpx.AsyncClient:
     return httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test")
-
-
-def committed_head() -> str:
-    """The newest committed Alembic revision (the head a migrated test database is at)."""
-    from alembic.config import Config
-    from alembic.script import ScriptDirectory
-
-    from aip.platform.db.migrator import alembic_ini
-
-    head = ScriptDirectory.from_config(Config(str(alembic_ini()))).get_current_head()
-    assert head is not None
-    return head
 
 
 def json_lines(out: str) -> list[dict[str, Any]]:
@@ -356,7 +346,10 @@ async def test_ready_503_when_database_is_behind_head(
     logged = [ln for ln in json_lines(capsys.readouterr().out) if ln.get("check") == "migrations"]
     assert logged
     assert "209901010000" in logged[0]["code_heads"]
-    assert committed_head() in logged[0]["db_revisions"]
+    committed = Config(str(DEFAULT_ALEMBIC_CONFIG))
+    head = ScriptDirectory.from_config(committed).get_current_head()
+    assert head is not None
+    assert head in logged[0]["db_revisions"]
     assert checks["db"] == "ok"
     assert checks["redis"] == "ok"
 

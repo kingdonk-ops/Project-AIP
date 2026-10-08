@@ -9,6 +9,9 @@ Server selection, in order:
 
 Every test gets its own empty database (``CREATE DATABASE ... TEMPLATE template0``) that is
 dropped afterwards; roles the session created are dropped at the end.
+
+The bootstrap gives every AIP role a throwaway test password (``ROLE_PASSWORDS``) through the
+``aip.*_password`` settings, exactly as deployments do; nothing reads a password from a file.
 """
 
 from __future__ import annotations
@@ -35,6 +38,22 @@ BOOTSTRAP_SQL = REPO_ROOT / "db" / "bootstrap" / "00_cluster.sql"
 PG_IMAGE = "pgvector/pgvector:pg16"
 OWNER = "aip_owner"
 OWNER_PASSWORD = "aip_owner_test_only"  # throwaway test credential, not a secret
+APP = "aip_app"
+JOBS = "aip_jobs"
+READONLY = "aip_readonly"
+# Throwaway test credentials (not secrets), passed to the bootstrap as aip.<role>_password.
+ROLE_PASSWORDS = {
+    OWNER: OWNER_PASSWORD,
+    APP: "aip_app_test_only",
+    JOBS: "aip_jobs_test_only",
+    READONLY: "aip_readonly_test_only",
+}
+_PASSWORD_SETTINGS = {
+    OWNER: "aip.owner_password",
+    APP: "aip.app_password",
+    JOBS: "aip.jobs_password",
+    READONLY: "aip.readonly_password",
+}
 
 
 def with_db(url: str, database: str, user: str | None = None, password: str | None = None) -> str:
@@ -106,12 +125,16 @@ def pg_superuser_url() -> Iterator[str]:
 
 
 def _with_role_cleanup(url: str) -> Iterator[str]:
-    existed = bool(fetch(url, "SELECT 1 FROM pg_roles WHERE rolname = $1", OWNER))
+    roles = (APP, JOBS, READONLY, OWNER)  # runtime roles first: they hold grants, not objects
+    existed = {
+        r[0] for r in fetch(url, "SELECT rolname FROM pg_roles WHERE rolname = ANY($1)", roles)
+    }
     yield url
-    if not existed:
-        # It may still own a database of a concurrent run: then leave it.
-        with contextlib.suppress(asyncpg.PostgresError):
-            execute(url, f"DROP ROLE IF EXISTS {OWNER}")
+    for role in roles:
+        if role not in existed:
+            # It may still own (or be granted) something in a concurrent run: then leave it.
+            with contextlib.suppress(asyncpg.PostgresError):
+                execute(url, f"DROP ROLE IF EXISTS {role}")
 
 
 @dataclass(frozen=True)
@@ -125,6 +148,14 @@ class FreshDb:
     def owner_url(self) -> str:
         return with_db(self.superuser_url, self.name, OWNER, OWNER_PASSWORD)
 
+    def role_url(self, role: str) -> str:
+        """URL of this database as one of the AIP roles (after ``bootstrap()``)."""
+        return with_db(self.superuser_url, self.name, role, ROLE_PASSWORDS[role])
+
+    @property
+    def app_url(self) -> str:
+        return self.role_url(APP)
+
     def execute(self, sql: str) -> None:
         execute(self.superuser_url, sql)
 
@@ -136,7 +167,17 @@ class FreshDb:
         if skip_vector:
             lines = sql.splitlines()
             sql = "\n".join(ln for ln in lines if "CREATE EXTENSION IF NOT EXISTS vector" not in ln)
-        self.execute(f"SELECT set_config('aip.owner_password', '{OWNER_PASSWORD}', false);\n{sql}")
+        settings = "".join(
+            f"SELECT set_config('{_PASSWORD_SETTINGS[role]}', '{password}', false);\n"
+            for role, password in ROLE_PASSWORDS.items()
+        )
+        self.execute(f"{settings}{sql}")
+
+    def migrate(self) -> None:
+        """Bootstrap the cluster, then ``aip-db migrate`` to head."""
+        self.bootstrap()
+        result = self.aip_db("migrate")
+        assert result.returncode == 0, result.stderr
 
     def aip_db_env(self, url: str | None = None) -> dict[str, str]:
         return {**os.environ, "DATABASE_MIGRATOR_URL": url or self.owner_url}

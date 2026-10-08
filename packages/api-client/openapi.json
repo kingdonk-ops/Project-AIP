@@ -1,6 +1,49 @@
 {
   "components": {
     "schemas": {
+      "Dependencies": {
+        "properties": {
+          "alembic": {
+            "title": "Alembic",
+            "type": "string"
+          },
+          "fastapi": {
+            "title": "Fastapi",
+            "type": "string"
+          },
+          "postgres": {
+            "title": "Postgres",
+            "type": "string"
+          },
+          "procrastinate": {
+            "title": "Procrastinate",
+            "type": "string"
+          },
+          "pydantic": {
+            "title": "Pydantic",
+            "type": "string"
+          },
+          "python": {
+            "title": "Python",
+            "type": "string"
+          },
+          "sqlalchemy": {
+            "title": "Sqlalchemy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "python",
+          "fastapi",
+          "pydantic",
+          "sqlalchemy",
+          "alembic",
+          "procrastinate",
+          "postgres"
+        ],
+        "title": "Dependencies",
+        "type": "object"
+      },
       "HealthResponse": {
         "description": "Body of GET /api/v1/health. Changing it changes the generated client (STACK-03).",
         "properties": {
@@ -40,6 +83,29 @@
           "depends_on"
         ],
         "title": "ModuleInfo",
+        "type": "object"
+      },
+      "VersionResponse": {
+        "description": "Body of GET /api/v1/platform/version. Changing it changes the generated client.",
+        "properties": {
+          "build": {
+            "title": "Build",
+            "type": "string"
+          },
+          "commit": {
+            "title": "Commit",
+            "type": "string"
+          },
+          "dependencies": {
+            "$ref": "#/components/schemas/Dependencies"
+          }
+        },
+        "required": [
+          "build",
+          "commit",
+          "dependencies"
+        ],
+        "title": "VersionResponse",
         "type": "object"
       }
     }
@@ -138,6 +204,27 @@
           }
         },
         "summary": "List Modules",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/version": {
+      "get": {
+        "operationId": "platform_version",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Version",
         "tags": [
           "platform"
         ]
