@@ -24,10 +24,12 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from tests.platform.db.conftest import (  # noqa: F401 - re-exported pytest fixtures
+from tests.fixtures.postgres import (  # noqa: F401 - re-exported pytest fixtures
     FreshDb,
     _docker_reachable,  # pyright: ignore[reportPrivateUsage]
+    bootstrapped_db,  # pyright: ignore[reportUnusedImport]
     empty_db,  # pyright: ignore[reportUnusedImport]
+    migrated_db,  # pyright: ignore[reportUnusedImport]
     migrations_copy,  # pyright: ignore[reportUnusedImport]
     pg_superuser_url,  # pyright: ignore[reportUnusedImport]
 )
@@ -39,21 +41,6 @@ REDIS_IMAGE = "valkey/valkey:8-alpine"
 class RedisServer:
     url: str
     stop: Callable[[], None]
-
-
-@pytest.fixture
-def bootstrapped_db(empty_db: FreshDb) -> FreshDb:  # noqa: F811
-    """An empty database after the cluster bootstrap, with no revision applied."""
-    empty_db.bootstrap()
-    return empty_db
-
-
-@pytest.fixture
-def migrated_db(bootstrapped_db: FreshDb) -> FreshDb:
-    """A bootstrapped database migrated to head with ``aip-db migrate``."""
-    result = bootstrapped_db.aip_db("migrate")
-    assert result.returncode == 0, result.stderr
-    return bootstrapped_db
 
 
 def _free_port() -> int:

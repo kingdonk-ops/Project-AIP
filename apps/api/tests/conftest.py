@@ -13,6 +13,15 @@ from uuid import UUID
 import pytest
 
 from aip.platform.context import Principal
+from tests.fixtures.postgres import (  # noqa: F401 - shared real-Postgres fixtures (TESTING-01)
+    bootstrapped_db,  # pyright: ignore[reportUnusedImport]
+    empty_db,  # pyright: ignore[reportUnusedImport]
+    migrated_db,  # pyright: ignore[reportUnusedImport]
+    migrations_copy,  # pyright: ignore[reportUnusedImport]
+    owner_conn_for_seeding_only,  # pyright: ignore[reportUnusedImport]
+    pg_superuser_url,  # pyright: ignore[reportUnusedImport]
+    tenant_db,  # pyright: ignore[reportUnusedImport]
+)
 
 TENANT_A_ID = UUID("00000000-0000-4000-8000-00000000000a")
 TENANT_B_ID = UUID("00000000-0000-4000-8000-00000000000b")
