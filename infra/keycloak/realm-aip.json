@@ -132,34 +132,31 @@
       }
     },
     {
-      "alias": "aip-passkey-loa2",
-      "config": {
-        "loa-condition-level": "2",
-        "loa-max-age": "0"
-      }
-    },
-    {
       "alias": "aip-ref-pwd",
       "config": {
-        "default.reference.value": "pwd"
+        "default.reference.value": "pwd",
+        "default.reference.maxAge": "36000"
       }
     },
     {
       "alias": "aip-ref-otp",
       "config": {
-        "default.reference.value": "otp"
+        "default.reference.value": "otp",
+        "default.reference.maxAge": "36000"
       }
     },
     {
       "alias": "aip-ref-hwk",
       "config": {
-        "default.reference.value": "hwk"
+        "default.reference.value": "hwk",
+        "default.reference.maxAge": "36000"
       }
     },
     {
       "alias": "aip-ref-passkey",
       "config": {
-        "default.reference.value": "hwk"
+        "default.reference.value": "hwk",
+        "default.reference.maxAge": "36000"
       }
     },
     {
@@ -173,12 +170,26 @@
       "config": {
         "require.password.update.after.registration": "false"
       }
+    },
+    {
+      "alias": "aip-passkey-not-used",
+      "config": {
+        "credentials": "webauthn-passwordless",
+        "included": "false"
+      }
+    },
+    {
+      "alias": "aip-key-not-used",
+      "config": {
+        "credentials": "webauthn",
+        "included": "false"
+      }
     }
   ],
   "authenticationFlows": [
     {
       "alias": "aip-browser",
-      "description": "AIP staff sign-in: SSO by email domain, or local password plus a second factor (aal2), or a passkey",
+      "description": "AIP staff sign-in: SSO by email domain, or a local account with password plus a second factor, or a passkey (both aal2)",
       "providerId": "basic-flow",
       "topLevel": true,
       "builtIn": false,
@@ -209,13 +220,6 @@
           "requirement": "ALTERNATIVE",
           "priority": 40,
           "flowAlias": "aip-forms",
-          "userSetupAllowed": false
-        },
-        {
-          "authenticatorFlow": true,
-          "requirement": "ALTERNATIVE",
-          "priority": 50,
-          "flowAlias": "aip-passkey",
           "userSetupAllowed": false
         }
       ]
@@ -260,7 +264,7 @@
     },
     {
       "alias": "aip-forms",
-      "description": "Local account: password (aal1), then OTP or a security key (aal2)",
+      "description": "Local account: password or passkey (aal1), then OTP or a security key unless a passkey was used (aal2)",
       "providerId": "basic-flow",
       "topLevel": false,
       "builtIn": false,
@@ -288,18 +292,42 @@
       "builtIn": false,
       "authenticationExecutions": [
         {
-          "authenticator": "conditional-level-of-authentication",
           "authenticatorConfig": "aip-loa1",
+          "authenticator": "conditional-level-of-authentication",
           "authenticatorFlow": false,
           "requirement": "REQUIRED",
           "priority": 10,
           "userSetupAllowed": false
         },
         {
-          "authenticator": "auth-username-password-form",
-          "authenticatorConfig": "aip-ref-pwd",
-          "authenticatorFlow": false,
+          "authenticatorFlow": true,
           "requirement": "REQUIRED",
+          "priority": 20,
+          "flowAlias": "aip-first-factor",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-first-factor",
+      "description": "Password, or a passkey (WebAuthn passwordless, user verification required)",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorConfig": "aip-ref-pwd",
+          "authenticator": "auth-username-password-form",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorConfig": "aip-ref-passkey",
+          "authenticator": "webauthn-authenticator-passwordless",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
           "priority": 20,
           "userSetupAllowed": false
         }
@@ -312,8 +340,8 @@
       "builtIn": false,
       "authenticationExecutions": [
         {
-          "authenticator": "conditional-level-of-authentication",
           "authenticatorConfig": "aip-loa2",
+          "authenticator": "conditional-level-of-authentication",
           "authenticatorFlow": false,
           "requirement": "REQUIRED",
           "priority": 10,
@@ -321,7 +349,7 @@
         },
         {
           "authenticatorFlow": true,
-          "requirement": "REQUIRED",
+          "requirement": "CONDITIONAL",
           "priority": 20,
           "flowAlias": "aip-second-factor",
           "userSetupAllowed": false
@@ -330,62 +358,77 @@
     },
     {
       "alias": "aip-second-factor",
-      "description": "One of: OTP, security key",
+      "description": "Skipped after a passkey. A registered security key is asked for first; otherwise OTP, which a user with no second factor must set up (CONFIGURE_TOTP)",
       "providerId": "basic-flow",
       "topLevel": false,
       "builtIn": false,
       "authenticationExecutions": [
         {
-          "authenticator": "auth-otp-form",
-          "authenticatorConfig": "aip-ref-otp",
-          "authenticatorFlow": false,
-          "requirement": "ALTERNATIVE",
-          "priority": 10,
-          "userSetupAllowed": false
-        },
-        {
-          "authenticator": "webauthn-authenticator",
-          "authenticatorConfig": "aip-ref-hwk",
-          "authenticatorFlow": false,
-          "requirement": "ALTERNATIVE",
-          "priority": 20,
-          "userSetupAllowed": false
-        }
-      ]
-    },
-    {
-      "alias": "aip-passkey",
-      "description": "Passkey (WebAuthn passwordless, user verification required): satisfies aal2 on its own",
-      "providerId": "basic-flow",
-      "topLevel": false,
-      "builtIn": false,
-      "authenticationExecutions": [
-        {
-          "authenticatorFlow": true,
-          "requirement": "CONDITIONAL",
-          "priority": 10,
-          "flowAlias": "aip-passkey-loa2",
-          "userSetupAllowed": false
-        }
-      ]
-    },
-    {
-      "alias": "aip-passkey-loa2",
-      "providerId": "basic-flow",
-      "topLevel": false,
-      "builtIn": false,
-      "authenticationExecutions": [
-        {
-          "authenticator": "conditional-level-of-authentication",
-          "authenticatorConfig": "aip-passkey-loa2",
+          "authenticatorConfig": "aip-passkey-not-used",
+          "authenticator": "conditional-credential",
           "authenticatorFlow": false,
           "requirement": "REQUIRED",
           "priority": 10,
           "userSetupAllowed": false
         },
         {
-          "authenticator": "webauthn-authenticator-passwordless",
-          "authenticatorConfig": "aip-ref-passkey",
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 20,
+          "flowAlias": "aip-2fa-key",
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 30,
+          "flowAlias": "aip-2fa-otp",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-2fa-key",
+      "description": "Security key, when the user has registered one",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-user-configured",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorConfig": "aip-ref-hwk",
+          "authenticator": "webauthn-authenticator",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-2fa-otp",
+      "description": "OTP unless a security key was used; set up at first sign-in when missing",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorConfig": "aip-key-not-used",
+          "authenticator": "conditional-credential",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorConfig": "aip-ref-otp",
+          "authenticator": "auth-otp-form",
           "authenticatorFlow": false,
           "requirement": "REQUIRED",
           "priority": 20,
