@@ -46,3 +46,9 @@ Generate cross-tenant and IDOR tests so new tables inherit coverage.
     - Cross-tenant PATCH /assets/:id with B's id as tenant A. Expected: 404 and B's row is unchanged.
   - **unit**:
     - The generator emits one test per catalogue table (fixture of 3 tables gives 3 tests).
+
+## Carried forward from the DATABASE-02 security review (PR #19, non-blocking)
+
+- Code holding a `with_tenant` connection can still call `set_config('app.tenant_id', other, true)`, `SET LOCAL` or `RESET` mid-transaction. Add a static test that no string `app.tenant_id` appears in `aip/` outside `aip/platform/db/session.py`.
+- `tests/arch/test_db_engine_boundary.py` is name-based: it misses aliased imports (`import asyncpg as pg`) and `get_engine().connect()` from outside the db package. Resolve aliases, and stop exporting `get_engine` or guard it with an import-linter contract.
+- Compose passes only `aip.owner_password`, so `aip_app`/`aip_jobs`/`aip_readonly` have no password there and compose still connects as `aip_owner`. Give the runtime roles passwords in the compose bootstrap and switch `DATABASE_URL`/`DATABASE_JOBS_URL` to them.
