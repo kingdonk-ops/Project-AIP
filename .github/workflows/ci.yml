@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -399,6 +402,10 @@ jobs:
         run: python3 tools/ci/check_security_docs.py
       - name: Unit and integration tests for the security docs checker
         run: python3 -m unittest tools/ci/test_check_security_docs.py
+      - name: Strip manifest and vulnerability exception checkers (SECURITY-08)
+        run: |
+          python3 -m unittest tools/ci/tests/test_check_prod_strip.py tools/ci/tests/test_check_vuln_exceptions.py
+          python3 tools/ci/check_vuln_exceptions.py
 
   licences:
     name: Licence policy and SBOMs (STACK-04)

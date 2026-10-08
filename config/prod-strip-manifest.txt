@@ -1,0 +1,65 @@
+# Production strip manifest (SECURITY-08). Read by tools/ci/check_prod_strip.py.
+#
+# Everything listed here must be absent from production builds: the API image (aip-api), and the
+# web build (apps/web/dist, served by aip-web). The strip test fails if any entry is present.
+# Format: one `<kind> <value>` per line; `#` starts a comment. Values contain no spaces.
+#
+#   forbidden    dotted module: dev tooling the blueprint says is stripped from production
+#                (security module README). It must not import and no file for it may exist.
+#   dev-module   dotted module: test-only or dev-only code (test runners, the scaffolding template,
+#                the test-only `widgets` module). It must not import in a production image.
+#   dev-glob     glob under the installed `aip` package: test files must not ship.
+#   image-path   absolute path that must not exist in the API image (source checkouts, tooling).
+#   route        URL path prefix no production app may mount (debug and test-only routes).
+#   web-glob     glob under the web build output that must match nothing (source maps, tests).
+#   web-marker   literal string no web build file may contain (dev-only runtime code).
+
+# The five blueprint items (docs/blueprint/modules/security/README.md).
+forbidden    aip.fixtures.admin             # admin fixtures
+forbidden    aip.modules.architecture_map   # architecture map generator
+forbidden    aip.modules.module_builder     # module builder
+forbidden    aip.modules.pipelines          # pipeline designer
+forbidden    aip.modules.compliance_dsl     # compliance DSL
+
+dev-module   aip.modules._template          # scaffolding copied by tools/new_module.py
+dev-module   aip.modules.widgets            # test-only module (AGENTS.md)
+dev-module   tests                          # apps/api/tests
+dev-module   pytest
+dev-module   _pytest
+dev-module   pytest_asyncio
+dev-module   testcontainers
+dev-module   hypothesis
+dev-module   pypdf                          # test-only PDF reader
+dev-module   ruff
+dev-module   pyright
+dev-module   importlinter
+
+dev-glob     **/tests
+dev-glob     **/test_*.py
+dev-glob     **/*_test.py
+dev-glob     **/conftest.py
+
+image-path   /app/tools
+image-path   /app/docs
+image-path   /app/e2e
+image-path   /app/apps/api/tests
+image-path   /app/apps/web
+image-path   /app/.git
+image-path   /app/.env
+image-path   /src
+
+route        /api/v1/_debug
+route        /_debug
+
+web-glob     **/*.map
+web-glob     **/*.test.*
+web-glob     **/*.spec.*
+web-glob     **/.env*
+
+web-marker   sourceMappingURL=
+web-marker   /@vite/client
+web-marker   $RefreshReg$
+web-marker   jsxDEV
+web-marker   react-jsx-dev-runtime
+web-marker   react-dom.development
+web-marker   /_debug/

@@ -1,0 +1,8 @@
+# Accepted vulnerabilities (SECURITY-08), validated by tools/ci/check_vuln_exceptions.py.
+# Trivy reads this file as its ignore file; pip-audit and pnpm audit get the IDs.
+# Each entry: a "# why: <reason, who accepted it>" line, then "<CVE|GHSA|PYSEC id> exp:YYYY-MM-DD".
+# The expiry is at most 180 days ahead. When it passes, every scan fails again until the entry is
+# fixed or re-reviewed. Prefer upgrading over adding an entry.
+
+# why: braces <=3.0.3 stack exhaustion on deeply nested patterns (GHSA-vfj7-8cjw-p6xm). Only via eslint-plugin-boundaries in packages/config-eslint (lint time, never shipped); the patterns are our own config. No fixed release yet. Accepted in SECURITY-08, 2026-10-07.
+CVE-2026-93687 exp:2027-01-05
