@@ -16,9 +16,10 @@ Settings (environment):
 - ``DB_POOL_SIZE`` (default 10), ``DB_MAX_OVERFLOW`` (default 0) and ``DB_POOL_TIMEOUT`` seconds
   (default 10): the pool bound. A request waits at most ``DB_POOL_TIMEOUT`` for a connection.
 
-Every new physical connection is checked once: a superuser, ``BYPASSRLS`` or owner login would
-silently escape row-level security, so the engine refuses it with ``DatabaseConfigError`` (fail
-closed).
+Every new physical connection is checked once. A login that is a superuser, has ``BYPASSRLS`` or
+``CREATEROLE``, can use ``aip_owner``'s privileges, is in ``pg_write_all_data``, or owns the
+database or a table could escape row-level security, so the engine refuses it with
+``DatabaseConfigError`` (fail closed).
 """
 
 from __future__ import annotations
@@ -55,11 +56,17 @@ DEFAULT_POOL_SIZE = 10
 DEFAULT_MAX_OVERFLOW = 0
 DEFAULT_POOL_TIMEOUT = 10.0
 
-# True when the login would escape RLS: a superuser, BYPASSRLS, the database owner, or the owner
-# of any non-system relation (an owner can ALTER TABLE ... NO FORCE ROW LEVEL SECURITY).
+# True when the login would escape RLS or could: a superuser, BYPASSRLS, CREATEROLE, a role that
+# can use aip_owner's privileges or write every table (pg_write_all_data), the database owner,
+# or the owner of any non-system relation (an owner can ALTER TABLE ... NO FORCE ROW LEVEL
+# SECURITY). Roles are looked up by name so a cluster without aip_owner does not error.
 _PRIVILEGE_CHECK = """
 SELECT r.rolname::text,
-       r.rolsuper OR r.rolbypassrls
+       r.rolsuper OR r.rolbypassrls OR r.rolcreaterole
+       OR EXISTS (SELECT 1 FROM pg_catalog.pg_roles o
+                  WHERE o.rolname = 'aip_owner' AND pg_has_role(r.oid, o.oid, 'USAGE'))
+       OR EXISTS (SELECT 1 FROM pg_catalog.pg_roles w
+                  WHERE w.rolname = 'pg_write_all_data' AND pg_has_role(r.oid, w.oid, 'MEMBER'))
        OR EXISTS (SELECT 1 FROM pg_catalog.pg_database d
                   WHERE d.datname = current_database() AND d.datdba = r.oid)
        OR EXISTS (SELECT 1 FROM pg_catalog.pg_class c
@@ -171,8 +178,9 @@ def _refuse_privileged_login(dbapi_connection: Any, _record: Any) -> None:
     if row is None or bool(row[1]):
         user = "unknown" if row is None else str(row[0])
         raise DatabaseConfigError(
-            f"refusing to use role {user!r} for application traffic: it is a superuser, has "
-            "BYPASSRLS or owns objects, so row-level security would not bind it (use aip_app)"
+            f"refusing to use role {user!r} for application traffic: it is a superuser, can "
+            "bypass RLS, create roles, act as aip_owner, write every table or owns objects "
+            "(use aip_app)"
         )
 
 

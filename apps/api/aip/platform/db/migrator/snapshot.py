@@ -31,12 +31,26 @@ def _dollar_state(line: str, open_tag: str | None) -> str | None:
     """The dollar-quote tag still open after ``line`` (``None`` when outside any body).
 
     pg_dump writes function bodies as ``$$ ... $$`` or ``$_$ ... $_$``; quotes inside a body
-    cannot close it, so only the matching tag is tracked.
+    cannot close it, so only the matching tag is tracked. Outside a body, a ``$$`` inside a
+    single-quoted string (``DEFAULT 'costs $$'``) is text, not a body opener.
     """
     pos = 0
     while True:
         if open_tag is None:
             m = _DOLLAR_TAG_RE.search(line, pos)
+            quote = line.find("'", pos)
+            if quote != -1 and (m is None or quote < m.start()):
+                close = quote + 1
+                while True:  # skip the string; '' is an escaped quote
+                    close = line.find("'", close)
+                    if close == -1:
+                        return None  # pg_dump keeps a string literal on one line
+                    if line.startswith("''", close):
+                        close += 2
+                        continue
+                    break
+                pos = close + 1
+                continue
             if m is None:
                 return None
             open_tag, pos = m.group(0), m.end()

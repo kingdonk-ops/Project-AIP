@@ -15,6 +15,11 @@ server connection. Session-level settings of the tenant are banned (a test scans
 Code that commits inside the block cannot keep going: SQLAlchemy refuses further statements on
 the closed ``begin()`` transaction. Any connection used without a tenant set fails closed under
 RLS anyway: 0 rows, and writes are rejected.
+
+Do not nest ``with_tenant`` calls. Each call takes its own connection and transaction, so an
+inner call needs a second connection while the outer one is still held. With a small pool and
+``max_overflow=0`` (the default), concurrent requests that each hold one connection and wait for
+a second can stall until ``DB_POOL_TIMEOUT``. Pass the outer ``conn`` down instead.
 """
 
 from __future__ import annotations

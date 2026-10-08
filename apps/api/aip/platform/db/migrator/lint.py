@@ -9,13 +9,20 @@ Works on the Python AST and the SQL string literals of each revision. Rules:
   calls (the template is rendered and its SQL linted), plus
   ``with op.get_context().autocommit_block():`` around ``CREATE INDEX CONCURRENTLY``, one
   statement per ``op.execute``;
-- no explicit ``BEGIN``/``COMMIT``, no session-level ``SET`` (only ``set_config(..., true)``),
-  also inside dollar-quoted (``DO $$ ... $$``) bodies;
+- no explicit ``BEGIN``/``COMMIT``, no session-level ``SET``, also inside dollar-quoted bodies;
+  every ``set_config`` call has exactly the literal ``true`` as its third argument, and
+  ``app.tenant_id`` is never set by ``SET``/``RESET`` or by
+  ``ALTER ROLE``/``USER``/``DATABASE``/``SYSTEM``;
+- ``DO`` blocks only in the baseline revision;
 - ``CREATE EXTENSION`` only in the baseline (the revision with ``down_revision = None``);
-- ``DROP TABLE``, ``DROP COLUMN`` and ``SET NOT NULL`` need ``# contract: <expand revision id>``
-  on the ``op.execute`` call's lines or in the comment block just above it. They are found
-  anywhere in the SQL, including dollar-quoted bodies and string literals (``EXECUTE 'DROP ...'``);
-- string literals may be standard (``'...'``), escape (``E'...'``) or dollar-quoted;
+- ``DROP TABLE``, ``DROP COLUMN`` (also ``ALTER TABLE ... DROP <column>``, where COLUMN is
+  optional) and ``SET NOT NULL`` need ``# contract: <expand revision id>`` on the ``op.execute``
+  call's lines or in the comment block just above it. So do the security-sensitive
+  ``NO FORCE``/``DISABLE ROW LEVEL SECURITY``, ``GRANT aip_owner``, ``SECURITY DEFINER``,
+  ``TRUNCATE`` and ``DROP SCHEMA``. They are found anywhere in the SQL, including dollar-quoted
+  bodies, string literals (``EXECUTE 'DROP ...'``) and quoted identifiers;
+- string literals may be standard (``'...'``), escape (``E'...'``) or dollar-quoted; quoted
+  identifiers (``"..."``) are parsed so they cannot hide a comment marker;
 - a single head;
 - no revision modified or deleted relative to ``origin/main`` (merge base).
 """
@@ -45,11 +52,30 @@ MSG_CONTRACT = "destructive change needs a contract comment"
 MSG_AUTOCOMMIT_ONE = "autocommit_block allows one statement per op.execute"
 MSG_MODULE = "only a docstring, imports, assignments, upgrade() and downgrade() may be top-level"
 MSG_TEMPLATE = "template render failed"
+MSG_SENSITIVE = "security-sensitive change needs a contract comment"
+MSG_DO = "DO blocks are only allowed in the baseline revision"
 
 _TRANSACTION_WORDS = ("BEGIN", "COMMIT", "ROLLBACK", "END", "ABORT", "START TRANSACTION")
 _DESTRUCTIVE_RE = re.compile(r"\bDROP\s+TABLE\b|\bDROP\s+COLUMN\b|\bSET\s+NOT\s+NULL\b")
+_ALTER_TABLE_RE = re.compile(r"\bALTER\s+TABLE\b")
+# In ALTER TABLE, `DROP <name>` drops a column (COLUMN is optional); these DROPs do not.
+_ALTER_TABLE_DROP_RE = re.compile(
+    r"\bDROP\s+(?!CONSTRAINT\b|DEFAULT\b|IDENTITY\b|EXPRESSION\b|NOT\s+NULL\b)"
+)
+_SENSITIVE_RES = (
+    re.compile(r"\bNO\s+FORCE\s+ROW\s+LEVEL\s+SECURITY\b"),
+    re.compile(r"\bDISABLE\s+ROW\s+LEVEL\s+SECURITY\b"),
+    re.compile(r"\bGRANT\s+(?:[A-Z0-9_]+\s*,\s*)*AIP_OWNER\b"),
+    re.compile(r"\bSECURITY\s+DEFINER\b"),
+    re.compile(r"\bTRUNCATE\b"),
+    re.compile(r"\bDROP\s+SCHEMA\b"),
+)
+_TENANT_SET_RE = re.compile(
+    r"\b(?:SET|RESET)\s+(?:SESSION\s+|LOCAL\s+)?APP\.TENANT_ID\b"
+    r"|\bALTER\s+(?:ROLE|USER|DATABASE|SYSTEM)\b[^;]*\bAPP\.TENANT_ID\b"
+)
+_SET_CONFIG_CALL_RE = re.compile(r"\bSET_CONFIG\s*\(")
 _EXTENSION_RE = re.compile(r"\bCREATE\s+EXTENSION\b")
-_SET_CONFIG_FALSE_RE = re.compile(r"\bSET_CONFIG\s*\([^)]*,\s*FALSE\s*\)")
 _CONCURRENT_INDEX_RE = re.compile(r"^CREATE\s+(UNIQUE\s+)?INDEX\s+CONCURRENTLY\b")
 _DOLLAR_TAG_RE = re.compile(r"\$[A-Za-z_][A-Za-z0-9_]*\$|\$\$")
 _BODY_SET_RE = re.compile(r"^(?:SET|RESET)\s|\b(?:BEGIN|THEN|ELSE|LOOP)\s+(?:SET|RESET)\s")
@@ -77,10 +103,11 @@ class _Revision:
 
 
 def _segments(sql: str) -> Iterator[tuple[str, str]]:
-    """Split SQL into ``(kind, text)``: ``code``, ``comment``, ``string`` or ``dollar``.
+    """Split SQL into ``(kind, text)``: ``code``, ``comment``, ``string``, ``ident`` or ``dollar``.
 
     ``string`` covers ``'...'`` (``''`` escapes a quote) and ``E'...'`` (a backslash escapes the
-    next character too); ``dollar`` is a whole ``$tag$ ... $tag$`` including both tags.
+    next character too); ``ident`` is a quoted identifier ``"..."`` (``""`` escapes a quote);
+    ``dollar`` is a whole ``$tag$ ... $tag$`` including both tags.
     """
     i, n, start = 0, len(sql), 0
     while i < n:
@@ -110,6 +137,16 @@ def _segments(sql: str) -> Iterator[tuple[str, str]]:
                     break
                 j += 1
             kind, end = "string", min(j + 1, n)
+        elif ch == '"':
+            j = i + 1
+            while j < n:
+                if sql[j] == '"':
+                    if j + 1 < n and sql[j + 1] == '"':
+                        j += 2
+                        continue
+                    break
+                j += 1
+            kind, end = "ident", min(j + 1, n)
         if not kind:
             i += 1
             continue
@@ -122,8 +159,11 @@ def _segments(sql: str) -> Iterator[tuple[str, str]]:
 
 
 def strip_sql(sql: str) -> str:
-    """Blank out comments, dollar-quoted bodies and string literals (keeps ``''`` placeholders)."""
-    blanks = {"comment": " ", "dollar": " '' ", "string": "''"}
+    """Blank out comments, dollar-quoted bodies, string literals and quoted identifiers.
+
+    Literals become ``''`` and quoted identifiers ``"_"``, so statements keep their shape.
+    """
+    blanks = {"comment": " ", "dollar": " '' ", "string": "''", "ident": '"_"'}
     return "".join(blanks.get(kind, text) for kind, text in _segments(sql))
 
 
@@ -158,6 +198,52 @@ def _body_has_session_set(body: str) -> bool:
     return any(_body_has_session_set(inner) for inner in dollar_bodies(body))
 
 
+def _call_args(code: str, start: int) -> list[str] | None:
+    """Top-level arguments of the call whose ``(`` ends just before ``start``; None if unclosed."""
+    args: list[str] = []
+    depth, quote, i, arg_start = 0, "", start, start
+    while i < len(code):
+        ch = code[i]
+        if quote:
+            if ch == quote:
+                if code.startswith(quote, i + 1):  # '' or "" escape
+                    i += 2
+                    continue
+                quote = ""
+        elif ch in "'\"":
+            quote = ch
+        elif ch == "(":
+            depth += 1
+        elif ch == ")":
+            if depth == 0:
+                args.append(code[arg_start:i].strip())
+                return args
+            depth -= 1
+        elif ch == "," and depth == 0:
+            args.append(code[arg_start:i].strip())
+            arg_start = i + 1
+        i += 1
+    return None
+
+
+def _bad_set_config(code: str) -> bool:
+    """Any ``set_config`` call whose third argument is not exactly the literal ``true``."""
+    for m in _SET_CONFIG_CALL_RE.finditer(code):
+        args = _call_args(code, m.end())
+        if args is None or len(args) != 3 or args[2] != "TRUE":
+            return True
+    return False
+
+
+def _destructive(code: str) -> bool:
+    if _DESTRUCTIVE_RE.search(code):
+        return True
+    return any(
+        _ALTER_TABLE_RE.search(stmt) and _ALTER_TABLE_DROP_RE.search(stmt)
+        for stmt in code.split(";")
+    )
+
+
 def _sql_findings(sql: str, *, is_baseline: bool, has_contract: bool) -> list[str]:
     found: list[str] = []
     for stmt in sql_statements(sql):
@@ -165,16 +251,23 @@ def _sql_findings(sql: str, *, is_baseline: bool, has_contract: bool) -> list[st
             found.append(MSG_TRANSACTION)
         if stmt.startswith(("SET ", "RESET ")):
             found.append(MSG_SET)
+        if (stmt == "DO" or stmt.startswith("DO ")) and not is_baseline:
+            found.append(MSG_DO)
     if any(_body_has_session_set(body) for body in dollar_bodies(sql)):
         found.append(MSG_SET)
-    # Everything but comments: DO bodies and EXECUTE '...' strings cannot hide these.
+    # Everything but comments: DO bodies, EXECUTE '...' strings and quoted names cannot hide
+    # these. `code` keeps quotes (for set_config argument parsing); `bare` drops `"`.
     code = " ".join(strip_comments(sql).split()).upper()
-    if _SET_CONFIG_FALSE_RE.search(code):
+    bare = code.replace('"', "")
+    if _bad_set_config(code) or _TENANT_SET_RE.search(bare):
         found.append(MSG_SET)
-    if _EXTENSION_RE.search(code) and not is_baseline:
+    if _EXTENSION_RE.search(bare) and not is_baseline:
         found.append(MSG_EXTENSION)
-    if _DESTRUCTIVE_RE.search(code) and not has_contract:
-        found.append(MSG_CONTRACT)
+    if not has_contract:
+        if _destructive(bare):
+            found.append(MSG_CONTRACT)
+        if any(rx.search(bare) for rx in _SENSITIVE_RES):
+            found.append(MSG_SENSITIVE)
     return list(dict.fromkeys(found))
 
 

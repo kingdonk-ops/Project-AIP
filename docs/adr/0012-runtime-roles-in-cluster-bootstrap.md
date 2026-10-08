@@ -18,16 +18,18 @@ Roles are cluster-wide objects, not database objects. To create them from a revi
 ## Decision
 
 - `db/bootstrap/00_cluster.sql` (superuser, idempotent) creates all four roles as `LOGIN
-  NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS`, repairing any drift. It sets
-  `aip_readonly` to read-only transactions by default. It revokes `CONNECT`/`TEMPORARY` on the
+  NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS`, repairing any drift. It also
+  sets `default_transaction_read_only` for `aip_readonly`, but only as a convenience: the role can
+  switch it off. What keeps `aip_readonly` read-only is that it is granted nothing but `SELECT`.
+  It revokes `CONNECT`/`TEMPORARY` on the
   database from `PUBLIC` and grants `CONNECT` to the three runtime roles.
 - Passwords come only from the custom settings `aip.<role>_password`, for example
   `PGOPTIONS='-c aip.app_password=...'`, filled from the environment or the secrets manager.
   Production passes pre-hashed SCRAM verifiers, or clear text with logging off for that session.
   No password is in the repository.
 - The Alembic revision `202610072200_platform_roles` stays re-runnable on any cluster. It checks,
-  with `IF NOT EXISTS`, that each runtime role exists, is unprivileged and is not a member of
-  `aip_owner`, and raises otherwise. Then it grants schema usage. Per-table grants come from
+  in plain SQL (no `DO` block: those are reserved for the baseline), that each runtime role
+  exists, is unprivileged and is not a member of `aip_owner`, and fails otherwise. Then it grants schema usage. Per-table grants come from
   `db/templates/tenant_table.sql.tpl`.
 - `aip_owner` stays `NOCREATEROLE`.
 

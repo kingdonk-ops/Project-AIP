@@ -6,7 +6,8 @@
 --   aip_owner     migrator; owns the database, schemas and every table. Used only by aip-db.
 --   aip_app       the API. LOGIN, not an owner of anything, no BYPASSRLS: RLS always applies.
 --   aip_jobs      the worker (Procrastinate tables and outbox publish columns, granted later).
---   aip_readonly  reporting. SELECT only, still subject to RLS, read-only transactions.
+--   aip_readonly  reporting. Granted SELECT only, which is what keeps it read-only; still
+--                 subject to RLS.
 -- None of them is SUPERUSER, CREATEDB, CREATEROLE, REPLICATION or BYPASSRLS. The revision
 -- 202610072200_platform_roles refuses to run if any of them is missing or privileged.
 --
@@ -57,7 +58,8 @@ BEGIN
     END IF;
   END LOOP;
 
-  -- Reporting sessions start read-only (RLS and grants still decide what they can see).
+  -- Reporting sessions start read-only. This is a convenience, not a guard: the role can turn it
+  -- off. Only SELECT grants keep aip_readonly from writing, and RLS limits what it reads.
   IF NOT EXISTS (
     SELECT 1 FROM pg_db_role_setting s JOIN pg_roles r ON r.oid = s.setrole
     WHERE r.rolname = 'aip_readonly' AND s.setdatabase = 0

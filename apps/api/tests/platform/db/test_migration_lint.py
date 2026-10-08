@@ -160,7 +160,10 @@ def test_session_set_inside_a_dollar_quoted_body_is_found(tmp_path: Path) -> Non
             tmp_path, {"202610071300_x.py": revision_source(upgrade=f"    op.execute({sql!r})\n")}
         )
         assert "session-level SET is forbidden; use set_config(..., true)" in found, body
-    ok = "DO $$ BEGIN UPDATE t SET a = 1; ALTER ROLE r SET work_mem = '4MB'; END $$;"
+    ok = (
+        "CREATE FUNCTION f() RETURNS void LANGUAGE plpgsql AS "
+        "$$ BEGIN UPDATE t SET a = 1; ALTER ROLE r SET work_mem = '4MB'; END $$;"
+    )
     assert (
         messages(
             tmp_path, {"202610071300_x.py": revision_source(upgrade=f"    op.execute({ok!r})\n")}
@@ -271,7 +274,8 @@ def test_explicit_transaction_control_is_rejected(tmp_path: Path) -> None:
 def test_plpgsql_begin_inside_dollar_quotes_is_allowed(tmp_path: Path) -> None:
     up = (
         '    op.execute("""\n'
-        "    DO $$\n    BEGIN\n      PERFORM 1;\n    END\n    $$;\n"
+        "    CREATE FUNCTION f() RETURNS void LANGUAGE plpgsql AS $$\n"
+        "    BEGIN\n      PERFORM 1;\n    END\n    $$;\n"
         "    -- BEGIN in a comment is fine too\n"
         "    SELECT 'COMMIT';\n"
         '    """)\n'
@@ -332,3 +336,124 @@ def test_cli_lint_exit_codes(tmp_path: Path, capsys: pytest.CaptureFixture[str])
     assert "0001_widgets.py:1: invalid migration filename" in capsys.readouterr().out
     (versions / "0001_widgets.py").unlink()
     assert cli.main(["lint", "--versions-dir", str(versions), "--no-git"]) == 0
+
+
+# --- DATABASE-02 security review: lint must not fail open ---------------------------------------
+
+CONTRACT_MSG = "destructive change needs a contract comment"
+SENSITIVE_MSG = "security-sensitive change needs a contract comment"
+SET_MSG = "session-level SET is forbidden; use set_config(..., true)"
+DO_MSG = "DO blocks are only allowed in the baseline revision"
+
+
+def sql_messages(tmp_path: Path, sql: str, *, contract: bool = False) -> list[str]:
+    prefix = "    # contract: 202610071200\n" if contract else ""
+    up = f"{prefix}    op.execute({sql!r})\n"
+    return messages(tmp_path, {"202610071300_x.py": revision_source(upgrade=up)})
+
+
+def test_quoted_identifier_cannot_hide_a_statement(tmp_path: Path) -> None:
+    assert CONTRACT_MSG in sql_messages(tmp_path, 'SELECT 1 AS "--"; DROP TABLE t;')
+    assert CONTRACT_MSG in sql_messages(tmp_path, 'SELECT 1 AS "a""/*"; DROP TABLE t; -- */')
+    assert lint.strip_sql('SELECT "a""b", \'c\'') == "SELECT \"_\", ''"
+    # A quoted name is still a name: DROP TABLE "t" is destructive.
+    assert CONTRACT_MSG in sql_messages(tmp_path, 'DROP TABLE "t"')
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "ALTER TABLE t DROP c",
+        "ALTER TABLE t DROP IF EXISTS c",
+        "ALTER TABLE ONLY public.t ADD COLUMN d int, DROP c CASCADE",
+    ],
+)
+def test_drop_without_column_keyword_is_destructive(tmp_path: Path, sql: str) -> None:
+    assert CONTRACT_MSG in sql_messages(tmp_path, sql)
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "ALTER TABLE t DROP CONSTRAINT ck",
+        "ALTER TABLE t ALTER COLUMN c DROP DEFAULT",
+        "ALTER TABLE t ALTER COLUMN c DROP IDENTITY IF EXISTS",
+        "ALTER TABLE t ALTER COLUMN c DROP EXPRESSION",
+        "ALTER TABLE t ALTER COLUMN c DROP NOT NULL",
+    ],
+)
+def test_non_destructive_alter_table_drops_are_allowed(tmp_path: Path, sql: str) -> None:
+    assert sql_messages(tmp_path, sql) == []
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "SELECT set_config('app.tenant_id', 'x', 'f')",
+        "SELECT set_config('app.tenant_id', 'x', (false))",
+        "SELECT set_config('app.tenant_id', 'x', NOT true)",
+        "SELECT set_config('app.tenant_id', 'x', 'true')",
+        "SELECT set_config('app.tenant_id', 'x', 0 = 1)",
+        "SELECT pg_catalog.set_config('app.tenant_id', 'x')",
+        "SELECT set_config('app.tenant_id', concat('a', 'b'), false)",
+    ],
+)
+def test_set_config_needs_the_literal_true(tmp_path: Path, sql: str) -> None:
+    assert SET_MSG in sql_messages(tmp_path, sql)
+
+
+def test_set_config_with_literal_true_is_allowed(tmp_path: Path) -> None:
+    sql = "SELECT set_config('app.tenant_id', concat('a', ','), TRUE)"
+    assert sql_messages(tmp_path, sql) == []
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "ALTER ROLE aip_app SET app.tenant_id = 'x'",
+        "ALTER ROLE aip_app IN DATABASE aip SET app.tenant_id TO 'x'",
+        "ALTER USER aip_app SET \"app.tenant_id\" = 'x'",
+        "ALTER DATABASE aip SET app.tenant_id = 'x'",
+        "ALTER SYSTEM SET app.tenant_id = 'x'",
+        "SET LOCAL app.tenant_id = 'x'",
+    ],
+)
+def test_persistent_or_session_tenant_settings_are_rejected(tmp_path: Path, sql: str) -> None:
+    assert SET_MSG in sql_messages(tmp_path, sql)
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "ALTER TABLE t NO FORCE ROW LEVEL SECURITY",
+        "ALTER TABLE t DISABLE ROW LEVEL SECURITY",
+        "GRANT aip_owner TO aip_app",
+        "GRANT pg_read_all_data, aip_owner TO aip_app",
+        'GRANT "aip_owner" TO aip_app',
+        "CREATE FUNCTION f() RETURNS int LANGUAGE sql SECURITY DEFINER AS 'SELECT 1'",
+        "TRUNCATE t",
+        "DROP SCHEMA s CASCADE",
+    ],
+)
+def test_security_sensitive_changes_need_a_contract(tmp_path: Path, sql: str) -> None:
+    assert SENSITIVE_MSG in sql_messages(tmp_path, sql)
+    assert SENSITIVE_MSG not in sql_messages(tmp_path, sql, contract=True)
+
+
+def test_ordinary_grants_are_not_sensitive(tmp_path: Path) -> None:
+    assert sql_messages(tmp_path, "GRANT SELECT ON t TO aip_owner, aip_readonly") == []
+
+
+def test_do_blocks_only_in_the_baseline(tmp_path: Path) -> None:
+    assert DO_MSG in sql_messages(tmp_path, "DO $$ BEGIN PERFORM 1; END $$;")
+    assert DO_MSG in sql_messages(tmp_path, "SELECT 1; do language plpgsql $x$ BEGIN END $x$")
+    base_dir = tmp_path / "base"
+    base_dir.mkdir()
+    versions = write_versions(base_dir, {})
+    baseline = revision_source(
+        rev="202610071200",
+        down=None,
+        upgrade="    op.execute('DO $$ BEGIN PERFORM 1; END $$;')\n",
+    )
+    (versions / "202610071200_baseline_extensions.py").write_text(baseline, encoding="utf-8")
+    assert lint.lint_directory(versions, git_base=None) == []

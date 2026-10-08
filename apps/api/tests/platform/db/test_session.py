@@ -21,7 +21,7 @@ from sqlalchemy import event, text
 from sqlalchemy.exc import DBAPIError, InvalidRequestError
 from sqlalchemy.ext.asyncio import AsyncEngine
 from tests.conftest import TENANT_A_ID, TENANT_B_ID
-from tests.platform.db.conftest import APP, JOBS, OWNER, READONLY, execute
+from tests.platform.db.conftest import APP, JOBS, OWNER, READONLY, ROLE_PASSWORDS, execute
 
 from aip.main import create_app
 from aip.platform.context import RequestContext, get_context
@@ -381,6 +381,40 @@ async def test_engine_refuses_a_login_that_escapes_rls(rls_db: FreshDb, who: str
                 pytest.fail("the block must not run")
     finally:
         await engine.dispose()
+
+
+@pytest.mark.parametrize(
+    ("kind", "setup"),
+    [
+        ("aip_owner member", "GRANT aip_owner TO {role}"),
+        ("pg_write_all_data member", "GRANT pg_write_all_data TO {role}"),
+        ("createrole", "ALTER ROLE {role} CREATEROLE"),
+    ],
+)
+async def test_engine_refuses_a_login_that_can_reach_owner_or_write_everything(
+    rls_db: FreshDb, kind: str, setup: str
+) -> None:
+    """A throwaway role (never a shared aip_* role) with one escalation path is refused."""
+    role = f"probe_{uuid.uuid4().hex[:12]}"
+    password = "probe_test_only"  # throwaway test credential, not a secret
+    su = await _connect(rls_db.superuser_url)
+    await su.execute(f"CREATE ROLE {role} LOGIN PASSWORD '{password}'")
+    try:
+        await su.execute(f'GRANT CONNECT ON DATABASE "{rls_db.name}" TO {role}')
+        await su.execute(setup.format(role=role))
+        url = rls_db.app_url.replace(f"{APP}:{ROLE_PASSWORDS[APP]}@", f"{role}:{password}@", 1)
+        assert role in url, kind
+        engine = create_app_engine(EngineSettings(url=url))
+        try:
+            with pytest.raises(DatabaseConfigError, match="refusing to use role"):
+                async with with_tenant(TENANT_A_ID, engine=engine):
+                    pytest.fail("the block must not run")
+        finally:
+            await engine.dispose()
+    finally:
+        await su.execute(f"DROP OWNED BY {role}")
+        await su.execute(f"DROP ROLE {role}")
+        await su.close()
 
 
 async def test_app_role_can_read_the_applied_revision_for_readiness(rls_db: FreshDb) -> None:

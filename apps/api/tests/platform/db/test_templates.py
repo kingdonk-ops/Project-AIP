@@ -51,6 +51,13 @@ def test_tenant_table_has_the_standard_columns() -> None:
         ({"table": "x"}, "needs columns"),
         ({"table": "x", "columns": "a int", "extra": "1"}, "no placeholder for extra"),
         ({"table": "x", "columns": 3}, "must be a string"),
+        ({"table": "x", "columns": "a text DEFAULT 'x'"}, "must not contain"),
+        ({"table": "x", "columns": 'a text, "b" int'}, "must not contain"),
+        ({"table": "x", "columns": "a text DEFAULT $$x$$"}, "must not contain"),
+        ({"table": "user", "columns": "a int"}, "reserved word"),
+        ({"table": "select", "columns": "a int"}, "reserved word"),
+        ({"table": "order", "columns": "a int"}, "reserved word"),
+        ({"table": "pg_widgets", "columns": "a int"}, "pg_"),
     ],
 )
 def test_bad_variables_are_rejected(kwargs: dict[str, object], message: str) -> None:

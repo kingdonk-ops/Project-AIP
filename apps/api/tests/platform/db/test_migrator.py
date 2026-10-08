@@ -126,6 +126,24 @@ def test_normalise_keeps_comment_and_set_lines_inside_function_bodies() -> None:
     assert snapshot.normalise_dump(once) == once
 
 
+def test_normalise_ignores_dollar_quotes_inside_single_quoted_strings() -> None:
+    dump = "\n".join(
+        [
+            "-- Name: t; Type: TABLE; Schema: public; Owner: aip_owner",
+            "CREATE TABLE public.t (",
+            "    price text DEFAULT 'costs $$ dear, it''s'::text",
+            ");",
+            "SET default_table_access_method = heap;",
+            "-- a dump comment that must still be dropped",
+        ]
+    )
+    once = snapshot.normalise_dump(dump)
+    assert "SET default_table_access_method" not in once
+    assert "a dump comment" not in once
+    assert "costs $$ dear, it''s" in once
+    assert snapshot.normalise_dump(once) == once
+
+
 def test_declared_metadata_is_a_single_shared_instance() -> None:
     from aip.platform.db import metadata as metadata_module
 
