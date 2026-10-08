@@ -1,0 +1,4 @@
+# Changes to these paths need review from the code owner (TESTING-02).
+# The schema-guard allow-list names the tables exempt from tenant_id and row level security.
+/apps/api/tests/schema/schema_guard_allowlist.yaml @kingdonk-ops
+/apps/api/aip/platform/db/schema_guard.py @kingdonk-ops
