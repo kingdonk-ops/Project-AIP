@@ -52,10 +52,6 @@ def get_login_service(
 ) -> LoginService:
     service: LoginService | None = getattr(request.app.state, "identity_login_service", None)
     if service is None:
-        database_url = os.environ.get("DATABASE_URL")
-        if not database_url:
-            logger.error("DATABASE_URL is not set; sign-in is unavailable")
-            raise HTTPException(status_code=503, detail="sign-in is not configured")
         oidc = KeycloakOidcClient(
             issuer=settings.issuer,
             token_endpoint=settings.token_endpoint,
@@ -66,7 +62,7 @@ def get_login_service(
             jwks_ttl=settings.jwks_ttl_seconds,
             timeout=settings.http_timeout_seconds,
         )
-        service = LoginService(settings, SqlLoginDirectory.from_url(database_url), oidc)
+        service = LoginService(settings, SqlLoginDirectory(), oidc)
         request.app.state.identity_login_service = service
     return service
 

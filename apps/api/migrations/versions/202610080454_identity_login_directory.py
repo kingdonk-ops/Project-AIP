@@ -7,20 +7,18 @@ through the SECURITY DEFINER function ``identity_resolve_login``.
 
 - ``tenant_id`` has no foreign key yet: ``tenants`` arrives with TENANCY-01, which adds
   ``fk_login_directory_tenant_id_tenants``.
-- ``aip_app`` is created by DATABASE-02. The grant below runs only when the role already exists;
-  a later roles revision must ``GRANT EXECUTE ON FUNCTION identity_resolve_login(text, citext)
-  TO aip_app`` if it creates the role after this revision.
+- ``aip_app`` comes from the cluster bootstrap (ADR 0012); 202610072200 checks it exists.
 - Dev rows come from ``python -m aip.modules.identity.seeds``, not from this revision.
 
 Revision ID: 202610080454
-Revises: 202610071200
+Revises: 202610072200
 Create Date: 2026-10-08 04:54:00+00:00
 """
 
 from alembic import op
 
 revision: str = "202610080454"
-down_revision: str | None = "202610071200"
+down_revision: str | None = "202610072200"
 branch_labels = None
 depends_on = None
 
@@ -40,6 +38,8 @@ def upgrade() -> None:
     CREATE INDEX ix_login_directory_tenant_id ON login_directory (tenant_id);
     REVOKE ALL ON TABLE login_directory FROM PUBLIC;
     """)
+    # contract: 202610080454 - SECURITY DEFINER on purpose (ADR 0005): the only read path for
+    # aip_app, owned by aip_owner, fixed search_path, one parameterised SELECT, EXECUTE to aip_app.
     op.execute("""
     CREATE FUNCTION identity_resolve_login(p_kind text, p_key citext)
     RETURNS TABLE (tenant_id uuid, idp_alias text)
@@ -53,16 +53,8 @@ def upgrade() -> None:
       WHERE d.kind = p_kind AND d.key = p_key
     $fn$;
     REVOKE ALL ON FUNCTION identity_resolve_login(text, citext) FROM PUBLIC;
-    """)
-    op.execute("""
-    DO $grants$
-    BEGIN
-      IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'aip_app') THEN
-        REVOKE ALL ON TABLE login_directory FROM aip_app;
-        GRANT EXECUTE ON FUNCTION identity_resolve_login(text, citext) TO aip_app;
-      END IF;
-    END
-    $grants$;
+    REVOKE ALL ON TABLE login_directory FROM aip_app, aip_jobs, aip_readonly;
+    GRANT EXECUTE ON FUNCTION identity_resolve_login(text, citext) TO aip_app;
     """)
 
 

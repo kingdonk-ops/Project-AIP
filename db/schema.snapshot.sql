@@ -63,6 +63,7 @@ ALTER TABLE aip_meta.alembic_version OWNER TO aip_owner;
 
 -- Name: FUNCTION identity_resolve_login(p_kind text, p_key public.citext); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) TO aip_app;
 
 -- Name: login_directory login_directory_pkey; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.login_directory

@@ -15,9 +15,8 @@ import sys
 from uuid import UUID
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine
 
-from aip.modules.identity.repository import async_database_url
+from aip.platform.db.migrator.run import create_migrator_engine
 
 TENANT_A_ID = UUID("00000000-0000-4000-8000-00000000000a")  # kaefer-demo
 TENANT_B_ID = UUID("00000000-0000-4000-8000-00000000000b")  # tenant-b
@@ -47,7 +46,7 @@ class SeedRefusedError(RuntimeError):
 async def seed(url: str, *, env: str | None = None) -> int:
     if (env if env is not None else os.environ.get("AIP_ENV", "")) == "production":
         raise SeedRefusedError("seeds refuse to run when AIP_ENV=production")
-    engine = create_async_engine(async_database_url(url))
+    engine = create_migrator_engine(url)
     try:
         async with engine.begin() as conn:
             for kind, key, tenant_id, alias in DEV_ROWS:

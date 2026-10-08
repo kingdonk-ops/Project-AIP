@@ -1,21 +1,22 @@
 """Data access for identity: the pre-tenant login directory (IDENTITY-01, ADR 0005).
 
 Reads go only through the SECURITY DEFINER function ``identity_resolve_login``; ``aip_app`` cannot
-select from ``login_directory``. This runs before any tenant is known, so it does not use
-``with_tenant``.
-
-Until DATABASE-02 lands ``aip.platform.db.engine``, ``SqlLoginDirectory.from_url`` builds a small
-dedicated engine from ``DATABASE_URL``; switch it to the platform engine then.
+select from ``login_directory``. This runs before any tenant is known, so it uses the platform's
+``before_tenant()`` connection (``aip_app``, no tenant set) instead of ``with_tenant``.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 from typing import Literal, Protocol
 from uuid import UUID
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncConnection
+
+from aip.platform.db.session import before_tenant
 
 LookupKind = Literal["email_domain", "tenant_slug"]
 
@@ -39,26 +40,15 @@ async def resolve_login(conn: AsyncConnection, kind: LookupKind, key: str) -> Lo
     return LoginTarget(tenant_id=row[0], idp_alias=row[1])
 
 
-def async_database_url(url: str) -> str:
-    for prefix in ("postgresql://", "postgres://"):
-        if url.startswith(prefix):
-            return "postgresql+asyncpg://" + url[len(prefix) :]
-    return url
+Connect = Callable[[], AbstractAsyncContextManager[AsyncConnection]]
 
 
 class SqlLoginDirectory:
-    """``LoginDirectory`` over Postgres."""
+    """``LoginDirectory`` over Postgres; ``connect`` defaults to the platform's ``before_tenant``."""
 
-    def __init__(self, engine: AsyncEngine) -> None:
-        self._engine = engine
-
-    @classmethod
-    def from_url(cls, url: str) -> SqlLoginDirectory:
-        return cls(create_async_engine(async_database_url(url), pool_size=2, max_overflow=2, pool_pre_ping=True))
+    def __init__(self, connect: Connect = before_tenant) -> None:
+        self._connect = connect
 
     async def resolve(self, kind: LookupKind, key: str) -> LoginTarget | None:
-        async with self._engine.connect() as conn:
+        async with self._connect() as conn:
             return await resolve_login(conn, kind, key)
-
-    async def dispose(self) -> None:
-        await self._engine.dispose()
