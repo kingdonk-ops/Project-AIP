@@ -1,0 +1,29 @@
+# TESTING-02: tables exempt from the tenant schema guard (aip.platform.db.schema_guard).
+# Owned via .github/CODEOWNERS: every change needs a security reviewer. An entry needs a
+# non-empty `reason`. `checks_skipped` lists what the table is exempt from, drawn from
+# tenant_id | rls | force_rls | policy; everything not listed is still asserted.
+# `table` is an exact name or a `prefix_*` pattern. `alembic_version` is never inspected.
+tables:
+  - table: deployment_regions
+    reason: Global reference data (the list of deployment regions); holds no tenant data.
+    checks_skipped: [tenant_id, rls, force_rls, policy]
+  - table: tenants
+    reason: >-
+      The tenant registry: its `id` is the tenant id. Not exempt from RLS; the guard asserts a
+      uuid NOT NULL `id`, FORCE RLS and a policy comparing `id` with app.tenant_id.
+    tenant_column: id
+  - table: login_directory
+    reason: >-
+      Pre-login tenant resolution (ADR 0005, IDENTITY-01): read before any tenant context exists,
+      so it has no RLS. aip_app, aip_jobs and aip_readonly hold no privilege on it; the only read
+      path is the SECURITY DEFINER function identity_resolve_login.
+    checks_skipped: [rls, force_rls, policy]
+    forbid_runtime_privileges: true
+  - table: partition_settings
+    reason: Global partition-maintenance settings; holds no tenant data.
+    checks_skipped: [tenant_id, rls, force_rls, policy]
+  - table: procrastinate_*
+    reason: >-
+      Procrastinate queue internals (ADR 0003). Payloads carry tenant_id; the worker restores
+      the tenant context before it touches tenant data.
+    checks_skipped: [tenant_id, rls, force_rls, policy]
