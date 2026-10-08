@@ -22,16 +22,18 @@ COMPOSE = ROOT / "infra" / "docker-compose.yml"
 ENV_EXAMPLE = ROOT / ".env.example"
 
 # Images built from this repo: UID 10001, read-only root, no capabilities (step 2).
-APP_SERVICES = {"api", "worker", "migrator", "object-store-init", "web", "sandbox"}
+APP_SERVICES = {"api", "worker", "migrator", "identity-seed", "object-store-init", "web", "sandbox"}
 # One-shot jobs: they exit 0 and their dependents wait on service_completed_successfully.
-ONE_SHOT = {"migrator", "object-store-init"}
+ONE_SHOT = {"migrator", "identity-seed", "object-store-init"}
 DEFAULT_SERVICES = {
     "postgres",
     "valkey",
     "rustfs",
     "gotenberg",
     "keycloak",
+    "mailpit",
     "migrator",
+    "identity-seed",
     "object-store-init",
     "api",
     "worker",
@@ -120,6 +122,36 @@ def test_one_shots_gate_their_dependents(services: dict[str, dict[str, Any]]) ->
     for name in ONE_SHOT:
         assert services[name].get("restart", "no") == "no", name
     assert services["migrator"]["depends_on"]["postgres"]["condition"] == "service_healthy"
+    assert (
+        services["api"]["depends_on"]["identity-seed"]["condition"]
+        == "service_completed_successfully"
+    )
+    assert (
+        services["identity-seed"]["depends_on"]["migrator"]["condition"]
+        == "service_completed_successfully"
+    )
+
+
+def test_keycloak_imports_the_realms_theme_and_blocklist(
+    services: dict[str, dict[str, Any]],
+) -> None:
+    """IDENTITY-01: realms as code, the aip theme and the blocklist, all read-only."""
+    keycloak = services["keycloak"]
+    assert "--import-realm" in keycloak["command"]
+    volumes = keycloak["volumes"]
+    for source, target in (
+        ("./keycloak/realm-aip.json", "/opt/keycloak/data/import/realm-aip.json"),
+        ("./keycloak/realm-mock-idp.json", "/opt/keycloak/data/import/realm-mock-idp.json"),
+        ("./keycloak/themes/aip", "/opt/keycloak/themes/aip"),
+        (
+            "./keycloak/password-blocklist.txt",
+            "/opt/keycloak/data/password-blacklists/password-blocklist.txt",
+        ),
+    ):
+        assert f"{source}:{target}:ro" in volumes
+        assert (ROOT / "infra" / source).exists(), source
+    assert keycloak["depends_on"]["mailpit"]["condition"] == "service_healthy"
+    assert keycloak["environment"]["KC_SMTP_HOST"] == "mailpit"
 
 
 def test_api_runs_uvicorn_factory(services: dict[str, dict[str, Any]]) -> None:

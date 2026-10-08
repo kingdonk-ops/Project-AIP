@@ -3,8 +3,9 @@
 Keycloak, in order:
 
 1. ``AIP_TEST_KEYCLOAK_URL`` (+ ``AIP_TEST_KEYCLOAK_ADMIN``/``AIP_TEST_KEYCLOAK_ADMIN_PASSWORD``): a
-   running server that imported ``infra/keycloak`` with ``APP_ORIGIN=https://app.example.test``,
-   ``KC_HOSTNAME`` = that URL and ``KEYCLOAK_PUBLIC_URL`` = that URL;
+   running server that imported ``infra/keycloak`` with ``KC_HOSTNAME`` and ``KEYCLOAK_PUBLIC_URL``
+   set to that URL and ``APP_ORIGIN`` = ``AIP_TEST_KEYCLOAK_APP_ORIGIN`` (default
+   ``https://app.example.test``); CI's compose job points this at the compose Keycloak;
 2. Testcontainers ``quay.io/keycloak/keycloak:26.7.5`` when Docker runs;
 3. otherwise skipped locally and failed under CI.
 
@@ -46,7 +47,8 @@ from .totp import totp
 ROOT = Path(__file__).resolve().parents[6]
 KC_DIR = ROOT / "infra" / "keycloak"
 KC_IMAGE = "quay.io/keycloak/keycloak:26.7.5"
-APP_ORIGIN = "https://app.example.test"
+# The APP_ORIGIN the Keycloak under test was started with (its aip-api redirect URIs).
+APP_ORIGIN = os.environ.get("AIP_TEST_KEYCLOAK_APP_ORIGIN", "https://app.example.test")
 API_SECRET = "aip_api_dev_only_secret"  # the realm file's dev default
 LOCAL_PASSWORD = "Carol-dev-only-Passw0rd!"
 

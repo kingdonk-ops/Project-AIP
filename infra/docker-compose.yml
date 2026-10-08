@@ -49,6 +49,15 @@ x-app-env: &app-env
   PDF_RENDERER: ${PDF_RENDERER:-gotenberg}
   GOTENBERG_URL: ${GOTENBERG_URL:-http://gotenberg:3000}
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+  # Staff sign-in (IDENTITY-01, ADR 0005). The API calls Keycloak inside the network; browsers and
+  # token issuers use the published port.
+  KEYCLOAK_URL: http://keycloak:8080
+  KEYCLOAK_PUBLIC_URL: http://localhost:${AIP_KEYCLOAK_PORT:-8180}
+  KEYCLOAK_REALM: aip
+  OIDC_CLIENT_ID: aip-api
+  OIDC_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:-aip_api_dev_only_secret}
+  APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8080}
+  PREAUTH_COOKIE_KEY: ${PREAUTH_COOKIE_KEY:-ZGV2LW9ubHktcHJlYXV0aC1jb29raWUta2V5LWZha2U}
 
 services:
   postgres:
@@ -129,9 +138,25 @@ services:
       start_period: 10s
     security_opt: ["no-new-privileges:true"]
 
+  mailpit:
+    # Dev SMTP catcher (MIT) for Keycloak's verify-email and reset-password mails (IDENTITY-01).
+    # Web UI on 127.0.0.1:${AIP_MAILPIT_PORT:-8025}.
+    image: axllent/mailpit:v1.31.2
+    user: "65534:65534"
+    ports:
+      - "127.0.0.1:${AIP_MAILPIT_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    security_opt: ["no-new-privileges:true"]
+
   keycloak:
-    # Identity broker (ADR 0005), pinned to 26.x with its own database. The realm in
-    # keycloak/import is a placeholder; IDENTITY-01 adds clients and the tenant IdPs.
+    # Staff sign-in (ADR 0005), pinned to 26.x with its own database. IDENTITY-01 imports realm
+    # `aip` (clients, Organizations, flows, policy) and realm `mock-idp` (stands in for customer
+    # IdPs; dev only) from infra/keycloak, with the `aip` login theme and the password blocklist.
+    # Realm placeholders (${APP_ORIGIN}, client secrets, SMTP) are filled from this environment.
     image: quay.io/keycloak/keycloak:26.7.5
     user: "1000"
     command: ["start-dev", "--import-realm"]
@@ -144,12 +169,29 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-keycloak_admin_dev_only}
       KC_HEALTH_ENABLED: "true"
       KC_HTTP_PORT: "8080"
+      # Tokens carry the browser-facing issuer; the API reaches Keycloak as keycloak:8080.
+      KC_HOSTNAME: http://localhost:${AIP_KEYCLOAK_PORT:-8180}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KEYCLOAK_PUBLIC_URL: http://localhost:${AIP_KEYCLOAK_PORT:-8180}
+      KEYCLOAK_INTERNAL_URL: http://localhost:8080
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8080}
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
+      AIP_API_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:-aip_api_dev_only_secret}
+      AIP_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:-aip_admin_dev_only_secret}
+      MOCK_IDP_CLIENT_SECRET: ${MOCK_IDP_CLIENT_SECRET:-mock_idp_dev_only_secret}
+      KC_SMTP_HOST: mailpit
+      KC_SMTP_PORT: "1025"
     volumes:
-      - ./keycloak/import:/opt/keycloak/data/import:ro
+      - ./keycloak/realm-aip.json:/opt/keycloak/data/import/realm-aip.json:ro
+      - ./keycloak/realm-mock-idp.json:/opt/keycloak/data/import/realm-mock-idp.json:ro
+      - ./keycloak/themes/aip:/opt/keycloak/themes/aip:ro
+      - ./keycloak/password-blocklist.txt:/opt/keycloak/data/password-blacklists/password-blocklist.txt:ro
     ports:
       - "127.0.0.1:${AIP_KEYCLOAK_PORT:-8180}:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
     healthcheck:
       # The image has no curl: ask the management port (9000) over bash's /dev/tcp.
@@ -183,6 +225,21 @@ services:
         condition: service_healthy
     restart: "no"
 
+  identity-seed:
+    # One-shot: login_directory rows for the dev tenants (kaefer.test, acme.test; IDENTITY-01).
+    # Idempotent; refuses to run when AIP_ENV=production.
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    command: ["python", "-m", "aip.modules.identity.seeds"]
+    environment:
+      AIP_ENV: ${AIP_ENV:-development}
+      DATABASE_MIGRATOR_URL: ${DATABASE_MIGRATOR_URL:-postgresql://aip_owner:aip_owner_dev_only@postgres:5432/aip}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    restart: "no"
+
   object-store-init:
     # One-shot: creates the dev bucket in RustFS (idempotent).
     <<: *app-hardening
@@ -207,6 +264,8 @@ services:
       - "127.0.0.1:${AIP_API_PORT:-8000}:8000"
     depends_on:
       migrator:
+        condition: service_completed_successfully
+      identity-seed:
         condition: service_completed_successfully
       object-store-init:
         condition: service_completed_successfully

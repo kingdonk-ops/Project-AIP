@@ -5,6 +5,40 @@
  */
 
 export interface paths {
+    "/api/v1/auth/login/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login Start */
+        post: operations["identity_login_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/oidc/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Oidc Callback */
+        get: operations["identity_oidc_callback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -111,6 +145,13 @@ export interface components {
             /** Sqlalchemy */
             sqlalchemy: string;
         };
+        /** ErrorResponse */
+        ErrorResponse: {
+            /** Code */
+            code: string;
+            /** Detail */
+            detail: string;
+        };
         /**
          * HealthResponse
          * @description Body of GET /api/v1/health. Changing it changes the generated client (STACK-03).
@@ -118,6 +159,26 @@ export interface components {
         HealthResponse: {
             /** Status */
             status: string;
+        };
+        /** LoginStartRequest */
+        LoginStartRequest: {
+            /** Email */
+            email: string;
+            /** Returnto */
+            returnTo?: string | null;
+        };
+        /**
+         * LoginStartResponse
+         * @description Same status and keys whether or not the email or domain is known; the tenant is never sent.
+         */
+        LoginStartResponse: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "sso" | "password";
+            /** Redirecturl */
+            redirectUrl: string;
         };
         /**
          * ModuleInfo
@@ -151,6 +212,86 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    identity_login_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginStartRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginStartResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    identity_oidc_callback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     platform_health: {
         parameters: {
             query?: never;
