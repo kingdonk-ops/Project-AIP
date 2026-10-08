@@ -68,3 +68,8 @@ Build the constant frame of the desktop web app (56px header, 56px nav rail, sco
     - Go to `/projects`, get redirected to `/login`, enter `alice@kaefer.test`, complete the Keycloak form, and land on `/projects`. The header shows tenant "Kaefer Demo" and the user menu shows the email.
     - Click Sign out. Expected: `/login?signed_out=1`. Visiting `/` again redirects to `/login`.
     - In the signed-in page, `await page.evaluate(() => document.cookie)` does not contain `__Host-`.
+
+## Carried forward from DESIGN-01 (non-blocking)
+
+- The `ipad-webkit` Playwright project could not run in the DESIGN-01 sandbox (host lacks WebKit system libraries); the new `/__fixtures/ui` spec ran on desktop Chromium and mobile Chrome only. CI runs all three projects.
+- `apps/web/eslint.config.js` still uses its own config plus a second `--config` pass; migrate it to extend `@aip/config-eslint` and add jsx-a11y like `packages/ui/eslint.config.mjs`.
