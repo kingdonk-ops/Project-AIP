@@ -2,6 +2,8 @@
 --   op.execute(render_template("tenant_table", table="widgets", columns="name text NOT NULL"))
 -- `table` is an unqualified snake_case name; `columns` is the comma-separated list of the
 -- table's own columns (the standard ones below are added for you).
+-- Pass sync=True to add the offline-sync columns and their unique index (DATABASE-04).
+-- Without it that block is removed.
 --
 -- RLS fails closed: with app.tenant_id unset or '' the NULLIF yields NULL, so no row matches
 -- USING (reads see 0 rows) and every write fails WITH CHECK (SQLSTATE 42501).
@@ -10,6 +12,10 @@ CREATE TABLE {{table}} (
   id uuid NOT NULL,
   tenant_id uuid NOT NULL,
   {{columns}},
+{{#sync}}
+  client_generated_id uuid NULL,
+  sync_version integer NOT NULL DEFAULT 1,
+{{/sync}}
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   deleted_at timestamptz NULL,
@@ -17,6 +23,11 @@ CREATE TABLE {{table}} (
 );
 
 CREATE INDEX ix_{{table}}_tenant_id ON {{table}} (tenant_id);
+{{#sync}}
+-- DATABASE-04: offline-created rows are idempotent on (tenant_id, client_generated_id). Not
+-- partial: ON CONFLICT infers a plain unique index, and NULLs are distinct anyway.
+CREATE UNIQUE INDEX ux_{{table}}_client_generated_id ON {{table}} (tenant_id, client_generated_id);
+{{/sync}}
 
 ALTER TABLE {{table}} ENABLE ROW LEVEL SECURITY;
 ALTER TABLE {{table}} FORCE ROW LEVEL SECURITY;

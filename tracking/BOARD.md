@@ -55,7 +55,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [TESTING-01](tasks/TESTING-01.md) | Testcontainers Postgres fixture with non-owner RLS role | testing | M | DATABASE-02 | todo | |
 | [OPS-11](tasks/OPS-11.md) | Coolify demo deployment of the walking skeleton (synthetic data only) | ops | M | DATABASE-08, STACK-05 | todo | owner decision: M0 deploys to Coolify (ADR 0007) |
 | [ARCH-05](tasks/ARCH-05.md) | domain_events outbox table and writer | arch | M | ARCH-04, DATABASE-02 | todo |  |
-| [DATABASE-04](tasks/DATABASE-04.md) | Base repository helpers: concurrency, ltree, soft delete, JSONB validation | database | M | DATABASE-02 | todo |  |
+| [DATABASE-04](tasks/DATABASE-04.md) | Base repository helpers: concurrency, ltree, soft delete, JSONB validation | database | M | DATABASE-02 | review | branch claude/p0-database-04b (PR pending) |
 | [TERMS-01](tasks/TERMS-01.md) | Terms schema, default en-AU dictionary and loader | terms | M | DATABASE-02 | todo | |
 | [OPS-01](tasks/OPS-01.md) | Job tables and service | ops | M | DATABASE-08 | done | PR #17 |
 
