@@ -35,7 +35,7 @@ from aip.platform.context import RequestContext
 from aip.platform.db.engine import get_engine
 from aip.platform.db.errors import InvalidTenantError
 
-__all__ = ["TenantRef", "tenant_uuid", "with_tenant"]
+__all__ = ["TenantRef", "before_tenant", "tenant_uuid", "with_tenant"]
 
 TenantRef = UUID | str | RequestContext
 
@@ -72,4 +72,19 @@ async def with_tenant(
     bound = get_engine() if engine is None else engine
     async with bound.begin() as conn:
         await conn.execute(_SET_TENANT, {"tenant_id": str(tenant_id)})
+        yield conn
+
+
+@asynccontextmanager
+async def before_tenant(*, engine: AsyncEngine | None = None) -> AsyncGenerator[AsyncConnection]:
+    """Yield an ``aip_app`` connection with no tenant set, for the pre-tenant lookups only.
+
+    Sign-in resolves the tenant before one is known (ADR 0005): ``identity_resolve_login`` reads
+    the global ``login_directory`` through a SECURITY DEFINER function, and ``aip_app`` has no
+    privilege on the table itself. Every tenant table still fails closed here (no
+    ``app.tenant_id``: 0 rows, writes rejected), so this cannot read tenant data. Anything else
+    uses ``with_tenant``.
+    """
+    bound = get_engine() if engine is None else engine
+    async with bound.begin() as conn:
         yield conn

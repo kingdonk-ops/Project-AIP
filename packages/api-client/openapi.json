@@ -44,6 +44,24 @@
         "title": "Dependencies",
         "type": "object"
       },
+      "ErrorResponse": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
       "HealthResponse": {
         "description": "Body of GET /api/v1/health. Changing it changes the generated client (STACK-03).",
         "properties": {
@@ -56,6 +74,58 @@
           "status"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "LoginStartRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          },
+          "returnTo": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Returnto"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "LoginStartRequest",
+        "type": "object"
+      },
+      "LoginStartResponse": {
+        "additionalProperties": false,
+        "description": "Same status and keys whether or not the email or domain is known; never the tenant.",
+        "properties": {
+          "method": {
+            "enum": [
+              "sso",
+              "password"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "redirectUrl": {
+            "title": "Redirecturl",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "redirectUrl"
+        ],
+        "title": "LoginStartResponse",
         "type": "object"
       },
       "ModuleInfo": {
@@ -116,6 +186,98 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/auth/login/start": {
+      "post": {
+        "operationId": "identity_login_start",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginStartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginStartResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Login Start",
+        "tags": [
+          "identity"
+        ],
+        "x-aip-access": "public"
+      }
+    },
+    "/api/v1/auth/oidc/callback": {
+      "get": {
+        "operationId": "identity_oidc_callback",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          }
+        },
+        "summary": "Oidc Callback",
+        "tags": [
+          "identity"
+        ],
+        "x-aip-access": "public"
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "platform_health",

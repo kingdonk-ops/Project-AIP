@@ -258,8 +258,12 @@ def test_check_schema_reports_declared_but_unmigrated_table(
     empty_db.bootstrap()
     assert empty_db.aip_db("migrate").returncode == 0
 
-    # The real declared tables match the migrated schema.
-    assert asyncio.run(schema_check.diff_schema(empty_db.owner_url, declared_metadata)) == []
+    # The real declared tables (every module's tables.py, as `aip-db check-schema` loads them)
+    # match the migrated schema.
+    from aip.platform.db.migrator.cli import load_declared_tables
+
+    declared = load_declared_tables()
+    assert asyncio.run(schema_check.diff_schema(empty_db.owner_url, declared)) == []
 
     fixture = MetaData()
     Table("ghost", fixture, Column("id", Uuid))

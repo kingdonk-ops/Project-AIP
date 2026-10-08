@@ -1,0 +1,75 @@
+{
+  "realm": "mock-idp",
+  "displayName": "Mock customer IdP (local dev and tests only)",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "attributes": {
+    "aip.note": "IDENTITY-01: stands in for customer IdPs (kaefer-oidc, acme-oidc). Dev-only users and obviously fake passwords. Never import outside local dev and CI."
+  },
+  "clients": [
+    {
+      "clientId": "aip-broker-kaefer",
+      "name": "AIP broker (kaefer-oidc)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${MOCK_IDP_CLIENT_SECRET:mock_idp_dev_only_secret}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["${KEYCLOAK_PUBLIC_URL:http://localhost:8180}/realms/aip/broker/kaefer-oidc/endpoint"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "aip-broker-acme",
+      "name": "AIP broker (acme-oidc)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${MOCK_IDP_CLIENT_SECRET:mock_idp_dev_only_secret}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["${KEYCLOAK_PUBLIC_URL:http://localhost:8180}/realms/aip/broker/acme-oidc/endpoint"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "alice@kaefer.test",
+      "email": "alice@kaefer.test",
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Kaefer",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "alice_dev_only_password", "temporary": false }
+      ]
+    },
+    {
+      "username": "bob@acme.test",
+      "email": "bob@acme.test",
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Acme",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "bob_dev_only_password", "temporary": false }
+      ]
+    }
+  ]
+}

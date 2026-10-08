@@ -79,6 +79,10 @@ GRANT UPDATE(status) ON TABLE public.jobs TO aip_jobs;
 -- Name: COLUMN jobs.updated_at; Type: ACL; Schema: public
 GRANT UPDATE(updated_at) ON TABLE public.jobs TO aip_jobs;
 
+-- Name: FUNCTION identity_resolve_login(p_kind text, p_key public.citext); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) TO aip_app;
+
 -- Name: TABLE job_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.job_events TO aip_app;
 GRANT SELECT,INSERT ON TABLE public.job_events TO aip_jobs;
@@ -105,9 +109,29 @@ ALTER TABLE ONLY public.jobs
 ALTER TABLE ONLY public.jobs
     ADD CONSTRAINT uq_jobs_id_tenant_id UNIQUE (id, tenant_id);
 
+-- Name: login_directory login_directory_pkey; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.login_directory
+    ADD CONSTRAINT login_directory_pkey PRIMARY KEY (id);
+
+-- Name: login_directory uq_login_directory_kind_key; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.login_directory
+    ADD CONSTRAINT uq_login_directory_kind_key UNIQUE (kind, key);
+
 -- Name: job_events fk_job_events_job_id_tenant_id_jobs; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
     ADD CONSTRAINT fk_job_events_job_id_tenant_id_jobs FOREIGN KEY (job_id, tenant_id) REFERENCES public.jobs(id, tenant_id);
+
+-- Name: identity_resolve_login(text, public.citext); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) RETURNS TABLE(tenant_id uuid, idp_alias text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+      SELECT d.tenant_id, d.idp_alias
+      FROM public.login_directory AS d
+      WHERE d.kind = p_kind AND d.key = p_key
+    $$;
+
+ALTER FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) OWNER TO aip_owner;
 
 -- Name: ix_job_events_tenant_id_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_job_events_tenant_id_occurred_at ON public.job_events USING btree (tenant_id, occurred_at);
@@ -123,6 +147,9 @@ CREATE INDEX ix_jobs_tenant_id_requested_by_created_at ON public.jobs USING btre
 
 -- Name: ix_jobs_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_jobs_tenant_id_status ON public.jobs USING btree (tenant_id, status) WHERE (deleted_at IS NULL);
+
+-- Name: ix_login_directory_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_login_directory_tenant_id ON public.login_directory USING btree (tenant_id);
 
 -- Name: uq_jobs_tenant_id_job_type_idempotency_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs USING btree (tenant_id, job_type, idempotency_key) WHERE (idempotency_key IS NOT NULL);
@@ -184,3 +211,16 @@ CREATE TABLE public.jobs (
 ALTER TABLE ONLY public.jobs FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.jobs OWNER TO aip_owner;
+
+-- Name: login_directory; Type: TABLE; Schema: public
+CREATE TABLE public.login_directory (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    kind text NOT NULL,
+    key public.citext NOT NULL,
+    tenant_id uuid NOT NULL,
+    idp_alias text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_login_directory_kind CHECK ((kind = ANY (ARRAY['email_domain'::text, 'tenant_slug'::text])))
+);
+
+ALTER TABLE public.login_directory OWNER TO aip_owner;

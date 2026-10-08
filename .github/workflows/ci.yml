@@ -202,6 +202,23 @@ jobs:
         run: |
           curl -fsS --max-time 10 http://localhost:8080/ | grep -q '<div id="root">'
           curl -fsS --max-time 10 http://localhost:8080/api/v1/platform/version > /dev/null
+      - name: IDENTITY-01 realms imported and login/start resolves the dev tenants
+        run: |
+          curl -fsS --max-time 10 http://localhost:8180/realms/aip/.well-known/openid-configuration \
+            | python3 -c 'import json,sys; b=json.load(sys.stdin); assert b["issuer"] == "http://localhost:8180/realms/aip", b["issuer"]'
+          curl -fsS --max-time 10 -o /dev/null http://localhost:8180/realms/mock-idp/.well-known/openid-configuration
+          for email in alice@kaefer.test x@unknown.test; do
+            curl -fsS --max-time 10 -X POST -H 'content-type: application/json' \
+              -d "{\"email\": \"$email\"}" http://localhost:8080/api/v1/auth/login/start > "start-$email.json"
+          done
+          python3 - <<'EOF'
+          import json
+          sso = json.load(open("start-alice@kaefer.test.json"))
+          unknown = json.load(open("start-x@unknown.test.json"))
+          assert sso["method"] == "sso" and "kc_idp_hint=kaefer-oidc" in sso["redirectUrl"], sso
+          assert unknown["method"] == "password" and "kc_idp_hint" not in unknown["redirectUrl"], unknown
+          assert set(sso) == set(unknown) == {"method", "redirectUrl"}
+          EOF
       - name: STACK-02 render, store and download inside the api container
         run: $COMPOSE exec -T api python - < infra/docker/smoke_render_store.py
       - uses: actions/setup-python@v5
@@ -221,6 +238,13 @@ jobs:
         run: >-
           uv run pytest -q -p no:cacheprovider
           "apps/api/tests/platform/capabilities/test_gotenberg.py::test_render_store_and_download_report"
+      - name: IDENTITY-01 sign-in flows against the compose Keycloak (SSO, OTP enrolment, lockout)
+        env:
+          AIP_TEST_KEYCLOAK_URL: http://localhost:8180
+          AIP_TEST_KEYCLOAK_ADMIN: admin
+          AIP_TEST_KEYCLOAK_ADMIN_PASSWORD: keycloak_admin_dev_only
+          AIP_TEST_KEYCLOAK_APP_ORIGIN: http://localhost:8080
+        run: uv run pytest -q -p no:cacheprovider apps/api/aip/modules/identity/tests/test_keycloak_flows.py
       - name: Stack state and logs
         if: failure()
         run: |

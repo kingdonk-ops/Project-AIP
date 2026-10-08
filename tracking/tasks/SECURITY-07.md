@@ -47,3 +47,7 @@ Enforce per-tenant IP allow-lists and add security headers in the FastAPI backen
   - **unit**:
     - 10.0.0.5 in ['10.0.0.0/24'] is allowed; 10.0.1.5 is denied.
     - A spoofed X-Forwarded-For beyond the trusted hop count is ignored.
+
+## Carried forward from IDENTITY-01 (non-blocking)
+
+- The login rate limit keys on the client address. Behind Coolify/nginx or an ALB that is the proxy's address, so only trust `X-Forwarded-For` from configured proxy hops (uvicorn `--forwarded-allow-ips` or an explicit trusted-proxy list) and test that a spoofed header from an untrusted peer is ignored.
