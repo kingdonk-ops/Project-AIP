@@ -1,3 +1,11 @@
+-- Name: SCHEMA aip_meta; Type: ACL; Schema: -
+GRANT USAGE ON SCHEMA aip_meta TO aip_app;
+
+-- Name: SCHEMA public; Type: ACL; Schema: -
+GRANT USAGE ON SCHEMA public TO aip_app;
+GRANT USAGE ON SCHEMA public TO aip_jobs;
+GRANT USAGE ON SCHEMA public TO aip_readonly;
+
 -- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -
 COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiST';
 
@@ -38,6 +46,9 @@ CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 CREATE SCHEMA aip_meta;
 
 ALTER SCHEMA aip_meta OWNER TO aip_owner;
+
+-- Name: TABLE alembic_version; Type: ACL; Schema: aip_meta
+GRANT SELECT ON TABLE aip_meta.alembic_version TO aip_app;
 
 -- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: aip_meta
 ALTER TABLE ONLY aip_meta.alembic_version
