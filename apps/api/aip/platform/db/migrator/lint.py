@@ -288,14 +288,18 @@ def _render_call(call: ast.Call) -> str | None:
     if not (isinstance(name, ast.Constant) and isinstance(name.value, str)):
         return None
     variables: dict[str, object] = {}
+    sync = False
     for kw in call.keywords:
         if kw.arg is None or not isinstance(kw.value, ast.Constant):
             return None
+        if kw.arg == "sync" and isinstance(kw.value.value, bool):  # DATABASE-04 optional block
+            sync = kw.value.value
+            continue
         if not isinstance(kw.value.value, str):
             return None
         variables[kw.arg] = kw.value.value
     try:
-        return render_template(name.value, **variables)
+        return render_template(name.value, sync=sync, **variables)
     except TemplateError as exc:
         raise _TemplateFailedError(str(exc)) from exc
 
