@@ -1,0 +1,775 @@
+{
+  "realm": "aip",
+  "displayName": "AIP",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "editUsernameAllowed": false,
+  "rememberMe": false,
+  "verifyEmail": true,
+  "resetPasswordAllowed": true,
+  "loginTheme": "aip",
+  "internationalizationEnabled": false,
+  "organizationsEnabled": true,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxTemporaryLockouts": 0,
+  "bruteForceStrategy": "MULTIPLE",
+  "failureFactor": 5,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "passwordPolicy": "length(12) and maxLength(128) and notUsername and notEmail and passwordHistory(5) and passwordBlacklist(password-blocklist.txt) and hashAlgorithm(argon2)",
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyDigits": 6,
+  "otpPolicyPeriod": 30,
+  "otpPolicyLookAheadWindow": 1,
+  "otpPolicyInitialCounter": 0,
+  "otpPolicyCodeReusable": false,
+  "webAuthnPolicyRpEntityName": "AIP",
+  "webAuthnPolicyRpId": "${WEBAUTHN_RP_ID:localhost}",
+  "webAuthnPolicySignatureAlgorithms": [
+    "ES256",
+    "RS256"
+  ],
+  "webAuthnPolicyUserVerificationRequirement": "preferred",
+  "webAuthnPolicyAttestationConveyancePreference": "not specified",
+  "webAuthnPolicyAuthenticatorAttachment": "not specified",
+  "webAuthnPolicyResidentKey": "not specified",
+  "webAuthnPolicyPasswordlessRpEntityName": "AIP",
+  "webAuthnPolicyPasswordlessRpId": "${WEBAUTHN_RP_ID:localhost}",
+  "webAuthnPolicyPasswordlessSignatureAlgorithms": [
+    "ES256",
+    "RS256"
+  ],
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "required",
+  "webAuthnPolicyPasswordlessResidentKey": "Yes",
+  "webAuthnPolicyPasswordlessAttestationConveyancePreference": "not specified",
+  "webAuthnPolicyPasswordlessAuthenticatorAttachment": "not specified",
+  "smtpServer": {
+    "host": "${KC_SMTP_HOST:mailpit}",
+    "port": "${KC_SMTP_PORT:1025}",
+    "from": "${KC_SMTP_FROM:no-reply@aip.test}",
+    "fromDisplayName": "AIP",
+    "ssl": "${KC_SMTP_SSL:false}",
+    "starttls": "${KC_SMTP_STARTTLS:false}",
+    "auth": "${KC_SMTP_AUTH:false}",
+    "user": "${KC_SMTP_USER:}",
+    "password": "${KC_SMTP_PASSWORD:}"
+  },
+  "attributes": {
+    "acr.loa.map": "{\"aal1\":1,\"aal2\":2}",
+    "aip.note": "IDENTITY-01 (ADR 0005): realm as code. Dev and CI values only; secrets come from the environment."
+  },
+  "browserFlow": "aip-browser",
+  "firstBrokerLoginFlow": "aip-first-broker-login",
+  "requiredActions": [
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "Verify Email",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 50,
+      "config": {}
+    },
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 30,
+      "config": {}
+    },
+    {
+      "alias": "CONFIGURE_TOTP",
+      "name": "Configure OTP",
+      "providerId": "CONFIGURE_TOTP",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 10,
+      "config": {}
+    },
+    {
+      "alias": "webauthn-register",
+      "name": "Webauthn Register",
+      "providerId": "webauthn-register",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 70,
+      "config": {}
+    },
+    {
+      "alias": "webauthn-register-passwordless",
+      "name": "Webauthn Register Passwordless",
+      "providerId": "webauthn-register-passwordless",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 80,
+      "config": {}
+    }
+  ],
+  "authenticatorConfig": [
+    {
+      "alias": "aip-loa1",
+      "config": {
+        "loa-condition-level": "1",
+        "loa-max-age": "36000"
+      }
+    },
+    {
+      "alias": "aip-loa2",
+      "config": {
+        "loa-condition-level": "2",
+        "loa-max-age": "0"
+      }
+    },
+    {
+      "alias": "aip-passkey-loa2",
+      "config": {
+        "loa-condition-level": "2",
+        "loa-max-age": "0"
+      }
+    },
+    {
+      "alias": "aip-ref-pwd",
+      "config": {
+        "default.reference.value": "pwd"
+      }
+    },
+    {
+      "alias": "aip-ref-otp",
+      "config": {
+        "default.reference.value": "otp"
+      }
+    },
+    {
+      "alias": "aip-ref-hwk",
+      "config": {
+        "default.reference.value": "hwk"
+      }
+    },
+    {
+      "alias": "aip-ref-passkey",
+      "config": {
+        "default.reference.value": "hwk"
+      }
+    },
+    {
+      "alias": "aip-review-profile-off",
+      "config": {
+        "update.profile.on.first.login": "off"
+      }
+    },
+    {
+      "alias": "aip-fbl-create-unique",
+      "config": {
+        "require.password.update.after.registration": "false"
+      }
+    }
+  ],
+  "authenticationFlows": [
+    {
+      "alias": "aip-browser",
+      "description": "AIP staff sign-in: SSO by email domain, or local password plus a second factor (aal2), or a passkey",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-cookie",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "identity-provider-redirector",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "ALTERNATIVE",
+          "priority": 30,
+          "flowAlias": "aip-organization",
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "ALTERNATIVE",
+          "priority": 40,
+          "flowAlias": "aip-forms",
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "ALTERNATIVE",
+          "priority": 50,
+          "flowAlias": "aip-passkey",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-organization",
+      "description": "Organization identity-first discovery: an email whose domain belongs to an organization goes to its IdP",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 10,
+          "flowAlias": "aip-organization-conditional",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-organization-conditional",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-user-configured",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "organization",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-forms",
+      "description": "Local account: password (aal1), then OTP or a security key (aal2)",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 10,
+          "flowAlias": "aip-forms-loa1",
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 20,
+          "flowAlias": "aip-forms-loa2",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-forms-loa1",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-level-of-authentication",
+          "authenticatorConfig": "aip-loa1",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "auth-username-password-form",
+          "authenticatorConfig": "aip-ref-pwd",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-forms-loa2",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-level-of-authentication",
+          "authenticatorConfig": "aip-loa2",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "flowAlias": "aip-second-factor",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-second-factor",
+      "description": "One of: OTP, security key",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-otp-form",
+          "authenticatorConfig": "aip-ref-otp",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "webauthn-authenticator",
+          "authenticatorConfig": "aip-ref-hwk",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-passkey",
+      "description": "Passkey (WebAuthn passwordless, user verification required): satisfies aal2 on its own",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 10,
+          "flowAlias": "aip-passkey-loa2",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-passkey-loa2",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-level-of-authentication",
+          "authenticatorConfig": "aip-passkey-loa2",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "webauthn-authenticator-passwordless",
+          "authenticatorConfig": "aip-ref-passkey",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-first-broker-login",
+      "description": "First SSO sign-in: create or link the brokered user (no profile review); MFA is the customer IdP's job",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorConfig": "aip-review-profile-off",
+          "authenticator": "idp-review-profile",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "flowAlias": "aip-fbl-user-creation-or-linking",
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 30,
+          "flowAlias": "aip-fbl-organization",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-fbl-user-creation-or-linking",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorConfig": "aip-fbl-create-unique",
+          "authenticator": "idp-create-user-if-unique",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "flowAlias": "aip-fbl-handle-existing",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-fbl-handle-existing",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "idp-confirm-link",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "flowAlias": "aip-fbl-verify-existing",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-fbl-verify-existing",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "idp-email-verification",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "flowAlias": "aip-fbl-reauthenticate",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-fbl-reauthenticate",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "idp-username-password-form",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 20,
+          "flowAlias": "aip-fbl-reauthenticate-2fa",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-fbl-reauthenticate-2fa",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-user-configured",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorConfig": "aip-ref-otp",
+          "authenticator": "auth-otp-form",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorConfig": "aip-ref-hwk",
+          "authenticator": "webauthn-authenticator",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 30,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "aip-fbl-organization",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-user-configured",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "idp-add-organization-member",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "aip-api",
+      "name": "AIP API (OIDC code flow + PKCE; the backend issues its own session)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${AIP_API_CLIENT_SECRET:aip_api_dev_only_secret}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": false,
+      "consentRequired": false,
+      "fullScopeAllowed": false,
+      "rootUrl": "${APP_ORIGIN:http://localhost:8080}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "${APP_ORIGIN:http://localhost:8080}/api/v1/auth/oidc/callback",
+        "${APP_ORIGIN:http://localhost:8080}/login"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "backchannel.logout.url": "${APP_ORIGIN:http://localhost:8080}/api/v1/auth/oidc/backchannel-logout",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "default.acr.values": "aal2",
+        "minimum.acr.value": "aal2",
+        "post.logout.redirect.uris": "${APP_ORIGIN:http://localhost:8080}/login",
+        "use.refresh.tokens": "false"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr",
+        "email",
+        "profile"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "identity_provider",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usersessionmodel-note-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.session.note": "identity_provider",
+            "claim.name": "identity_provider",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "false"
+          }
+        },
+        {
+          "name": "amr",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-amr-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "introspection.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "aip-admin",
+      "name": "AIP backend admin API client (python-keycloak; users only)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${AIP_ADMIN_CLIENT_SECRET:aip_admin_dev_only_secret}",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "redirectUris": [],
+      "webOrigins": [],
+      "attributes": {}
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-aip-admin",
+      "enabled": true,
+      "serviceAccountClientId": "aip-admin",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    }
+  ],
+  "organizations": [
+    {
+      "name": "kaefer-demo",
+      "alias": "kaefer-demo",
+      "enabled": true,
+      "description": "Tenant A (dev fixture)",
+      "domains": [
+        {
+          "name": "kaefer.test",
+          "verified": true
+        }
+      ],
+      "identityProviders": [
+        {
+          "alias": "kaefer-oidc"
+        }
+      ],
+      "members": []
+    },
+    {
+      "name": "tenant-b",
+      "alias": "tenant-b",
+      "enabled": true,
+      "description": "Tenant B (dev fixture)",
+      "domains": [
+        {
+          "name": "acme.test",
+          "verified": true
+        }
+      ],
+      "identityProviders": [
+        {
+          "alias": "acme-oidc"
+        }
+      ],
+      "members": []
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "kaefer-oidc",
+      "displayName": "Kaefer (mock IdP)",
+      "providerId": "oidc",
+      "enabled": true,
+      "hideOnLogin": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "aip-first-broker-login",
+      "config": {
+        "kc.org.domain": "kaefer.test",
+        "kc.org.broker.redirect.mode.email-matches": "true",
+        "clientId": "aip-broker-kaefer",
+        "clientSecret": "${MOCK_IDP_CLIENT_SECRET:mock_idp_dev_only_secret}",
+        "clientAuthMethod": "client_secret_post",
+        "authorizationUrl": "${KEYCLOAK_PUBLIC_URL:http://localhost:8180}/realms/mock-idp/protocol/openid-connect/auth",
+        "tokenUrl": "${KEYCLOAK_INTERNAL_URL:http://localhost:8080}/realms/mock-idp/protocol/openid-connect/token",
+        "jwksUrl": "${KEYCLOAK_INTERNAL_URL:http://localhost:8080}/realms/mock-idp/protocol/openid-connect/certs",
+        "userInfoUrl": "${KEYCLOAK_INTERNAL_URL:http://localhost:8080}/realms/mock-idp/protocol/openid-connect/userinfo",
+        "issuer": "${KEYCLOAK_PUBLIC_URL:http://localhost:8180}/realms/mock-idp",
+        "validateSignature": "true",
+        "useJwksUrl": "true",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "defaultScope": "openid email profile",
+        "loginHint": "true",
+        "syncMode": "IMPORT"
+      }
+    },
+    {
+      "alias": "acme-oidc",
+      "displayName": "Acme (mock IdP)",
+      "providerId": "oidc",
+      "enabled": true,
+      "hideOnLogin": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "aip-first-broker-login",
+      "config": {
+        "kc.org.domain": "acme.test",
+        "kc.org.broker.redirect.mode.email-matches": "true",
+        "clientId": "aip-broker-acme",
+        "clientSecret": "${MOCK_IDP_CLIENT_SECRET:mock_idp_dev_only_secret}",
+        "clientAuthMethod": "client_secret_post",
+        "authorizationUrl": "${KEYCLOAK_PUBLIC_URL:http://localhost:8180}/realms/mock-idp/protocol/openid-connect/auth",
+        "tokenUrl": "${KEYCLOAK_INTERNAL_URL:http://localhost:8080}/realms/mock-idp/protocol/openid-connect/token",
+        "jwksUrl": "${KEYCLOAK_INTERNAL_URL:http://localhost:8080}/realms/mock-idp/protocol/openid-connect/certs",
+        "userInfoUrl": "${KEYCLOAK_INTERNAL_URL:http://localhost:8080}/realms/mock-idp/protocol/openid-connect/userinfo",
+        "issuer": "${KEYCLOAK_PUBLIC_URL:http://localhost:8180}/realms/mock-idp",
+        "validateSignature": "true",
+        "useJwksUrl": "true",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "defaultScope": "openid email profile",
+        "loginHint": "true",
+        "syncMode": "IMPORT"
+      }
+    }
+  ]
+}

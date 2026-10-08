@@ -1,0 +1,37 @@
+/* AIP login theme overrides on keycloak.v2 (PatternFly 5). IDENTITY-01.
+ * Placeholder values until the DESIGN-01 tokens merge; keep the custom property names in step with
+ * packages/ui tokens when they land. */
+:root {
+  --aip-color-brand: #0b5cad;
+  --aip-color-brand-hover: #094a8b;
+  --aip-color-surface: #f5f7fa;
+  --aip-color-text: #1b1f24;
+  --aip-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --pf-v5-global--primary-color--100: var(--aip-color-brand);
+  --pf-v5-global--primary-color--200: var(--aip-color-brand-hover);
+  --pf-v5-global--link--Color: var(--aip-color-brand);
+  --pf-v5-global--link--Color--hover: var(--aip-color-brand-hover);
+  --pf-v5-global--FontFamily--text: var(--aip-font-family);
+  --pf-v5-global--FontFamily--heading: var(--aip-font-family);
+}
+
+.pf-v5-c-login {
+  background: var(--aip-color-surface);
+  color: var(--aip-color-text);
+}
+
+#kc-header-wrapper {
+  font-family: var(--aip-font-family);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--aip-color-brand);
+}
+
+/* Visible keyboard focus on every control (WCAG 2.2 AA). */
+.pf-v5-c-button:focus-visible,
+.pf-v5-c-form-control:focus-within,
+a:focus-visible {
+  outline: 3px solid var(--aip-color-brand);
+  outline-offset: 2px;
+}

@@ -1,0 +1,9 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+id = "identity"
+context = "identity"
+depends_on = []
+permissions = []
+events = []
+subscribes = []
+settings = []
+term_keys = []
