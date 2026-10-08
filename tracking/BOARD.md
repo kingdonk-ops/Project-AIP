@@ -118,7 +118,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [UPLOADS-03](tasks/UPLOADS-03.md) | Resumable S3 multipart uploads | uploads | M | UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [TESTING-03](tasks/TESTING-03.md) | Isolation tests for Redis, queues, S3 prefixes and search | testing | M | OPS-02, TENANCY-02, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-05](tasks/TESTING-05.md) | Migration up-down-up test | testing | S | TESTING-01 | todo | convert to Python backend per ADR 0001 before starting |
-| [SECURITY-08](tasks/SECURITY-08.md) | Production strip test and security CI workflow | security | M | ARCH-03, STACK-04 | todo | convert to Python backend per ADR 0001 before starting |
+| [SECURITY-08](tasks/SECURITY-08.md) | Production strip test and security CI workflow | security | M | ARCH-03, STACK-04 | in-progress | branch claude/p0-security-08 |
 | [OPS-07](tasks/OPS-07.md) | Terraform baseline for staging and the build-promote pipeline | ops | M | STACK-05 | todo | use infra/terraform (ADR 0004), not infrastructure/ |
 | [OPS-09](tasks/OPS-09.md) | Build once, scan, push to ECR, deploy staging, smoke | ops | M | OPS-07, STACK-05 | todo |  |
 | [OPS-10](tasks/OPS-10.md) | Cosign signing, prod promotion approval, digest rollback | ops | M | OPS-09 | todo | convert to Python backend per ADR 0001 before starting  |
