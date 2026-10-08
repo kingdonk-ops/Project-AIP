@@ -16,6 +16,7 @@ becomes an ADR update. **Bold** questions block M0.
 - 2026-10-07 — **Sign-off assurance:** one quick check at signing (passkey, company device + PIN, code, or company MFA); per-tenant minimum; supervisor countersign fallback. Field-PIN users can sign on a registered device. → ADR 0010, task IDENTITY-07.
 - 2026-10-08 — **Licence policy:** any free licence is fine; no paid commercial licences (build it ourselves instead). → ADR 0011 accepted.
 - 2026-10-08 — **Provenance log:** initialled by the owner (KK).
+- 2026-10-08 — **Security scanning and signing:** ADR 0013 accepted (free scanners, expiring vulnerability exceptions, key-based cosign without public logs).
 
 Nothing blocks M0 now.
 
@@ -58,5 +59,4 @@ the client isn't set up, the inspector records a witness note and the client con
   real customer data goes onto Coolify; store the replacement only as GitHub Actions secrets (`COOLIFY_TOKEN`,
   `COOLIFY_WEBHOOK`).
 - In GitHub branch protection for `main`, mark the `boundaries` check (ARCH-03) as required.
-- Confirm ADR 0013 (security scanners, expiring vulnerability exceptions, key-based image signing; proposed in SECURITY-08).
 - Optional: add repository secrets `COSIGN_PRIVATE_KEY` and `COSIGN_PASSWORD` (from `cosign generate-key-pair`) so CI image signatures use a real key instead of a throwaway one.
