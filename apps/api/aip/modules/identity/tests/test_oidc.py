@@ -39,7 +39,8 @@ def test_domain_of_lowercases() -> None:
 
 
 @pytest.mark.parametrize(
-    "value", ["no-at-sign", "@kaefer.test", "alice@", "a@b@kaefer.test", "alice@nodot", "x@exa mple.test"]
+    "value",
+    ["no-at-sign", "@kaefer.test", "alice@", "a@b@kaefer.test", "alice@nodot", "x@exa mple.test"],
 )
 def test_domain_of_rejects_malformed(value: str) -> None:
     with pytest.raises(ValueError):

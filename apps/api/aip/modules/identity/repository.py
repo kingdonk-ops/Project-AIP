@@ -44,7 +44,7 @@ Connect = Callable[[], AbstractAsyncContextManager[AsyncConnection]]
 
 
 class SqlLoginDirectory:
-    """``LoginDirectory`` over Postgres; ``connect`` defaults to the platform's ``before_tenant``."""
+    """``LoginDirectory`` over Postgres; ``connect`` defaults to ``before_tenant``."""
 
     def __init__(self, connect: Connect = before_tenant) -> None:
         self._connect = connect

@@ -21,7 +21,7 @@ if TYPE_CHECKING:  # fixtures come from conftest.py; this import is for type hin
 REPO_ROOT = Path(__file__).resolve().parents[5]
 
 BASELINE = "202610071200"
-HEAD = "202610072200"  # DATABASE-02 platform_roles
+HEAD = "202610080454"  # IDENTITY-01 identity_login_directory
 EXTENSIONS = {"ltree", "pgcrypto", "pg_trgm", "citext", "btree_gist", "vector"}
 OWNER_ERROR = "migrator must run as aip_owner"
 
@@ -244,8 +244,12 @@ def test_check_schema_reports_declared_but_unmigrated_table(
     empty_db.bootstrap()
     assert empty_db.aip_db("migrate").returncode == 0
 
-    # The real declared tables match the migrated schema.
-    assert asyncio.run(schema_check.diff_schema(empty_db.owner_url, declared_metadata)) == []
+    # The real declared tables (every module's tables.py, as `aip-db check-schema` loads them)
+    # match the migrated schema.
+    from aip.platform.db.migrator.cli import load_declared_tables
+
+    declared = load_declared_tables()
+    assert asyncio.run(schema_check.diff_schema(empty_db.owner_url, declared)) == []
 
     fixture = MetaData()
     Table("ghost", fixture, Column("id", Uuid))

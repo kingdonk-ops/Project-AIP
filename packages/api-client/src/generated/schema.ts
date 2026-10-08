@@ -169,7 +169,7 @@ export interface components {
         };
         /**
          * LoginStartResponse
-         * @description Same status and keys whether or not the email or domain is known; the tenant is never sent.
+         * @description Same status and keys whether or not the email or domain is known; never the tenant.
          */
         LoginStartResponse: {
             /**

@@ -42,7 +42,9 @@ __all__ = [
 
 ID_TOKEN_ALGORITHMS = ["RS256", "PS256", "ES256"]
 SCOPE = "openid email profile"
-_DOMAIN_RE = re.compile(r"^(?=.{1,253}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$")
+_DOMAIN_RE = re.compile(
+    r"^(?=.{1,253}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$"
+)
 _CONTROL_RE = re.compile(r"[\x00-\x1f\x7f]")
 
 
@@ -94,7 +96,7 @@ def build_authorize_url(
     code_verifier: str,
     scope: str = SCOPE,
 ) -> str:
-    """Keycloak's authorize URL: code flow, S256 PKCE, ``login_hint`` and, for SSO, ``kc_idp_hint``."""
+    """Keycloak's authorize URL: code flow, S256 PKCE, ``login_hint``; ``kc_idp_hint`` for SSO."""
     extra: dict[str, str] = {
         "nonce": nonce,
         "code_challenge": create_s256_code_challenge(code_verifier),
@@ -123,7 +125,9 @@ def check_idp_binding(claim_alias: str | None, cookie_alias: str | None) -> None
     """
     if claim_alias is not None:
         if claim_alias != cookie_alias:
-            raise OidcError("IDP_TENANT_MISMATCH", 403, "signed in through a different identity provider")
+            raise OidcError(
+                "IDP_TENANT_MISMATCH", 403, "signed in through a different identity provider"
+            )
         return
     if cookie_alias is not None:
         raise OidcError("SSO_REQUIRED", 403, "this email domain must sign in with company SSO")
@@ -195,30 +199,34 @@ class KeycloakOidcClient:
 
     async def exchange_code(self, *, code: str, code_verifier: str) -> str:
         """Redeem ``code`` with the PKCE verifier; return the raw ID token (and drop the rest)."""
-        async with AsyncOAuth2Client(
+        client: Any = AsyncOAuth2Client(
             client_id=self.client_id,
             client_secret=self._client_secret,
             token_endpoint_auth_method="client_secret_basic",
             redirect_uri=self._redirect_uri,
             timeout=self._timeout,
             transport=self._transport,
-        ) as client:
-            try:
-                token: Mapping[str, Any] = await client.fetch_token(  # pyright: ignore[reportUnknownMemberType]
-                    self._token_endpoint,
-                    grant_type="authorization_code",
-                    code=code,
-                    code_verifier=code_verifier,
-                )
-            except Exception as exc:  # authlib raises OAuthError, httpx raises HTTPError
-                raise OidcError("TOKEN_EXCHANGE_FAILED", 400, "the authorization code was rejected") from exc
+        )
+        try:
+            token: Mapping[str, Any] = await client.fetch_token(
+                self._token_endpoint,
+                grant_type="authorization_code",
+                code=code,
+                code_verifier=code_verifier,
+            )
+        except Exception as exc:  # authlib raises OAuthError, httpx raises HTTPError
+            raise OidcError(
+                "TOKEN_EXCHANGE_FAILED", 400, "the authorization code was rejected"
+            ) from exc
+        finally:
+            await client.aclose()
         id_token = token.get("id_token")
         if not isinstance(id_token, str) or not id_token:
             raise OidcError("TOKEN_EXCHANGE_FAILED", 400, "no ID token was returned")
         return id_token
 
     async def verify_id_token(self, id_token: str, *, nonce: str) -> dict[str, Any]:
-        """Signature (JWKS), ``iss``, ``aud``/``azp``, ``exp``, ``iat`` and ``nonce``; returns the claims."""
+        """Check the signature (JWKS), iss, aud/azp, exp, iat and nonce; return the claims."""
         try:
             decoded = jwt.decode(id_token, await self.jwks.get(), algorithms=ID_TOKEN_ALGORITHMS)
         except (JoseError, ValueError):
@@ -227,7 +235,9 @@ class KeycloakOidcClient:
                     id_token, await self.jwks.get(refresh=True), algorithms=ID_TOKEN_ALGORITHMS
                 )
             except (JoseError, ValueError) as exc:
-                raise OidcError("INVALID_ID_TOKEN", 400, "the ID token signature is invalid") from exc
+                raise OidcError(
+                    "INVALID_ID_TOKEN", 400, "the ID token signature is invalid"
+                ) from exc
         claims: dict[str, Any] = dict(decoded.claims)
         registry = jwt.JWTClaimsRegistry(
             leeway=30,
@@ -242,9 +252,9 @@ class KeycloakOidcClient:
             registry.validate(claims)
         except JoseError as exc:
             raise OidcError("INVALID_ID_TOKEN", 400, "the ID token claims are invalid") from exc
-        aud = claims.get("aud")
-        azp = claims.get("azp")
-        if (isinstance(aud, list) and len(aud) > 1) or azp is not None:  # pyright: ignore[reportUnknownArgumentType]
-            if azp != self.client_id:
-                raise OidcError("INVALID_ID_TOKEN", 400, "the ID token was issued to another client")
+        aud: object = claims.get("aud")
+        azp: object = claims.get("azp")
+        several = isinstance(aud, list) and len(aud) > 1  # pyright: ignore[reportUnknownArgumentType]
+        if (several or azp is not None) and azp != self.client_id:
+            raise OidcError("INVALID_ID_TOKEN", 400, "the ID token was issued to another client")
         return claims

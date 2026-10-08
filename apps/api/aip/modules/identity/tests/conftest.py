@@ -127,7 +127,9 @@ class StubProvider:
             verifier = form.get("code_verifier", "")
             digest = hashlib.sha256(verifier.encode()).digest()
             if base64.urlsafe_b64encode(digest).rstrip(b"=").decode() != grant.challenge:
-                return httpx.Response(400, json={"error": "invalid_grant", "error_description": "pkce"})
+                return httpx.Response(
+                    400, json={"error": "invalid_grant", "error_description": "pkce"}
+                )
             if form.get("redirect_uri") != grant.redirect_uri:
                 return httpx.Response(400, json={"error": "invalid_grant"})
             body = {
@@ -137,7 +139,9 @@ class StubProvider:
                 "expires_in": 300,
                 "id_token": self.sign(grant.claims),
             }
-            return httpx.Response(200, content=json.dumps(body), headers={"content-type": "application/json"})
+            return httpx.Response(
+                200, content=json.dumps(body), headers={"content-type": "application/json"}
+            )
         return httpx.Response(404)
 
 

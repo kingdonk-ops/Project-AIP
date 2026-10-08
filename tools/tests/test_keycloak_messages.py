@@ -13,7 +13,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _load() -> ModuleType:
-    spec = importlib.util.spec_from_file_location("keycloak_messages", ROOT / "tools" / "keycloak_messages.py")
+    spec = importlib.util.spec_from_file_location(
+        "keycloak_messages", ROOT / "tools" / "keycloak_messages.py"
+    )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules["keycloak_messages"] = module

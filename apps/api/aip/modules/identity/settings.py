@@ -23,7 +23,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 PREAUTH_KEY_BYTES = 32  # A256GCM
 
 # The compose dev default (base64url of an obviously fake 32-byte string). Refused in production.
-DEV_PREAUTH_COOKIE_KEY = "ZGV2LW9ubHktcHJlYXV0aC1jb29raWUta2V5LWZha2U"  # dev-only-preauth-cookie-key-fake
+DEV_PREAUTH_COOKIE_KEY = (
+    "ZGV2LW9ubHktcHJlYXV0aC1jb29raWUta2V5LWZha2U"  # dev-only-preauth-cookie-key-fake
+)
 
 
 class IdentitySettingsError(ValueError):

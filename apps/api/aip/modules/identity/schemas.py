@@ -20,7 +20,7 @@ class LoginStartRequest(_CamelModel):
 
 
 class LoginStartResponse(_CamelModel):
-    """Same status and keys whether or not the email or domain is known; the tenant is never sent."""
+    """Same status and keys whether or not the email or domain is known; never the tenant."""
 
     method: Literal["sso", "password"]
     redirect_url: str

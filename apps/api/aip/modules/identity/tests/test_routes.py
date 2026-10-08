@@ -40,7 +40,9 @@ def _state(url: str) -> str:
     return parse_qs(urlsplit(url).query)["state"][0]
 
 
-async def test_start_known_and_unknown_domains_have_the_same_shape(client: httpx.AsyncClient) -> None:
+async def test_start_known_and_unknown_domains_have_the_same_shape(
+    client: httpx.AsyncClient,
+) -> None:
     unknown, _ = await _start(client, "x@unknown.test")
     sso, _ = await _start(client, "alice@kaefer.test", returnTo="/projects")
     assert unknown["method"] == "password"
@@ -66,7 +68,9 @@ async def test_start_rejects_malformed_email(client: httpx.AsyncClient) -> None:
     assert r.json()["code"] == "INVALID_EMAIL"
 
 
-async def test_sso_callback_yields_identity(client: httpx.AsyncClient, provider: StubProvider) -> None:
+async def test_sso_callback_yields_identity(
+    client: httpx.AsyncClient, provider: StubProvider
+) -> None:
     body, cookie = await _start(client, "alice@kaefer.test", returnTo="/projects?x=1")
     code = provider.authorize(body["redirectUrl"])
     r = await _callback(client, cookie, code=code, state=_state(body["redirectUrl"]))
@@ -83,7 +87,9 @@ async def test_sso_callback_yields_identity(client: httpx.AsyncClient, provider:
     assert f'{COOKIE_NAME}=""' in r.headers["set-cookie"] or "Max-Age=0" in r.headers["set-cookie"]
 
 
-async def test_local_callback_requires_aal2(client: httpx.AsyncClient, provider: StubProvider) -> None:
+async def test_local_callback_requires_aal2(
+    client: httpx.AsyncClient, provider: StubProvider
+) -> None:
     body, cookie = await _start(client, "carol@client.test")
     ok = provider.authorize(body["redirectUrl"])
     r = await _callback(client, cookie, code=ok, state=_state(body["redirectUrl"]))
@@ -100,14 +106,18 @@ async def test_local_callback_requires_aal2(client: httpx.AsyncClient, provider:
 
 async def test_idp_mismatch(client: httpx.AsyncClient, provider: StubProvider) -> None:
     body, cookie = await _start(client, "alice@kaefer.test")
-    code = provider.authorize(body["redirectUrl"], identity_provider="acme-oidc", email="bob@acme.test")
+    code = provider.authorize(
+        body["redirectUrl"], identity_provider="acme-oidc", email="bob@acme.test"
+    )
     r = await _callback(client, cookie, code=code, state=_state(body["redirectUrl"]))
     assert r.status_code == 403
     assert r.json()["code"] == "IDP_TENANT_MISMATCH"
     assert "Max-Age=0" in r.headers["set-cookie"]
 
 
-async def test_local_account_on_sso_domain(client: httpx.AsyncClient, provider: StubProvider) -> None:
+async def test_local_account_on_sso_domain(
+    client: httpx.AsyncClient, provider: StubProvider
+) -> None:
     body, cookie = await _start(client, "alice@kaefer.test")
     code = provider.authorize(body["redirectUrl"], identity_provider=None, acr="aal2")
     r = await _callback(client, cookie, code=code, state=_state(body["redirectUrl"]))
@@ -247,5 +257,12 @@ def test_no_staff_credential_libraries() -> None:
     module = Path(__file__).resolve().parents[1]
     for path in module.rglob("*.py"):
         text = path.read_text(encoding="utf-8")
-        for banned in ("import argon2", "import pyotp", "import webauthn", "from argon2", "from pyotp", "from webauthn"):
+        for banned in (
+            "import argon2",
+            "import pyotp",
+            "import webauthn",
+            "from argon2",
+            "from pyotp",
+            "from webauthn",
+        ):
             assert banned not in text or path.name == Path(__file__).name, f"{path}: {banned}"

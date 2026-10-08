@@ -32,8 +32,15 @@ def test_realm_policy(realm: dict[str, Any]) -> None:
     assert realm["maxFailureWaitSeconds"] == 900
     assert realm["maxDeltaTimeSeconds"] == 43200
     policy = realm["passwordPolicy"]
-    for part in ("length(12)", "maxLength(128)", "notUsername", "notEmail", "passwordHistory(5)",
-                 "passwordBlacklist(password-blocklist.txt)", "hashAlgorithm(argon2)"):
+    for part in (
+        "length(12)",
+        "maxLength(128)",
+        "notUsername",
+        "notEmail",
+        "passwordHistory(5)",
+        "passwordBlacklist(password-blocklist.txt)",
+        "hashAlgorithm(argon2)",
+    ):
         assert part in policy
     assert realm["browserFlow"] == "aip-browser"
     assert realm["loginTheme"] == "aip"
@@ -44,13 +51,22 @@ def test_realm_policy(realm: dict[str, Any]) -> None:
 
 def test_otp_and_webauthn_policy(realm: dict[str, Any]) -> None:
     assert (realm["otpPolicyType"], realm["otpPolicyAlgorithm"]) == ("totp", "HmacSHA1")
-    assert (realm["otpPolicyDigits"], realm["otpPolicyPeriod"], realm["otpPolicyLookAheadWindow"]) == (6, 30, 1)
+    assert (
+        realm["otpPolicyDigits"],
+        realm["otpPolicyPeriod"],
+        realm["otpPolicyLookAheadWindow"],
+    ) == (6, 30, 1)
     assert realm["webAuthnPolicySignatureAlgorithms"] == ["ES256", "RS256"]
     assert realm["webAuthnPolicyUserVerificationRequirement"] == "preferred"
     assert realm["webAuthnPolicyPasswordlessUserVerificationRequirement"] == "required"
     enabled = {a["alias"] for a in realm["requiredActions"] if a["enabled"]}
-    assert {"VERIFY_EMAIL", "UPDATE_PASSWORD", "CONFIGURE_TOTP", "webauthn-register",
-            "webauthn-register-passwordless"} <= enabled
+    assert {
+        "VERIFY_EMAIL",
+        "UPDATE_PASSWORD",
+        "CONFIGURE_TOTP",
+        "webauthn-register",
+        "webauthn-register-passwordless",
+    } <= enabled
 
 
 def test_api_client(realm: dict[str, Any]) -> None:
@@ -71,7 +87,9 @@ def test_api_client(realm: dict[str, Any]) -> None:
         "/login",
     ]
     mappers = {m["protocolMapper"]: m for m in api["protocolMappers"]}
-    assert mappers["oidc-usersessionmodel-note-mapper"]["config"]["claim.name"] == "identity_provider"
+    assert (
+        mappers["oidc-usersessionmodel-note-mapper"]["config"]["claim.name"] == "identity_provider"
+    )
     assert mappers["oidc-usersessionmodel-note-mapper"]["config"]["id.token.claim"] == "true"
     assert mappers["oidc-amr-mapper"]["config"]["id.token.claim"] == "true"
     assert {"basic", "acr"} <= set(api["defaultClientScopes"])
@@ -134,13 +152,23 @@ def test_browser_flow(realm: dict[str, Any]) -> None:
     # Keycloak allows one LoA condition per level: a passkey satisfies level 2 by skipping the
     # second factor (Condition - credential: webauthn-passwordless not used).
     second = _flow(realm, "aip-second-factor")
-    assert _config(realm, second[0]["authenticatorConfig"])["credentials"] == "webauthn-passwordless"
+    assert (
+        _config(realm, second[0]["authenticatorConfig"])["credentials"] == "webauthn-passwordless"
+    )
     key = {e["authenticator"]: e for e in _flow(realm, "aip-2fa-key")}
     otp = {e["authenticator"]: e for e in _flow(realm, "aip-2fa-otp")}
-    assert _config(realm, key["webauthn-authenticator"]["authenticatorConfig"])["default.reference.value"] == "hwk"
+    assert (
+        _config(realm, key["webauthn-authenticator"]["authenticatorConfig"])[
+            "default.reference.value"
+        ]
+        == "hwk"
+    )
     # REQUIRED, so a user with no second factor gets CONFIGURE_TOTP at first sign-in.
     assert otp["auth-otp-form"]["requirement"] == "REQUIRED"
-    assert _config(realm, otp["auth-otp-form"]["authenticatorConfig"])["default.reference.value"] == "otp"
+    assert (
+        _config(realm, otp["auth-otp-form"]["authenticatorConfig"])["default.reference.value"]
+        == "otp"
+    )
     levels = [
         c["config"]["loa-condition-level"]
         for c in realm["authenticatorConfig"]

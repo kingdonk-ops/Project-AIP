@@ -41,7 +41,10 @@ class PlaceholderLoginHandler:
         if self._env == "test":
             return JSONResponse(identity.model_dump(mode="json"))
         return JSONResponse(
-            {"code": "PROVISIONING_NOT_IMPLEMENTED", "detail": "account provisioning is not built yet"},
+            {
+                "code": "PROVISIONING_NOT_IMPLEMENTED",
+                "detail": "account provisioning is not built yet",
+            },
             status_code=501,
         )
 

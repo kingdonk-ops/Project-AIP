@@ -62,7 +62,9 @@ def test_function_is_security_definer_with_fixed_search_path(directory_db: Fresh
         "FROM pg_proc p WHERE p.proname = 'identity_resolve_login'"
     )
     assert rows == [(True, "aip_owner", ["search_path=pg_catalog, public"], False, False)]
-    owner = directory_db.fetch("SELECT tableowner FROM pg_tables WHERE tablename = 'login_directory'")
+    owner = directory_db.fetch(
+        "SELECT tableowner FROM pg_tables WHERE tablename = 'login_directory'"
+    )
     assert owner == [("aip_owner",)]
 
 
@@ -89,7 +91,8 @@ def test_repository_as_aip_app_and_idempotent_seeds(directory_db: FreshDb) -> No
 
 def test_kind_is_checked(directory_db: FreshDb) -> None:
     sql: Any = (
-        "INSERT INTO login_directory (kind, key, tenant_id) VALUES ('nope', 'x.test', gen_random_uuid())"
+        "INSERT INTO login_directory (kind, key, tenant_id) "
+        "VALUES ('nope', 'x.test', gen_random_uuid())"
     )
     with pytest.raises(asyncpg.CheckViolationError):
         execute(directory_db.owner_url, sql)

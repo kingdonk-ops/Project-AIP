@@ -131,7 +131,9 @@ def kc_settings(keycloak: Keycloak) -> IdentitySettings:
 
 
 @pytest.fixture
-async def kc_app(kc_settings: IdentitySettings, monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[FastAPI]:
+async def kc_app(
+    kc_settings: IdentitySettings, monkeypatch: pytest.MonkeyPatch
+) -> AsyncIterator[FastAPI]:
     monkeypatch.setenv("AIP_ENV", "test")
     oidc = KeycloakOidcClient(
         issuer=kc_settings.issuer,
@@ -152,7 +154,9 @@ async def kc_app(kc_settings: IdentitySettings, monkeypatch: pytest.MonkeyPatch)
 
 @pytest.fixture
 async def api(kc_app: FastAPI) -> AsyncIterator[httpx.AsyncClient]:
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=kc_app), base_url=APP_ORIGIN) as c:
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=kc_app), base_url=APP_ORIGIN
+    ) as c:
         yield c
 
 
@@ -178,7 +182,7 @@ async def _callback(api: httpx.AsyncClient, callback_url: str, cookie: str) -> h
     return await api.get("/api/v1/auth/oidc/callback", params=query)
 
 
-def _credentials(email: str, password: str):  # noqa: ANN202 - local filler
+def _credentials(email: str, password: str):
     def fill(page: Page) -> dict[str, str] | None:
         if page.form_with("password"):
             values = {"password": password}
@@ -197,8 +201,14 @@ def _credentials(email: str, password: str):  # noqa: ANN202 - local filler
 def _create_local_user(keycloak: Keycloak, email: str) -> str:
     admin = keycloak.admin()
     user_id = admin.create_user(  # pyright: ignore[reportUnknownMemberType]
-        {"username": email, "email": email, "emailVerified": True, "enabled": True,
-         "firstName": "Carol", "lastName": "Client"}
+        {
+            "username": email,
+            "email": email,
+            "emailVerified": True,
+            "enabled": True,
+            "firstName": "Carol",
+            "lastName": "Client",
+        }
     )
     admin.set_user_password(user_id, LOCAL_PASSWORD, temporary=False)  # pyright: ignore[reportUnknownMemberType]
     return str(user_id)
@@ -225,9 +235,9 @@ async def test_alice_sso_goes_straight_to_the_mock_idp(
     assert "/realms/mock-idp/" in first.url, first.url  # no aip password page in between
     end = drive(browser, first, _credentials("alice@kaefer.test", "alice_dev_only_password"))
     assert isinstance(end, str), end.url if isinstance(end, Page) else end
-    assert not any(
-        "/realms/aip/" in p.url and p.form_with("password") for p in browser.pages
-    ), "the aip realm showed a password page"
+    assert not any("/realms/aip/" in p.url and p.form_with("password") for p in browser.pages), (
+        "the aip realm showed a password page"
+    )
     r = await _callback(api, end, cookie)
     assert r.status_code == 200, r.text
     identity = r.json()
@@ -241,7 +251,11 @@ async def test_bob_with_a_kaefer_cookie_is_refused(
     api: httpx.AsyncClient, browser: Browser, kc_settings: IdentitySettings
 ) -> None:
     body, cookie = await _login_start(api, "bob@acme.test")
-    end = drive(browser, browser.get(body["redirectUrl"]), _credentials("bob@acme.test", "bob_dev_only_password"))
+    end = drive(
+        browser,
+        browser.get(body["redirectUrl"]),
+        _credentials("bob@acme.test", "bob_dev_only_password"),
+    )
     assert isinstance(end, str)
     pre = open_cookie(cookie, kc_settings.preauth_key)
     kaefer = pre.model_copy(update={"tenant_id": TENANT_A_ID, "idp_alias": "kaefer-oidc"})
@@ -313,7 +327,12 @@ async def test_brute_force_locks_the_account(
         body, _ = await _login_start(api, email)
         b = Browser(stop_prefix=browser.stop_prefix)
         try:
-            end = drive(b, b.get(body["redirectUrl"]), _credentials(email, f"wrong-{attempt}-password"), max_steps=3)
+            end = drive(
+                b,
+                b.get(body["redirectUrl"]),
+                _credentials(email, f"wrong-{attempt}-password"),
+                max_steps=3,
+            )
             assert isinstance(end, Page)
         finally:
             b.close()
@@ -324,7 +343,9 @@ async def test_brute_force_locks_the_account(
     ).json()
     assert status["disabled"] is True, status
     body, _ = await _login_start(api, email)
-    end = drive(browser, browser.get(body["redirectUrl"]), _credentials(email, LOCAL_PASSWORD), max_steps=4)
+    end = drive(
+        browser, browser.get(body["redirectUrl"]), _credentials(email, LOCAL_PASSWORD), max_steps=4
+    )
     assert isinstance(end, Page), "a locked account reached the callback"
 
 

@@ -2,7 +2,7 @@
 import type { LoginStartResponseMethod } from './loginStartResponseMethod';
 
 /**
- * Same status and keys whether or not the email or domain is known; the tenant is never sent.
+ * Same status and keys whether or not the email or domain is known; never the tenant.
  */
 export interface LoginStartResponse {
   method: LoginStartResponseMethod;
