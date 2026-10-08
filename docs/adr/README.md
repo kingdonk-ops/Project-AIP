@@ -17,4 +17,5 @@ bullets and a row here; `tools/ci/check_adrs.py` enforces this in CI (`make chec
 | [0009](0009-ocr-and-licensing.md) | Only permissive open-source or AWS services; OCR = Tesseract + pypdfium2, Textract optional | accepted |
 | [0010](0010-signoff-assurance.md) | Sign-off assurance: one quick check at signing (passkey, device+PIN, TOTP or IdP MFA), per-tenant minimum, countersign fallback | accepted |
 | [0011](0011-licence-policy-details.md) | Licence check details: more permissive licences allowed; image OS packages judged as aggregation (AGPL/SSPL/Ghostscript still denied) | proposed |
+| [0012](0012-runtime-roles-in-cluster-bootstrap.md) | Runtime DB roles (`aip_app`, `aip_jobs`, `aip_readonly`) are created by the superuser cluster bootstrap; revisions only verify and grant | accepted |
 | [0013](0013-security-scanning-and-signing.md) | Security CI: permissive free scanners, expiring vuln exceptions, key-based cosign without public log | proposed |
