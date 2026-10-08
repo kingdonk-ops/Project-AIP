@@ -1,4 +1,4 @@
-# ADR 0012: Security CI scanners, vulnerability exceptions and image signing
+# ADR 0013: Security CI scanners, vulnerability exceptions and image signing
 
 - **Status:** proposed
 - **Date:** 2026-10-08

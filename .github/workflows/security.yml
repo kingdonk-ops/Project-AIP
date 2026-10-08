@@ -9,7 +9,7 @@ name: security
 # Exceptions: config/vuln-exceptions.txt (expiry per entry; tools/ci/check_vuln_exceptions.py).
 # Tools and licences (all usable without a paid account): Trivy Apache-2.0, syft Apache-2.0,
 # cosign Apache-2.0, gitleaks MIT (CLI image, not gitleaks-action, which needs a licence key for
-# organisations), pip-audit Apache-2.0, bandit Apache-2.0, pnpm MIT. See ADR 0012.
+# organisations), pip-audit Apache-2.0, bandit Apache-2.0, pnpm MIT. See ADR 0013.
 # Scanner images are pinned by tag and digest; third-party actions by commit SHA.
 
 on:

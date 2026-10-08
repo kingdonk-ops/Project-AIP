@@ -2,7 +2,7 @@
 
 <!-- hand-edited: depends-on synced from BOARD.md; converted to the Python backend per ADR 0001 (2026-10-08) -->
 
-## Conversion to the real stack (ADR 0001, 0004, 0012)
+## Conversion to the real stack (ADR 0001, 0004, 0013)
 
 The spec below predates ADR 0001. Built as follows (Python 3.12 + FastAPI in the uv workspace,
 Vite TS apps in the pnpm workspace):
@@ -26,7 +26,7 @@ Vite TS apps in the pnpm workspace):
 
 Tool licences (no paid account needed): Trivy Apache-2.0, syft Apache-2.0, cosign Apache-2.0,
 gitleaks MIT, pip-audit Apache-2.0, bandit Apache-2.0, pnpm MIT. Semgrep was not used: its
-community rules are not under a permissive licence. Details: ADR 0012.
+community rules are not under a permissive licence. Details: ADR 0013.
 
 Folded in from the STACK-05 security review: `ci.yml` top-level `permissions: contents: read`;
 `infra/docker/migrator.Dockerfile` pinned to `python:3.12.15-slim-bookworm`.
