@@ -82,7 +82,10 @@ def _error(code: str, status_code: int, detail: str) -> JSONResponse:
 @router.post(
     "/login/start",
     response_model=LoginStartResponse,
-    responses={422: {"model": ErrorResponse}, 429: {"model": ErrorResponse}},
+    responses={
+        422: {"model": ErrorResponse, "description": "Unprocessable Entity"},
+        429: {"model": ErrorResponse},
+    },
     openapi_extra=PUBLIC,
 )
 async def login_start(
