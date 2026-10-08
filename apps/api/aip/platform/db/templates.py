@@ -32,6 +32,10 @@ __all__ = ["render_template", "templates_dir"]
 _NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 _PLACEHOLDER_RE = re.compile(r"\{\{\s*([a-z_][a-z0-9_]*)\s*\}\}")
 _IDENTIFIER_RE = re.compile(r"^[a-z_][a-z0-9_]{0,47}$")  # room for the ix_/pk_ prefixes in 63
+_BLOCK_RE = re.compile(
+    r"^\{\{#([a-z_][a-z0-9_]*)\}\}\n(.*?)^\{\{/\1\}\}\n", re.DOTALL | re.MULTILINE
+)
+_BLOCKS = frozenset({"sync"})  # optional blocks a template may declare; each is a bool argument
 _IDENTIFIER_VARS = frozenset({"table"})
 _FORBIDDEN_IN_LISTS = (";", "--", "/*", "'", '"', "$")
 
@@ -170,14 +174,30 @@ def _check_value(key: str, value: object) -> str:
     return value
 
 
-def render_template(name: str, **variables: object) -> str:
-    """Return ``db/templates/<name>.sql.tpl`` with its ``{{placeholders}}`` filled in."""
+def _apply_blocks(name: str, text: str, flags: dict[str, bool]) -> str:
+    """Keep or drop each ``{{#block}}`` ... ``{{/block}}`` (own lines) according to ``flags``."""
+    declared = {m.group(1) for m in _BLOCK_RE.finditer(text)}
+    unknown = sorted(declared - _BLOCKS)
+    if unknown:
+        raise TemplateError(f"template {name!r} has an unknown block {', '.join(unknown)}")
+    unused = sorted(k for k, on in flags.items() if on and k not in declared)
+    if unused:
+        raise TemplateError(f"template {name!r} has no {', '.join(unused)} block")
+    return _BLOCK_RE.sub(lambda m: m.group(2) if flags.get(m.group(1), False) else "", text)
+
+
+def render_template(name: str, *, sync: bool = False, **variables: object) -> str:
+    """Return ``db/templates/<name>.sql.tpl`` with its ``{{placeholders}}`` filled in.
+
+    ``sync=True`` keeps the template's optional ``sync`` block (``tenant_table``: the
+    ``client_generated_id`` and ``sync_version`` columns and their unique index, DATABASE-04).
+    """
     if not _NAME_RE.match(name):
         raise TemplateError(f"invalid template name {name!r}")
     path = templates_dir() / f"{name}.sql.tpl"
     if not path.is_file():
         raise TemplateError(f"unknown template {name!r} (no {path})")
-    text = path.read_text(encoding="utf-8")
+    text = _apply_blocks(name, path.read_text(encoding="utf-8"), {"sync": sync})
 
     wanted = set(_PLACEHOLDER_RE.findall(text))
     missing = sorted(wanted - variables.keys())

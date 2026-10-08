@@ -37,6 +37,7 @@ from aip.platform.context import (
     RequestContextMiddleware,
     get_context,
 )
+from aip.platform.http import install_error_handlers
 from aip.platform.modules.registry import load_modules
 from aip.platform.modules.routes import create_router as create_modules_router
 from aip.platform.observability.logging import RequestIdMiddleware, configure_logging
@@ -114,6 +115,8 @@ def create_app(
     ) -> JSONResponse:
         # A request reached code that needs a tenant context but no principal was resolved.
         return JSONResponse({"detail": "Not authenticated"}, status_code=401)
+
+    install_error_handlers(app)  # DATABASE-04: ConflictError 409, NotFoundError 404
 
     app.add_middleware(
         RequestContextMiddleware,
