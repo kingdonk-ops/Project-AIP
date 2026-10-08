@@ -36,6 +36,7 @@ dev = [
     "ruff>=0.8",
     "pyright>=1.1.390",
     "pypdf>=5.1",
+    "pyyaml>=6",
     "testcontainers[keycloak,postgres,redis]>=4.8",
     "types-aioboto3[s3]>=13.2",
 ]
