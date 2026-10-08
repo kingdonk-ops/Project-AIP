@@ -111,3 +111,8 @@ After Keycloak signs a staff user in, the FastAPI backend issues every browser s
 ## Carried forward from IDENTITY-01 (non-blocking)
 
 - `jwcrypto` (LGPL-3.0) arrives transitively through `python-keycloak`, used for the admin/seed client; our own token checks use `joserfc` (BSD). LGPL is allowed as an unmodified, imported library (ADR 0011), but record it in the licence notes, or drop `python-keycloak` for plain admin REST calls when this task touches the admin client.
+
+## Carried forward from TENANCY-01 (non-blocking)
+
+- TENANCY-01's e2e test needs a real app session, so it lands here: Playwright on compose, sign in as `alice@kaefer.test` through Keycloak, then `GET /api/v1/me/tenant`. Expected: slug `kaefer-demo`, `regionCode` `ap-southeast-2`; as `bob@acme.test` the same call returns `tenant-b` and nothing of `kaefer-demo`. (The spec's `admin@kaefer-demo.test` is not a fixture user; use the AGENTS.md users.)
+- The session `PrincipalResolver` must hand the middleware the tenant id from the `user_session` row; tenancy's `require_active_tenant` (via `aip.modules.tenancy.api`) then rejects suspended/offboarded/provisioning tenants. The compose stack needs `tenancy-seed` before `identity-seed` (the `login_directory` FK).

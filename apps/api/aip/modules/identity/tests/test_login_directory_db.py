@@ -28,6 +28,13 @@ from aip.platform.db.session import before_tenant
 @pytest.fixture
 def directory_db(empty_db: FreshDb) -> FreshDb:  # noqa: F811
     empty_db.migrate()
+    # login_directory.tenant_id references tenants (TENANCY-01): the fixture tenants come first.
+    # Inserted as the superuser so this test stays independent of the tenancy module's internals.
+    empty_db.execute(
+        "INSERT INTO tenants (id, name, slug, region_code, status) VALUES "
+        f"('{TENANT_A_ID}', 'Kaefer Demo', 'kaefer-demo', 'ap-southeast-2', 'active'), "
+        f"('{TENANT_B_ID}', 'Tenant B', 'tenant-b', 'ap-southeast-2', 'active')"
+    )
     asyncio.run(seed(empty_db.owner_url, env="test"))
     return empty_db
 

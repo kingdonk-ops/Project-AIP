@@ -19,3 +19,4 @@ bullets and a row here; `tools/ci/check_adrs.py` enforces this in CI (`make chec
 | [0011](0011-licence-policy-details.md) | Licence check details: more permissive licences allowed; image OS packages judged as aggregation (AGPL/SSPL/Ghostscript still denied) | accepted |
 | [0012](0012-runtime-roles-in-cluster-bootstrap.md) | Runtime DB roles (`aip_app`, `aip_jobs`, `aip_readonly`) are created by the superuser cluster bootstrap; revisions only verify and grant | accepted |
 | [0013](0013-security-scanning-and-signing.md) | Security CI: permissive free scanners, expiring vuln exceptions, key-based cosign without public log | accepted |
+| [0015](0015-tenant-row-and-tenant-resolution.md) | `tenants` read-only for the app (RLS `id = app.tenant_id`), shared fixture tenant ids, fail-closed tenant resolution errors | proposed |

@@ -22,9 +22,18 @@ COMPOSE = ROOT / "infra" / "docker-compose.yml"
 ENV_EXAMPLE = ROOT / ".env.example"
 
 # Images built from this repo: UID 10001, read-only root, no capabilities (step 2).
-APP_SERVICES = {"api", "worker", "migrator", "identity-seed", "object-store-init", "web", "sandbox"}
+APP_SERVICES = {
+    "api",
+    "worker",
+    "migrator",
+    "tenancy-seed",
+    "identity-seed",
+    "object-store-init",
+    "web",
+    "sandbox",
+}
 # One-shot jobs: they exit 0 and their dependents wait on service_completed_successfully.
-ONE_SHOT = {"migrator", "identity-seed", "object-store-init"}
+ONE_SHOT = {"migrator", "tenancy-seed", "identity-seed", "object-store-init"}
 DEFAULT_SERVICES = {
     "postgres",
     "valkey",
@@ -33,6 +42,7 @@ DEFAULT_SERVICES = {
     "keycloak",
     "mailpit",
     "migrator",
+    "tenancy-seed",
     "identity-seed",
     "object-store-init",
     "api",
@@ -128,6 +138,15 @@ def test_one_shots_gate_their_dependents(services: dict[str, dict[str, Any]]) ->
     )
     assert (
         services["identity-seed"]["depends_on"]["migrator"]["condition"]
+        == "service_completed_successfully"
+    )
+    # TENANCY-01: login_directory references tenants, so the tenants are seeded first.
+    assert (
+        services["identity-seed"]["depends_on"]["tenancy-seed"]["condition"]
+        == "service_completed_successfully"
+    )
+    assert (
+        services["tenancy-seed"]["depends_on"]["migrator"]["condition"]
         == "service_completed_successfully"
     )
 

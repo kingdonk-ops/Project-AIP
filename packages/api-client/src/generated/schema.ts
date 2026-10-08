@@ -90,6 +90,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/tenant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get My Tenant */
+        get: operations["tenancy_get_my_tenant"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/modules": {
         parameters: {
             query?: never;
@@ -191,6 +208,47 @@ export interface components {
             depends_on: string[];
             /** Id */
             id: string;
+        };
+        /** TenantErrorBody */
+        TenantErrorBody: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
+        /**
+         * TenantErrorResponse
+         * @description Body of a 401/403 from ``require_active_tenant``. Never names the tenant.
+         */
+        TenantErrorResponse: {
+            detail: components["schemas"]["TenantErrorBody"];
+        };
+        /**
+         * TenantView
+         * @description The caller's tenant as other modules and the API see it.
+         */
+        TenantView: {
+            /**
+             * Deploymentshape
+             * @enum {string}
+             */
+            deploymentShape: "pooled" | "siloed";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Regioncode */
+            regionCode: string;
+            /** Slug */
+            slug: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "provisioning" | "active" | "suspended" | "offboarding" | "offboarded";
         };
         /**
          * VersionResponse
@@ -358,6 +416,44 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    tenancy_get_my_tenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The caller's active tenant. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantView"];
+                };
+            };
+            /** @description No authenticated principal, or no known tenant for it. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantErrorResponse"];
+                };
+            };
+            /** @description The tenant is suspended, offboarded or not ready. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantErrorResponse"];
+                };
             };
         };
     };

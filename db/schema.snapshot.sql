@@ -83,6 +83,11 @@ GRANT UPDATE(updated_at) ON TABLE public.jobs TO aip_jobs;
 REVOKE ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) TO aip_app;
 
+-- Name: TABLE deployment_regions; Type: ACL; Schema: public
+GRANT SELECT ON TABLE public.deployment_regions TO aip_app;
+GRANT SELECT ON TABLE public.deployment_regions TO aip_jobs;
+GRANT SELECT ON TABLE public.deployment_regions TO aip_readonly;
+
 -- Name: TABLE job_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.job_events TO aip_app;
 GRANT SELECT,INSERT ON TABLE public.job_events TO aip_jobs;
@@ -92,6 +97,14 @@ GRANT SELECT ON TABLE public.job_events TO aip_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.jobs TO aip_app;
 GRANT SELECT ON TABLE public.jobs TO aip_readonly;
 GRANT SELECT ON TABLE public.jobs TO aip_jobs;
+
+-- Name: TABLE tenants; Type: ACL; Schema: public
+GRANT SELECT ON TABLE public.tenants TO aip_app;
+GRANT SELECT ON TABLE public.tenants TO aip_readonly;
+
+-- Name: deployment_regions pk_deployment_regions; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.deployment_regions
+    ADD CONSTRAINT pk_deployment_regions PRIMARY KEY (code);
 
 -- Name: job_events pk_job_events; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
@@ -117,9 +130,25 @@ ALTER TABLE ONLY public.login_directory
 ALTER TABLE ONLY public.login_directory
     ADD CONSTRAINT uq_login_directory_kind_key UNIQUE (kind, key);
 
+-- Name: tenants pk_tenants; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT pk_tenants PRIMARY KEY (id);
+
+-- Name: tenants uq_tenants_slug; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT uq_tenants_slug UNIQUE (slug);
+
 -- Name: job_events fk_job_events_job_id_tenant_id_jobs; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
     ADD CONSTRAINT fk_job_events_job_id_tenant_id_jobs FOREIGN KEY (job_id, tenant_id) REFERENCES public.jobs(id, tenant_id);
+
+-- Name: login_directory fk_login_directory_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.login_directory
+    ADD CONSTRAINT fk_login_directory_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: tenants fk_tenants_region_code_deployment_regions; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT fk_tenants_region_code_deployment_regions FOREIGN KEY (region_code) REFERENCES public.deployment_regions(code);
 
 -- Name: identity_resolve_login(text, public.citext); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) RETURNS TABLE(tenant_id uuid, idp_alias text)
@@ -151,6 +180,12 @@ CREATE INDEX ix_jobs_tenant_id_status ON public.jobs USING btree (tenant_id, sta
 -- Name: ix_login_directory_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_login_directory_tenant_id ON public.login_directory USING btree (tenant_id);
 
+-- Name: ix_tenants_region_code; Type: INDEX; Schema: public
+CREATE INDEX ix_tenants_region_code ON public.tenants USING btree (region_code);
+
+-- Name: ix_tenants_status; Type: INDEX; Schema: public
+CREATE INDEX ix_tenants_status ON public.tenants USING btree (status);
+
 -- Name: uq_jobs_tenant_id_job_type_idempotency_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs USING btree (tenant_id, job_type, idempotency_key) WHERE (idempotency_key IS NOT NULL);
 
@@ -160,11 +195,30 @@ CREATE POLICY tenant_isolation ON public.job_events USING ((tenant_id = (NULLIF(
 -- Name: jobs tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.jobs USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: tenants tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.tenants USING ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: job_events; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.job_events ENABLE ROW LEVEL SECURITY;
 
 -- Name: jobs; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
+
+-- Name: tenants; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+
+-- Name: deployment_regions; Type: TABLE; Schema: public
+CREATE TABLE public.deployment_regions (
+    code text NOT NULL,
+    label_key text NOT NULL,
+    in_country_only boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_deployment_regions_code CHECK ((code ~ '^[a-z]{2}(-[a-z]+)+-[0-9]+$'::text)),
+    CONSTRAINT ck_deployment_regions_label_key CHECK ((label_key ~ '^[a-z][a-z0-9_.]*$'::text))
+);
+
+ALTER TABLE public.deployment_regions OWNER TO aip_owner;
 
 -- Name: job_events; Type: TABLE; Schema: public
 CREATE TABLE public.job_events (
@@ -224,3 +278,27 @@ CREATE TABLE public.login_directory (
 );
 
 ALTER TABLE public.login_directory OWNER TO aip_owner;
+
+-- Name: tenants; Type: TABLE; Schema: public
+CREATE TABLE public.tenants (
+    id uuid NOT NULL,
+    name text NOT NULL,
+    slug text NOT NULL,
+    deployment_shape text DEFAULT 'pooled'::text NOT NULL,
+    region_code text NOT NULL,
+    kms_key_ref text,
+    status text DEFAULT 'provisioning'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_tenants_deployment_shape CHECK ((deployment_shape = ANY (ARRAY['pooled'::text, 'siloed'::text]))),
+    CONSTRAINT ck_tenants_id CHECK ((id <> '00000000-0000-0000-0000-000000000000'::uuid)),
+    CONSTRAINT ck_tenants_kms_key_ref CHECK ((kms_key_ref <> ''::text)),
+    CONSTRAINT ck_tenants_name CHECK ((btrim(name) <> ''::text)),
+    CONSTRAINT ck_tenants_slug CHECK ((slug ~ '^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$'::text)),
+    CONSTRAINT ck_tenants_status CHECK ((status = ANY (ARRAY['provisioning'::text, 'active'::text, 'suspended'::text, 'offboarding'::text, 'offboarded'::text])))
+);
+
+ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.tenants OWNER TO aip_owner;
