@@ -14,7 +14,7 @@ WORKDIR /repo
 
 COPY . .
 RUN pnpm install --frozen-lockfile --filter "@aip/web..." \
-    && pnpm --filter @aip/web build
+    && pnpm --filter "@aip/web..." build
 
 
 FROM nginxinc/nginx-unprivileged:1.30.5-alpine AS runtime

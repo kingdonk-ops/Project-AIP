@@ -58,6 +58,5 @@ the client isn't set up, the inspector records a witness note and the client con
 - Coolify API key: owner decided (2026-10-08) to keep the key that was pasted in chat for now. Rotate it before any
   real customer data goes onto Coolify; store the replacement only as GitHub Actions secrets (`COOLIFY_TOKEN`,
   `COOLIFY_WEBHOOK`).
-- The Everything Claude Code plugin's `config-protection` hook blocks agents from writing `eslint.config.*` files. DESIGN-01 needs `packages/ui/eslint.config.mjs`, and the web app's lint config should extend the shared boundaries config (ARCH-03). Either turn that hook off for this project, or add the file yourself from the drafted config.
 - In GitHub branch protection for `main`, mark the `boundaries` check (ARCH-03) as required.
 - Optional: add repository secrets `COSIGN_PRIVATE_KEY` and `COSIGN_PASSWORD` (from `cosign generate-key-pair`) so CI image signatures use a real key instead of a throwaway one.

@@ -1,3 +1,5 @@
+import "@aip/ui/tokens.css";
+import "@aip/ui/styles.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
