@@ -55,3 +55,7 @@ Run jobs through Procrastinate (Postgres-backed, asyncio) with timeouts, memory 
   - **unit**:
     - `enqueue` for an unregistered type raises `UnknownJobType`.
     - The retry wait for attempt 3 is greater than for attempt 1.
+
+## Carried forward from TENANCY-01 security review (non-blocking)
+
+- `aip_jobs` has no SELECT on `tenants` (it does on `deployment_regions`). That fails closed, but worker code that reads `tenants` will fail once jobs run as `aip_jobs`: grant the minimum column-level SELECT it needs in a new revision, or have jobs receive the tenant fields they need in the payload.

@@ -20,8 +20,8 @@ The queue tables are infrastructure, not tenant tables: their `args` carry only 
 ids (never payloads), so they have no `tenant_id` and no RLS. Tenant isolation of the job data
 lives in `jobs`/`job_events`, which the worker reads inside `with_tenant`.
 
-Revision ID: 202610080900
-Revises: 202610080600
+Revision ID: 202610081200
+Revises: 202610081122
 Create Date: 2026-10-08 09:00:00+00:00
 """
 
@@ -29,8 +29,8 @@ Create Date: 2026-10-08 09:00:00+00:00
 
 from alembic import op
 
-revision: str = "202610080900"
-down_revision: str | None = "202610080600"
+revision: str = "202610081200"
+down_revision: str | None = "202610081122"
 branch_labels = None
 depends_on = None
 

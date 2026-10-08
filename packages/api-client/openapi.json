@@ -155,6 +155,89 @@
         "title": "ModuleInfo",
         "type": "object"
       },
+      "TenantErrorBody": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "TenantErrorBody",
+        "type": "object"
+      },
+      "TenantErrorResponse": {
+        "description": "Body of a 401/403 from ``require_active_tenant``. Never names the tenant.",
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/TenantErrorBody"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "TenantErrorResponse",
+        "type": "object"
+      },
+      "TenantView": {
+        "additionalProperties": false,
+        "description": "The caller's tenant as other modules and the API see it.",
+        "properties": {
+          "deploymentShape": {
+            "enum": [
+              "pooled",
+              "siloed"
+            ],
+            "title": "Deploymentshape",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "regionCode": {
+            "title": "Regioncode",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "provisioning",
+              "active",
+              "suspended",
+              "offboarding",
+              "offboarded"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "regionCode",
+          "deploymentShape",
+          "status"
+        ],
+        "title": "TenantView",
+        "type": "object"
+      },
       "VersionResponse": {
         "description": "Body of GET /api/v1/platform/version. Changing it changes the generated client.",
         "properties": {
@@ -343,6 +426,47 @@
         "summary": "Ready",
         "tags": [
           "platform"
+        ]
+      }
+    },
+    "/api/v1/me/tenant": {
+      "get": {
+        "operationId": "tenancy_get_my_tenant",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantView"
+                }
+              }
+            },
+            "description": "The caller's active tenant."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantErrorResponse"
+                }
+              }
+            },
+            "description": "No authenticated principal, or no known tenant for it."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantErrorResponse"
+                }
+              }
+            },
+            "description": "The tenant is suspended, offboarded or not ready."
+          }
+        },
+        "summary": "Get My Tenant",
+        "tags": [
+          "tenancy"
         ]
       }
     },

@@ -50,6 +50,9 @@ class RequestContext:
     ``asset_path_scope`` lists the ltree asset paths (and their subtrees) the actor may access.
     An EMPTY ``asset_path_scope`` means NO asset access - it is never "unrestricted". Code that
     filters by asset must deny when the scope is empty, not skip the filter.
+
+    ``tenant_slug`` and ``region_code`` are ``None`` until the tenant has been loaded and found
+    active (tenancy's ``require_active_tenant``, TENANCY-01); never trust them before that.
     """
 
     tenant_id: UUID
@@ -57,6 +60,8 @@ class RequestContext:
     project_id: UUID | None = None
     actor_id: UUID | None = None
     asset_path_scope: tuple[str, ...] = ()
+    tenant_slug: str | None = None
+    region_code: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.tenant_id, UUID):  # pyright: ignore[reportUnnecessaryIsInstance]

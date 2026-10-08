@@ -51,3 +51,8 @@ Enforce per-tenant IP allow-lists and add security headers in the FastAPI backen
 ## Carried forward from IDENTITY-01 (non-blocking)
 
 - The login rate limit keys on the client address. Behind Coolify/nginx or an ALB that is the proxy's address, so only trust `X-Forwarded-For` from configured proxy hops (uvicorn `--forwarded-allow-ips` or an explicit trusted-proxy list) and test that a spoofed header from an untrusted peer is ignored.
+
+## Carried forward from TENANCY-01 security review (non-blocking)
+
+- The seeds (`tenancy` and `identity`) refuse to run only when `AIP_ENV` is exactly `production`, so `prod`, `Production` or a trailing space would let them run. Normalise the value and deny anything not on an allow-list (development, test, ci, staging), in one shared helper used by every seed.
+- The tenancy seed resets `status = 'active'` and `deleted_at = NULL` on every run, so a suspended or soft-deleted demo tenant in staging is reactivated by the next `compose up`. Documented as intended; revisit when staging exists.

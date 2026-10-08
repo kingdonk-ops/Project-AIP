@@ -1,0 +1,16 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+# TENANCY-01: tenants, deployment regions, fixture tenants and tenant resolution.
+#   Route: GET /api/v1/me/tenant (guarded by require_active_tenant).
+#   Region labels are the terminology keys in deployment_regions.label_key.
+id = "tenancy"
+context = "tenancy"
+depends_on = []
+permissions = []
+events = []
+subscribes = []
+settings = []
+term_keys = [
+  "tenancy.region.ap_southeast_2",
+  "tenancy.region.eu_west_2",
+  "tenancy.region.ap_southeast_1",
+]

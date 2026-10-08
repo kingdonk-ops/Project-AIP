@@ -235,7 +235,11 @@ def test_allow_listed_tables_are_exempt_only_from_the_checks_they_name(migrated_
         asyncio.run(
             guard(
                 migrated_url,
-                "CREATE TABLE procrastinate_scratch (id bigint)",  # exempt: procrastinate_*
+                # The real tables may exist by now (TENANCY-01, OPS-02): swap in bare stand-ins. The
+                # scratch transaction is rolled back, so the real tables are untouched.
+                "DROP TABLE IF EXISTS procrastinate_jobs CASCADE",
+                "DROP TABLE IF EXISTS tenants CASCADE",
+                "CREATE TABLE procrastinate_jobs (id bigint)",  # exempt: queue internals
                 "CREATE TABLE tenants (id uuid)",  # exempt from nothing: keyed on id
             )
         )
@@ -253,6 +257,7 @@ def test_tenants_with_an_id_policy_passes_the_dedicated_rule(migrated_url: str) 
     found = asyncio.run(
         guard(
             migrated_url,
+            "DROP TABLE IF EXISTS tenants CASCADE",  # the real one exists since TENANCY-01
             "CREATE TABLE tenants (id uuid PRIMARY KEY, slug text NOT NULL)",
             "ALTER TABLE tenants ENABLE ROW LEVEL SECURITY",
             "ALTER TABLE tenants FORCE ROW LEVEL SECURITY",

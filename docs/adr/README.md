@@ -20,4 +20,5 @@ bullets and a row here; `tools/ci/check_adrs.py` enforces this in CI (`make chec
 | [0012](0012-runtime-roles-in-cluster-bootstrap.md) | Runtime DB roles (`aip_app`, `aip_jobs`, `aip_readonly`) are created by the superuser cluster bootstrap; revisions only verify and grant | accepted |
 | [0013](0013-security-scanning-and-signing.md) | Security CI: permissive free scanners, expiring vuln exceptions, key-based cosign without public log | accepted |
 | [0014](0014-ofl-fonts-allowed.md) | SIL OFL-1.1 allowed in the licence policy so IBM Plex fonts can be self-hosted | accepted |
-| [0015](0015-job-runner-semantics.md) | Job runner on Procrastinate: queue tables in public with narrow grants, lock slots for the per-tenant cap, `max_attempts` = total tries, atomic enqueue | accepted |
+| [0015](0015-tenant-row-and-tenant-resolution.md) | `tenants` read-only for the app (RLS `id = app.tenant_id`), shared fixture tenant ids, fail-closed tenant resolution errors | proposed |
+| [0016](0016-job-runner-semantics.md) | Job runner on Procrastinate: queue tables in public with narrow grants, lock slots for the per-tenant cap, `max_attempts` = total tries, atomic enqueue | accepted |

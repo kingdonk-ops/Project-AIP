@@ -53,3 +53,7 @@ CI fails when any table in the migrated schema lacks `tenant_id`, `ENABLE` and `
 ## Carried forward from IDENTITY-01 (non-blocking)
 
 - Add `login_directory` to the cross-tenant test's allow-list of global (no-RLS) tables, and assert that `aip_app` has no table privileges on it, only EXECUTE on `identity_resolve_login`.
+
+## Carried forward from TENANCY-01 (non-blocking)
+
+- Allow-list the global, non-tenant tables: `deployment_regions` (reference data, read-only for runtime roles) and `login_directory` (IDENTITY-01, no runtime privileges, read only through `identity_resolve_login`). `tenants` has no `tenant_id` column: its FORCE RLS policy is `id = app.tenant_id`, so the guard must accept `id` as the tenant key for that table.

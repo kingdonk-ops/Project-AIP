@@ -1,4 +1,4 @@
-# ADR 0015: Job runner semantics on Procrastinate (queue schema, locks, tries, privileges)
+# ADR 0016: Job runner semantics on Procrastinate (queue schema, locks, tries, privileges)
 
 - **Status:** accepted (builds on ADR 0003; no owner decision reversed)
 - **Date:** 2026-10-08
@@ -41,6 +41,11 @@ means. The task text still said arq; it is translated per ADR 0001 and 0003.
   use `DATABASE_JOBS_URL`. The psycopg pool is created in `aip.platform.jobs.app`, because
   Procrastinate owns that connection; the engine boundary test still holds (no raw driver
   connect calls).
+- **Licences.** Procrastinate is MIT, but it requires `psycopg` and `psycopg-pool` (LGPL-3.0-only),
+  which the policy only lets through in sandbox image SBOMs. Per ADR 0011 (free licences are fine),
+  `config/licence-policy.json` gets two named `exceptions` (expiring 2027-04-06) for these two
+  packages, imported unmodified, not vendored or patched. `allow`/`deny` and the general LGPL rule
+  are unchanged. The owner is asked to confirm them in `tracking/OPEN-QUESTIONS.md`.
 
 ## Consequences
 
