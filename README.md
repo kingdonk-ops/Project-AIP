@@ -18,6 +18,7 @@ IFC/OCR/PDF signing. **Frontends:** TypeScript · Vite + React (web, offline fie
 | Path | What |
 |---|---|
 | [AGENTS.md](AGENTS.md) | **Start here if you're an agent.** The one-task loop and what to read |
+| [docs/handover/CLAUDE-HANDOVER.md](docs/handover/CLAUDE-HANDOVER.md) | **Taking over from another coordinating agent?** Current state, workflow, rules and next steps |
 | [tracking/BOARD.md](tracking/BOARD.md) | Every task, its wave, dependencies and status |
 | [tracking/PROGRESS.md](tracking/PROGRESS.md) | Milestones and the change log |
 | [tracking/OPEN-QUESTIONS.md](tracking/OPEN-QUESTIONS.md) | Decisions waiting on the owner |
