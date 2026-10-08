@@ -3,7 +3,7 @@
 # Build from the repository root:
 #   docker build -f infra/docker/migrator.Dockerfile -t aip-migrator .
 #   docker run --rm -e DATABASE_MIGRATOR_URL=postgresql://aip_owner:...@db:5432/aip aip-migrator
-FROM python:3.12-slim
+FROM python:3.12.15-slim-bookworm
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /usr/local/bin/uv
 

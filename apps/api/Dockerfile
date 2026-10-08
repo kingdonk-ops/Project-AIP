@@ -5,6 +5,12 @@
 #   docker build -f apps/api/Dockerfile --build-arg GIT_SHA=$(git rev-parse HEAD) \
 #     --build-arg BUILD_ID=local -t aip-api .
 # GIT_SHA and BUILD_ID become image labels and env; GET /api/v1/platform/version reports them.
+#
+# Stages (SECURITY-08): `build` installs the runtime dependencies and the package, then runs the
+# production strip check on the result; `runtime` (the default, last stage) copies only /opt/venv
+# and the Alembic scripts, so uv, the source tree, tests and dev dependencies never reach it.
+# `dev` adds the dev dependency group; it exists only as the strip test's negative control
+# (`--target dev` must fail tools/ci/check_prod_strip.py) and is never shipped.
 
 ARG PYTHON_IMAGE=python:3.12.15-slim-bookworm
 
@@ -29,6 +35,17 @@ RUN uv sync --frozen --no-dev --package aip --no-install-workspace
 COPY apps/api apps/api
 RUN uv sync --frozen --no-dev --package aip --no-editable
 
+# Strip guard (SECURITY-08): no forbidden module, dev-only module, test file or debug route in the
+# installed package. .dockerignore already leaves out tests and the module template.
+COPY config/prod-strip-manifest.txt tools/ci/check_prod_strip.py /strip/
+RUN /opt/venv/bin/python -I /strip/check_prod_strip.py --manifest /strip/prod-strip-manifest.txt api-env
+
+
+# Negative control for the strip test only. Never pushed or deployed.
+FROM build AS dev
+RUN uv sync --frozen --package aip --no-editable
+ENV PATH="/opt/venv/bin:${PATH}"
+
 
 FROM ${PYTHON_IMAGE} AS runtime
 
@@ -50,6 +67,7 @@ RUN apt-get update \
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    AIP_ENV=production \
     AIP_ALEMBIC_CONFIG=/app/apps/api/alembic.ini \
     GIT_SHA="${GIT_SHA}" \
     BUILD_ID="${BUILD_ID}"

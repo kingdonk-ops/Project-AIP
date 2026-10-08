@@ -1,0 +1,269 @@
+name: security
+
+# SECURITY-08: production strip test and the security scanning gates.
+#   images   build the API and web images, prove dev tooling is stripped (tests + negative controls),
+#            Trivy image scan (fails on fixable HIGH/CRITICAL unless excepted), syft SBOMs, cosign
+#            signature over the image digests and SBOMs; uploads everything as evidence.
+#   deps     pip-audit (Python runtime deps), pnpm audit (JS workspace), bandit (API source).
+#   secrets  gitleaks over the full git history, plus a planted-secret negative control.
+# Exceptions: config/vuln-exceptions.txt (expiry per entry; tools/ci/check_vuln_exceptions.py).
+# Tools and licences (all usable without a paid account): Trivy Apache-2.0, syft Apache-2.0,
+# cosign Apache-2.0, gitleaks MIT (CLI image, not gitleaks-action, which needs a licence key for
+# organisations), pip-audit Apache-2.0, bandit Apache-2.0, pnpm MIT. See ADR 0013.
+# Scanner images are pinned by tag and digest; third-party actions by commit SHA.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 19 * * 1" # weekly, so new CVEs in unchanged code still surface
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TRIVY_IMAGE: aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+  GITLEAKS_IMAGE: zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+  COSIGN_IMAGE: ghcr.io/sigstore/cosign/cosign:v3.1.1@sha256:6bbe0d281d955c79f85b325f0f7e651c1bcab5a4fa4ad4903d74955178a3b2eb
+  SYFT_VERSION: v1.33.0
+  PIP_AUDIT_VERSION: "2.10.1"
+  BANDIT_VERSION: "1.9.4"
+
+jobs:
+  images:
+    name: Images (strip test, Trivy, SBOM, signing)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      API_IMAGE: aip-api:security-${{ github.sha }}
+      API_DEV_IMAGE: aip-api-dev:security-${{ github.sha }}
+      WEB_IMAGE: aip-web:security-${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: |
+          uv sync --all-packages --frozen
+          pnpm install --frozen-lockfile
+      - name: Exception file is valid (no expired or unexplained entries)
+        run: python3 tools/ci/check_vuln_exceptions.py
+
+      - name: Build the production images and the dev negative control
+        run: |
+          docker build -f apps/api/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t "$API_IMAGE" .
+          docker build -f apps/api/Dockerfile --target dev -t "$API_DEV_IMAGE" .
+          docker build -f apps/web/Dockerfile -t "$WEB_IMAGE" .
+      - name: Build the web app in production and development mode
+        run: |
+          pnpm --filter @aip/web build
+          NODE_ENV=development pnpm --filter @aip/web exec vite build --mode development \
+            --sourcemap --outDir "$RUNNER_TEMP/web-dev-dist"
+
+      - name: Production strip test (API and web; dev builds must fail)
+        env:
+          AIP_TEST_API_IMAGE: ${{ env.API_IMAGE }}
+          AIP_TEST_API_DEV_IMAGE: ${{ env.API_DEV_IMAGE }}
+          AIP_TEST_WEB_IMAGE: ${{ env.WEB_IMAGE }}
+          AIP_TEST_WEB_DIST: ${{ github.workspace }}/apps/web/dist
+          AIP_TEST_WEB_DEV_DIST: ${{ runner.temp }}/web-dev-dist
+          AIP_TEST_GITLEAKS_IMAGE: ${{ env.GITLEAKS_IMAGE }}
+        run: |
+          uv run pytest -q -p no:cacheprovider -rs apps/api/tests/security | tee strip.log
+          if grep -q "SKIPPED" strip.log; then echo "::error::a strip test was skipped in CI"; exit 1; fi
+
+      - name: Trivy gate negative controls (known HIGH fails, exception passes, expired fails)
+        run: |
+          set -u
+          fixture="$RUNNER_TEMP/vuln-fixture"; cache="$RUNNER_TEMP/trivy-cache"
+          mkdir -p "$fixture" "$cache"
+          # Generated here so no vulnerable manifest is committed: Django 2.2.0 has fixed HIGHs.
+          echo "django==2.2.0" > "$fixture/requirements.txt"
+          trivy() {
+            docker run --rm -v "$fixture:/scan:ro" -v "$cache:/root/.cache" "$TRIVY_IMAGE" \
+              fs --quiet --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$@" /scan
+          }
+          if trivy --format json --output /root/.cache/fixture.json; then
+            echo "::error::Trivy passed a known-HIGH fixture"; exit 1
+          fi
+          python3 - "$cache/fixture.json" "$cache" <<'EOF'
+          import datetime as dt, json, sys
+          from pathlib import Path
+          report, out = json.load(open(sys.argv[1])), Path(sys.argv[2])
+          ids = sorted({v["VulnerabilityID"] for r in report.get("Results", [])
+                        for v in r.get("Vulnerabilities") or []})
+          assert ids, "fixture produced no findings"
+          future = dt.date.today() + dt.timedelta(days=30)
+          out.joinpath("ignore-future").write_text("".join(f"{i} exp:{future}\n" for i in ids))
+          out.joinpath("ignore-past").write_text("".join(f"{i} exp:2020-01-01\n" for i in ids))
+          print(f"{len(ids)} HIGH/CRITICAL findings in the fixture")
+          EOF
+          trivy --ignorefile /root/.cache/ignore-future
+          if trivy --ignorefile /root/.cache/ignore-past; then
+            echo "::error::Trivy honoured an expired exception"; exit 1
+          fi
+
+      - name: Trivy image scan (fixable HIGH/CRITICAL fail unless excepted)
+        run: |
+          mkdir -p evidence
+          cache="$RUNNER_TEMP/trivy-cache"; mkdir -p "$cache"
+          fail=0
+          for image in "$API_IMAGE" "$WEB_IMAGE"; do
+            name="${image%%:*}"
+            for format in table json; do
+              docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                -v "$cache:/root/.cache" -v "$PWD/config:/cfg:ro" -v "$PWD/evidence:/out" \
+                "$TRIVY_IMAGE" image --quiet --scanners vuln --severity HIGH,CRITICAL \
+                --ignore-unfixed --ignorefile /cfg/vuln-exceptions.txt --exit-code 1 \
+                --format "$format" --output "/out/trivy-$name.$format" "$image" || fail=1
+            done
+            cat "evidence/trivy-$name.table"
+          done
+          exit $fail
+
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          syft-version: ${{ env.SYFT_VERSION }}
+      - name: SBOMs of the images (syft, CycloneDX)
+        run: |
+          for image in "$API_IMAGE" "$WEB_IMAGE"; do
+            name="${image%%:*}"
+            syft scan "docker:$image" -q -o "cyclonedx-json=evidence/sbom-$name.cdx.json"
+          done
+          ls -l evidence
+      - name: Image digests
+        run: |
+          {
+            echo "commit $GITHUB_SHA"
+            for image in "$API_IMAGE" "$WEB_IMAGE"; do
+              echo "${image%%:*} $(docker image inspect --format '{{.Id}}' "$image")"
+            done
+          } > evidence/image-digests.txt
+          cat evidence/image-digests.txt
+      - name: Sign the digests and SBOMs (cosign, key-based, no public transparency log)
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_KEY_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          keys="$RUNNER_TEMP/cosign-keys"; mkdir -p "$keys"
+          cosign() {
+            docker run --rm -u "$(id -u):$(id -g)" -e COSIGN_PASSWORD \
+              -v "$PWD/evidence:/w" -v "$keys:/keys" -w /w "$COSIGN_IMAGE" "$@"
+          }
+          if [ -n "$COSIGN_PRIVATE_KEY" ]; then
+            printf '%s\n' "$COSIGN_PRIVATE_KEY" > "$keys/cosign.key"
+            export COSIGN_PASSWORD="$COSIGN_KEY_PASSWORD"
+            cosign public-key --key /keys/cosign.key > evidence/cosign.pub
+          else
+            # Proves the signing pipeline only; set COSIGN_PRIVATE_KEY/COSIGN_PASSWORD for trust.
+            echo "::warning::COSIGN_PRIVATE_KEY is not set: signing with an ephemeral key"
+            export COSIGN_PASSWORD="ephemeral-$GITHUB_RUN_ID"
+            docker run --rm -u "$(id -u):$(id -g)" -e COSIGN_PASSWORD \
+              -v "$keys:/keys" -w /keys "$COSIGN_IMAGE" generate-key-pair
+            cp "$keys/cosign.pub" evidence/cosign.ephemeral.pub
+          fi
+          pub=cosign.pub
+          if [ -f evidence/cosign.ephemeral.pub ]; then pub=cosign.ephemeral.pub; fi
+          for file in image-digests.txt sbom-aip-api.cdx.json sbom-aip-web.cdx.json; do
+            cosign sign-blob --yes --key /keys/cosign.key --use-signing-config=false \
+              --tlog-upload=false --bundle "$file.sigstore.json" "$file"
+            cosign verify-blob --key "$pub" --insecure-ignore-tlog=true \
+              --bundle "$file.sigstore.json" "$file"
+          done
+          rm -rf "$keys"
+
+      - name: Upload evidence (SBOMs, scan reports, digests, signatures)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-evidence-${{ github.sha }}
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 90
+
+  deps:
+    name: Dependencies and SAST (pip-audit, pnpm audit, bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Exception file is valid
+        run: python3 tools/ci/check_vuln_exceptions.py
+      - name: pip-audit (Python runtime dependencies from uv.lock)
+        run: |
+          mkdir -p evidence
+          uv export --frozen --no-dev --all-packages --no-emit-workspace --no-header \
+            --format requirements-txt -o "$RUNNER_TEMP/requirements.txt" > /dev/null
+          ignores=()
+          for id in $(python3 tools/ci/check_vuln_exceptions.py --ids); do ignores+=(--ignore-vuln "$id"); done
+          uvx "pip-audit==$PIP_AUDIT_VERSION" -r "$RUNNER_TEMP/requirements.txt" --require-hashes \
+            --disable-pip --progress-spinner off --format json --output evidence/pip-audit.json \
+            "${ignores[@]}" || { cat evidence/pip-audit.json; exit 1; }
+          echo "pip-audit: no known vulnerabilities"
+      - name: pnpm audit (HIGH/CRITICAL fail unless excepted)
+        run: |
+          pnpm install --frozen-lockfile
+          # pnpm's --ignore persists IDs with no expiry, so the JSON report is gated instead.
+          pnpm audit --json > evidence/pnpm-audit.json || true
+          python3 tools/ci/check_vuln_exceptions.py --pnpm-audit evidence/pnpm-audit.json
+      - name: bandit (API source, medium severity and confidence and up)
+        run: |
+          uvx "bandit==$BANDIT_VERSION" -r apps/api/aip -x '*/tests/*,*/_template/*' \
+            --severity-level medium --confidence-level medium
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-audit-${{ github.sha }}
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 90
+
+  secrets:
+    name: Secrets (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the full history, not just the tip
+          persist-credentials: false
+      - name: gitleaks over the full git history
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' \
+            "$GITLEAKS_IMAGE" git --no-banner --redact -v /repo
+      - name: Negative control (a planted fake AWS key fails gitleaks)
+        run: |
+          planted="$RUNNER_TEMP/planted"; mkdir -p "$planted"
+          # Generated at run time, so no key-shaped string is committed.
+          key="AKIA$(python3 -c 'import secrets; print("".join(secrets.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567") for _ in range(16)))')"
+          echo "AWS_ACCESS_KEY_ID = \"$key\"" > "$planted/settings.py"
+          if docker run --rm -v "$planted:/scan:ro" "$GITLEAKS_IMAGE" dir --no-banner --redact /scan; then
+            echo "::error::gitleaks passed a planted AWS key"; exit 1
+          fi
+          echo "gitleaks failed the planted secret, as it must"
