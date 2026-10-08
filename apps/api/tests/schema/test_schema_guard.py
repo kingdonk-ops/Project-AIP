@@ -235,7 +235,7 @@ def test_allow_listed_tables_are_exempt_only_from_the_checks_they_name(migrated_
         asyncio.run(
             guard(
                 migrated_url,
-                "CREATE TABLE procrastinate_jobs (id bigint)",  # exempt: queue internals
+                "CREATE TABLE procrastinate_scratch (id bigint)",  # exempt: procrastinate_*
                 "CREATE TABLE tenants (id uuid)",  # exempt from nothing: keyed on id
             )
         )
