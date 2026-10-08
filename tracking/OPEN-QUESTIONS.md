@@ -14,6 +14,8 @@ becomes an ADR update. **Bold** questions block M0.
 - 2026-10-07 — **Frontends:** Vite for all three apps. → ADR 0004.
 - 2026-10-07 — **Sign-in:** Keycloak handles all staff sign-in; backend issues sessions and builds field PIN, portal links, SCIM. → ADR 0005 rev 2.
 - 2026-10-07 — **Sign-off assurance:** one quick check at signing (passkey, company device + PIN, code, or company MFA); per-tenant minimum; supervisor countersign fallback. Field-PIN users can sign on a registered device. → ADR 0010, task IDENTITY-07.
+- 2026-10-08 — **Licence policy:** any free licence is fine; no paid commercial licences (build it ourselves instead). → ADR 0011 accepted.
+- 2026-10-08 — **Provenance log:** initialled by the owner (KK).
 
 Nothing blocks M0 now.
 
@@ -52,10 +54,10 @@ the client isn't set up, the inspector records a witness note and the client con
 
 ## Also waiting on the owner
 
-- Initial the provenance log ([`docs/security/provenance-log.md`](../docs/security/provenance-log.md)) to confirm AIP was not read or copied.
-- Rotate the Coolify API key that was pasted in chat, then store the new one only as GitHub Actions secrets
-  (`COOLIFY_TOKEN`, `COOLIFY_WEBHOOK`). This is needed before OPS-11.
-- Confirm ADR 0011 (licence policy details, proposed in STACK-04): the extra permissive licences we already use, and the narrower rule for OS packages inside container images (GPL tools such as bash ship in every Debian base image; only AGPL/SSPL and named packages are denied there).
+- Coolify API key: owner decided (2026-10-08) to keep the key that was pasted in chat for now. Rotate it before any
+  real customer data goes onto Coolify; store the replacement only as GitHub Actions secrets (`COOLIFY_TOKEN`,
+  `COOLIFY_WEBHOOK`).
 - The Everything Claude Code plugin's `config-protection` hook blocks agents from writing `eslint.config.*` files. DESIGN-01 needs `packages/ui/eslint.config.mjs`, and the web app's lint config should extend the shared boundaries config (ARCH-03). Either turn that hook off for this project, or add the file yourself from the drafted config.
 - In GitHub branch protection for `main`, mark the `boundaries` check (ARCH-03) as required.
-
+- Confirm ADR 0013 (security scanners, expiring vulnerability exceptions, key-based image signing; proposed in SECURITY-08).
+- Optional: add repository secrets `COSIGN_PRIVATE_KEY` and `COSIGN_PASSWORD` (from `cosign generate-key-pair`) so CI image signatures use a real key instead of a throwaway one.

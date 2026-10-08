@@ -18,8 +18,8 @@ row by adding a new one.
 
 | Date | Reference area | Viewed by | Statement | Reviewer |
 |---|---|---|---|---|
-| 2026-10-07 | AIP codebase, schema and data — not read, not copied (ADR 0001); behaviour taken only from the blueprint text | All build agents (standing) | Not read, not copied: no AIP code, schema or data was read, and no code or schema was copied. | pending (owner) |
-| 2026-10-07 | OpenConstructionERP — none viewed yet | — | No OpenConstructionERP source, schema or UI has been viewed by the build; no code or schema was copied. Blueprint module docs only mention it by name as a feature reference. | pending (owner) |
+| 2026-10-07 | AIP codebase, schema and data — not read, not copied (ADR 0001); behaviour taken only from the blueprint text | All build agents (standing) | Not read, not copied: no AIP code, schema or data was read, and no code or schema was copied. | KK 2026-10-08 |
+| 2026-10-07 | OpenConstructionERP — none viewed yet | — | No OpenConstructionERP source, schema or UI has been viewed by the build; no code or schema was copied. Blueprint module docs only mention it by name as a feature reference. | KK 2026-10-08 |
 
 ## Legal advice
 
