@@ -40,7 +40,12 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-DEFAULT_MANIFEST = Path(__file__).resolve().parents[2] / "config" / "prod-strip-manifest.txt"
+
+def _default_manifest() -> Path:
+    # Lazy: inside an image this file runs from stdin or /strip/, with no repo around it.
+    return Path(__file__).resolve().parents[2] / "config" / "prod-strip-manifest.txt"
+
+
 MANIFEST_ENV = "AIP_STRIP_MANIFEST"
 WEB_ROOT_IN_IMAGE = "/usr/share/nginx/html"
 KINDS = ("forbidden", "dev-module", "dev-glob", "image-path", "route", "web-glob", "web-marker")
@@ -114,7 +119,7 @@ def parse_manifest(text: str) -> StripManifest:
 
 
 def load_manifest(path: Path | None = None) -> StripManifest:
-    return parse_manifest((path or DEFAULT_MANIFEST).read_text(encoding="utf-8"))
+    return parse_manifest((path or _default_manifest()).read_text(encoding="utf-8"))
 
 
 # --- generic checks ----------------------------------------------------------------------------
@@ -163,7 +168,9 @@ def is_importable(module: str) -> bool:
 
 
 def check_imports(modules: Iterable[str], importable: Callable[[str], bool]) -> list[str]:
-    return [f"{m}: importable (must raise ImportError in production)" for m in modules if importable(m)]
+    return [
+        f"{m}: importable (must raise ImportError in production)" for m in modules if importable(m)
+    ]
 
 
 def _under(path: str, prefix: str) -> bool:
@@ -277,11 +284,26 @@ def _docker() -> str:
 def api_image_errors(image: str, manifest_text: str) -> tuple[int, str]:
     """Run ``api-env --image-paths`` inside ``image``. Returns (exit code, output)."""
     source = Path(__file__).read_text(encoding="utf-8")
-    result = subprocess.run(  # noqa: S603 - fixed argv, image name is the caller's
+    result = subprocess.run(
         [
-            _docker(), "run", "--rm", "-i", "--network", "none", "--read-only",
-            "--tmpfs", "/tmp", "-e", MANIFEST_ENV, "--entrypoint", "python", image,
-            "-I", "-", "api-env", "--image-paths",
+            _docker(),
+            "run",
+            "--rm",
+            "-i",
+            "--network",
+            "none",
+            "--read-only",
+            "--tmpfs",
+            "/tmp",
+            "-e",
+            MANIFEST_ENV,
+            "--entrypoint",
+            "python",
+            image,
+            "-I",
+            "-",
+            "api-env",
+            "--image-paths",
         ],
         input=source,
         capture_output=True,
@@ -294,19 +316,18 @@ def api_image_errors(image: str, manifest_text: str) -> tuple[int, str]:
 
 def web_image_errors(image: str, manifest: StripManifest) -> list[str]:
     docker = _docker()
-    created = subprocess.run(  # noqa: S603
-        [docker, "create", image], capture_output=True, text=True, check=True
-    )
+    created = subprocess.run([docker, "create", image], capture_output=True, text=True, check=True)
     container = created.stdout.strip()
     try:
         with tempfile.TemporaryDirectory() as tmp:
-            subprocess.run(  # noqa: S603
+            subprocess.run(
                 [docker, "cp", f"{container}:{WEB_ROOT_IN_IMAGE}", tmp],
-                capture_output=True, check=True,
+                capture_output=True,
+                check=True,
             )
             return scan_web_dist(Path(tmp) / PurePosixPath(WEB_ROOT_IN_IMAGE).name, manifest)
     finally:
-        subprocess.run([docker, "rm", "-f", container], capture_output=True, check=False)  # noqa: S603
+        subprocess.run([docker, "rm", "-f", container], capture_output=True, check=False)
 
 
 # --- CLI ---------------------------------------------------------------------------------------
@@ -338,7 +359,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.manifest is None and os.environ.get(MANIFEST_ENV):
             text = os.environ[MANIFEST_ENV]
         else:
-            text = (args.manifest or DEFAULT_MANIFEST).read_text(encoding="utf-8")
+            text = (args.manifest or _default_manifest()).read_text(encoding="utf-8")
         manifest = parse_manifest(text)
     except (OSError, ManifestError) as exc:
         print(f"check_prod_strip: manifest: {exc}", file=sys.stderr)
@@ -348,7 +369,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("\n".join(e.value for e in manifest.forbidden))
         return 0
     if args.command == "api-env":
-        return _report(api_env_errors(manifest, image_paths=args.image_paths), "the API environment")
+        return _report(
+            api_env_errors(manifest, image_paths=args.image_paths), "the API environment"
+        )
     if args.command == "api-image":
         code, output = api_image_errors(args.image, text)
         print(output, end="")

@@ -3,8 +3,10 @@
 
 config/vuln-exceptions.txt lists the vulnerabilities the security scans accept for now. It is in
 Trivy's ignore-file format, so Trivy reads it as is (``--ignorefile``) and itself stops ignoring an
-entry once its ``exp:`` date passes. pip-audit (``--ignore-vuln``) and pnpm audit (``--ignore``)
-get the IDs from ``--ids``.
+entry once its ``exp:`` date passes. pip-audit gets the IDs from ``--ids`` (``--ignore-vuln``).
+pnpm audit's own ``--ignore`` writes the ID into pnpm-workspace.yaml with no expiry, so its JSON
+report is gated here instead: ``--pnpm-audit REPORT.json`` fails on any HIGH/CRITICAL advisory
+that no entry covers (by CVE or GHSA id).
 
 Rules, one finding per broken entry:
 - each entry is ``<ID> exp:YYYY-MM-DD``; the ID is a CVE, GHSA or PYSEC id;
@@ -12,7 +14,8 @@ Rules, one finding per broken entry:
 - the expiry is in the future and at most 180 days ahead, so every exception is re-reviewed;
 - no ID appears twice.
 
-Usage: python3 tools/ci/check_vuln_exceptions.py [--file PATH] [--today YYYY-MM-DD] [--ids]
+Usage: python3 tools/ci/check_vuln_exceptions.py [--file PATH] [--today YYYY-MM-DD]
+       [--ids | --pnpm-audit REPORT.json]
 Exits 1 on findings; with --ids prints the IDs (one per line) when the file is valid.
 """
 
@@ -20,17 +23,19 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import re
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+
+GATED_SEVERITIES = ("high", "critical")
 
 DEFAULT_FILE = Path(__file__).resolve().parents[2] / "config" / "vuln-exceptions.txt"
 MAX_DAYS = 180
-VULN_ID = re.compile(
-    r"^(CVE-\d{4}-\d{4,}|GHSA(-[a-z0-9]{4}){3}|PYSEC-\d{4}-\d+)$"
-)
+VULN_ID = re.compile(r"^(CVE-\d{4}-\d{4,}|GHSA(-[a-z0-9]{4}){3}|PYSEC-\d{4}-\d+)$")
 WHY = re.compile(r"^#\s*why:\s*(\S.{8,})$")
 
 
@@ -97,11 +102,33 @@ def check_text(text: str, today: dt.date) -> list[str]:
     return validate(parse(text), today)
 
 
+def pnpm_audit_findings(report: dict[str, Any], accepted: set[str]) -> list[str]:
+    """HIGH/CRITICAL advisories in a ``pnpm audit --json`` report that no exception covers."""
+    findings: list[str] = []
+    advisories: dict[str, Any] = report.get("advisories") or {}
+    for advisory in advisories.values():
+        severity = str(advisory.get("severity", "")).lower()
+        if severity not in GATED_SEVERITIES:
+            continue
+        ghsa = str(advisory.get("github_advisory_id", ""))
+        cves = sorted(str(c) for c in advisory.get("cves") or [])
+        if ({ghsa, *cves}) & accepted:
+            continue
+        findings.append(
+            f"pnpm audit: {severity} {ghsa} {cves} in {advisory.get('module_name')}: "
+            f"{advisory.get('title')}"
+        )
+    return findings
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate config/vuln-exceptions.txt")
     parser.add_argument("--file", type=Path, default=DEFAULT_FILE)
     parser.add_argument("--today", type=dt.date.fromisoformat, default=dt.date.today())
     parser.add_argument("--ids", action="store_true", help="print the IDs when the file is valid")
+    parser.add_argument(
+        "--pnpm-audit", type=Path, help="gate a `pnpm audit --json` report on HIGH/CRITICAL"
+    )
     args = parser.parse_args(argv)
     text = args.file.read_text(encoding="utf-8")
     errors = check_text(text, args.today)
@@ -109,6 +136,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"{args.file}: {error}")
     if errors:
         return 1
+    if args.pnpm_audit is not None:
+        report = json.loads(args.pnpm_audit.read_text(encoding="utf-8"))
+        findings = pnpm_audit_findings(report, {e.id for e in parse(text)})
+        for finding in findings:
+            print(finding)
+        print(f"pnpm audit: {len(findings)} HIGH/CRITICAL advisory(ies) not excepted")
+        return 1 if findings else 0
     if args.ids:
         print("\n".join(e.id for e in parse(text)))
     return 0

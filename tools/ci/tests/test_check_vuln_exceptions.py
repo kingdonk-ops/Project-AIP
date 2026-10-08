@@ -6,6 +6,7 @@ Run from the repo root: python3 -m unittest tools/ci/tests/test_check_vuln_excep
 from __future__ import annotations
 
 import datetime as dt
+import json
 import subprocess
 import sys
 import tempfile
@@ -81,6 +82,37 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(cve.check_text("# no exceptions\n", today=TODAY), [])
 
 
+def advisory(severity: str, ghsa: str, *cves: str) -> dict[str, object]:
+    return {
+        "severity": severity,
+        "github_advisory_id": ghsa,
+        "cves": list(cves),
+        "module_name": "pkg",
+        "title": "t",
+    }
+
+
+class PnpmAuditGateTest(unittest.TestCase):
+    def test_high_and_critical_fail_unless_excepted(self) -> None:
+        report = {
+            "advisories": {
+                "1": advisory("high", "GHSA-aaaa-bbbb-cccc", "CVE-2026-0001"),
+                "2": advisory("critical", "GHSA-dddd-eeee-ffff"),
+                "3": advisory("moderate", "GHSA-gggg-hhhh-iiii", "CVE-2026-0009"),
+            }
+        }
+        findings = cve.pnpm_audit_findings(report, {"CVE-2026-0001"})
+        self.assertEqual(len(findings), 1, findings)
+        self.assertIn("GHSA-dddd-eeee-ffff", findings[0])
+
+    def test_ghsa_id_also_excepts(self) -> None:
+        report = {"advisories": {"1": advisory("high", "GHSA-aaaa-bbbb-cccc", "CVE-2026-0001")}}
+        self.assertEqual(cve.pnpm_audit_findings(report, {"GHSA-aaaa-bbbb-cccc"}), [])
+
+    def test_empty_report_passes(self) -> None:
+        self.assertEqual(cve.pnpm_audit_findings({"advisories": {}}, set()), [])
+
+
 class RepoFileTest(unittest.TestCase):
     def test_repo_file_is_valid_today(self) -> None:
         errors = cve.check_text(REPO_FILE.read_text(encoding="utf-8"), today=dt.date.today())
@@ -100,6 +132,28 @@ class CliTest(unittest.TestCase):
             result = self.run_cli("--file", str(path), "--today", "2026-10-07", "--ids")
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout.split(), ["CVE-2026-0001", "GHSA-abcd-efgh-ijkl"])
+
+    def test_pnpm_audit_cli_uses_the_exceptions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "x.txt"
+            path.write_text(GOOD, encoding="utf-8")
+            report = Path(tmp) / "audit.json"
+            report.write_text(
+                json.dumps(
+                    {"advisories": {"1": advisory("high", "GHSA-zzzz-zzzz-zzzz", "CVE-2026-0001")}}
+                ),
+                encoding="utf-8",
+            )
+            ok = self.run_cli(
+                "--file", str(path), "--today", "2026-10-07", "--pnpm-audit", str(report)
+            )
+            self.assertEqual(ok.returncode, 0, ok.stdout + ok.stderr)
+            path.write_text("# none\n", encoding="utf-8")
+            bad = self.run_cli(
+                "--file", str(path), "--today", "2026-10-07", "--pnpm-audit", str(report)
+            )
+            self.assertEqual(bad.returncode, 1, bad.stdout + bad.stderr)
+            self.assertIn("CVE-2026-0001", bad.stdout)
 
     def test_expired_entry_exits_1(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

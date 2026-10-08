@@ -1,5 +1,5 @@
 # `make check` runs every backend and frontend gate (ARCH-01). CI runs the same commands.
-.PHONY: check check-py check-ts check-docs check-boundaries check-client generate-client e2e install sbom
+.PHONY: check check-py check-ts check-docs check-boundaries check-client generate-client e2e install sbom strip-check
 
 install:
 	uv sync --all-packages --frozen
@@ -28,7 +28,7 @@ check-ts:
 	pnpm -r test
 
 # STACK-01: ADR record, errata marker and version pins; SECURITY-01: threat model and provenance log;
-# STACK-04: licence checker tests (the SBOMs themselves need network: run `make sbom`).
+# STACK-04: licence checker tests; SECURITY-08: strip manifest and vuln exception checkers (the SBOMs themselves need network: run `make sbom`).
 # Stdlib only (no uv/pnpm needed).
 check-docs:
 	python3 tools/ci/check_adrs.py
@@ -38,6 +38,8 @@ check-docs:
 	python3 tools/ci/check_generated_header.py
 	python3 -m unittest tools/ci/test_check_generated_header.py
 	python3 -m unittest tools/ci/tests/test_check_licences.py tools/ci/tests/test_sbom_fill_licences.py
+	python3 -m unittest tools/ci/tests/test_check_prod_strip.py tools/ci/tests/test_check_vuln_exceptions.py
+	python3 tools/ci/check_vuln_exceptions.py
 
 # STACK-03: regenerate the typed API client from the FastAPI schema, and the CI drift check
 # (fails on uncommitted changes under packages/api-client).
@@ -56,3 +58,12 @@ e2e:
 sbom:
 	tools/sbom.sh
 	python3 tools/ci/check_licences.py dist/sbom/*.cdx.json
+
+# SECURITY-08: build the production images (and the dev negative control) and run the strip test
+# against them, as .github/workflows/security.yml does. Needs Docker and network.
+strip-check:
+	docker build -f apps/api/Dockerfile -t aip-api:strip .
+	docker build -f apps/api/Dockerfile --target dev -t aip-api-dev:strip .
+	docker build -f apps/web/Dockerfile -t aip-web:strip .
+	AIP_TEST_API_IMAGE=aip-api:strip AIP_TEST_API_DEV_IMAGE=aip-api-dev:strip \
+	AIP_TEST_WEB_IMAGE=aip-web:strip uv run pytest -q -rs apps/api/tests/security
