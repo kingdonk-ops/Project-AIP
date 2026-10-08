@@ -39,6 +39,9 @@ testpaths = ["apps/api", "tools/tests"]
 addopts = ["--import-mode=importlib"]
 # Makes `tests.*` (fixture module packages, ARCH-02) importable alongside `aip`.
 pythonpath = ["apps/api"]
+# OPS-01: without this, importlib mode imports module test packages as `apps.api.aip.modules.<m>`
+# as well as `aip.modules.<m>`, so a module's tables.py would run twice on the shared MetaData.
+consider_namespace_packages = true
 norecursedirs = [".venv", "node_modules", "_template", ".*"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

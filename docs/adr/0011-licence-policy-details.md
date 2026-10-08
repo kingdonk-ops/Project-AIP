@@ -1,6 +1,6 @@
 # ADR 0011: Licence policy details for the CI check (allow-list additions, image OS packages)
 
-- **Status:** proposed
+- **Status:** accepted (owner, 2026-10-08: free licences of any type are fine; no paid commercial licences)
 - **Date:** 2026-10-07
 - **Affects:** STACK-04 (`config/licence-policy.json`, `tools/ci/check_licences.py`), SECURITY-08, apps/sandbox images
 
