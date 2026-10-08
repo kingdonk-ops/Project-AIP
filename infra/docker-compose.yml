@@ -36,10 +36,10 @@ x-api-build: &api-build
 # Settings shared by the API, the worker and the one-shot jobs that use the API image.
 x-app-env: &app-env
   AIP_ENV: ${AIP_ENV:-development}
-  # The request path connects as aip_app (DATABASE-02: the engine refuses owner logins). Jobs stay
-  # on aip_owner until OPS-02 grants aip_jobs.
+  # The request path connects as aip_app (DATABASE-02: the engine refuses owner logins); the
+  # worker connects as aip_jobs (OPS-02, ADR 0003).
   DATABASE_URL: ${DATABASE_URL:-postgresql://aip_app:aip_app_dev_only@postgres:5432/aip}
-  DATABASE_JOBS_URL: ${DATABASE_JOBS_URL:-postgresql://aip_owner:aip_owner_dev_only@postgres:5432/aip}
+  DATABASE_JOBS_URL: ${DATABASE_JOBS_URL:-postgresql://aip_jobs:aip_jobs_dev_only@postgres:5432/aip}
   REDIS_URL: ${REDIS_URL:-redis://valkey:6379/0}
   OBJECT_STORE: ${OBJECT_STORE:-minio}
   OBJECT_STORE_BUCKET: ${OBJECT_STORE_BUCKET:-aip}
@@ -72,6 +72,7 @@ services:
       # Read by docker/postgres/init/10-aip-bootstrap.sh on the first start only.
       AIP_OWNER_PASSWORD: ${AIP_OWNER_PASSWORD:-aip_owner_dev_only}
       AIP_APP_PASSWORD: ${AIP_APP_PASSWORD:-aip_app_dev_only}
+      AIP_JOBS_PASSWORD: ${AIP_JOBS_PASSWORD:-aip_jobs_dev_only}
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak_dev_only}
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -286,17 +287,18 @@ services:
       start_period: 10s
 
   worker:
-    # Same image as the API. A stub until OPS-02 adds the Procrastinate worker; it then becomes
-    # `procrastinate --app=aip.platform.jobs.app.app worker`.
+    # Same image as the API (OPS-02). Procrastinate worker as aip_jobs; SIGTERM finishes in-flight
+    # jobs. One process per queue group: add a service with `--queues pdf` / `--queues scan` for
+    # Gotenberg and sandbox work.
     <<: *app-hardening
     build: *api-build
     image: aip-api:${AIP_IMAGE_TAG:-dev}
     init: true
-    command:
-      - sh
-      - -c
-      - 'echo "worker stub - the Procrastinate worker arrives with OPS-02" && exec sleep infinity'
-    environment: *app-env
+    command: ["python", "-m", "aip.worker", "--queues", "default,import,outbox"]
+    stop_grace_period: 70s
+    environment:
+      <<: *app-env
+      WORKER_MEMORY_LIMIT_MB: ${WORKER_MEMORY_LIMIT_MB:-1024}
     depends_on:
       migrator:
         condition: service_completed_successfully

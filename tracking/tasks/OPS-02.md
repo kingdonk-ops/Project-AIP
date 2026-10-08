@@ -1,5 +1,5 @@
 # OPS-02 — Procrastinate worker and handler registry
-<!-- hand-edited: converted to Python backend per ADR 0001 (2026-10-07) -->
+<!-- hand-edited: arq replaced by Procrastinate per ADR 0003 -->
 
 | Field | Value |
 |---|---|

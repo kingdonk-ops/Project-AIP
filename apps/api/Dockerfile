@@ -1,6 +1,6 @@
 # API and worker image (STACK-05): one image, two commands.
 #   api:    uvicorn aip.main:create_app --factory --host 0.0.0.0 --port 8000
-#   worker: procrastinate worker once OPS-02 lands (a stub until then; see infra/docker-compose.yml)
+#   worker: python -m aip.worker --queues default,outbox (OPS-02; see infra/docker-compose.yml)
 # Build from the repository root:
 #   docker build -f apps/api/Dockerfile --build-arg GIT_SHA=$(git rev-parse HEAD) \
 #     --build-arg BUILD_ID=local -t aip-api .
