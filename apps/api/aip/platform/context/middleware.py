@@ -8,7 +8,8 @@ Per request:
 
 1. reuse the request id the outer ``RequestIdMiddleware`` (OPS-04) already set; standalone, read
    ``X-Request-Id`` when it is safe, otherwise generate a UUIDv7; echo it on every response;
-2. ask the injected ``PrincipalResolver`` for the verified principal (ADR 0005);
+2. ask the injected ``PrincipalResolver`` for the verified principal (ADR 0005); a principal
+   whose ``tenant_id`` is not a non-nil UUID is rejected with 401;
 3. if ``X-Project-Id`` is sent, require a valid UUID (400), an authenticated caller (401) and
    membership per the injected ``ProjectMembershipResolver`` (403); if either resolver raises,
    the error is logged with the request id and the request is rejected with 500 (still
@@ -101,6 +102,13 @@ class RequestContextMiddleware:
                 await reject(401, "Not authenticated")
                 return
             await self.app(scope, receive, send_with_request_id)
+            return
+
+        # A principal without a usable tenant id is not authenticated (TENANCY-01): fail closed
+        # with 401 before anything downstream, rather than a 500 from RequestContext.
+        tenant_id = principal.tenant_id
+        if not isinstance(tenant_id, UUID) or tenant_id.int == 0:  # pyright: ignore[reportUnnecessaryIsInstance]
+            await reject(401, "Not authenticated")
             return
 
         if project_id is not None:

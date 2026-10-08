@@ -227,6 +227,21 @@ services:
         condition: service_healthy
     restart: "no"
 
+  tenancy-seed:
+    # One-shot: the fixture tenants kaefer-demo and tenant-b (TENANCY-01). Idempotent; refuses to
+    # run when AIP_ENV=production. Runs before identity-seed (login_directory references tenants).
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    command: ["python", "-m", "aip.modules.tenancy.seed"]
+    environment:
+      AIP_ENV: ${AIP_ENV:-development}
+      DATABASE_MIGRATOR_URL: ${DATABASE_MIGRATOR_URL:-postgresql://aip_owner:aip_owner_dev_only@postgres:5432/aip}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    restart: "no"
+
   identity-seed:
     # One-shot: login_directory rows for the dev tenants (kaefer.test, acme.test; IDENTITY-01).
     # Idempotent; refuses to run when AIP_ENV=production.
@@ -239,6 +254,8 @@ services:
       DATABASE_MIGRATOR_URL: ${DATABASE_MIGRATOR_URL:-postgresql://aip_owner:aip_owner_dev_only@postgres:5432/aip}
     depends_on:
       migrator:
+        condition: service_completed_successfully
+      tenancy-seed:
         condition: service_completed_successfully
     restart: "no"
 
