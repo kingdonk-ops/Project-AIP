@@ -1,0 +1,4 @@
+# Reviewed false positives (gitleaks fingerprints: commit:file:rule:line). Each needs a reason.
+# IDENTITY-01 compose dev default PREAUTH_COOKIE_KEY: base64url of "dev-only-preauth-cookie-key-fake",
+# refused in production by IdentitySettings.
+09371a9ec7c012eb6b6ebf758c66ea38f90d588d:apps/api/aip/modules/identity/settings.py:generic-api-key:26

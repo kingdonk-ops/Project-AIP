@@ -57,3 +57,10 @@ On every merge to main, build the `aip/api` image (used by both the api and work
     - `tofu plan` on envs/staging shows only creates for ECR and OIDC resources.
   - **e2e**:
     - Merge a commit to main. Expected: within 30 minutes the staging `/api/v1/platform/version` returns that commit, and `aws ecr describe-images` shows the deployed digest with the tag equal to the SHA.
+
+## Carried forward from the STACK-05 security review (PR #18, non-blocking)
+
+- Add `cap_drop: [ALL]` to the third-party containers that tolerate it (valkey, gotenberg at least); they already have `no-new-privileges`.
+- Prefix compose interpolation variables (e.g. `AIP_DATABASE_URL`) so a developer's exported `DATABASE_URL` cannot silently leak into the stack, or document it in `.env.example`.
+- `apps/web/nginx.conf`: repeat `Referrer-Policy` inside `location` blocks that use `add_header` (nginx drops server-level headers there).
+- `GET /api/v1/platform/version` is public and opens a Postgres connection per request: cache the postgres value for a short TTL or rate-limit it, and list the version disclosure in the threat model.

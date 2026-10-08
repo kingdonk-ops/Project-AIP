@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -17,8 +20,25 @@ jobs:
       fail-fast: false
       matrix:
         python: ["3.12", "3.13"]
+    # Real Postgres for the DB tests (DATABASE-08): a service container, reached through
+    # AIP_TEST_DATABASE_URL. Locally the fixture falls back to Testcontainers when Docker runs.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: aip_test
+          POSTGRES_PASSWORD: aip_test
+          POSTGRES_DB: aip_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aip_test -d aip_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     env:
       UV_PYTHON: ${{ matrix.python }}
+      AIP_TEST_DATABASE_URL: postgresql://aip_test:aip_test@localhost:5432/aip_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -37,6 +57,202 @@ jobs:
         run: uv run pyright
       - name: Pytest
         run: uv run pytest -q
+
+  db:
+    name: Database (bootstrap, migrate, snapshot, check-schema, lint, migrator image)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aip
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d aip"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      # Throwaway CI-only credentials for the service container; not secrets.
+      SUPERUSER_URL: postgresql://postgres:postgres@localhost:5432/aip
+      DATABASE_MIGRATOR_URL: postgresql://aip_owner:aip_owner_ci@localhost:5432/aip
+      # psql and pg_dump come from the server's own image, so the client always matches it.
+      PG_DUMP: docker run --rm --network host -e PGPASSWORD pgvector/pgvector:pg16 pg_dump
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # aip-db lint diffs migrations/versions against origin/main
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install
+        run: uv sync --all-packages --frozen
+      - name: Bootstrap the cluster as superuser (db/bootstrap/00_cluster.sql)
+        run: >-
+          docker run --rm -i --network host
+          -e PGOPTIONS="-c aip.owner_password=aip_owner_ci"
+          pgvector/pgvector:pg16
+          psql "$SUPERUSER_URL" -v ON_ERROR_STOP=1 -f - < db/bootstrap/00_cluster.sql
+      - name: aip-db migrate
+        run: uv run aip-db migrate
+      - name: aip-db migrate again applies nothing
+        run: |
+          uv run aip-db migrate 2> second.log
+          cat second.log
+          if grep -q "Running upgrade" second.log; then echo "second migrate applied revisions"; exit 1; fi
+      - name: Schema snapshot is up to date
+        run: |
+          uv run aip-db snapshot
+          git diff --exit-code db/schema.snapshot.sql
+      - name: Migrated schema matches the declared tables
+        run: uv run aip-db check-schema
+      - name: Migration lint
+        run: uv run aip-db lint --base origin/main
+      - name: Build the migrator image
+        run: docker build -f infra/docker/migrator.Dockerfile -t aip-migrator:ci .
+      - name: Migrator image runs as non-root and migrates
+        run: |
+          uid=$(docker run --rm --entrypoint id aip-migrator:ci -u)
+          echo "uid=$uid"
+          test "$uid" != "0"
+          docker run --rm --network host -e DATABASE_MIGRATOR_URL aip-migrator:ci
+
+  # STACK-05: the local compose stack, end to end. Also the compose checks OPS-04 (ready probe)
+  # and STACK-02 (render, store, download) deferred to this task.
+  compose:
+    name: Compose stack (up --wait, non-root, version, ready probe, render-store-download)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COMPOSE: docker compose -f infra/docker-compose.yml
+      GIT_SHA: ${{ github.sha }}
+      BUILD_ID: ci-${{ github.run_id }}-${{ github.run_attempt }}
+      AIP_IMAGE_TAG: ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compose version
+        run: docker compose version
+      - name: Compose file is valid
+        run: |
+          $COMPOSE config --quiet
+          $COMPOSE --profile sandbox config --quiet
+      - name: Pull third-party images
+        run: $COMPOSE pull --ignore-buildable --quiet
+      - name: Build images (api, worker, migrator, web, sandbox)
+        run: $COMPOSE --profile sandbox build
+      - name: Start the stack and wait until every service is healthy (180 s)
+        run: timeout 240 $COMPOSE up --detach --wait --wait-timeout 180
+      - name: Migrator exited 0
+        run: |
+          cid=$($COMPOSE ps --all --quiet migrator)
+          code=$(docker inspect --format '{{.State.ExitCode}}' "$cid")
+          echo "migrator exit code: $code"
+          test "$code" = "0"
+      - name: OPS-04 ready probe returns 200 (the compose healthcheck's probe)
+        run: |
+          curl -fsS --max-time 10 http://localhost:8000/api/v1/health/ready | tee ready.json
+          python3 -c 'import json; b = json.load(open("ready.json")); assert b["status"] == "ok", b'
+      - name: api and worker run as UID 10001
+        run: |
+          for svc in api worker; do
+            uid=$($COMPOSE exec -T "$svc" id -u)
+            echo "$svc uid=$uid"
+            test "$uid" = "10001"
+          done
+      - name: No container runs as root
+        run: |
+          fail=0
+          for cid in $($COMPOSE ps --quiet); do
+            name=$(docker inspect --format '{{.Name}}' "$cid")
+            uids=$(docker top "$cid" -eo uid | tail -n +2 | sort -u | tr '\n' ' ')
+            echo "$name: process uids = $uids"
+            for uid in $uids; do
+              if [ "$uid" = "0" ]; then echo "::error::$name runs a process as root"; fail=1; fi
+            done
+          done
+          exit $fail
+      - name: Sandbox image runs non-root with no network
+        run: |
+          uid=$(docker run --rm --network none --read-only "aip-sandbox:$AIP_IMAGE_TAG" id -u)
+          echo "sandbox uid=$uid"
+          test "$uid" != "0"
+      - name: GET /api/v1/platform/version reports the built commit, Python 3.12 and Postgres 16
+        run: |
+          curl -fsS --max-time 10 http://localhost:8000/api/v1/platform/version | tee version.json
+          python3 - <<'EOF'
+          import json, os
+          body = json.load(open("version.json"))
+          deps = body["dependencies"]
+          assert body["commit"] == os.environ["GIT_SHA"], body
+          assert body["build"] == os.environ["BUILD_ID"], body
+          assert deps["python"].startswith("3.12"), deps
+          assert deps["postgres"].startswith("16"), deps
+          EOF
+      - name: Image label carries the commit
+        run: |
+          label=$(docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "aip-api:$AIP_IMAGE_TAG")
+          test "$label" = "$GIT_SHA"
+      - name: Web serves the app and proxies /api
+        run: |
+          curl -fsS --max-time 10 http://localhost:8080/ | grep -q '<div id="root">'
+          curl -fsS --max-time 10 http://localhost:8080/api/v1/platform/version > /dev/null
+      - name: IDENTITY-01 realms imported and login/start resolves the dev tenants
+        run: |
+          curl -fsS --max-time 10 http://localhost:8180/realms/aip/.well-known/openid-configuration \
+            | python3 -c 'import json,sys; b=json.load(sys.stdin); assert b["issuer"] == "http://localhost:8180/realms/aip", b["issuer"]'
+          curl -fsS --max-time 10 -o /dev/null http://localhost:8180/realms/mock-idp/.well-known/openid-configuration
+          for email in alice@kaefer.test x@unknown.test; do
+            curl -fsS --max-time 10 -X POST -H 'content-type: application/json' \
+              -d "{\"email\": \"$email\"}" http://localhost:8080/api/v1/auth/login/start > "start-$email.json"
+          done
+          python3 - <<'EOF'
+          import json
+          sso = json.load(open("start-alice@kaefer.test.json"))
+          unknown = json.load(open("start-x@unknown.test.json"))
+          assert sso["method"] == "sso" and "kc_idp_hint=kaefer-oidc" in sso["redirectUrl"], sso
+          assert unknown["method"] == "password" and "kc_idp_hint" not in unknown["redirectUrl"], unknown
+          assert set(sso) == set(unknown) == {"method", "redirectUrl"}
+          EOF
+      - name: STACK-02 render, store and download inside the api container
+        run: $COMPOSE exec -T api python - < infra/docker/smoke_render_store.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install
+        run: uv sync --all-packages --frozen
+      - name: STACK-02 e2e against the stack (fixture report text contains FX-0001)
+        env:
+          AIP_TEST_RUSTFS_URL: http://localhost:9000
+          AIP_TEST_RUSTFS_ACCESS_KEY: rustfs_dev_only
+          AIP_TEST_RUSTFS_SECRET_KEY: rustfs_dev_only_secret
+          AIP_TEST_GOTENBERG_URL: http://localhost:3000
+        run: >-
+          uv run pytest -q -p no:cacheprovider
+          "apps/api/tests/platform/capabilities/test_gotenberg.py::test_render_store_and_download_report"
+      - name: IDENTITY-01 sign-in flows against the compose Keycloak (SSO, OTP enrolment, lockout)
+        env:
+          AIP_TEST_KEYCLOAK_URL: http://localhost:8180
+          AIP_TEST_KEYCLOAK_ADMIN: admin
+          AIP_TEST_KEYCLOAK_ADMIN_PASSWORD: keycloak_admin_dev_only
+          AIP_TEST_KEYCLOAK_APP_ORIGIN: http://localhost:8080
+        run: uv run pytest -q -p no:cacheprovider apps/api/aip/modules/identity/tests/test_keycloak_flows.py
+      - name: Stack state and logs
+        if: failure()
+        run: |
+          $COMPOSE ps --all
+          $COMPOSE logs --no-color --timestamps --tail 300
+      - name: Tear down
+        if: always()
+        run: $COMPOSE --profile sandbox down --volumes --remove-orphans
 
   typescript:
     name: TypeScript (lint, typecheck, build, test)
@@ -61,19 +277,113 @@ jobs:
       - name: Web build output exists
         run: test -f apps/web/dist/index.html
 
+  # ARCH-03: a required status check in branch protection. Module boundaries and repo layout.
+  boundaries:
+    name: boundaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: |
+          uv sync --all-packages --frozen
+          pnpm install --frozen-lockfile
+      - name: Python import contracts (no-deep-module-import, platform-never-imports-modules)
+        run: uv run lint-imports --no-cache
+      - name: Module manifests declare the permissions, events and term keys their code uses
+        run: python3 tools/ci/check_manifests.py
+      - name: Repository layout (ADR 0004)
+        run: python3 tools/ci/check_layout.py
+      - name: ESLint boundaries (apps never import other apps)
+        run: pnpm -r lint
+
+  api-client:
+    name: Generated API client (header check, drift check) (STACK-03)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: |
+          uv sync --all-packages --frozen
+          pnpm install --frozen-lockfile
+      - name: Every generated file has the @generated header
+        run: python3 tools/ci/check_generated_header.py
+      - name: Client matches the API schema (drift check)
+        run: bash tools/ci/check_client_drift.sh
+      - name: Drift check integration tests
+        run: uv run pytest -q tools/tests/test_client_drift.py -p no:cacheprovider
+      - name: Web builds against the current schema
+        run: pnpm --filter web build
+
+  e2e:
+    name: E2E (Playwright, web)
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: |
+          uv sync --all-packages --frozen
+          pnpm install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: pnpm --filter e2e exec playwright install --with-deps chromium webkit
+      - name: Playwright
+        run: pnpm --filter e2e test:e2e
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: e2e/test-results
+          retention-days: 7
+
   layout:
     name: Repository layout (ADR 0004)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: No backend/, frontend/, services/ and no TypeScript under apps/api
+      - name: Alembic is the only migration path (DATABASE-08)
         run: |
           set -e
-          for d in backend frontend services; do
-            if [ -e "$d" ]; then echo "forbidden path: $d/"; exit 1; fi
-          done
-          if git ls-files 'apps/api' | grep -qE '\.(ts|tsx|mts|cts)$'; then
-            echo "TypeScript under apps/api"; exit 1
+          if [ -e db/migrations ]; then echo "forbidden path: db/migrations/"; exit 1; fi
+          if git ls-files | grep -E '(^|/)migrations/.*\.(ts|mts|cts|js|mjs|cjs)$'; then
+            echo "TypeScript/JavaScript migration files"; exit 1
+          fi
+          if git ls-files -- '*package.json' | xargs grep -lE '"(node-pg-migrate|kysely)"'; then
+            echo "node-pg-migrate or Kysely dependency"; exit 1
           fi
 
   docs:
@@ -92,3 +402,44 @@ jobs:
         run: python3 tools/ci/check_security_docs.py
       - name: Unit and integration tests for the security docs checker
         run: python3 -m unittest tools/ci/test_check_security_docs.py
+      - name: Strip manifest and vulnerability exception checkers (SECURITY-08)
+        run: |
+          python3 -m unittest tools/ci/tests/test_check_prod_strip.py tools/ci/tests/test_check_vuln_exceptions.py
+          python3 tools/ci/check_vuln_exceptions.py
+
+  licences:
+    name: Licence policy and SBOMs (STACK-04)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Licence checker tests
+        run: python3 -m unittest tools/ci/tests/test_check_licences.py tools/ci/tests/test_sbom_fill_licences.py
+      - name: Install JS workspace
+        run: pnpm install --frozen-lockfile
+      - name: Python and JS SBOMs (images are scanned in release.yml)
+        run: |
+          for attempt in 1 2 3; do
+            if tools/sbom.sh; then exit 0; fi
+            echo "tools/sbom.sh failed (attempt $attempt); retrying"
+            sleep $((attempt * 20))
+          done
+          exit 1
+      - name: Licence policy
+        run: python3 tools/ci/check_licences.py dist/sbom/*.cdx.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sbom
+          path: dist/sbom/*.cdx.json
+          if-no-files-found: warn

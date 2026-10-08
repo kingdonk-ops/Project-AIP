@@ -4,10 +4,29 @@ version = "0.1.0"
 description = "AIP API: FastAPI app, platform services and business modules (ADR 0001, 0004)"
 requires-python = ">=3.12"
 dependencies = [
+    "aioboto3>=13.2",
+    "alembic>=1.14,<2",
+    "asyncpg>=0.30",
+    "authlib>=1.6",
     "fastapi>=0.115",
+    "httpx>=0.27",
+    "joserfc>=1.3",
+    "limits>=5.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.45.1",
+    "opentelemetry-instrumentation-fastapi>=0.66b1",
+    "opentelemetry-instrumentation-redis>=0.66b1",
+    "opentelemetry-instrumentation-sqlalchemy>=0.66b1",
+    "opentelemetry-sdk>=1.45.1",
+    "pydantic-settings>=2.6",
     "pydantic>=2.9",
+    "redis>=8.1.0",
+    "sqlalchemy[asyncio]>=2.0,<2.1",
+    "structlog>=26.1.0",
     "uvicorn[standard]>=0.32",
 ]
+
+[project.scripts]
+aip-db = "aip.platform.db.migrator.cli:main"
 
 [dependency-groups]
 dev = [
@@ -16,6 +35,9 @@ dev = [
     "httpx>=0.27",
     "ruff>=0.8",
     "pyright>=1.1.390",
+    "pypdf>=5.1",
+    "testcontainers[keycloak,postgres,redis]>=4.8",
+    "types-aioboto3[s3]>=13.2",
 ]
 
 [build-system]

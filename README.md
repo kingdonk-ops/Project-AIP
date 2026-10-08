@@ -18,6 +18,7 @@ IFC/OCR/PDF signing. **Frontends:** TypeScript · Vite + React (web, offline fie
 | Path | What |
 |---|---|
 | [AGENTS.md](AGENTS.md) | **Start here if you're an agent.** The one-task loop and what to read |
+| [docs/handover/CLAUDE-HANDOVER.md](docs/handover/CLAUDE-HANDOVER.md) | **Taking over from another coordinating agent?** Current state, workflow, rules and next steps |
 | [tracking/BOARD.md](tracking/BOARD.md) | Every task, its wave, dependencies and status |
 | [tracking/PROGRESS.md](tracking/PROGRESS.md) | Milestones and the change log |
 | [tracking/OPEN-QUESTIONS.md](tracking/OPEN-QUESTIONS.md) | Decisions waiting on the owner |
@@ -39,6 +40,7 @@ IFC/OCR/PDF signing. **Frontends:** TypeScript · Vite + React (web, offline fie
 | App stack | Frontend and offline guidance still applies (Vite PWA, Dexie); backend parts superseded by review 08 | [06](docs/reviews/06-stack-typescript.md) |
 | Development lead | P0 not executable as written; walking skeleton first; 40+ missing P0 tasks | [07](docs/reviews/07-delivery.md) |
 | Stack & architecture | Mostly keep; Python backend + TS frontends; Postgres job queue, Vite SPAs, per-tenant KMS keys (adopted) | [08](docs/reviews/08-stack-decision.md) |
+| Tablet hand-over signing | Client picks name + own PIN on the inspector's tablet; hold points need the client's own key or phone; owner questions 12–16 | [09](docs/reviews/09-tablet-handover-signing.md) |
 
 What we did about it: ADRs 0001–0008 resolve the contradictions, the board is ordered into waves starting
 with an M0 walking skeleton, and owner decisions still needed are listed in OPEN-QUESTIONS.

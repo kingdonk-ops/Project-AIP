@@ -13,3 +13,7 @@ build/
 *.tsbuildinfo
 coverage/
 .vite/
+.claude/worktrees/
+.import_linter_cache/
+test-results/
+playwright-report/

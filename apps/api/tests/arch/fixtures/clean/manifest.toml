@@ -1,0 +1,6 @@
+# Fixture: every permission, event and term key used in code is declared.
+id = "clean"
+context = "fixtures"
+permissions = ["clean.widget.read"]
+events = [{ name = "clean.widget.created", version = 1 }]
+term_keys = ["clean.widget.label"]

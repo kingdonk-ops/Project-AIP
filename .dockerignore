@@ -1,0 +1,20 @@
+**/__pycache__
+**/node_modules
+.venv
+.git
+.claude
+# STACK-05: keep build output, caches, local env files and tests out of images.
+**/dist
+**/.vite
+**/*.tsbuildinfo
+.pytest_cache
+.ruff_cache
+.import_linter_cache
+.env
+.env.*
+apps/api/tests
+apps/api/aip/modules/*/tests
+# SECURITY-08: scaffolding is dev-only (config/prod-strip-manifest.txt).
+apps/api/aip/modules/_template
+e2e/test-results
+e2e/playwright-report

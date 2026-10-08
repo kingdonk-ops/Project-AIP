@@ -14,6 +14,8 @@ becomes an ADR update. **Bold** questions block M0.
 - 2026-10-07 — **Frontends:** Vite for all three apps. → ADR 0004.
 - 2026-10-07 — **Sign-in:** Keycloak handles all staff sign-in; backend issues sessions and builds field PIN, portal links, SCIM. → ADR 0005 rev 2.
 - 2026-10-07 — **Sign-off assurance:** one quick check at signing (passkey, company device + PIN, code, or company MFA); per-tenant minimum; supervisor countersign fallback. Field-PIN users can sign on a registered device. → ADR 0010, task IDENTITY-07.
+- 2026-10-08 — **Licence policy:** any free licence is fine; no paid commercial licences (build it ourselves instead). → ADR 0011 accepted.
+- 2026-10-08 — **Provenance log:** initialled by the owner (KK).
 
 Nothing blocks M0 now.
 
@@ -33,3 +35,28 @@ Nothing blocks M0 now.
     witness and counter-sign". Trim the matrix?
 9. Retention periods per record type, and who is the named security owner?
 10. Team size: solo or hiring? (Sets agent parallelism and realistic dates.)
+11. **Shared field tablets and PINs:** if workers share a device and a PIN, one could sign off in another's name. Accept this risk, require one device per worker, or require a passkey (fingerprint/face) for critical actions? (threat model, ADR 0010)
+
+### Tablet hand-over signing ([review 09](../docs/reviews/09-tablet-handover-signing.md))
+
+Recommendation: the client picks their name and enters their own PIN on the inspector's tablet. PIN only counts as a
+light check (`aal1`), so it is enough for witness points. To release a **hold point**, the client also taps their own
+security key or scans a QR code with their phone, unless the client has agreed in writing that PIN only is fine. If
+the client isn't set up, the inspector records a witness note and the client confirms later in the portal.
+
+12. Do Rio Tinto client reps carry a phone on the work front, and would they accept a FIDO key on their lanyard if we
+    (or Kaefer) supply it?
+13. For hold points, is PIN-only acceptable if Rio Tinto agrees in writing for a project, or must it always be the
+    client's own key/phone (or later confirmation)?
+14. Offline: may a hold be provisionally released on a PIN-only client signature before sync, or must the crew wait?
+15. Is a photo of the client at signing acceptable (privacy notice, Rio site camera rules)?
+16. Which tablets does Kaefer use (Android with NFC, or iPad), and are they under MDM so we can use kiosk/screen pinning?
+
+## Also waiting on the owner
+
+- Coolify API key: owner decided (2026-10-08) to keep the key that was pasted in chat for now. Rotate it before any
+  real customer data goes onto Coolify; store the replacement only as GitHub Actions secrets (`COOLIFY_TOKEN`,
+  `COOLIFY_WEBHOOK`).
+- In GitHub branch protection for `main`, mark the `boundaries` check (ARCH-03) as required.
+- Confirm ADR 0013 (security scanners, expiring vulnerability exceptions, key-based image signing; proposed in SECURITY-08).
+- Optional: add repository secrets `COSIGN_PRIVATE_KEY` and `COSIGN_PASSWORD` (from `cosign generate-key-pair`) so CI image signatures use a real key instead of a throwaway one.

@@ -53,7 +53,7 @@ const options = [
 export function UiFixture() {
   return (
     <TooltipProvider>
-      <main>
+      <main data-testid="ui-fixture">
         <h1>{"UI fixture"}</h1>
         <section aria-label="Buttons and badges">
           <Button>{"Save"}</Button> <Button variant="secondary">{"Cancel"}</Button> <Badge tone="accent">{"New"}</Badge>{" "}

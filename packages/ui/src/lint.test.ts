@@ -27,8 +27,8 @@ describe("ui lint gate", { timeout: 30_000 }, () => {
   });
 
   it("rejects imports from apps", async () => {
-    const rules = await lint(`import { t } from "../../../apps/web/src/terms";\nexport const x = t;\n`);
-    expect(rules).toContain("no-restricted-imports");
+    const rules = await lint(`import { t } from "../../../../apps/web/src/terms";\nexport const x = t;\n`);
+    expect(rules).toContain("boundaries/dependencies");
   });
 
   it("accepts a labelled component taking text through props", async () => {
