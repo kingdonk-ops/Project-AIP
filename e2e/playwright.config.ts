@@ -22,7 +22,7 @@ const webServer: PlaywrightTestConfig["webServer"] = [
   },
   {
     name: "web",
-    command: `pnpm --filter web build && pnpm --filter web exec vite preview --port ${webPort} --strictPort`,
+    command: `pnpm --filter "web..." build && pnpm --filter web exec vite preview --port ${webPort} --strictPort`,
     cwd: "..",
     url: `http://localhost:${webPort}`,
     env: { AIP_API_URL: `http://localhost:${apiPort}` },
@@ -31,7 +31,7 @@ const webServer: PlaywrightTestConfig["webServer"] = [
   },
   {
     name: "web-dev",
-    command: `pnpm --filter web exec vite --port ${devPort} --strictPort`,
+    command: `pnpm --filter "web^..." build && pnpm --filter web exec vite --port ${devPort} --strictPort`,
     cwd: "..",
     url: devBaseURL,
     reuseExistingServer: reuse,
