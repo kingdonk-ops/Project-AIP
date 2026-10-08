@@ -334,7 +334,7 @@ jobs:
       - name: Drift check integration tests
         run: uv run pytest -q tools/tests/test_client_drift.py -p no:cacheprovider
       - name: Web builds against the current schema
-        run: pnpm --filter web build
+        run: pnpm --filter "web..." build
 
   e2e:
     name: E2E (Playwright, web)

@@ -70,7 +70,7 @@ jobs:
           docker build -f apps/web/Dockerfile -t "$WEB_IMAGE" .
       - name: Build the web app in production and development mode
         run: |
-          pnpm --filter @aip/web build
+          pnpm --filter "@aip/web..." build
           NODE_ENV=development pnpm --filter @aip/web exec vite build --mode development \
             --sourcemap --outDir "$RUNNER_TEMP/web-dev-dist"
 

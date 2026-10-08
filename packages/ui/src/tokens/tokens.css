@@ -1,0 +1,123 @@
+/*
+ * AIP design tokens (DESIGN-01). Mirrored in tokens.ts; apps never hard-code hex values.
+ * Fonts are self-hosted from @fontsource (SIL OFL 1.1), so no runtime request reaches Google Fonts.
+ * The accent is a single variable: overriding --accent on :root restyles every accent use without a rebuild.
+ */
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+
+:root {
+  /* Neutral ramp */
+  --neutral-0: #ffffff;
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e5e5e5;
+  --neutral-300: #d4d4d4;
+  --neutral-400: #a3a3a3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
+
+  /* Semantic surfaces */
+  --surface: var(--neutral-0);
+  --surface-muted: var(--neutral-50);
+  --foreground: var(--neutral-900);
+  --foreground-muted: var(--neutral-600);
+  --border: var(--neutral-300);
+  --border-strong: var(--neutral-500);
+
+  /* Accent (tenant-themeable, single token) */
+  --accent: #0f766e;
+  --accent-foreground: #ffffff;
+  --focus-ring: var(--accent);
+
+  /* Status colours: always paired with an icon or visible text */
+  --status-success: #15803d;
+  --status-warning: #b45309;
+  --status-danger: #b91c1c;
+  --status-info: #1d4ed8;
+  --status-neutral: #525252;
+  --status-foreground: #ffffff;
+
+  /* Typography */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 30px;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* Spacing (4px grid) */
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Radii */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+
+  /* Density: compact is the default */
+  --row-h: 32px;
+  --control-h: 32px;
+  --touch-target: 32px;
+}
+
+[data-density="comfortable"] {
+  --row-h: 40px;
+  --control-h: 40px;
+  --touch-target: 40px;
+}
+
+/* Field mode: glove-safe touch targets */
+[data-field] {
+  --control-h: 48px;
+  --touch-target: 48px;
+}
+
+/* Outdoor high-contrast theme for sun glare */
+[data-contrast="high"] {
+  --surface: #ffffff;
+  --surface-muted: #ffffff;
+  --foreground: #000000;
+  --foreground-muted: #171717;
+  --border: #000000;
+  --border-strong: #000000;
+  --accent: #0b5c55;
+  --accent-foreground: #ffffff;
+  --status-success: #14532d;
+  --status-warning: #7c2d12;
+  --status-danger: #7f1d1d;
+  --status-info: #1e3a8a;
+  --status-neutral: #171717;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--foreground);
+  background: var(--surface);
+}
+
+body {
+  font-family: var(--font-sans);
+}
