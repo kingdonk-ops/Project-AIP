@@ -62,7 +62,7 @@ def test_tenant_table_has_the_standard_columns() -> None:
 )
 def test_bad_variables_are_rejected(kwargs: dict[str, object], message: str) -> None:
     with pytest.raises(TemplateError, match=message):
-        render_template("tenant_table", **kwargs)
+        render_template("tenant_table", **kwargs)  # pyright: ignore[reportArgumentType]
 
 
 def test_unknown_or_unsafe_template_names_are_rejected() -> None:
@@ -70,3 +70,18 @@ def test_unknown_or_unsafe_template_names_are_rejected() -> None:
         render_template("nope")
     with pytest.raises(TemplateError, match="invalid template name"):
         render_template("../bootstrap/00_cluster")
+
+
+def test_sync_block_is_dropped_by_default_and_kept_with_sync_true() -> None:
+    plain = render_template("tenant_table", table="x", columns="n int")
+    assert "client_generated_id" not in plain and "sync_version" not in plain
+    assert "{{" not in plain
+
+    synced = render_template("tenant_table", table="x", columns="n int", sync=True)
+    assert "client_generated_id uuid NULL" in synced
+    assert "sync_version integer NOT NULL DEFAULT 1" in synced
+    assert "CREATE UNIQUE INDEX ux_x_client_generated_id ON x (tenant_id, client_generated_id)" in (
+        synced
+    )
+    assert "{{" not in synced
+    sql_statements(synced)  # still parses into statements the migration lint understands
