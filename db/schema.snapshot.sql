@@ -79,8 +79,38 @@ GRANT UPDATE(status) ON TABLE public.jobs TO aip_jobs;
 -- Name: COLUMN jobs.updated_at; Type: ACL; Schema: public
 GRANT UPDATE(updated_at) ON TABLE public.jobs TO aip_jobs;
 
+-- Name: COLUMN procrastinate_events.at; Type: ACL; Schema: public
+GRANT INSERT(at) ON TABLE public.procrastinate_events TO aip_app;
+
+-- Name: COLUMN procrastinate_events.job_id; Type: ACL; Schema: public
+GRANT INSERT(job_id) ON TABLE public.procrastinate_events TO aip_app;
+
+-- Name: COLUMN procrastinate_events.type; Type: ACL; Schema: public
+GRANT INSERT(type) ON TABLE public.procrastinate_events TO aip_app;
+
+-- Name: COLUMN procrastinate_jobs.args; Type: ACL; Schema: public
+GRANT INSERT(args) ON TABLE public.procrastinate_jobs TO aip_app;
+
 -- Name: COLUMN procrastinate_jobs.id; Type: ACL; Schema: public
 GRANT SELECT(id) ON TABLE public.procrastinate_jobs TO aip_app;
+
+-- Name: COLUMN procrastinate_jobs.lock; Type: ACL; Schema: public
+GRANT INSERT(lock) ON TABLE public.procrastinate_jobs TO aip_app;
+
+-- Name: COLUMN procrastinate_jobs.priority; Type: ACL; Schema: public
+GRANT INSERT(priority) ON TABLE public.procrastinate_jobs TO aip_app;
+
+-- Name: COLUMN procrastinate_jobs.queue_name; Type: ACL; Schema: public
+GRANT INSERT(queue_name) ON TABLE public.procrastinate_jobs TO aip_app;
+
+-- Name: COLUMN procrastinate_jobs.queueing_lock; Type: ACL; Schema: public
+GRANT INSERT(queueing_lock) ON TABLE public.procrastinate_jobs TO aip_app;
+
+-- Name: COLUMN procrastinate_jobs.scheduled_at; Type: ACL; Schema: public
+GRANT INSERT(scheduled_at) ON TABLE public.procrastinate_jobs TO aip_app;
+
+-- Name: COLUMN procrastinate_jobs.task_name; Type: ACL; Schema: public
+GRANT INSERT(task_name) ON TABLE public.procrastinate_jobs TO aip_app;
 
 -- Name: FUNCTION identity_resolve_login(p_kind text, p_key public.citext); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) FROM PUBLIC;
@@ -114,11 +144,9 @@ GRANT SELECT ON TABLE public.jobs TO aip_jobs;
 
 -- Name: TABLE procrastinate_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_events TO aip_jobs;
-GRANT INSERT ON TABLE public.procrastinate_events TO aip_app;
 
 -- Name: TABLE procrastinate_jobs; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_jobs TO aip_jobs;
-GRANT INSERT ON TABLE public.procrastinate_jobs TO aip_app;
 
 -- Name: TABLE procrastinate_periodic_defers; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_periodic_defers TO aip_jobs;
