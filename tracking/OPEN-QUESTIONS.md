@@ -17,6 +17,7 @@ becomes an ADR update. **Bold** questions block M0.
 - 2026-10-08 — **Licence policy:** any free licence is fine; no paid commercial licences (build it ourselves instead). → ADR 0011 accepted.
 - 2026-10-08 — **Provenance log:** initialled by the owner (KK).
 - 2026-10-08 — **Security scanning and signing:** ADR 0013 accepted (free scanners, expiring vulnerability exceptions, key-based cosign without public logs).
+- 2026-10-09 — **LGPL exceptions:** owner confirmed the `psycopg` and `psycopg-pool` LGPL-3.0 exceptions (required by Procrastinate, imported unmodified; expire 2027-04-06). → ADR 0016.
 
 Nothing blocks M0 now.
 
@@ -55,7 +56,6 @@ the client isn't set up, the inspector records a witness note and the client con
 
 ## Also waiting on the owner
 
-- Confirm the `psycopg` / `psycopg-pool` LGPL-3.0 exceptions in `config/licence-policy.json` (required by Procrastinate, imported unmodified; expire 2027-04-06; ADR 0016 records it).
 - Coolify API key: owner decided (2026-10-08) to keep the key that was pasted in chat for now. Rotate it before any
   real customer data goes onto Coolify; store the replacement only as GitHub Actions secrets (`COOLIFY_TOKEN`,
   `COOLIFY_WEBHOOK`).
