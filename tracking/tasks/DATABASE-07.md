@@ -52,3 +52,8 @@ Generate cross-tenant and IDOR tests so new tables inherit coverage.
 - Code holding a `with_tenant` connection can still call `set_config('app.tenant_id', other, true)`, `SET LOCAL` or `RESET` mid-transaction. Add a static test that no string `app.tenant_id` appears in `aip/` outside `aip/platform/db/session.py`.
 - `tests/arch/test_db_engine_boundary.py` is name-based: it misses aliased imports (`import asyncpg as pg`) and `get_engine().connect()` from outside the db package. Resolve aliases, and stop exporting `get_engine` or guard it with an import-linter contract.
 - Compose passes only `aip.owner_password`, so `aip_app`/`aip_jobs`/`aip_readonly` have no password there and compose still connects as `aip_owner`. Give the runtime roles passwords in the compose bootstrap and switch `DATABASE_URL`/`DATABASE_JOBS_URL` to them.
+
+## Carried forward from TENANCY-02 (not built there)
+
+- `tools/ci/check_raw_keys.py` and its CI wiring: the AST arch test (`tests/arch/test_tenant_key_boundary.py`) catches hand-built `tenant:` keys, but not bare Redis or boto3 calls with literal first arguments (`redis.get("user:1")`) or literal `Key=` / `lock=` arguments. Add a check for those.
+- Testcontainers integration tests for the key builders: Redis, LocalStack S3, and a worker run that carries no `tenant_id`.

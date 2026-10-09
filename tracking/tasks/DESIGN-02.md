@@ -72,4 +72,13 @@ Build the constant frame of the desktop web app (56px header, 56px nav rail, sco
 ## Carried forward from DESIGN-01 (non-blocking)
 
 - The `ipad-webkit` Playwright project could not run in the DESIGN-01 sandbox (host lacks WebKit system libraries); the new `/__fixtures/ui` spec ran on desktop Chromium and mobile Chrome only. CI runs all three projects.
-- `apps/web/eslint.config.js` still uses its own config plus a second `--config` pass; migrate it to extend `@aip/config-eslint` and add jsx-a11y like `packages/ui/eslint.config.mjs`.
+
+## Carried forward from DESIGN-02 (non-blocking unless marked)
+
+- Done in DESIGN-02 (PR #34): `apps/web/eslint.config.js` now extends `@aip/config-eslint` with jsx-a11y (errors), react hooks and `react/jsx-no-literals` for `src/features` and `src/routes`. The ECC config-protection hook still refuses the edit by default; the owner asked for the one-file change to be written through the shell, once. Turn the hook off (`ECC_DISABLED_HOOKS=pre:config-protection` in the environment settings) before the next config edit.
+- Session port: `httpSessionPort` (`apps/web/src/features/shell/session.ts`) calls `GET /api/v1/me` and `POST /api/v1/auth/logout` with `fetch` because they are not in the generated client yet. Switch to the generated client when IDENTITY-02/03 land, add `GET /api/v1/access/me/abilities` (ACCESS-01) for `permissions`, and drop the 404-means-signed-out fail-closed shim. Un-skip the `@needs-identity-03` e2e case and replace the dev stub (`features/shell/dev/dev-session-stub.ts`, `VITE_AIP_DEV_SESSION=stub`) with a real Keycloak login in `e2e/web/shell.spec.ts`.
+- Terminology: `features/shell/t.ts` reads `config/terms/en-AU/shell.json` directly; TERMS-08 (`packages/terms`) replaces it without changing call sites.
+- Routes are code-based (as the repo already does), not the TanStack file-based plugin; switch if a later task wants `routeTree.gen.ts`.
+- Security headers: `apps/web/security-headers.json` feeds `vite preview` (all headers) and `vite dev` (all but the CSP, because of the inline React Refresh preamble). `apps/web/nginx.conf` and the CloudFront response-headers policy (OPS-09 / infra) must carry the same CSP; nginx currently sends only `Referrer-Policy` and `X-Content-Type-Options`. `style-src` keeps `'unsafe-inline'` for Radix.
+- The shell e2e specs run on the dev server (with the stub) and the login spec on `vite preview`; the iPad WebKit project runs all of them in CI but could not run in this sandbox.
+- Shell nav registers Home and Projects only (Projects is a placeholder page); the project switcher, search and asset-subtree chip are empty slots.

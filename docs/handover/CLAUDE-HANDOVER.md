@@ -52,13 +52,16 @@ Then on GitHub (use the GitHub MCP tools; there is no `gh` CLI in cloud sessions
 2. Read `tracking/OPEN-QUESTIONS.md` (owner decisions and what is waiting on them) and the tail of `tracking/PROGRESS.md` (the last log lines show what was just done).
 3. Read `tracking/BOARD.md` to see waves, dependencies and statuses.
 
-### Where things stood at handover (2026-10-08)
+### Where things stood (updated 2026-10-09)
 
-- **Merged to `main`:** PRs #1 to #22. Waves 0 and 1 are done except DESIGN-01. Wave 2/3 items done: DATABASE-02 (runtime roles, `with_tenant`, fail-closed RLS), STACK-03, OPS-01 (job tables). SECURITY-08 (security CI) and STACK-05 (compose stack) are done.
-- **Open:** PR #23 **IDENTITY-01** (Keycloak realms as code, `login_directory`, OIDC login). All checks were green except Python 3.13, which I had just fixed (the 422 response description differed between Python versions; fixed by pinning the description in `identity/routes.py`). Re-check it.
-- **DESIGN-01** is `blocked`. It needs to write `packages/ui/eslint.config.mjs`, which the Everything Claude Code plugin's `config-protection` hook used to block. The owner merged PR #21, which disables that hook (`ECC_DISABLED_HOOKS` in `.claude/settings.json`). It should now be unblocked: set it back to `todo`/`in-progress` and run it.
-- **Started but abandoned (nothing pushed):** ARCH-05, OPS-02, DATABASE-04. Their agents died mid-work and only a board claim or a dependency edit existed. Treat them as fresh `todo`. OPS-02's title says "arq": build it on **Procrastinate** per ADR 0003.
-- **Next ready tasks** (after IDENTITY-01 merges): run `next_task.py --all`. Expect TESTING-02, TESTING-01, TENANCY-01, TERMS-01, ARCH-05, DATABASE-04, OPS-02, DESIGN-01 and OPS-11 depending on dependencies.
+- **Merged to `main` (PRs #1 to #33):** waves 0 and 1 done. Also done: DATABASE-02, DATABASE-04, OPS-01, OPS-02 (Procrastinate job runner), IDENTITY-01 (Keycloak realms, login directory, OIDC login), TENANCY-01 (tenants and regions), TENANCY-02 (tenant-safe key builders), TESTING-01 (shared Postgres fixture), TESTING-02 (schema guard), DESIGN-01 (`@aip/ui`), STACK-03/04/05 and SECURITY-08. PR #32 pinned `handlebars` and upgraded `libtiff` in the web image after new advisories failed the scans on every PR: expect that kind of drift, and fix it with an upgrade, not an exception.
+- **In flight at the time of writing:**
+  - **PR #34 DESIGN-02** (app shell, login page): security review was clean; CI was re-running after a test fix (an iPad WebKit assertion keyed off `isMobile`; it now keys off viewport width). Merge it when all checks are green.
+  - **IDENTITY-02** (users, tenant membership, JIT provisioning, `GET /me`): branch `claude/p0-identity-02`, committed as work in progress with a status file `tracking/tasks/IDENTITY-02-STATUS.md` if the agent finished its wrap-up. Open its PR, finish what the status file lists, run the independent security review (it is identity code), then merge.
+- **Next, in dependency order** (run `python3 tools/next_task.py --all`): ACCESS-01 → PROJECTS-01 → PROJECTS-02 (the M0 slice), IDENTITY-03 (real login sessions), then OPS-11 (Coolify demo) and TESTING-09 (walking-skeleton e2e). ARCH-05, TERMS-01, DATABASE-05 and SECURITY-02 are also ready; each adds a migration, so run migration tasks one at a time (re-chain the Alembic head after each merge).
+- **Known blocker for the owner:** the ECC `config-protection` hook still blocks edits to `apps/web/eslint.config.js` although `ECC_DISABLED_HOOKS=pre:config-protection` is set in `.claude/settings.json`. The migration to extend `@aip/config-eslint` with jsx-a11y is recorded as blocked in `tracking/tasks/DESIGN-02.md`. Do not work around the hook.
+- **Owner confirmations still pending** (see `tracking/OPEN-QUESTIONS.md`): the two LGPL exceptions for `psycopg` and `psycopg-pool` (ADR 0016), the optional cosign secrets, and the Coolify key rotation before real data.
+- **Carried-forward items** are written into the future task files they belong to (for example OPS-11 needs the CSP in nginx, OPS-03 needs the job-payload tenant guard, DATABASE-07 needs the raw-key check). Read the "Carried forward" sections when you start a task.
 
 ---
 

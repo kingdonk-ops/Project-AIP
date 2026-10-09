@@ -1,0 +1,8 @@
+{
+  "_comment": "Single source for web security headers (DESIGN-02). Applied by vite dev/preview (vite.config.ts); the CloudFront response-headers policy (OPS/infra) and nginx.conf must carry the same values. style-src keeps 'unsafe-inline' because Radix (scroll lock, popper) injects style elements; scripts stay 'self' only with no inline script in index.html.",
+  "headers": {
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "X-Content-Type-Options": "nosniff"
+  }
+}

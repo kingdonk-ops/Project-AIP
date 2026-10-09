@@ -87,14 +87,14 @@
           "component": "psycopg",
           "licence": "LGPL-3.0-only",
           "reason": "Required by Procrastinate (MIT) for the OPS-02 job queue (pypi, python.cdx.json); imported unmodified as a library, not vendored or patched. ADR 0016.",
-          "approver": "owner (KK), standing decision 2026-10-08, ADR 0011: free licences of any type are fine; to be confirmed for these two packages in tracking/OPEN-QUESTIONS.md",
+          "approver": "owner (KK), confirmed for these two packages on 2026-10-09 (standing decision 2026-10-08, ADR 0011: free licences of any type are fine; ADR 0016)",
           "expires": "2027-04-06"
       },
       {
           "component": "psycopg-pool",
           "licence": "LGPL-3.0-only",
           "reason": "Required by Procrastinate (MIT) for the OPS-02 job queue (pypi, python.cdx.json); imported unmodified as a library, not vendored or patched. ADR 0016.",
-          "approver": "owner (KK), standing decision 2026-10-08, ADR 0011: free licences of any type are fine; to be confirmed for these two packages in tracking/OPEN-QUESTIONS.md",
+          "approver": "owner (KK), confirmed for these two packages on 2026-10-09 (standing decision 2026-10-08, ADR 0011: free licences of any type are fine; ADR 0016)",
           "expires": "2027-04-06"
       }
   ]

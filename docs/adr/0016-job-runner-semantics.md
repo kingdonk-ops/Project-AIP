@@ -1,6 +1,6 @@
 # ADR 0016: Job runner semantics on Procrastinate (queue schema, locks, tries, privileges)
 
-- **Status:** accepted (builds on ADR 0003; no owner decision reversed)
+- **Status:** accepted (builds on ADR 0003; no owner decision reversed; the two LGPL exceptions confirmed by the owner, 2026-10-09)
 - **Date:** 2026-10-08
 - **Affects:** ops; OPS-02, OPS-03, TENANCY-02, UPLOADS-02, AUDIT-03
 
