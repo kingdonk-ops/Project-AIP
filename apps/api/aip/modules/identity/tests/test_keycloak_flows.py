@@ -31,9 +31,17 @@ import pytest
 from fastapi import FastAPI
 from keycloak import KeycloakAdmin  # pyright: ignore[reportMissingTypeStubs]
 from keycloak.exceptions import KeycloakError  # pyright: ignore[reportMissingTypeStubs]
+from tests.fixtures.postgres import TenantDb
 from tests.platform.db.conftest import _docker_reachable  # pyright: ignore[reportPrivateUsage]
 
 from aip.main import create_app
+from aip.modules.identity.api import (
+    JitLoginHandler,
+    PlaceholderLoginHandler,
+    get_external_login_handler,
+    list_users,
+)
+from aip.modules.identity.jit import JitProvisioner
 from aip.modules.identity.oidc import KeycloakOidcClient
 from aip.modules.identity.preauth_cookie import COOKIE_NAME, open_cookie, seal
 from aip.modules.identity.routes import get_login_rate_limiter, get_login_service
@@ -148,6 +156,8 @@ async def kc_app(
     limiter = LoginRateLimiter.from_redis_url(None)
     app.dependency_overrides[get_login_service] = lambda: service
     app.dependency_overrides[get_login_rate_limiter] = lambda: limiter
+    # These IDENTITY-01 tests assert on the verified identity: keep the echoing placeholder.
+    app.dependency_overrides[get_external_login_handler] = PlaceholderLoginHandler
     yield app
     await oidc.aclose()
 
@@ -245,6 +255,39 @@ async def test_alice_sso_goes_straight_to_the_mock_idp(
     assert identity["idp_alias"] == "kaefer-oidc"
     assert identity["email"] == "alice@kaefer.test"
     assert "eyJ" not in r.text and "eyJ" not in r.headers.get("set-cookie", "")
+
+
+async def test_alice_sso_is_provisioned_once_by_jit(
+    api: httpx.AsyncClient, kc_app: FastAPI, keycloak: Keycloak, idb: TenantDb
+) -> None:
+    """IDENTITY-02 e2e: two real sign-ins through the mock IdP give the same user id and exactly
+    one ``app_user`` (read back as ``aip_app``)."""
+    jit = JitLoginHandler(JitProvisioner(connect=idb.with_tenant, connect_pre=idb.no_tenant))
+    kc_app.dependency_overrides[get_external_login_handler] = lambda: jit
+    user_ids: list[str] = []
+    for _ in range(2):
+        browser = Browser(stop_prefix=f"{APP_ORIGIN}/api/v1/auth/oidc/callback")
+        try:
+            body, cookie = await _login_start(api, "alice@kaefer.test")
+            first = browser.get(body["redirectUrl"])
+            end = (
+                first
+                if isinstance(first, str)
+                else drive(
+                    browser, first, _credentials("alice@kaefer.test", "alice_dev_only_password")
+                )
+            )
+            assert isinstance(end, str), end.url if isinstance(end, Page) else end
+        finally:
+            browser.close()
+        r = await _callback(api, end, cookie)
+        assert r.status_code == 200, r.text
+        user_ids.append(r.json()["userId"])
+    assert user_ids[0] == user_ids[1]
+    async with idb.with_tenant(TENANT_A_ID) as conn:
+        page = await list_users(conn)
+    assert [str(u.id) for u in page.items] == [user_ids[0]]
+    assert page.items[0].email == "alice@kaefer.test" and page.items[0].sso_managed
 
 
 async def test_bob_with_a_kaefer_cookie_is_refused(

@@ -1,6 +1,37 @@
 {
   "components": {
     "schemas": {
+      "AuthErrorBody": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "AuthErrorBody",
+        "type": "object"
+      },
+      "AuthErrorResponse": {
+        "description": "Body of a 401/403 on an authenticated route. Never names a tenant or a user.",
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/AuthErrorBody"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "AuthErrorResponse",
+        "type": "object"
+      },
       "Dependencies": {
         "properties": {
           "alembic": {
@@ -126,6 +157,177 @@
           "redirectUrl"
         ],
         "title": "LoginStartResponse",
+        "type": "object"
+      },
+      "MeMembership": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "membershipType": {
+            "enum": [
+              "member",
+              "client",
+              "subcontractor",
+              "guest"
+            ],
+            "title": "Membershiptype",
+            "type": "string"
+          },
+          "organisationId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organisationid"
+          },
+          "validFrom": {
+            "format": "date",
+            "title": "Validfrom",
+            "type": "string"
+          },
+          "validTo": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validto"
+          }
+        },
+        "required": [
+          "id",
+          "membershipType",
+          "organisationId",
+          "validFrom",
+          "validTo"
+        ],
+        "title": "MeMembership",
+        "type": "object"
+      },
+      "MeResponse": {
+        "additionalProperties": false,
+        "description": "The caller's own user, tenant and memberships. Never another tenant's data.",
+        "properties": {
+          "aal": {
+            "enum": [
+              1,
+              2
+            ],
+            "title": "Aal",
+            "type": "integer"
+          },
+          "amr": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Amr",
+            "type": "array"
+          },
+          "memberships": {
+            "items": {
+              "$ref": "#/components/schemas/MeMembership"
+            },
+            "title": "Memberships",
+            "type": "array"
+          },
+          "tenant": {
+            "$ref": "#/components/schemas/MeTenant"
+          },
+          "user": {
+            "$ref": "#/components/schemas/MeUser"
+          }
+        },
+        "required": [
+          "user",
+          "tenant",
+          "memberships",
+          "aal",
+          "amr"
+        ],
+        "title": "MeResponse",
+        "type": "object"
+      },
+      "MeTenant": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name"
+        ],
+        "title": "MeTenant",
+        "type": "object"
+      },
+      "MeUser": {
+        "additionalProperties": false,
+        "properties": {
+          "displayName": {
+            "title": "Displayname",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "invited",
+              "active",
+              "deactivated"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "userClass": {
+            "enum": [
+              "staff",
+              "field",
+              "portal"
+            ],
+            "title": "Userclass",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "displayName",
+          "userClass",
+          "status"
+        ],
+        "title": "MeUser",
         "type": "object"
       },
       "ModuleInfo": {
@@ -426,6 +628,47 @@
         "summary": "Ready",
         "tags": [
           "platform"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "identity_get_me",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description": "The caller's own user, tenant and memberships."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "No authenticated principal, or the user is unknown or not active."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "The tenant is suspended, offboarded or not ready."
+          }
+        },
+        "summary": "Get Me",
+        "tags": [
+          "identity"
         ]
       }
     },

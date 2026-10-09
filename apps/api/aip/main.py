@@ -8,7 +8,9 @@ holds the modules and ``AIP_DISABLED_MODULES`` (comma-separated) skips modules. 
 error propagates, so a bad module set stops the process from starting.
 
 Every request passes through the request-context middleware (ARCH-04), which resolves the
-principal and project membership; the default resolvers deny everyone.
+principal and project membership; the default resolvers deny everyone. With ``AIP_ENV=test`` and
+``AUTH_TEST_STUB=1`` the identity test stub (``x-test-principal``, IDENTITY-02) authenticates
+instead; ``AUTH_TEST_STUB`` in any other environment stops startup with a ``RuntimeError``.
 
 Observability (OPS-04): ``RequestIdMiddleware`` is the outermost middleware (request id, JSON
 request log line); logs are JSON on stdout with the PII scrubber; OpenTelemetry tracing starts when
@@ -25,6 +27,7 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
+from aip.modules.identity.api import PlatformPrincipalAdapter, stub_principal_resolver
 from aip.modules.ops.health import ReadinessChecker
 from aip.modules.ops.health import router as health_router
 from aip.platform.capabilities import validate_capability_settings
@@ -117,6 +120,13 @@ def create_app(
         return JSONResponse({"detail": "Not authenticated"}, status_code=401)
 
     install_error_handlers(app)  # DATABASE-04: ConflictError 409, NotFoundError 404
+
+    # IDENTITY-02: the identity resolver behind get_principal. Until IDENTITY-03 only the test
+    # stub exists (x-test-principal, AIP_ENV=test + AUTH_TEST_STUB=1); it refuses production.
+    identity_resolver = stub_principal_resolver(env)
+    app.state.identity_principal_resolver = identity_resolver
+    if principal_resolver is None and identity_resolver is not None:
+        principal_resolver = PlatformPrincipalAdapter(identity_resolver)
 
     app.add_middleware(
         RequestContextMiddleware,
