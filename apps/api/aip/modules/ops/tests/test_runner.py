@@ -39,9 +39,9 @@ from aip.platform.jobs.app import (
     QUEUES,
     JobRetryStrategy,
     defer_in_transaction,
-    job_lock,
     run_worker,
 )
+from aip.platform.tenant_keys import job_lock
 
 Tx = Callable[[UUID], AbstractAsyncContextManager[AsyncConnection]]
 Handler = Callable[[AsyncConnection, ops.JobView], Awaitable[str | None]]
@@ -227,10 +227,6 @@ def test_register_is_idempotent_for_the_same_handler_and_rejects_a_different_one
 
 def test_queues_are_per_job_class() -> None:
     assert QUEUES == ("default", "pdf", "scan", "import", "outbox")
-
-
-def test_job_lock_names_tenant_type_and_slot() -> None:
-    assert job_lock(TENANT_A_ID, "export", 1) == f"tenant:{TENANT_A_ID}:job:export:1"
 
 
 def test_memory_guard_warns_then_asks_the_worker_to_exit(caplog: pytest.LogCaptureFixture) -> None:
@@ -529,7 +525,7 @@ async def test_the_queue_row_holds_ids_only_and_the_tenant_lock(
     assert args["job_id"] == str(job.id) and args["tenant_id"] == str(TENANT_A_ID)
     assert args["actor_id"] == str(ALICE_ID)
     assert "secret" not in str(args) and "do-not-copy" not in str(args)
-    assert lock == job_lock(TENANT_A_ID, spec.job_type, 0)
+    assert lock == job_lock(TENANT_A_ID, spec.job_type, "0")
     assert queue == "default"
 
 
