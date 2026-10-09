@@ -127,3 +127,8 @@ Let tenant admins invite staff who do not sign in through company SSO. The backe
 ## Carried forward from IDENTITY-02 (non-blocking)
 
 - Changing a local (`sso_managed=false`) user's email registers the new address through `identity_register_email`, but the old `login_directory` row of kind `email` is not removed (there is no unregister function), so the old address still resolves to the tenant. Add a SECURITY DEFINER `identity_unregister_email` (same tenant-context and local-user checks) in a new revision and call it from the email-change and user-delete paths, with a test that the old address no longer resolves.
+
+## Carried forward from IDENTITY-02 security review (non-blocking)
+
+- Before invites ship, `identity_register_email` must refuse an address whose domain is claimed by another tenant's SSO IdP. Today a local email claim by tenant A pins that address to A for good, and tenant B's later invite gets `EMAIL_IN_OTHER_TENANT`, which reveals the address exists elsewhere. Release the claim on email change and delete (see the unregister item above).
+- Low: `domain_of` lower-cases before the ASCII check, and Python maps U+212A (Kelvin sign) to `k`, so `alice@Kaefer.test` with a Kelvin sign passes the domain check while the raw email is stored. Only the tenant's own IdP can assert it, so it cannot cross tenants. Normalise with NFKC and require ASCII on the whole email, or store the normalised form (oidc.py, jit.py).
