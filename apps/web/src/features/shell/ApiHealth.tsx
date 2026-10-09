@@ -10,7 +10,7 @@ export function ApiHealth() {
   else value = health.data.data.status;
   return (
     <p>
-      {t("health.label")}: <output data-testid="api-health-status">{value}</output>
+      {t("health.label")}{": "}<output data-testid="api-health-status">{value}</output>
     </p>
   );
 }

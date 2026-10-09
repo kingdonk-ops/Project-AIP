@@ -72,11 +72,10 @@ Build the constant frame of the desktop web app (56px header, 56px nav rail, sco
 ## Carried forward from DESIGN-01 (non-blocking)
 
 - The `ipad-webkit` Playwright project could not run in the DESIGN-01 sandbox (host lacks WebKit system libraries); the new `/__fixtures/ui` spec ran on desktop Chromium and mobile Chrome only. CI runs all three projects.
-- `apps/web/eslint.config.js` still uses its own config plus a second `--config` pass; migrate it to extend `@aip/config-eslint` and add jsx-a11y like `packages/ui/eslint.config.mjs`.
 
 ## Carried forward from DESIGN-02 (non-blocking unless marked)
 
-- **BLOCKED:** Migrate `apps/web/eslint.config.js` to extend `@aip/config-eslint` and add jsx-a11y + `react/jsx-no-literals`: blocked by the ECC config-protection hook (still fires although PR #21 disabled it); needs the owner to allow it. Until then `apps/web` keeps its own config plus the second `--config` pass; a11y is covered by `packages/ui` lint, Vitest + axe-core tests and the Playwright axe checks. (This also carries forward DESIGN-01's note of the same name.)
+- Done in DESIGN-02 (PR #34): `apps/web/eslint.config.js` now extends `@aip/config-eslint` with jsx-a11y (errors), react hooks and `react/jsx-no-literals` for `src/features` and `src/routes`. The ECC config-protection hook still refuses the edit by default; the owner asked for the one-file change to be written through the shell, once. Turn the hook off (`ECC_DISABLED_HOOKS=pre:config-protection` in the environment settings) before the next config edit.
 - Session port: `httpSessionPort` (`apps/web/src/features/shell/session.ts`) calls `GET /api/v1/me` and `POST /api/v1/auth/logout` with `fetch` because they are not in the generated client yet. Switch to the generated client when IDENTITY-02/03 land, add `GET /api/v1/access/me/abilities` (ACCESS-01) for `permissions`, and drop the 404-means-signed-out fail-closed shim. Un-skip the `@needs-identity-03` e2e case and replace the dev stub (`features/shell/dev/dev-session-stub.ts`, `VITE_AIP_DEV_SESSION=stub`) with a real Keycloak login in `e2e/web/shell.spec.ts`.
 - Terminology: `features/shell/t.ts` reads `config/terms/en-AU/shell.json` directly; TERMS-08 (`packages/terms`) replaces it without changing call sites.
 - Routes are code-based (as the repo already does), not the TanStack file-based plugin; switch if a later task wants `routeTree.gen.ts`.

@@ -35,8 +35,9 @@ export function NavRail({ permissions, items = registeredNavItems(), open, onNav
 
   return (
     <nav id="shell-nav" className="shell-rail" aria-label={t("shell.nav.label")} data-open={open ? "true" : "false"}>
-      {/* The arrow-key handler is a progressive enhancement over native Tab order. */}
-      <div ref={listRef} className="shell-rail__list" onKeyDown={onKeyDown}>
+      {/* The arrow-key handler is a progressive enhancement over native Tab order. The wrapper only
+          delegates key events from the links inside it, so it carries no role of its own. */}
+      <div ref={listRef} role="presentation" className="shell-rail__list" onKeyDown={onKeyDown}>
         {groups.map((group) => (
           <ul key={group.section} className="shell-rail__group" aria-label={t(`shell.nav.section.${group.section}`)}>
             {group.items.map((item) => (
