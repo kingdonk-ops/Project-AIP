@@ -1,6 +1,6 @@
 # API and worker image (STACK-05): one image, two commands.
 #   api:    uvicorn aip.main:create_app --factory --host 0.0.0.0 --port 8000
-#   worker: procrastinate worker once OPS-02 lands (a stub until then; see infra/docker-compose.yml)
+#   worker: python -m aip.worker --queues default,outbox (OPS-02; see infra/docker-compose.yml)
 # Build from the repository root:
 #   docker build -f apps/api/Dockerfile --build-arg GIT_SHA=$(git rev-parse HEAD) \
 #     --build-arg BUILD_ID=local -t aip-api .
@@ -17,6 +17,12 @@ ARG PYTHON_IMAGE=python:3.12.15-slim-bookworm
 FROM ${PYTHON_IMAGE} AS build
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /usr/local/bin/uv
+
+# libpq is the PostgreSQL client library psycopg (Procrastinate, OPS-02) loads at import time. The
+# strip check below imports the app in this stage, so it needs it here as well as in runtime.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpq5 \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
@@ -57,9 +63,10 @@ LABEL org.opencontainers.image.title="aip-api" \
       org.opencontainers.image.revision="${GIT_SHA}" \
       org.opencontainers.image.version="${BUILD_ID}"
 
-# curl is the container healthcheck (GET /api/v1/health/ready, OPS-04).
+# curl is the container healthcheck (GET /api/v1/health/ready, OPS-04); libpq5 is psycopg's client
+# library (OPS-02).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl libpq5 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 10001 aip \
     && useradd --system --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin aip

@@ -77,3 +77,9 @@ async def next_event_seq(conn: AsyncConnection, job_id: UUID) -> int:
 
 async def insert_event(conn: AsyncConnection, values: dict[str, Any]) -> None:
     await conn.execute(insert(job_events).values(**values))
+
+
+async def count_jobs_of_type(conn: AsyncConnection, job_type: str) -> int:
+    """How many jobs of ``job_type`` the current tenant has (soft-deleted ones included)."""
+    stmt = select(func.count()).select_from(jobs).where(jobs.c.job_type == job_type)
+    return int((await conn.execute(stmt)).scalar_one())

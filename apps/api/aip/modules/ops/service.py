@@ -24,7 +24,10 @@ __all__ = [
     "ALLOWED_TRANSITIONS",
     "InvalidTransition",
     "JobNotFound",
+    "attach_procrastinate_job",
+    "begin_attempt",
     "create_job",
+    "note_retry",
     "resolve_correlation_id",
     "transition",
     "validate_transition",
@@ -180,3 +183,69 @@ async def transition(
         },
     )
     return updated
+
+
+async def attach_procrastinate_job(
+    conn: AsyncConnection, job_id: UUID, procrastinate_job_id: int
+) -> JobView:
+    """Record which Procrastinate job carries ``job_id`` (set once, by the enqueue)."""
+    row = await repository.lock_job(conn, job_id)
+    if row is None:
+        raise JobNotFound(f"job {job_id} not found")
+    return JobView.model_validate(
+        await repository.update_job(conn, job_id, {"procrastinate_job_id": procrastinate_job_id})
+    )
+
+
+async def begin_attempt(conn: AsyncConnection, job_id: UUID) -> JobView | None:
+    """Start one run of the job; ``None`` when it is already terminal (redelivery, cancelled).
+
+    ``queued`` moves to ``running`` (the normal transition). A job already ``running`` is being
+    retried or recovered after a worker died: it stays ``running`` and only the attempt counter
+    and a ``running -> running`` event (``detail.attempt``) record the new try.
+    Raises ``JobNotFound``.
+    """
+    row = await repository.lock_job(conn, job_id)
+    if row is None:
+        raise JobNotFound(f"job {job_id} not found")
+    current = JobView.model_validate(row)
+    if current.status.is_terminal:
+        return None
+    if current.status is JobStatus.QUEUED:
+        return await transition(conn, job_id, JobStatus.RUNNING, detail={"attempt": 1})
+    attempt = current.attempts + 1
+    updated = JobView.model_validate(
+        await repository.update_job(conn, job_id, {"attempts": attempt})
+    )
+    await _append_running_event(conn, updated, {"attempt": attempt})
+    return updated
+
+
+async def note_retry(conn: AsyncConnection, job_id: UUID, *, error: str) -> JobView:
+    """Keep the job ``running`` after a failed try that will be retried; store the error."""
+    row = await repository.lock_job(conn, job_id)
+    if row is None:
+        raise JobNotFound(f"job {job_id} not found")
+    current = JobView.model_validate(row)
+    if current.status is not JobStatus.RUNNING:
+        raise InvalidTransition(current.status, JobStatus.RUNNING)
+    updated = JobView.model_validate(await repository.update_job(conn, job_id, {"error": error}))
+    await _append_running_event(conn, updated, {"retry": True, "error": error})
+    return updated
+
+
+async def _append_running_event(
+    conn: AsyncConnection, job: JobView, detail: Mapping[str, Any]
+) -> None:
+    await repository.insert_event(
+        conn,
+        {
+            "id": _uuid7(),
+            "tenant_id": job.tenant_id,
+            "job_id": job.id,
+            "seq": await repository.next_event_seq(conn, job.id),
+            "from_status": JobStatus.RUNNING.value,
+            "to_status": JobStatus.RUNNING.value,
+            "detail": dict(detail),
+        },
+    )

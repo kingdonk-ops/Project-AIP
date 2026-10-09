@@ -56,3 +56,7 @@ Enforce per-tenant IP allow-lists and add security headers in the FastAPI backen
 
 - The seeds (`tenancy` and `identity`) refuse to run only when `AIP_ENV` is exactly `production`, so `prod`, `Production` or a trailing space would let them run. Normalise the value and deny anything not on an allow-list (development, test, ci, staging), in one shared helper used by every seed.
 - The tenancy seed resets `status = 'active'` and `deleted_at = NULL` on every run, so a suspended or soft-deleted demo tenant in staging is reactivated by the next `compose up`. Documented as intended; revisit when staging exists.
+
+## Carried forward from OPS-02 security review (non-blocking)
+
+- `str(DBAPIError)` includes the bound query parameters, which can carry PII into logs and into `jobs.error` (the runner stores `type: message` of a failed handler). Set `hide_parameters=True` on every engine (`create_app_engine` and the jobs engine), or store only the exception type plus a sanitised message in `jobs.error` and in the runner's log lines.

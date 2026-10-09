@@ -1,7 +1,9 @@
 """``aip-db check-schema``: compare the migrated database with the declared SQLAlchemy tables.
 
 Compares tables, columns, types and nullability, ignoring schemas ``aip_meta`` and
-``procrastinate`` (and the system schemas). Prints one line per difference.
+``procrastinate`` (and the system schemas) and the ``procrastinate_*`` queue tables that the
+OPS-02 migration creates in ``public`` (Procrastinate's own schema, not declared here). Prints one
+line per difference.
 """
 
 from __future__ import annotations
@@ -27,6 +29,7 @@ LEFT JOIN pg_catalog.pg_attribute a
 WHERE c.relkind IN ('r', 'p')
   AND NOT c.relispartition
   AND n.nspname NOT LIKE 'pg\\_%'
+  AND c.relname NOT LIKE 'procrastinate\\_%'
   AND n.nspname NOT IN ('aip_meta', 'procrastinate', 'information_schema')
   AND NOT EXISTS (
     SELECT 1 FROM pg_catalog.pg_depend d

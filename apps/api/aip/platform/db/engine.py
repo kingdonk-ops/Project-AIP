@@ -40,14 +40,18 @@ from aip.platform.db.errors import DatabaseConfigError
 
 __all__ = [
     "DATABASE_URL_ENV",
+    "JOBS_DATABASE_URL_ENV",
     "EngineSettings",
     "PoolMode",
     "create_app_engine",
     "dispose_engine",
+    "dispose_jobs_engine",
     "get_engine",
+    "get_jobs_engine",
 ]
 
 DATABASE_URL_ENV = "DATABASE_URL"
+JOBS_DATABASE_URL_ENV = "DATABASE_JOBS_URL"
 POOL_MODE_ENV = "DB_POOL_MODE"
 POOL_SIZE_ENV = "DB_POOL_SIZE"
 MAX_OVERFLOW_ENV = "DB_MAX_OVERFLOW"
@@ -213,5 +217,33 @@ async def dispose_engine() -> None:
     """Close the process-wide engine's pool (application shutdown, tests)."""
     global _engine
     engine, _engine = _engine, None
+    if engine is not None:
+        await engine.dispose()
+
+
+_jobs_engine: AsyncEngine | None = None
+
+
+def get_jobs_engine() -> AsyncEngine:
+    """The worker's engine, connecting as ``aip_jobs`` (``DATABASE_JOBS_URL``, OPS-02).
+
+    Same bounds and the same refusal of privileged logins as the app engine. The worker passes it
+    to ``with_tenant(..., engine=get_jobs_engine())`` so every job runs in its tenant's context.
+    """
+    global _jobs_engine
+    if _jobs_engine is None:
+        env = dict(os.environ)
+        url = env.get(JOBS_DATABASE_URL_ENV, "")
+        if not url:
+            raise DatabaseConfigError(f"{JOBS_DATABASE_URL_ENV} is not set")
+        env[DATABASE_URL_ENV] = url
+        _jobs_engine = create_app_engine(EngineSettings.from_env(env))
+    return _jobs_engine
+
+
+async def dispose_jobs_engine() -> None:
+    """Close the worker engine's pool (worker shutdown, tests)."""
+    global _jobs_engine
+    engine, _jobs_engine = _jobs_engine, None
     if engine is not None:
         await engine.dispose()
