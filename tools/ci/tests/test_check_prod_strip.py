@@ -189,7 +189,7 @@ class WebDistTest(unittest.TestCase):
         self.assertEqual(len(errors), 1, errors)
         self.assertIn("dev-session-stub", errors[0])
         (self.dist / "assets" / "dev-session-stub-AbC123.js").unlink()
-        write(self.dist / "assets" / "i.js", "throw new Error('AIP_DEV_SESSION_STUB must not load')")
+        write(self.dist / "assets" / "i.js", "throw new Error('AIP_DEV_SESSION_STUB')")
         errors = cps.scan_web_dist(self.dist, self.manifest)
         self.assertEqual(len(errors), 1, errors)
         self.assertIn("AIP_DEV_SESSION_STUB", errors[0])
