@@ -49,3 +49,7 @@ building the AWS pipeline yet (owner decision 2026-10-07). AWS staging (OPS-07/0
     - `docker compose -f infra/coolify/docker-compose.coolify.yml up --wait` locally, then `tools/smoke.py http://localhost` passes.
   - **e2e**:
     - After deploy, TESTING-09's Playwright journey runs against the Coolify URL (`E2E_BASE_URL`) and passes.
+
+## Carried forward from DESIGN-02 security review (non-blocking)
+
+- Coolify serves the `apps/web` nginx image directly, with no CDN in front, and `apps/web/nginx.conf` only sets `X-Content-Type-Options` and `Referrer-Policy`. Add the CSP and `frame-ancestors 'none'` from `apps/web/security-headers.json` (and a `Permissions-Policy`) to nginx, repeating them inside any `location` block that uses `add_header`. HSTS belongs at the TLS terminator (Coolify's proxy or CloudFront); confirm it is on. Without this the demo can be framed (clickjacking) and has no CSP.

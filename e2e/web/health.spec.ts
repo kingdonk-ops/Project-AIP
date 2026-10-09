@@ -2,6 +2,14 @@
 // The health endpoint is public and not tenant-scoped, so this journey has no cross-tenant case.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { devBaseURL } from "../playwright.config";
+import { signInAsStub } from "./stub-session";
+
+// DESIGN-02: `/` is behind sign-in, so this runs on the dev server with the fixture session stub.
+test.use({ baseURL: process.env.E2E_DEV_URL ?? devBaseURL });
+test.beforeEach(async ({ page }) => {
+  await signInAsStub(page, "alice@kaefer.test");
+});
 
 test("index shows the API status from the generated health hook", async ({ page }) => {
   const consoleErrors: string[] = [];

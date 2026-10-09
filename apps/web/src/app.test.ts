@@ -1,7 +1,11 @@
 import { getPlatformHealthQueryKey, getPlatformHealthUrl } from "@aip/api-client";
+import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
+import { httpSessionPort } from "./features/shell/session";
 import { createAppRouter } from "./router";
 import { t } from "./terms";
+
+const makeRouter = () => createAppRouter({ queryClient: new QueryClient(), sessionPort: httpSessionPort });
 
 describe("web shell", () => {
   it("resolves the app.title terminology key", () => {
@@ -18,13 +22,13 @@ describe("web shell", () => {
     expect(getPlatformHealthQueryKey()).toEqual(["/api/v1/health"]);
   });
 
-  it("registers the index route", () => {
-    const router = createAppRouter();
-    expect(Object.keys(router.routesByPath)).toContain("/");
+  it("registers the home, projects and login routes", () => {
+    const router = makeRouter();
+    expect(Object.keys(router.routesByPath)).toEqual(expect.arrayContaining(["/", "/projects", "/login"]));
   });
 
   it("registers the dev-only UI fixture route outside production", () => {
-    const router = createAppRouter();
+    const router = makeRouter();
     expect(Object.keys(router.routesByPath)).toContain("/__fixtures/ui");
   });
 });
