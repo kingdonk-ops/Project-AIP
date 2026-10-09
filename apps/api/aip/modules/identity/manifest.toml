@@ -1,11 +1,14 @@
 # Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
 # IDENTITY-01: staff sign-in through Keycloak (ADR 0005). Routes (both public, x-aip-access):
 #   POST /api/v1/auth/login/start, GET /api/v1/auth/oidc/callback.
-# depends_on tenancy: login_directory.tenant_id references tenants (TENANCY-01).
+# IDENTITY-02: app_user, tenant_membership, auth_event; JIT provisioning in the callback;
+#   GET /api/v1/me (authenticated). identity.user.manage is privileged (status changes,
+#   ACCESS-01 should require step-up for it).
+# depends_on tenancy: login_directory and the user tables reference tenants (TENANCY-01).
 id = "identity"
 context = "identity"
 depends_on = ["tenancy"]
-permissions = []
+permissions = ["identity.user.read", "identity.user.manage"]
 events = []
 subscribes = []
 settings = [
@@ -16,5 +19,6 @@ settings = [
   "OIDC_CLIENT_SECRET",
   "APP_ORIGIN",
   "PREAUTH_COOKIE_KEY",
+  "AUTH_TEST_STUB",
 ]
 term_keys = []

@@ -6,6 +6,9 @@ code with PKCE, verifies the ID token, enforces the IdP binding and aal2 for loc
 returns a ``VerifiedExternalIdentity``. Keycloak tokens are discarded inside ``complete``.
 
 No staff password, TOTP or WebAuthn code lives here: Keycloak does all of it.
+
+IDENTITY-02 adds ``create_local_user`` and ``change_email``, which keep a local account's email
+registered to its one tenant (``identity_register_email``).
 """
 
 from __future__ import annotations
@@ -15,11 +18,14 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
+from uuid import UUID
 
 from limits import RateLimitItem, parse
 from limits.aio.storage import MemoryStorage, RedisStorage, Storage
 from limits.aio.strategies import MovingWindowRateLimiter
+from sqlalchemy.ext.asyncio import AsyncConnection
 
+from aip.modules.identity import repository as repo
 from aip.modules.identity.oidc import (
     KeycloakOidcClient,
     OidcError,
@@ -41,6 +47,7 @@ from aip.modules.identity.preauth_cookie import (
 from aip.modules.identity.repository import LoginDirectory
 from aip.modules.identity.schemas import LoginStartResponse, VerifiedExternalIdentity
 from aip.modules.identity.settings import IdentitySettings
+from aip.platform.db.errors import NotFoundError
 
 LOGIN_START_LIMIT = "10/minute"
 REQUIRED_LOCAL_ACR = "aal2"
@@ -170,3 +177,51 @@ class LoginRateLimiter:
 
     async def hit(self, client_key: str) -> bool:
         return await self._limiter.hit(self._item, "identity-login-start", client_key)
+
+
+# --- local accounts (IDENTITY-02 step 2) -------------------------------------------------------
+# A Keycloak-local account's email is registered to exactly one tenant in ``login_directory``
+# whenever such a user is created or their email changes; the sign-in callback resolves the
+# tenant of a local account from it. SSO users are not registered (their domain names the tenant).
+
+
+async def create_local_user(
+    conn: AsyncConnection,
+    *,
+    tenant_id: UUID,
+    email: str,
+    display_name: str,
+    user_class: repo.UserClass = "staff",
+    membership_type: repo.MembershipType = "member",
+) -> UUID:
+    """An ``invited`` local user plus a membership, with the email registered to ``tenant_id``.
+
+    ``conn`` comes from ``with_tenant(tenant_id)``. ``EmailInOtherTenantError`` when another tenant
+    already holds the email; the transaction then rolls back, so no half-created user remains.
+    """
+    user_id = await repo.insert_user(
+        conn,
+        tenant_id=tenant_id,
+        email=email,
+        display_name=display_name,
+        user_class=user_class,
+        status="invited",
+        sso_managed=False,
+    )
+    await repo.insert_membership(
+        conn, tenant_id=tenant_id, user_id=user_id, membership_type=membership_type
+    )
+    await repo.register_email(conn, email, tenant_id)
+    return user_id
+
+
+async def change_email(
+    conn: AsyncConnection, *, tenant_id: UUID, user_id: UUID, email: str
+) -> None:
+    """Change a live user's email; a local user's new email is registered to ``tenant_id``."""
+    user = await repo.get_user(conn, user_id)
+    if user is None:
+        raise NotFoundError(f"app_user {user_id} not found")
+    await repo.update_user(conn, user_id, email=email.strip())
+    if not user.sso_managed:
+        await repo.register_email(conn, email, tenant_id)

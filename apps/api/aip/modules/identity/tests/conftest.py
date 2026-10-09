@@ -23,11 +23,24 @@ import pytest
 from fastapi import FastAPI
 from joserfc import jwt
 from joserfc.jwk import RSAKey
+from tests.fixtures.postgres import (  # noqa: F401 - shared real-Postgres fixtures (TESTING-01)
+    TenantDb,
+    bootstrapped_db,  # pyright: ignore[reportUnusedImport]
+    empty_db,  # pyright: ignore[reportUnusedImport]
+    migrated_db,  # pyright: ignore[reportUnusedImport]
+    pg_superuser_url,  # pyright: ignore[reportUnusedImport]
+    tenant_db,  # pyright: ignore[reportUnusedImport]
+)
+from tests.fixtures.postgres import (
+    _execute as _su_execute,  # pyright: ignore[reportPrivateUsage]
+)
 
 from aip.main import create_app
+from aip.modules.identity.api import PlaceholderLoginHandler, get_external_login_handler
 from aip.modules.identity.oidc import KeycloakOidcClient
 from aip.modules.identity.repository import LoginTarget, LookupKind
 from aip.modules.identity.routes import get_login_rate_limiter, get_login_service
+from aip.modules.identity.seeds import seed as seed_login_directory
 from aip.modules.identity.service import LoginRateLimiter, LoginService
 from aip.modules.identity.settings import IdentitySettings
 
@@ -145,6 +158,29 @@ class StubProvider:
         return httpx.Response(404)
 
 
+SEED_TENANTS_SQL = (
+    "INSERT INTO tenants (id, name, slug, region_code, status) VALUES "
+    f"('{TENANT_A_ID}', 'Kaefer Demo', 'kaefer-demo', 'ap-southeast-2', 'active'), "
+    f"('{TENANT_B_ID}', 'Tenant B', 'tenant-b', 'ap-southeast-2', 'active')"
+)
+
+
+async def seed_sql(db: TenantDb, sql: str) -> None:
+    """Run seeding SQL as the superuser (never for assertions: it bypasses row-level security)."""
+    await _su_execute(db.db.superuser_url, sql)
+
+
+@pytest.fixture
+async def idb(tenant_db: TenantDb) -> TenantDb:  # noqa: F811
+    """``tenant_db`` (``aip_app``, RLS on) with the two fixture tenants and the login directory.
+
+    Seeding runs as the superuser / table owner; every assertion goes through ``aip_app``.
+    """
+    await seed_sql(tenant_db, SEED_TENANTS_SQL)
+    await seed_login_directory(tenant_db.db.owner_url, env="test")
+    return tenant_db
+
+
 @pytest.fixture
 def settings() -> IdentitySettings:
     return make_settings()
@@ -178,6 +214,9 @@ def app(
     limiter = LoginRateLimiter.from_redis_url(None)
     application.dependency_overrides[get_login_service] = lambda: service
     application.dependency_overrides[get_login_rate_limiter] = lambda: limiter
+    # The IDENTITY-01 flow tests check the verified identity itself, so they keep the echoing
+    # placeholder; JIT provisioning (the real default) is tested in test_jit_db.py.
+    application.dependency_overrides[get_external_login_handler] = PlaceholderLoginHandler
     return application
 
 

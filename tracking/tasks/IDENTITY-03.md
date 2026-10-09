@@ -116,3 +116,7 @@ After Keycloak signs a staff user in, the FastAPI backend issues every browser s
 
 - TENANCY-01's e2e test needs a real app session, so it lands here: Playwright on compose, sign in as `alice@kaefer.test` through Keycloak, then `GET /api/v1/me/tenant`. Expected: slug `kaefer-demo`, `regionCode` `ap-southeast-2`; as `bob@acme.test` the same call returns `tenant-b` and nothing of `kaefer-demo`. (The spec's `admin@kaefer-demo.test` is not a fixture user; use the AGENTS.md users.)
 - The session `PrincipalResolver` must hand the middleware the tenant id from the `user_session` row; tenancy's `require_active_tenant` (via `aip.modules.tenancy.api`) then rejects suspended/offboarded/provisioning tenants. The compose stack needs `tenancy-seed` before `identity-seed` (the `login_directory` FK).
+
+## Carried forward from IDENTITY-02 (non-blocking)
+
+- `auth_event.ip` and `auth_event.user_agent` stay NULL for `login.succeeded` / `login.denied`: the `ExternalLoginHandler` port receives only the verified identity, not the request. When this task builds the session callback, pass the client IP (after trusted-proxy handling) and user agent through to `JitLoginHandler` so they are recorded. Changing the port signature needs a short ADR note.

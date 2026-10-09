@@ -1,4 +1,4 @@
-"""Smoke test: the tenancy module imports and its manifest validates; api exports three names."""
+"""Smoke test: the tenancy module imports, its manifest validates, api exports its names."""
 
 import importlib
 from pathlib import Path
@@ -18,4 +18,11 @@ def test_module_imports_and_manifest_validates() -> None:
 
 def test_api_exports_only_the_published_interface() -> None:
     api = importlib.import_module("aip.modules.tenancy.api")
-    assert sorted(api.__all__) == ["TenantView", "get_tenant", "require_active_tenant"]
+    assert sorted(api.__all__) == [
+        "Denial",
+        "TenantView",
+        "access_for_status",
+        "get_tenant",
+        "load_tenant",
+        "require_active_tenant",
+    ]
