@@ -182,6 +182,18 @@ class WebDistTest(unittest.TestCase):
                 self.assertEqual(len(errors), 1, errors)
                 self.assertIn(marker, errors[0])
 
+    def test_dev_session_stub_chunk_and_marker_fail(self) -> None:
+        # DESIGN-02: the fixture-backed session stub must never reach a production build.
+        write(self.dist / "assets" / "dev-session-stub-AbC123.js", "export const x = 1;")
+        errors = cps.scan_web_dist(self.dist, self.manifest)
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("dev-session-stub", errors[0])
+        (self.dist / "assets" / "dev-session-stub-AbC123.js").unlink()
+        write(self.dist / "assets" / "i.js", "throw new Error('AIP_DEV_SESSION_STUB must not load')")
+        errors = cps.scan_web_dist(self.dist, self.manifest)
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("AIP_DEV_SESSION_STUB", errors[0])
+
     def test_empty_dist_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             errors = cps.scan_web_dist(Path(tmp), self.manifest)

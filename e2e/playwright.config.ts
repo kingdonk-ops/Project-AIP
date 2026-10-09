@@ -34,6 +34,8 @@ const webServer: PlaywrightTestConfig["webServer"] = [
     command: `pnpm --filter "web^..." build && pnpm --filter web exec vite --port ${devPort} --strictPort`,
     cwd: "..",
     url: devBaseURL,
+    // DESIGN-02: the fixture-backed session stub exists only in the dev server (never in `vite preview`).
+    env: { AIP_API_URL: `http://localhost:${apiPort}`, VITE_AIP_DEV_SESSION: "stub" },
     reuseExistingServer: reuse,
     timeout: 120_000,
   },

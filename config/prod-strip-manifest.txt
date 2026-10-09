@@ -63,3 +63,7 @@ web-marker   jsxDEV
 web-marker   react-jsx-dev-runtime
 web-marker   react-dom.development
 web-marker   /_debug/
+
+# DESIGN-02: the development session stub (fixture identities). Only a non-production build may contain it.
+web-marker   AIP_DEV_SESSION_STUB
+web-glob     **/dev-session-stub*

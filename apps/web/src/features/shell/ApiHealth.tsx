@@ -1,25 +1,8 @@
 import { usePlatformHealth } from "@aip/api-client";
-import { createRoute } from "@tanstack/react-router";
-import { t } from "../terms";
-import { rootRoute } from "./__root";
-
-export const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/",
-  component: HomePage,
-});
-
-function HomePage() {
-  return (
-    <main>
-      <h1>{t("app.title")}</h1>
-      <ApiHealth />
-    </main>
-  );
-}
+import { t } from "../../terms";
 
 /** API status from the generated client hook (STACK-03). The status value is data, not a label. */
-function ApiHealth() {
+export function ApiHealth() {
   const health = usePlatformHealth();
   let value: string;
   if (health.isPending) value = t("health.loading");

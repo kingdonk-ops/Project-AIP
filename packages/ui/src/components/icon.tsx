@@ -5,10 +5,15 @@ import {
   CircleAlert,
   CircleCheck,
   Clock,
+  CircleUser,
+  Folder,
+  House,
   Info,
   LoaderCircle,
+  Menu,
   Minus,
   Search,
+  ShieldCheck,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -26,6 +31,11 @@ const registry = {
   search: Search,
   loader: LoaderCircle,
   minus: Minus,
+  home: House,
+  folder: Folder,
+  menu: Menu,
+  user: CircleUser,
+  shield: ShieldCheck,
 } as const satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof registry;

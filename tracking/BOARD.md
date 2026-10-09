@@ -45,7 +45,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [DATABASE-02](tasks/DATABASE-02.md) | Roles, session helper and fail-closed tenant context | database | M | DATABASE-08 | done | PR #19 |
 | [TESTING-02](tasks/TESTING-02.md) | Schema guard: tenant_id and RLS on every table | testing | S | DATABASE-02 | review | branch claude/p0-testing-02 (PR pending) |
 | [STACK-03](tasks/STACK-03.md) | Generated typed API client with drift check | stack | M | ARCH-01 | done | PR #13 |
-| [DESIGN-02](tasks/DESIGN-02.md) | App shell (header, nav rail, scope bar) + login/logout | design | M | DESIGN-01, IDENTITY-01 | todo |  |
+| [DESIGN-02](tasks/DESIGN-02.md) | App shell (header, nav rail, scope bar) + login/logout | design | M | DESIGN-01, IDENTITY-01 | review | branch claude/p0-design-02 (PR pending) |
 
 ### Wave 3
 
