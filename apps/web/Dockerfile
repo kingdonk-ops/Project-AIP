@@ -19,6 +19,11 @@ RUN pnpm install --frozen-lockfile --filter "@aip/web..." \
 
 FROM nginxinc/nginx-unprivileged:1.30.5-alpine AS runtime
 
+# CVE-2026-4775 (HIGH): the base image's libtiff 4.7.1-r0, fixed in 4.7.2-r0, and the newest nginx tag
+# still ships the old one. Upgrade just that package. Remove this block once the base image has it.
+USER root
+RUN apk upgrade --no-cache tiff
+
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/apps/web/dist /usr/share/nginx/html
 

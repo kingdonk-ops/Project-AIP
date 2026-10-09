@@ -4,3 +4,11 @@ packages:
   - apps/portal
   - packages/*
   - e2e
+
+# Security overrides. Each entry names the advisories it fixes and when to drop it.
+overrides:
+  # CVE-2026-106445 and CVE-2026-106446 (handlebars <= 4.7.9, JavaScript injection in compile),
+  # reported 2026-10-09 by pnpm audit. Pulled in at an exact 4.7.9 by eslint-plugin-boundaries and
+  # @boundaries/elements (lint time only, never shipped). Drop this once those packages depend on a
+  # fixed handlebars.
+  handlebars: 4.7.10
