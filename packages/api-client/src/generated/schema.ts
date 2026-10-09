@@ -90,6 +90,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Me */
+        get: operations["identity_get_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/tenant": {
         parameters: {
             query?: never;
@@ -145,6 +162,20 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AuthErrorBody */
+        AuthErrorBody: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
+        /**
+         * AuthErrorResponse
+         * @description Body of a 401/403 on an authenticated route. Never names a tenant or a user.
+         */
+        AuthErrorResponse: {
+            detail: components["schemas"]["AuthErrorBody"];
+        };
         /** Dependencies */
         Dependencies: {
             /** Alembic */
@@ -196,6 +227,79 @@ export interface components {
             method: "sso" | "password";
             /** Redirecturl */
             redirectUrl: string;
+        };
+        /** MeMembership */
+        MeMembership: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Membershiptype
+             * @enum {string}
+             */
+            membershipType: "member" | "client" | "subcontractor" | "guest";
+            /** Organisationid */
+            organisationId: string | null;
+            /**
+             * Validfrom
+             * Format: date
+             */
+            validFrom: string;
+            /** Validto */
+            validTo: string | null;
+        };
+        /**
+         * MeResponse
+         * @description The caller's own user, tenant and memberships. Never another tenant's data.
+         */
+        MeResponse: {
+            /**
+             * Aal
+             * @enum {integer}
+             */
+            aal: 1 | 2;
+            /** Amr */
+            amr: string[];
+            /** Memberships */
+            memberships: components["schemas"]["MeMembership"][];
+            tenant: components["schemas"]["MeTenant"];
+            user: components["schemas"]["MeUser"];
+        };
+        /** MeTenant */
+        MeTenant: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+        };
+        /** MeUser */
+        MeUser: {
+            /** Displayname */
+            displayName: string;
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "invited" | "active" | "deactivated";
+            /**
+             * Userclass
+             * @enum {string}
+             */
+            userClass: "staff" | "field" | "portal";
         };
         /**
          * ModuleInfo
@@ -416,6 +520,44 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    identity_get_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The caller's own user, tenant and memberships. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+            /** @description No authenticated principal, or the user is unknown or not active. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description The tenant is suspended, offboarded or not ready. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
             };
         };
     };

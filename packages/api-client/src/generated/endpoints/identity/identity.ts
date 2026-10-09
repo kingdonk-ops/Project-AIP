@@ -19,9 +19,11 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AuthErrorResponse,
   ErrorResponse,
   LoginStartRequest,
-  LoginStartResponse
+  LoginStartResponse,
+  MeResponse
 } from '../../model';
 
 
@@ -281,6 +283,137 @@ export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identi
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getIdentityOidcCallbackQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type identityGetMeResponse200 = {
+  data: MeResponse
+  status: 200
+}
+
+export type identityGetMeResponse401 = {
+  data: AuthErrorResponse
+  status: 401
+}
+
+export type identityGetMeResponse403 = {
+  data: AuthErrorResponse
+  status: 403
+}
+
+export type identityGetMeResponseSuccess = (identityGetMeResponse200) & {
+  headers: Headers;
+};
+export type identityGetMeResponseError = (identityGetMeResponse401 | identityGetMeResponse403) & {
+  headers: Headers;
+};
+
+export type identityGetMeResponse = (identityGetMeResponseSuccess | identityGetMeResponseError)
+
+export const getIdentityGetMeUrl = () => {
+
+
+
+
+  return `/api/v1/me`
+}
+
+/**
+ * @summary Get Me
+ */
+export const identityGetMe = async ( options?: RequestInit): Promise<identityGetMeResponse> => {
+
+  const res = await fetch(getIdentityGetMeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: identityGetMeResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as identityGetMeResponse
+}
+
+
+
+
+
+export const getIdentityGetMeQueryKey = () => {
+    return [
+    `/api/v1/me`
+    ] as const;
+    }
+
+
+export const getIdentityGetMeQueryOptions = <TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getIdentityGetMeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof identityGetMe>>> = ({ signal }) => identityGetMe({ ...(signal ? { signal } : {}), ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type IdentityGetMeQueryResult = NonNullable<Awaited<ReturnType<typeof identityGetMe>>>
+export type IdentityGetMeQueryError = AuthErrorResponse
+
+
+export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof identityGetMe>>,
+          TError,
+          Awaited<ReturnType<typeof identityGetMe>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof identityGetMe>>,
+          TError,
+          Awaited<ReturnType<typeof identityGetMe>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Me
+ */
+
+export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getIdentityGetMeQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -112,6 +112,10 @@ GRANT INSERT(scheduled_at) ON TABLE public.procrastinate_jobs TO aip_app;
 -- Name: COLUMN procrastinate_jobs.task_name; Type: ACL; Schema: public
 GRANT INSERT(task_name) ON TABLE public.procrastinate_jobs TO aip_app;
 
+-- Name: FUNCTION identity_register_email(p_email public.citext, p_tenant uuid); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) TO aip_app;
+
 -- Name: FUNCTION identity_resolve_login(p_kind text, p_key public.citext); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) TO aip_app;
@@ -126,6 +130,14 @@ GRANT USAGE ON SEQUENCE public.procrastinate_jobs_id_seq TO aip_app;
 
 -- Name: SEQUENCE procrastinate_periodic_defers_id_seq; Type: ACL; Schema: public
 GRANT SELECT,USAGE ON SEQUENCE public.procrastinate_periodic_defers_id_seq TO aip_jobs;
+
+-- Name: TABLE app_user; Type: ACL; Schema: public
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.app_user TO aip_app;
+GRANT SELECT ON TABLE public.app_user TO aip_readonly;
+
+-- Name: TABLE auth_event; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.auth_event TO aip_app;
+GRANT SELECT ON TABLE public.auth_event TO aip_readonly;
 
 -- Name: TABLE deployment_regions; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.deployment_regions TO aip_app;
@@ -154,9 +166,25 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_periodic_defers 
 -- Name: TABLE procrastinate_workers; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_workers TO aip_jobs;
 
+-- Name: TABLE tenant_membership; Type: ACL; Schema: public
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.tenant_membership TO aip_app;
+GRANT SELECT ON TABLE public.tenant_membership TO aip_readonly;
+
 -- Name: TABLE tenants; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.tenants TO aip_app;
 GRANT SELECT ON TABLE public.tenants TO aip_readonly;
+
+-- Name: app_user pk_app_user; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.app_user
+    ADD CONSTRAINT pk_app_user PRIMARY KEY (id);
+
+-- Name: app_user uq_app_user_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.app_user
+    ADD CONSTRAINT uq_app_user_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: auth_event pk_auth_event; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.auth_event
+    ADD CONSTRAINT pk_auth_event PRIMARY KEY (id);
 
 -- Name: deployment_regions pk_deployment_regions; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.deployment_regions
@@ -206,6 +234,10 @@ ALTER TABLE ONLY public.procrastinate_periodic_defers
 ALTER TABLE ONLY public.procrastinate_workers
     ADD CONSTRAINT procrastinate_workers_pkey PRIMARY KEY (id);
 
+-- Name: tenant_membership pk_tenant_membership; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_membership
+    ADD CONSTRAINT pk_tenant_membership PRIMARY KEY (id);
+
 -- Name: tenants pk_tenants; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenants
     ADD CONSTRAINT pk_tenants PRIMARY KEY (id);
@@ -222,6 +254,18 @@ ALTER TABLE ONLY public.procrastinate_jobs ALTER COLUMN id SET DEFAULT nextval('
 
 -- Name: procrastinate_periodic_defers id; Type: DEFAULT; Schema: public
 ALTER TABLE ONLY public.procrastinate_periodic_defers ALTER COLUMN id SET DEFAULT nextval('public.procrastinate_periodic_defers_id_seq'::regclass);
+
+-- Name: app_user fk_app_user_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.app_user
+    ADD CONSTRAINT fk_app_user_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: auth_event fk_auth_event_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.auth_event
+    ADD CONSTRAINT fk_auth_event_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: auth_event fk_auth_event_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.auth_event
+    ADD CONSTRAINT fk_auth_event_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
 
 -- Name: job_events fk_job_events_job_id_tenant_id_jobs; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
@@ -243,9 +287,50 @@ ALTER TABLE ONLY public.procrastinate_jobs
 ALTER TABLE ONLY public.procrastinate_periodic_defers
     ADD CONSTRAINT procrastinate_periodic_defers_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.procrastinate_jobs(id);
 
+-- Name: tenant_membership fk_tenant_membership_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_membership
+    ADD CONSTRAINT fk_tenant_membership_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: tenant_membership fk_tenant_membership_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_membership
+    ADD CONSTRAINT fk_tenant_membership_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
 -- Name: tenants fk_tenants_region_code_deployment_regions; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenants
     ADD CONSTRAINT fk_tenants_region_code_deployment_regions FOREIGN KEY (region_code) REFERENCES public.deployment_regions(code);
+
+-- Name: identity_register_email(public.citext, uuid); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+    DECLARE
+      v_owner uuid;
+    BEGIN
+      IF p_tenant IS NULL OR p_email IS NULL
+         OR p_tenant IS DISTINCT FROM NULLIF(current_setting('app.tenant_id', true), '')::uuid THEN
+        RAISE EXCEPTION 'TENANT_CONTEXT_MISMATCH' USING ERRCODE = '42501';
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM public.app_user AS u
+        WHERE u.tenant_id = p_tenant AND u.email = p_email
+          AND u.deleted_at IS NULL AND NOT u.sso_managed
+      ) THEN
+        RAISE EXCEPTION 'EMAIL_NOT_A_LOCAL_USER' USING ERRCODE = '42501';
+      END IF;
+      INSERT INTO public.login_directory (kind, key, tenant_id, idp_alias)
+      VALUES ('email', p_email, p_tenant, NULL)
+      ON CONFLICT (kind, key) DO NOTHING;
+      SELECT d.tenant_id INTO v_owner
+      FROM public.login_directory AS d
+      WHERE d.kind = 'email' AND d.key = p_email;
+      IF v_owner IS DISTINCT FROM p_tenant THEN
+        RAISE EXCEPTION 'EMAIL_IN_OTHER_TENANT' USING ERRCODE = 'P0001';
+      END IF;
+    END;
+    $$;
+
+ALTER FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) OWNER TO aip_owner;
 
 -- Name: identity_resolve_login(text, public.citext); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) RETURNS TABLE(tenant_id uuid, idp_alias text)
@@ -728,6 +813,21 @@ CREATE INDEX idx_procrastinate_jobs_worker_not_null ON public.procrastinate_jobs
 -- Name: idx_procrastinate_workers_last_heartbeat; Type: INDEX; Schema: public
 CREATE INDEX idx_procrastinate_workers_last_heartbeat ON public.procrastinate_workers USING btree (last_heartbeat);
 
+-- Name: ix_app_user_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_app_user_tenant_id ON public.app_user USING btree (tenant_id);
+
+-- Name: ix_app_user_tenant_id_organisation_id; Type: INDEX; Schema: public
+CREATE INDEX ix_app_user_tenant_id_organisation_id ON public.app_user USING btree (tenant_id, organisation_id);
+
+-- Name: ix_app_user_tenant_id_status; Type: INDEX; Schema: public
+CREATE INDEX ix_app_user_tenant_id_status ON public.app_user USING btree (tenant_id, status) WHERE (deleted_at IS NULL);
+
+-- Name: ix_auth_event_tenant_id_event_type_occurred_at; Type: INDEX; Schema: public
+CREATE INDEX ix_auth_event_tenant_id_event_type_occurred_at ON public.auth_event USING btree (tenant_id, event_type, occurred_at);
+
+-- Name: ix_auth_event_tenant_id_user_id_occurred_at; Type: INDEX; Schema: public
+CREATE INDEX ix_auth_event_tenant_id_user_id_occurred_at ON public.auth_event USING btree (tenant_id, user_id, occurred_at DESC);
+
 -- Name: ix_job_events_tenant_id_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_job_events_tenant_id_occurred_at ON public.job_events USING btree (tenant_id, occurred_at);
 
@@ -745,6 +845,12 @@ CREATE INDEX ix_jobs_tenant_id_status ON public.jobs USING btree (tenant_id, sta
 
 -- Name: ix_login_directory_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_login_directory_tenant_id ON public.login_directory USING btree (tenant_id);
+
+-- Name: ix_tenant_membership_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_tenant_membership_tenant_id ON public.tenant_membership USING btree (tenant_id);
+
+-- Name: ix_tenant_membership_tenant_id_user_id; Type: INDEX; Schema: public
+CREATE INDEX ix_tenant_membership_tenant_id_user_id ON public.tenant_membership USING btree (tenant_id, user_id);
 
 -- Name: ix_tenants_region_code; Type: INDEX; Schema: public
 CREATE INDEX ix_tenants_region_code ON public.tenants USING btree (region_code);
@@ -773,8 +879,23 @@ CREATE UNIQUE INDEX procrastinate_jobs_queueing_lock_idx_v1 ON public.procrastin
 -- Name: procrastinate_periodic_defers_job_id_fkey_v1; Type: INDEX; Schema: public
 CREATE INDEX procrastinate_periodic_defers_job_id_fkey_v1 ON public.procrastinate_periodic_defers USING btree (job_id);
 
+-- Name: uq_app_user_tenant_id_email; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_app_user_tenant_id_email ON public.app_user USING btree (tenant_id, email) WHERE (deleted_at IS NULL);
+
+-- Name: uq_app_user_tenant_id_keycloak_user_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_app_user_tenant_id_keycloak_user_id ON public.app_user USING btree (tenant_id, keycloak_user_id) WHERE (keycloak_user_id IS NOT NULL);
+
 -- Name: uq_jobs_tenant_id_job_type_idempotency_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs USING btree (tenant_id, job_type, idempotency_key) WHERE (idempotency_key IS NOT NULL);
+
+-- Name: uq_tenant_membership_tenant_id_user_id_organisation_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_tenant_membership_tenant_id_user_id_organisation_id ON public.tenant_membership USING btree (tenant_id, user_id, organisation_id) NULLS NOT DISTINCT WHERE (deleted_at IS NULL);
+
+-- Name: app_user tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.app_user USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: auth_event tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.auth_event USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: job_events tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.job_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -782,14 +903,26 @@ CREATE POLICY tenant_isolation ON public.job_events USING ((tenant_id = (NULLIF(
 -- Name: jobs tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.jobs USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: tenant_membership tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.tenant_membership USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: tenants tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenants USING ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: app_user; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.app_user ENABLE ROW LEVEL SECURITY;
+
+-- Name: auth_event; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.auth_event ENABLE ROW LEVEL SECURITY;
 
 -- Name: job_events; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.job_events ENABLE ROW LEVEL SECURITY;
 
 -- Name: jobs; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
+
+-- Name: tenant_membership; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.tenant_membership ENABLE ROW LEVEL SECURITY;
 
 -- Name: tenants; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
@@ -842,6 +975,58 @@ ALTER SEQUENCE public.procrastinate_jobs_id_seq OWNED BY public.procrastinate_jo
 
 -- Name: procrastinate_periodic_defers_id_seq; Type: SEQUENCE OWNED BY; Schema: public
 ALTER SEQUENCE public.procrastinate_periodic_defers_id_seq OWNED BY public.procrastinate_periodic_defers.id;
+
+-- Name: app_user; Type: TABLE; Schema: public
+CREATE TABLE public.app_user (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    organisation_id uuid,
+    user_class text NOT NULL,
+    email public.citext NOT NULL,
+    display_name text NOT NULL,
+    idp_alias text,
+    keycloak_user_id uuid,
+    external_id text,
+    sso_managed boolean DEFAULT false NOT NULL,
+    status text NOT NULL,
+    deactivated_at timestamp with time zone,
+    last_login_at timestamp with time zone,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_app_user_deactivated_at CHECK (((status = 'deactivated'::text) = (deactivated_at IS NOT NULL))),
+    CONSTRAINT ck_app_user_display_name CHECK (((btrim(display_name) <> ''::text) AND (length(display_name) <= 200))),
+    CONSTRAINT ck_app_user_email CHECK ((email OPERATOR(public.~) '^[^@[:space:]]+@[^@[:space:]]+$'::public.citext)),
+    CONSTRAINT ck_app_user_external_id CHECK ((external_id <> ''::text)),
+    CONSTRAINT ck_app_user_idp_alias CHECK ((idp_alias <> ''::text)),
+    CONSTRAINT ck_app_user_status CHECK ((status = ANY (ARRAY['invited'::text, 'active'::text, 'deactivated'::text]))),
+    CONSTRAINT ck_app_user_sync_version CHECK ((sync_version >= 1)),
+    CONSTRAINT ck_app_user_user_class CHECK ((user_class = ANY (ARRAY['staff'::text, 'field'::text, 'portal'::text])))
+);
+
+ALTER TABLE ONLY public.app_user FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.app_user OWNER TO aip_owner;
+
+-- Name: auth_event; Type: TABLE; Schema: public
+CREATE TABLE public.auth_event (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid,
+    event_type text NOT NULL,
+    ip inet,
+    user_agent text,
+    detail jsonb DEFAULT '{}'::jsonb NOT NULL,
+    occurred_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_auth_event_detail CHECK ((jsonb_typeof(detail) = 'object'::text)),
+    CONSTRAINT ck_auth_event_event_type CHECK ((event_type ~ '^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$'::text)),
+    CONSTRAINT ck_auth_event_user_agent CHECK ((length(user_agent) <= 512))
+);
+
+ALTER TABLE ONLY public.auth_event FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.auth_event OWNER TO aip_owner;
 
 -- Name: deployment_regions; Type: TABLE; Schema: public
 CREATE TABLE public.deployment_regions (
@@ -910,7 +1095,8 @@ CREATE TABLE public.login_directory (
     tenant_id uuid NOT NULL,
     idp_alias text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT ck_login_directory_kind CHECK ((kind = ANY (ARRAY['email_domain'::text, 'tenant_slug'::text])))
+    CONSTRAINT ck_login_directory_email_no_idp CHECK (((kind <> 'email'::text) OR (idp_alias IS NULL))),
+    CONSTRAINT ck_login_directory_kind CHECK ((kind = ANY (ARRAY['email_domain'::text, 'tenant_slug'::text, 'email'::text])))
 );
 
 ALTER TABLE public.login_directory OWNER TO aip_owner;
@@ -962,6 +1148,26 @@ CREATE TABLE public.procrastinate_workers (
 );
 
 ALTER TABLE public.procrastinate_workers OWNER TO aip_owner;
+
+-- Name: tenant_membership; Type: TABLE; Schema: public
+CREATE TABLE public.tenant_membership (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    organisation_id uuid,
+    membership_type text NOT NULL,
+    valid_from date DEFAULT CURRENT_DATE NOT NULL,
+    valid_to date,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_tenant_membership_membership_type CHECK ((membership_type = ANY (ARRAY['member'::text, 'client'::text, 'subcontractor'::text, 'guest'::text]))),
+    CONSTRAINT ck_tenant_membership_valid_to CHECK (((valid_to IS NULL) OR (valid_to >= valid_from)))
+);
+
+ALTER TABLE ONLY public.tenant_membership FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.tenant_membership OWNER TO aip_owner;
 
 -- Name: tenants; Type: TABLE; Schema: public
 CREATE TABLE public.tenants (

@@ -242,7 +242,7 @@ class JitProvisioner:
             return _deny("INVALID_EMAIL")
         binding = await self._binding(identity, email, domain)
         if isinstance(binding, Denied):
-            logger.info("jit refused before tenant: %s", binding.code)
+            logger.info("jit refused before tenant resolution (%s)", binding.code)
             return binding
         for attempt in (1, 2):
             try:

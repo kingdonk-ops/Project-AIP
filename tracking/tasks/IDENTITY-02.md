@@ -63,3 +63,22 @@ Keep one `app_user` per person per tenant with tenant membership, provision SSO 
     - After creating local user `carol@client.test` in `kaefer-demo`, `identity_resolve_login('email', 'carol@client.test')` returns the `kaefer-demo` tenant id. Registering the same email for `tenant-b` raises `EMAIL_IN_OTHER_TENANT`.
   - **e2e**:
     - Compose stack, Playwright: sign in as `alice@kaefer.test` through the mock IdP (as in IDENTITY-01's e2e). Expected: the callback test response contains a userId. A second sign-in returns the same userId, and the database holds exactly 1 `app_user` for alice.
+
+## Implementation notes (2026-10-09)
+
+Migration revision `202610091851_identity_users` (revises `202610081200`).
+
+- Migration: `app_user`, `tenant_membership` (tenant-table template, FORCE RLS, composite `(user_id, tenant_id)` FKs, FKs to `tenants`), append-only `auth_event` (`aip_app`: SELECT + INSERT only), `login_directory.kind` += `email`, SECURITY DEFINER `identity_register_email` (only for the bound `app.tenant_id` and only for a live local user of that tenant).
+- `jit.py`: pure `decide_jit`, `JitProvisioner` and `JitLoginHandler` (default behind the unchanged `ExternalLoginHandler` port). Tenant comes only from the IdP binding (SSO: cookie tenant plus a token email domain claimed by that tenant/IdP) or the local email registration. Fails closed for inactive/deleted tenant, deactivated or soft-deleted user, unverified email, unclaimed domain, no current membership and local/SSO mismatch. Advisory locks plus one retry make concurrent first logins race-safe (mutation-checked).
+- `principal.py`: `Principal`, `PrincipalResolver`, `get_principal`; the `x-test-principal` stub needs `AIP_ENV=test` and `AUTH_TEST_STUB=1`, and `create_app()` refuses it outside test.
+- `GET /api/v1/me`; `api.py` exports per spec; tenancy `api.py` also exports `load_tenant`, `access_for_status`, `Denial`.
+- Not run locally: the real-Keycloak e2e `test_alice_sso_is_provisioned_once_by_jit` (needs Docker/compose).
+- Carried forward: `auth_event` ip/user agent at login -> IDENTITY-03; stale `email` directory rows on email change -> IDENTITY-04.
+
+### For the security reviewer
+
+- `identity_register_email` (SECURITY DEFINER) checks tenant context and local user; it leaks only `EMAIL_IN_OTHER_TENANT` to the calling tenant (spec-required 409).
+- Local login: the registration tenant is authoritative; a differing cookie tenant is refused (`TENANT_MISMATCH`).
+- Denial codes (e.g. `USER_DEACTIVATED` vs `NOT_INVITED`) are shown only after Keycloak authenticated the account.
+- Soft-deleted users block re-provisioning by subject or email until restored (deliberate fail-closed).
+- `test_me_db.py` points the process engine at the test DB via `DATABASE_URL` and disposes it afterwards.

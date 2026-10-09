@@ -95,7 +95,8 @@ def upgrade() -> None:
         FOREIGN KEY (user_id, tenant_id) REFERENCES app_user (id, tenant_id),
       ADD CONSTRAINT ck_tenant_membership_membership_type
         CHECK (membership_type IN ('member', 'client', 'subcontractor', 'guest')),
-      ADD CONSTRAINT ck_tenant_membership_valid_to CHECK (valid_to IS NULL OR valid_to >= valid_from);
+      ADD CONSTRAINT ck_tenant_membership_valid_to
+        CHECK (valid_to IS NULL OR valid_to >= valid_from);
 
     CREATE UNIQUE INDEX uq_tenant_membership_tenant_id_user_id_organisation_id
       ON tenant_membership (tenant_id, user_id, organisation_id) NULLS NOT DISTINCT
