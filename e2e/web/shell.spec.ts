@@ -28,13 +28,16 @@ test("unauthenticated /projects redirects to /login, then sign in lands on /proj
   await expect(page.getByTestId("user-email")).toHaveText("alice@kaefer.test");
 });
 
-test("shell landmarks, nav and axe on the signed-in page", async ({ page, isMobile }) => {
+test("shell landmarks, nav and axe on the signed-in page", async ({ page }) => {
   await signInAsStub(page, "alice@kaefer.test");
   await page.goto("/");
   await expect(page.getByRole("banner")).toBeVisible();
   await expect(page.getByRole("main")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
-  if (isMobile) {
+  // Key off the real viewport, not Playwright's isMobile flag: the iPad project is isMobile but is
+  // 810px wide, above the 768px breakpoint, so its rail stays open.
+  const narrow = (page.viewportSize()?.width ?? Number.POSITIVE_INFINITY) < 768;
+  if (narrow) {
     // Under 768px the rail collapses behind the menu button.
     await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeHidden();
     await page.getByRole("button", { name: "Menu", exact: true }).click();
