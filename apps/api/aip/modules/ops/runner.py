@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from .registry import JobSpec
 
 __all__ = [
+    "JOB_TYPE_MISMATCH",
     "MEMORY_LIMIT_ENV",
     "MemoryGuard",
     "memory_guard",
@@ -53,6 +54,7 @@ MEMORY_LIMIT_ENV = "WORKER_MEMORY_LIMIT_MB"
 MEMORY_WARN_RATIO = 0.80
 MEMORY_EXIT_RATIO = 0.95
 MAX_ERROR_CHARS = 2000
+JOB_TYPE_MISMATCH = "job_type_mismatch"
 
 
 def _peak_rss_mb() -> float:
@@ -142,6 +144,17 @@ async def run_job(
             job = await service.begin_attempt(conn, jid)
         if job is None:
             logger.info("job %s is already finished; skipping redelivery", job_id)
+            return
+        if job.job_type != spec.job_type:
+            # A queue row for task A points at a job of type B: never run A's handler on it.
+            logger.error(
+                "job %s is of type %s but was queued for task %s; failing it",
+                job_id,
+                job.job_type,
+                spec.job_type,
+            )
+            async with with_tenant(tenant_id, engine=engine) as conn:
+                await service.transition(conn, jid, JobStatus.FAILED, error=JOB_TYPE_MISMATCH)
             return
         if job.attempts > spec.max_attempts:
             # Recovered after a worker died more often than the job may try.

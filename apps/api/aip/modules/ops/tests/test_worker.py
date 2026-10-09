@@ -64,3 +64,24 @@ def test_a_sigterm_stops_an_idle_worker_gracefully(migrated_db: FreshDb) -> None
             proc.kill()
     # A graceful stop unregisters the worker.
     assert migrated_db.fetch("SELECT count(*) FROM procrastinate_workers") == [(0,)]
+
+
+async def test_startup_refuses_a_privileged_jobs_login(
+    migrated_db: FreshDb, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from aip.platform.db.engine import dispose_jobs_engine
+    from aip.platform.db.errors import DatabaseConfigError
+    from aip.worker import check_jobs_login
+
+    monkeypatch.setenv("DATABASE_JOBS_URL", migrated_db.role_url(JOBS))
+    try:
+        await check_jobs_login()  # aip_jobs: fine
+    finally:
+        await dispose_jobs_engine()
+
+    monkeypatch.setenv("DATABASE_JOBS_URL", migrated_db.owner_url)  # aip_owner would bypass RLS
+    try:
+        with pytest.raises(DatabaseConfigError):
+            await check_jobs_login()
+    finally:
+        await dispose_jobs_engine()

@@ -531,3 +531,65 @@ async def test_the_queue_row_holds_ids_only_and_the_tenant_lock(
     assert "secret" not in str(args) and "do-not-copy" not in str(args)
     assert lock == job_lock(TENANT_A_ID, spec.job_type, 0)
     assert queue == "default"
+
+
+def _sqlstate(exc: DBAPIError) -> str | None:
+    orig: Any = exc.orig
+    return getattr(orig, "sqlstate", None) or getattr(orig, "pgcode", None)
+
+
+@pytest.mark.parametrize(
+    "insert",
+    [
+        "INSERT INTO procrastinate_jobs (queue_name, task_name, status) "
+        "VALUES ('default', 'x', 'doing')",
+        "INSERT INTO procrastinate_jobs (queue_name, task_name, attempts) "
+        "VALUES ('default', 'x', 9)",
+        "INSERT INTO procrastinate_jobs (id, queue_name, task_name) VALUES (1, 'default', 'x')",
+        "INSERT INTO procrastinate_jobs (queue_name, task_name, abort_requested) "
+        "VALUES ('default', 'x', true)",
+        "INSERT INTO procrastinate_jobs (queue_name, task_name, worker_id) "
+        "VALUES ('default', 'x', 1)",
+        "INSERT INTO procrastinate_events (job_id, type, id) VALUES (1, 'started', 1)",
+    ],
+)
+async def test_the_app_role_cannot_forge_queue_state(
+    queue_db: FreshDb, tx: Tx, insert: str
+) -> None:
+    """INSERT is granted per column: no forged status/id/attempts (a 'doing' row holds a lock)."""
+    with pytest.raises(DBAPIError) as raised:
+        async with tx(TENANT_A_ID) as conn:
+            await conn.execute(text(insert))
+    assert _sqlstate(raised.value) == "42501"
+    assert await sfetch(queue_db, "SELECT count(*) FROM procrastinate_jobs") == [(0,)]
+
+
+async def test_a_queue_row_for_the_wrong_task_never_runs_that_handler(
+    queue_db: FreshDb, tx: Tx, register_job: Callable[..., ops.JobSpec]
+) -> None:
+    ran: list[str] = []
+
+    async def handler_a(conn: AsyncConnection, job: ops.JobView) -> str | None:
+        ran.append("A")
+        return None
+
+    async def handler_b(conn: AsyncConnection, job: ops.JobView) -> str | None:
+        ran.append("B")
+        return None
+
+    spec_a = register_job(handler_a)
+    spec_b = register_job(handler_b)
+    async with tx(TENANT_A_ID) as conn:
+        job_b = await ops.create_job(conn, job_type=spec_b.job_type, payload={})
+        # Forged queue row: task A, but pointing at the same tenant's job of type B.
+        await defer_in_transaction(
+            conn,
+            task_name=spec_a.job_type,
+            queue="default",
+            args={"job_id": str(job_b.id), "tenant_id": str(TENANT_A_ID)},
+        )
+    await drain(queue_db)
+
+    assert ran == []
+    row = await job_row(tx, TENANT_A_ID, job_b.id)
+    assert (row.status, row.error) == ("failed", "job_type_mismatch")

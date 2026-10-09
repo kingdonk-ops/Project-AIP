@@ -27,7 +27,7 @@ import sys
 from collections.abc import Sequence
 
 from aip.modules.ops.runner import memory_guard
-from aip.platform.db.engine import dispose_engine, dispose_jobs_engine
+from aip.platform.db.engine import dispose_engine, dispose_jobs_engine, get_jobs_engine
 from aip.platform.jobs.app import DEFAULT_QUEUE, QUEUES, run_worker
 from aip.platform.modules.registry import (
     DEFAULT_MODULES_PACKAGE,
@@ -36,7 +36,7 @@ from aip.platform.modules.registry import (
 )
 from aip.platform.observability.logging import configure_logging
 
-__all__ = ["import_job_modules", "main", "parse_args"]
+__all__ = ["check_jobs_login", "import_job_modules", "main", "parse_args"]
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +85,19 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return args
 
 
+async def check_jobs_login() -> None:
+    """Open one ``aip_jobs`` connection now, so a privileged login stops startup.
+
+    The engine refuses an owner, superuser, BYPASSRLS or CREATEROLE login on connect
+    (``DatabaseConfigError``); finding out here beats failing every job later.
+    """
+    async with get_jobs_engine().connect():
+        pass
+
+
 async def _run(queues: list[str], concurrency: int, shutdown_timeout: float) -> None:
     try:
+        await check_jobs_login()
         await run_worker(
             queues=queues,
             concurrency=concurrency,

@@ -634,8 +634,12 @@ CREATE TRIGGER procrastinate_trigger_delete_jobs_v1
 
     -- The API enqueues through procrastinate_defer_jobs_v1 inside the tenant transaction. The
     -- function and its triggers run with the caller's rights: INSERT into jobs and events, and
-    -- RETURNING id needs SELECT on that one column. No other column of the queue is readable.
-    GRANT INSERT ON procrastinate_jobs, procrastinate_events TO aip_app;
+    -- RETURNING id needs SELECT on that one column. INSERT is granted per column, only on the ones
+    -- the defer path sets, so a compromised API session cannot forge status, id, attempts or
+    -- worker_id (e.g. a 'doing' row holding another tenant's lock). Nothing else is readable.
+    GRANT INSERT (queue_name, task_name, priority, lock, queueing_lock, args, scheduled_at)
+      ON procrastinate_jobs TO aip_app;
+    GRANT INSERT (job_id, type, at) ON procrastinate_events TO aip_app;
     GRANT SELECT (id) ON procrastinate_jobs TO aip_app;
     GRANT USAGE ON SEQUENCE procrastinate_jobs_id_seq, procrastinate_events_id_seq TO aip_app;
     """)

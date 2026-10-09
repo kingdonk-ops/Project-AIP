@@ -109,7 +109,22 @@ def test_worker_and_app_grants_on_the_queue(migrated_db: FreshDb) -> None:
 
     for privilege in ("SELECT", "INSERT", "UPDATE", "DELETE"):
         assert can(JOBS, "procrastinate_jobs", privilege)
-    assert can("aip_app", "procrastinate_jobs", "INSERT")
+    assert not can("aip_app", "procrastinate_jobs", "INSERT")  # column-level only
+    allowed = {
+        "queue_name",
+        "task_name",
+        "priority",
+        "lock",
+        "queueing_lock",
+        "args",
+        "scheduled_at",
+    }
+    columns = migrated_db.fetch(
+        "SELECT attname FROM pg_attribute WHERE attrelid = 'procrastinate_jobs'::regclass "
+        "AND attnum > 0 AND NOT attisdropped "
+        "AND has_column_privilege('aip_app', attrelid, attnum, 'INSERT')"
+    )
+    assert {c[0] for c in columns} == allowed
     assert not can("aip_app", "procrastinate_jobs", "SELECT")  # only the id column
     assert not can("aip_app", "procrastinate_jobs", "UPDATE")
     assert not can("aip_app", "procrastinate_jobs", "DELETE")
