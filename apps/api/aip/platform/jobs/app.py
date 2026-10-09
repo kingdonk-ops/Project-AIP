@@ -12,11 +12,11 @@ transaction leaves neither a domain row, a ``jobs`` row nor a queue row. Procras
 which is why this module lives in ``aip.platform.jobs`` and not in a module. Application data is
 read and written by the job runner through ``with_tenant`` on the ``aip_jobs`` engine.
 
-**Fairness.** ``job_lock`` builds the Procrastinate lock string. Two jobs with the same lock never
-run at once, so giving a tenant's jobs of one type ``max_per_tenant`` distinct slots caps that
-tenant's concurrency for the type, while other tenants' jobs (other locks) are not held up.
-TENANCY-02's ``job_lock`` is not merged yet; this uses its documented format
-``tenant:<id>:job:<type>:<slot>`` and should be replaced by it.
+**Fairness.** ``tenant_keys.job_lock`` builds the Procrastinate lock string. Two jobs with the same
+lock never run at once, so giving a tenant's jobs of one type ``max_per_tenant`` distinct slots
+caps that tenant's concurrency for the type, while other tenants' jobs (other locks) are not
+held up.
+The key format is ``tenant:<id>:job:<type>:<slot>``.
 """
 
 from __future__ import annotations
@@ -26,7 +26,6 @@ import json
 import os
 from collections.abc import Iterable
 from typing import Any
-from uuid import UUID
 
 import procrastinate
 from procrastinate import RetryStrategy
@@ -42,7 +41,6 @@ __all__ = [
     "JobRetryStrategy",
     "app",
     "defer_in_transaction",
-    "job_lock",
     "jobs_conninfo",
     "run_worker",
 ]
@@ -67,11 +65,6 @@ def jobs_conninfo() -> str:
     if not url:
         raise RuntimeError(f"{JOBS_URL_ENV} is not set")
     return url
-
-
-def job_lock(tenant_id: UUID | str, job_type: str, slot: int) -> str:
-    """The Procrastinate lock for one concurrency slot of ``(tenant, job type)``."""
-    return f"tenant:{tenant_id}:job:{job_type}:{slot}"
 
 
 class JobRetryStrategy(RetryStrategy):
