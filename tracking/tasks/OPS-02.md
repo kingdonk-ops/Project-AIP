@@ -59,3 +59,8 @@ Run jobs through Procrastinate (Postgres-backed, asyncio) with timeouts, memory 
 ## Carried forward from TENANCY-01 security review (non-blocking)
 
 - `aip_jobs` has no SELECT on `tenants` (it does on `deployment_regions`). That fails closed, but worker code that reads `tenants` will fail once jobs run as `aip_jobs`: grant the minimum column-level SELECT it needs in a new revision, or have jobs receive the tenant fields they need in the payload.
+
+## Carried forward from TENANCY-02 (non-blocking)
+
+- `aip.platform.tenant_keys` now has `job_lock(tenant_id, job_type, *slot_parts)` (format `tenant:<id>:job:<type>:<slot>`, identical to the local helper in PR #31) and `job_queueing_lock(...)` (`tenant:<id>:queueing:<type>:<slot>`). When OPS-02 merges: delete the local `job_lock` in `aip/platform/jobs/app.py`, import the builder instead (same key format, so queued locks stay valid), and update its tests. The arch test `apps/api/tests/arch/test_tenant_key_boundary.py` fails on any hand-built `tenant:` / `tenants/` literal under `aip/`, so a leftover local helper will fail CI.
+- TENANCY-02's `tenant_guard.py` (`TenantJobPayload`, `defer_for_tenant`, `tenant_task`) was not built, because it lives in `aip/platform/jobs/`, which OPS-02 owns. Plug it into OPS-02's handler-registry wrapper.
