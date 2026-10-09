@@ -36,26 +36,26 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [STACK-05](tasks/STACK-05.md) | Platform version endpoint and docker-compose stack | stack | M | STACK-02 | done | PR #18 |
 | [OPS-04](tasks/OPS-04.md) | Health endpoints and structured logging with PII scrubber | ops | S | ARCH-01 | done | PR #15 |
 | [IDENTITY-01](tasks/IDENTITY-01.md) | Keycloak dev realm in compose + OIDC broker login + login_directory | identity | M | ARCH-01, STACK-05 | done | PR #23 |
-| [DESIGN-01](tasks/DESIGN-01.md) | Design tokens, ui package (Radix/shadcn), axe lint | design | M | ARCH-01 | review | branch claude/p0-design-01; PR pending; adds ADR 0014 (OFL-1.1 fonts) |
+| [DESIGN-01](tasks/DESIGN-01.md) | Design tokens, ui package (Radix/shadcn), axe lint | design | M | ARCH-01 | done | PR #26; adds ADR 0014 (OFL-1.1 fonts) |
 
 ### Wave 2
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
 | [DATABASE-02](tasks/DATABASE-02.md) | Roles, session helper and fail-closed tenant context | database | M | DATABASE-08 | done | PR #19 |
-| [TESTING-02](tasks/TESTING-02.md) | Schema guard: tenant_id and RLS on every table | testing | S | DATABASE-02 | review | branch claude/p0-testing-02 (PR pending) |
+| [TESTING-02](tasks/TESTING-02.md) | Schema guard: tenant_id and RLS on every table | testing | S | DATABASE-02 | done | PR #27 |
 | [STACK-03](tasks/STACK-03.md) | Generated typed API client with drift check | stack | M | ARCH-01 | done | PR #13 |
-| [DESIGN-02](tasks/DESIGN-02.md) | App shell (header, nav rail, scope bar) + login/logout | design | M | DESIGN-01, IDENTITY-01 | review | branch claude/p0-design-02 (PR pending) |
+| [DESIGN-02](tasks/DESIGN-02.md) | App shell (header, nav rail, scope bar) + login/logout | design | M | DESIGN-01, IDENTITY-01 | review | branch claude/p0-design-02, PR #34 |
 
 ### Wave 3
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [TENANCY-01](tasks/TENANCY-01.md) | Tenants, regions and tenant resolution | tenancy | M | DATABASE-02, IDENTITY-01 | review | branch claude/p0-tenancy-01 (PR pending) |
-| [TESTING-01](tasks/TESTING-01.md) | Testcontainers Postgres fixture with non-owner RLS role | testing | M | DATABASE-02 | review | branch claude/p0-testing-01 (PR pending) |
+| [TENANCY-01](tasks/TENANCY-01.md) | Tenants, regions and tenant resolution | tenancy | M | DATABASE-02, IDENTITY-01 | done | PR #29 |
+| [TESTING-01](tasks/TESTING-01.md) | Testcontainers Postgres fixture with non-owner RLS role | testing | M | DATABASE-02 | done | PR #30 |
 | [OPS-11](tasks/OPS-11.md) | Coolify demo deployment of the walking skeleton (synthetic data only) | ops | M | DATABASE-08, STACK-05 | todo | owner decision: M0 deploys to Coolify (ADR 0007) |
 | [ARCH-05](tasks/ARCH-05.md) | domain_events outbox table and writer | arch | M | ARCH-04, DATABASE-02 | todo |  |
-| [DATABASE-04](tasks/DATABASE-04.md) | Base repository helpers: concurrency, ltree, soft delete, JSONB validation | database | M | DATABASE-02 | review | branch claude/p0-database-04b (PR pending) |
+| [DATABASE-04](tasks/DATABASE-04.md) | Base repository helpers: concurrency, ltree, soft delete, JSONB validation | database | M | DATABASE-02 | done | PR #28 |
 | [TERMS-01](tasks/TERMS-01.md) | Terms schema, default en-AU dictionary and loader | terms | M | DATABASE-02 | todo | |
 | [OPS-01](tasks/OPS-01.md) | Job tables and service | ops | M | DATABASE-08 | done | PR #17 |
 
@@ -64,12 +64,12 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
 | [IDENTITY-02](tasks/IDENTITY-02.md) | Users and tenant membership, JIT provisioning, GET /me | identity | M | DATABASE-02, IDENTITY-01, TENANCY-01 | todo |  |
-| [TENANCY-02](tasks/TENANCY-02.md) | Tenant-scoped key builders for Redis, queues, S3 and search | tenancy | S | ARCH-04, TENANCY-01 | review | branch claude/p0-tenancy-02 (PR pending) |
+| [TENANCY-02](tasks/TENANCY-02.md) | Tenant-scoped key builders for Redis, queues, S3 and search | tenancy | S | ARCH-04, TENANCY-01 | done | PR #33 |
 | [ENT-01](tasks/ENT-01.md) | EntitlementService, tenant_subscription, tenant_usage; flags vs entitlements (ADR 0008) | tenancy | M | DATABASE-02, TENANCY-01 | todo |  |
 | [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | todo |  |
 | [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | todo |  |
 | [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | todo | |
-| [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | review | branch claude/p0-ops-02b (PR pending) |
+| [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
 | [DATABASE-05](tasks/DATABASE-05.md) | Append-only grants and time partitioning | database | M | DATABASE-02 | todo | |
 | [SECURITY-02](tasks/SECURITY-02.md) | Security schema with RLS and append-only grants | security | M | DATABASE-02 | todo | |
 

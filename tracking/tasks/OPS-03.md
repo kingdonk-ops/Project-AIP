@@ -46,3 +46,7 @@ Expose job endpoints with ownership and permission checks.
     - Cancel of a succeeded job returns 409.
   - **unit**:
     - can_cancel(requester=u1, job.requested_by=u2, no admin) is false.
+
+## Carried forward from TENANCY-02 (not built there)
+
+- `aip/platform/jobs/tenant_guard.py` (`TenantJobPayload`, `defer_for_tenant`, `tenant_task`): a payload type that requires a validated `TenantId`, and a deferral helper that refuses to enqueue a tenant job without one. It lives in the jobs code OPS-02 owns, so it was left out of TENANCY-02. Build it with the jobs API.
