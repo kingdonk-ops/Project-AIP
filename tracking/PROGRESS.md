@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-10 · DOCS-10 · (PR pending) · Remote un-block and targeted wipe recorded as ADR 0024 (token epoch, quarantine of refused uploads, second approver for signed work, device revoke), with an offline-module backlog note.
 - 2026-10-10 · DOCS-09 · (PR pending) · Owner confirmations recorded (date 2027-03-31, offline out of R1, company tools, database sizes, ADR 0020 adjustments); new ADR 0023 (operator entitlement controls, billing states moved by a person) with tasks ENT-03 and ENT-04.
 - 2026-10-10 · DOCS-08 · (PR pending) · Offline timers revised: two clocks (14 days idle; 72 and 120 hours from the oldest unsynced provisional sign-off), sync progression instead of a 4-hour deadline, session interlock, signing-only gating, with four adjustments flagged; archive plan redesigned as a sealed bundle with a separate viewer (ADR 0022).
 - 2026-10-10 · DOCS-07 · (PR pending) · Offboarding lifecycle recorded as ADR 0022 (30-day export, quarantine to day 90, purge, certificate, optional archive plan), ADR 0021 scope clarified, TENANCY-07 rewritten, draft contract wording for the lawyer.

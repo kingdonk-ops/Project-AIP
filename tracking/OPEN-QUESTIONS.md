@@ -40,6 +40,7 @@ Nothing blocks M0 now.
 ### Company systems and compliance ([ADR 0017](../docs/adr/0017-company-systems-and-contract-link.md), [`docs/internal/internal.md`](../docs/internal/internal.md))
 
 21. **Make the `Project-AIP` repository private.** It is public today and holds the threat model, security reviews and Keycloak realm config. Private repositories use GitHub Actions minutes, so check Settings, Billing and plans first.
+31. Confirm ADR 0024's adjustments to the remote un-block specification: no Super Admin default, refused uploads quarantined (not dropped), a second approver when signed work is on the tablet, a separate revoke-device action for lost tablets, and browser storage in place of the native Android pieces.
 
 ## Also waiting on the owner
 
