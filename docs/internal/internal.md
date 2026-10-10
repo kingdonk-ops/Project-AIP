@@ -30,7 +30,7 @@ Status: **proposed** = a recommendation awaiting the owner's choice, **decided**
 
 | Function | Candidate | Licence (reported) | Runs on | Holds customer data | Product touchpoint | Status |
 |---|---|---|---|---|---|---|
-| CRM, quotes | A lightweight CRM, product still to choose: Twenty (open source) or a hosted one (HubSpot Free or Starter, Attio) | AGPL-3.0 or commercial | corp account or SaaS | Yes (contacts) | Won deal supplies the tenant name and `contract_ref` | set chosen (owner 2026-10-10), product open (OPEN-QUESTIONS 28) |
+| CRM, quotes | A lightweight CRM, product still to choose: Twenty (open source) or a hosted one (HubSpot Free or Starter, Attio) | AGPL-3.0 or commercial | corp account or SaaS | Yes (contacts) | Won deal supplies the tenant name and `contract_ref` | set chosen (owner 2026-10-10); hosted CRM chosen 2026-10-11 (HubSpot Free or Starter, or Attio; self-hosting Twenty rejected) |
 | Contracts and e-signature | DocuSeal (alt: Documenso) | AGPL-3.0 | corp account | Yes (contracts) | Signed contract → `contract_ref`; never embedded in the product | decided (owner 2026-10-10) |
 | Invoicing and accounting | Xero (AU GST and BAS) | Commercial | SaaS | Yes | Annual invoice from the contract; true-up from usage export | decided (owner 2026-10-10) |
 | Subscription automation | None at launch (ADR 0008: contract billing, no payment provider) | n/a | n/a | n/a | Revisit Lago or ERPNext only with self-serve or metered billing | decided |
@@ -92,7 +92,8 @@ Data crossing the boundary, in both directions, is deliberately small:
 | Power BI (customer-owned) | A customer reads a read-only reporting feed with their own licences; no Microsoft service is run by us | accepted add-on `reporting_feed` (ADR 0008 C); security review before build |
 | Power BI Embedded or dedicated capacity | Paid Azure capacity, Microsoft as sub-processor, residency questions | **deferred**, owner decision and ADR needed |
 | Amazon SES in ap-southeast-2 | Invites, notifications | decided (owner 2026-10-10); needs DKIM, SPF and DMARC on the company domain |
-| Error tracking | Client errors, OPS-05 | **open** (OPEN-QUESTIONS 29): hosted Sentry has no Australian region and would hold event data outside Australia, so events would need scrubbing first; our own error sink (OPS-05) plus CloudWatch is the alternative |
+| Error tracking | Client errors, OPS-05 | decided (owner 2026-10-11): our own error sink (OPS-05) plus Amazon CloudWatch in ap-southeast-2. Hosted Sentry is rejected: it has no Australian region, and stack traces can carry asset tags, user ids and file paths |
+| Hosted CRM (HubSpot Free or Starter, or Attio) | Leads, deals, contact emails | decided (owner 2026-10-11); holds customer contact data outside the product, so list it as a sub-processor once chosen and check where it stores data |
 | GitHub: code, Actions, cosign | Build and signing | decided; in audit scope, not a data processor |
 | Customer identity providers (Entra, Okta) | Federation | the customer's, not ours |
 
@@ -105,7 +106,7 @@ Anything in this table that processes customer data goes on the published sub-pr
 - **Security owner (ISMS owner):** the Head of Engineering and Data Governance role, held by the owner while the company is a
   sole developer. Duties: key and secret rotation (KMS keys rotate automatically each year; application secrets are rotated
   quarterly), audit log integrity, deletion validation (ADR 0021) and the incident process. The operational contact is a
-  `security@` mailbox on the company domain; it must exist before it appears in `security.txt` (OPEN-QUESTIONS 26).
+  `security@` mailbox on the company domain; it is created on the Microsoft 365 tenant once the domain and its mail records are confirmed, and must exist before it appears in `security.txt`. The owner confirmed this on 2026-10-11; the named person is recorded in the private ISMS repository, not here.
 - Auditors also cover people and devices: onboarding and offboarding, MDM, access reviews, vendor register, incident response.
 
 ## 7. Gaps to close before the first paying pilot

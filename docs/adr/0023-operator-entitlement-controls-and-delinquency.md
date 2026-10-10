@@ -1,6 +1,6 @@
 # ADR 0023: Operator entitlement controls and delinquency states
 
-- **Status:** accepted (owner designs, 2026-10-10); points 1, 4, 7, 9, 12 adjust those designs and need the owner's confirmation
+- **Status:** accepted (owner designs, 2026-10-10); points 1, 4, 7, 9, 12 adjust those designs and were confirmed by the owner on 2026-10-11
 - **Date:** 2026-10-10
 - **Affects:** tenancy (ENT-01, ENT-03, ENT-04), ADR 0008, ADR 0015, ADR 0010
 

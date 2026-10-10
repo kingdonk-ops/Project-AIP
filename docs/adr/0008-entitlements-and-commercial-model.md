@@ -1,6 +1,6 @@
 # ADR 0008: One entitlement service; sales-led onboarding; contract billing at launch
 
-- **Status:** accepted (owner, 2026-10-10: the plan structure below); adjustments A to C accepted by the owner 2026-10-10; D is proposed
+- **Status:** accepted (owner, 2026-10-10: the plan structure below); adjustments A to D accepted by the owner (A to C on 2026-10-10, D on 2026-10-11)
 - **Date:** 2026-10-07
 - **Affects:** tenancy, arch; ARCH-08, TENANCY-05, TENANCY-06, ai_gov budgets
 
@@ -46,7 +46,7 @@ Every tenant has its own KMS key regardless of plan (ADR 0006), and the same imm
 `limit.api_calls_per_day` and `limit.db_gb` are the keys ENT-01 defines. Add-ons: `add_on.db_block_20gb` (another 20 GB of
 database, price in the company systems) and `add_on.reporting_feed` (see C).
 
-### Adjustments (A to C accepted by the owner on 2026-10-10, D proposed)
+### Adjustments (A to C accepted by the owner on 2026-10-10, D on 2026-10-11)
 
 - **A. No database-row caps; meter size in GB.** Rows cannot be counted consistently across tables. Meter seats,
   active projects, file storage and **database size in GB** (an included amount per plan, then extra blocks of 20 GB).
