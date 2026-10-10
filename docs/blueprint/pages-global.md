@@ -476,21 +476,21 @@ Tamper-evident log of all significant events.
   - Save view
 - **access**: Auditor permission, separate from app admin. Read-only.
 
-#### Billing & usage `/settings/billing` (global)
+#### Plan and usage `/settings/billing` (global)
 
-Plan, seats and usage for hosted tenants.
+<!-- hand-edited 2026-10-10 (ADR 0008, ADR 0017): read-only; invoices and payments live in company systems. -->
+Read-only plan, seats and usage. Contract billing at launch: there is no in-app payment, plan change or invoice list.
 
 - **layout**: Summary cards plus table
 - **sections**:
-  - Plan and seats
-  - Usage (storage, SSO or SCIM connections)
-  - Invoices
-  - Billing contacts
+  - Plan, term and contract reference
+  - Seats used against the limit, per user class
+  - Usage (storage, SSO or SCIM connections, AI spend)
+  - Renewal date
+  - Billing contact (display only)
 - **actions**:
-  - Change plan
-  - Download invoice
-  - Update contacts
-- **access**: Billing admin. Hidden on siloed or contract-billed tenants.
+  - Request a change (opens a message to the account owner; only an operator changes the plan)
+- **access**: Tenant admin, read-only. Shown on every tenant, including contract-billed and siloed ones.
 
 #### Security policies `/settings/security` (global)
 
