@@ -67,23 +67,51 @@ SSO systems don't report whether MFA was used.
   version of it).
 - **Offline grace for permission changes.** The owner wants queued offline drafts to keep their signing authority until
   they sync. That is accepted with limits: the grace covers only role-permission edits made after the device's last
-  sync, and only within the maximum offline period (OPEN-QUESTIONS 7). It never covers a deactivated user, a revoked
+  sync, and only within the offline signing limits in part 3. It never covers a deactivated user, a revoked
   session or a removed device. The device records the access version it last synced with, and the server checks that
   version when the draft arrives; anything outside the limits is held for review or countersign.
 
-## Owner answers, part 3: offline limits (2026-10-10)
+## Owner answers, part 3: offline timers (2026-10-10, revised the same day)
 
-- **Hard ceiling of 72 hours offline.** The owner wrote "72 hours (3 business days)"; this ADR reads it as 72 elapsed
-  hours, so a weekend shutdown does not lock people out wrongly. Confirm (OPEN-QUESTIONS 25).
-- **Provisional sign-off offline.** Inspectors may record and provisionally sign hold points and witness points offline so
-  blasting, coating and erection crews are not stopped. Such records carry the state `PROVISIONAL_OFFLINE`.
-- The local timestamp is informational. Device clocks can be wrong, so the server also records when it received the
-  record, the device, the device's last successful sync time and its access version, rejects a device time later than
-  the receive time, and flags large differences for review.
-- **Reconcile within 4 hours of connectivity returning.** The app syncs on its own. A device still unreconciled after
-  4 hours of connectivity is flagged to the inspector and a tenant admin, and new provisional sign-offs on it are
-  blocked until it reconciles (the consequence is proposed; the owner gave the deadline only).
-- **Beyond 72 hours without contacting the sync gateway**, new provisional sign-offs are locked until a tenant admin
-  override or a device check-in restores signing.
+The first version of this part used one 72-hour ceiling and a 4-hour reconcile deadline. The owner replaced it: calendar
+time penalises people who are simply off shift (long weekends, rostered days off, FIFO travel), so two separate clocks
+are used. All thresholds are platform defaults; a tenant admin may shorten them, never lengthen them.
+
+- **Track A, idle device (nothing unsynced).** Cached drawings, checklists and forms stay usable for **14 days** since the
+  last contact with the server. After that the app asks for one reconnect to re-validate the session. There is no admin
+  lockout.
+- **Track B, unsynced provisional records.** Inspectors may record and provisionally sign hold points and witness points
+  offline so blasting, coating and erection crews are not stopped; such records carry `PROVISIONAL_OFFLINE`. The clock starts
+  at the oldest pending record:
+  - 0 to 72 hours: normal work.
+  - 72 to 120 hours: a banner ("3 signed records pending sync. Connect within 48 hours"); work continues.
+  - 120 hours: new provisional sign-offs are blocked until the queue syncs. Pending records stay in the encrypted local
+    store and are never deleted.
+- **On reconnect** the app starts syncing by itself and sends small payloads first (sign-off records with their attachment
+  hashes, statuses), then photos and video in a deferred queue. There is no fixed 4-hour deadline, because a flickering
+  signal would cause false failures. New provisional sign-offs are blocked only if sync has not completed 24 hours after the
+  device first regained connectivity.
+- **Session interlock.** While provisional records older than 72 hours are pending, the user cannot log out or switch user
+  until the queue is empty. A tenant admin can override with an audit entry (a stuck record, a handed-in device). Logging
+  out never deletes pending records.
+- **Only signing is gated.** Read-only access to drawings and specifications already on the device is never locked, even
+  after a timeout, for safety on site.
 - Offline device caches are purged automatically once the server acknowledges reconciliation, and at most 30 days after.
-- The permission grace in the earlier part of this addendum is bounded by the same 72 hours.
+- The device time is informational. The server records when it received each record, the device, the device's last sync
+  and its access version, rejects a device time later than the receive time, and flags large differences for review.
+
+### Adjustments proposed (owner to confirm)
+
+1. **Signing authority needs a recent online check.** New provisional sign-offs also require an online validation no
+   older than 7 days; Track A's 14 days covers reading cached material only. Otherwise a user deactivated or stripped of a
+   permission while their tablet sat idle could still sign on day 13 and then get a further 120 hours.
+2. **Unmanaged tablets cannot be wiped remotely.** The local store is encrypted with a key that needs the user's unlock, the
+   app locks after a short idle period, and on the next contact a deactivated user's or revoked device's cache is wiped.
+   Rio Tinto may require shorter limits; check the contract.
+3. **Sign-offs before their photos.** The server accepts a sign-off with its attachment hashes marked "evidence pending";
+   the sealed report cannot be finalised until every attachment arrives.
+4. **This is a web app, not a native one.** Browsers can evict local storage under pressure, so the app must request
+   persistent storage, be installed to the home screen and show storage status; background sync is not guaranteed, so sync
+   also runs on app open and when the browser reports it is online. The Android callbacks in the owner's note
+   (connectivity broadcasts, WorkManager) apply to a native app and are not available here.
+5. The permission grace in part 2 is bounded by Track B and by adjustment 1.

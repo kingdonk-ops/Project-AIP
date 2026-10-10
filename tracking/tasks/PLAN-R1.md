@@ -131,5 +131,10 @@ R1 scope (ADR 0007 §4). Module folders and ID prefixes are below. IDs must matc
 ## Carried forward from owner answers, part 3 (2026-10-10)
 
 - **Scope question that moves the date:** ADR 0007 puts the offline PWA after R1, but the owner's milestones list "core offline sync" in the alpha. If offline is required for "Kaefer live", add it to R1 (OPEN-QUESTIONS 25). Offline sync is the riskiest module; plan its property tests (TESTING-07) with it.
-- Offline rules to build: the 72-hour ceiling, `PROVISIONAL_OFFLINE`, the 4-hour reconcile deadline and the server-side checks in the ADR 0010 addendum (part 3).
+- Offline rules to build (ADR 0010 addendum, part 3, revised): two clocks (14 days idle; 72/120 hours from the oldest pending `PROVISIONAL_OFFLINE` record), the 24-hour sync grace, the 7-day online-validation limit for new signing, the session interlock with an audited admin override, signing-only gating, encrypted local store, persistent-storage request and storage status, evidence-pending attachments, and the server-side checks.
 - Retention: ADR 0021.
+
+## Carried forward: archive viewer (owner design, 2026-10-10)
+
+Backlog, after R1 and after the TENANCY-07 export: the sealed archive bundle format and a simple read-only archive area on its own origin and sign-in, with a layout like the main system (ADR 0022 point 6). Plan it with a compatibility test that opens bundles from every earlier schema version.
+

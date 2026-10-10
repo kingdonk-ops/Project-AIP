@@ -30,11 +30,22 @@ terms, and a lawyer must confirm how the contract allocates the duty.
    the true end of the data is the purge day plus up to 35 days. Tenant files are unreadable from the key's deletion.
 5. **The platform keeps a deletion record** (tenant id, dates, row and object counts, hashes, the certificate), with no
    business data, for 7 years.
-6. **Archive plan (backlog, not R1).** A customer who must keep records buys a read-only `archive` plan: the tenant stays
-   active but read-only (writes return 403 `TENANT_READ_ONLY`), one or two auditor seats, search and export stay on, files
-   move to S3 Glacier Instant Retrieval. Database rows stay in the shared cluster and count toward the database size
-   (ADR 0008), so the price must cover them; a sealed export bundle with a static viewer is the alternative if that cost
-   matters. Prices are set in the company systems.
+6. **Archive plan (backlog, not R1): a sealed archive bundle and a separate viewer** (owner design, 2026-10-10). A customer
+   who must keep records after leaving buys the `archive` plan. At conversion the tenant's data is exported from the
+   shared database into a **sealed bundle** held with the reports and files in S3 Glacier Instant Retrieval under the tenant's
+   KMS key: a single SQLite file (a stable, openable format) plus CSV and JSON copies, the sealed PDF reports, the photos and
+   a manifest with a schema version and hashes. The tenant's rows are then purged from the shared cluster (same purge job
+   as point 2), so an archived tenant adds nothing to the database size. The tenant row stays with status `archived`.
+   - **Archive area.** A separate origin and sign-in for one or two auditor seats (local accounts with the second step,
+     ADR 0005), like the client portal and operator console. A simple read-only viewer opens the bundle with a layout
+     similar to the main system (built from `@aip/ui`): registers, records, reports, photos, search and export.
+   - Isolation is by file, per tenant, not by row-level security. The viewer must read every bundle schema version it has
+     ever produced, so compatibility tests keep old bundles from the fixtures.
+   - Project-scoped access is not kept: every archive seat sees the whole bundle.
+   - Ending the archive subscription starts the lifecycle in point 2 again.
+   - Price: storage plus the viewer and sign-in; it no longer has to cover database growth. Prices are set in the company
+     systems. The export and purge are the same work TENANCY-07 already needs, so the new work is the bundle format and
+     the viewer.
 7. **Contract wording** must match the timeline: the customer has 30 days after termination to export; production data
    is deleted by day 90 after termination; the provider is not a records keeper unless an archive plan is active. A draft
    for the lawyer is in `docs/internal/internal.md`. The wording the owner supplied said deletion "within 90 days after

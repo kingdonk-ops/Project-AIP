@@ -75,7 +75,7 @@ ARCH-08 and TENANCY-05 build their flags and module toggles on this service (tas
 
 ## Archive plan (backlog, ADR 0022)
 
-Plan code `archive`: a read-only tenant for customers who must keep records after leaving, with one or two auditor seats
-and search and export only. Not part of R1. The price is set in the company systems and must cover the database space the
-tenant keeps (database size is metered, adjustment A).
-
+Plan code `archive`: for customers who must keep records after leaving. Their data becomes a sealed bundle held with the reports
+and files in cold storage and is read through a separate archive area with one or two auditor seats (search and export only).
+The tenant's rows leave the shared database, so the plan carries no database-size charge. Not part of R1. The price is set in
+the company systems.
