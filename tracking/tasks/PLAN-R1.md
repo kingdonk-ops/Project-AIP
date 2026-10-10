@@ -121,3 +121,9 @@ R1 scope (ADR 0007 §4). Module folders and ID prefixes are below. IDs must matc
 - Plan the R1 tasks against the proposed target of 2027-03-31 (ADR 0007) and the Kaefer-as-one-tenant model (regional organisations with projects, TENANCY-03).
 - Backlog, not R1: a read-only per-tenant reporting feed for customers' own Power BI (ADR 0008 C); the `ai_gov` tasks for the `AiProvider` port, Bedrock adapter first (ADR 0019); a siloed-deployment option for Enterprise (only on a contract).
 - Offline provisional hold-point release and the PIN-only project setting (ADR 0010 addendum, IDENTITY-07) belong to the offline module's tasks.
+
+## Carried forward from owner answers, part 2 (2026-10-10)
+
+- Client portal sign-off (username and password plus the second step, ADR 0010 addendum) is the normal client route for hold points, witness points and reports; plan the portal tasks for R1 accordingly. A later dedicated client app (ITP sign-off, scheduling, report coding) is backlog.
+- The `reporting_feed` add-on (customer-owned Power BI, ADR 0008 C) needs its own security review and ADR before any task is built: per-tenant read credentials, row-level security, rate limits, audit of every read.
+- Offline module: record the access version at last sync and apply the limited permission grace in ADR 0010 and ADR 0020.

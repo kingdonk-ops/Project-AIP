@@ -120,3 +120,8 @@ After Keycloak signs a staff user in, the FastAPI backend issues every browser s
 ## Carried forward from IDENTITY-02 (non-blocking)
 
 - `auth_event.ip` and `auth_event.user_agent` stay NULL for `login.succeeded` / `login.denied`: the `ExternalLoginHandler` port receives only the verified identity, not the request. When this task builds the session callback, pass the client IP (after trusted-proxy handling) and user agent through to `JitLoginHandler` so they are recorded. Changing the port signature needs a short ADR note.
+
+## Added by ADR 0020 (2026-10-10)
+
+- The session stores identity only, never a permission list. Authorisation reads current grants on each request (ACCESS-01 access version), so a role change applies without logging out. Test: change the user's role, then call a protected route on the existing session; the new rule applies on the first call.
+- A deactivated user or a revoked session must stop working on the next request. The offline permission grace (ADR 0010 addendum) never extends to these.

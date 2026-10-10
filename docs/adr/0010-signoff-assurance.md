@@ -58,3 +58,16 @@ SSO systems don't report whether MFA was used.
 - Client reviewer permissions (sign-off of hold points, witness points and reports) are role permissions that the
   tenant admin can change (ACCESS-02).
 
+## Owner answers, part 2 (2026-10-10)
+
+- **Clients sign in to the client portal** with their own username and password (and the second step that local accounts
+  already require, ADR 0005) and sign off there: hold points, witness points and reports. This is the normal route.
+  Signing on the inspector's tablet with a PIN stays an optional route controlled by the project setting above.
+- **Later:** a dedicated client app for ITP sign-off, scheduling and report coding (backlog; the portal is the first
+  version of it).
+- **Offline grace for permission changes.** The owner wants queued offline drafts to keep their signing authority until
+  they sync. That is accepted with limits: the grace covers only role-permission edits made after the device's last
+  sync, and only within the maximum offline period (OPEN-QUESTIONS 7). It never covers a deactivated user, a revoked
+  session or a removed device. The device records the access version it last synced with, and the server checks that
+  version when the draft arrives; anything outside the limits is held for review or countersign.
+

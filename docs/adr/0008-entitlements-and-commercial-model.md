@@ -1,6 +1,6 @@
 # ADR 0008: One entitlement service; sales-led onboarding; contract billing at launch
 
-- **Status:** accepted (owner, 2026-10-10: the plan structure below); adjustments A to D are proposed and need the owner's confirmation
+- **Status:** accepted (owner, 2026-10-10: the plan structure below); adjustments A to C accepted by the owner 2026-10-10; D is proposed
 - **Date:** 2026-10-07
 - **Affects:** tenancy, arch; ARCH-08, TENANCY-05, TENANCY-06, ai_gov budgets
 
@@ -32,6 +32,7 @@ Kaefer is **one tenant**; its regions are organisations with projects beneath th
 | Extra seats | billed per seat | billed per seat | volume scale; reviewer seats included |
 | Active projects | 2 | 15 | unlimited |
 | Included file storage | 25 GB pooled | 250 GB pooled | 2 TB or more |
+| Included database size | owner to set (OPEN-QUESTIONS 24) | 20 GB (owner's example) | custom |
 | Inspection categories | standard set | unlimited custom, form builder | full taxonomies, code matching |
 | Integration API | none | standard REST, 5,000 requests per day | dedicated, webhooks |
 | Reporting | CSV and Excel export | in-app dashboards and a read-only reporting feed | dedicated capacity option |
@@ -42,17 +43,22 @@ Kaefer is **one tenant**; its regions are organisations with projects beneath th
 Overage (extra seats, storage, projects) is invoiced from the monthly usage export (ENT-02), never charged in the app.
 Every tenant has its own KMS key regardless of plan (ADR 0006), and the same immutable audit log (see B).
 `limit.seats.full` (staff plus field), `limit.seats.portal`, `limit.projects`, `limit.storage_gb` and
-`limit.api_calls_per_day` are the keys ENT-01 defines.
+`limit.api_calls_per_day` and `limit.db_gb` are the keys ENT-01 defines. Add-ons: `add_on.db_block_20gb` (another 20 GB of
+database, price in the company systems) and `add_on.reporting_feed` (see C).
 
-### Adjustments proposed (owner to confirm)
+### Adjustments (A to C accepted by the owner on 2026-10-10, D proposed)
 
-- **A. No database-row caps.** Rows cannot be counted consistently across tables and invite disputes. Meter seats,
-  active projects and storage in GB instead.
-- **B. One audit log for every plan.** The append-only hash-chained audit log is built once (P0). Plans may differ in
+- **A. No database-row caps; meter size in GB.** Rows cannot be counted consistently across tables. Meter seats,
+  active projects, file storage and **database size in GB** (an included amount per plan, then extra blocks of 20 GB).
+  The cluster is shared, so no per-tenant database file exists: a nightly job estimates each tenant's size by summing
+  the byte size of its rows in every tenant table (including the audit log), and the page shows the estimate and how
+  it is measured.
+- **B. One audit log for every plan (accepted: the 30-day audit tier is dropped).** The append-only hash-chained audit log is built once (P0). Plans may differ in
   how long the searchable view and export are offered, but never in whether sign-off evidence is kept.
-- **C. Power BI.** Adopt only the customer-owned mode: a read-only, tenant-scoped reporting feed that a customer's own
-  Power BI reads with their own licences (a later `professional` feature, using the `aip_readonly` role and row-level
-  security). Embedded and dedicated Power BI capacity need paid Azure capacity, add Microsoft as a sub-processor
+- **C. Power BI (accepted).** Only the customer-owned mode: a read-only, tenant-scoped reporting feed that a customer's own
+  Power BI reads with their own licences, sold as the `reporting_feed` add-on (the price is set in the company systems,
+  not in this repository). It needs its own security review before it is built, because it gives a customer's tool
+  direct read access (per-tenant credentials, row-level security, rate limits, audit of every read). Embedded and dedicated Power BI capacity need paid Azure capacity, add Microsoft as a sub-processor
   and raise residency questions, which conflicts with the no-paid-licence rule. They wait for an owner decision and
   their own ADR. In-app dashboards use open-source charts.
 - **D. No on-premises deployment.** "Dedicated" means a siloed deployment in our cloud account, after R1, on contract.

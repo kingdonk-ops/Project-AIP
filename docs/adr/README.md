@@ -25,3 +25,5 @@ bullets and a row here; `tools/ci/check_adrs.py` enforces this in CI (`make chec
 | [0017](0017-company-systems-and-contract-link.md) | Company systems (CRM, contracts, invoicing, support, GRC) stay outside the product; `contract_ref` links a tenant to its contract; operator console on its own origin; no standing operator access to tenant data | accepted |
 | [0018](0018-module-groups-and-navigation.md) | Six domain groups and a job-area menu as documentation overlay; no module merges now | accepted |
 | [0019](0019-ai-provider-port.md) | `AiProvider` port with Bedrock Sydney (default) and direct vendor API adapters; verify in-region processing before claiming residency | accepted |
+| [0020](0020-role-management-and-guardrails.md) | Editable built-in roles with reset, project-scoped overrides, no operator standing rights, lockout and audit guardrails, immediate effect on sessions | accepted (adjustments proposed) |
+
