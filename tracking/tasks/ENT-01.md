@@ -70,3 +70,14 @@ Provide a single `EntitlementService.check(tenant, feature | limit)` that resolv
     - `POST /api/v1/auth/register` returns 404.
   - **e2e**:
     - Playwright: the `kaefer-demo` tenant admin opens `/settings/billing`. Expected: "Plan and usage" shows plan `professional`, the renewal date and seats used against the limit per class, and there is no "Change plan" or payment control.
+
+## Added by ADR 0017 (2026-10-10)
+
+- `contract_ref` is validated: required when `term` is `annual` or `multi_year`, optional for `trial` and `sandbox`.
+  `PUT .../subscription` rejects a production term without it (422 `CONTRACT_REF_REQUIRED`) and records the old and new
+  value in the audit event. The product stores no price, invoice or payment data.
+- The plan-and-usage page shows `contract_ref` and `renewal_date` read-only. No invoice list, plan change or payment
+  control (see `docs/blueprint/pages-global.md`, "Plan and usage").
+- Tests: unit (`annual` without `contract_ref` is invalid; `sandbox` without is valid); integration (tenant admin
+  `PUT` is 403; operator `PUT` without `contract_ref` on `annual` is 422; with it is 200 and audited).
+- The monthly usage export is ENT-02, not this task.

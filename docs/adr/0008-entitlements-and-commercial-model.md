@@ -19,6 +19,12 @@ TENANCY-05 tenant modules overlap, and neither is tied to what a tenant paid for
   config-bundle promotion to production.
 - No payment provider at launch. `/settings/billing` shows read-only "Plan and usage".
 
+## Contract link (added 2026-10-10, ADR 0017)
+
+`tenant_subscription.contract_ref` is the only join to the company's contract system (opaque id, no prices).
+Required for `annual` and `multi_year` terms. Prices, invoices and payments stay outside the product. Monthly
+`tenant_usage` counts are exported by an operator for the true-up invoice (ENT-02).
+
 ## Consequences
 
 ARCH-08 and TENANCY-05 build their flags and module toggles on this service (task ENT-01).

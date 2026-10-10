@@ -49,3 +49,13 @@ Create tenants repeatably with region, terminology set and admin invite.
   - **unit**:
     - Slug 'Kaefer WA' normalises to 'kaefer-wa'.
     - Updating the region on an existing tenant throws ImmutableFieldError.
+
+## Added by ADR 0017 (2026-10-10)
+
+- The wizard takes `contract_ref` (and plan code, term, start and renewal dates, seat limits) and writes
+  `tenant_subscription` through ENT-01's service in the same transaction. A production term without `contract_ref`
+  is refused; `trial` and `sandbox` may omit it. A contract webhook may pre-fill the form (ENT-02) but never
+  provisions a tenant.
+- Test: provision with `annual` and no `contract_ref` returns 422 and creates no rows; with `contract_ref`
+  creates the tenant and the subscription together.
+- Operator routes stay under `/platform/*`; their separate origin is OPS-12.

@@ -165,6 +165,8 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [SECURITY-06](tasks/SECURITY-06.md) | Data classification tags, field masking and EXIF GPS control | security | M | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting |
 | [OPS-05](tasks/OPS-05.md) | Client error sink | ops | M | OPS-04, PLAN-R1 | todo | convert to Python backend per ADR 0001 before starting |
 | [OPS-06](tasks/OPS-06.md) | Storage lifecycle renderer with evidence-expiry guard | ops | S | PLAN-R1 | todo | convert to Python backend per ADR 0001 before starting |
+| [ENT-02](tasks/ENT-02.md) | Operator usage export and optional contract intake (ADR 0017) | tenancy | S | ENT-01, PLAN-R1, TENANCY-05 | todo | adds the company-systems link; no prices in the product |
+| [OPS-12](tasks/OPS-12.md) | Operator console on its own origin and realm (ADR 0017) | ops | M | IDENTITY-04, OPS-07, PLAN-R1, TENANCY-05 | todo | after the AWS pipeline |
 
 ### Moved out of P0: re-scoped by PLAN-R1 (ADR 0007)
 

@@ -54,6 +54,17 @@ the client isn't set up, the inspector records a witness note and the client con
 15. Is a photo of the client at signing acceptable (privacy notice, Rio site camera rules)?
 16. Which tablets does Kaefer use (Android with NFC, or iPad), and are they under MDM so we can use kiosk/screen pinning?
 
+### Company systems and compliance ([ADR 0017](../docs/adr/0017-company-systems-and-contract-link.md), [`docs/internal/internal.md`](../docs/internal/internal.md))
+
+Also confirm ADR 0017 and [ADR 0018](../docs/adr/0018-module-groups-and-navigation.md) (both proposed).
+
+17. CRM, contracts and invoicing: lighter set (CRM + DocuSeal + Xero, recommended for launch) or one console (ERPNext + Frappe CRM)? Is Xero acceptable for AU GST and BAS?
+18. Support desk, status page, trust centre and website: accept the candidates in the register (Zammad, Upptime, Astro and Starlight)?
+19. Compliance tool (extends Q6): open-source Comp AI, or buy Vanta/Drata? Drop HIPAA from the framework list (no health data) and aim for SOC 2 Type I, then ISO 27001, plus the Privacy Act and NDB scheme?
+20. Corporate IT and the remaining undecided services: Microsoft 365 Business Premium (Entra, Intune MDM) or Google Workspace? Transactional email (SES) and error tracking (self-hosted Sentry or CloudWatch RUM)?
+21. **Make the `Project-AIP` repository private.** It is public today and holds the threat model, security reviews and Keycloak realm config. Private repositories use GitHub Actions minutes, so check Settings, Billing and plans first.
+22. Intellectual property: get written confirmation of who owns the code before incorporating or selling, and check the employment agreement's IP and outside-work clauses (legal advice, not repository work).
+
 ## Also waiting on the owner
 
 - Coolify API key: owner decided (2026-10-08) to keep the key that was pasted in chat for now. Rotate it before any

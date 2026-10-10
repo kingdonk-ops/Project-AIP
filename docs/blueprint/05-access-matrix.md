@@ -1,5 +1,13 @@
 # Accounts, profiles and access matrix
 
+<!-- hand-edited 2026-10-10 (ADR 0017): the Super Admin column. split_blueprint.py would overwrite this. -->
+> **Super Admin column (hand-edited, ADR 0017).** The platform operator has no standing access to tenant
+> business data (see the Super-admin account below). The column is therefore `admin` only on platform modules
+> (architecture, stack, database, tenancy, security, operations, design system, testing, terminology, AI
+> governance, regional packs) and `none` everywhere else, including the tenant audit trail. Operators reach
+> tenant data only through a customer-approved, time-boxed support-access grant (TENANCY-06). The 11 tenant
+> roles (ACCESS-02) are unaffected: Super Admin is not a tenant role.
+
 
 - **access matrix**:
 
@@ -15,59 +23,59 @@
 | Testing & quality engineering | admin | none | none | none | none | none | none | none | none | none | none | none | none |
 | Terminology dictionary & localisation | admin | admin | view | view | none | none | none | none | view | none | none | view | none |
 | AI governance & data controls | admin | admin | none | view | none | none | none | none | none | none | none | view | none |
-| Users, sign-in & SSO | admin | admin | view | none | none | none | none | none | none | none | none | view | none |
-| Roles, permissions & teams | admin | admin | edit | view | none | none | none | none | none | none | none | view | none |
-| Projects, sites & classification | admin | admin | admin | view | view | view | view | view | view | view | view | view | view |
-| Client & subcontractor portal | admin | admin | approve | edit | none | none | none | none | edit | view | view | view | none |
-| Asset hierarchy & registers | admin | admin | edit | edit | view | edit | create | view | view | view | view | view | create |
-| Content types, item types & attributes | admin | admin | view | edit | none | none | none | none | view | none | none | view | none |
-| Traceability graph: components, materials & certificates | admin | admin | edit | approve | view | edit | create | create | view | view | create | view | create |
-| Scopes of work (RSW), disciplines & tasks | admin | admin | approve | edit | view | edit | view | view | view | view | view | view | create |
-| Offline field app & sync | admin | admin | view | view | view | create | create | create | none | none | create | none | none |
-| Form & template designer | admin | admin | view | admin | edit | view | view | view | view | none | none | view | none |
-| Inspections, ITPs & hold points | admin | admin | approve | approve | view | approve | create | create | view | approve | create | view | create |
-| Certificates, competency & calibration gate | admin | admin | edit | approve | edit | edit | view | view | edit | view | create | view | create |
-| Issues, NCRs & corrective actions | admin | admin | approve | approve | approve | approve | create | create | view | create | edit | view | create |
-| Punch list & defects liability | admin | admin | approve | approve | view | edit | create | create | view | create | edit | view | none |
-| Quality roll-up & audits | admin | admin | view | admin | view | view | none | none | view | none | none | view | none |
-| Rules & validation engine | admin | admin | view | edit | none | none | none | none | none | none | none | view | none |
-| Commissioning | admin | admin | approve | approve | view | edit | create | view | view | approve | create | view | none |
-| Report engine & published records | admin | admin | approve | approve | create | create | create | none | create | view | none | view | view |
-| Safety & HSE | admin | admin | approve | view | admin | create | create | create | view | none | create | view | none |
-| Temporary works register | admin | admin | approve | view | approve | edit | create | view | view | view | create | view | none |
-| Site diary & field reports | admin | admin | approve | view | view | approve | create | create | view | view | create | view | none |
-| Voice notes & phone log | admin | admin | edit | view | none | create | create | create | none | none | none | view | none |
-| Site logistics & mobilisation | admin | admin | approve | view | view | edit | view | create | view | view | create | view | none |
-| Equipment & fleet | admin | admin | edit | edit | view | edit | view | create | view | none | create | view | create |
-| Stock, consumables & materials | admin | admin | edit | view | none | edit | create | create | view | none | create | view | create |
-| Resources & crews (basic) | admin | admin | approve | view | view | edit | view | view | none | none | none | view | none |
-| Schedule & look-ahead (basic) | admin | admin | approve | view | view | edit | view | view | view | view | view | view | view |
-| Document library & control | admin | admin | edit | edit | create | create | create | create | admin | view | create | view | create |
-| Markup, viewer & plan room | admin | admin | create | create | create | create | create | create | create | create | create | view | none |
-| Workflow & approvals engine | admin | admin | approve | approve | approve | approve | view | none | approve | approve | view | view | none |
-| E-signatures & tamper-evident records | admin | admin | approve | approve | approve | approve | create | create | approve | approve | create | view | none |
-| Transmittals & correspondence | admin | admin | approve | view | none | none | none | none | admin | view | view | view | none |
-| Inbound capture & connectors | admin | admin | view | none | none | none | none | none | admin | none | none | view | none |
-| Upload & file processing pipeline | admin | admin | create | create | create | create | create | create | create | create | create | none | create |
-| Comments, mentions & notifications | admin | admin | create | create | create | create | create | create | create | create | create | view | none |
-| Meetings & AI minutes | admin | admin | approve | edit | create | create | view | none | view | create | create | view | none |
-| RFIs & submittals | admin | admin | approve | approve | none | create | create | none | approve | approve | create | view | none |
-| Interface management | admin | admin | approve | edit | none | edit | none | none | view | approve | create | view | none |
-| Tasks, deadlines & my work | admin | admin | approve | create | create | approve | create | create | create | create | create | view | create |
-| Supplier catalogue, requisitions & POs | admin | admin | approve | view | none | create | none | none | view | none | none | view | view |
+| Users, sign-in & SSO | none | admin | view | none | none | none | none | none | none | none | none | view | none |
+| Roles, permissions & teams | none | admin | edit | view | none | none | none | none | none | none | none | view | none |
+| Projects, sites & classification | none | admin | admin | view | view | view | view | view | view | view | view | view | view |
+| Client & subcontractor portal | none | admin | approve | edit | none | none | none | none | edit | view | view | view | none |
+| Asset hierarchy & registers | none | admin | edit | edit | view | edit | create | view | view | view | view | view | create |
+| Content types, item types & attributes | none | admin | view | edit | none | none | none | none | view | none | none | view | none |
+| Traceability graph: components, materials & certificates | none | admin | edit | approve | view | edit | create | create | view | view | create | view | create |
+| Scopes of work (RSW), disciplines & tasks | none | admin | approve | edit | view | edit | view | view | view | view | view | view | create |
+| Offline field app & sync | none | admin | view | view | view | create | create | create | none | none | create | none | none |
+| Form & template designer | none | admin | view | admin | edit | view | view | view | view | none | none | view | none |
+| Inspections, ITPs & hold points | none | admin | approve | approve | view | approve | create | create | view | approve | create | view | create |
+| Certificates, competency & calibration gate | none | admin | edit | approve | edit | edit | view | view | edit | view | create | view | create |
+| Issues, NCRs & corrective actions | none | admin | approve | approve | approve | approve | create | create | view | create | edit | view | create |
+| Punch list & defects liability | none | admin | approve | approve | view | edit | create | create | view | create | edit | view | none |
+| Quality roll-up & audits | none | admin | view | admin | view | view | none | none | view | none | none | view | none |
+| Rules & validation engine | none | admin | view | edit | none | none | none | none | none | none | none | view | none |
+| Commissioning | none | admin | approve | approve | view | edit | create | view | view | approve | create | view | none |
+| Report engine & published records | none | admin | approve | approve | create | create | create | none | create | view | none | view | view |
+| Safety & HSE | none | admin | approve | view | admin | create | create | create | view | none | create | view | none |
+| Temporary works register | none | admin | approve | view | approve | edit | create | view | view | view | create | view | none |
+| Site diary & field reports | none | admin | approve | view | view | approve | create | create | view | view | create | view | none |
+| Voice notes & phone log | none | admin | edit | view | none | create | create | create | none | none | none | view | none |
+| Site logistics & mobilisation | none | admin | approve | view | view | edit | view | create | view | view | create | view | none |
+| Equipment & fleet | none | admin | edit | edit | view | edit | view | create | view | none | create | view | create |
+| Stock, consumables & materials | none | admin | edit | view | none | edit | create | create | view | none | create | view | create |
+| Resources & crews (basic) | none | admin | approve | view | view | edit | view | view | none | none | none | view | none |
+| Schedule & look-ahead (basic) | none | admin | approve | view | view | edit | view | view | view | view | view | view | view |
+| Document library & control | none | admin | edit | edit | create | create | create | create | admin | view | create | view | create |
+| Markup, viewer & plan room | none | admin | create | create | create | create | create | create | create | create | create | view | none |
+| Workflow & approvals engine | none | admin | approve | approve | approve | approve | view | none | approve | approve | view | view | none |
+| E-signatures & tamper-evident records | none | admin | approve | approve | approve | approve | create | create | approve | approve | create | view | none |
+| Transmittals & correspondence | none | admin | approve | view | none | none | none | none | admin | view | view | view | none |
+| Inbound capture & connectors | none | admin | view | none | none | none | none | none | admin | none | none | view | none |
+| Upload & file processing pipeline | none | admin | create | create | create | create | create | create | create | create | create | none | create |
+| Comments, mentions & notifications | none | admin | create | create | create | create | create | create | create | create | create | view | none |
+| Meetings & AI minutes | none | admin | approve | edit | create | create | view | none | view | create | create | view | none |
+| RFIs & submittals | none | admin | approve | approve | none | create | create | none | approve | approve | create | view | none |
+| Interface management | none | admin | approve | edit | none | edit | none | none | view | approve | create | view | none |
+| Tasks, deadlines & my work | none | admin | approve | create | create | approve | create | create | create | create | create | view | create |
+| Supplier catalogue, requisitions & POs | none | admin | approve | view | none | create | none | none | view | none | none | view | view |
 | Cost items & schedule of rates (thin) | none | none | none | none | none | none | none | none | none | none | none | none | none |
-| Change orders, variations & MOC (basic) | admin | admin | approve | edit | none | create | none | none | view | approve | create | view | none |
-| Contacts & companies | admin | admin | edit | view | view | view | view | none | edit | none | none | view | view |
+| Change orders, variations & MOC (basic) | none | admin | approve | edit | none | create | none | none | view | approve | create | view | none |
+| Contacts & companies | none | admin | edit | view | view | view | view | none | edit | none | none | view | view |
 | Regional reference data packs | admin | admin | view | view | none | none | none | none | view | none | none | view | none |
-| Handover, data books & submissions | admin | admin | approve | approve | view | edit | view | none | admin | approve | create | view | none |
-| Service & maintenance | admin | admin | approve | edit | view | edit | create | create | view | view | create | view | create |
-| Prefab & off-site manufacture | admin | admin | approve | approve | none | edit | create | create | view | view | create | view | none |
-| Dashboards & KPI reporting | admin | admin | edit | edit | view | view | view | none | view | view | none | view | view |
-| Audit trail, activity & timeline | view | view | view | view | none | none | none | none | none | none | none | view | none |
-| Search, retrieval & saved views | view | view | view | view | view | view | view | view | view | view | view | view | none |
-| AI assistant & agents | admin | admin | view | view | view | view | view | none | view | none | none | none | none |
-| Integrations & webhooks | admin | admin | view | none | none | none | none | none | none | none | none | view | edit |
-| Data import, export & backup | admin | admin | create | view | none | none | none | none | create | none | none | view | view |
+| Handover, data books & submissions | none | admin | approve | approve | view | edit | view | none | admin | approve | create | view | none |
+| Service & maintenance | none | admin | approve | edit | view | edit | create | create | view | view | create | view | create |
+| Prefab & off-site manufacture | none | admin | approve | approve | none | edit | create | create | view | view | create | view | none |
+| Dashboards & KPI reporting | none | admin | edit | edit | view | view | view | none | view | view | none | view | view |
+| Audit trail, activity & timeline | none | view | view | view | none | none | none | none | none | none | none | view | none |
+| Search, retrieval & saved views | none | view | view | view | view | view | view | view | view | view | view | view | none |
+| AI assistant & agents | none | admin | view | view | view | view | view | none | view | none | none | none | none |
+| Integrations & webhooks | none | admin | view | none | none | none | none | none | none | none | none | view | edit |
+| Data import, export & backup | none | admin | create | view | none | none | none | none | create | none | none | view | view |
 | User-authored playbooks | none | none | none | none | none | none | none | none | none | none | none | none | none |
 
 - **account types**:

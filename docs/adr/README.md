@@ -22,3 +22,5 @@ bullets and a row here; `tools/ci/check_adrs.py` enforces this in CI (`make chec
 | [0014](0014-ofl-fonts-allowed.md) | SIL OFL-1.1 allowed in the licence policy so IBM Plex fonts can be self-hosted | accepted |
 | [0015](0015-tenant-row-and-tenant-resolution.md) | `tenants` read-only for the app (RLS `id = app.tenant_id`), shared fixture tenant ids, fail-closed tenant resolution errors | proposed |
 | [0016](0016-job-runner-semantics.md) | Job runner on Procrastinate: queue tables in public with narrow grants, lock slots for the per-tenant cap, `max_attempts` = total tries, atomic enqueue | accepted |
+| [0017](0017-company-systems-and-contract-link.md) | Company systems (CRM, contracts, invoicing, support, GRC) stay outside the product; `contract_ref` links a tenant to its contract; operator console on its own origin; no standing operator access to tenant data | proposed |
+| [0018](0018-module-groups-and-navigation.md) | Six domain groups and a job-area menu as documentation overlay; no module merges now | proposed |
