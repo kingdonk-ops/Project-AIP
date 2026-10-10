@@ -71,3 +71,19 @@ SSO systems don't report whether MFA was used.
   session or a removed device. The device records the access version it last synced with, and the server checks that
   version when the draft arrives; anything outside the limits is held for review or countersign.
 
+## Owner answers, part 3: offline limits (2026-10-10)
+
+- **Hard ceiling of 72 hours offline.** The owner wrote "72 hours (3 business days)"; this ADR reads it as 72 elapsed
+  hours, so a weekend shutdown does not lock people out wrongly. Confirm (OPEN-QUESTIONS 25).
+- **Provisional sign-off offline.** Inspectors may record and provisionally sign hold points and witness points offline so
+  blasting, coating and erection crews are not stopped. Such records carry the state `PROVISIONAL_OFFLINE`.
+- The local timestamp is informational. Device clocks can be wrong, so the server also records when it received the
+  record, the device, the device's last successful sync time and its access version, rejects a device time later than
+  the receive time, and flags large differences for review.
+- **Reconcile within 4 hours of connectivity returning.** The app syncs on its own. A device still unreconciled after
+  4 hours of connectivity is flagged to the inspector and a tenant admin, and new provisional sign-offs on it are
+  blocked until it reconciles (the consequence is proposed; the owner gave the deadline only).
+- **Beyond 72 hours without contacting the sync gateway**, new provisional sign-offs are locked until a tenant admin
+  override or a device check-in restores signing.
+- Offline device caches are purged automatically once the server acknowledges reconciliation, and at most 30 days after.
+- The permission grace in the earlier part of this addendum is bounded by the same 72 hours.

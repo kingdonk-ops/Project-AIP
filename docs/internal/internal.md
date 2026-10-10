@@ -102,6 +102,10 @@ Anything in this table that processes customer data goes on the published sub-pr
 
 - **Frameworks that matter for the markets:** SOC 2 Type I, then ISO 27001; Australian Privacy Act (APPs) and Notifiable Data Breaches; IRAP later. UK GDPR only if there are UK users. HIPAA is dropped (no health data, owner 2026-10-10) and must not be claimed.
 - **Do not build the GRC tool.** It is a product in itself and would put home-built code in the audit. Comp AI is chosen (Q6 answered). Start the evidence clock first and book the auditor.
+- **Security owner (ISMS owner):** the Head of Engineering and Data Governance role, held by the owner while the company is a
+  sole developer. Duties: key and secret rotation (KMS keys rotate automatically each year; application secrets are rotated
+  quarterly), audit log integrity, deletion validation (ADR 0021) and the incident process. The operational contact is a
+  `security@` mailbox on the company domain; it must exist before it appears in `security.txt` (OPEN-QUESTIONS 26).
 - Auditors also cover people and devices: onboarding and offboarding, MDM, access reviews, vendor register, incident response.
 
 ## 7. Gaps to close before the first paying pilot

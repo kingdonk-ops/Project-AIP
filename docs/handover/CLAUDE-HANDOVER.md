@@ -185,7 +185,7 @@ If you change API routes or schemas, regenerate and commit the OpenAPI/client (`
 - **Keep PRs small and current.** When another PR merges first, `BOARD.md`/`PROGRESS.md` usually conflict: keep `main`'s content plus your own task row/line (they are append/edit-by-row files), and check `next_task.py --check` afterwards.
 - **After a push, subscribe to the PR** (`subscribe_pr_activity`) so CI results arrive as events. Do not poll or sleep. When a check fails: read the job logs (`get_job_logs`, large logs are saved to a file: grep it), reproduce locally, fix the cause, run the checks, push once. Never skip, disable or quarantine a test to get green. "Flake" is not a root cause.
 - **Security review:** for anything touching auth, sessions, crypto, RLS, SQL, or external input, spawn a security-review agent on the diff before merging and fix blocking findings. Put non-blocking findings into the relevant future task file as "Carried forward" notes (this is how earlier reviews were handled).
-- **Parallel work:** several tasks in the same wave can run on separate branches/worktrees. Before spawning agents, check they will not touch the same files or the same Alembic head. Give each agent one task, the exact files to read and these rules. Do not commit an agent's unfinished work.
+- **Parallel work (owner, 2026-10-10): at most two build streams at once**, for example one on the API, sync and database and one on the web UI. Tasks in the same wave can run on separate branches/worktrees within that limit. Before spawning agents, check they will not touch the same files or the same Alembic head. Give each agent one task, the exact files to read and these rules. Do not commit an agent's unfinished work.
 
 ---
 
@@ -220,7 +220,7 @@ If you change API routes or schemas, regenerate and commit the OpenAPI/client (`
 - Python backend; never use AIP code. Postgres queue (Procrastinate). Vite for all frontends. Keycloak for all staff sign-in. Start on Coolify.
 - No paid licences; open source or AWS only. ADR 0011 (licence details) **accepted**. Provenance log **initialled KK 2026-10-08**.
 - Merge policy "b": the coordinating agent merges green PRs; the owner reviews in batches.
-- Run multiple branches in parallel where safe. The coordinating agent writes, runs and monitors web tests.
+- Run at most two build streams in parallel (owner, 2026-10-10: solo developer, hiring or contracting later); the coordinating agent writes, runs and monitors web tests.
 - Keep the current Coolify key for now; rotate before real data.
 - If usage runs out, continue where you left off and **collect questions for the owner's next chat** in `tracking/OPEN-QUESTIONS.md`.
 

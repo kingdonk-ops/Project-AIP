@@ -47,3 +47,9 @@ Render s3-lifecycle.json from settings and refuse any expiration rule on evidenc
   - **unit**:
     - render(defaults) has 365 and 2555 transitions.
     - validate with {'Expiration':{'Days':30}} on prefix evidence/ raises.
+
+## Changed by ADR 0021 (2026-10-10)
+
+- Photos and media: STANDARD for 12 months, then S3 Glacier Instant Retrieval (replace the default that moved to Glacier Instant Retrieval at 7 years). The 7-year end of life is executed by a retention job (AUDIT-05) that honours legal holds, not by an S3 expiry rule; `validate()` still rejects expiry rules on evidence prefixes.
+- Reports: sealed report and manifest move to the read-only archive tier after 2 years. Offline device caches are not in S3.
+- Test: the rendered policy has a transition to GLACIER_IR at 365 days and no Expiration on evidence prefixes.

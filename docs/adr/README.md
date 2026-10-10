@@ -26,4 +26,4 @@ bullets and a row here; `tools/ci/check_adrs.py` enforces this in CI (`make chec
 | [0018](0018-module-groups-and-navigation.md) | Six domain groups and a job-area menu as documentation overlay; no module merges now | accepted |
 | [0019](0019-ai-provider-port.md) | `AiProvider` port with Bedrock Sydney (default) and direct vendor API adapters; verify in-region processing before claiming residency | accepted |
 | [0020](0020-role-management-and-guardrails.md) | Editable built-in roles with reset, project-scoped overrides, no operator standing rights, lockout and audit guardrails, immediate effect on sessions | accepted (adjustments proposed) |
-
+| [0021](0021-retention-schedule.md) | Retention schedule by record type (7 years for reports, photos and sign-offs; 3 years for the security audit trail), two audit streams, chain checkpoints | accepted (adjustments proposed) |

@@ -8,7 +8,7 @@ This repo is built by AI coding agents, one small task at a time. The product bl
 1. **Pick a task**
    ```bash
    python3 tools/next_task.py          # next ready task + the exact files to read
-   python3 tools/next_task.py --all    # every ready task, when several agents run in parallel
+   python3 tools/next_task.py --all    # every ready task (run at most two build streams at once)
    ```
    Or take the task ID you were given. Never start a task whose dependencies aren't `done`.
 2. **Claim it.** In [`tracking/BOARD.md`](tracking/BOARD.md), set its status to `in-progress`
