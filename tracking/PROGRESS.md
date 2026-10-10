@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-10 · DOCS-05 · (PR pending) · Owner follow-ups recorded: database-size metering in GB with 20 GB blocks, audit tier dropped, customer-owned reporting feed add-on, client portal sign-off, new ADR 0020 (editable roles, project overrides, lockout and audit guardrails) with ACCESS-01, ACCESS-02 and IDENTITY-03 updates.
 - 2026-10-10 · DOCS-04 · (PR pending) · Owner answers recorded: ADR 0006 accepted (a KMS key per tenant, every plan), ADR 0008 plan structure accepted with adjustments proposed, ADR 0010 addendum (sign-off settings, one tablet per worker), new ADR 0019 (AI provider port, Bedrock Sydney default), Client Reviewer column trimmed, ACCESS-02 lets tenant admins change role permissions, proposed Kaefer-live date 2027-03-31.
 - 2026-10-10 · DOCS-03 · (PR pending) · Owner accepted ADR 0017 and ADR 0018; statuses, ADR index and open questions updated.
 - 2026-10-10 · DOCS-02 · (PR pending) · Plan review: `docs/internal/internal.md` (company systems register and the tenant-contract link), ADR 0017 (`contract_ref`, separate operator console, no standing operator data access) and ADR 0018 (domain groups and job-area menu; no module merges), Super Admin column fixed in the access matrix, read-only billing page spec, new tasks ENT-02 and OPS-12, owner questions 17 to 22.

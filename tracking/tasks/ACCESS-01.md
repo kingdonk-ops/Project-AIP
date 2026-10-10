@@ -70,3 +70,8 @@ The runtime pieces every module uses live in `aip/platform/access/` (platform ne
     - Run `python tools/gen_permissions.py` twice. Expected: byte-identical output.
   - **e2e**:
     - Playwright on compose: signed-in alice with no roles calls `GET /api/v1/me`, which returns 200 (`authenticated()`). `GET /api/v1/access/me/abilities` returns 200 `{permissions:[]}`. A `requires()` route returns 403.
+
+## Added by ADR 0020 (2026-10-10)
+
+- Add a per-tenant **access version** (an integer on the tenant's access settings row) that every role edit, reset, project override and assignment change increments in the same transaction. `PolicyService` may cache grants only under that version, so a change applies on the next request with no logout. Test: grant, check allowed, change the role, check denied on the very next request without re-login.
+- Permission flags are atomic and named `<module>.<resource>.<action>`; a module manifest declares them at the granularity in ADR 0020 point 5 (for example inspections: draft create, submit, sign, reopen). A manifest that declares only coarse read and write fails the catalogue check for modules in the permission matrix.

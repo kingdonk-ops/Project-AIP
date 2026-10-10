@@ -28,7 +28,7 @@ Let an operator export each month's `tenant_usage` counts for the true-up invoic
   - apps/api/aip/modules/tenancy/tests/test_usage_export.py
   - apps/api/aip/modules/tenancy/tests/test_contract_intake.py
 - **steps**:
-  - 1. `GET /api/v1/platform/usage-export?month=YYYY-MM&format=csv|json` (operator principal only). One row per tenant: `tenant_slug`, `contract_ref`, `plan_code`, `month`, active users per class, `storage_gb`, `active_projects`, `api_calls`, `jobs`, `ai_spend_aud`, and the plan's limits for the same fields so overage can be invoiced without a lookup. No names, emails or business data.
+  - 1. `GET /api/v1/platform/usage-export?month=YYYY-MM&format=csv|json` (operator principal only). One row per tenant: `tenant_slug`, `contract_ref`, `plan_code`, `month`, active users per class, `storage_gb`, `active_projects`, `db_gb`, `api_calls`, `jobs`, `ai_spend_aud`, and the plan's limits for the same fields so overage can be invoiced without a lookup. No names, emails or business data.
   - 2. The response carries `X-Content-SHA256` of the body and writes an `platform.usage_exported` audit event (operator id, month, row count).
   - 3. `POST /api/v1/platform/contract-intake` accepts `{contract_ref, tenant_name, plan_code, term, starts_on, renewal_date, seat_limits}` signed with an HMAC secret from settings (never from the repo). It stores a pending intake row an operator can load into the wizard. It never creates a tenant and never changes a subscription.
   - 4. An unsigned, badly signed or replayed request (same `contract_ref` and nonce) returns 401 and stores nothing.

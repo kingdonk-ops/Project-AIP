@@ -73,3 +73,16 @@ The steps above say system roles cannot be edited. That is replaced by:
 - PATCH or DELETE of a system role's `code` or name key, and DELETE of any system role, still return 409 `SYSTEM_ROLE_IMMUTABLE`.
 - The Client Reviewer defaults are in `docs/blueprint/05-access-matrix.md` (read-only plus sign-off of hold points, witness points and reports) and the company's admin may widen or narrow them.
 - Tests replace the old `PATCH inspector` case: (1) tenant admin removes `inspections.*.approve` from `client_reviewer`; the next permission check is denied and `customised_at` is set. (2) Re-running the seed after a catalogue addition leaves that role unchanged and reports the new permission. (3) `POST .../reset` restores the defaults and clears `customised_at`. (4) DELETE of `client_reviewer` returns 409.
+
+## Amended requirement and guardrails (owner specification, ADR 0020, 2026-10-10)
+
+> The platform shall provide default, pre-configured system roles representing standard operational functions. System default roles shall be fully editable by authorized Company Admins, and each shall have a "Reset to Default" action. Authorized administrators shall be able to create, clone, configure and delete an arbitrary number of custom roles with granular, module-level permissions.
+
+On top of the "tenant admins can change role permissions" section above:
+
+- **Project overrides.** A project owner or project admin can add permission overrides for their project only (`project_permission_override`: role or user, permission, project, granted_by, timestamps, soft delete). They cannot edit tenant-wide role definitions, cannot grant a permission they do not hold themselves, and can never grant role management. Tests: a project admin grants punchlist close for P1 and the grantee can close in P1 but not in P2; the same admin tries to grant a permission they lack, expected 403 `GRANT_EXCEEDS_GRANTOR`; tries to edit `inspector` tenant-wide, expected 403.
+- **Custom roles** by clone or blank; assignable tenant-wide or limited to a project, an organisation or an asset subtree.
+- **No lockout.** The last user holding `access.role.manage` at tenant scope cannot lose it, be deleted or be deactivated (409 `LAST_ROLE_MANAGER`). The check takes a per-tenant advisory lock inside the transaction. Test: two admins each remove the other concurrently; exactly one succeeds and the other gets 409.
+- **Audit.** Every role edit, creation, deletion, reset and project override writes an append-only audit event with timestamp, acting user id, target role id, and the permission set before and after. Test: reset a customised role; the event shows both sets and the actor.
+- **Operators.** A platform operator can change tenant roles only inside a support-access grant (TENANCY-06); outside one the call returns 403 and writes an audit event.
+- Bump the tenant access version (ACCESS-01) in the same transaction as each change.

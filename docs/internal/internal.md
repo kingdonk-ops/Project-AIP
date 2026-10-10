@@ -89,7 +89,7 @@ Data crossing the boundary, in both directions, is deliberately small:
 | AWS Secrets Manager, CloudTrail, GuardDuty, Security Hub, Backup (copy to Melbourne) | Security and recovery | decided, OPS-10 |
 | AWS Textract | Optional OCR | ADR 0009, optional |
 | AI model provider: Bedrock Sydney (default) and the direct vendor API (optional, per tenant) | AI assistant | decided, ADR 0019; verify in-region processing |
-| Power BI (customer-owned) | A customer reads a read-only reporting feed with their own licences; no Microsoft service is run by us | later `professional` feature (ADR 0008 C) |
+| Power BI (customer-owned) | A customer reads a read-only reporting feed with their own licences; no Microsoft service is run by us | accepted add-on `reporting_feed` (ADR 0008 C); security review before build |
 | Power BI Embedded or dedicated capacity | Paid Azure capacity, Microsoft as sub-processor, residency questions | **deferred**, owner decision and ADR needed |
 | Transactional email (SES implied) | Invites, notifications | **undecided** |
 | Error tracking (self-hosted Sentry or CloudWatch RUM) | Client errors, OPS-05 | **undecided** |
