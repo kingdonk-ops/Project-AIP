@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-10 · DOCS-03 · (PR pending) · Owner accepted ADR 0017 and ADR 0018; statuses, ADR index and open questions updated.
 - 2026-10-10 · DOCS-02 · (PR pending) · Plan review: `docs/internal/internal.md` (company systems register and the tenant-contract link), ADR 0017 (`contract_ref`, separate operator console, no standing operator data access) and ADR 0018 (domain groups and job-area menu; no module merges), Super Admin column fixed in the access matrix, read-only billing page spec, new tasks ENT-02 and OPS-12, owner questions 17 to 22.
 - 2026-10-09 · IDENTITY-02 · (PR pending) · `app_user`, `tenant_membership` and append-only `auth_event` (revision `202610091851`) with fail-closed, race-safe JIT provisioning behind the IDENTITY-01 login port, the `Principal` model with a test-only header stub and `GET /api/v1/me`; auth_event ip/user agent at login carried to IDENTITY-03 and stale email registrations on email change to IDENTITY-04.
 - 2026-10-09 · DESIGN-02 · #34 · App shell (header, nav rail, scope bar), login/logout and route guard in apps/web behind a SessionPort with a production-stripped dev stub; strip manifest, Vitest and Playwright (axe) coverage added; eslint migration blocked by the config-protection hook.

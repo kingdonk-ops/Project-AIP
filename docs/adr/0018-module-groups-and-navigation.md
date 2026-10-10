@@ -1,6 +1,6 @@
 # ADR 0018: Domain groups and navigation by job area; modules stay separate
 
-- **Status:** proposed: **owner to confirm**
+- **Status:** accepted (owner confirmed 2026-10-10)
 - **Date:** 2026-10-10
 - **Affects:** design (nav rail), every module's UI entry, docs only for the code layout
 

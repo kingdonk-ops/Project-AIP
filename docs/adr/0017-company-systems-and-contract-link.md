@@ -1,6 +1,6 @@
 # ADR 0017: Company systems stay outside the product; the tenant contract is the link
 
-- **Status:** proposed: **owner to confirm**
+- **Status:** accepted (owner confirmed 2026-10-10)
 - **Date:** 2026-10-10
 - **Affects:** tenancy, ops, the role matrix and the internal docs; ENT-01, ENT-02, TENANCY-05, OPS-12
 
