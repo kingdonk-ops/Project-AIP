@@ -1,6 +1,6 @@
 # ADR 0021: Retention schedule by record type
 
-- **Status:** accepted (owner schedule, 2026-10-10); points 2 to 6 are adjustments the owner has not yet confirmed
+- **Status:** accepted (owner schedule, 2026-10-10); points 2 to 6 confirmed by the owner on 2026-10-11 (7-year retention, two audit streams, chain checkpoints, Glacier Instant Retrieval in Sydney)
 - **Date:** 2026-10-10
 - **Affects:** audit (AUDIT-01, AUDIT-02, AUDIT-05), ops (OPS-06), tenancy (TENANCY-07), offline; resolves OPEN-QUESTIONS 9
 

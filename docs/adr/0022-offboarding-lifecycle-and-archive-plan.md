@@ -1,6 +1,6 @@
 # ADR 0022: Offboarding lifecycle (30-day export, 90-day purge) and an optional archive plan
 
-- **Status:** accepted (owner position, 2026-10-10); the contract wording and points 3 to 5 need the owner's and a lawyer's confirmation
+- **Status:** accepted (owner position, 2026-10-10); lifecycle confirmed by the owner on 2026-10-11; the archive plan is post-R1 backlog (sealed bundle plus a separate standalone viewer); a lawyer still finalises the contract wording and the Privacy Act position
 - **Date:** 2026-10-10
 - **Affects:** tenancy (TENANCY-07), ADR 0021 point 6, ADR 0015 statuses, ADR 0008 plans, docs/internal; resolves OPEN-QUESTIONS 26 in part
 
