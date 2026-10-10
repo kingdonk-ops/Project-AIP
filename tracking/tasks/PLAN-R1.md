@@ -115,3 +115,9 @@ R1 scope (ADR 0007 §4). Module folders and ID prefixes are below. IDs must matc
       - DATABASE-03 and TESTING-06 show as `dropped`.
   - **e2e**:
     - Agent dry run: take the first ready R1 task from `next_task.py` and resolve every relative link in its "Read before starting" list and spec → all targets exist. Every path in its **files** list that the task does not itself create already exists in the repo.
+
+## Carried forward from the owner answers (2026-10-10)
+
+- Plan the R1 tasks against the proposed target of 2027-03-31 (ADR 0007) and the Kaefer-as-one-tenant model (regional organisations with projects, TENANCY-03).
+- Backlog, not R1: a read-only per-tenant reporting feed for customers' own Power BI (ADR 0008 C); the `ai_gov` tasks for the `AiProvider` port, Bedrock adapter first (ADR 0019); a siloed-deployment option for Enterprise (only on a contract).
+- Offline provisional hold-point release and the PIN-only project setting (ADR 0010 addendum, IDENTITY-07) belong to the offline module's tasks.

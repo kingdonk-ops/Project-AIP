@@ -55,3 +55,11 @@ how the person proved who they are and on the tenant's minimum for that action. 
   - **unit**: a table-driven test of `derive_assurance` over the 5 session shapes above, and freshness at 9:59 (allow) and 10:01 (step_up_required).
   - **integration** (testcontainers Postgres): policy read under `with_tenant`; tenant-b can't read kaefer-demo's policy (RLS); the default applies when a row is missing.
   - **e2e** (Playwright, with IDENTITY-04 and APPROVALS-02 merged): `alice@kaefer.test` releases a hold point → redirected to the passkey step → returns → the release succeeds and the decision shows "Passkey".
+
+## Added by owner answers (2026-10-10, ADR 0010 addendum)
+
+- Project settings, both default off: `holdpoint_client_pin_only` (with an `agreement_ref` text field recording the written agreement) and `client_signing_photo`. Tenant admins and project managers can change them; every change is audited.
+- With `holdpoint_client_pin_only` off, a client hold-point release needs the client's phone: a passkey on the phone, or a QR code that opens the website on the phone to confirm. Physical security keys are not required or assumed.
+- Offline release: when the setting is on, `check_signoff_assurance` returns `allow_provisional`; the release is stored as provisional and the server validates it on sync (a rejection reverts it and notifies the inspector and the client). With the setting off, an offline hold-point release by a client is not allowed.
+- Nothing may depend on device management (kiosk mode, screen pinning); Kaefer's Android tablets are not managed. People sign in with their own username or email and password on their own tablet.
+- Tests: setting off and a PIN-only client signature → `step_up_required`; setting on → `allow`; setting on and offline → `allow_provisional`, then a server rejection on sync reverts the release.

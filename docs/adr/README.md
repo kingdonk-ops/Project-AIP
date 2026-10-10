@@ -11,9 +11,9 @@ bullets and a row here; `tools/ci/check_adrs.py` enforces this in CI (`make chec
 | [0003](0003-jobs-outbox-and-sidecar.md) | Procrastinate (Postgres) jobs; Postgres outbox; sandboxed Python workers | accepted |
 | [0004](0004-repository-layout.md) | Repo layout: Python API/worker, three Vite TS apps (web, field PWA, portal) | accepted |
 | [0005](0005-identity-architecture.md) | Keycloak handles all staff sign-in (SSO, password, MFA); backend issues sessions, field PIN, portal links, SCIM | accepted |
-| [0006](0006-per-tenant-envelope-keys.md) | One AWS KMS key per tenant (reverses shared key; enables crypto-shred) | proposed |
+| [0006](0006-per-tenant-envelope-keys.md) | One AWS KMS key per tenant (reverses shared key; enables crypto-shred) | accepted |
 | [0007](0007-mvp-scope-and-strangler.md) | Walking skeleton → trimmed P0 → R1 "Kaefer live" | proposed |
-| [0008](0008-entitlements-and-commercial-model.md) | One entitlement service; sales-led; contract billing at launch | proposed |
+| [0008](0008-entitlements-and-commercial-model.md) | One entitlement service; sales-led; contract billing at launch | accepted (plan structure); adjustments proposed |
 | [0009](0009-ocr-and-licensing.md) | Only permissive open-source or AWS services; OCR = Tesseract + pypdfium2, Textract optional | accepted |
 | [0010](0010-signoff-assurance.md) | Sign-off assurance: one quick check at signing (passkey, device+PIN, TOTP or IdP MFA), per-tenant minimum, countersign fallback | accepted |
 | [0011](0011-licence-policy-details.md) | Licence check details: more permissive licences allowed; image OS packages judged as aggregation (AGPL/SSPL/Ghostscript still denied) | accepted |
@@ -24,3 +24,4 @@ bullets and a row here; `tools/ci/check_adrs.py` enforces this in CI (`make chec
 | [0016](0016-job-runner-semantics.md) | Job runner on Procrastinate: queue tables in public with narrow grants, lock slots for the per-tenant cap, `max_attempts` = total tries, atomic enqueue | accepted |
 | [0017](0017-company-systems-and-contract-link.md) | Company systems (CRM, contracts, invoicing, support, GRC) stay outside the product; `contract_ref` links a tenant to its contract; operator console on its own origin; no standing operator access to tenant data | accepted |
 | [0018](0018-module-groups-and-navigation.md) | Six domain groups and a job-area menu as documentation overlay; no module merges now | accepted |
+| [0019](0019-ai-provider-port.md) | `AiProvider` port with Bedrock Sydney (default) and direct vendor API adapters; verify in-region processing before claiming residency | accepted |

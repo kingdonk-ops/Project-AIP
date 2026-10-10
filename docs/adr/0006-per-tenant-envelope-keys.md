@@ -1,6 +1,6 @@
 # ADR 0006: One AWS KMS key per tenant
 
-- **Status:** proposed. This reverses the decision "Shared key with tenant prefixes". **Owner to confirm.**
+- **Status:** accepted (owner confirmed 2026-10-10). This reverses the decision "Shared key with tenant prefixes".
 - **Date:** 2026-10-07 (revised: the first version's app-held data keys could not crypto-shred S3 objects)
 - **Affects:** tenancy, data_io, documents, signing, uploads, security; TENANCY-02, TENANCY-07, UPLOADS-01
 
@@ -20,6 +20,10 @@ part in that, so deleting it leaves the tenant's files readable.
 - **Crypto-shred:** legal-hold check → schedule key deletion (7–30 day window) → deletion certificate. Legal hold always wins.
 - **Documented limits:** RDS rows are deleted, not shredded. Automated backups age out within PITR retention
   (≤ 35 days). Manual snapshots follow a purge procedure.
+- **Every tenant gets its own KMS key, on every plan** (owner, 2026-10-10). The cost is small and one code path is
+  simpler to audit than a keyed tier and an unkeyed tier. Plans differ by entitlements (ADR 0008), never by whether
+  isolation controls exist. All tenants share one database cluster, protected by row-level security (ADR 0015);
+  a siloed deployment is an Enterprise option built only when a contract requires it.
 - Tenant key prefixes for Redis, queues, S3 and search remain as a second isolation layer. BYOK is a later Enterprise option.
 
 ## Consequences
