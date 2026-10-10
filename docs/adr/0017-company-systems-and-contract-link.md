@@ -2,7 +2,7 @@
 
 - **Status:** proposed: **owner to confirm**
 - **Date:** 2026-10-10
-- **Affects:** tenancy (ENT-01, ENT-02, TENANCY-05), ops (OPS-12), access matrix, docs/internal
+- **Affects:** tenancy, ops, access matrix, docs/internal; ENT-01, ENT-02, TENANCY-05, OPS-12
 
 ## Context
 
