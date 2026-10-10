@@ -3,7 +3,9 @@
 # refused in production by IdentitySettings.
 09371a9ec7c012eb6b6ebf758c66ea38f90d588d:apps/api/aip/modules/identity/settings.py:generic-api-key:26
 
-# Reviewed false positives (2026-10-10): the "Affects:" line of ADR 0017 listed "access matrix, docs/internal", which
-# the generic-api-key rule read as `access <token>`. Prose only, no secret. The line was reworded in the later commit.
+# Reviewed false positives (2026-10-10): the Affects line of ADR 0017 (a list of module and document names) was read by
+# the generic-api-key rule as a key followed by a value. Prose only, no secret. The line was reworded in a later commit;
+# the third entry is this comment's own earlier wording.
 73bbd8b9eb10ba0972d24e4a5429e67103daf555:docs/adr/0017-company-systems-and-contract-link.md:generic-api-key:5
 08f01997f5cc9838a8fdb2ead3790d143113b671:docs/adr/0017-company-systems-and-contract-link.md:generic-api-key:5
+2b1b4d8e7557d9656f64c7ccfddb1407590f7ffa:.gitleaksignore:generic-api-key:6
