@@ -65,3 +65,7 @@ The steps above describe a shared-key prefix deletion in a TypeScript service an
 - Tests: a held tenant halts at the purge with the hold named and nothing deleted; a quarantined tenant gets 403 `TENANT_QUARANTINED` and a `terminating` one works; reactivation restores logins; after the purge the tenant's rows and objects are gone, tenant B is untouched, and the certificate lists what was removed; the export of a fixture tenant contains every report, photo and register row it had.
 - Convert to Python per ADR 0001 (the board already says so).
 
+### Archive path (owner design, ADR 0022 point 6, backlog)
+
+When the customer chooses the archive plan, the day-90 purge keeps the tenant's key and files, first writes the sealed bundle (SQLite file, CSV and JSON copies, sealed PDFs, photos, manifest with schema version and hashes) to cold storage, verifies the hashes, and only then deletes the rows. The tenant status becomes `archived`. The archive viewer and its separate sign-in are later tasks (see PLAN-R1). Test: after conversion the tenant has no rows in the shared database, the bundle opens read-only and every register row and report is present, and a corrupted bundle fails hash verification before any row is deleted.
+

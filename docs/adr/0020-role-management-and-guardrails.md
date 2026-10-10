@@ -41,7 +41,7 @@ that specification against earlier decisions found three points that need adjust
      any cache keyed by a per-tenant access version that every role or assignment change increments, so changes apply on
      the next request without logging out.
    - **Offline grace** is limited as set out in the ADR 0010 addendum (permission edits only, within the maximum
-     offline period, never for deactivation or revoked sessions).
+     offline signing limits, never for deactivation or revoked sessions).
 
 ## Consequences
 

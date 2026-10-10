@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-10 · DOCS-08 · (PR pending) · Offline timers revised: two clocks (14 days idle; 72 and 120 hours from the oldest unsynced provisional sign-off), sync progression instead of a 4-hour deadline, session interlock, signing-only gating, with four adjustments flagged; archive plan redesigned as a sealed bundle with a separate viewer (ADR 0022).
 - 2026-10-10 · DOCS-07 · (PR pending) · Offboarding lifecycle recorded as ADR 0022 (30-day export, quarantine to day 90, purge, certificate, optional archive plan), ADR 0021 scope clarified, TENANCY-07 rewritten, draft contract wording for the lawyer.
 - 2026-10-10 · DOCS-06 · (PR pending) · Owner answers 7, 9 and 10 recorded: 72-hour offline ceiling and provisional sign-off rules, ADR 0021 retention schedule (two audit streams, chain checkpoints), team size and two-stream limit, milestone comparison with the offline scope question.
 - 2026-10-10 · DOCS-05 · (PR pending) · Owner follow-ups recorded: database-size metering in GB with 20 GB blocks, audit tier dropped, customer-owned reporting feed add-on, client portal sign-off, new ADR 0020 (editable roles, project overrides, lockout and audit guardrails) with ACCESS-01, ACCESS-02 and IDENTITY-03 updates.
