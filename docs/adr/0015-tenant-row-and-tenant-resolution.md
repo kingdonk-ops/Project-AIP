@@ -50,5 +50,6 @@ A few details were not settled by ADR 0002, ADR 0005 or the task spec:
 
 - `terminating`: the tenant keeps working during the 30-day export window; the app shows a banner. Resolves as active.
 - `quarantined`: 403 `TENANT_QUARANTINED`, no logins; an operator can reactivate within the window.
+- Billing states (ADR 0023) are separate from `status`: `past_due` passes with a banner, `restricted` returns 403 `TENANT_RESTRICTED` for everyone except billing managers reading, exporting and paying, and `suspended` is the existing `TENANT_SUSPENDED`.
 - `archived`: the tenant's data is a sealed bundle (ADR 0022); the main app returns 403 `TENANT_ARCHIVED` and auditors use the archive area.
 

@@ -167,6 +167,8 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [OPS-06](tasks/OPS-06.md) | Storage lifecycle renderer with evidence-expiry guard | ops | S | PLAN-R1 | todo | convert to Python backend per ADR 0001 before starting |
 | [ENT-02](tasks/ENT-02.md) | Operator usage export and optional contract intake (ADR 0017) | tenancy | S | ENT-01, PLAN-R1, TENANCY-05 | todo | adds the company-systems link; no prices in the product |
 | [OPS-12](tasks/OPS-12.md) | Operator console on its own origin and realm (ADR 0017) | ops | M | IDENTITY-04, OPS-07, PLAN-R1, TENANCY-05 | todo | after the AWS pipeline |
+| [ENT-03](tasks/ENT-03.md) | Billing state (good standing, past due, restricted, suspended) and enforcement (ADR 0023) | tenancy | M | ENT-01, PLAN-R1, TENANCY-05 | todo | an operator moves the state, never a payment event |
+| [ENT-04](tasks/ENT-04.md) | Operator console pages: entitlement overrides and billing state (ADR 0023) | tenancy | M | ENT-03, OPS-12, PLAN-R1 | todo | on the operator origin |
 
 ### Moved out of P0: re-scoped by PLAN-R1 (ADR 0007)
 

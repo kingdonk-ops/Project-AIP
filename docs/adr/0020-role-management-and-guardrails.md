@@ -1,6 +1,6 @@
 # ADR 0020: Editable roles, project-scoped overrides and role-change guardrails
 
-- **Status:** accepted (owner specification, 2026-10-10); points 2, 3 and 6 contain adjustments to that specification that the owner has not yet confirmed
+- **Status:** accepted (owner specification, 2026-10-10; the owner confirmed the adjustments in points 2, 3 and 6 on the same day)
 - **Date:** 2026-10-10
 - **Affects:** access (ACCESS-01, ACCESS-02, ACCESS-05), identity (IDENTITY-03), audit, offline; supersedes the "system roles are immutable" rule in ACCESS-02
 
