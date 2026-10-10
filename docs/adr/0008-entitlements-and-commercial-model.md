@@ -72,3 +72,10 @@ Required for `annual` and `multi_year` terms. Prices, invoices and payments stay
 ## Consequences
 
 ARCH-08 and TENANCY-05 build their flags and module toggles on this service (task ENT-01).
+
+## Archive plan (backlog, ADR 0022)
+
+Plan code `archive`: a read-only tenant for customers who must keep records after leaving, with one or two auditor seats
+and search and export only. Not part of R1. The price is set in the company systems and must cover the database space the
+tenant keeps (database size is metered, adjustment A).
+

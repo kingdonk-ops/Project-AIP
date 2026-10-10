@@ -6,6 +6,8 @@
 
 ## Decision
 
+0. **Scope.** This schedule is what the platform keeps while a tenant is active. What happens after a customer leaves is
+   ADR 0022 (export window, quarantine, purge); the customer's own retention duty is then met from their export.
 1. **Schedule.** These are platform defaults. A tenant may lengthen them; shortening needs an operator-approved contract
    exception. A legal hold (AUDIT-05) always stops deletion.
 
@@ -29,10 +31,9 @@
    used for anything people open.
 5. **Deletion at the end of life is done by a retention job, not an S3 expiry rule,** so legal holds are honoured and the
    OPS-06 guard against expiry rules on evidence stays in force.
-6. **Offboarding.** When a contract ends the customer receives an export of the retained records, then the tenant is
-   crypto-shredded (ADR 0006). Retention duties after that rest with the customer's export. S3 Object Lock is not used for
-   tenant evidence in the live bucket because it would block crypto-shred; backups in the separate backup account keep
-   their vault lock (OPS-10).
+6. **Offboarding** follows ADR 0022 (30-day export window, quarantine to day 90, then purge and a deletion certificate).
+   S3 Object Lock is not used for tenant evidence in the live bucket because it would block the purge; backups in the
+   separate backup account keep their vault lock (OPS-10).
 7. The 7-year figure is the owner's reading of statutory and contractual warranty needs. Check it against the Kaefer and
    Rio Tinto contracts; pressure equipment and similar assets can require longer.
 
