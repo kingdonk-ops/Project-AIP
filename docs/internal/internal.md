@@ -67,7 +67,7 @@ bundle any of these into the product image or repo; inspection and hold-point si
 | In-term | | Read-only plan and usage page `/settings/billing`; operator changes plan | ENT-01 |
 | Month end | Accounting | Monthly `tenant_usage` snapshot; operator export (counts only) | ENT-01, ENT-02 |
 | Renewal | CRM reminder | `renewal_date` visible to operators and the tenant admin | ENT-01 |
-| Offboard | Contracts, accounting | Export, crypto-shred, deletion certificate | TENANCY-07 |
+| Offboard | Contracts, accounting | 30-day export window, quarantine to day 90, purge, deletion certificate (ADR 0022) | TENANCY-07 |
 
 Data crossing the boundary, in both directions, is deliberately small:
 
@@ -118,3 +118,16 @@ Anything in this table that processes customer data goes on the published sub-pr
 - **Intellectual property.** Before incorporating or selling, obtain written confirmation of who owns the code, and check the employment agreement's IP and outside-work clauses. This is a legal question for the owner's lawyer, not this repository.
 
 Open decisions are in [`tracking/OPEN-QUESTIONS.md`](../../tracking/OPEN-QUESTIONS.md) (items 17, 20, 21, 22 and 23).
+
+## 8. Draft contract wording for the lawyer (not legal advice)
+
+Matches ADR 0022. A lawyer finalises the text and the Australian Privacy Act position.
+
+- **Ownership.** The Customer keeps all rights in Customer Data entered into the Platform.
+- **Export.** For 30 days after termination or expiry, the Customer may export Customer Data with the Platform's export tools.
+- **Deletion.** The Provider permanently deletes Customer Data from production systems within 90 days after termination and
+  issues a certificate of destruction on request. Backups expire within a further 35 days.
+- **No records duty.** Unless an archive subscription is active, the Provider is not the Customer's record keeper, and the
+  Customer remains responsible for any statutory or contractual retention duty.
+- **Reactivation.** Data can be recovered during the 90 days, which may carry an administrative fee.
+

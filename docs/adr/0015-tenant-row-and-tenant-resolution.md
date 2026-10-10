@@ -45,3 +45,10 @@ A few details were not settled by ADR 0002, ADR 0005 or the task spec:
 - Seeds run in order: `tenancy-seed`, then `identity-seed` (compose does this).
 - A later platform-wide error envelope can replace the `detail` wrapper in one place
   (`aip/modules/tenancy/dependencies.py`).
+
+## Added statuses (ADR 0022, 2026-10-10)
+
+- `terminating`: the tenant keeps working during the 30-day export window; the app shows a banner. Resolves as active.
+- `quarantined`: 403 `TENANT_QUARANTINED`, no logins; an operator can reactivate within the window.
+- A read-only archive tenant stays `active` with the entitlement `read_only`; writes return 403 `TENANT_READ_ONLY`.
+

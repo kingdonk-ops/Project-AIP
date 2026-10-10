@@ -53,3 +53,15 @@ Implement an offboarding workflow that respects legal hold and the shared-key-wi
 ## Added by ADR 0021 (2026-10-10)
 
 - Offboarding exports the tenant's retained records (reports, sign-offs, photos, corrective actions, with manifests and hashes) to the customer before crypto-shred; the deletion certificate lists what was exported.
+
+## Rewritten by ADR 0022 (2026-10-10): supersedes the steps above
+
+The steps above describe a shared-key prefix deletion in a TypeScript service and predate ADR 0001 and ADR 0006. Build:
+
+- Statuses `terminating` (days 0 to 30), `quarantined` (30 to 90) and `offboarded` (after purge), resolved as in ADR 0015. An operator starts termination with a reason and a termination date; the dates drive the transitions.
+- Self-serve export for tenant admins during `terminating`: a ZIP of sealed PDF reports, original photos with metadata, and CSV or JSON of every register, with a manifest of hashes. Free of charge.
+- Operator `reactivate` during `quarantined` (audited, reason required).
+- The purge job at day 90: refuses if any legal hold exists and names it; deletes every tenant row in every tenant table through a dedicated purge role (the audit log is append-only for the app, so the purge path is separate and audited); deletes the tenant's file prefixes; disables the tenant's KMS key and schedules its deletion; then writes a `tenant_deletion_record` (no business data: tenant id, dates, row and object counts, hashes) and issues the certificate, which states the backup roll-off date (purge day plus up to 35 days).
+- Tests: a held tenant halts at the purge with the hold named and nothing deleted; a quarantined tenant gets 403 `TENANT_QUARANTINED` and a `terminating` one works; reactivation restores logins; after the purge the tenant's rows and objects are gone, tenant B is untouched, and the certificate lists what was removed; the export of a fixture tenant contains every report, photo and register row it had.
+- Convert to Python per ADR 0001 (the board already says so).
+
