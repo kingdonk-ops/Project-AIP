@@ -1,6 +1,11 @@
 # Accounts, profiles and access matrix
 
 <!-- hand-edited 2026-10-10 (ADR 0017): the Super Admin column. split_blueprint.py would overwrite this. -->
+> **Client Reviewer column (hand-edited 2026-10-10, owner decision).** Read-only on the system's data (assets,
+> documents, inspections, consumables and everything else shown as `view`), plus sign-off of hold points, witness points
+> and reports: `approve` only on Inspections, Report engine, E-signatures and the Workflow engine (for steps assigned to
+> them). Nothing else is `create` or `approve`. The company's tenant admin can change these permissions (ACCESS-02).
+
 > **Super Admin column (hand-edited, ADR 0017).** The platform operator has no standing access to tenant
 > business data (see the Super-admin account below). The column is therefore `admin` only on platform modules
 > (architecture, stack, database, tenancy, security, operations, design system, testing, terminology, AI
@@ -35,39 +40,39 @@
 | Form & template designer | none | admin | view | admin | edit | view | view | view | view | none | none | view | none |
 | Inspections, ITPs & hold points | none | admin | approve | approve | view | approve | create | create | view | approve | create | view | create |
 | Certificates, competency & calibration gate | none | admin | edit | approve | edit | edit | view | view | edit | view | create | view | create |
-| Issues, NCRs & corrective actions | none | admin | approve | approve | approve | approve | create | create | view | create | edit | view | create |
-| Punch list & defects liability | none | admin | approve | approve | view | edit | create | create | view | create | edit | view | none |
+| Issues, NCRs & corrective actions | none | admin | approve | approve | approve | approve | create | create | view | view | edit | view | create |
+| Punch list & defects liability | none | admin | approve | approve | view | edit | create | create | view | view | edit | view | none |
 | Quality roll-up & audits | none | admin | view | admin | view | view | none | none | view | none | none | view | none |
 | Rules & validation engine | none | admin | view | edit | none | none | none | none | none | none | none | view | none |
-| Commissioning | none | admin | approve | approve | view | edit | create | view | view | approve | create | view | none |
-| Report engine & published records | none | admin | approve | approve | create | create | create | none | create | view | none | view | view |
+| Commissioning | none | admin | approve | approve | view | edit | create | view | view | view | create | view | none |
+| Report engine & published records | none | admin | approve | approve | create | create | create | none | create | approve | none | view | view |
 | Safety & HSE | none | admin | approve | view | admin | create | create | create | view | none | create | view | none |
 | Temporary works register | none | admin | approve | view | approve | edit | create | view | view | view | create | view | none |
 | Site diary & field reports | none | admin | approve | view | view | approve | create | create | view | view | create | view | none |
 | Voice notes & phone log | none | admin | edit | view | none | create | create | create | none | none | none | view | none |
 | Site logistics & mobilisation | none | admin | approve | view | view | edit | view | create | view | view | create | view | none |
 | Equipment & fleet | none | admin | edit | edit | view | edit | view | create | view | none | create | view | create |
-| Stock, consumables & materials | none | admin | edit | view | none | edit | create | create | view | none | create | view | create |
+| Stock, consumables & materials | none | admin | edit | view | none | edit | create | create | view | view | create | view | create |
 | Resources & crews (basic) | none | admin | approve | view | view | edit | view | view | none | none | none | view | none |
 | Schedule & look-ahead (basic) | none | admin | approve | view | view | edit | view | view | view | view | view | view | view |
 | Document library & control | none | admin | edit | edit | create | create | create | create | admin | view | create | view | create |
-| Markup, viewer & plan room | none | admin | create | create | create | create | create | create | create | create | create | view | none |
+| Markup, viewer & plan room | none | admin | create | create | create | create | create | create | create | view | create | view | none |
 | Workflow & approvals engine | none | admin | approve | approve | approve | approve | view | none | approve | approve | view | view | none |
 | E-signatures & tamper-evident records | none | admin | approve | approve | approve | approve | create | create | approve | approve | create | view | none |
 | Transmittals & correspondence | none | admin | approve | view | none | none | none | none | admin | view | view | view | none |
 | Inbound capture & connectors | none | admin | view | none | none | none | none | none | admin | none | none | view | none |
-| Upload & file processing pipeline | none | admin | create | create | create | create | create | create | create | create | create | none | create |
-| Comments, mentions & notifications | none | admin | create | create | create | create | create | create | create | create | create | view | none |
-| Meetings & AI minutes | none | admin | approve | edit | create | create | view | none | view | create | create | view | none |
-| RFIs & submittals | none | admin | approve | approve | none | create | create | none | approve | approve | create | view | none |
-| Interface management | none | admin | approve | edit | none | edit | none | none | view | approve | create | view | none |
-| Tasks, deadlines & my work | none | admin | approve | create | create | approve | create | create | create | create | create | view | create |
+| Upload & file processing pipeline | none | admin | create | create | create | create | create | create | create | view | create | none | create |
+| Comments, mentions & notifications | none | admin | create | create | create | create | create | create | create | view | create | view | none |
+| Meetings & AI minutes | none | admin | approve | edit | create | create | view | none | view | view | create | view | none |
+| RFIs & submittals | none | admin | approve | approve | none | create | create | none | approve | view | create | view | none |
+| Interface management | none | admin | approve | edit | none | edit | none | none | view | view | create | view | none |
+| Tasks, deadlines & my work | none | admin | approve | create | create | approve | create | create | create | view | create | view | create |
 | Supplier catalogue, requisitions & POs | none | admin | approve | view | none | create | none | none | view | none | none | view | view |
 | Cost items & schedule of rates (thin) | none | none | none | none | none | none | none | none | none | none | none | none | none |
-| Change orders, variations & MOC (basic) | none | admin | approve | edit | none | create | none | none | view | approve | create | view | none |
+| Change orders, variations & MOC (basic) | none | admin | approve | edit | none | create | none | none | view | view | create | view | none |
 | Contacts & companies | none | admin | edit | view | view | view | view | none | edit | none | none | view | view |
 | Regional reference data packs | admin | admin | view | view | none | none | none | none | view | none | none | view | none |
-| Handover, data books & submissions | none | admin | approve | approve | view | edit | view | none | admin | approve | create | view | none |
+| Handover, data books & submissions | none | admin | approve | approve | view | edit | view | none | admin | view | create | view | none |
 | Service & maintenance | none | admin | approve | edit | view | edit | create | create | view | view | create | view | create |
 | Prefab & off-site manufacture | none | admin | approve | approve | none | edit | create | create | view | view | create | view | none |
 | Dashboards & KPI reporting | none | admin | edit | edit | view | view | view | none | view | view | none | view | view |

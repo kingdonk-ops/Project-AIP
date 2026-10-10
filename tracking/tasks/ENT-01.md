@@ -81,3 +81,9 @@ Provide a single `EntitlementService.check(tenant, feature | limit)` that resolv
 - Tests: unit (`annual` without `contract_ref` is invalid; `sandbox` without is valid); integration (tenant admin
   `PUT` is 403; operator `PUT` without `contract_ref` on `annual` is 422; with it is 200 and audited).
 - The monthly usage export is ENT-02, not this task.
+
+## Added by the owner's plan structure (2026-10-10, ADR 0008)
+
+- `plans.py` defines `core`, `professional` and `enterprise` with the limits and features in the ADR 0008 table. New limit keys: `limit.seats.full` (staff plus field seats together), `limit.seats.portal` (reviewer seats), `limit.projects`, `limit.api_calls_per_day`; keep `limit.storage_gb` and `limit.ai_spend_aud_month`. New feature keys: `feature.api`, `feature.sso`, `feature.custom_categories`, `feature.reporting_feed`.
+- Prices never appear in code or the database. No row-count limits (ADR 0008 adjustment A).
+- Tests: `core` with 1 full user: `check_limit("limit.seats.full", 2)` is not allowed; `professional` allows 5 and refuses 6; `limit.projects` 2 for `core`; `feature.sso` false for `professional` and true for `enterprise`; a negative limit still fails plan load.

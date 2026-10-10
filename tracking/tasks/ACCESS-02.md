@@ -63,3 +63,13 @@ Add roles built from the catalogue, seed the default tenant roles from the acces
     - After a successful POST, an outbox row `access.role_assignment.created` exists.
   - **e2e**:
     - Playwright APIRequestContext on compose: the seeded kaefer tenant admin creates projects P1 and P2 (PROJECTS-01 API) and assigns alice `inspector` on P1. Expected: alice's `GET /api/v1/access/me/abilities?projectId=P1` includes `projects.project.read`, the same call for P2 returns an empty list, and `GET /api/v1/projects/P2` as alice returns 403 or 404.
+
+## Changed by owner decision (2026-10-10): tenant admins can change role permissions
+
+The steps above say system roles cannot be edited. That is replaced by:
+
+- System roles keep their `code`, cannot be deleted and stay in every tenant, but a tenant admin (`access.role.manage`) can change their permissions. Add `customised_at timestamptz NULL` to `role`; the first edit sets it and writes an audit event with the before and after sets. A `POST /roles/:id/reset` action restores the shipped defaults.
+- `seedDefaultRoles` syncs permissions only for roles where `customised_at IS NULL`. For a customised role, a permission added to the catalogue later is **not** granted automatically (fail closed); it is listed in the response so the admin can decide.
+- PATCH or DELETE of a system role's `code` or name key, and DELETE of any system role, still return 409 `SYSTEM_ROLE_IMMUTABLE`.
+- The Client Reviewer defaults are in `docs/blueprint/05-access-matrix.md` (read-only plus sign-off of hold points, witness points and reports) and the company's admin may widen or narrow them.
+- Tests replace the old `PATCH inspector` case: (1) tenant admin removes `inspections.*.approve` from `client_reviewer`; the next permission check is denied and `customised_at` is set. (2) Re-running the seed after a catalogue addition leaves that role unchanged and reports the new permission. (3) `POST .../reset` restores the defaults and clears `customised_at`. (4) DELETE of `client_reviewer` returns 409.

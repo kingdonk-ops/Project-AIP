@@ -37,3 +37,24 @@ SSO systems don't report whether MFA was used.
   `countersign_required`. APPROVALS-02 calls it instead of a hard-coded MFA check.
 - Answers OPEN-QUESTIONS: field-PIN users *can* sign on a registered device, and SSO users without IdP MFA get a
   Keycloak step at signing.
+
+## Owner answers (2026-10-10)
+
+- **One tablet per worker.** People sign in with their username or email and password; tablets are not shared. A
+  different person on the same tablet logs out and in again. The field PIN stays a quick re-check at signing
+  (`aal1`), not a way to share a login. Sessions lock after a short idle period.
+- **Client representatives carry their own phones and will not use physical security keys.** The second factor for
+  a hold point is the client's own phone: a passkey on the phone, or a QR code that opens the website on the phone to
+  confirm. Later confirmation in the portal stays available.
+- **Project setting `holdpoint_client_pin_only`** (default off, with a field for the reference to the written
+  agreement). When on, a client PIN alone releases a hold point. When off, a hold point needs the phone or website
+  confirmation, or later confirmation.
+- **Offline.** A hold point may be released provisionally on a PIN-only client signature before sync, only where the
+  project setting allows PIN-only. The release is marked provisional until the server validates it on sync; a
+  rejection reverts it and notifies the inspector and the client.
+- **Photo of the client at signing** is an optional tenant or project setting, default off.
+- **Devices.** Kaefer uses Android tablets with NFC and no MDM. Nothing may depend on MDM features such as kiosk
+  mode or screen pinning; auto-lock, short sessions and logout are enforced in the app.
+- Client reviewer permissions (sign-off of hold points, witness points and reports) are role permissions that the
+  tenant admin can change (ACCESS-02).
+
