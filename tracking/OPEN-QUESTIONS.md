@@ -45,6 +45,7 @@ Nothing blocks M0 now.
 28. Pick the CRM product: Twenty (open source, self-hosted) or a hosted one (HubSpot Free or Starter, Attio).
 29. Confirm ADR 0023 points 1, 4, 7, 9 and 12 (plans stay in code; kill switch is a release flag; offline timers and embedded Power BI are not plan features; a person, not a payment event, moves the billing state; sync of already-signed records while restricted).
 30. Your reply numbered "24) confirm" did not say which item it answered. Candidates: 23 (no on-premises deployment), 26 (security mailbox and the 7-year retention check) or 27 (the offboarding lifecycle). Say which, or confirm all.
+31. Confirm ADR 0024's adjustments to the remote un-block specification: no Super Admin default, refused uploads quarantined (not dropped), a second approver when signed work is on the tablet, a separate revoke-device action for lost tablets, and browser storage in place of the native Android pieces.
 23. Confirm ADR 0008 adjustment D (no on-premises deployment; a siloed deployment only on contract, after R1). Adjustments A to C were accepted on 2026-10-10.
 
 ## Also waiting on the owner

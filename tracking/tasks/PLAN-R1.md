@@ -138,3 +138,7 @@ R1 scope (ADR 0007 §4). Module folders and ID prefixes are below. IDs must matc
 
 Backlog, after R1 and after the TENANCY-07 export: the sealed archive bundle format and a simple read-only archive area on its own origin and sign-in, with a layout like the main system (ADR 0022 point 6). Plan it with a compatibility test that opens bundles from every earlier schema version.
 
+## Carried forward: remote un-block and targeted wipe (owner specification, 2026-10-10)
+
+Backlog for the offline module, after R1 (ADR 0024): check-out token and epoch, pre-sync command list, quarantine store for refused uploads, targeted client purge with an encrypted recovery snapshot, second approver for signed work, the `inspections.checkout.unblock` permission, a "revoke device" action for lost tablets, and the admin page with required reason codes.
+
