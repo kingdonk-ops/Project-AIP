@@ -17,6 +17,7 @@ becomes an ADR update. **Bold** questions block M0.
 - 2026-10-08 — **Licence policy:** any free licence is fine; no paid commercial licences (build it ourselves instead). → ADR 0011 accepted.
 - 2026-10-08 — **Provenance log:** initialled by the owner (KK).
 - 2026-10-08 — **Security scanning and signing:** ADR 0013 accepted (free scanners, expiring vulnerability exceptions, key-based cosign without public logs).
+- 2026-10-10 — **Company systems and navigation:** owner accepted ADR 0017 (company systems outside the product, `contract_ref` link, separate operator console, no standing operator data access) and ADR 0018 (domain groups and job-area menu, no module merges). Tool choices remain open (items 17 to 20).
 - 2026-10-09 — **LGPL exceptions:** owner confirmed the `psycopg` and `psycopg-pool` LGPL-3.0 exceptions (required by Procrastinate, imported unmodified; expire 2027-04-06). → ADR 0016.
 
 Nothing blocks M0 now.
@@ -55,8 +56,6 @@ the client isn't set up, the inspector records a witness note and the client con
 16. Which tablets does Kaefer use (Android with NFC, or iPad), and are they under MDM so we can use kiosk/screen pinning?
 
 ### Company systems and compliance ([ADR 0017](../docs/adr/0017-company-systems-and-contract-link.md), [`docs/internal/internal.md`](../docs/internal/internal.md))
-
-Also confirm ADR 0017 and [ADR 0018](../docs/adr/0018-module-groups-and-navigation.md) (both proposed).
 
 17. CRM, contracts and invoicing: lighter set (CRM + DocuSeal + Xero, recommended for launch) or one console (ERPNext + Frappe CRM)? Is Xero acceptable for AU GST and BAS?
 18. Support desk, status page, trust centre and website: accept the candidates in the register (Zammad, Upptime, Astro and Starlight)?
