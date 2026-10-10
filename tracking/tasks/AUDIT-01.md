@@ -56,3 +56,7 @@ Create the tamper-evident store: a per-tenant, per-stream hash-chained `audit_lo
     - `SELECT rolbypassrls FROM pg_roles WHERE rolname IN ('aip_app','aip_audit_writer')`. Expected: both false.
   - **e2e**:
     - With the compose stack running, a script (`python -m aip.modules.audit.tests.e2e_chain`) appends 3 entries for kaefer-demo through `AuditApi`, then recomputes the chain from a plain `SELECT … ORDER BY seq` using `chain_hash.py`. Expected: all 3 hashes match and the head equals hash #3.
+
+## Added by ADR 0021 (2026-10-10)
+
+- Seal each stream in monthly segments: store the closing hash of a segment in `audit_chain_checkpoints` (tenant_id, stream, segment, last_seq, last_hash). Verification can start from any checkpoint, so an old segment can be removed under the retention rules without breaking verification of the rest. Test: remove the oldest segment in a scratch database; verification from the next checkpoint passes, and altering one retained row still fails.

@@ -57,3 +57,7 @@ Make deletion defensible. Soft-deleted records enter a recycle bin with a purge 
     - Restore W1 before purge. Expected: the handler restores it (deleted_at null), restored_at is set, and it leaves the bin.
   - **e2e**:
     - Through the API as the kaefer-demo admin: soft-delete a fixture record, place a project hold, and try to purge (expected 423). Then a second admin releases the hold with a note and the purge succeeds. GET `/legal-holds/:id/events` shows `placed` and `released` with both actors.
+
+## Added by ADR 0021 (2026-10-10)
+
+- A retention job applies the schedule in ADR 0021: it removes expired security-stream segments and expired records only when no legal hold applies, writes a deletion audit entry, and never uses an S3 expiry rule on evidence. Tests: a held record past its date is kept; an unheld expired record is removed with an audit entry; a tenant with a longer retention setting keeps records past the default.

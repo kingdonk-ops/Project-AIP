@@ -56,3 +56,7 @@ Write every domain event into the hash chain automatically, so modules only emit
     - Run events for tenants A and B in one batch. Expected: two independent chains, each starting at seq 1.
   - **e2e**:
     - Log in through Keycloak as the kaefer-demo admin, create a project and log out. Expected: security_audit_events has `auth.login.succeeded` and `auth.logout` for that user, and audit_log has `project.created` with the project id as record_id.
+
+## Added by ADR 0021 (2026-10-10)
+
+- `security_audit_events` (sign-in, role change, session events) keeps 3 years. Domain audit entries that evidence a sign-off follow the 7-year record they prove, so they must stay in `audit_log` and never in the security stream.

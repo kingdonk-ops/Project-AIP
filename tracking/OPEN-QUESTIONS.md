@@ -26,16 +26,14 @@ becomes an ADR update. **Bold** questions block M0.
 - 2026-10-10 — **Shared tablets and hold-point signing (items 11 to 16):** one tablet per worker with username and password sign-in; clients use their own phones, no physical security keys; PIN-only hold-point release is a project setting needing a written agreement; provisional release offline is allowed; the photo at signing is an optional setting; Kaefer uses unmanaged Android tablets with NFC. → ADR 0010 addendum, IDENTITY-07.
 - 2026-10-10 — **Compliance and company tools:** use Comp AI (open source) for compliance, drop HIPAA; accept the candidates for support, status, trust centre, website and help pages. → `docs/internal/internal.md`.
 - 2026-10-10 — **Pricing adjustments and roles:** meter seats, projects, file storage and database size in GB (extra blocks of 20 GB); no 30-day audit tier; customer-owned Power BI as a paid `reporting_feed` add-on; clients sign off in the client portal with username and password; role management per the owner's specification. → ADR 0008 (A to C), ADR 0010 addendum, ADR 0020, ACCESS-02.
+- 2026-10-10 — **Offline limits, retention, team (items 7, 9, 10):** 72 hours offline ceiling with provisional hold-point sign-off and a 4-hour reconcile deadline; retention schedule of 7 years for reports, photos, sign-offs and punchlists, life of asset plus 3 years for asset data, 3 years for the security audit trail; solo developer with at most two build streams; milestones 6 to 8, 12 to 14 and 20 to 24 weeks. → ADR 0010 addendum (part 3), ADR 0021, ADR 0007.
 - 2026-10-09 — **LGPL exceptions:** owner confirmed the `psycopg` and `psycopg-pool` LGPL-3.0 exceptions (required by Procrastinate, imported unmodified; expire 2027-04-06). → ADR 0016.
 
 Nothing blocks M0 now.
 
 ## Needed before P0-core exit / R1
 
-2. **Confirm the "Kaefer live" date.** Proposed 2027-03-31 (ADR 0007, with milestones). Change it if the business needs earlier.
-7. What maximum offline period is acceptable for field devices? (Provisional hold-point release before sync is allowed, and the permission grace in ADR 0020 is bounded by this period.)
-9. Retention periods per record type, and who is the named security owner?
-10. Team size: solo or hiring? (Sets agent parallelism and realistic dates.)
+2. **Confirm the "Kaefer live" date.** Proposed 2027-03-31 if offline stays out of R1, about late May 2027 if offline is in (item 25). Change it if the business needs earlier.
 
 ### Company systems and compliance ([ADR 0017](../docs/adr/0017-company-systems-and-contract-link.md), [`docs/internal/internal.md`](../docs/internal/internal.md))
 
@@ -43,6 +41,8 @@ Nothing blocks M0 now.
 20. Corporate IT and the remaining undecided services: Microsoft 365 Business Premium (Entra, Intune MDM) or Google Workspace? Transactional email (SES) and error tracking (self-hosted Sentry or CloudWatch RUM)?
 21. **Make the `Project-AIP` repository private.** It is public today and holds the threat model, security reviews and Keycloak realm config. Private repositories use GitHub Actions minutes, so check Settings, Billing and plans first.
 22. Intellectual property: get written confirmation of who owns the code before incorporating or selling, and check the employment agreement's IP and outside-work clauses (legal advice, not repository work).
+25. **Is offline operation required for "Kaefer live"?** ADR 0007 keeps it out of R1. Also confirm the 72 hours means elapsed hours (not business days) and the consequence proposed for a device unreconciled 4 hours after connectivity returns (ADR 0010 addendum, part 3).
+26. Security contact: create the `security@` mailbox on the company domain (the owner suggested `project-aip.io`; confirm that domain is registered and yours) and confirm the owner is the named security owner while solo. Confirm the 7-year retention against the Kaefer and Rio Tinto contracts, and the ADR 0021 adjustments (two audit streams, chain checkpoints, Glacier Instant Retrieval).
 23. Confirm ADR 0008 adjustment D (no on-premises deployment; a siloed deployment only on contract, after R1). Adjustments A to C were accepted on 2026-10-10.
 24. Included database size per plan (the owner's example is 20 GB for Professional): what for Essentials and Enterprise? Also confirm the three adjustments to the role specification in ADR 0020 (project owners cannot edit tenant-wide roles; operators change tenant roles only inside a support-access grant; the offline permission grace has limits).
 

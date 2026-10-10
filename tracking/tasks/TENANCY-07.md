@@ -49,3 +49,7 @@ Implement an offboarding workflow that respects legal hold and the shared-key-wi
   - **unit**:
     - The step machine refuses 'delete' before 'export' is complete.
     - The certificate hash is stable for the same inputs.
+
+## Added by ADR 0021 (2026-10-10)
+
+- Offboarding exports the tenant's retained records (reports, sign-offs, photos, corrective actions, with manifests and hashes) to the customer before crypto-shred; the deletion certificate lists what was exported.

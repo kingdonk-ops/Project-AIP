@@ -127,3 +127,9 @@ R1 scope (ADR 0007 §4). Module folders and ID prefixes are below. IDs must matc
 - Client portal sign-off (username and password plus the second step, ADR 0010 addendum) is the normal client route for hold points, witness points and reports; plan the portal tasks for R1 accordingly. A later dedicated client app (ITP sign-off, scheduling, report coding) is backlog.
 - The `reporting_feed` add-on (customer-owned Power BI, ADR 0008 C) needs its own security review and ADR before any task is built: per-tenant read credentials, row-level security, rate limits, audit of every read.
 - Offline module: record the access version at last sync and apply the limited permission grace in ADR 0010 and ADR 0020.
+
+## Carried forward from owner answers, part 3 (2026-10-10)
+
+- **Scope question that moves the date:** ADR 0007 puts the offline PWA after R1, but the owner's milestones list "core offline sync" in the alpha. If offline is required for "Kaefer live", add it to R1 (OPEN-QUESTIONS 25). Offline sync is the riskiest module; plan its property tests (TESTING-07) with it.
+- Offline rules to build: the 72-hour ceiling, `PROVISIONAL_OFFLINE`, the 4-hour reconcile deadline and the server-side checks in the ADR 0010 addendum (part 3).
+- Retention: ADR 0021.
