@@ -100,7 +100,7 @@ are used. All thresholds are platform defaults; a tenant admin may shorten them,
 - The device time is informational. The server records when it received each record, the device, the device's last sync
   and its access version, rejects a device time later than the receive time, and flags large differences for review.
 
-### Adjustments proposed (owner to confirm)
+### Adjustments (confirmed by the owner on 2026-10-10)
 
 1. **Signing authority needs a recent online check.** New provisional sign-offs also require an online validation no
    older than 7 days; Track A's 14 days covers reading cached material only. Otherwise a user deactivated or stripped of a

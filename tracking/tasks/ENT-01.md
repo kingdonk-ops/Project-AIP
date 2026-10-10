@@ -93,3 +93,13 @@ Provide a single `EntitlementService.check(tenant, feature | limit)` that resolv
 - New limit key `limit.db_gb` (included database size per plan) and add-ons `add_on.db_block_20gb` (+20 GB) and `add_on.reporting_feed`. Plan amounts are in ADR 0008 (core's included size is open, OPEN-QUESTIONS 24); prices stay out of the repository.
 - `tenant_usage.db_bytes_est`: a nightly job estimates each tenant's database size by summing the byte size of its rows over every tenant table (including the audit log), using the tenant's `tenant_id` filter, and records the method version with the figure. `check_limit("limit.db_gb", …)` uses it. The plan-and-usage page shows the estimate and states how it is measured.
 - Tests: two tenants with known row counts produce estimates in the expected ratio; a tenant over its included size with no add-on is reported over limit but not blocked from sign-off or reads (limits warn, they never lock evidence away).
+
+## Added by ADR 0023 (2026-10-10)
+
+- Each numeric limit has an action when reached: `BLOCK`, `WARN` or `OVERAGE` (allow and record for the invoice). Storage and database size warn at 80% and 95%; at 100% new uploads are restricted, but reads, exports and sign-off of work already started are never blocked.
+- Reached-limit response: 403 `LIMIT_REACHED` with `gate`, `limit` and `current` (and `NOT_ENTITLED` for a missing feature).
+- Each tenant has an entitlement version that every override, add-on or plan change increments in the same transaction; any cache uses tenant-prefixed keys from the TENANCY-02 builders and is keyed by that version, so a change applies at once.
+- A nightly job removes expired overrides and writes an audit entry; evaluation already ignores expired ones.
+- Plan numbers stay in code (ADR 0023 point 1). Offline timers are not entitlements.
+- Tests: version bump invalidates a cached decision; `WARN` allows and records; `OVERAGE` allows and appears in the usage snapshot; `BLOCK` at 100% storage refuses an upload but not an export.
+

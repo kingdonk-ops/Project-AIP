@@ -130,7 +130,7 @@ R1 scope (ADR 0007 §4). Module folders and ID prefixes are below. IDs must matc
 
 ## Carried forward from owner answers, part 3 (2026-10-10)
 
-- **Scope question that moves the date:** ADR 0007 puts the offline PWA after R1, but the owner's milestones list "core offline sync" in the alpha. If offline is required for "Kaefer live", add it to R1 (OPEN-QUESTIONS 25). Offline sync is the riskiest module; plan its property tests (TESTING-07) with it.
+- **Offline is out of R1** (owner confirmed 2026-10-10), so the date 2027-03-31 holds. Plan the offline module after R1, with its property tests (TESTING-07); if the owner later needs offline for Kaefer live, the date moves by roughly 6 to 8 weeks.
 - Offline rules to build (ADR 0010 addendum, part 3, revised): two clocks (14 days idle; 72/120 hours from the oldest pending `PROVISIONAL_OFFLINE` record), the 24-hour sync grace, the 7-day online-validation limit for new signing, the session interlock with an audited admin override, signing-only gating, encrypted local store, persistent-storage request and storage status, evidence-pending attachments, and the server-side checks.
 - Retention: ADR 0021.
 

@@ -30,9 +30,9 @@ Status: **proposed** = a recommendation awaiting the owner's choice, **decided**
 
 | Function | Candidate | Licence (reported) | Runs on | Holds customer data | Product touchpoint | Status |
 |---|---|---|---|---|---|---|
-| CRM, quotes | Twenty (alt: EspoCRM) | AGPL-3.0 | corp account, Sydney | Yes (contacts) | Won deal supplies the tenant name and `contract_ref` | proposed |
-| Contracts and e-signature | DocuSeal (alt: Documenso) | AGPL-3.0 | corp account | Yes (contracts) | Signed contract → `contract_ref`; never embedded in the product | proposed |
-| Invoicing and accounting | Xero (AU GST and BAS) | Commercial | SaaS | Yes | Annual invoice from the contract; true-up from usage export | proposed |
+| CRM, quotes | A lightweight CRM, product still to choose: Twenty (open source) or a hosted one (HubSpot Free or Starter, Attio) | AGPL-3.0 or commercial | corp account or SaaS | Yes (contacts) | Won deal supplies the tenant name and `contract_ref` | set chosen (owner 2026-10-10), product open (OPEN-QUESTIONS 28) |
+| Contracts and e-signature | DocuSeal (alt: Documenso) | AGPL-3.0 | corp account | Yes (contracts) | Signed contract → `contract_ref`; never embedded in the product | decided (owner 2026-10-10) |
+| Invoicing and accounting | Xero (AU GST and BAS) | Commercial | SaaS | Yes | Annual invoice from the contract; true-up from usage export | decided (owner 2026-10-10) |
 | Subscription automation | None at launch (ADR 0008: contract billing, no payment provider) | n/a | n/a | n/a | Revisit Lago or ERPNext only with self-serve or metered billing | decided |
 | Support desk and tickets | Zammad (alt: Chatwoot) | AGPL-3.0 (Chatwoot MIT core) | corp account | Yes | Support-access grants (TENANCY-06) | decided (owner 2026-10-10) |
 | Help pages and product docs | Starlight (Astro), docs in the monorepo | MIT | static, web account | No | Versioned with releases | decided (owner 2026-10-10) |
@@ -41,7 +41,7 @@ Status: **proposed** = a recommendation awaiting the owner's choice, **decided**
 | Trust centre | Provided by the GRC tool | n/a | `trust.` subdomain | No | Publishes the sub-processor list | decided (owner 2026-10-10) |
 | Compliance (GRC) | Comp AI, open source (owner 2026-10-10; alternatives CISO Assistant, Probo) | AGPL-3.0 | corp account | Evidence only | SECURITY-03 to 05 shrink: use the tool for the control catalogue, evidence and access reviews | decided |
 | ISMS policies | Markdown in a private `isms` repo; PR approval is the approval record | n/a | GitHub | No | None | proposed |
-| Company files and identity | Microsoft 365 Business Premium (Entra, Intune MDM) | Commercial | SaaS | Yes | None | proposed |
+| Company files and identity | Microsoft 365 Business Premium (Entra, Intune MDM) | Commercial | SaaS | Yes | None | decided (owner 2026-10-10) |
 | Password manager | Bitwarden Teams | AGPL / commercial | SaaS | No | None | proposed |
 | Website analytics | Umami | MIT | web account | No | None | proposed |
 | On-call alerting | Free tier of a pager service | Commercial | SaaS | No | OPS-04 alerts | proposed |
@@ -52,7 +52,7 @@ bundle any of these into the product image or repo; inspection and hold-point si
 
 **Consolidation options (owner to choose).**
 
-- **D, lighter (leaning default for launch):** CRM + DocuSeal + Xero, joined by webhooks. Three small tools, each replaceable.
+- **D, lighter (chosen by the owner, 2026-10-10):** CRM + DocuSeal + Xero, joined by webhooks. Three small tools, each replaceable.
 - **A, one console:** ERPNext + Frappe CRM + Helpdesk (GPLv3) with DocuSeal beside it. Subscriptions with seat quantity and auto-invoices are built in, at the cost of operating a larger system that is itself in audit scope.
 - Odoo Community lacks subscriptions and e-signature (Enterprise only), so it does not meet the no-paid-licence rule.
 
@@ -91,8 +91,8 @@ Data crossing the boundary, in both directions, is deliberately small:
 | AI model provider: Bedrock Sydney (default) and the direct vendor API (optional, per tenant) | AI assistant | decided, ADR 0019; verify in-region processing |
 | Power BI (customer-owned) | A customer reads a read-only reporting feed with their own licences; no Microsoft service is run by us | accepted add-on `reporting_feed` (ADR 0008 C); security review before build |
 | Power BI Embedded or dedicated capacity | Paid Azure capacity, Microsoft as sub-processor, residency questions | **deferred**, owner decision and ADR needed |
-| Transactional email (SES implied) | Invites, notifications | **undecided** |
-| Error tracking (self-hosted Sentry or CloudWatch RUM) | Client errors, OPS-05 | **undecided** |
+| Amazon SES in ap-southeast-2 | Invites, notifications | decided (owner 2026-10-10); needs DKIM, SPF and DMARC on the company domain |
+| Error tracking | Client errors, OPS-05 | **open** (OPEN-QUESTIONS 29): hosted Sentry has no Australian region and would hold event data outside Australia, so events would need scrubbing first; our own error sink (OPS-05) plus CloudWatch is the alternative |
 | GitHub: code, Actions, cosign | Build and signing | decided; in audit scope, not a data processor |
 | Customer identity providers (Entra, Okta) | Federation | the customer's, not ours |
 

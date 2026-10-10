@@ -32,7 +32,7 @@ Kaefer is **one tenant**; its regions are organisations with projects beneath th
 | Extra seats | billed per seat | billed per seat | volume scale; reviewer seats included |
 | Active projects | 2 | 15 | unlimited |
 | Included file storage | 25 GB pooled | 250 GB pooled | 2 TB or more |
-| Included database size | owner to set (OPEN-QUESTIONS 24) | 20 GB (owner's example) | custom |
+| Included database size | 5 GB | 20 GB | 100 GB |
 | Inspection categories | standard set | unlimited custom, form builder | full taxonomies, code matching |
 | Integration API | none | standard REST, 5,000 requests per day | dedicated, webhooks |
 | Reporting | CSV and Excel export | in-app dashboards and a read-only reporting feed | dedicated capacity option |
