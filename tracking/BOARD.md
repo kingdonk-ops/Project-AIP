@@ -121,6 +121,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [TESTING-03](tasks/TESTING-03.md) | Isolation tests for Redis, queues, S3 prefixes and search | testing | M | OPS-02, TENANCY-02, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-05](tasks/TESTING-05.md) | Migration up-down-up test | testing | S | TESTING-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [SECURITY-08](tasks/SECURITY-08.md) | Production strip test and security CI workflow | security | M | ARCH-03, STACK-04 | done | PR #20 |
+| [SECURITY-09](tasks/SECURITY-09.md) | No public API docs or OpenAPI schema in production | security | XS | ACCESS-01 | done | ClaudeK: PR #52 |
 | [OPS-07](tasks/OPS-07.md) | Terraform baseline for staging and the build-promote pipeline | ops | M | STACK-05 | todo | use infra/terraform (ADR 0004), not infrastructure/ |
 | [OPS-09](tasks/OPS-09.md) | Build once, scan, push to ECR, deploy staging, smoke | ops | M | OPS-07, STACK-05 | todo |  |
 | [OPS-10](tasks/OPS-10.md) | Cosign signing, prod promotion approval, digest rollback | ops | M | OPS-09 | todo | convert to Python backend per ADR 0001 before starting  |
