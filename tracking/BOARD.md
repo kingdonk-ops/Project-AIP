@@ -78,7 +78,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [ACCESS-01](tasks/ACCESS-01.md) | Permission catalogue from manifests + PolicyService.can + Nest guard (deny by default) | access | M | ARCH-02, ARCH-04, IDENTITY-02 | todo |  |
+| [ACCESS-01](tasks/ACCESS-01.md) | Permission catalogue from manifests + PolicyService.can + Nest guard (deny by default) | access | M | ARCH-02, ARCH-04, IDENTITY-02 | done | ClaudeK: PR #51 |
 | [ARCH-07](tasks/ARCH-07.md) | Outbox dispatcher, retries and dead-letter | arch | M | ARCH-06 | todo |  |
 | [TERMS-03](tasks/TERMS-03.md) | ICU formatting and unit conversion | terms | M | TERMS-02 | todo | |
 | [TERMS-07](tasks/TERMS-07.md) | Hard-coded string linter and coverage report | terms | M | TERMS-01 | todo | |

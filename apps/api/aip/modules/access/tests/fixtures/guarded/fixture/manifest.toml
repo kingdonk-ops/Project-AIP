@@ -1,0 +1,11 @@
+# ACCESS-01 test fixture.
+id = "fixture"
+context = "test"
+
+[[permissions]]
+code = "fixture.item.read"
+description = "View fixture items"
+
+[[permissions]]
+code = "fixture.item.create"
+description = "Create fixture items"

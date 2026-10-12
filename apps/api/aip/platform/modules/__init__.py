@@ -1,6 +1,6 @@
 """Module manifest (ARCH-01) and the module registry (ARCH-02)."""
 
-from aip.platform.modules.manifest import EventRef, ModuleManifest
+from aip.platform.modules.manifest import EventRef, ModuleManifest, PermissionEntry
 from aip.platform.modules.registry import (
     CycleError,
     LoadedModule,
@@ -19,6 +19,7 @@ __all__ = [
     "ManifestError",
     "MissingDependencyError",
     "ModuleManifest",
+    "PermissionEntry",
     "RegistryError",
     "discover",
     "load_modules",

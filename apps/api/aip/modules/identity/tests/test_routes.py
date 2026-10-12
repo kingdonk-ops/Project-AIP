@@ -7,6 +7,7 @@ from typing import Any
 import httpx
 import pytest
 from fastapi import FastAPI
+from fastapi.routing import APIRoute, iter_route_contexts
 from starlette.responses import JSONResponse, Response
 
 from aip.modules.identity.api import (
@@ -15,6 +16,7 @@ from aip.modules.identity.api import (
     get_external_login_handler,
 )
 from aip.modules.identity.preauth_cookie import COOKIE_NAME
+from aip.platform.access import access_declarations
 
 from .conftest import TENANT_A_ID, StubProvider
 
@@ -245,10 +247,17 @@ async def test_placeholder_handler_outside_test_is_501() -> None:
     assert b"PROVISIONING_NOT_IMPLEMENTED" in r.body
 
 
-def test_routes_are_marked_public(app: FastAPI) -> None:
-    paths = app.openapi()["paths"]
-    assert paths["/api/v1/auth/login/start"]["post"]["x-aip-access"] == "public"
-    assert paths["/api/v1/auth/oidc/callback"]["get"]["x-aip-access"] == "public"
+def test_routes_declare_their_access(app: FastAPI) -> None:
+    """ACCESS-01: the auth routes are public(); /me is authenticated()."""
+    kinds = {
+        (method, ctx.path): {d.kind for d in access_declarations(ctx.dependant)}
+        for ctx in iter_route_contexts(app.router.routes)
+        if isinstance(ctx.original_route, APIRoute)
+        for method in ctx.methods or ()
+    }
+    assert kinds[("POST", "/api/v1/auth/login/start")] == {"public"}
+    assert kinds[("GET", "/api/v1/auth/oidc/callback")] == {"public"}
+    assert kinds[("GET", "/api/v1/me")] == {"authenticated"}
 
 
 def test_no_staff_credential_libraries() -> None:

@@ -89,3 +89,23 @@ def test_cli_on_fixture_exits_one() -> None:
     )
     assert result.returncode == 1
     assert "x.y.z" in result.stdout
+
+
+def test_permission_tables_and_access_calls(tmp_path: Path) -> None:
+    module = tmp_path / "things"
+    module.mkdir()
+    (module / "manifest.toml").write_text(
+        'id = "things"\ncontext = "x"\n'
+        '[[permissions]]\ncode = "things.thing.read"\ndescription = "View things"\n'
+    )
+    (module / "routes.py").write_text(
+        "from aip.platform.access import requires\n"
+        "ok = requires('things.thing.read')\n"
+        "bad = requires('things.thing.create')\n"
+        "async def f(policy, p):\n"
+        "    await policy.assert_can(p, 'things.thing.delete', None)\n"
+    )
+    errors = check_manifests(tmp_path)
+    assert len(errors) == 2, errors
+    assert any("things.thing.create" in e for e in errors)
+    assert any("things.thing.delete" in e for e in errors)

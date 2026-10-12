@@ -4,8 +4,8 @@
 - ``GET /api/v1/auth/oidc/callback``: public; clears the pre-auth cookie on every outcome.
 - ``GET /api/v1/me``: authenticated; the caller's own user, tenant and memberships.
 
-The two auth routes carry the ``x-aip-access: public`` OpenAPI marker, a no-op declaration until
-ACCESS-01 reads it; their error bodies are ``{code, detail}``. ``/me`` errors follow ADR 0015
+The two auth routes are ``public()`` and ``/me`` is ``authenticated()`` (ACCESS-01); the auth
+routes' error bodies are ``{code, detail}``. ``/me`` errors follow ADR 0015
 (``{"detail": {"code", "message"}}``). No error body contains a token, email or tenant.
 
 ``/me`` checks, in order and failing closed: a principal (401), the tenant active (401/403, via
@@ -19,7 +19,7 @@ import os
 from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
 from functools import lru_cache
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -47,13 +47,12 @@ from aip.modules.identity.schemas import (
 from aip.modules.identity.service import LoginRateLimiter, LoginService
 from aip.modules.identity.settings import IdentitySettings, IdentitySettingsError
 from aip.modules.tenancy.api import TenantView, require_active_tenant
+from aip.platform.access import authenticated, public
 from aip.platform.db.session import with_tenant
 
 logger = logging.getLogger(__name__)
 
-PUBLIC: dict[str, Any] = {"x-aip-access": "public"}
-
-auth_router = APIRouter(prefix="/auth", tags=["identity"])
+auth_router = APIRouter(prefix="/auth", tags=["identity"], dependencies=[Depends(public())])
 
 
 @lru_cache(maxsize=1)
@@ -108,7 +107,6 @@ def _error(code: str, status_code: int, detail: str) -> JSONResponse:
         422: {"model": ErrorResponse, "description": "Unprocessable Entity"},
         429: {"model": ErrorResponse},
     },
-    openapi_extra=PUBLIC,
 )
 async def login_start(
     body: LoginStartRequest,
@@ -132,7 +130,6 @@ async def login_start(
 @auth_router.get(
     "/oidc/callback",
     responses={400: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
-    openapi_extra=PUBLIC,
 )
 async def oidc_callback(
     request: Request,
@@ -170,6 +167,7 @@ def _not_authenticated() -> HTTPException:
 
 @me_router.get(
     "/me",
+    dependencies=[Depends(authenticated())],
     response_model=MeResponse,
     responses={
         200: {"description": "The caller's own user, tenant and memberships."},

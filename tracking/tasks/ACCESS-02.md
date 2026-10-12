@@ -86,3 +86,10 @@ On top of the "tenant admins can change role permissions" section above:
 - **Audit.** Every role edit, creation, deletion, reset and project override writes an append-only audit event with timestamp, acting user id, target role id, and the permission set before and after. Test: reset a customised role; the event shows both sets and the actor.
 - **Operators.** A platform operator can change tenant roles only inside a support-access grant (TENANCY-06); outside one the call returns 403 and writes an audit event.
 - Bump the tenant access version (ACCESS-01) in the same transaction as each change.
+
+## Carried forward from ACCESS-01 (non-blocking)
+
+- Register the role-assignment `GrantProvider` on the app's `PolicyService` (`app.state.access_policy.register(...)`); until then every `requires()` route is 403. Bump the version with `aip.modules.access.api.bump_access_version(conn)` in the same transaction as each change (it only ever increases; a trigger enforces it).
+- `permission.deprecated_at` is informational: during a rolling deploy an older replica can briefly re-deprecate a code a newer replica added. Role editors must never hide or drop a deprecated code that a role still grants.
+- Downgrading a permission from privileged to not privileged is refused by `access_sync_permissions` (startup fails); do it with a migration if ever needed.
+- If a grant changes inside one request, the per-request grant memo still holds the old grants for that request; re-check on the next request (or clear the memo when the version is bumped).

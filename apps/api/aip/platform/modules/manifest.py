@@ -23,6 +23,20 @@ class EventRef(BaseModel):
     version: Annotated[int, Field(ge=1)]
 
 
+class PermissionEntry(BaseModel):
+    """A ``[[permissions]]`` table: one atomic permission the module declares (ACCESS-01).
+
+    The code format and namespace are checked when the catalogue is built
+    (``aip.platform.access.catalogue``), so the error can name the module.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    code: Annotated[str, Field(min_length=1)]
+    description: Annotated[str, Field(min_length=1)]
+    privileged: bool = False
+
+
 class ModuleManifest(BaseModel):
     """Declares a module's identity, dependencies and published surface."""
 
@@ -31,11 +45,19 @@ class ModuleManifest(BaseModel):
     id: ModuleId
     context: Annotated[str, Field(min_length=1)]
     depends_on: list[ModuleId] = Field(default_factory=list[str])
-    permissions: list[str] = Field(default_factory=list[str])
+    permissions: list[PermissionEntry] = Field(default_factory=list[PermissionEntry])
+    permission_namespaces: list[ModuleId] | None = None
     events: list[EventRef] = Field(default_factory=list[EventRef])
     subscribes: list[EventRef] = Field(default_factory=list[EventRef])
     settings: list[str] = Field(default_factory=list[str])
     term_keys: list[str] = Field(default_factory=list[str])
+
+    @property
+    def namespaces(self) -> tuple[str, ...]:
+        """The first permission-code segments this module owns (default: its own id)."""
+        if self.permission_namespaces is None:
+            return (self.id,)
+        return tuple(self.permission_namespaces)
 
     @classmethod
     def from_toml(cls, path: str | Path) -> ModuleManifest:

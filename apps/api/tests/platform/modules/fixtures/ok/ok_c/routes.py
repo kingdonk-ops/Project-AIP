@@ -1,8 +1,10 @@
 """Routes for fixture module ok_c."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-router = APIRouter(prefix="/ok_c", tags=["ok_c"])
+from aip.platform.access import public
+
+router = APIRouter(prefix="/ok_c", tags=["ok_c"], dependencies=[Depends(public())])
 
 
 @router.get("/ping")

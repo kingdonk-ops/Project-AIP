@@ -8,7 +8,6 @@
 id = "identity"
 context = "identity"
 depends_on = ["tenancy"]
-permissions = ["identity.user.read", "identity.user.manage"]
 events = []
 subscribes = []
 settings = [
@@ -22,3 +21,13 @@ settings = [
   "AUTH_TEST_STUB",
 ]
 term_keys = []
+
+# ACCESS-01: [[permissions]] tables come after every top-level key (TOML).
+[[permissions]]
+code = "identity.user.read"
+description = "View users of the tenant"
+
+[[permissions]]
+code = "identity.user.manage"
+description = "Invite, activate and deactivate users"
+privileged = true

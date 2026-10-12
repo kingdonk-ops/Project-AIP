@@ -19,6 +19,12 @@ tables:
       path is the SECURITY DEFINER function identity_resolve_login.
     checks_skipped: [rls, force_rls, policy]
     forbid_runtime_privileges: true
+  - table: permission
+    reason: >-
+      Global permission catalogue mirrored from the module manifests (ACCESS-01); holds no tenant
+      data. aip_app may only SELECT; writes go through the SECURITY DEFINER function
+      access_sync_permissions.
+    checks_skipped: [tenant_id, rls, force_rls, policy]
   - table: partition_settings
     reason: Global partition-maintenance settings; holds no tenant data.
     checks_skipped: [tenant_id, rls, force_rls, policy]

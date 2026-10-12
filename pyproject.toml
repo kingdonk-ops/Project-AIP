@@ -59,6 +59,13 @@ type = "module_public_api"
 modules = "aip.modules"
 
 [[tool.importlinter.contracts]]
+id = "platform-access-never-imports-modules"
+name = "platform-access-never-imports-modules (ACCESS-01)"
+type = "forbidden"
+source_modules = ["aip.platform.access"]
+forbidden_modules = ["aip.modules"]
+
+[[tool.importlinter.contracts]]
 id = "platform-never-imports-modules"
 name = "platform-never-imports-modules"
 type = "forbidden"

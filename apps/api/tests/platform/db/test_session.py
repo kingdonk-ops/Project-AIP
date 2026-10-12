@@ -17,6 +17,7 @@ from uuid import UUID
 import asyncpg  # pyright: ignore[reportMissingTypeStubs]
 import httpx
 import pytest
+from fastapi import Depends
 from sqlalchemy import event, text
 from sqlalchemy.exc import DBAPIError, InvalidRequestError
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -24,6 +25,7 @@ from tests.conftest import TENANT_A_ID, TENANT_B_ID
 from tests.platform.db.conftest import APP, JOBS, OWNER, READONLY, ROLE_PASSWORDS, execute
 
 from aip.main import create_app
+from aip.platform.access import authenticated
 from aip.platform.context import RequestContext, get_context
 from aip.platform.db.engine import EngineSettings, PoolMode, connect_args, create_app_engine
 from aip.platform.db.errors import DatabaseConfigError, InvalidTenantError
@@ -443,7 +445,7 @@ async def test_route_without_a_tenant_principal_gets_401_and_never_checks_out(
         tracing=False,
     )
 
-    @app.get("/api/v1/_fixture/rls-probe")
+    @app.get("/api/v1/_fixture/rls-probe", dependencies=[Depends(authenticated())])
     async def rls_probe() -> dict[str, list[str]]:  # pyright: ignore[reportUnusedFunction]
         async with with_tenant(get_context(), engine=app_engine) as conn:
             tenants = (await conn.execute(TENANTS)).scalars().all()
