@@ -14,7 +14,7 @@ import pytest
 import structlog
 from alembic.config import Config
 from alembic.script import ScriptDirectory
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from tests.conftest import (
     ALICE_ID,
     TENANT_A_ID,
@@ -24,6 +24,7 @@ from tests.conftest import (
 
 from aip.main import create_app
 from aip.modules.ops.health import DEFAULT_ALEMBIC_CONFIG, ReadinessChecker
+from aip.platform.access import authenticated, public
 from aip.platform.context import Principal
 from aip.platform.observability.logging import configure_logging
 from aip.platform.observability.scrub import REDACTED, scrub
@@ -180,7 +181,7 @@ async def test_logs_inside_a_request_carry_request_id_and_stdlib_is_routed(
 ) -> None:
     app = make_app()
 
-    @app.get("/api/v1/_ops_test/log")
+    @app.get("/api/v1/_ops_test/log", dependencies=[Depends(authenticated())])
     async def log_something() -> dict[str, str]:  # pyright: ignore[reportUnusedFunction]
         structlog.get_logger("aip.test").info(
             "structlog line", email="carol@kaefer.test", password="hunter2"
@@ -215,7 +216,7 @@ async def test_unhandled_exception_is_500_with_request_id_and_logged(
 ) -> None:
     app = make_app()
 
-    @app.get("/api/v1/_ops_test/boom")
+    @app.get("/api/v1/_ops_test/boom", dependencies=[Depends(authenticated())])
     async def boom() -> dict[str, str]:  # pyright: ignore[reportUnusedFunction]
         raise RuntimeError("boom for eve@acme.test")
 
@@ -403,7 +404,7 @@ async def test_tracing_exports_request_spans_when_endpoint_is_set() -> None:
     exporter = InMemorySpanExporter()
     app = make_app(tracing=False)
 
-    @app.get("/api/v1/_ops_test/traced")
+    @app.get("/api/v1/_ops_test/traced", dependencies=[Depends(public())])
     async def traced() -> dict[str, str]:  # pyright: ignore[reportUnusedFunction]
         return {"ok": "yes"}
 

@@ -1,8 +1,10 @@
 """Routes for fixture module cycle_a."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-router = APIRouter(prefix="/cycle_a", tags=["cycle_a"])
+from aip.platform.access import public
+
+router = APIRouter(prefix="/cycle_a", tags=["cycle_a"], dependencies=[Depends(public())])
 
 
 @router.get("/ping")

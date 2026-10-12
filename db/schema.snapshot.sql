@@ -112,6 +112,10 @@ GRANT INSERT(scheduled_at) ON TABLE public.procrastinate_jobs TO aip_app;
 -- Name: COLUMN procrastinate_jobs.task_name; Type: ACL; Schema: public
 GRANT INSERT(task_name) ON TABLE public.procrastinate_jobs TO aip_app;
 
+-- Name: FUNCTION access_sync_permissions(p_catalogue jsonb); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.access_sync_permissions(p_catalogue jsonb) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.access_sync_permissions(p_catalogue jsonb) TO aip_app;
+
 -- Name: FUNCTION identity_register_email(p_email public.citext, p_tenant uuid); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) TO aip_app;
@@ -130,6 +134,10 @@ GRANT USAGE ON SEQUENCE public.procrastinate_jobs_id_seq TO aip_app;
 
 -- Name: SEQUENCE procrastinate_periodic_defers_id_seq; Type: ACL; Schema: public
 GRANT SELECT,USAGE ON SEQUENCE public.procrastinate_periodic_defers_id_seq TO aip_jobs;
+
+-- Name: TABLE access_settings; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.access_settings TO aip_app;
+GRANT SELECT ON TABLE public.access_settings TO aip_readonly;
 
 -- Name: TABLE app_user; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.app_user TO aip_app;
@@ -154,6 +162,10 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.jobs TO aip_app;
 GRANT SELECT ON TABLE public.jobs TO aip_readonly;
 GRANT SELECT ON TABLE public.jobs TO aip_jobs;
 
+-- Name: TABLE permission; Type: ACL; Schema: public
+GRANT SELECT ON TABLE public.permission TO aip_app;
+GRANT SELECT ON TABLE public.permission TO aip_readonly;
+
 -- Name: TABLE procrastinate_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_events TO aip_jobs;
 
@@ -173,6 +185,10 @@ GRANT SELECT ON TABLE public.tenant_membership TO aip_readonly;
 -- Name: TABLE tenants; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.tenants TO aip_app;
 GRANT SELECT ON TABLE public.tenants TO aip_readonly;
+
+-- Name: access_settings pk_access_settings; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.access_settings
+    ADD CONSTRAINT pk_access_settings PRIMARY KEY (id);
 
 -- Name: app_user pk_app_user; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.app_user
@@ -214,6 +230,10 @@ ALTER TABLE ONLY public.login_directory
 ALTER TABLE ONLY public.login_directory
     ADD CONSTRAINT uq_login_directory_kind_key UNIQUE (kind, key);
 
+-- Name: permission pk_permission; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.permission
+    ADD CONSTRAINT pk_permission PRIMARY KEY (code);
+
 -- Name: procrastinate_events procrastinate_events_pkey; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.procrastinate_events
     ADD CONSTRAINT procrastinate_events_pkey PRIMARY KEY (id);
@@ -254,6 +274,10 @@ ALTER TABLE ONLY public.procrastinate_jobs ALTER COLUMN id SET DEFAULT nextval('
 
 -- Name: procrastinate_periodic_defers id; Type: DEFAULT; Schema: public
 ALTER TABLE ONLY public.procrastinate_periodic_defers ALTER COLUMN id SET DEFAULT nextval('public.procrastinate_periodic_defers_id_seq'::regclass);
+
+-- Name: access_settings fk_access_settings_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.access_settings
+    ADD CONSTRAINT fk_access_settings_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 -- Name: app_user fk_app_user_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.app_user
@@ -298,6 +322,75 @@ ALTER TABLE ONLY public.tenant_membership
 -- Name: tenants fk_tenants_region_code_deployment_regions; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenants
     ADD CONSTRAINT fk_tenants_region_code_deployment_regions FOREIGN KEY (region_code) REFERENCES public.deployment_regions(code);
+
+-- Name: access_settings_version_guard(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.access_settings_version_guard() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+    BEGIN
+      IF NEW.access_version <= OLD.access_version THEN
+        RAISE EXCEPTION 'access_version must increase' USING ERRCODE = '23514';
+      END IF;
+      IF NEW.deleted_at IS NOT NULL OR NEW.id <> OLD.id OR NEW.tenant_id <> OLD.tenant_id THEN
+        RAISE EXCEPTION 'access_settings rows are never deleted or moved' USING ERRCODE = '23514';
+      END IF;
+      RETURN NEW;
+    END;
+    $$;
+
+ALTER FUNCTION public.access_settings_version_guard() OWNER TO aip_owner;
+
+-- Name: access_sync_permissions(jsonb); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.access_sync_permissions(p_catalogue jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+    DECLARE
+      v_modules text[];
+    BEGIN
+      IF p_catalogue IS NULL OR jsonb_typeof(p_catalogue) <> 'array'
+         OR jsonb_array_length(p_catalogue) = 0 THEN
+        RAISE EXCEPTION 'access_sync_permissions: empty or invalid catalogue'
+          USING ERRCODE = '22023';
+      END IF;
+      PERFORM pg_advisory_xact_lock(hashtext('access_sync_permissions'));
+      IF EXISTS (
+        SELECT 1
+        FROM jsonb_to_recordset(p_catalogue) AS e(code text, is_privileged boolean)
+        JOIN public.permission AS p ON p.code = e.code
+        WHERE p.is_privileged AND NOT coalesce(e.is_privileged, false)
+      ) THEN
+        RAISE EXCEPTION 'access_sync_permissions: a privileged permission cannot be downgraded'
+          USING ERRCODE = '42501';
+      END IF;
+      SELECT array_agg(DISTINCT e.module_id) INTO v_modules
+      FROM jsonb_to_recordset(p_catalogue) AS e(module_id text);
+
+      INSERT INTO public.permission AS p (code, module_id, description, is_privileged)
+      SELECT e.code, e.module_id, e.description, coalesce(e.is_privileged, false)
+      FROM jsonb_to_recordset(p_catalogue)
+        AS e(code text, module_id text, description text, is_privileged boolean)
+      ON CONFLICT (code) DO UPDATE
+        SET module_id = excluded.module_id,
+            description = excluded.description,
+            is_privileged = excluded.is_privileged,
+            deprecated_at = NULL,
+            updated_at = now()
+        WHERE (p.module_id, p.description, p.is_privileged, p.deprecated_at)
+          IS DISTINCT FROM (excluded.module_id, excluded.description, excluded.is_privileged, NULL);
+
+      UPDATE public.permission AS p
+        SET deprecated_at = now(), updated_at = now()
+        WHERE p.deprecated_at IS NULL
+          AND p.module_id = ANY (v_modules)
+          AND NOT EXISTS (
+            SELECT 1 FROM jsonb_to_recordset(p_catalogue) AS e(code text) WHERE e.code = p.code
+          );
+    END;
+    $$;
+
+ALTER FUNCTION public.access_sync_permissions(p_catalogue jsonb) OWNER TO aip_owner;
 
 -- Name: identity_register_email(public.citext, uuid); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) RETURNS void
@@ -813,6 +906,9 @@ CREATE INDEX idx_procrastinate_jobs_worker_not_null ON public.procrastinate_jobs
 -- Name: idx_procrastinate_workers_last_heartbeat; Type: INDEX; Schema: public
 CREATE INDEX idx_procrastinate_workers_last_heartbeat ON public.procrastinate_workers USING btree (last_heartbeat);
 
+-- Name: ix_access_settings_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_access_settings_tenant_id ON public.access_settings USING btree (tenant_id);
+
 -- Name: ix_app_user_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_app_user_tenant_id ON public.app_user USING btree (tenant_id);
 
@@ -845,6 +941,9 @@ CREATE INDEX ix_jobs_tenant_id_status ON public.jobs USING btree (tenant_id, sta
 
 -- Name: ix_login_directory_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_login_directory_tenant_id ON public.login_directory USING btree (tenant_id);
+
+-- Name: ix_permission_module_id; Type: INDEX; Schema: public
+CREATE INDEX ix_permission_module_id ON public.permission USING btree (module_id);
 
 -- Name: ix_tenant_membership_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_tenant_membership_tenant_id ON public.tenant_membership USING btree (tenant_id);
@@ -879,6 +978,9 @@ CREATE UNIQUE INDEX procrastinate_jobs_queueing_lock_idx_v1 ON public.procrastin
 -- Name: procrastinate_periodic_defers_job_id_fkey_v1; Type: INDEX; Schema: public
 CREATE INDEX procrastinate_periodic_defers_job_id_fkey_v1 ON public.procrastinate_periodic_defers USING btree (job_id);
 
+-- Name: uq_access_settings_tenant_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_access_settings_tenant_id ON public.access_settings USING btree (tenant_id) WHERE (deleted_at IS NULL);
+
 -- Name: uq_app_user_tenant_id_email; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_app_user_tenant_id_email ON public.app_user USING btree (tenant_id, email) WHERE (deleted_at IS NULL);
 
@@ -890,6 +992,9 @@ CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs US
 
 -- Name: uq_tenant_membership_tenant_id_user_id_organisation_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_tenant_membership_tenant_id_user_id_organisation_id ON public.tenant_membership USING btree (tenant_id, user_id, organisation_id) NULLS NOT DISTINCT WHERE (deleted_at IS NULL);
+
+-- Name: access_settings tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.access_settings USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: app_user tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.app_user USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -908,6 +1013,9 @@ CREATE POLICY tenant_isolation ON public.tenant_membership USING ((tenant_id = (
 
 -- Name: tenants tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenants USING ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: access_settings; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.access_settings ENABLE ROW LEVEL SECURITY;
 
 -- Name: app_user; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.app_user ENABLE ROW LEVEL SECURITY;
@@ -975,6 +1083,21 @@ ALTER SEQUENCE public.procrastinate_jobs_id_seq OWNED BY public.procrastinate_jo
 
 -- Name: procrastinate_periodic_defers_id_seq; Type: SEQUENCE OWNED BY; Schema: public
 ALTER SEQUENCE public.procrastinate_periodic_defers_id_seq OWNED BY public.procrastinate_periodic_defers.id;
+
+-- Name: access_settings; Type: TABLE; Schema: public
+CREATE TABLE public.access_settings (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    access_version bigint DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_access_settings_access_version CHECK ((access_version >= 1))
+);
+
+ALTER TABLE ONLY public.access_settings FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.access_settings OWNER TO aip_owner;
 
 -- Name: app_user; Type: TABLE; Schema: public
 CREATE TABLE public.app_user (
@@ -1101,6 +1224,22 @@ CREATE TABLE public.login_directory (
 
 ALTER TABLE public.login_directory OWNER TO aip_owner;
 
+-- Name: permission; Type: TABLE; Schema: public
+CREATE TABLE public.permission (
+    code text NOT NULL,
+    module_id text NOT NULL,
+    description text NOT NULL,
+    is_privileged boolean DEFAULT false NOT NULL,
+    deprecated_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_permission_code CHECK ((code ~ '^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){1,2}$'::text)),
+    CONSTRAINT ck_permission_description CHECK (((btrim(description) <> ''::text) AND (length(description) <= 500))),
+    CONSTRAINT ck_permission_module_id CHECK ((module_id ~ '^[a-z][a-z0-9_]*$'::text))
+);
+
+ALTER TABLE public.permission OWNER TO aip_owner;
+
 -- Name: procrastinate_events; Type: TABLE; Schema: public
 CREATE TABLE public.procrastinate_events (
     id bigint NOT NULL,
@@ -1192,6 +1331,9 @@ CREATE TABLE public.tenants (
 ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.tenants OWNER TO aip_owner;
+
+-- Name: access_settings trg_access_settings_version_guard; Type: TRIGGER; Schema: public
+CREATE TRIGGER trg_access_settings_version_guard BEFORE UPDATE ON public.access_settings FOR EACH ROW EXECUTE FUNCTION public.access_settings_version_guard();
 
 -- Name: procrastinate_jobs procrastinate_jobs_notify_queue_job_aborted_v1; Type: TRIGGER; Schema: public
 CREATE TRIGGER procrastinate_jobs_notify_queue_job_aborted_v1 AFTER UPDATE OF abort_requested ON public.procrastinate_jobs FOR EACH ROW WHEN (((old.abort_requested = false) AND (new.abort_requested = true) AND (new.status = 'doing'::public.procrastinate_job_status))) EXECUTE FUNCTION public.procrastinate_notify_queue_abort_job_v1();

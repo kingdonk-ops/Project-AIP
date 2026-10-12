@@ -32,6 +32,7 @@ from aip.modules.tenancy.api import TenantView, get_tenant, require_active_tenan
 from aip.modules.tenancy.dependencies import get_tenant_service
 from aip.modules.tenancy.seed import KAEFER_DEMO_ID, TENANT_B_ID, seed
 from aip.modules.tenancy.service import TenantConnect, TenantService
+from aip.platform.access import authenticated
 from aip.platform.context import Principal
 from aip.platform.db.engine import EngineSettings, create_app_engine, dispose_engine
 from aip.platform.db.session import with_tenant
@@ -74,7 +75,9 @@ def app(app_tx: TenantConnect) -> FastAPI:
     ) -> dict[str, Any]:
         return {"slug": tenant.slug}
 
-    application.add_api_route("/api/v1/_test/guarded", guarded, methods=["GET"])
+    application.add_api_route(
+        "/api/v1/_test/guarded", guarded, methods=["GET"], dependencies=[Depends(authenticated())]
+    )
     return application
 
 

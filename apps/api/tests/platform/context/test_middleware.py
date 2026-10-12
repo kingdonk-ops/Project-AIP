@@ -14,6 +14,7 @@ import pytest
 from fastapi import Depends, FastAPI
 
 from aip.main import create_app
+from aip.platform.access import authenticated
 from aip.platform.context import Principal, RequestContext, get_context
 from aip.platform.context.resolvers import PrincipalResolver
 
@@ -184,7 +185,7 @@ async def test_e2e_authenticated_call_is_audited_with_request_id(
     sink = InMemoryAuditSink()
     app = make_app(principal_resolver, membership_resolver)
 
-    @app.post("/api/v1/_test/widgets")
+    @app.post("/api/v1/_test/widgets", dependencies=[Depends(authenticated())])
     async def create_widget(  # pyright: ignore[reportUnusedFunction]
         tenant_from_thread: UUID = Depends(sync_tenant_dependency),  # noqa: B008
     ) -> dict[str, str]:

@@ -4,7 +4,9 @@
 For every module directory (one holding a ``manifest.toml``) this parses the module's Python files
 with ``ast`` and collects string-literal arguments of:
 
-- ``require_permission("<code>", ...)``: first argument, must be in ``permissions``;
+- ``requires("<code>", ...)`` / ``require_permission("<code>", ...)``: first argument, and
+  ``assert_can(principal, "<code>", ...)`` / ``can(...)``: second argument, must be a ``code`` in
+  the ``[[permissions]]`` tables (ACCESS-01);
 - ``emit(conn, "<event>", <version>, ...)``: second argument, must be in ``events`` (by name);
 - ``term("<key>", ...)``: first argument, must be in ``term_keys``.
 
@@ -29,7 +31,10 @@ DEFAULT_ROOT = Path("apps/api/aip/modules")
 
 # call name -> (argument index, manifest key)
 CHECKED_CALLS: dict[str, tuple[int, str]] = {
+    "requires": (0, "permissions"),
     "require_permission": (0, "permissions"),
+    "assert_can": (1, "permissions"),
+    "can": (1, "permissions"),
     "emit": (1, "events"),
     "term": (0, "term_keys"),
 }
@@ -69,7 +74,10 @@ def _declared(manifest: dict[str, Any]) -> dict[str, set[str]]:
         elif isinstance(event, str):
             events.add(event)
     return {
-        "permissions": {str(p) for p in manifest.get("permissions", [])},
+        "permissions": {
+            str(p["code"]) if isinstance(p, dict) else str(p)  # pyright: ignore[reportUnknownArgumentType]
+            for p in manifest.get("permissions", [])
+        },
         "events": events,
         "term_keys": {str(t) for t in manifest.get("term_keys", [])},
     }

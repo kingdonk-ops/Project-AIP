@@ -5,6 +5,23 @@
  */
 
 export interface paths {
+    "/api/v1/access/me/abilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get My Abilities */
+        get: operations["access_get_my_abilities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login/start": {
         parameters: {
             query?: never;
@@ -162,6 +179,14 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AbilitiesResponse
+         * @description Body of GET /api/v1/access/me/abilities: what the caller may do (the UI hides the rest).
+         */
+        AbilitiesResponse: {
+            /** Permissions */
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read")[];
+        };
         /** AuthErrorBody */
         AuthErrorBody: {
             /** Code */
@@ -199,6 +224,11 @@ export interface components {
             code: string;
             /** Detail */
             detail: string;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
         };
         /**
          * HealthResponse
@@ -354,6 +384,19 @@ export interface components {
              */
             status: "provisioning" | "active" | "suspended" | "offboarding" | "offboarded";
         };
+        /** ValidationError */
+        ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+        };
         /**
          * VersionResponse
          * @description Body of GET /api/v1/platform/version. Changing it changes the generated client.
@@ -374,6 +417,44 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    access_get_my_abilities: {
+        parameters: {
+            query?: {
+                projectId?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbilitiesResponse"];
+                };
+            };
+            /** @description No authenticated principal. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     identity_login_start: {
         parameters: {
             query?: never;

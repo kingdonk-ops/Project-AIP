@@ -20,9 +20,11 @@ from typing import Protocol, cast
 
 import asyncpg  # pyright: ignore[reportMissingTypeStubs]
 import structlog
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.engine import make_url
+
+from aip.platform.access import public
 
 __all__ = ["Dependencies", "VersionResponse", "router"]
 
@@ -95,7 +97,7 @@ async def postgres_version() -> str:
         return UNAVAILABLE
 
 
-router = APIRouter(prefix="/platform", tags=["platform"])
+router = APIRouter(prefix="/platform", tags=["platform"], dependencies=[Depends(public())])
 
 
 @router.get("/version")

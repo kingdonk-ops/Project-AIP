@@ -33,10 +33,12 @@ import asyncpg  # pyright: ignore[reportMissingTypeStubs]
 import structlog
 from alembic.config import Config
 from alembic.script import ScriptDirectory
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 from sqlalchemy.engine import make_url
+
+from aip.platform.access import public
 
 __all__ = ["DEFAULT_ALEMBIC_CONFIG", "ReadinessChecker", "router"]
 
@@ -174,7 +176,8 @@ class ReadinessChecker:
         return dict(zip(names, results, strict=True))
 
 
-router = APIRouter(prefix="/health", tags=["platform"])
+# Public (ACCESS-01): probes need no session and reveal no tenant data.
+router = APIRouter(prefix="/health", tags=["platform"], dependencies=[Depends(public())])
 
 
 @router.get("/live")

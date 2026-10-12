@@ -16,6 +16,7 @@ from uuid import UUID
 
 import httpx
 import pytest
+from fastapi import Depends
 from sqlalchemy import (
     Column,
     DateTime,
@@ -32,6 +33,7 @@ from tests.conftest import TENANT_A_ID, TENANT_B_ID
 from tests.platform.db.conftest import execute
 
 from aip.main import create_app
+from aip.platform.access import authenticated
 from aip.platform.context import get_context
 from aip.platform.db.concurrency import update_with_version
 from aip.platform.db.engine import EngineSettings, create_app_engine
@@ -418,7 +420,7 @@ async def test_routes_return_409_with_the_current_record_and_404_for_deleted_row
         tracing=False,
     )
 
-    @app.get("/api/v1/_fixture/probe/{row_id}")
+    @app.get("/api/v1/_fixture/probe/{row_id}", dependencies=[Depends(authenticated())])
     async def read_row(row_id: UUID) -> dict[str, Any]:  # pyright: ignore[reportUnusedFunction]
         async with with_tenant(get_context(), engine=engine) as conn:
             row = (await conn.execute(active(probe).where(probe.c.id == row_id))).first()
@@ -426,13 +428,13 @@ async def test_routes_return_409_with_the_current_record_and_404_for_deleted_row
             raise NotFoundError(str(row_id))
         return {"id": str(row.id), "name": row.name, "sync_version": row.sync_version}
 
-    @app.patch("/api/v1/_fixture/probe/{row_id}")
+    @app.patch("/api/v1/_fixture/probe/{row_id}", dependencies=[Depends(authenticated())])
     async def patch_row(row_id: UUID, version: int, name: str) -> dict[str, Any]:  # pyright: ignore[reportUnusedFunction]
         async with with_tenant(get_context(), engine=engine) as conn:
             row = await update_with_version(conn, probe, row_id, version, {"name": name})
         return {"sync_version": row["sync_version"]}
 
-    @app.delete("/api/v1/_fixture/probe/{row_id}")
+    @app.delete("/api/v1/_fixture/probe/{row_id}", dependencies=[Depends(authenticated())])
     async def delete_row(row_id: UUID, undo: bool = False) -> dict[str, bool]:  # pyright: ignore[reportUnusedFunction]
         async with with_tenant(get_context(), engine=engine) as conn:
             await (restore if undo else soft_delete)(conn, probe, row_id)

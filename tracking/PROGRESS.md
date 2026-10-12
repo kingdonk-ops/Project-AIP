@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-12 · ACCESS-01 · PR #51 · Deny-by-default authorisation: permission catalogue from manifests (synced to a global `permission` table), `PolicyService.can`, `public()`/`authenticated()`/`requires()` on every route with a startup check and runtime 403, abilities endpoint, per-tenant access version, and generated `PermissionCode` types.
 - 2026-10-12 · TESTING-10 · PR #48 · The worker SIGTERM test now waits for the worker to register (60 s deadline) instead of a fixed 4 s sleep that failed on slower machines.
 - 2026-10-10 · DOCS-10 · PR #46 · Remote un-block and targeted wipe recorded as ADR 0024 (token epoch, quarantine of refused uploads, second approver for signed work, device revoke), with an offline-module backlog note.
 - 2026-10-10 · DOCS-09 · PR #45 · Owner confirmations recorded (date 2027-03-31, offline out of R1, company tools, database sizes, ADR 0020 adjustments); new ADR 0023 (operator entitlement controls, billing states moved by a person) with tasks ENT-03 and ENT-04.

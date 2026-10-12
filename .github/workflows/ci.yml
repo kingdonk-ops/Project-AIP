@@ -302,6 +302,8 @@ jobs:
         run: uv run lint-imports --no-cache
       - name: Module manifests declare the permissions, events and term keys their code uses
         run: python3 tools/ci/check_manifests.py
+      - name: Generated permission codes match the manifests (ACCESS-01)
+        run: uv run python tools/gen_permissions.py --check
       - name: Repository layout (ADR 0004)
         run: python3 tools/ci/check_layout.py
       - name: ESLint boundaries (apps never import other apps)

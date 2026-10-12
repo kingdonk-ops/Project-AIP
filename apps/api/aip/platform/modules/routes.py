@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict
 
+from aip.platform.access import public
 from aip.platform.modules.registry import LoadedModule
 
 
@@ -30,7 +31,10 @@ def create_router(modules: Sequence[LoadedModule]) -> APIRouter:
         )
         for module in modules
     ]
-    router = APIRouter(prefix="/platform/modules", tags=["platform"])
+    # Public, as before ACCESS-01: module ids and dependencies only, no tenant data.
+    router = APIRouter(
+        prefix="/platform/modules", tags=["platform"], dependencies=[Depends(public())]
+    )
 
     @router.get("", response_model=list[ModuleInfo])
     def list_modules() -> list[ModuleInfo]:  # pyright: ignore[reportUnusedFunction]

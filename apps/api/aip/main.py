@@ -17,19 +17,41 @@ request log line); logs are JSON on stdout with the PII scrubber; OpenTelemetry 
 ``OTEL_EXPORTER_OTLP_ENDPOINT`` is set. ``/api/v1/health/live`` and ``/api/v1/health/ready`` come
 from ``aip.modules.ops.health`` and are mounted here, outside the module registry, as is
 ``/api/v1/platform/version`` (STACK-05, ``aip.platform.version``).
+
+Access (ACCESS-01): the permission catalogue is built from the enabled modules' manifests (an
+invalid or duplicate code stops startup), every route must declare ``public()``,
+``authenticated()`` or ``requires()`` (``install_access`` refuses to start otherwise), and the
+lifespan startup hook syncs the catalogue into the ``permission`` table. No grant provider is
+registered until ACCESS-02, so every ``requires()`` route answers 403.
 """
 
 import os
-from collections.abc import Iterable
+from collections.abc import AsyncIterator, Iterable
+from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
-from aip.modules.identity.api import PlatformPrincipalAdapter, stub_principal_resolver
+from aip.modules.access.api import sync_catalogue
+from aip.modules.identity.api import (
+    PlatformPrincipalAdapter,
+    get_principal,
+    stub_principal_resolver,
+)
 from aip.modules.ops.health import ReadinessChecker
 from aip.modules.ops.health import router as health_router
+from aip.platform.access import (
+    AccessPrincipal,
+    PolicyService,
+    authenticated,
+    build_catalogue,
+    check_routes,
+    enforce_routes,
+    install_access,
+    public,
+)
 from aip.platform.capabilities import validate_capability_settings
 from aip.platform.context import (
     ContextMissingError,
@@ -62,6 +84,12 @@ def operation_id(route: APIRoute) -> str:
     return f"{route.tags[0]}_{route.name}" if route.tags else route.name
 
 
+async def identity_access_principal(request: Request) -> AccessPrincipal:
+    """The identity principal (401 when absent or inconsistent) as the policy's principal."""
+    principal = await get_principal(request)
+    return AccessPrincipal(tenant_id=principal.tenant_id, actor_id=principal.user_id, kind="user")
+
+
 def create_app(
     modules_package: str | None = None,
     disabled_modules: Iterable[str] | None = None,
@@ -75,15 +103,30 @@ def create_app(
     configure_logging()
     validate_capability_settings()  # unknown OBJECT_STORE / PDF_RENDERER stops startup (STACK-02)
     modules = load_modules(modules_package, disabled_modules)
+    catalogue = build_catalogue(module.manifest for module in modules)  # ACCESS-01
+    policy = PolicyService(catalogue)
     env = os.environ.get("AIP_ENV", "") if env is None else env
 
-    app = FastAPI(title="AIP API", version="0.1.0", generate_unique_id_function=operation_id)
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        # Routes added after create_app(): refuse to serve them undeclared, and convert them.
+        check_routes(app.router.routes, catalogue, app)
+        enforce_routes(app)
+        await sync_catalogue(catalogue)
+        yield
+
+    app = FastAPI(
+        title="AIP API",
+        version="0.1.0",
+        generate_unique_id_function=operation_id,
+        lifespan=lifespan,
+    )
 
     app.state.readiness = readiness or ReadinessChecker.from_env()
 
     v1 = APIRouter(prefix="/api/v1")
 
-    @v1.get("/health", tags=["platform"])
+    @v1.get("/health", tags=["platform"], dependencies=[Depends(public())])
     def health() -> HealthResponse:  # pyright: ignore[reportUnusedFunction]
         return HealthResponse(status="ok")
 
@@ -94,7 +137,7 @@ def create_app(
 
     if env == "test":
         # ARCH-04: test-only echo of the request context. Never mounted outside AIP_ENV=test.
-        @v1.get("/_debug/context", include_in_schema=False)
+        @v1.get("/_debug/context", include_in_schema=False, dependencies=[Depends(authenticated())])
         async def debug_context() -> dict[str, object]:  # pyright: ignore[reportUnusedFunction]
             ctx = get_context()
             return {
@@ -125,8 +168,19 @@ def create_app(
     # stub exists (x-test-principal, AIP_ENV=test + AUTH_TEST_STUB=1); it refuses production.
     identity_resolver = stub_principal_resolver(env)
     app.state.identity_principal_resolver = identity_resolver
+    identity_drives_context = False
     if principal_resolver is None and identity_resolver is not None:
         principal_resolver = PlatformPrincipalAdapter(identity_resolver)
+        identity_drives_context = True
+
+    # ACCESS-01: after every route is mounted. With the identity resolver in charge, requires()
+    # uses identity's principal; an injected resolver (tests) is read from the request context.
+    install_access(
+        app,
+        catalogue=catalogue,
+        policy=policy,
+        principal_source=identity_access_principal if identity_drives_context else None,
+    )
 
     app.add_middleware(
         RequestContextMiddleware,

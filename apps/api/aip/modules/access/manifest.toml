@@ -1,0 +1,39 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+# ACCESS-01: the permission catalogue table and its startup sync, the per-tenant access version,
+#   and GET /api/v1/access/me/abilities (authenticated). The runtime pieces every module uses
+#   (PolicyService, public/authenticated/requires) live in aip.platform.access.
+# Role and assignment permissions are declared here for ACCESS-02 and ACCESS-05.
+# depends_on tenancy: access_settings references tenants.
+id = "access"
+context = "identity"
+depends_on = ["tenancy"]
+events = []
+subscribes = []
+settings = []
+term_keys = []
+
+[[permissions]]
+code = "access.role.read"
+description = "View roles and their permissions"
+
+[[permissions]]
+code = "access.role.manage"
+description = "Create, edit, reset and delete roles"
+privileged = true
+
+[[permissions]]
+code = "access.role_assignment.read"
+description = "View who holds which role"
+
+[[permissions]]
+code = "access.role_assignment.manage"
+description = "Assign and remove roles"
+privileged = true
+
+[[permissions]]
+code = "access.team.manage"
+description = "Create teams and manage their members"
+
+[[permissions]]
+code = "access.matrix.export"
+description = "Export the permission matrix"

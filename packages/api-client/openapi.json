@@ -1,6 +1,34 @@
 {
   "components": {
     "schemas": {
+      "AbilitiesResponse": {
+        "description": "Body of GET /api/v1/access/me/abilities: what the caller may do (the UI hides the rest).",
+        "properties": {
+          "permissions": {
+            "items": {
+              "enum": [
+                "access.matrix.export",
+                "access.role.manage",
+                "access.role.read",
+                "access.role_assignment.manage",
+                "access.role_assignment.read",
+                "access.team.manage",
+                "identity.user.manage",
+                "identity.user.read"
+              ],
+              "title": "PermissionCode",
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "permissions"
+        ],
+        "title": "AbilitiesResponse",
+        "type": "object"
+      },
       "AuthErrorBody": {
         "properties": {
           "code": {
@@ -91,6 +119,19 @@
           "detail"
         ],
         "title": "ErrorResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
         "type": "object"
       },
       "HealthResponse": {
@@ -440,6 +481,46 @@
         "title": "TenantView",
         "type": "object"
       },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
       "VersionResponse": {
         "description": "Body of GET /api/v1/platform/version. Changing it changes the generated client.",
         "properties": {
@@ -471,6 +552,59 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/access/me/abilities": {
+      "get": {
+        "operationId": "access_get_my_abilities",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "projectId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Projectid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbilitiesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "No authenticated principal."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get My Abilities",
+        "tags": [
+          "access"
+        ]
+      }
+    },
     "/api/v1/auth/login/start": {
       "post": {
         "operationId": "identity_login_start",
@@ -519,8 +653,7 @@
         "summary": "Login Start",
         "tags": [
           "identity"
-        ],
-        "x-aip-access": "public"
+        ]
       }
     },
     "/api/v1/auth/oidc/callback": {
@@ -559,8 +692,7 @@
         "summary": "Oidc Callback",
         "tags": [
           "identity"
-        ],
-        "x-aip-access": "public"
+        ]
       }
     },
     "/api/v1/health": {

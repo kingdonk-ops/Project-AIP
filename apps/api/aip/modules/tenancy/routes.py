@@ -11,12 +11,14 @@ from fastapi import APIRouter, Depends, Response
 
 from aip.modules.tenancy.dependencies import require_active_tenant
 from aip.modules.tenancy.schemas import TenantErrorResponse, TenantView
+from aip.platform.access import authenticated
 
 router = APIRouter(tags=["tenancy"])
 
 
 @router.get(
     "/me/tenant",
+    dependencies=[Depends(authenticated())],
     response_model=TenantView,
     responses={
         200: {"description": "The caller's active tenant."},

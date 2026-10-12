@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aip.platform.modules.manifest import EventRef, ModuleManifest
+from aip.platform.modules.manifest import EventRef, ModuleManifest, PermissionEntry
 
 MINIMAL = {"id": "x", "context": "platform", "depends_on": [], "events": []}
 
@@ -40,10 +40,30 @@ def test_from_toml(tmp_path: Path) -> None:
         'id = "widgets"\n'
         'context = "test"\n'
         "depends_on = []\n"
-        'permissions = ["widgets.read"]\n'
         'events = [{ name = "widget.created", version = 1 }]\n'
+        "[[permissions]]\n"
+        'code = "widgets.widget.read"\n'
+        'description = "View widgets"\n'
     )
     manifest = ModuleManifest.from_toml(path)
     assert manifest.id == "widgets"
     assert manifest.events == [EventRef(name="widget.created", version=1)]
-    assert manifest.permissions == ["widgets.read"]
+    assert manifest.permissions == [
+        PermissionEntry(code="widgets.widget.read", description="View widgets", privileged=False)
+    ]
+    assert manifest.namespaces == ("widgets",)
+
+
+def test_permission_namespaces_default_to_the_module_id() -> None:
+    manifest = ModuleManifest.model_validate({**MINIMAL, "permission_namespaces": ["x", "y"]})
+    assert manifest.namespaces == ("x", "y")
+
+
+def test_permission_entry_needs_a_description() -> None:
+    with pytest.raises(ValidationError):
+        ModuleManifest.model_validate({**MINIMAL, "permissions": [{"code": "x.thing.read"}]})
+
+
+def test_plain_string_permissions_are_rejected() -> None:
+    with pytest.raises(ValidationError):
+        ModuleManifest.model_validate({**MINIMAL, "permissions": ["x.thing.read"]})

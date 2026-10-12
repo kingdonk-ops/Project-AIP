@@ -18,6 +18,7 @@ from aip.main import create_app
 from aip.modules.tenancy.api import TenantView, require_active_tenant
 from aip.modules.tenancy.dependencies import get_tenant_service, parse_tenant_id
 from aip.modules.tenancy.service import TenantAccessError, access_for_status
+from aip.platform.access import authenticated
 from aip.platform.context import Principal, get_context
 
 NOBODY_TENANT = UUID("00000000-0000-4000-8000-0000000000ff")
@@ -59,7 +60,7 @@ def app(tenants: FakeTenants) -> FastAPI:
         {
             "token-alice": Principal(tenant_id=TENANT_A_ID, actor_id=ALICE_ID),
             "token-bob": Principal(tenant_id=TENANT_B_ID, actor_id=BOB_ID),
-            "token-unknown": Principal(tenant_id=NOBODY_TENANT),
+            "token-unknown": Principal(tenant_id=NOBODY_TENANT, actor_id=ALICE_ID),
             "token-bad-uuid": Principal(tenant_id="not-a-uuid"),  # pyright: ignore[reportArgumentType]
             "token-no-tenant": Principal(tenant_id=None),  # pyright: ignore[reportArgumentType]
             "token-nil": Principal(tenant_id=UUID(int=0)),
@@ -79,7 +80,9 @@ def app(tenants: FakeTenants) -> FastAPI:
             "view_slug": tenant.slug,
         }
 
-    application.add_api_route("/api/v1/_test/guarded", guarded, methods=["GET"])
+    application.add_api_route(
+        "/api/v1/_test/guarded", guarded, methods=["GET"], dependencies=[Depends(authenticated())]
+    )
     return application
 
 

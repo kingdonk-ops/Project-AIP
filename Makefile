@@ -8,10 +8,11 @@ install:
 check: check-py check-ts check-docs check-boundaries
 
 # ARCH-03: module import boundaries (import-linter; run from the repo root so tools/ci is
-# importable), manifest coverage and the ADR 0004 layout. ESLint boundaries run in check-ts.
+# importable), manifest coverage, the generated permission codes (ACCESS-01) and the ADR 0004 layout. ESLint boundaries run in check-ts.
 check-boundaries:
 	uv run lint-imports --no-cache
 	python3 tools/ci/check_manifests.py
+	uv run python tools/gen_permissions.py --check
 	python3 tools/ci/check_layout.py
 
 check-py:
