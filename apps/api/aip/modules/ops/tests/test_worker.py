@@ -13,6 +13,9 @@ from tests.platform.db.conftest import JOBS, FreshDb
 
 from aip.worker import import_job_modules, parse_args
 
+# Generous: a slow laptop takes several seconds just to import the worker.
+WORKER_STARTUP_TIMEOUT = 60.0
+
 
 def test_queues_default_to_the_default_queue() -> None:
     args = parse_args([])
@@ -54,9 +57,12 @@ def test_a_sigterm_stops_an_idle_worker_gracefully(migrated_db: FreshDb) -> None
         text=True,
     )
     try:
-        time.sleep(4)  # connect, register the worker, start polling
-        assert proc.poll() is None, proc.stdout.read() if proc.stdout else ""
-        assert migrated_db.fetch("SELECT count(*) FROM procrastinate_workers") == [(1,)]
+        # Wait for the worker to connect and register; startup time varies by machine (TESTING-10).
+        deadline = time.monotonic() + WORKER_STARTUP_TIMEOUT
+        while migrated_db.fetch("SELECT count(*) FROM procrastinate_workers") != [(1,)]:
+            assert proc.poll() is None, proc.stdout.read() if proc.stdout else ""
+            assert time.monotonic() < deadline, "worker did not register in time"
+            time.sleep(0.25)
         proc.send_signal(signal.SIGTERM)
         assert proc.wait(timeout=30) == 0
     finally:
