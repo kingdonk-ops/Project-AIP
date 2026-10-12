@@ -6,7 +6,7 @@
 | Module | [`projects`](../../docs/blueprint/modules/projects/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | ACCESS-01, DATABASE-02, TENANCY-01 |
+| Depends on | ACCESS-01, ARCH-05, DATABASE-02, TENANCY-01 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
