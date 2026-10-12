@@ -14,6 +14,7 @@
 .env.*
 apps/api/tests
 apps/api/aip/modules/*/tests
+apps/api/aip/platform/*/tests
 # SECURITY-08: scaffolding is dev-only (config/prod-strip-manifest.txt).
 apps/api/aip/modules/_template
 e2e/test-results
