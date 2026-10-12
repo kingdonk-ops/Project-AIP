@@ -85,8 +85,11 @@ Then check what it added (`/plugin`, the skills list) before relying on any of i
 4. **If CI fails, fix it without asking:** read the job log, reproduce, fix the cause, push once. Never skip,
    disable or quarantine a test.
 5. **When every check is green, squash-merge it yourself** (`gh pr merge <n> --squash`). Do not wait for
-   the owner. GitHub auto-merge is not available: the repo has auto-merge off and `main` has no branch
-   protection (that is an owner decision; do not change it).
+   the owner. GitHub auto-merge is off for the repo (an owner setting; do not change it). An active
+   ruleset, "Boundaries check", protects `main`: no force-push, and the checks `boundaries`,
+   `Python 3.12`, `Licence policy and SBOMs` and `Compose stack` must pass **on a branch that is up to
+   date with `main`**. If `gh pr merge` says the branch is not up to date, merge `origin/main` into it,
+   push, and merge after CI is green again. Never use `--admin` to bypass the ruleset.
 6. Never rebase or force-push shared branches; merge `origin/main` into your branch. Commit with
    `git commit -m` (never `--no-verify`). End commit messages with the attribution trailer your session
    gives you.
@@ -148,7 +151,7 @@ Always re-check with `python3 tools/next_task.py --all`; the board decides.
 - Rotate the Coolify API key before real data (see above).
 - The repository is **public** and names the first customer. The owner should confirm that is intended.
 - PR #47 (owner decisions of 2026-10-11) has no PROGRESS line or task ID; ask which ID to log it under.
-- Branch protection / required checks on `main` (and the `boundaries` check) are still the owner's call.
+- Any change to the `main` ruleset or to auto-merge is the owner's call.
 - Other questions waiting on the owner: `tracking/OPEN-QUESTIONS.md`.
 
 ## 9. How to report
