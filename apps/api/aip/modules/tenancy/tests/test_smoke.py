@@ -24,5 +24,6 @@ def test_api_exports_only_the_published_interface() -> None:
         "access_for_status",
         "get_tenant",
         "load_tenant",
+        "region_exists",
         "require_active_tenant",
     ]
