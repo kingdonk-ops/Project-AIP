@@ -1,4 +1,10 @@
 # Reviewed false positives (gitleaks fingerprints: commit:file:rule:line). Each needs a reason.
+#
+# Prefer fixing the line over adding an entry. A fingerprint names one commit, and a squash merge
+# makes a new commit, so an entry added on a branch must be added again for main after the merge.
+# If a line only looks like a secret (a fake dev default, an env var name followed by an argument),
+# reshape it (for example one argument per line) until `gitleaks dir` stops flagging it. Entries
+# below stay because the history keeps the old lines.
 # IDENTITY-01 compose dev default PREAUTH_COOKIE_KEY: base64url of "dev-only-preauth-cookie-key-fake",
 # refused in production by IdentitySettings.
 09371a9ec7c012eb6b6ebf758c66ea38f90d588d:apps/api/aip/modules/identity/settings.py:generic-api-key:26

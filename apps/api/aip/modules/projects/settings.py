@@ -26,8 +26,12 @@ class ProjectsSettings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore", frozen=True)
 
     aip_env: str = Field(default="", validation_alias="AIP_ENV")
+    # Keep these arguments on separate lines: on one line, the gitleaks generic-api-key rule takes
+    # the env var name and the length limit for a key and its value (see .gitleaksignore).
     cursor_key: SecretStr = Field(
-        default=SecretStr(DEV_CURSOR_KEY), validation_alias="PROJECTS_CURSOR_KEY", min_length=16
+        default=SecretStr(DEV_CURSOR_KEY),
+        validation_alias="PROJECTS_CURSOR_KEY",
+        min_length=16,
     )
 
     @model_validator(mode="after")
