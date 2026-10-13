@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-13 · DESIGN-03 · PR #63 · `RegisterTable` standard in `@aip/ui` (filters, URL state, cursor paging and sorting, column chooser, permission-gated bulk actions, server-side CSV export link, accessible states) with CSV golden vectors shared by `toCsv` and the Python writer; the projects register switch is split to PROJECTS-06.
 - 2026-10-13 · ACCESS-02 · PR #61 · Roles, role permissions and tenant/project role assignments with the 11 system roles seeded from the access matrix (ADR 0027), a RoleGrantProvider behind PolicyService, step-up for every privileged change and last-admin/last-manager guards; project overrides and the operator gate split to ACCESS-06.
 - 2026-10-13 · PROJECTS-02 · PR #60 · Projects register (URL-held status filter and search, cursor paging, status chips, empty/loading/error states) and create form validated by orval-generated Zod schemas with server errors mapped onto fields; the session now reads permissions from the abilities endpoint.
 - 2026-10-13 · PROJECTS-05 · PR #58 · System sites (the hidden per-project hierarchy root) are left out of the sites list and get, and editing or deleting one returns 409 `SITE_IS_SYSTEM` (owner decision).
