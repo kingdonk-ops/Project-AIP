@@ -1,4 +1,4 @@
-import { identityLoginStart } from "@aip/api-client";
+import { accessGetMyAbilities, identityGetMe, identityLoginStart } from "@aip/api-client";
 import { queryOptions } from "@tanstack/react-query";
 
 /**
@@ -10,9 +10,10 @@ import { queryOptions } from "@tanstack/react-query";
  * through `resolveSessionPort` only in a non-production Vite build with
  * `VITE_AIP_DEV_SESSION=stub`; a production build removes it (SECURITY-08 strip manifest).
  *
- * GAP (IDENTITY-02, IDENTITY-03, ACCESS-01): `GET /api/v1/me`, `POST /api/v1/auth/logout` and
- * `GET /api/v1/access/me/abilities` do not exist yet and are not in the generated client. The
- * calls below use `fetch` directly; replace them with the generated client when those routes land.
+ * The session is `GET /api/v1/me` (IDENTITY-02) plus the caller's tenant-wide permissions from
+ * `GET /api/v1/access/me/abilities` (ACCESS-01), both through the generated client.
+ * GAP (IDENTITY-03): `POST /api/v1/auth/logout` does not exist yet and is not in the generated
+ * client, so logout uses `fetch` directly; switch it when the route lands.
  */
 
 export interface Session {
@@ -45,33 +46,24 @@ export function sessionQuery(port: SessionPort) {
   });
 }
 
-function isSession(value: unknown): value is Session {
-  if (typeof value !== "object" || value === null) return false;
-  const v = value as Record<string, unknown>;
-  const user = v.user as Record<string, unknown> | undefined;
-  const tenant = v.tenant as Record<string, unknown> | undefined;
-  return (
-    typeof user?.id === "string" &&
-    typeof user.name === "string" &&
-    typeof user.email === "string" &&
-    typeof tenant?.slug === "string" &&
-    typeof tenant.name === "string" &&
-    Array.isArray(v.permissions)
-  );
-}
-
 export const httpSessionPort: SessionPort = {
   async getSession() {
-    const response = await fetch("/api/v1/me", { credentials: "same-origin", headers: { Accept: "application/json" } });
-    // Fail closed: no session, a suspended tenant (403) or a route that does not exist yet (404,
-    // until IDENTITY-02) all mean "not signed in". Anything else is a real failure.
-    if (response.status === 401 || response.status === 403 || response.status === 404) return null;
-    if (!response.ok) throw new Error(`GET /api/v1/me failed: ${response.status}`);
-    const body: unknown = await response.json();
-    if (!isSession(body)) throw new Error("GET /api/v1/me returned an unexpected shape");
-    return body;
+    const me = await identityGetMe({ credentials: "same-origin" });
+    // Fail closed: no session (401) or a suspended tenant (403) both mean "not signed in".
+    // `status` is widened: a proxy or the server can answer codes the OpenAPI document omits.
+    const status: number = me.status;
+    if (status === 401 || status === 403) return null;
+    if (me.status !== 200) throw new Error(`GET /api/v1/me failed: ${status}`);
+    const abilities = await accessGetMyAbilities(undefined, { credentials: "same-origin" });
+    // Without abilities the user is signed in but holds nothing: deny by default.
+    const permissions = abilities.status === 200 ? abilities.data.permissions : [];
+    const { user, tenant } = me.data;
+    return {
+      user: { id: user.id, name: user.displayName, email: user.email },
+      tenant: { slug: tenant.slug, name: tenant.name },
+      permissions,
+    };
   },
-
   async startLogin(email, returnTo) {
     try {
       const response = await identityLoginStart({ email, returnTo });

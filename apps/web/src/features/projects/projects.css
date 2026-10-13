@@ -1,0 +1,85 @@
+/* Projects register and create form (PROJECTS-02). Tokens from @aip/ui. */
+
+.projects-register,
+.projects-form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 100%;
+}
+
+.projects-register__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.projects-register__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.projects-register__filter {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 12rem;
+}
+
+.projects-register__select {
+  min-height: 2.5rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.projects-register__select:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Wide registers scroll inside their own box, never the page. */
+.projects-register__table {
+  overflow-x: auto;
+}
+
+.projects-register__mono {
+  font-family: var(--font-mono);
+}
+
+.projects-register__state {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+}
+
+.projects-register__ref {
+  color: var(--foreground-muted);
+  font-family: var(--font-mono);
+}
+
+.projects-register__notice {
+  padding: var(--space-3);
+  border-left: 3px solid var(--accent);
+  background: var(--surface-muted);
+}
+
+.projects-register__pages,
+.projects-form__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.projects-form form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 36rem;
+}

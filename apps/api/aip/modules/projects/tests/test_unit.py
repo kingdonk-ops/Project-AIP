@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from pydantic import ValidationError
 
 from aip.modules.projects.cursor import CursorCodec, InvalidCursorError
 from aip.modules.projects.policies import can_transition
-from aip.modules.projects.schemas import ProjectCreate, ProjectUpdate, SiteCreate
+from aip.modules.projects.schemas import CURRENCIES, ProjectCreate, ProjectUpdate, SiteCreate
 from aip.modules.projects.settings import ProjectsSettings
 
 
@@ -124,3 +126,24 @@ async def test_server_startup_fails_without_a_cursor_key_outside_dev(
                 pass
     finally:
         get_settings.cache_clear()
+
+
+@pytest.mark.parametrize(
+    "code", ["L592", "l592", "KIPS-01", "a1", "ab cd", "-L592", "L", "X" * 33, "L5_92", "L592 "]
+)
+def test_the_published_code_pattern_accepts_what_the_server_accepts(code: str) -> None:
+    """PROJECTS-02: the web form validates with the OpenAPI pattern, so it must match the server
+    (stricter only about surrounding spaces, which the server strips)."""
+    pattern = ProjectCreate.model_json_schema()["properties"]["code"]["pattern"]
+    client_ok = re.fullmatch(pattern, code) is not None
+    try:
+        ProjectCreate.model_validate({"code": code, "name": "x"})
+        server_ok = True
+    except ValidationError:
+        server_ok = False
+    assert client_ok == (server_ok and code == code.strip())
+
+
+def test_the_published_currency_pattern_covers_every_accepted_currency() -> None:
+    pattern = ProjectCreate.model_json_schema()["properties"]["currency"]["anyOf"][0]["pattern"]
+    assert all(re.fullmatch(pattern, c) and re.fullmatch(pattern, c.lower()) for c in CURRENCIES)

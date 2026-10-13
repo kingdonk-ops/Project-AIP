@@ -22,5 +22,8 @@
     "orval": "^8.40.0",
     "react": "^19.3.0",
     "typescript": "~6.0.3"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
   }
 }

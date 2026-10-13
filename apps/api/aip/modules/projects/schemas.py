@@ -222,8 +222,24 @@ def _check_timezone(value: str) -> str:
     return value
 
 
-Code = Annotated[str, BeforeValidator(_upper), AfterValidator(_check_code)]
-Currency = Annotated[str, BeforeValidator(_upper), AfterValidator(_check_currency)]
+# The OpenAPI patterns describe what a client may send (any case: the server upper-cases), so the
+# Zod schemas orval generates for the web forms reject the same input the server does
+# (PROJECTS-02). The validators above stay the source of truth.
+CODE_INPUT_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9-]{1,31}$"
+CURRENCY_INPUT_PATTERN = r"^[A-Za-z]{3}$"
+
+Code = Annotated[
+    str,
+    BeforeValidator(_upper),
+    AfterValidator(_check_code),
+    Field(json_schema_extra={"pattern": CODE_INPUT_PATTERN}),
+]
+Currency = Annotated[
+    str,
+    BeforeValidator(_upper),
+    AfterValidator(_check_currency),
+    Field(json_schema_extra={"pattern": CURRENCY_INPUT_PATTERN}),
+]
 TimeZone = Annotated[str, AfterValidator(_check_timezone)]
 Name = Annotated[str, Field(min_length=1, max_length=200)]
 Region = Annotated[str, Field(min_length=1, max_length=64)]

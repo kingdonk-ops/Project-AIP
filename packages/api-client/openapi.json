@@ -446,12 +446,14 @@
             "title": "Clientcompanyid"
           },
           "code": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{1,31}$",
             "title": "Code",
             "type": "string"
           },
           "currency": {
             "anyOf": [
               {
+                "pattern": "^[A-Za-z]{3}$",
                 "type": "string"
               },
               {
@@ -743,6 +745,7 @@
           "code": {
             "anyOf": [
               {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{1,31}$",
                 "type": "string"
               },
               {
@@ -754,6 +757,7 @@
           "currency": {
             "anyOf": [
               {
+                "pattern": "^[A-Za-z]{3}$",
                 "type": "string"
               },
               {
@@ -856,6 +860,7 @@
         "additionalProperties": false,
         "properties": {
           "code": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{1,31}$",
             "title": "Code",
             "type": "string"
           },
@@ -1032,6 +1037,7 @@
           "code": {
             "anyOf": [
               {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{1,31}$",
                 "type": "string"
               },
               {
