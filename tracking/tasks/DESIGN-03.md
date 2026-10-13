@@ -57,3 +57,17 @@ Ship one reusable `RegisterTable` that every P1 register uses: a dense table wit
   - **e2e** (Playwright):
     - On `/projects`, set Status=Active, sort by Code descending and hide the Region column, then copy the URL into a new page. Expected: the same filter, sort and columns, and the first row is the highest active code.
     - Using only the keyboard, Tab into the table, ArrowDown to the second row and press Enter. Expected: the row's open action fires.
+
+## As built (2026-10-13)
+
+- `packages/ui/src/register/`: `RegisterTable` (TanStack Table, headless), `FilterBar`, `ColumnChooser` with the
+  `ColumnPrefsStore` interface (`localStorageColumnPrefs` for now), `url-state.ts`
+  (`decodeRegisterQuery`/`encodeRegisterQuery`, no router import), `csv.ts` (`toCsv`) and `types.ts`; exported from
+  `@aip/ui`. Labels are term keys looked up through a `translate` prop (`config/terms/en-AU/register.json`).
+- Golden vectors: `packages/contracts/csv-vectors/csv-v1.json`; the Python twin `aip.platform.http.csv.to_csv` runs
+  the same file in pytest, ready for the module export endpoints.
+- Columns declare which sort directions the server supports (`sortable: true | ["asc"]`), because PROJECTS-01's list
+  sorts each column one way only. Native `<select>` and `<details>` controls keep filters and the column chooser
+  keyboard-operable without extra dependencies.
+- Step 8 (switching the projects register) was not a one-line change: split to **PROJECTS-06**, together with the
+  backend sort direction, the projects CSV export endpoint and the integration and e2e tests that need them.

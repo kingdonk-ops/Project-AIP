@@ -1,0 +1,22 @@
+{
+  "register.search": "Search",
+  "register.clearAll": "Clear all",
+  "register.any": "Any",
+  "register.dateFrom": "From",
+  "register.dateTo": "To",
+  "register.columns": "Columns",
+  "register.restoreDefaults": "Restore defaults",
+  "register.export": "Export CSV",
+  "register.previous": "Previous",
+  "register.next": "Next",
+  "register.pageSize": "Rows per page",
+  "register.pagination": "Pages",
+  "register.selectPage": "Select all rows on this page",
+  "register.selectRow": "Select row {row}",
+  "register.selected": "{count} selected",
+  "register.bulkActions": "Bulk actions",
+  "register.empty": "Nothing matches these filters.",
+  "register.loading": "Loading…",
+  "register.error": "The list could not be loaded.",
+  "register.retry": "Try again"
+}
