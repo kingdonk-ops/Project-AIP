@@ -1,7 +1,7 @@
 # ADR 0025: Time and time zones: UTC instants, wall-clock future events, calendar-day expiry
 
-- **Status:** accepted (owner, 2026-10-13: "UTC everywhere internally, localise at presentation"); point 5 picks the
-  reference zone for calendar-day expiry and needs the owner's confirmation
+- **Status:** accepted (owner, 2026-10-13: "UTC everywhere internally, localise at presentation"; point 5, UTC as the
+  reference zone for calendar-day expiry, confirmed the same day)
 - **Date:** 2026-10-13
 - **Affects:** every module that stores or shows dates and times; identity (`tenant_membership.valid_from`/`valid_to`),
   projects and sites (`timezone`), inspections and hold points (scheduled work), audit, web and field UIs
@@ -33,15 +33,13 @@ at the edges, and two exceptions: future scheduled events, and calendar-day dead
 5. **Calendar-day expiry has one reference zone: UTC.** Rules that say "valid until the end of a date", such as
    `tenant_membership.valid_to`, are inclusive through 23:59:59 UTC on that date and are checked against the UTC date,
    as the code does today. The UI must say so: "Expires 31 Oct 2026, 11:59 PM UTC (1 Nov, 7:59 AM your time)". Travel
-   cannot move the cutoff. *Alternative the owner may choose instead:* anchor the cutoff to the tenant's (or
-   organisation's) IANA zone at provisioning, converted to a UTC instant. That makes "today" end at local midnight in
-   Perth but needs a tenant time-zone setting and a change to the membership check.
+   cannot move the cutoff. The owner considered anchoring the cutoff to the tenant's zone at provisioning and chose UTC.
 6. **Point-in-time expiry is a UTC instant.** Sessions, invite links, trials and API client credentials expire at an
    exact `timestamptz`, never at "end of day".
 
 ## Consequences
 
-- No code change is needed for memberships unless the owner picks the alternative in point 5. TESTING-11 (PR #53)
+- No code change is needed for memberships. TESTING-11 (PR #53)
   already makes the test use the database date.
 - Tasks that add scheduled work (inspections, hold and witness points) must use the three-column wall-clock pattern in
   point 4; tasks that show expiry dates must show the UTC cutoff and the local equivalent.
