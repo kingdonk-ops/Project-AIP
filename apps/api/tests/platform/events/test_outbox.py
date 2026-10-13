@@ -25,7 +25,7 @@ from aip.platform.db.session import with_tenant
 from aip.platform.db.templates import render_template
 from aip.platform.events import Aggregate, EventValidationError, emit
 from tests.conftest import ALICE_ID, BOB_ID, TENANT_A_ID, TENANT_B_ID
-from tests.fixtures.postgres import APP, JOBS, FreshDb, OwnerSeeder
+from tests.fixtures.postgres import APP, JOBS, READONLY, FreshDb, OwnerSeeder
 
 from .fixtures import SCHEMAS
 
@@ -283,3 +283,20 @@ async def test_an_event_written_for_another_tenant_is_refused(app_engine: AsyncE
         ):
             await emit_widget(conn, WIDGET_ID)
     assert sqlstate(caught.value) == "42501"
+
+
+async def test_aip_readonly_reads_only_the_bound_tenant(
+    migrated_db: FreshDb, app_engine: AsyncEngine
+) -> None:
+    await seed_events(app_engine, TENANT_A_ID, ALICE_ID, 3)
+    await seed_events(app_engine, TENANT_B_ID, BOB_ID, 2)
+    async with role_engine(migrated_db, READONLY) as readonly:
+        async with with_tenant(TENANT_A_ID, engine=readonly) as conn:
+            assert (await conn.execute(text("SELECT count(*) FROM domain_events"))).scalar() == 3
+        async with readonly.begin() as conn:
+            assert (await conn.execute(text("SELECT count(*) FROM domain_events"))).scalar() == 0
+        with pytest.raises(DBAPIError) as caught:
+            async with use_context(ctx()), with_tenant(TENANT_A_ID, engine=readonly) as conn:
+                await emit_widget(conn, WIDGET_ID)
+        # aip_readonly sessions are read-only (25006) before privileges are even checked.
+        assert sqlstate(caught.value) == "25006"
