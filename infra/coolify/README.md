@@ -82,8 +82,13 @@ run the smoke test.
 The demo uses the fixture tenants and users from `infra/keycloak` (`alice@kaefer.test` through the
 mock IdP, `bob@acme.test`, and the local accounts). Their passwords are in the public repository,
 so anyone with the URL can sign in as them: acceptable for synthetic data only, never for real data.
-Nobody holds a role after the first sign-in until TESTING-09's demo bootstrap gives the first
-kaefer-demo user `tenant_admin`.
+The `admin-bootstrap` one-shot (TESTING-09) makes `alice@kaefer.test` the kaefer-demo
+`tenant_admin` and `bob@acme.test` the tenant-b `tenant_admin` before their first sign-in.
+
+After each deploy the workflow runs the walking-skeleton journey against `DEMO_URL` when the
+`coolify-demo` environment has the secrets `E2E_USER_A`, `E2E_PASS_A`, `E2E_USER_B` and
+`E2E_PASS_B` (the two users above); without them the step is skipped with a notice. Each run
+creates one project in kaefer-demo and archives it at the end.
 
 ## Known limits
 

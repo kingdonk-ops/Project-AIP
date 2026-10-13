@@ -65,7 +65,7 @@ jobs:
     name: Deploy to the Coolify demo and smoke-test it
     needs: images
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     environment: coolify-demo
     steps:
       - uses: actions/checkout@v4
@@ -113,3 +113,37 @@ jobs:
           cat smoke.log
           echo "::error::the demo did not serve ${SHA} healthily within 10 minutes"
           exit 1
+      # TESTING-09: the walking skeleton against the demo once it serves this commit. Credentials
+      # come from the coolify-demo environment secrets; a failure fails the deploy job.
+      - uses: pnpm/action-setup@v4
+        if: steps.trigger.outputs.deployed == 'true' && vars.DEMO_URL != ''
+      - uses: actions/setup-node@v4
+        if: steps.trigger.outputs.deployed == 'true' && vars.DEMO_URL != ''
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Walking skeleton against the demo (staging project, @staging)
+        if: steps.trigger.outputs.deployed == 'true' && vars.DEMO_URL != ''
+        env:
+          E2E_SKELETON: "1"
+          E2E_BASE_URL: ${{ vars.DEMO_URL }}
+          E2E_USER_A: ${{ secrets.E2E_USER_A }}
+          E2E_PASS_A: ${{ secrets.E2E_PASS_A }}
+          E2E_USER_B: ${{ secrets.E2E_USER_B }}
+          E2E_PASS_B: ${{ secrets.E2E_PASS_B }}
+        run: |
+          set -euo pipefail
+          if [ -z "${E2E_USER_A}" ] || [ -z "${E2E_USER_B}" ]; then
+            echo "::notice::E2E_USER_A/B secrets are not set on coolify-demo: demo journey skipped"
+            exit 0
+          fi
+          pnpm install --frozen-lockfile
+          pnpm --filter e2e exec playwright install --with-deps chromium
+          pnpm --filter e2e exec playwright test --project staging --grep @staging
+      - name: Upload the demo journey trace
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-demo
+          path: e2e/test-results
+          retention-days: 7

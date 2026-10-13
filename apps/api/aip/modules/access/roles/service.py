@@ -52,7 +52,7 @@ from aip.modules.access.roles.schemas import (
     RoleUpdate,
 )
 from aip.modules.access.roles.seed import default_role_permissions
-from aip.modules.identity.api import get_user
+from aip.modules.identity.api import ensure_invited_sso_user, get_user
 from aip.modules.projects.api import ProjectsApi
 from aip.platform.access import AccessPrincipal
 from aip.platform.context import get_context, new_request_id
@@ -60,7 +60,7 @@ from aip.platform.db.session import with_tenant
 from aip.platform.events import Aggregate, emit
 from aip.platform.http import DomainError
 
-__all__ = ["AssignmentService", "RoleService"]
+__all__ = ["AssignmentService", "RoleService", "bootstrap_tenant_admin"]
 
 TENANT_ADMIN: Final = "tenant_admin"
 ROLE_MANAGE: Final = "access.role.manage"
@@ -292,6 +292,51 @@ class RoleService:
             )
         await repo.set_role_permissions(conn, role_id, permissions)
         return role_id
+
+
+async def bootstrap_tenant_admin(
+    conn: AsyncConnection, *, tenant_id: UUID, email: str, idp_alias: str
+) -> bool:
+    """Dev and demo only (TESTING-09): make ``email`` a tenant-scope ``tenant_admin``.
+
+    Nobody holds a role after a JIT sign-in, and every role change needs a stepped-up tenant
+    admin, so the first admin of a fixture tenant is seeded here: an invited SSO user (linked on
+    their first sign-in) plus the assignment, emitted like any other. Runs on the caller's
+    ``with_tenant`` connection inside a request context. Idempotent; ``True`` when it assigned.
+    ``LookupError`` when the tenant has no ``tenant_admin`` role (run ``seed-roles`` first).
+    """
+    await repo.lock_tenant_roles(conn)
+    role = await repo.get_role_by_code(conn, TENANT_ADMIN)
+    if role is None:
+        raise LookupError("tenant_admin role missing: run `aip-access seed-roles` first")
+    user_id = await ensure_invited_sso_user(
+        conn, tenant_id=tenant_id, email=email, idp_alias=idp_alias
+    )
+    if await repo.has_live_tenant_assignment(conn, user_id, role["id"]):
+        return False
+    assignment_id = _new_id()
+    await repo.insert_assignment(
+        conn,
+        assignment_id=assignment_id,
+        user_id=user_id,
+        role_id=role["id"],
+        scope_type="tenant",
+        project_id=None,
+        valid_to=None,
+        approved_by=None,
+        created_by=None,
+    )
+    row = await repo.get_assignment(conn, assignment_id)
+    assert row is not None
+    await emit(
+        conn,
+        ROLE_ASSIGNMENT_CREATED,
+        1,
+        Aggregate("role_assignment", assignment_id),
+        _assignment_payload(row),
+    )
+    await bump_access_version(conn)
+    return True
 
 
 def _assignment_payload(row: dict[str, Any]) -> dict[str, Any]:

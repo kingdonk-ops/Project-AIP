@@ -22,6 +22,7 @@ __all__ = [
     "get_assignment",
     "get_role",
     "get_role_by_code",
+    "has_live_tenant_assignment",
     "holds_role_at_tenant",
     "insert_assignment",
     "insert_role",
@@ -283,6 +284,18 @@ async def holds_role_at_tenant(conn: AsyncConnection, user_id: UUID, role_code: 
             f" AND {ACTIVE_ASSIGNMENT} LIMIT 1"
         ),
         {"user": user_id, "code": role_code},
+    )
+    return row.first() is not None
+
+
+async def has_live_tenant_assignment(conn: AsyncConnection, user_id: UUID, role_id: UUID) -> bool:
+    """A live (not deleted) tenant-scope assignment exists, whatever the user's status."""
+    row = await conn.execute(
+        text(
+            "SELECT 1 FROM role_assignment WHERE user_id = :user AND role_id = :role"
+            " AND scope_type = 'tenant' AND deleted_at IS NULL LIMIT 1"
+        ),
+        {"user": user_id, "role": role_id},
     )
     return row.first() is not None
 

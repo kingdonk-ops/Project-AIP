@@ -134,6 +134,31 @@ async def test_jit_twice_creates_one_user_and_refreshes_last_login(idb: TenantDb
     assert await events(idb, TENANT_B_ID) == []
 
 
+async def test_an_ensured_invited_sso_user_is_linked_on_first_sign_in(idb: TenantDb) -> None:
+    # TESTING-09: the dev/demo admin bootstrap pre-creates the user; the first SSO sign-in links
+    # that row (so roles assigned beforehand apply) instead of creating a second user.
+    async with idb.with_tenant(TENANT_A_ID) as conn:
+        made = await repo.ensure_invited_sso_user(
+            conn, tenant_id=TENANT_A_ID, email=ALICE, idp_alias="kaefer-oidc"
+        )
+        again = await repo.ensure_invited_sso_user(
+            conn, tenant_id=TENANT_A_ID, email=ALICE, idp_alias="kaefer-oidc"
+        )
+    assert again == made
+    invited = await get(idb, TENANT_A_ID, made)
+    assert invited is not None and invited.status == "invited" and invited.sso_managed
+    assert invited.keycloak_user_id is None
+
+    subject = uuid4()
+    result = await provisioner(idb).provision(identity(ALICE, subject))
+    assert isinstance(result, Provisioned) and result.action == "linked"
+    assert result.user_id == made
+    linked = await get(idb, TENANT_A_ID, made)
+    assert linked is not None and linked.status == "active" and linked.keycloak_user_id == subject
+    assert await users(idb, TENANT_A_ID) == 1
+    assert await count(idb, TENANT_A_ID, "SELECT count(*) FROM tenant_membership") == 1
+
+
 async def test_local_login_with_no_directory_row_is_not_invited(idb: TenantDb) -> None:
     result = await provisioner(idb).provision(local_identity("nobody@client.test"))
     assert isinstance(result, Denied) and result.code == "NOT_INVITED"

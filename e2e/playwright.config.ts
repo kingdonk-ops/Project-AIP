@@ -41,6 +41,20 @@ const webServer: PlaywrightTestConfig["webServer"] = [
   },
 ];
 
+// TESTING-09: the walking skeleton runs only in its own projects, against a whole deployment:
+// `web` against the compose stack (CI job e2e-skeleton, E2E_BASE_URL=http://localhost:8080) and
+// `staging` against the Coolify demo after a deploy. Both need E2E_SKELETON=1 and the E2E_USER_*
+// / E2E_PASS_* variables, so the default run never needs Keycloak. `unit` runs the fixture tests.
+const SKELETON = "web/walking-skeleton.spec.ts";
+const UNIT = "fixtures/*.spec.ts";
+const skeletonProjects: PlaywrightTestConfig["projects"] = process.env.E2E_SKELETON
+  ? [
+      { name: "web", testMatch: SKELETON, retries: 0, timeout: 120_000, use: { ...devices["Desktop Chrome"], actionTimeout: 15_000 } },
+      // No trace on the demo: a trace records typed values, and its credentials come from secrets.
+      { name: "staging", testMatch: SKELETON, retries: 0, timeout: 120_000, use: { ...devices["Desktop Chrome"], actionTimeout: 15_000, trace: "off" } },
+    ]
+  : [];
+
 export default defineConfig({
   testDir: ".",
   testMatch: "**/*.spec.ts",
@@ -53,9 +67,11 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
-    { name: "desktop-chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile-chrome", use: { ...devices["Pixel 7"] } },
-    { name: "ipad-webkit", use: { ...devices["iPad (gen 7)"] } },
+    { name: "unit", testMatch: UNIT },
+    { name: "desktop-chromium", testIgnore: [SKELETON, UNIT], use: { ...devices["Desktop Chrome"] } },
+    { name: "mobile-chrome", testIgnore: [SKELETON, UNIT], use: { ...devices["Pixel 7"] } },
+    { name: "ipad-webkit", testIgnore: [SKELETON, UNIT], use: { ...devices["iPad (gen 7)"] } },
+    ...(skeletonProjects ?? []),
   ],
   ...(external ? {} : { webServer }),
 });

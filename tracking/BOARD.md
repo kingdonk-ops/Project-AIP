@@ -11,6 +11,8 @@ inside task files** (the development-lead review re-wired several of them; see d
 
 **M0 walking skeleton** = waves 0–5: two tenants, Keycloak sign-in, Vite web shell, Projects register,
 RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; AWS staging comes in wave 7).
+M0 status: the exit proof (TESTING-09) runs in CI (`e2e-skeleton`) and after each demo deploy; the wave 5
+tasks still `todo` below remain before M0 is closed.
 
 ## P0
 
@@ -88,7 +90,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [DESIGN-03](tasks/DESIGN-03.md) | Register table standard (filters, server pagination, CSV) | design | M | DESIGN-02 | done | PR #63; projects switch split to PROJECTS-06 |
 | [PROJECTS-01](tasks/PROJECTS-01.md) | Projects + sites tables and CRUD API | projects | M | ACCESS-01, ARCH-05, DATABASE-02, TENANCY-01 | done | ClaudeK: PR #56 |
 | [PROJECTS-02](tasks/PROJECTS-02.md) | Projects register page + create form (M0 UI slice) | projects | M | DESIGN-02, PROJECTS-01, STACK-03 | done | ClaudeK: PR #60 |
-| [TESTING-09](tasks/TESTING-09.md) | Walking-skeleton e2e: two tenants, login, register, isolation (CI + Coolify demo) | testing | S | OPS-11, PROJECTS-02 | todo |  |
+| [TESTING-09](tasks/TESTING-09.md) | Walking-skeleton e2e: two tenants, login, register, isolation (CI + Coolify demo) | testing | S | OPS-11, PROJECTS-02 | done | PR #67; owner: make `e2e-skeleton` a required check, add E2E_* secrets to coolify-demo |
 
 ### Wave 6
 
