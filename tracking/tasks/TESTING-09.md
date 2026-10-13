@@ -69,3 +69,23 @@ Prove M0 end to end. A Keycloak user of tenant A signs in to the Vite + React we
   ACCESS-02 (assign alice `inspector` on P1; abilities for P1 vs P2) journeys.
 - Nobody holds a role after JIT sign-in: the demo/dev bootstrap must give the first kaefer-demo user `tenant_admin`
   (a tenant-scope `role_assignment` after `seed_default_roles`) before these journeys can create projects.
+
+## As built (2026-10-13)
+
+- Users: the realm already had one SSO user per tenant (`alice@kaefer.test` for kaefer-demo, `bob@acme.test` for
+  tenant-b, both on the mock IdP), so no realm change. Nobody holds a role after a JIT sign-in, so
+  `aip-access bootstrap-admin --admin <tenant>,<email>,<idp>` (dev and demo only, refused in production) pre-creates
+  each as an invited SSO user with a tenant-scope `tenant_admin`; the first sign-in links it (`decide_jit` LINK).
+  It runs as the `admin-bootstrap` one-shot in `infra/docker-compose.yml` and the Coolify stack.
+- Files: `e2e/fixtures/{run-id,tenants,login}.ts` (+ `fixtures.spec.ts`, the `unit` project),
+  `e2e/web/walking-skeleton.spec.ts`, `apps/api/tests/isolation/test_projects_unset_tenant.py`, CI job `e2e-skeleton`,
+  and the demo step in `.github/workflows/deploy-coolify.yml` (OPS-09's staging is the Coolify demo until wave 7).
+- The `web` and `staging` Playwright projects exist only with `E2E_SKELETON=1` (retries 0, 2-minute budget), so the
+  existing e2e job never needs Keycloak.
+- Proven once: replacing the `projects` policy with `USING (true) WITH CHECK (true)` makes the no-context count 2,
+  failing `test_no_tenant_context_sees_no_projects`. Sign-in was run against the live demo (alice reaches the shell);
+  the full journey there needs this PR's bootstrap deployed.
+- Owner steps: make `e2e-skeleton` a required status check on `main`; add `E2E_USER_A`, `E2E_PASS_A`, `E2E_USER_B`,
+  `E2E_PASS_B` to the `coolify-demo` environment (the deploy skips the journey with a notice until then).
+- Carried forward (non-blocking, still open): the IDENTITY-03 live-Keycloak revocation checks and the Active sessions
+  journey, and the TENANCY-01 / ACCESS-01 / ACCESS-02 journeys listed above.

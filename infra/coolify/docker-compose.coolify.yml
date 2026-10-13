@@ -295,6 +295,25 @@ services:
       tenancy-seed:
         condition: service_completed_successfully
 
+  admin-bootstrap:
+    # TESTING-09: each fixture tenant's first tenant_admin, linked on their first SSO sign-in
+    # (alice@kaefer.test, bob@acme.test from the mock IdP). Idempotent.
+    <<: *oneshot
+    image: *api-image
+    command:
+      - python
+      - -m
+      - aip.modules.access.roles.cli
+      - bootstrap-admin
+      - --admin
+      - 00000000-0000-4000-8000-00000000000a,alice@kaefer.test,kaefer-oidc
+      - --admin
+      - 00000000-0000-4000-8000-00000000000b,bob@acme.test,acme-oidc
+    environment: *app-env
+    depends_on:
+      access-seed:
+        condition: service_completed_successfully
+
   object-store-init:
     <<: *oneshot
     image: *api-image
@@ -348,6 +367,8 @@ services:
       identity-seed:
         condition: service_completed_successfully
       access-seed:
+        condition: service_completed_successfully
+      admin-bootstrap:
         condition: service_completed_successfully
       object-store-init:
         condition: service_completed_successfully

@@ -372,6 +372,63 @@ jobs:
           path: e2e/test-results
           retention-days: 7
 
+  # TESTING-09: the M0 exit proof on every build. The compose stack runs the migrator, the seeds
+  # and the dev admin bootstrap as one-shots; the journey signs in for real through Keycloak and
+  # the mock IdP (dev realm users, public dev-only passwords). Retries are off for this spec.
+  e2e-skeleton:
+    name: E2E walking skeleton (compose, real sign-in, two tenants)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: "true"
+      COMPOSE: docker compose -f infra/docker-compose.yml
+      AIP_IMAGE_TAG: ci
+      GIT_SHA: ${{ github.sha }}
+      BUILD_ID: ci-${{ github.run_id }}-${{ github.run_attempt }}
+      E2E_SKELETON: "1"
+      E2E_BASE_URL: http://localhost:8080
+      E2E_USER_A: alice@kaefer.test
+      E2E_PASS_A: alice_dev_only_password
+      E2E_USER_B: bob@acme.test
+      E2E_PASS_B: bob_dev_only_password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm --filter e2e exec playwright install --with-deps chromium
+      - name: Pull and build the stack
+        run: |
+          $COMPOSE pull --ignore-buildable --quiet
+          $COMPOSE build
+      - name: Start the stack and wait until every service is healthy (180 s)
+        run: timeout 240 $COMPOSE up --detach --wait --wait-timeout 180
+      - name: The admin bootstrap exited 0
+        run: |
+          cid=$($COMPOSE ps --all --quiet admin-bootstrap)
+          $COMPOSE logs admin-bootstrap
+          test "$(docker inspect --format '{{.State.ExitCode}}' "$cid")" = "0"
+      - name: Walking skeleton (web project, @skeleton)
+        run: pnpm --filter e2e exec playwright test --project web --grep @skeleton
+      - name: Upload the trace, video and report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-skeleton
+          path: e2e/test-results
+          retention-days: 7
+      - name: Stack logs
+        if: failure()
+        run: $COMPOSE logs --no-color --timestamps --tail 200 api keycloak web
+      - name: Tear down
+        if: always()
+        run: $COMPOSE down --volumes --remove-orphans
+
   layout:
     name: Repository layout (ADR 0004)
     runs-on: ubuntu-latest

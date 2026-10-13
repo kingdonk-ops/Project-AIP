@@ -10,6 +10,8 @@ handler by overriding the ``get_external_login_handler`` dependency.
 
 Users (IDENTITY-02): ``get_user``, ``list_users``, ``find_by_email``, ``set_user_status`` and
 ``record_auth_event`` all take the connection from ``with_tenant`` and see only that tenant.
+``ensure_invited_sso_user`` (TESTING-09) pre-creates an invited SSO user for the dev and demo
+admin bootstrap (``aip-access bootstrap-admin``).
 ``Principal``, ``PrincipalResolver`` and the ``get_principal`` dependency describe the caller.
 
 Sessions (IDENTITY-03): ``issue_session``, ``rotate_session`` (IDENTITY-04 step-up),
@@ -38,6 +40,7 @@ from aip.modules.identity.principal import (
 from aip.modules.identity.repository import (
     UserPage,
     UserRow,
+    ensure_invited_sso_user,
     find_by_email,
     get_user,
     list_users,
@@ -69,6 +72,7 @@ __all__ = [
     "UserRow",
     "VerifiedExternalIdentity",
     "add_session_middleware",
+    "ensure_invited_sso_user",
     "find_by_email",
     "get_api",
     "get_external_login_handler",

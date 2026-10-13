@@ -279,6 +279,32 @@ async def insert_user(
     return user_id
 
 
+async def ensure_invited_sso_user(
+    conn: AsyncConnection, *, tenant_id: UUID, email: str, idp_alias: str
+) -> UUID:
+    """The live user with ``email`` in the bound tenant; else a new ``invited`` SSO user.
+
+    Dev and demo bootstrap only (TESTING-09): the new user has a ``member`` membership and no
+    Keycloak link, so the first SSO sign-in with that verified email links it (``decide_jit``
+    ``LINK``) and keeps any role assigned beforehand. Idempotent.
+    """
+    existing = await find_by_email(conn, email)
+    if existing is not None:
+        return existing.id
+    user_id = await insert_user(
+        conn,
+        tenant_id=tenant_id,
+        email=email,
+        display_name=email.split("@", 1)[0][:200],
+        user_class="staff",
+        status="invited",
+        sso_managed=True,
+        idp_alias=idp_alias,
+    )
+    await insert_membership(conn, tenant_id=tenant_id, user_id=user_id, membership_type="member")
+    return user_id
+
+
 async def update_user(conn: AsyncConnection, user_id: UUID, **values: Any) -> None:
     """Set ``values`` on the live user ``user_id`` (bumps ``updated_at`` and ``sync_version``).
 
