@@ -130,6 +130,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [OPS-09](tasks/OPS-09.md) | Build once, scan, push to ECR, deploy staging, smoke | ops | M | OPS-07, STACK-05 | todo |  |
 | [OPS-10](tasks/OPS-10.md) | Cosign signing, prod promotion approval, digest rollback | ops | M | OPS-09 | todo | convert to Python backend per ADR 0001 before starting  |
 | [SECURITY-10](tasks/SECURITY-10.md) | Secret rotation without downtime (90-day Secrets Manager rotation) | security | M | IDENTITY-03, STACK-07 | todo | AWS readiness; adds an ADR |
+| [SECURITY-11](tasks/SECURITY-11.md) | Stop gitleaks false positives at the source | security | XS | SECURITY-08 | in-progress | ClaudeK: p0/security-dev-keys-gitleaks |
 | [OPS-14](tasks/OPS-14.md) | AWS services beyond the baseline: Keycloak, Gotenberg, KMS and SES | ops | M | OPS-07, STACK-06 | todo | AWS readiness; Glacier IR lifecycle stays in OPS-06 |
 | [PLAN-R1](tasks/PLAN-R1.md) | Generate R1 task files just in time (ADR 0007; process in docs/reviews/07-delivery.md) | arch | M | ACCESS-02, APPROVALS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 
