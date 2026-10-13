@@ -1,0 +1,31 @@
+"""SECURITY-09: FastAPI's API docs and OpenAPI schema are not served in production."""
+
+from __future__ import annotations
+
+import httpx
+import pytest
+
+from aip.main import create_app
+
+DOC_PATHS = ("/openapi.json", "/docs", "/docs/oauth2-redirect", "/redoc")
+
+
+async def status_codes(env: str) -> dict[str, int]:
+    app = create_app(env=env, tracing=False)
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        return {path: (await client.get(path)).status_code for path in DOC_PATHS}
+
+
+async def test_production_serves_no_docs_or_schema() -> None:
+    assert await status_codes("production") == dict.fromkeys(DOC_PATHS, 404)
+
+
+@pytest.mark.parametrize("env", ["test", "development", ""])
+async def test_other_environments_keep_the_docs(env: str) -> None:
+    assert await status_codes(env) == dict.fromkeys(DOC_PATHS, 200)
+
+
+def test_the_schema_is_still_built_in_process_for_codegen() -> None:
+    schema = create_app(env="production", tracing=False).openapi()
+    assert "/api/v1/health" in schema["paths"]

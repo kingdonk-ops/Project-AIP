@@ -115,11 +115,17 @@ def create_app(
         await sync_catalogue(catalogue)
         yield
 
+    # SECURITY-09 (owner, 2026-10-12): no /docs, /redoc or /openapi.json in production. The
+    # schema is still built in process (app.openapi()) for codegen and the strip check.
+    production = env == "production"
     app = FastAPI(
         title="AIP API",
         version="0.1.0",
         generate_unique_id_function=operation_id,
         lifespan=lifespan,
+        openapi_url=None if production else "/openapi.json",
+        docs_url=None if production else "/docs",
+        redoc_url=None if production else "/redoc",
     )
 
     app.state.readiness = readiness or ReadinessChecker.from_env()

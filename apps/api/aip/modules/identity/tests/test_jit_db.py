@@ -440,13 +440,16 @@ async def test_user_without_a_current_membership_is_refused(idb: TenantDb) -> No
     result = await provisioner(idb).provision(identity(ALICE, sub))
     assert isinstance(result, Denied) and result.code == "MEMBERSHIP_INACTIVE"
     async with idb.with_tenant(TENANT_A_ID) as conn:
+        # The database clock, not date.today(): validity is checked against Postgres
+        # current_date, and the two disagree for part of the day when local time is not UTC.
+        today: date = (await conn.execute(text("SELECT current_date"))).scalar_one()
         await repo.insert_membership(
             conn,
             tenant_id=TENANT_A_ID,
             user_id=user_id,
             membership_type="member",
-            valid_from=date.today() - timedelta(days=30),
-            valid_to=date.today() - timedelta(days=1),
+            valid_from=today - timedelta(days=30),
+            valid_to=today - timedelta(days=1),
         )
     result = await provisioner(idb).provision(identity(ALICE, sub))
     assert isinstance(result, Denied) and result.code == "MEMBERSHIP_INACTIVE"
