@@ -37,8 +37,9 @@ tools/            new_module.py, codegen, tracking scripts
   Hypothesis, and import-linter (modules import only other modules' `api`; `platform` never imports `modules`).
 - **TS tooling:** pnpm workspace, Vitest, Playwright, and ESLint boundaries (apps never import each other; no
   hard-coded UI strings).
-- **Delivery:** each SPA is served from S3 + CloudFront, with `/api/*` path-routed to the ALB, so cookies are same-origin
-  `__Host-` cookies. The portal uses its own domain.
+- **Delivery:** superseded by [ADR 0026](0026-web-delivery-behind-the-alb.md) (2026-10-13): each SPA runs as an nginx
+  container behind the ALB, with `/api/*` routed to the API on the same host, so cookies are same-origin `__Host-`
+  cookies. The portal uses its own domain.
 - **API contract:** FastAPI generates OpenAPI, which feeds `packages/api-client`. A CI drift check fails on uncommitted changes.
 
 ## Consequences

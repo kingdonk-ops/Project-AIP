@@ -108,7 +108,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | todo | AWS readiness |
 | [STACK-07](tasks/STACK-07.md) | TLS to Postgres and Redis (RDS and ElastiCache ready) | stack | S | OPS-02, STACK-05 | todo | AWS readiness |
 | [OPS-13](tasks/OPS-13.md) | Scheduled job trigger: one command for Coolify cron and EventBridge Scheduler | ops | S | OPS-02 | todo | AWS readiness |
-| [OPS-16](tasks/OPS-16.md) | RDS bootstrap runbook and the web hosting decision | ops | S | DATABASE-02 | todo | AWS readiness; needs an owner answer (ALB vs S3 + CloudFront) before OPS-07 |
+| [OPS-16](tasks/OPS-16.md) | RDS bootstrap runbook | ops | S | DATABASE-02 | todo | AWS readiness |
 
 ### Wave 7
 
@@ -126,7 +126,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [TESTING-05](tasks/TESTING-05.md) | Migration up-down-up test | testing | S | TESTING-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [SECURITY-08](tasks/SECURITY-08.md) | Production strip test and security CI workflow | security | M | ARCH-03, STACK-04 | done | PR #20 |
 | [SECURITY-09](tasks/SECURITY-09.md) | No public API docs or OpenAPI schema in production | security | XS | ACCESS-01 | done | ClaudeK: PR #52 |
-| [OPS-07](tasks/OPS-07.md) | Terraform baseline for staging and the build-promote pipeline | ops | M | STACK-05 | todo | use infra/terraform (ADR 0004), not infrastructure/ |
+| [OPS-07](tasks/OPS-07.md) | Terraform baseline for staging and the build-promote pipeline | ops | M | STACK-05 | todo | use infra/terraform (ADR 0004), not infrastructure/; web behind the ALB (ADR 0026) |
 | [OPS-09](tasks/OPS-09.md) | Build once, scan, push to ECR, deploy staging, smoke | ops | M | OPS-07, STACK-05 | todo |  |
 | [OPS-10](tasks/OPS-10.md) | Cosign signing, prod promotion approval, digest rollback | ops | M | OPS-09 | todo | convert to Python backend per ADR 0001 before starting  |
 | [SECURITY-10](tasks/SECURITY-10.md) | Secret rotation without downtime (90-day Secrets Manager rotation) | security | M | IDENTITY-03, STACK-07 | todo | AWS readiness; adds an ADR |

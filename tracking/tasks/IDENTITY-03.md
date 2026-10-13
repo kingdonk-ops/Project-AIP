@@ -79,7 +79,7 @@ After Keycloak signs a staff user in, the FastAPI backend issues every browser s
   - 9. Web.
     - `csrf-fetch.ts` is the fetch wrapper the generated `packages/api-client` uses: it sends `X-CSRF-Token` from the cookie, and on 401 `SESSION_EXPIRED` it hands over to DESIGN-02's redirect to `/login?next=<path>`.
     - The TanStack Router route `/settings/profile/sessions` lists active sessions (device, IP, last seen) with a "Sign out" action per row. Labels are terminology keys in `identity.json`.
-    - Same-origin `/api` routing comes from DESIGN-02's Vite proxy (CloudFront in AWS). There is no Next.js and no BFF.
+    - Same-origin `/api` routing comes from DESIGN-02's Vite proxy (the ALB host rule in AWS, ADR 0026). There is no Next.js and no BFF.
 - **acceptance**:
   - No JWT and no Keycloak token reaches the browser. The only auth cookies are `__Host-aip_sid` and `__Host-aip_csrf`.
   - A revoked session is refused on the next request. If the cache purge fails, it is refused within 60 s at worst.
