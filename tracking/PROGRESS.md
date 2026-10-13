@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-13 · PROJECTS-05 · PR #58 · System sites (the hidden per-project hierarchy root) are left out of the sites list and get, and editing or deleting one returns 409 `SITE_IS_SYSTEM` (owner decision).
 - 2026-10-13 · ADR-0026 · PR #59 · Owner chose web delivery behind the ALB (nginx containers on Fargate, host-based routing for more sites) over S3 + CloudFront: ADR 0026 supersedes ADR 0004's Delivery bullet; OPS-07, OPS-09 and OPS-16 updated.
 - 2026-10-13 · AWS-READINESS · PR #57 · Checked the stack against the AWS production target (Fargate + ALB, RDS, ElastiCache, S3/Glacier IR, SES, CloudWatch, EventBridge/Lambda, Secrets Manager) and added the gaps as tasks STACK-06, STACK-07, OPS-13 to OPS-16 and SECURITY-10.
 - 2026-10-13 · PROJECTS-01 · PR #56 · Projects and sites registers: RLS tables with per-tenant case-insensitive codes, permission-checked CRUD API with signed cursor pagination, optimistic concurrency and forward-only status, outbox events, generated client hooks; also fixed `aip-db check-schema` type parsing (aliases never applied).
