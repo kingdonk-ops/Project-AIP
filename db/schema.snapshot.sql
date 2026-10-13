@@ -195,6 +195,14 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_periodic_defers 
 -- Name: TABLE procrastinate_workers; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_workers TO aip_jobs;
 
+-- Name: TABLE projects; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.projects TO aip_app;
+GRANT SELECT ON TABLE public.projects TO aip_readonly;
+
+-- Name: TABLE sites; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.sites TO aip_app;
+GRANT SELECT ON TABLE public.sites TO aip_readonly;
+
 -- Name: TABLE tenant_membership; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.tenant_membership TO aip_app;
 GRANT SELECT ON TABLE public.tenant_membership TO aip_readonly;
@@ -275,6 +283,18 @@ ALTER TABLE ONLY public.procrastinate_periodic_defers
 ALTER TABLE ONLY public.procrastinate_workers
     ADD CONSTRAINT procrastinate_workers_pkey PRIMARY KEY (id);
 
+-- Name: projects pk_projects; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT pk_projects PRIMARY KEY (id);
+
+-- Name: sites pk_sites; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.sites
+    ADD CONSTRAINT pk_sites PRIMARY KEY (id);
+
+-- Name: sites uq_sites_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.sites
+    ADD CONSTRAINT uq_sites_id_tenant_id UNIQUE (id, tenant_id);
+
 -- Name: tenant_membership pk_tenant_membership; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_membership
     ADD CONSTRAINT pk_tenant_membership PRIMARY KEY (id);
@@ -331,6 +351,14 @@ ALTER TABLE ONLY public.procrastinate_jobs
 -- Name: procrastinate_periodic_defers procrastinate_periodic_defers_job_id_fkey; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.procrastinate_periodic_defers
     ADD CONSTRAINT procrastinate_periodic_defers_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.procrastinate_jobs(id);
+
+-- Name: projects fk_projects_region_deployment_regions; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT fk_projects_region_deployment_regions FOREIGN KEY (region) REFERENCES public.deployment_regions(code);
+
+-- Name: projects fk_projects_site_id_tenant_id_sites; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT fk_projects_site_id_tenant_id_sites FOREIGN KEY (site_id, tenant_id) REFERENCES public.sites(id, tenant_id);
 
 -- Name: tenant_membership fk_tenant_membership_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_membership
@@ -978,6 +1006,18 @@ CREATE INDEX ix_login_directory_tenant_id ON public.login_directory USING btree 
 -- Name: ix_permission_module_id; Type: INDEX; Schema: public
 CREATE INDEX ix_permission_module_id ON public.permission USING btree (module_id);
 
+-- Name: ix_projects_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_projects_tenant_id ON public.projects USING btree (tenant_id);
+
+-- Name: ix_projects_tenant_id_site_id; Type: INDEX; Schema: public
+CREATE INDEX ix_projects_tenant_id_site_id ON public.projects USING btree (tenant_id, site_id);
+
+-- Name: ix_projects_tenant_id_status; Type: INDEX; Schema: public
+CREATE INDEX ix_projects_tenant_id_status ON public.projects USING btree (tenant_id, status);
+
+-- Name: ix_sites_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_sites_tenant_id ON public.sites USING btree (tenant_id);
+
 -- Name: ix_tenant_membership_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_tenant_membership_tenant_id ON public.tenant_membership USING btree (tenant_id);
 
@@ -1023,6 +1063,12 @@ CREATE UNIQUE INDEX uq_app_user_tenant_id_keycloak_user_id ON public.app_user US
 -- Name: uq_jobs_tenant_id_job_type_idempotency_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs USING btree (tenant_id, job_type, idempotency_key) WHERE (idempotency_key IS NOT NULL);
 
+-- Name: uq_projects_tenant_id_upper_code; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_projects_tenant_id_upper_code ON public.projects USING btree (tenant_id, upper(code)) WHERE (deleted_at IS NULL);
+
+-- Name: uq_sites_tenant_id_upper_code; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_sites_tenant_id_upper_code ON public.sites USING btree (tenant_id, upper(code)) WHERE (deleted_at IS NULL);
+
 -- Name: uq_tenant_membership_tenant_id_user_id_organisation_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_tenant_membership_tenant_id_user_id_organisation_id ON public.tenant_membership USING btree (tenant_id, user_id, organisation_id) NULLS NOT DISTINCT WHERE (deleted_at IS NULL);
 
@@ -1050,6 +1096,12 @@ CREATE POLICY tenant_isolation ON public.job_events USING ((tenant_id = (NULLIF(
 -- Name: jobs tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.jobs USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: projects tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.projects USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: sites tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.sites USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: tenant_membership tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenant_membership USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -1073,6 +1125,12 @@ ALTER TABLE public.job_events ENABLE ROW LEVEL SECURITY;
 
 -- Name: jobs; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
+
+-- Name: projects; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+
+-- Name: sites; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.sites ENABLE ROW LEVEL SECURITY;
 
 -- Name: tenant_membership; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenant_membership ENABLE ROW LEVEL SECURITY;
@@ -1359,6 +1417,58 @@ CREATE TABLE public.procrastinate_workers (
 );
 
 ALTER TABLE public.procrastinate_workers OWNER TO aip_owner;
+
+-- Name: projects; Type: TABLE; Schema: public
+CREATE TABLE public.projects (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    code text NOT NULL,
+    name text NOT NULL,
+    client_company_id uuid,
+    site_id uuid,
+    classification_id uuid,
+    template_id uuid,
+    region text,
+    timezone text,
+    currency character(3),
+    status text DEFAULT 'draft'::text NOT NULL,
+    closed_at timestamp with time zone,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_projects_code CHECK ((code <> ''::text)),
+    CONSTRAINT ck_projects_name CHECK ((name <> ''::text)),
+    CONSTRAINT ck_projects_status CHECK ((status = ANY (ARRAY['draft'::text, 'active'::text, 'closing'::text, 'archived'::text]))),
+    CONSTRAINT ck_projects_sync_version CHECK ((sync_version >= 1))
+);
+
+ALTER TABLE ONLY public.projects FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.projects OWNER TO aip_owner;
+
+-- Name: sites; Type: TABLE; Schema: public
+CREATE TABLE public.sites (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    code text NOT NULL,
+    name text NOT NULL,
+    lat numeric(9,6),
+    lng numeric(9,6),
+    timezone text,
+    is_system boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_sites_code CHECK ((code <> ''::text)),
+    CONSTRAINT ck_sites_lat CHECK (((lat >= ('-90'::integer)::numeric) AND (lat <= (90)::numeric))),
+    CONSTRAINT ck_sites_lng CHECK (((lng >= ('-180'::integer)::numeric) AND (lng <= (180)::numeric))),
+    CONSTRAINT ck_sites_name CHECK ((name <> ''::text))
+);
+
+ALTER TABLE ONLY public.sites FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.sites OWNER TO aip_owner;
 
 -- Name: tenant_membership; Type: TABLE; Schema: public
 CREATE TABLE public.tenant_membership (

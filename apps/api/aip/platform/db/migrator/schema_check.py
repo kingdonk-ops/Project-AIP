@@ -49,7 +49,11 @@ _ALIASES = {
     "decimal": "numeric",
 }
 _ZONELESS = {"timestamp": "timestamp without time zone", "time": "time without time zone"}
-_TYPE_RE = re.compile(r"^(?P<base>[a-z_][a-z0-9_ ]*?)\s*(?P<args>\([^)]*\))?(?P<rest>.*)$")
+# ``rest`` is empty, a space-led suffix (``with time zone``) or an array suffix (``[]``), so the
+# lazy ``base`` cannot stop after one letter (``char(3)`` must split as ``char`` + ``(3)``).
+_TYPE_RE = re.compile(
+    r"^(?P<base>[a-z_][a-z0-9_ ]*?)\s*(?P<args>\([^)]*\))?(?P<rest>(?:\s.*|\[.*)?)$"
+)
 
 Columns = dict[str, tuple[str, bool]]  # column -> (normalised type, nullable)
 

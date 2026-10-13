@@ -2,4 +2,6 @@
 export * from './access/access';
 export * from './identity/identity';
 export * from './platform/platform';
+export * from './projects/projects';
+export * from './sites/sites';
 export * from './tenancy/tenancy';
