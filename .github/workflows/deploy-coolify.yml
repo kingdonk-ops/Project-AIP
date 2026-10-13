@@ -38,7 +38,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ACTOR: ${{ github.actor }}
         run: echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
-      - name: Build and push aip-api, aip-migrator and aip-web-demo
+      - name: Build and push the demo images
         env:
           SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
@@ -56,7 +56,10 @@ jobs:
           }
           build aip-api apps/api/Dockerfile --build-arg "GIT_SHA=${SHA}" --build-arg "BUILD_ID=${RUN_ID}"
           build aip-migrator infra/docker/migrator.Dockerfile
-          build aip-web-demo apps/web/Dockerfile --build-arg VITE_AIP_DEMO=1
+          build aip-web-demo apps/web/Dockerfile --build-arg VITE_AIP_DEMO=1 \
+            --build-arg NGINX_CONF=infra/coolify/nginx.conf
+          build aip-postgres-demo infra/coolify/images/postgres.Dockerfile
+          build aip-keycloak-demo infra/coolify/images/keycloak.Dockerfile
 
   deploy:
     name: Deploy to the Coolify demo and smoke-test it

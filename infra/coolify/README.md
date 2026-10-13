@@ -11,14 +11,20 @@ tenant is marked `is_real_customer`. AWS staging (OPS-07/09/10) comes before any
   API, the master realm) answers 404. Upstreams see the real client IP, never a client-supplied
   `X-Forwarded-For`.
 - Images: built and pushed to GHCR by `.github/workflows/deploy-coolify.yml` on every push to `main`
-  (`aip-api`, `aip-migrator`, `aip-web-demo`, each tagged `main` and the git SHA), which then calls
-  the Coolify deploy webhook. The server only pulls.
+  (`aip-api`, `aip-migrator`, `aip-web-demo`, `aip-postgres-demo`, `aip-keycloak-demo`, each tagged
+  `main` and the git SHA), which then calls the Coolify deploy webhook. The server only pulls.
+- No repository files are bind-mounted: Coolify resolves relative mount paths under the app's own
+  directory on the server, not the clone, so they would mount empty (the first deploy failed that
+  way). The nginx config, the Postgres bootstrap, the Keycloak realms and theme are built into the
+  images (`infra/coolify/images/`). The `db-bootstrap` one-shot applies the roles, their passwords and
+  Keycloak's database on every deploy, so changing a database password in Coolify takes effect on
+  the next redeploy.
 
 ## One-time setup (owner)
 
 1. **Rotate the Coolify API token first.** The current one was pasted into a chat; create a new token
    in Coolify (Keys & Tokens > API tokens, deploy permission only) and revoke the old one.
-2. **GHCR access.** The repository is public, so make the three packages public after the first
+2. **GHCR access.** The repository is public, so make the five packages public after the first
    workflow run (GitHub > Packages > package settings > visibility), or add a GHCR read token to the
    server in Coolify (Servers > Docker registries).
 3. **Create the resource in the Coolify UI** (the API cannot create Docker Compose resources):

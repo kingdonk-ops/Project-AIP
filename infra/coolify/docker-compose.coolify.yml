@@ -3,6 +3,9 @@
 # Coolify (bytedock.io) runs this file from the repository (Docker Compose build pack, location
 # /infra/coolify/docker-compose.coolify.yml). The app images are built and pushed to GHCR by
 # .github/workflows/deploy-coolify.yml and pulled here by tag; nothing is built on the server.
+# No service bind-mounts a file from the repository: Coolify resolves relative mount paths under the
+# app's own directory on the server, not the clone, so they would mount empty. Config files are
+# built into the images instead (infra/coolify/images/, the web image's NGINX_CONF build arg).
 # Setup, environment variables, redeploy and rollback: infra/coolify/README.md. Every variable is
 # listed in infra/coolify/env.example. Secrets have no defaults (`${VAR:?}`): a missing one stops
 # the deploy instead of starting with a guessable value.
@@ -31,6 +34,7 @@ x-oneshot: &oneshot
   restart: "no"
 
 x-api-image: &api-image ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-api:${AIP_IMAGE_TAG:-main}
+x-postgres-image: &postgres-image ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-postgres-demo:${AIP_IMAGE_TAG:-main}
 
 x-app-env: &app-env
   AIP_ENV: demo
@@ -61,23 +65,16 @@ x-migrator-url: &migrator-url postgresql://aip_owner:${AIP_OWNER_PASSWORD:?set A
 
 services:
   postgres:
-    image: pgvector/pgvector:0.8.7-pg16-bookworm
+    image: *postgres-image
     user: postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       POSTGRES_DB: aip
-      # Read by docker/postgres/init/10-aip-bootstrap.sh on the first start only.
-      AIP_OWNER_PASSWORD: ${AIP_OWNER_PASSWORD:?set AIP_OWNER_PASSWORD}
-      AIP_APP_PASSWORD: ${AIP_APP_PASSWORD:?set AIP_APP_PASSWORD}
-      AIP_JOBS_PASSWORD: ${AIP_JOBS_PASSWORD:?set AIP_JOBS_PASSWORD}
-      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - postgres-backups:/backups:ro  # nightly dumps, read only here, for restores
-      - ../docker/postgres/init:/docker-entrypoint-initdb.d:ro
-      - ../../db/bootstrap:/aip/bootstrap:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d aip"]
       interval: 5s
@@ -86,10 +83,31 @@ services:
       start_period: 20s
     security_opt: ["no-new-privileges:true"]
 
+  db-bootstrap:
+    # One-shot, every deploy, as the superuser: the AIP roles (with their passwords), schema aip_meta,
+    # extension vector, and Keycloak's role and database (infra/coolify/images/db-bootstrap.sh).
+    # Idempotent; the migrator and Keycloak wait for it.
+    image: *postgres-image
+    user: postgres
+    restart: "no"
+    command: ["/aip/db-bootstrap.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      AIP_OWNER_PASSWORD: ${AIP_OWNER_PASSWORD:?set AIP_OWNER_PASSWORD}
+      AIP_APP_PASSWORD: ${AIP_APP_PASSWORD:?set AIP_APP_PASSWORD}
+      AIP_JOBS_PASSWORD: ${AIP_JOBS_PASSWORD:?set AIP_JOBS_PASSWORD}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    security_opt: ["no-new-privileges:true"]
+
   postgres-backup:
     # Nightly pg_dump (custom format) of the app and Keycloak databases into the postgres-backups
     # volume, keeping BACKUP_RETENTION_DAYS days. Restore: README.md.
-    image: pgvector/pgvector:0.8.7-pg16-bookworm
+    image: *postgres-image
     user: postgres
     restart: unless-stopped
     environment:
@@ -176,7 +194,8 @@ services:
   keycloak:
     # Imports realm `aip` and the stand-in customer IdP realm `mock-idp`. Served under /auth on the
     # demo origin through `web`, which blocks /auth/admin; the API uses keycloak:8080/auth inside.
-    image: quay.io/keycloak/keycloak:26.7.5
+    # Stock Keycloak plus the realm imports, theme and blocklist (infra/coolify/images/).
+    image: ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-keycloak-demo:${AIP_IMAGE_TAG:-main}
     user: "1000"
     restart: unless-stopped
     command: ["start", "--import-realm"]
@@ -204,14 +223,9 @@ services:
       MOCK_IDP_CLIENT_SECRET: ${MOCK_IDP_CLIENT_SECRET:?set MOCK_IDP_CLIENT_SECRET}
       KC_SMTP_HOST: mailpit
       KC_SMTP_PORT: "1025"
-    volumes:
-      - ../keycloak/realm-aip.json:/opt/keycloak/data/import/realm-aip.json:ro
-      - ../keycloak/realm-mock-idp.json:/opt/keycloak/data/import/realm-mock-idp.json:ro
-      - ../keycloak/themes/aip:/opt/keycloak/themes/aip:ro
-      - ../keycloak/password-blocklist.txt:/opt/keycloak/data/password-blacklists/password-blocklist.txt:ro
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       mailpit:
         condition: service_healthy
     healthcheck:
@@ -237,8 +251,8 @@ services:
       DATABASE_MIGRATOR_URL: *migrator-url
       PYTHONDONTWRITEBYTECODE: "1"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
 
   tenancy-seed:
     # The fixture tenants kaefer-demo and tenant-b (synthetic, is_real_customer false).
@@ -283,10 +297,32 @@ services:
   object-store-init:
     <<: *oneshot
     image: *api-image
-    command: ["python", "/opt/aip/create_bucket.py"]
+    # infra/docker/create_bucket.py, inlined (Coolify cannot bind-mount it): create the bucket if
+    # it is missing, with the API's own OBJECT_STORE_* settings.
+    command:
+      - python
+      - -c
+      - |
+        import os
+        import boto3
+        from botocore.config import Config
+        from botocore.exceptions import ClientError
+        bucket = os.environ["OBJECT_STORE_BUCKET"]
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=os.environ["OBJECT_STORE_ENDPOINT_URL"],
+            region_name=os.environ["OBJECT_STORE_REGION"],
+            aws_access_key_id=os.environ["OBJECT_STORE_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["OBJECT_STORE_SECRET_ACCESS_KEY"],
+            config=Config(signature_version="s3v4", s3={"addressing_style": "path"}),
+        )
+        try:
+            s3.head_bucket(Bucket=bucket)
+            print(f"bucket {bucket} exists")
+        except ClientError:
+            s3.create_bucket(Bucket=bucket)
+            print(f"bucket {bucket} created")
     environment: *app-env
-    volumes:
-      - ../docker/create_bucket.py:/opt/aip/create_bucket.py:ro
     depends_on:
       rustfs:
         condition: service_healthy
@@ -352,10 +388,9 @@ services:
     # The only routed service: give it the demo domain in Coolify, container port 8080.
     <<: *app-hardening
     image: ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-web-demo:${AIP_IMAGE_TAG:-main}
+    # Built with infra/coolify/nginx.conf (security headers, /api and /auth proxies).
     environment:
       NGINX_ENTRYPOINT_QUIET_LOGS: "1"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     expose:
       - "8080"
     depends_on:

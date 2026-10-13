@@ -79,3 +79,9 @@ building the AWS pipeline yet (owner decision 2026-10-07). AWS staging (OPS-07/0
   `DEMO_URL` variable, make the GHCR packages public. The acceptance checks that need the live server (redeploy
   within 10 minutes, smoke against the demo URL) run in the workflow once those exist; the local compose
   integration run needs Docker, which this environment does not have.
+- Fix after the first deploy (PR #65): Coolify resolves relative bind-mount paths under the app's directory on the
+  server, not the clone, so the Postgres init scripts, Keycloak realms and nginx config mounted empty and the migrator
+  could not log in. They are now built into `aip-postgres-demo`, `aip-keycloak-demo` and `aip-web-demo`
+  (`infra/coolify/images/`), and the idempotent `db-bootstrap` one-shot applies the roles, passwords and Keycloak's
+  database on every deploy (it repaired the existing volume without a wipe). `tools/tests/test_coolify.py` forbids
+  repository bind mounts and checks every pulled image is built by the workflow.

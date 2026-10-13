@@ -86,6 +86,40 @@ def test_data_lives_in_named_volumes_and_is_backed_up(services: dict[str, dict[s
     )
 
 
+def test_no_service_bind_mounts_a_repository_file(services: dict[str, dict[str, Any]]) -> None:
+    # Coolify resolves relative mount paths under the app's directory on the server, not the clone,
+    # so a repository file would mount empty (the first demo deploy failed that way). Only named
+    # volumes are allowed; config is built into the images.
+    for name, svc in services.items():
+        for volume in svc.get("volumes", []):
+            source = (
+                volume.split(":", 1)[0] if isinstance(volume, str) else volume.get("source", "")
+            )
+            assert not source.startswith((".", "/")), f"{name} bind-mounts {source}"
+
+
+def test_every_ghcr_image_is_built_by_the_workflow(services: dict[str, dict[str, Any]]) -> None:
+    workflow = (ROOT / ".github" / "workflows" / "deploy-coolify.yml").read_text()
+    built = set(re.findall(r"^\s*build (aip-[a-z-]+) ", workflow, flags=re.M))
+    used = {
+        m.group(1)
+        for svc in services.values()
+        if (m := re.search(r"/(aip-[a-z-]+):", svc["image"]))
+    }
+    assert used == built, f"used {sorted(used)}, built {sorted(built)}"
+
+
+def test_the_bootstrap_runs_before_the_migrator_and_keycloak(
+    services: dict[str, dict[str, Any]],
+) -> None:
+    assert services["db-bootstrap"]["command"] == ["/aip/db-bootstrap.sh"]
+    for name in ("migrator", "keycloak"):
+        assert (
+            services[name]["depends_on"]["db-bootstrap"]["condition"]
+            == "service_completed_successfully"
+        )
+
+
 def test_api_waits_for_the_migrator(services: dict[str, dict[str, Any]]) -> None:
     for name in ("api", "worker"):
         assert (
