@@ -12,6 +12,10 @@ RUN corepack enable pnpm
 
 WORKDIR /repo
 
+# OPS-11: `--build-arg VITE_AIP_DEMO=1` builds the Coolify demo (the synthetic-data banner).
+ARG VITE_AIP_DEMO=""
+ENV VITE_AIP_DEMO=${VITE_AIP_DEMO}
+
 COPY . .
 RUN pnpm install --frozen-lockfile --filter "@aip/web..." \
     && pnpm --filter "@aip/web..." build

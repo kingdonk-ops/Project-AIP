@@ -45,6 +45,7 @@ from aip.modules.identity.api import (
 )
 from aip.modules.ops.health import ReadinessChecker
 from aip.modules.ops.health import router as health_router
+from aip.modules.tenancy.api import DEMO_ENV, assert_demo_has_no_real_customers
 from aip.platform.access import (
     AccessPrincipal,
     PolicyService,
@@ -119,6 +120,8 @@ def create_app(
         # Routes added after create_app(): refuse to serve them undeclared, and convert them.
         check_routes(app.router.routes, catalogue, app)
         enforce_routes(app)
+        if env == DEMO_ENV:  # OPS-11 / ADR 0007: the demo never runs with real customer data
+            await assert_demo_has_no_real_customers()
         await sync_catalogue(catalogue)
         yield
 

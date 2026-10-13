@@ -34,5 +34,6 @@
   "shell.login.invalidEmail": "Enter a valid email address.",
   "shell.login.rateLimited": "Too many attempts. Wait a moment and try again.",
   "shell.login.unavailable": "Sign-in is not available right now. Try again shortly.",
-  "shell.error.sessionUnavailable": "We could not load your session. Reload the page to try again."
+  "shell.error.sessionUnavailable": "We could not load your session. Reload the page to try again.",
+  "shell.demoBanner": "Demo, synthetic data only"
 }
