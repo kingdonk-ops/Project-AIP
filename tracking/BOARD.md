@@ -66,7 +66,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [IDENTITY-02](tasks/IDENTITY-02.md) | Users and tenant membership, JIT provisioning, GET /me | identity | M | DATABASE-02, IDENTITY-01, TENANCY-01 | done | PR #37 |
 | [TENANCY-02](tasks/TENANCY-02.md) | Tenant-scoped key builders for Redis, queues, S3 and search | tenancy | S | ARCH-04, TENANCY-01 | done | PR #33 |
 | [ENT-01](tasks/ENT-01.md) | EntitlementService, tenant_subscription, tenant_usage; flags vs entitlements (ADR 0008) | tenancy | M | DATABASE-02, TENANCY-01 | todo |  |
-| [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | todo | pick up the three low security findings in PR #55 (consumer ownership re-check, write-once publish columns, bounded last_error) |
+| [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | todo |  |
 | [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | todo |  |
 | [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | todo | |
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
@@ -80,7 +80,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
 | [ACCESS-01](tasks/ACCESS-01.md) | Permission catalogue from manifests + PolicyService.can + Nest guard (deny by default) | access | M | ARCH-02, ARCH-04, IDENTITY-02 | done | ClaudeK: PR #51 |
-| [ARCH-07](tasks/ARCH-07.md) | Outbox dispatcher, retries and dead-letter | arch | M | ARCH-06 | todo |  |
+| [ARCH-07](tasks/ARCH-07.md) | Outbox dispatcher, retries and dead-letter | arch | M | ARCH-06 | todo | pick up the three low security findings in PR #55 (consumer ownership re-check, write-once publish columns, bounded last_error) |
 | [TERMS-03](tasks/TERMS-03.md) | ICU formatting and unit conversion | terms | M | TERMS-02 | todo | |
 | [TERMS-07](tasks/TERMS-07.md) | Hard-coded string linter and coverage report | terms | M | TERMS-01 | todo | |
 | [TERMS-08](tasks/TERMS-08.md) | Frontend i18n provider and dictionary admin screen | terms | M | TERMS-05 | todo | |
