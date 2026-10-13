@@ -22,6 +22,9 @@ from aip.platform.db.migrator import (
     versions_dir,
 )
 
+# Platform services that own tables (modules are found by scanning ``aip/modules``).
+PLATFORM_TABLES = ("aip.platform.events.tables",)
+
 
 def load_declared_tables() -> MetaData:
     """The shared ``MetaData`` after importing every module's ``tables.py``.
@@ -31,6 +34,8 @@ def load_declared_tables() -> MetaData:
     """
     from aip.platform.db.metadata import metadata
 
+    for name in PLATFORM_TABLES:
+        importlib.import_module(name)
     modules_dir = api_dir() / "aip" / "modules"
     if modules_dir.is_dir():
         for path in sorted(modules_dir.iterdir()):

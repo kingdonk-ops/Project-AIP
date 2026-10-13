@@ -54,7 +54,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [TENANCY-01](tasks/TENANCY-01.md) | Tenants, regions and tenant resolution | tenancy | M | DATABASE-02, IDENTITY-01 | done | PR #29 |
 | [TESTING-01](tasks/TESTING-01.md) | Testcontainers Postgres fixture with non-owner RLS role | testing | M | DATABASE-02 | done | PR #30 |
 | [OPS-11](tasks/OPS-11.md) | Coolify demo deployment of the walking skeleton (synthetic data only) | ops | M | DATABASE-08, STACK-05 | todo | owner decision: M0 deploys to Coolify (ADR 0007) |
-| [ARCH-05](tasks/ARCH-05.md) | domain_events outbox table and writer | arch | M | ARCH-04, DATABASE-02 | todo |  |
+| [ARCH-05](tasks/ARCH-05.md) | domain_events outbox table and writer | arch | M | ARCH-04, DATABASE-02 | done | ClaudeK: PR #55 |
 | [DATABASE-04](tasks/DATABASE-04.md) | Base repository helpers: concurrency, ltree, soft delete, JSONB validation | database | M | DATABASE-02 | done | PR #28 |
 | [TERMS-01](tasks/TERMS-01.md) | Terms schema, default en-AU dictionary and loader | terms | M | DATABASE-02 | todo | |
 | [OPS-01](tasks/OPS-01.md) | Job tables and service | ops | M | DATABASE-08 | done | PR #17 |
@@ -80,13 +80,13 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
 | [ACCESS-01](tasks/ACCESS-01.md) | Permission catalogue from manifests + PolicyService.can + Nest guard (deny by default) | access | M | ARCH-02, ARCH-04, IDENTITY-02 | done | ClaudeK: PR #51 |
-| [ARCH-07](tasks/ARCH-07.md) | Outbox dispatcher, retries and dead-letter | arch | M | ARCH-06 | todo |  |
+| [ARCH-07](tasks/ARCH-07.md) | Outbox dispatcher, retries and dead-letter | arch | M | ARCH-06 | todo | pick up the three low security findings in PR #55 (consumer ownership re-check, write-once publish columns, bounded last_error) |
 | [TERMS-03](tasks/TERMS-03.md) | ICU formatting and unit conversion | terms | M | TERMS-02 | todo | |
 | [TERMS-07](tasks/TERMS-07.md) | Hard-coded string linter and coverage report | terms | M | TERMS-01 | todo | |
 | [TERMS-08](tasks/TERMS-08.md) | Frontend i18n provider and dictionary admin screen | terms | M | TERMS-05 | todo | |
 | [AUDIT-01](tasks/AUDIT-01.md) | Append-only hash-chained audit_log, writer role, REVOKE | audit | M | ARCH-05, DATABASE-05 | todo |  |
 | [DESIGN-03](tasks/DESIGN-03.md) | Register table standard (filters, server pagination, CSV) | design | M | DESIGN-02 | todo |  |
-| [PROJECTS-01](tasks/PROJECTS-01.md) | Projects + sites tables and CRUD API | projects | M | ACCESS-01, DATABASE-02, TENANCY-01 | todo |  |
+| [PROJECTS-01](tasks/PROJECTS-01.md) | Projects + sites tables and CRUD API | projects | M | ACCESS-01, ARCH-05, DATABASE-02, TENANCY-01 | todo | step 9 emits through the ARCH-05 outbox |
 | [PROJECTS-02](tasks/PROJECTS-02.md) | Projects register page + create form (M0 UI slice) | projects | M | DESIGN-02, PROJECTS-01, STACK-03 | todo |  |
 | [TESTING-09](tasks/TESTING-09.md) | Walking-skeleton e2e: two tenants, login, register, isolation (CI + Coolify demo) | testing | S | OPS-11, PROJECTS-02 | todo |  |
 
