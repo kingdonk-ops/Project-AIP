@@ -6,6 +6,9 @@ Other modules may import only this file. Keep it small and stable.
   same transaction as every role, override or assignment change; ACCESS-04 keys its grant cache
   by it. Both take the connection from ``with_tenant``.
 - ``sync_catalogue``: the startup sync of the permission catalogue (called by ``aip.main``).
+- ``seed_default_roles`` (ACCESS-02): the 11 system roles for the connection's tenant, idempotent
+  (TENANCY-05 provisioning calls it). ``RoleGrantProvider``: role assignments as policy grants
+  (registered by ``aip.main``).
 
 The authorisation runtime itself (``PolicyService``, ``requires``) is ``aip.platform.access``.
 """
@@ -20,15 +23,20 @@ from aip.modules.access.repository import (
     get_access_version,
     list_permissions,
 )
+from aip.modules.access.roles.grant_provider import RoleGrantProvider
+from aip.modules.access.roles.seed import SeedReport, seed_default_roles
 from aip.modules.access.service import sync_catalogue
 
 __all__ = [
     "ModuleApi",
     "PermissionRow",
+    "RoleGrantProvider",
+    "SeedReport",
     "bump_access_version",
     "get_access_version",
     "get_api",
     "list_permissions",
+    "seed_default_roles",
     "sync_catalogue",
 ]
 

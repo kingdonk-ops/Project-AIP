@@ -3,14 +3,28 @@
 #   and GET /api/v1/access/me/abilities (authenticated). The runtime pieces every module uses
 #   (PolicyService, public/authenticated/requires) live in aip.platform.access.
 # Role and assignment permissions are declared here for ACCESS-02 and ACCESS-05.
-# depends_on tenancy: access_settings references tenants.
+# ACCESS-02: role, role_permission, role_assignment; the roles and role-assignments API; the
+#   RoleGrantProvider behind PolicyService; outbox events below.
+# depends_on tenancy: access_settings and role reference tenants. identity: assignments reference
+#   app_user. projects: project-scope assignments reference projects.
 id = "access"
 context = "identity"
-depends_on = ["tenancy"]
-events = []
+depends_on = ["tenancy", "identity", "projects"]
 subscribes = []
 settings = []
-term_keys = []
+term_keys = [
+  "access.role.tenant_admin.name",
+  "access.role.project_manager.name",
+  "access.role.qaqc_manager.name",
+  "access.role.hse_officer.name",
+  "access.role.supervisor.name",
+  "access.role.inspector.name",
+  "access.role.field_worker.name",
+  "access.role.document_controller.name",
+  "access.role.client_reviewer.name",
+  "access.role.subcontractor.name",
+  "access.role.auditor.name",
+]
 
 [[permissions]]
 code = "access.role.read"
@@ -37,3 +51,15 @@ description = "Create teams and manage their members"
 [[permissions]]
 code = "access.matrix.export"
 description = "Export the permission matrix"
+
+[[events]]
+name = "access.role.changed"
+version = 1
+
+[[events]]
+name = "access.role_assignment.created"
+version = 1
+
+[[events]]
+name = "access.role_assignment.removed"
+version = 1

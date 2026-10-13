@@ -29,6 +29,7 @@ dependencies = [
 
 [project.scripts]
 aip-db = "aip.platform.db.migrator.cli:main"
+aip-access = "aip.modules.access.roles.cli:main"
 
 [dependency-groups]
 dev = [

@@ -34,7 +34,7 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
-from aip.modules.access.api import sync_catalogue
+from aip.modules.access.api import RoleGrantProvider, sync_catalogue
 from aip.modules.identity.api import (
     PlatformPrincipalAdapter,
     get_principal,
@@ -87,7 +87,9 @@ def operation_id(route: APIRoute) -> str:
 async def identity_access_principal(request: Request) -> AccessPrincipal:
     """The identity principal (401 when absent or inconsistent) as the policy's principal."""
     principal = await get_principal(request)
-    return AccessPrincipal(tenant_id=principal.tenant_id, actor_id=principal.user_id, kind="user")
+    return AccessPrincipal(
+        tenant_id=principal.tenant_id, actor_id=principal.user_id, kind="user", aal=principal.aal
+    )
 
 
 def create_app(
@@ -105,6 +107,8 @@ def create_app(
     modules = load_modules(modules_package, disabled_modules)
     catalogue = build_catalogue(module.manifest for module in modules)  # ACCESS-01
     policy = PolicyService(catalogue)
+    if any(module.manifest.id == "access" for module in modules):
+        policy.register(RoleGrantProvider())  # ACCESS-02: role assignments are the grants
     env = os.environ.get("AIP_ENV", "") if env is None else env
 
     @asynccontextmanager

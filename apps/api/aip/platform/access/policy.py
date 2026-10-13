@@ -48,13 +48,18 @@ DecisionReason = Literal[
 
 @dataclass(frozen=True, slots=True)
 class AccessPrincipal:
-    """Who is asking, as the policy sees it. ``scopes`` only matter for ``api_client``."""
+    """Who is asking, as the policy sees it. ``scopes`` only matter for ``api_client``.
+
+    ``aal`` is the session's authentication assurance level (2 after MFA or step-up); actions
+    that need step-up (ACCESS-02's privileged role assignment) check it.
+    """
 
     tenant_id: UUID
     actor_id: UUID | None = None
     kind: PrincipalKind = "user"
     active: bool = True
     scopes: frozenset[str] = field(default_factory=frozenset[str])
+    aal: int = 1
 
 
 @dataclass(frozen=True, slots=True)

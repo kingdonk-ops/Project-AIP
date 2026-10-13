@@ -94,7 +94,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [ACCESS-02](tasks/ACCESS-02.md) | Roles, default role seed, tenant/project role assignment API | access | M | ACCESS-01, PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting  |
+| [ACCESS-02](tasks/ACCESS-02.md) | Roles, default role seed, tenant/project role assignment API | access | M | ACCESS-01, PROJECTS-01 | done | PR #61; project overrides and operator gate split to ACCESS-06 |
 | [IDENTITY-03](tasks/IDENTITY-03.md) | Server-side sessions (__Host- cookie, user_session), rotation, revocation | identity | M | DESIGN-02, IDENTITY-02 | todo |  |
 | [TENANCY-03](tasks/TENANCY-03.md) | Organisations and project-scoped role assignment | tenancy | M | PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | todo | convert to Python backend per ADR 0001 before starting  |
@@ -144,6 +144,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [UPLOADS-05](tasks/UPLOADS-05.md) | Per-file-type policy table + storage quota counters | uploads | S | UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [IDENTITY-05](tasks/IDENTITY-05.md) | SCIM 2.0 server; deprovision revokes everything in one transaction | identity | M | ACCESS-01, ARCH-05, IDENTITY-03 | todo |  |
 | [ACCESS-05](tasks/ACCESS-05.md) | Users & Roles UI, permission matrix page and export | access | M | ACCESS-02, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting; step-up is now a full redirect to Keycloak (`stepUpUrl`); map `mfaEnrolled` to `app_user.mfa_enrolled_at` (ADR 0005 rev 2) |
+| [ACCESS-06](tasks/ACCESS-06.md) | Project permission overrides, operator support-access gate, lockout on user removal | access | M | ACCESS-02, PROJECTS-03, TENANCY-06 | todo | split from ACCESS-02 (2026-10-13) |
 | [PROJECTS-04](tasks/PROJECTS-04.md) | Work-type classification + project settings overrides | projects | M | PROJECTS-01, TERMS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [OPS-15](tasks/OPS-15.md) | CloudWatch alarms, EventBridge schedules and secret-rotation Lambdas | ops | M | OPS-07, OPS-13, SECURITY-10 | todo | AWS readiness |
 | [PROJECTS-05](tasks/PROJECTS-05.md) | System sites are hidden and protected (owner decision) | projects | XS | PROJECTS-01 | done | ClaudeK: PR #58 |

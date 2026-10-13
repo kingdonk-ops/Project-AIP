@@ -261,6 +261,31 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  access-seed:
+    # One-shot: the 11 system roles for the dev tenants (ACCESS-02). Idempotent; runs as aip_app
+    # (RLS on). Customised roles are reported, not changed.
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    command:
+      - python
+      - -m
+      - aip.modules.access.roles.cli
+      - seed-roles
+      - --tenant
+      - 00000000-0000-4000-8000-00000000000a
+      - --tenant
+      - 00000000-0000-4000-8000-00000000000b
+    environment:
+      AIP_ENV: ${AIP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://aip_app:aip_app_dev_only@postgres:5432/aip}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      tenancy-seed:
+        condition: service_completed_successfully
+    restart: "no"
+
   object-store-init:
     # One-shot: creates the dev bucket in RustFS (idempotent).
     <<: *app-hardening
@@ -287,6 +312,8 @@ services:
       migrator:
         condition: service_completed_successfully
       identity-seed:
+        condition: service_completed_successfully
+      access-seed:
         condition: service_completed_successfully
       object-store-init:
         condition: service_completed_successfully

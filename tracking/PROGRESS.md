@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-13 · ACCESS-02 · PR #61 · Roles, role permissions and tenant/project role assignments with the 11 system roles seeded from the access matrix (ADR 0027), a RoleGrantProvider behind PolicyService, step-up for every privileged change and last-admin/last-manager guards; project overrides and the operator gate split to ACCESS-06.
 - 2026-10-13 · PROJECTS-02 · PR #60 · Projects register (URL-held status filter and search, cursor paging, status chips, empty/loading/error states) and create form validated by orval-generated Zod schemas with server errors mapped onto fields; the session now reads permissions from the abilities endpoint.
 - 2026-10-13 · PROJECTS-05 · PR #58 · System sites (the hidden per-project hierarchy root) are left out of the sites list and get, and editing or deleting one returns 409 `SITE_IS_SYSTEM` (owner decision).
 - 2026-10-13 · ADR-0026 · PR #59 · Owner chose web delivery behind the ALB (nginx containers on Fargate, host-based routing for more sites) over S3 + CloudFront: ADR 0026 supersedes ADR 0004's Delivery bullet; OPS-07, OPS-09 and OPS-16 updated.

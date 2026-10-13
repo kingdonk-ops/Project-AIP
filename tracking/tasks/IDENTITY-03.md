@@ -130,3 +130,13 @@ After Keycloak signs a staff user in, the FastAPI backend issues every browser s
 
 - The session stores identity only, never a permission list. Authorisation reads current grants on each request (ACCESS-01 access version), so a role change applies without logging out. Test: change the user's role, then call a protected route on the existing session; the new rule applies on the first call.
 - A deactivated user or a revoked session must stop working on the next request. The offline permission grace (ADR 0010 addendum) never extends to these.
+
+## Carried forward from ACCESS-02 (non-blocking)
+
+- Once sessions exist, add the ACCESS-02 e2e journey (Playwright APIRequestContext on compose): the kaefer tenant
+  admin creates P1 and P2 and assigns alice `inspector` on P1; `GET /api/v1/access/me/abilities?projectId=P1`
+  includes `project.view`, the same call for P2 is empty, and `GET /api/v1/projects/P2` as alice is 403 or 404.
+- Nobody holds a role after JIT sign-in. A dev/demo bootstrap must give the first kaefer-demo user `tenant_admin`
+  (insert a tenant-scope `role_assignment` after `seed_default_roles`); TESTING-09 and OPS-11 rely on it.
+- The session's `aal` reaches `AccessPrincipal.aal` (see `aip.main.identity_access_principal`); privileged role
+  assignment answers 403 `STEP_UP_REQUIRED` below `aal=2`, so the step-up flow must raise it.

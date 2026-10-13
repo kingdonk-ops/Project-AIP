@@ -93,3 +93,26 @@ On top of the "tenant admins can change role permissions" section above:
 - `permission.deprecated_at` is informational: during a rolling deploy an older replica can briefly re-deprecate a code a newer replica added. Role editors must never hide or drop a deprecated code that a role still grants.
 - Downgrading a permission from privileged to not privileged is refused by `access_sync_permissions` (startup fails); do it with a migration if ever needed.
 - If a grant changes inside one request, the per-request grant memo still holds the old grants for that request; re-check on the next request (or clear the memo when the version is bumped).
+
+## As built (2026-10-13, Python per ADR 0001)
+
+- Code: `apps/api/aip/modules/access/roles/` (`default_roles`, `seed`, `repository`, `service`, `routes`, `schemas`,
+  `grant_provider`, `cli`), events in `access/events.py`, migration `202610131400_access_roles`. `seed_default_roles`
+  and `RoleGrantProvider` are exported from `access/api.py`; `aip.main` registers the provider.
+- Level expansion and the Client Reviewer sign-off-only rule: ADR 0027 (proposed).
+- `AccessPrincipal` gained `aal` (from the identity principal) for the step-up check.
+- Deviations: the backfill CLI is `aip-access seed-roles --tenant <id> ...` (no `--all-tenants`: under FORCE RLS no
+  application role can list every tenant; TENANCY-05 seeds new tenants), and compose runs it for the two dev
+  tenants (`access-seed`). A project scope without `projectId` is 422 (the repo's validation status), not 400.
+  Assigning a privileged role as a non-tenant-admin is 403 `TENANT_ADMIN_REQUIRED`. Resetting a custom role is
+  409 `NOT_A_SYSTEM_ROLE`.
+- Security review (2026-10-13) widened the step-up rule: any change that touches a privileged permission needs a
+  tenant_admin at `aal=2` (create or clone a role holding one, change or reset a role that holds or would hold one,
+  assign or remove such a role). The 11 system codes are reserved for custom roles (409 `ROLE_CODE_TAKEN`), a user
+  holds a role once per scope among live rows (409 `ASSIGNMENT_EXISTS`), and only people (not API clients) assign
+  roles. The seed reports for a customised role only codes added to the catalogue after it was customised.
+- Split to **ACCESS-06**: project permission overrides, the operator support-access gate and the lockout guard on
+  user deactivation or deletion (they need PROJECTS-03, TENANCY-06 and the identity lifecycle routes).
+- Audit: every role and assignment change writes an outbox event with the actor and the before and after
+  permission sets; AUDIT-01/02 turn them into audit records.
+- The e2e journey moved to IDENTITY-03 (it needs real API sessions).
