@@ -61,6 +61,18 @@ CREATE TABLE aip_meta.alembic_version (
 
 ALTER TABLE aip_meta.alembic_version OWNER TO aip_owner;
 
+-- Name: COLUMN domain_events.attempts; Type: ACL; Schema: public
+GRANT UPDATE(attempts) ON TABLE public.domain_events TO aip_jobs;
+
+-- Name: COLUMN domain_events.dead_lettered_at; Type: ACL; Schema: public
+GRANT UPDATE(dead_lettered_at) ON TABLE public.domain_events TO aip_jobs;
+
+-- Name: COLUMN domain_events.last_error; Type: ACL; Schema: public
+GRANT UPDATE(last_error) ON TABLE public.domain_events TO aip_jobs;
+
+-- Name: COLUMN domain_events.published_at; Type: ACL; Schema: public
+GRANT UPDATE(published_at) ON TABLE public.domain_events TO aip_jobs;
+
 -- Name: COLUMN jobs.attempts; Type: ACL; Schema: public
 GRANT UPDATE(attempts) ON TABLE public.jobs TO aip_jobs;
 
@@ -152,6 +164,11 @@ GRANT SELECT ON TABLE public.deployment_regions TO aip_app;
 GRANT SELECT ON TABLE public.deployment_regions TO aip_jobs;
 GRANT SELECT ON TABLE public.deployment_regions TO aip_readonly;
 
+-- Name: TABLE domain_events; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.domain_events TO aip_app;
+GRANT SELECT ON TABLE public.domain_events TO aip_jobs;
+GRANT SELECT ON TABLE public.domain_events TO aip_readonly;
+
 -- Name: TABLE job_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.job_events TO aip_app;
 GRANT SELECT,INSERT ON TABLE public.job_events TO aip_jobs;
@@ -205,6 +222,10 @@ ALTER TABLE ONLY public.auth_event
 -- Name: deployment_regions pk_deployment_regions; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.deployment_regions
     ADD CONSTRAINT pk_deployment_regions PRIMARY KEY (code);
+
+-- Name: domain_events pk_domain_events; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.domain_events
+    ADD CONSTRAINT pk_domain_events PRIMARY KEY (id);
 
 -- Name: job_events pk_job_events; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
@@ -924,6 +945,18 @@ CREATE INDEX ix_auth_event_tenant_id_event_type_occurred_at ON public.auth_event
 -- Name: ix_auth_event_tenant_id_user_id_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_auth_event_tenant_id_user_id_occurred_at ON public.auth_event USING btree (tenant_id, user_id, occurred_at DESC);
 
+-- Name: ix_domain_events_aggregate_type_aggregate_id; Type: INDEX; Schema: public
+CREATE INDEX ix_domain_events_aggregate_type_aggregate_id ON public.domain_events USING btree (aggregate_type, aggregate_id);
+
+-- Name: ix_domain_events_asset_id; Type: INDEX; Schema: public
+CREATE INDEX ix_domain_events_asset_id ON public.domain_events USING btree (asset_id);
+
+-- Name: ix_domain_events_event_name_occurred_at; Type: INDEX; Schema: public
+CREATE INDEX ix_domain_events_event_name_occurred_at ON public.domain_events USING btree (event_name, occurred_at);
+
+-- Name: ix_domain_events_tenant_id_occurred_at_pending; Type: INDEX; Schema: public
+CREATE INDEX ix_domain_events_tenant_id_occurred_at_pending ON public.domain_events USING btree (tenant_id, occurred_at) WHERE ((published_at IS NULL) AND (dead_lettered_at IS NULL));
+
 -- Name: ix_job_events_tenant_id_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_job_events_tenant_id_occurred_at ON public.job_events USING btree (tenant_id, occurred_at);
 
@@ -1002,6 +1035,15 @@ CREATE POLICY tenant_isolation ON public.app_user USING ((tenant_id = (NULLIF(cu
 -- Name: auth_event tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.auth_event USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: domain_events dispatcher_select; Type: POLICY; Schema: public
+CREATE POLICY dispatcher_select ON public.domain_events FOR SELECT TO aip_jobs USING (true);
+
+-- Name: domain_events dispatcher_update; Type: POLICY; Schema: public
+CREATE POLICY dispatcher_update ON public.domain_events FOR UPDATE TO aip_jobs USING (true) WITH CHECK (true);
+
+-- Name: domain_events tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.domain_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: job_events tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.job_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -1022,6 +1064,9 @@ ALTER TABLE public.app_user ENABLE ROW LEVEL SECURITY;
 
 -- Name: auth_event; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.auth_event ENABLE ROW LEVEL SECURITY;
+
+-- Name: domain_events; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.domain_events ENABLE ROW LEVEL SECURITY;
 
 -- Name: job_events; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.job_events ENABLE ROW LEVEL SECURITY;
@@ -1163,6 +1208,33 @@ CREATE TABLE public.deployment_regions (
 );
 
 ALTER TABLE public.deployment_regions OWNER TO aip_owner;
+
+-- Name: domain_events; Type: TABLE; Schema: public
+CREATE TABLE public.domain_events (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    project_id uuid,
+    asset_id uuid,
+    event_name text NOT NULL,
+    event_version integer NOT NULL,
+    aggregate_type text NOT NULL,
+    aggregate_id uuid NOT NULL,
+    payload jsonb NOT NULL,
+    actor_id uuid,
+    occurred_at timestamp with time zone DEFAULT now() NOT NULL,
+    published_at timestamp with time zone,
+    attempts integer DEFAULT 0 NOT NULL,
+    dead_lettered_at timestamp with time zone,
+    last_error text,
+    CONSTRAINT ck_domain_events_aggregate_type CHECK ((aggregate_type <> ''::text)),
+    CONSTRAINT ck_domain_events_attempts CHECK ((attempts >= 0)),
+    CONSTRAINT ck_domain_events_event_name CHECK ((event_name <> ''::text)),
+    CONSTRAINT ck_domain_events_event_version CHECK ((event_version >= 1))
+);
+
+ALTER TABLE ONLY public.domain_events FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.domain_events OWNER TO aip_owner;
 
 -- Name: job_events; Type: TABLE; Schema: public
 CREATE TABLE public.job_events (
