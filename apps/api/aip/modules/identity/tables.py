@@ -8,10 +8,25 @@ queries it directly (``aip_app`` has no privileges on it) and reads through
 IDENTITY-02 (revision ``202610091851_identity_users``): ``app_user`` and ``tenant_membership``
 (tenant tables: FORCE RLS, soft delete) and the append-only ``auth_event`` (no ``updated_at`` or
 ``deleted_at``; ``aip_app`` may only INSERT and SELECT).
+
+IDENTITY-03 (revision ``202610131500_identity_sessions``): ``user_session`` (tenant table, FORCE
+RLS; revoked, never deleted) and ``tenant_auth_policy`` (one row per tenant, FORCE RLS).
 """
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Integer, Table, Text, Uuid, text
-from sqlalchemy.dialects.postgresql import CITEXT, INET, JSONB
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    Integer,
+    LargeBinary,
+    SmallInteger,
+    Table,
+    Text,
+    Uuid,
+    text,
+)
+from sqlalchemy.dialects.postgresql import ARRAY, CITEXT, INET, JSONB
 
 from aip.platform.db.metadata import metadata
 
@@ -74,4 +89,43 @@ auth_event = Table(
     Column("user_agent", Text, nullable=True),
     Column("detail", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
     Column("occurred_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+)
+
+
+user_session = Table(
+    "user_session",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("tenant_id", Uuid, nullable=False),
+    Column("user_id", Uuid, nullable=False),
+    Column("sid_hash", LargeBinary, nullable=False),
+    Column("audience", Text, nullable=False),
+    Column("device_id", Uuid, nullable=True),
+    Column("aal", SmallInteger, nullable=False),
+    Column("amr", ARRAY(Text), nullable=False),
+    Column("authenticated_at", DateTime(timezone=True), nullable=False),
+    Column("kc_sid", Text, nullable=True),
+    Column("ip", INET, nullable=True),
+    Column("user_agent", Text, nullable=True),
+    Column("last_seen_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("idle_seconds", Integer, nullable=False),
+    Column("idle_expires_at", DateTime(timezone=True), nullable=False),
+    Column("absolute_expires_at", DateTime(timezone=True), nullable=False),
+    Column("revoked_at", DateTime(timezone=True), nullable=True),
+    Column("revoke_reason", Text, nullable=True),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", DateTime(timezone=True), nullable=True),
+)
+
+tenant_auth_policy = Table(
+    "tenant_auth_policy",
+    metadata,
+    Column("tenant_id", Uuid, primary_key=True),
+    Column("session_policy", JSONB, nullable=False),
+    Column("sso_enforced", Boolean, nullable=False, server_default=text("false")),
+    Column("step_up_max_age_min", Integer, nullable=False, server_default=text("10")),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", DateTime(timezone=True), nullable=True),
 )

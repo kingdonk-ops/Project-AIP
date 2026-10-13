@@ -1,6 +1,6 @@
 # ADR 0027: How the access matrix levels become permission codes
 
-- **Status:** proposed (ACCESS-02, 2026-10-13; awaiting owner confirmation)
+- **Status:** accepted (owner, 2026-10-13: Client Reviewer "approve" is read plus sign-off only)
 - **Date:** 2026-10-13
 - **Affects:** access (ACCESS-02 seed, ACCESS-05 matrix page), every module that declares permissions
 

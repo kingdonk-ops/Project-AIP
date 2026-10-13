@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
   Icon,
 } from "@aip/ui";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import type { Session } from "./session";
 import { t } from "./t";
@@ -62,6 +63,9 @@ export function Header({ session, navOpen, onToggleNav, onSignOut }: HeaderProps
             </span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link to="/settings/profile/sessions">{t("identity.sessions.title")}</Link>
+          </DropdownMenuItem>
           {/* A POST form, never a link. Works without script: the action is the logout endpoint. */}
           <form method="post" action="/api/v1/auth/logout" onSubmit={(event) => void submitSignOut(event)}>
             <DropdownMenuItem asChild onSelect={(event) => event.preventDefault()}>

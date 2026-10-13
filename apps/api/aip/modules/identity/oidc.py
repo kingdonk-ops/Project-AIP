@@ -157,10 +157,16 @@ class JwksCache:
         self._fetched_at = 0.0
         self._lock = asyncio.Lock()
 
+    # A forced refresh (unknown key) happens at most this often, so garbage tokens cannot make
+    # every request refetch Keycloak's JWKS.
+    MIN_REFRESH_INTERVAL = 30.0
+
     async def get(self, *, refresh: bool = False) -> KeySet:
         async with self._lock:
-            stale = time.monotonic() - self._fetched_at > self._ttl
-            if self._keys is None or stale or refresh:
+            age = time.monotonic() - self._fetched_at
+            stale = age > self._ttl
+            forced = refresh and age >= self.MIN_REFRESH_INTERVAL
+            if self._keys is None or stale or forced:
                 response = await self._http.get(self._uri)
                 response.raise_for_status()
                 self._keys = KeySet.import_key_set(response.json())
@@ -258,3 +264,54 @@ class KeycloakOidcClient:
         if (several or azp is not None) and azp != self.client_id:
             raise OidcError("INVALID_ID_TOKEN", 400, "the ID token was issued to another client")
         return claims
+
+
+BACKCHANNEL_LOGOUT_EVENT = "http://schemas.openid.net/event/backchannel-logout"
+_LOGOUT_MAX_AGE_S = 300
+
+
+def check_logout_claims(
+    claims: Mapping[str, Any], *, issuer: str, client_id: str, now: float
+) -> str:
+    """OIDC back-channel logout token rules (IDENTITY-03 step 7); returns the Keycloak ``sid``.
+
+    iss and aud must match, ``iat`` must be within 5 minutes, ``events`` must carry the
+    back-channel-logout event, there must be no ``nonce``, and there must be a ``sid``.
+    """
+    aud: object = claims.get("aud")
+    audiences = aud if isinstance(aud, list) else [aud]  # pyright: ignore[reportUnknownVariableType]
+    iat: object = claims.get("iat")
+    events: object = claims.get("events")
+    sid: object = claims.get("sid")
+    if claims.get("iss") != issuer or client_id not in audiences:
+        raise OidcError("INVALID_LOGOUT_TOKEN", 400, "the logout token is for another client")
+    if not isinstance(iat, int | float) or abs(now - iat) > _LOGOUT_MAX_AGE_S:
+        raise OidcError("INVALID_LOGOUT_TOKEN", 400, "the logout token is stale")
+    if not isinstance(events, Mapping) or BACKCHANNEL_LOGOUT_EVENT not in events:
+        raise OidcError("INVALID_LOGOUT_TOKEN", 400, "the logout token has no logout event")
+    if "nonce" in claims:
+        raise OidcError("INVALID_LOGOUT_TOKEN", 400, "a logout token must not carry a nonce")
+    if not isinstance(sid, str) or not sid:
+        raise OidcError("INVALID_LOGOUT_TOKEN", 400, "the logout token names no session")
+    return sid
+
+
+async def verify_logout_token(
+    client: KeycloakOidcClient, token: str, *, now: float | None = None
+) -> str:
+    """Verify a Keycloak logout token's signature (JWKS) and claims; return its ``sid``."""
+    try:
+        decoded = jwt.decode(token, await client.jwks.get(), algorithms=ID_TOKEN_ALGORITHMS)
+    except (JoseError, ValueError):
+        try:
+            decoded = jwt.decode(
+                token, await client.jwks.get(refresh=True), algorithms=ID_TOKEN_ALGORITHMS
+            )
+        except (JoseError, ValueError) as exc:
+            raise OidcError("INVALID_LOGOUT_TOKEN", 400, "the logout token is invalid") from exc
+    return check_logout_claims(
+        decoded.claims,
+        issuer=client.issuer,
+        client_id=client.client_id,
+        now=time.time() if now is None else now,
+    )

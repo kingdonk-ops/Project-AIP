@@ -67,6 +67,10 @@ class LoginService:
         self._directory = directory
         self._oidc = oidc
 
+    @property
+    def oidc(self) -> KeycloakOidcClient:
+        return self._oidc
+
     async def start(self, email: str, return_to: str | None) -> LoginStart:
         """``ValueError`` for a malformed email; otherwise the same shape for every domain."""
         domain = domain_of(email)

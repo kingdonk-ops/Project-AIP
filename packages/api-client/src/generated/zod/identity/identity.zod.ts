@@ -23,6 +23,17 @@ export const IdentityLoginStartResponse = zod.object({
 }).describe('Same status and keys whether or not the email or domain is known; never the tenant.')
 
 /**
+ * Revoke the current session (the Keycloak SSO session ends through the queued job).
+ * @summary Logout
+ */
+export const IdentityLogoutResponse = zod.void()
+
+/**
+ * @summary Backchannel Logout
+ */
+export const IdentityBackchannelLogoutResponse = zod.unknown()
+
+/**
  * @summary Oidc Callback
  */
 export const IdentityOidcCallbackResponse = zod.unknown()
@@ -53,4 +64,29 @@ export const IdentityGetMeResponse = zod.object({
   "userClass": zod.enum(['staff', 'field', 'portal'])
 })
 }).describe('The caller\'s own user, tenant and memberships. Never another tenant\'s data.')
+
+/**
+ * @summary List My Sessions
+ */
+export const IdentityListMySessionsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "aal": zod.union([zod.literal(1),zod.literal(2)]),
+  "audience": zod.enum(['app', 'portal', 'device']),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "current": zod.boolean(),
+  "id": zod.uuid(),
+  "ip": zod.union([zod.string(),zod.null()]),
+  "lastSeenAt": zod.iso.datetime({"offset":true}),
+  "userAgent": zod.union([zod.string(),zod.null()])
+}).describe('One of the caller\'s own live sessions (the "Active sessions" page).'))
+})
+
+/**
+ * @summary Revoke My Session
+ */
+export const IdentityRevokeMySessionParams = zod.object({
+  "session_id": zod.uuid()
+})
+
+export const IdentityRevokeMySessionResponse = zod.void()
 

@@ -21,7 +21,10 @@ import type {
   VersionResponse
 } from '../../model';
 
+import { apiFetch } from '../../../fetcher';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -63,23 +66,16 @@ export const getPlatformHealthUrl = () => {
 /**
  * @summary Health
  */
-export const platformHealth = async ( options?: RequestInit): Promise<platformHealthResponse> => {
+export const platformHealth = async ( options?: Parameters<typeof apiFetch>[1]): Promise<platformHealthResponse> => {
 
-  const res = await fetch(getPlatformHealthUrl(),
+  return apiFetch<platformHealthResponse>(getPlatformHealthUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: platformHealthResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as platformHealthResponse
-}
+);}
 
 
 
@@ -92,16 +88,16 @@ export const getPlatformHealthQueryKey = () => {
     }
 
 
-export const getPlatformHealthQueryOptions = <TData = Awaited<ReturnType<typeof platformHealth>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformHealth>>, TError, TData>>, fetch?: RequestInit}
+export const getPlatformHealthQueryOptions = <TData = Awaited<ReturnType<typeof platformHealth>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformHealth>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getPlatformHealthQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformHealth>>> = ({ signal }) => platformHealth({ ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformHealth>>> = ({ signal }) => platformHealth({ signal, ...requestOptions });
 
 
 
@@ -121,7 +117,7 @@ export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHeal
           TError,
           Awaited<ReturnType<typeof platformHealth>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHealth>>, TError = unknown>(
@@ -131,11 +127,11 @@ export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHeal
           TError,
           Awaited<ReturnType<typeof platformHealth>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHealth>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformHealth>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformHealth>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -143,7 +139,7 @@ export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHeal
  */
 
 export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHealth>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformHealth>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformHealth>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -182,23 +178,16 @@ export const getPlatformLiveUrl = () => {
 /**
  * @summary Live
  */
-export const platformLive = async ( options?: RequestInit): Promise<platformLiveResponse> => {
+export const platformLive = async ( options?: Parameters<typeof apiFetch>[1]): Promise<platformLiveResponse> => {
 
-  const res = await fetch(getPlatformLiveUrl(),
+  return apiFetch<platformLiveResponse>(getPlatformLiveUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: platformLiveResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as platformLiveResponse
-}
+);}
 
 
 
@@ -211,16 +200,16 @@ export const getPlatformLiveQueryKey = () => {
     }
 
 
-export const getPlatformLiveQueryOptions = <TData = Awaited<ReturnType<typeof platformLive>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformLive>>, TError, TData>>, fetch?: RequestInit}
+export const getPlatformLiveQueryOptions = <TData = Awaited<ReturnType<typeof platformLive>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformLive>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getPlatformLiveQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformLive>>> = ({ signal }) => platformLive({ ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformLive>>> = ({ signal }) => platformLive({ signal, ...requestOptions });
 
 
 
@@ -240,7 +229,7 @@ export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>
           TError,
           Awaited<ReturnType<typeof platformLive>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>, TError = unknown>(
@@ -250,11 +239,11 @@ export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>
           TError,
           Awaited<ReturnType<typeof platformLive>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformLive>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformLive>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -262,7 +251,7 @@ export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>
  */
 
 export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformLive>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformLive>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -308,23 +297,16 @@ export const getPlatformReadyUrl = () => {
 /**
  * @summary Ready
  */
-export const platformReady = async ( options?: RequestInit): Promise<platformReadyResponse> => {
+export const platformReady = async ( options?: Parameters<typeof apiFetch>[1]): Promise<platformReadyResponse> => {
 
-  const res = await fetch(getPlatformReadyUrl(),
+  return apiFetch<platformReadyResponse>(getPlatformReadyUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: platformReadyResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as platformReadyResponse
-}
+);}
 
 
 
@@ -337,16 +319,16 @@ export const getPlatformReadyQueryKey = () => {
     }
 
 
-export const getPlatformReadyQueryOptions = <TData = Awaited<ReturnType<typeof platformReady>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformReady>>, TError, TData>>, fetch?: RequestInit}
+export const getPlatformReadyQueryOptions = <TData = Awaited<ReturnType<typeof platformReady>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformReady>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getPlatformReadyQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformReady>>> = ({ signal }) => platformReady({ ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformReady>>> = ({ signal }) => platformReady({ signal, ...requestOptions });
 
 
 
@@ -366,7 +348,7 @@ export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady
           TError,
           Awaited<ReturnType<typeof platformReady>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady>>, TError = void>(
@@ -376,11 +358,11 @@ export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady
           TError,
           Awaited<ReturnType<typeof platformReady>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformReady>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformReady>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -388,7 +370,7 @@ export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady
  */
 
 export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformReady>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformReady>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -427,23 +409,16 @@ export const getPlatformListModulesUrl = () => {
 /**
  * @summary List Modules
  */
-export const platformListModules = async ( options?: RequestInit): Promise<platformListModulesResponse> => {
+export const platformListModules = async ( options?: Parameters<typeof apiFetch>[1]): Promise<platformListModulesResponse> => {
 
-  const res = await fetch(getPlatformListModulesUrl(),
+  return apiFetch<platformListModulesResponse>(getPlatformListModulesUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: platformListModulesResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as platformListModulesResponse
-}
+);}
 
 
 
@@ -456,16 +431,16 @@ export const getPlatformListModulesQueryKey = () => {
     }
 
 
-export const getPlatformListModulesQueryOptions = <TData = Awaited<ReturnType<typeof platformListModules>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListModules>>, TError, TData>>, fetch?: RequestInit}
+export const getPlatformListModulesQueryOptions = <TData = Awaited<ReturnType<typeof platformListModules>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListModules>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getPlatformListModulesQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformListModules>>> = ({ signal }) => platformListModules({ ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformListModules>>> = ({ signal }) => platformListModules({ signal, ...requestOptions });
 
 
 
@@ -485,7 +460,7 @@ export function usePlatformListModules<TData = Awaited<ReturnType<typeof platfor
           TError,
           Awaited<ReturnType<typeof platformListModules>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function usePlatformListModules<TData = Awaited<ReturnType<typeof platformListModules>>, TError = unknown>(
@@ -495,11 +470,11 @@ export function usePlatformListModules<TData = Awaited<ReturnType<typeof platfor
           TError,
           Awaited<ReturnType<typeof platformListModules>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function usePlatformListModules<TData = Awaited<ReturnType<typeof platformListModules>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListModules>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListModules>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -507,7 +482,7 @@ export function usePlatformListModules<TData = Awaited<ReturnType<typeof platfor
  */
 
 export function usePlatformListModules<TData = Awaited<ReturnType<typeof platformListModules>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListModules>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListModules>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -546,23 +521,16 @@ export const getPlatformVersionUrl = () => {
 /**
  * @summary Version
  */
-export const platformVersion = async ( options?: RequestInit): Promise<platformVersionResponse> => {
+export const platformVersion = async ( options?: Parameters<typeof apiFetch>[1]): Promise<platformVersionResponse> => {
 
-  const res = await fetch(getPlatformVersionUrl(),
+  return apiFetch<platformVersionResponse>(getPlatformVersionUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: platformVersionResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as platformVersionResponse
-}
+);}
 
 
 
@@ -575,16 +543,16 @@ export const getPlatformVersionQueryKey = () => {
     }
 
 
-export const getPlatformVersionQueryOptions = <TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, fetch?: RequestInit}
+export const getPlatformVersionQueryOptions = <TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getPlatformVersionQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformVersion>>> = ({ signal }) => platformVersion({ ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformVersion>>> = ({ signal }) => platformVersion({ signal, ...requestOptions });
 
 
 
@@ -604,7 +572,7 @@ export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVer
           TError,
           Awaited<ReturnType<typeof platformVersion>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
@@ -614,11 +582,11 @@ export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVer
           TError,
           Awaited<ReturnType<typeof platformVersion>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -626,7 +594,7 @@ export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVer
  */
 
 export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

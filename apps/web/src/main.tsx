@@ -7,6 +7,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createQueryClient } from "./features/shell/query-client";
+import { installSessionExpiry } from "./features/identity/csrf-fetch";
 import { resolveSessionPort } from "./features/shell/session";
 import { SessionPortProvider } from "./features/shell/session-context";
 import { createAppRouter } from "./router";
@@ -42,6 +43,8 @@ async function start() {
   }
 
   const queryClient = createQueryClient(onSessionExpired);
+  // IDENTITY-03: the API's 401 SESSION_EXPIRED (signalled by the generated client's fetch).
+  installSessionExpiry(onSessionExpired);
   const router = createAppRouter({ queryClient, sessionPort });
 
   root.render(

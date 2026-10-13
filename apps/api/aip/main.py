@@ -37,7 +37,10 @@ from pydantic import BaseModel
 from aip.modules.access.api import RoleGrantProvider, sync_catalogue
 from aip.modules.identity.api import (
     PlatformPrincipalAdapter,
+    add_session_middleware,
     get_principal,
+    install_session_errors,
+    session_resolver,
     stub_principal_resolver,
 )
 from aip.modules.ops.health import ReadinessChecker
@@ -174,12 +177,13 @@ def create_app(
 
     install_error_handlers(app)  # DATABASE-04: ConflictError 409, NotFoundError 404
 
-    # IDENTITY-02: the identity resolver behind get_principal. Until IDENTITY-03 only the test
-    # stub exists (x-test-principal, AIP_ENV=test + AUTH_TEST_STUB=1); it refuses production.
-    identity_resolver = stub_principal_resolver(env)
+    # IDENTITY-03: the session cookie is the principal. The x-test-principal stub (IDENTITY-02)
+    # remains only as a fallback under AIP_ENV=test + AUTH_TEST_STUB=1; it refuses production.
+    install_session_errors(app)
+    identity_resolver = session_resolver(stub_principal_resolver(env))
     app.state.identity_principal_resolver = identity_resolver
     identity_drives_context = False
-    if principal_resolver is None and identity_resolver is not None:
+    if principal_resolver is None:
         principal_resolver = PlatformPrincipalAdapter(identity_resolver)
         identity_drives_context = True
 
@@ -197,6 +201,9 @@ def create_app(
         principal_resolver=principal_resolver or DenyAllPrincipalResolver(),
         membership_resolver=membership_resolver or DenyAllMembershipResolver(),
     )
+    # Outside the context middleware: resolve the session cookie and check CSRF first. CSRF is
+    # always on; an injected resolver (tests) only skips the session cookie resolution.
+    add_session_middleware(app, resolve_sessions=identity_drives_context)
     # Added last, so it runs first: the request id exists before the context is resolved.
     app.add_middleware(RequestIdMiddleware)
     if tracing:

@@ -4,10 +4,13 @@
 # IDENTITY-02: app_user, tenant_membership, auth_event; JIT provisioning in the callback;
 #   GET /api/v1/me (authenticated). identity.user.manage is privileged (status changes,
 #   ACCESS-01 should require step-up for it).
+# IDENTITY-03: user_session, tenant_auth_policy; the __Host- session and CSRF cookies; logout,
+#   back-channel logout, GET/DELETE /api/v1/me/sessions; the identity.revoke_keycloak_sessions job.
 # depends_on tenancy: login_directory and the user tables reference tenants (TENANCY-01).
+#   ops: revocation enqueues its Keycloak job through the ops job registry (ADR 0003).
 id = "identity"
 context = "identity"
-depends_on = ["tenancy"]
+depends_on = ["tenancy", "ops"]
 events = []
 subscribes = []
 settings = [
@@ -19,6 +22,9 @@ settings = [
   "APP_ORIGIN",
   "PREAUTH_COOKIE_KEY",
   "AUTH_TEST_STUB",
+  "KEYCLOAK_ADMIN_CLIENT_ID",
+  "KEYCLOAK_ADMIN_CLIENT_SECRET",
+  "REDIS_URL",
 ]
 term_keys = []
 
