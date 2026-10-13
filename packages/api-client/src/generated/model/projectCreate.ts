@@ -4,6 +4,7 @@ import type { ProjectCreateStatus } from './projectCreateStatus';
 export interface ProjectCreate {
   classificationId?: string | null;
   clientCompanyId?: string | null;
+  /** @pattern ^[A-Za-z0-9][A-Za-z0-9-]{1,31}$ */
   code: string;
   currency?: string | null;
   /**

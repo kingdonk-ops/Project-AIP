@@ -22,8 +22,6 @@
   "shell.userMenu.signOutFailed": "Sign out failed. Try again.",
   "shell.home.title": "Home",
   "shell.home.placeholder": "My Work will appear here.",
-  "shell.projects.title": "Projects",
-  "shell.projects.placeholder": "The projects register will appear here.",
   "shell.login.title": "Sign in",
   "shell.login.email": "Work email",
   "shell.login.emailHint": "We will take you to your organisation's sign-in page.",
