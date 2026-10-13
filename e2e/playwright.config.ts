@@ -51,7 +51,15 @@ const skeletonProjects: PlaywrightTestConfig["projects"] = process.env.E2E_SKELE
   ? [
       { name: "web", testMatch: SKELETON, retries: 0, timeout: 120_000, use: { ...devices["Desktop Chrome"], actionTimeout: 15_000 } },
       // No trace on the demo: a trace records typed values, and its credentials come from secrets.
-      { name: "staging", testMatch: SKELETON, retries: 0, timeout: 120_000, use: { ...devices["Desktop Chrome"], actionTimeout: 15_000, trace: "off" } },
+      // The demo is a remote deployment: its first loads through Keycloak can exceed 5 s.
+      {
+        name: "staging",
+        testMatch: SKELETON,
+        retries: 0,
+        timeout: 120_000,
+        expect: { timeout: 15_000 },
+        use: { ...devices["Desktop Chrome"], actionTimeout: 15_000, trace: "off" },
+      },
     ]
   : [];
 
