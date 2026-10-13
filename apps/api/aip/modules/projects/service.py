@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from typing import Any, Final
 from uuid import UUID
 
+from sqlalchemy import ColumnElement
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -227,10 +228,27 @@ def _payload(
     return payload
 
 
+async def _user_site(conn: AsyncConnection, site_id: UUID) -> dict[str, Any]:
+    """A live site users may change: 404 when absent, 409 ``SITE_IS_SYSTEM`` for a system site."""
+    row = await repo.get_site(conn, site_id)
+    if row is None:
+        raise NotFoundError(f"site {site_id} not found")
+    if row["is_system"]:
+        raise DomainError(409, "SITE_IS_SYSTEM")
+    return row
+
+
 class SiteService:
+    """Sites as users see them. System sites (``is_system``: the hidden per-project root of the
+    asset hierarchy) are created by the platform, never listed or shown, and cannot be edited or
+    deleted through the API (PROJECTS-05).
+    """
+
     async def list(self, *, limit: int, cursor: str | None, q: str | None) -> SitePage:
         page = _page(cursor, "code", limit)
-        filters = [repo.search(sites, q)] if q else []
+        filters: list[ColumnElement[bool]] = [sites.c.is_system.is_(False)]
+        if q:
+            filters.append(repo.search(sites, q))
         async with _tx() as conn:
             rows = await repo.list_page(conn, sites, page, *filters)
         items = [SiteOut.model_validate(r) for r in rows[: page.limit]]
@@ -239,7 +257,7 @@ class SiteService:
     async def get(self, site_id: UUID) -> SiteOut:
         async with _tx() as conn:
             row = await repo.get_site(conn, site_id)
-        if row is None:
+        if row is None or row["is_system"]:
             raise NotFoundError(f"site {site_id} not found")
         return SiteOut.model_validate(row)
 
@@ -252,11 +270,10 @@ class SiteService:
     async def update(self, site_id: UUID, body: SiteUpdate) -> SiteOut:
         patch = body.changes()
         async with _tx() as conn, _unique("SITE_CODE_TAKEN"):
+            row = await _user_site(conn, site_id)
             if patch:
                 row = await repo.update_site(conn, site_id, patch)
-            else:
-                row = await repo.get_site(conn, site_id)
-        if row is None:
+        if row is None:  # deleted between the read and the write
             raise NotFoundError(f"site {site_id} not found")
         return SiteOut.model_validate(row)
 
@@ -264,6 +281,7 @@ class SiteService:
         async with _tx() as conn:
             if not await repo.lock_live_site(conn, site_id, exclusive=True):
                 raise NotFoundError(f"site {site_id} not found")
+            await _user_site(conn, site_id)
             if await repo.site_in_use(conn, site_id):
                 raise DomainError(409, "SITE_IN_USE")
             await repo.delete_site(conn, site_id)
