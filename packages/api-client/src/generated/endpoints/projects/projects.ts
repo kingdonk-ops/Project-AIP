@@ -28,7 +28,10 @@ import type {
   ProjectsListParams
 } from '../../model';
 
+import { apiFetch } from '../../../fetcher';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -92,23 +95,16 @@ export const getProjectsListUrl = (params?: ProjectsListParams,) => {
 /**
  * @summary List Projects
  */
-export const projectsList = async (params?: ProjectsListParams, options?: RequestInit): Promise<projectsListResponse> => {
+export const projectsList = async (params?: ProjectsListParams, options?: Parameters<typeof apiFetch>[1]): Promise<projectsListResponse> => {
 
-  const res = await fetch(getProjectsListUrl(params),
+  return apiFetch<projectsListResponse>(getProjectsListUrl(params),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: projectsListResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as projectsListResponse
-}
+);}
 
 
 
@@ -121,16 +117,16 @@ export const getProjectsListQueryKey = (params?: ProjectsListParams,) => {
     }
 
 
-export const getProjectsListQueryOptions = <TData = Awaited<ReturnType<typeof projectsList>>, TError = void>(params?: ProjectsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsList>>, TError, TData>>, fetch?: RequestInit}
+export const getProjectsListQueryOptions = <TData = Awaited<ReturnType<typeof projectsList>>, TError = void>(params?: ProjectsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getProjectsListQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof projectsList>>> = ({ signal }) => projectsList(params, { ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof projectsList>>> = ({ signal }) => projectsList(params, { signal, ...requestOptions });
 
 
 
@@ -150,7 +146,7 @@ export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>
           TError,
           Awaited<ReturnType<typeof projectsList>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>, TError = void>(
@@ -160,11 +156,11 @@ export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>
           TError,
           Awaited<ReturnType<typeof projectsList>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>, TError = void>(
- params?: ProjectsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsList>>, TError, TData>>, fetch?: RequestInit}
+ params?: ProjectsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -172,7 +168,7 @@ export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>
  */
 
 export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>, TError = void>(
- params?: ProjectsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsList>>, TError, TData>>, fetch?: RequestInit}
+ params?: ProjectsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -223,7 +219,7 @@ export const getProjectsCreateUrl = () => {
 /**
  * @summary Create Project
  */
-export const projectsCreate = async (projectCreate: ProjectCreate, options?: RequestInit): Promise<projectsCreateResponse> => {
+export const projectsCreate = async (projectCreate: ProjectCreate, options?: Parameters<typeof apiFetch>[1]): Promise<projectsCreateResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -239,21 +235,14 @@ export const projectsCreate = async (projectCreate: ProjectCreate, options?: Req
     }
     return headers;
   };
-const res = await fetch(getProjectsCreateUrl(),
+return apiFetch<projectsCreateResponse>(getProjectsCreateUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(projectCreate)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: projectsCreateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as projectsCreateResponse
-}
+);}
 
 
 
@@ -262,15 +251,15 @@ const res = await fetch(getProjectsCreateUrl(),
 export const getProjectsCreateMutationKey = () => ['projectsCreate'] as const;
 
 export const getProjectsCreateMutationOptions = <TError = ErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof projectsCreate>>, TError,ProjectsCreateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof projectsCreate>>, TError,ProjectsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof projectsCreate>>, TError,ProjectsCreateMutationVariables, TContext> => {
 
 const mutationKey = getProjectsCreateMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -278,7 +267,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof projectsCreate>>, ProjectsCreateMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  projectsCreate(data,fetchOptions)
+          return  projectsCreate(data,requestOptions)
         }
 
 
@@ -297,7 +286,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Create Project
  */
 export const useProjectsCreate = <TError = ErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof projectsCreate>>, TError,ProjectsCreateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof projectsCreate>>, TError,ProjectsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof projectsCreate>>,
         TError,
@@ -341,23 +330,16 @@ export const getProjectsGetUrl = (projectId: string,) => {
 /**
  * @summary Get Project
  */
-export const projectsGet = async (projectId: string, options?: RequestInit): Promise<projectsGetResponse> => {
+export const projectsGet = async (projectId: string, options?: Parameters<typeof apiFetch>[1]): Promise<projectsGetResponse> => {
 
-  const res = await fetch(getProjectsGetUrl(projectId),
+  return apiFetch<projectsGetResponse>(getProjectsGetUrl(projectId),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: projectsGetResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as projectsGetResponse
-}
+);}
 
 
 
@@ -370,16 +352,16 @@ export const getProjectsGetQueryKey = (projectId: string,) => {
     }
 
 
-export const getProjectsGetQueryOptions = <TData = Awaited<ReturnType<typeof projectsGet>>, TError = ErrorBody | HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsGet>>, TError, TData>>, fetch?: RequestInit}
+export const getProjectsGetQueryOptions = <TData = Awaited<ReturnType<typeof projectsGet>>, TError = ErrorBody | HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getProjectsGetQueryKey(projectId);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof projectsGet>>> = ({ signal }) => projectsGet(projectId, { ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof projectsGet>>> = ({ signal }) => projectsGet(projectId, { signal, ...requestOptions });
 
 
 
@@ -399,7 +381,7 @@ export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, 
           TError,
           Awaited<ReturnType<typeof projectsGet>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, TError = ErrorBody | HTTPValidationError>(
@@ -409,11 +391,11 @@ export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, 
           TError,
           Awaited<ReturnType<typeof projectsGet>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, TError = ErrorBody | HTTPValidationError>(
- projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsGet>>, TError, TData>>, fetch?: RequestInit}
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -421,7 +403,7 @@ export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, 
  */
 
 export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, TError = ErrorBody | HTTPValidationError>(
- projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsGet>>, TError, TData>>, fetch?: RequestInit}
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -478,7 +460,7 @@ export const getProjectsUpdateUrl = (projectId: string,) => {
  * @summary Update Project
  */
 export const projectsUpdate = async (projectId: string,
-    projectUpdate: ProjectUpdate, options?: RequestInit): Promise<projectsUpdateResponse> => {
+    projectUpdate: ProjectUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<projectsUpdateResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -494,21 +476,14 @@ export const projectsUpdate = async (projectId: string,
     }
     return headers;
   };
-const res = await fetch(getProjectsUpdateUrl(projectId),
+return apiFetch<projectsUpdateResponse>(getProjectsUpdateUrl(projectId),
   {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(projectUpdate)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: projectsUpdateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as projectsUpdateResponse
-}
+);}
 
 
 
@@ -517,15 +492,15 @@ const res = await fetch(getProjectsUpdateUrl(projectId),
 export const getProjectsUpdateMutationKey = () => ['projectsUpdate'] as const;
 
 export const getProjectsUpdateMutationOptions = <TError = ErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof projectsUpdate>>, TError,ProjectsUpdateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof projectsUpdate>>, TError,ProjectsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof projectsUpdate>>, TError,ProjectsUpdateMutationVariables, TContext> => {
 
 const mutationKey = getProjectsUpdateMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -533,7 +508,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof projectsUpdate>>, ProjectsUpdateMutationVariables> = (props) => {
           const {projectId,data} = props ?? {};
 
-          return  projectsUpdate(projectId,data,fetchOptions)
+          return  projectsUpdate(projectId,data,requestOptions)
         }
 
 
@@ -552,7 +527,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Update Project
  */
 export const useProjectsUpdate = <TError = ErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof projectsUpdate>>, TError,ProjectsUpdateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof projectsUpdate>>, TError,ProjectsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof projectsUpdate>>,
         TError,

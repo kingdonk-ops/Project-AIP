@@ -6,6 +6,7 @@ import { appRoute } from "./routes/_app";
 import { homeRoute } from "./routes/_app/index";
 import { projectsIndexRoute } from "./routes/_app/projects/index";
 import { projectsNewRoute } from "./routes/_app/projects/new";
+import { sessionsRoute } from "./routes/_app/settings/profile/sessions";
 import { loginRoute } from "./routes/login";
 
 // DESIGN-01 component fixture: dev-only. In a production build this branch is dead code, so the
@@ -22,7 +23,7 @@ const devRoutes = import.meta.env.PROD
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute]),
+  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, sessionsRoute]),
   ...devRoutes,
 ]);
 

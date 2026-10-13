@@ -301,6 +301,8 @@ async def update_user(conn: AsyncConnection, user_id: UUID, **values: Any) -> No
 async def set_user_status(conn: AsyncConnection, user_id: UUID, status: UserStatus) -> UserRow:
     """Change a live user's status; ``deactivated`` stamps ``deactivated_at``, others clear it.
 
+    Any status other than ``active`` also revokes every session of the user in the same
+    transaction (IDENTITY-03), so a later reactivation cannot revive an old cookie.
     ``NotFoundError`` when no live user ``user_id`` exists in the bound tenant.
     """
     if status not in ("invited", "active", "deactivated"):
@@ -314,6 +316,10 @@ async def set_user_status(conn: AsyncConnection, user_id: UUID, status: UserStat
     user = await get_user(conn, user_id)
     if user is None:  # pragma: no cover - updated just above in the same transaction
         raise NotFoundError(f"app_user {user_id} not found")
+    if status != "active":
+        from aip.modules.identity.sessions import revoke_all_for_user
+
+        await revoke_all_for_user(conn, user_id, f"user_{status}")
     return user
 
 

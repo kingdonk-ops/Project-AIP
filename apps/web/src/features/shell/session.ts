@@ -1,4 +1,4 @@
-import { accessGetMyAbilities, identityGetMe, identityLoginStart } from "@aip/api-client";
+import { accessGetMyAbilities, identityGetMe, identityLoginStart, identityLogout } from "@aip/api-client";
 import { queryOptions } from "@tanstack/react-query";
 
 /**
@@ -12,8 +12,8 @@ import { queryOptions } from "@tanstack/react-query";
  *
  * The session is `GET /api/v1/me` (IDENTITY-02) plus the caller's tenant-wide permissions from
  * `GET /api/v1/access/me/abilities` (ACCESS-01), both through the generated client.
- * GAP (IDENTITY-03): `POST /api/v1/auth/logout` does not exist yet and is not in the generated
- * client, so logout uses `fetch` directly; switch it when the route lands.
+ * Logout is `POST /api/v1/auth/logout` (IDENTITY-03) through the generated client, which sends the
+ * CSRF token; the API revokes the session, clears both cookies and ends the Keycloak SSO session.
  */
 
 export interface Session {
@@ -80,9 +80,10 @@ export const httpSessionPort: SessionPort = {
 
   async logout() {
     try {
-      const response = await fetch("/api/v1/auth/logout", { method: "POST", credentials: "same-origin" });
+      const response = await identityLogout();
       // 401: the session was already gone, which is the state we wanted.
-      return response.status === 204 || response.status === 401;
+      const status: number = response.status;
+      return status === 204 || status === 401;
     } catch {
       return false;
     }

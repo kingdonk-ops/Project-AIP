@@ -136,6 +136,14 @@ GRANT ALL ON FUNCTION public.identity_register_email(p_email public.citext, p_te
 REVOKE ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) TO aip_app;
 
+-- Name: FUNCTION identity_resolve_session(p_sid_hash bytea); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.identity_resolve_session(p_sid_hash bytea) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.identity_resolve_session(p_sid_hash bytea) TO aip_app;
+
+-- Name: FUNCTION identity_sessions_by_kc_sid(p_kc_sid text); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) TO aip_app;
+
 -- Name: SEQUENCE procrastinate_events_id_seq; Type: ACL; Schema: public
 GRANT SELECT,USAGE ON SEQUENCE public.procrastinate_events_id_seq TO aip_jobs;
 GRANT USAGE ON SEQUENCE public.procrastinate_events_id_seq TO aip_app;
@@ -215,6 +223,10 @@ GRANT SELECT ON TABLE public.role_permission TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.sites TO aip_app;
 GRANT SELECT ON TABLE public.sites TO aip_readonly;
 
+-- Name: TABLE tenant_auth_policy; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_auth_policy TO aip_app;
+GRANT SELECT ON TABLE public.tenant_auth_policy TO aip_readonly;
+
 -- Name: TABLE tenant_membership; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.tenant_membership TO aip_app;
 GRANT SELECT ON TABLE public.tenant_membership TO aip_readonly;
@@ -222,6 +234,10 @@ GRANT SELECT ON TABLE public.tenant_membership TO aip_readonly;
 -- Name: TABLE tenants; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.tenants TO aip_app;
 GRANT SELECT ON TABLE public.tenants TO aip_readonly;
+
+-- Name: TABLE user_session; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.user_session TO aip_app;
+GRANT SELECT ON TABLE public.user_session TO aip_readonly;
 
 -- Name: access_settings pk_access_settings; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.access_settings
@@ -327,6 +343,10 @@ ALTER TABLE ONLY public.sites
 ALTER TABLE ONLY public.sites
     ADD CONSTRAINT uq_sites_id_tenant_id UNIQUE (id, tenant_id);
 
+-- Name: tenant_auth_policy pk_tenant_auth_policy; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_auth_policy
+    ADD CONSTRAINT pk_tenant_auth_policy PRIMARY KEY (tenant_id);
+
 -- Name: tenant_membership pk_tenant_membership; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_membership
     ADD CONSTRAINT pk_tenant_membership PRIMARY KEY (id);
@@ -338,6 +358,14 @@ ALTER TABLE ONLY public.tenants
 -- Name: tenants uq_tenants_slug; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenants
     ADD CONSTRAINT uq_tenants_slug UNIQUE (slug);
+
+-- Name: user_session pk_user_session; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.user_session
+    ADD CONSTRAINT pk_user_session PRIMARY KEY (id);
+
+-- Name: user_session uq_user_session_sid_hash; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.user_session
+    ADD CONSTRAINT uq_user_session_sid_hash UNIQUE (sid_hash);
 
 -- Name: procrastinate_events id; Type: DEFAULT; Schema: public
 ALTER TABLE ONLY public.procrastinate_events ALTER COLUMN id SET DEFAULT nextval('public.procrastinate_events_id_seq'::regclass);
@@ -424,6 +452,10 @@ ALTER TABLE ONLY public.role_permission
 ALTER TABLE ONLY public.role_permission
     ADD CONSTRAINT fk_role_permission_role_id_tenant_id_role FOREIGN KEY (role_id, tenant_id) REFERENCES public.role(id, tenant_id);
 
+-- Name: tenant_auth_policy fk_tenant_auth_policy_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_auth_policy
+    ADD CONSTRAINT fk_tenant_auth_policy_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
 -- Name: tenant_membership fk_tenant_membership_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_membership
     ADD CONSTRAINT fk_tenant_membership_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
@@ -435,6 +467,10 @@ ALTER TABLE ONLY public.tenant_membership
 -- Name: tenants fk_tenants_region_code_deployment_regions; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenants
     ADD CONSTRAINT fk_tenants_region_code_deployment_regions FOREIGN KEY (region_code) REFERENCES public.deployment_regions(code);
+
+-- Name: user_session fk_user_session_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.user_session
+    ADD CONSTRAINT fk_user_session_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
 
 -- Name: access_settings_version_guard(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.access_settings_version_guard() RETURNS trigger
@@ -549,6 +585,32 @@ CREATE FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) 
     $$;
 
 ALTER FUNCTION public.identity_resolve_login(p_kind text, p_key public.citext) OWNER TO aip_owner;
+
+-- Name: identity_resolve_session(bytea); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.identity_resolve_session(p_sid_hash bytea) RETURNS TABLE(tenant_id uuid, user_id uuid, session_id uuid, aal smallint, amr text[], authenticated_at timestamp with time zone, audience text, last_seen_at timestamp with time zone, idle_seconds integer, idle_expires_at timestamp with time zone, absolute_expires_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+      SELECT s.tenant_id, s.user_id, s.id, s.aal, s.amr, s.authenticated_at, s.audience,
+             s.last_seen_at, s.idle_seconds, s.idle_expires_at, s.absolute_expires_at
+      FROM user_session s
+      WHERE s.sid_hash = p_sid_hash
+        AND s.revoked_at IS NULL AND s.deleted_at IS NULL
+        AND s.idle_expires_at > now() AND s.absolute_expires_at > now()
+    $$;
+
+ALTER FUNCTION public.identity_resolve_session(p_sid_hash bytea) OWNER TO aip_owner;
+
+-- Name: identity_sessions_by_kc_sid(text); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) RETURNS TABLE(tenant_id uuid, session_id uuid)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+      SELECT s.tenant_id, s.id FROM user_session s
+      WHERE s.kc_sid = p_kc_sid AND s.revoked_at IS NULL AND s.deleted_at IS NULL
+    $$;
+
+ALTER FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) OWNER TO aip_owner;
 
 -- Name: procrastinate_cancel_job_v1(bigint, boolean, boolean); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.procrastinate_cancel_job_v1(job_id bigint, abort boolean, delete_job boolean) RETURNS bigint
@@ -1112,6 +1174,15 @@ CREATE INDEX ix_tenants_region_code ON public.tenants USING btree (region_code);
 -- Name: ix_tenants_status; Type: INDEX; Schema: public
 CREATE INDEX ix_tenants_status ON public.tenants USING btree (status);
 
+-- Name: ix_user_session_kc_sid; Type: INDEX; Schema: public
+CREATE INDEX ix_user_session_kc_sid ON public.user_session USING btree (kc_sid) WHERE (revoked_at IS NULL);
+
+-- Name: ix_user_session_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_user_session_tenant_id ON public.user_session USING btree (tenant_id);
+
+-- Name: ix_user_session_tenant_id_user_id; Type: INDEX; Schema: public
+CREATE INDEX ix_user_session_tenant_id_user_id ON public.user_session USING btree (tenant_id, user_id) WHERE (revoked_at IS NULL);
+
 -- Name: procrastinate_events_job_id_fkey_v1; Type: INDEX; Schema: public
 CREATE INDEX procrastinate_events_job_id_fkey_v1 ON public.procrastinate_events USING btree (job_id);
 
@@ -1202,11 +1273,20 @@ CREATE POLICY tenant_isolation ON public.role_permission USING ((tenant_id = (NU
 -- Name: sites tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.sites USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: tenant_auth_policy tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.tenant_auth_policy USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: tenant_membership tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenant_membership USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: tenants tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenants USING ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: user_session session_lookup; Type: POLICY; Schema: public
+CREATE POLICY session_lookup ON public.user_session FOR SELECT TO aip_owner USING (true);
+
+-- Name: user_session tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.user_session USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: access_settings; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.access_settings ENABLE ROW LEVEL SECURITY;
@@ -1241,11 +1321,17 @@ ALTER TABLE public.role_permission ENABLE ROW LEVEL SECURITY;
 -- Name: sites; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.sites ENABLE ROW LEVEL SECURITY;
 
+-- Name: tenant_auth_policy; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.tenant_auth_policy ENABLE ROW LEVEL SECURITY;
+
 -- Name: tenant_membership; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenant_membership ENABLE ROW LEVEL SECURITY;
 
 -- Name: tenants; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+
+-- Name: user_session; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.user_session ENABLE ROW LEVEL SECURITY;
 
 -- Name: procrastinate_events_id_seq; Type: SEQUENCE; Schema: public
 CREATE SEQUENCE public.procrastinate_events_id_seq
@@ -1643,6 +1729,23 @@ ALTER TABLE ONLY public.sites FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.sites OWNER TO aip_owner;
 
+-- Name: tenant_auth_policy; Type: TABLE; Schema: public
+CREATE TABLE public.tenant_auth_policy (
+    tenant_id uuid NOT NULL,
+    session_policy jsonb DEFAULT '{"field": {"idleMin": 5, "absoluteH": 12}, "staff": {"idleMin": 30, "absoluteH": 12}, "portal": {"idleMin": 15, "absoluteH": 8}}'::jsonb NOT NULL,
+    sso_enforced boolean DEFAULT false NOT NULL,
+    step_up_max_age_min integer DEFAULT 10 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_tenant_auth_policy_session_policy CHECK ((jsonb_typeof(session_policy) = 'object'::text)),
+    CONSTRAINT ck_tenant_auth_policy_step_up_max_age_min CHECK (((step_up_max_age_min >= 1) AND (step_up_max_age_min <= 1440)))
+);
+
+ALTER TABLE ONLY public.tenant_auth_policy FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.tenant_auth_policy OWNER TO aip_owner;
+
 -- Name: tenant_membership; Type: TABLE; Schema: public
 CREATE TABLE public.tenant_membership (
     id uuid NOT NULL,
@@ -1686,6 +1789,42 @@ CREATE TABLE public.tenants (
 ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.tenants OWNER TO aip_owner;
+
+-- Name: user_session; Type: TABLE; Schema: public
+CREATE TABLE public.user_session (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    sid_hash bytea NOT NULL,
+    audience text NOT NULL,
+    device_id uuid,
+    aal smallint NOT NULL,
+    amr text[] NOT NULL,
+    authenticated_at timestamp with time zone NOT NULL,
+    kc_sid text,
+    ip inet,
+    user_agent text,
+    last_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+    idle_seconds integer NOT NULL,
+    idle_expires_at timestamp with time zone NOT NULL,
+    absolute_expires_at timestamp with time zone NOT NULL,
+    revoked_at timestamp with time zone,
+    revoke_reason text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_user_session_aal CHECK ((aal = ANY (ARRAY[1, 2]))),
+    CONSTRAINT ck_user_session_audience CHECK ((audience = ANY (ARRAY['app'::text, 'portal'::text, 'device'::text]))),
+    CONSTRAINT ck_user_session_expiry CHECK ((idle_expires_at <= absolute_expires_at)),
+    CONSTRAINT ck_user_session_idle_seconds CHECK ((idle_seconds > 0)),
+    CONSTRAINT ck_user_session_revoked CHECK (((revoked_at IS NULL) = (revoke_reason IS NULL))),
+    CONSTRAINT ck_user_session_sid_hash CHECK ((octet_length(sid_hash) = 32)),
+    CONSTRAINT ck_user_session_user_agent CHECK ((char_length(user_agent) <= 512))
+);
+
+ALTER TABLE ONLY public.user_session FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.user_session OWNER TO aip_owner;
 
 -- Name: access_settings trg_access_settings_version_guard; Type: TRIGGER; Schema: public
 CREATE TRIGGER trg_access_settings_version_guard BEFORE UPDATE ON public.access_settings FOR EACH ROW EXECUTE FUNCTION public.access_settings_version_guard();

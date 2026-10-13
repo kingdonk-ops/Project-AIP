@@ -55,3 +55,17 @@ Prove M0 end to end. A Keycloak user of tenant A signs in to the Vite + React we
   - **e2e** (Playwright):
     - On CI against compose: steps (a) to (e) pass in under 2 minutes, and B never sees `E2E-<runId>`.
     - On staging after deploy: the same spec with `--project staging` passes, and the created project ends archived.
+
+## Carried forward from IDENTITY-03 and ACCESS-02 (non-blocking)
+
+- Live Keycloak on compose: after `POST /api/v1/auth/logout` and the queued `identity.revoke_keycloak_sessions` job,
+  Keycloak's admin `get_sessions(carol)` is empty and the next sign-in shows the password form; running the job again
+  succeeds (404 is success). Keycloak admin `user_logout(carol)` calls the back-channel endpoint and her next
+  `GET /api/v1/me` is 401 `SESSION_EXPIRED`.
+- Playwright: sign in as alice and reload (still signed in); from a second context, sign in again and revoke it from
+  the first context's Active sessions page (`/settings/profile/sessions`), so the second context's next navigation
+  lands on `/login`; Logout clears both `__Host-` cookies.
+- The TENANCY-01 (`/me/tenant` per tenant), ACCESS-01 (no roles: abilities empty, a `requires()` route 403) and
+  ACCESS-02 (assign alice `inspector` on P1; abilities for P1 vs P2) journeys.
+- Nobody holds a role after JIT sign-in: the demo/dev bootstrap must give the first kaefer-demo user `tenant_admin`
+  (a tenant-scope `role_assignment` after `seed_default_roles`) before these journeys can create projects.

@@ -19,7 +19,10 @@ import type {
   TenantView
 } from '../../model';
 
+import { apiFetch } from '../../../fetcher';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -73,23 +76,16 @@ export const getTenancyGetMyTenantUrl = () => {
 /**
  * @summary Get My Tenant
  */
-export const tenancyGetMyTenant = async ( options?: RequestInit): Promise<tenancyGetMyTenantResponse> => {
+export const tenancyGetMyTenant = async ( options?: Parameters<typeof apiFetch>[1]): Promise<tenancyGetMyTenantResponse> => {
 
-  const res = await fetch(getTenancyGetMyTenantUrl(),
+  return apiFetch<tenancyGetMyTenantResponse>(getTenancyGetMyTenantUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: tenancyGetMyTenantResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as tenancyGetMyTenantResponse
-}
+);}
 
 
 
@@ -102,16 +98,16 @@ export const getTenancyGetMyTenantQueryKey = () => {
     }
 
 
-export const getTenancyGetMyTenantQueryOptions = <TData = Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError = TenantErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError, TData>>, fetch?: RequestInit}
+export const getTenancyGetMyTenantQueryOptions = <TData = Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError = TenantErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getTenancyGetMyTenantQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof tenancyGetMyTenant>>> = ({ signal }) => tenancyGetMyTenant({ ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof tenancyGetMyTenant>>> = ({ signal }) => tenancyGetMyTenant({ signal, ...requestOptions });
 
 
 
@@ -131,7 +127,7 @@ export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyG
           TError,
           Awaited<ReturnType<typeof tenancyGetMyTenant>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError = TenantErrorResponse>(
@@ -141,11 +137,11 @@ export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyG
           TError,
           Awaited<ReturnType<typeof tenancyGetMyTenant>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError = TenantErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -153,7 +149,7 @@ export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyG
  */
 
 export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError = TenantErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

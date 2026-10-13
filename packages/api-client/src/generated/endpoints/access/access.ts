@@ -34,7 +34,10 @@ import type {
   RoleUpdate
 } from '../../model';
 
+import { apiFetch } from '../../../fetcher';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -95,23 +98,16 @@ export const getAccessGetMyAbilitiesUrl = (params?: AccessGetMyAbilitiesParams,)
 /**
  * @summary Get My Abilities
  */
-export const accessGetMyAbilities = async (params?: AccessGetMyAbilitiesParams, options?: RequestInit): Promise<accessGetMyAbilitiesResponse> => {
+export const accessGetMyAbilities = async (params?: AccessGetMyAbilitiesParams, options?: Parameters<typeof apiFetch>[1]): Promise<accessGetMyAbilitiesResponse> => {
 
-  const res = await fetch(getAccessGetMyAbilitiesUrl(params),
+  return apiFetch<accessGetMyAbilitiesResponse>(getAccessGetMyAbilitiesUrl(params),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: accessGetMyAbilitiesResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as accessGetMyAbilitiesResponse
-}
+);}
 
 
 
@@ -124,16 +120,16 @@ export const getAccessGetMyAbilitiesQueryKey = (params?: AccessGetMyAbilitiesPar
     }
 
 
-export const getAccessGetMyAbilitiesQueryOptions = <TData = Awaited<ReturnType<typeof accessGetMyAbilities>>, TError = void | HTTPValidationError>(params?: AccessGetMyAbilitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessGetMyAbilities>>, TError, TData>>, fetch?: RequestInit}
+export const getAccessGetMyAbilitiesQueryOptions = <TData = Awaited<ReturnType<typeof accessGetMyAbilities>>, TError = void | HTTPValidationError>(params?: AccessGetMyAbilitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessGetMyAbilities>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getAccessGetMyAbilitiesQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof accessGetMyAbilities>>> = ({ signal }) => accessGetMyAbilities(params, { ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof accessGetMyAbilities>>> = ({ signal }) => accessGetMyAbilities(params, { signal, ...requestOptions });
 
 
 
@@ -153,7 +149,7 @@ export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof access
           TError,
           Awaited<ReturnType<typeof accessGetMyAbilities>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof accessGetMyAbilities>>, TError = void | HTTPValidationError>(
@@ -163,11 +159,11 @@ export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof access
           TError,
           Awaited<ReturnType<typeof accessGetMyAbilities>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof accessGetMyAbilities>>, TError = void | HTTPValidationError>(
- params?: AccessGetMyAbilitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessGetMyAbilities>>, TError, TData>>, fetch?: RequestInit}
+ params?: AccessGetMyAbilitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessGetMyAbilities>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -175,7 +171,7 @@ export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof access
  */
 
 export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof accessGetMyAbilities>>, TError = void | HTTPValidationError>(
- params?: AccessGetMyAbilitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessGetMyAbilities>>, TError, TData>>, fetch?: RequestInit}
+ params?: AccessGetMyAbilitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessGetMyAbilities>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -228,23 +224,16 @@ export const getAccessRoleAssignmentsListUrl = (params?: AccessRoleAssignmentsLi
 /**
  * @summary List Assignments
  */
-export const accessRoleAssignmentsList = async (params?: AccessRoleAssignmentsListParams, options?: RequestInit): Promise<accessRoleAssignmentsListResponse> => {
+export const accessRoleAssignmentsList = async (params?: AccessRoleAssignmentsListParams, options?: Parameters<typeof apiFetch>[1]): Promise<accessRoleAssignmentsListResponse> => {
 
-  const res = await fetch(getAccessRoleAssignmentsListUrl(params),
+  return apiFetch<accessRoleAssignmentsListResponse>(getAccessRoleAssignmentsListUrl(params),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: accessRoleAssignmentsListResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as accessRoleAssignmentsListResponse
-}
+);}
 
 
 
@@ -257,16 +246,16 @@ export const getAccessRoleAssignmentsListQueryKey = (params?: AccessRoleAssignme
     }
 
 
-export const getAccessRoleAssignmentsListQueryOptions = <TData = Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError = void>(params?: AccessRoleAssignmentsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError, TData>>, fetch?: RequestInit}
+export const getAccessRoleAssignmentsListQueryOptions = <TData = Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError = void>(params?: AccessRoleAssignmentsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getAccessRoleAssignmentsListQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof accessRoleAssignmentsList>>> = ({ signal }) => accessRoleAssignmentsList(params, { ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof accessRoleAssignmentsList>>> = ({ signal }) => accessRoleAssignmentsList(params, { signal, ...requestOptions });
 
 
 
@@ -286,7 +275,7 @@ export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof a
           TError,
           Awaited<ReturnType<typeof accessRoleAssignmentsList>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError = void>(
@@ -296,11 +285,11 @@ export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof a
           TError,
           Awaited<ReturnType<typeof accessRoleAssignmentsList>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError = void>(
- params?: AccessRoleAssignmentsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError, TData>>, fetch?: RequestInit}
+ params?: AccessRoleAssignmentsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -308,7 +297,7 @@ export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof a
  */
 
 export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError = void>(
- params?: AccessRoleAssignmentsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError, TData>>, fetch?: RequestInit}
+ params?: AccessRoleAssignmentsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -374,7 +363,7 @@ export const getAccessRoleAssignmentsCreateUrl = () => {
 /**
  * @summary Create Assignment
  */
-export const accessRoleAssignmentsCreate = async (assignmentCreate: AssignmentCreate, options?: RequestInit): Promise<accessRoleAssignmentsCreateResponse> => {
+export const accessRoleAssignmentsCreate = async (assignmentCreate: AssignmentCreate, options?: Parameters<typeof apiFetch>[1]): Promise<accessRoleAssignmentsCreateResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -390,21 +379,14 @@ export const accessRoleAssignmentsCreate = async (assignmentCreate: AssignmentCr
     }
     return headers;
   };
-const res = await fetch(getAccessRoleAssignmentsCreateUrl(),
+return apiFetch<accessRoleAssignmentsCreateResponse>(getAccessRoleAssignmentsCreateUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(assignmentCreate)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: accessRoleAssignmentsCreateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as accessRoleAssignmentsCreateResponse
-}
+);}
 
 
 
@@ -413,15 +395,15 @@ const res = await fetch(getAccessRoleAssignmentsCreateUrl(),
 export const getAccessRoleAssignmentsCreateMutationKey = () => ['accessRoleAssignmentsCreate'] as const;
 
 export const getAccessRoleAssignmentsCreateMutationOptions = <TError = AccessErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsCreate>>, TError,AccessRoleAssignmentsCreateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsCreate>>, TError,AccessRoleAssignmentsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsCreate>>, TError,AccessRoleAssignmentsCreateMutationVariables, TContext> => {
 
 const mutationKey = getAccessRoleAssignmentsCreateMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -429,7 +411,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessRoleAssignmentsCreate>>, AccessRoleAssignmentsCreateMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  accessRoleAssignmentsCreate(data,fetchOptions)
+          return  accessRoleAssignmentsCreate(data,requestOptions)
         }
 
 
@@ -448,7 +430,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Create Assignment
  */
 export const useAccessRoleAssignmentsCreate = <TError = AccessErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsCreate>>, TError,AccessRoleAssignmentsCreateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsCreate>>, TError,AccessRoleAssignmentsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof accessRoleAssignmentsCreate>>,
         TError,
@@ -507,23 +489,16 @@ export const getAccessRoleAssignmentsDeleteUrl = (assignmentId: string,) => {
 /**
  * @summary Delete Assignment
  */
-export const accessRoleAssignmentsDelete = async (assignmentId: string, options?: RequestInit): Promise<accessRoleAssignmentsDeleteResponse> => {
+export const accessRoleAssignmentsDelete = async (assignmentId: string, options?: Parameters<typeof apiFetch>[1]): Promise<accessRoleAssignmentsDeleteResponse> => {
 
-  const res = await fetch(getAccessRoleAssignmentsDeleteUrl(assignmentId),
+  return apiFetch<accessRoleAssignmentsDeleteResponse>(getAccessRoleAssignmentsDeleteUrl(assignmentId),
   {
     ...options,
     method: 'DELETE'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: accessRoleAssignmentsDeleteResponse['data'] = body ? JSON.parse(body) : undefined
-  return { data, status: res.status, headers: res.headers } as accessRoleAssignmentsDeleteResponse
-}
+);}
 
 
 
@@ -532,15 +507,15 @@ export const accessRoleAssignmentsDelete = async (assignmentId: string, options?
 export const getAccessRoleAssignmentsDeleteMutationKey = () => ['accessRoleAssignmentsDelete'] as const;
 
 export const getAccessRoleAssignmentsDeleteMutationOptions = <TError = AccessErrorBody | HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsDelete>>, TError,AccessRoleAssignmentsDeleteMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsDelete>>, TError,AccessRoleAssignmentsDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsDelete>>, TError,AccessRoleAssignmentsDeleteMutationVariables, TContext> => {
 
 const mutationKey = getAccessRoleAssignmentsDeleteMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -548,7 +523,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessRoleAssignmentsDelete>>, AccessRoleAssignmentsDeleteMutationVariables> = (props) => {
           const {assignmentId} = props ?? {};
 
-          return  accessRoleAssignmentsDelete(assignmentId,fetchOptions)
+          return  accessRoleAssignmentsDelete(assignmentId,requestOptions)
         }
 
 
@@ -567,7 +542,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Delete Assignment
  */
 export const useAccessRoleAssignmentsDelete = <TError = AccessErrorBody | HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsDelete>>, TError,AccessRoleAssignmentsDeleteMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsDelete>>, TError,AccessRoleAssignmentsDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof accessRoleAssignmentsDelete>>,
         TError,
@@ -599,23 +574,16 @@ export const getAccessRolesListUrl = () => {
 /**
  * @summary List Roles
  */
-export const accessRolesList = async ( options?: RequestInit): Promise<accessRolesListResponse> => {
+export const accessRolesList = async ( options?: Parameters<typeof apiFetch>[1]): Promise<accessRolesListResponse> => {
 
-  const res = await fetch(getAccessRolesListUrl(),
+  return apiFetch<accessRolesListResponse>(getAccessRolesListUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: accessRolesListResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as accessRolesListResponse
-}
+);}
 
 
 
@@ -628,16 +596,16 @@ export const getAccessRolesListQueryKey = () => {
     }
 
 
-export const getAccessRolesListQueryOptions = <TData = Awaited<ReturnType<typeof accessRolesList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRolesList>>, TError, TData>>, fetch?: RequestInit}
+export const getAccessRolesListQueryOptions = <TData = Awaited<ReturnType<typeof accessRolesList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRolesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getAccessRolesListQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof accessRolesList>>> = ({ signal }) => accessRolesList({ ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof accessRolesList>>> = ({ signal }) => accessRolesList({ signal, ...requestOptions });
 
 
 
@@ -657,7 +625,7 @@ export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRoles
           TError,
           Awaited<ReturnType<typeof accessRolesList>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRolesList>>, TError = unknown>(
@@ -667,11 +635,11 @@ export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRoles
           TError,
           Awaited<ReturnType<typeof accessRolesList>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRolesList>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRolesList>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRolesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -679,7 +647,7 @@ export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRoles
  */
 
 export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRolesList>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRolesList>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRolesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -745,7 +713,7 @@ export const getAccessRolesCreateUrl = () => {
 /**
  * @summary Create Role
  */
-export const accessRolesCreate = async (roleCreate: RoleCreate, options?: RequestInit): Promise<accessRolesCreateResponse> => {
+export const accessRolesCreate = async (roleCreate: RoleCreate, options?: Parameters<typeof apiFetch>[1]): Promise<accessRolesCreateResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -761,21 +729,14 @@ export const accessRolesCreate = async (roleCreate: RoleCreate, options?: Reques
     }
     return headers;
   };
-const res = await fetch(getAccessRolesCreateUrl(),
+return apiFetch<accessRolesCreateResponse>(getAccessRolesCreateUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(roleCreate)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: accessRolesCreateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as accessRolesCreateResponse
-}
+);}
 
 
 
@@ -784,15 +745,15 @@ const res = await fetch(getAccessRolesCreateUrl(),
 export const getAccessRolesCreateMutationKey = () => ['accessRolesCreate'] as const;
 
 export const getAccessRolesCreateMutationOptions = <TError = AccessErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesCreate>>, TError,AccessRolesCreateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesCreate>>, TError,AccessRolesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof accessRolesCreate>>, TError,AccessRolesCreateMutationVariables, TContext> => {
 
 const mutationKey = getAccessRolesCreateMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -800,7 +761,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessRolesCreate>>, AccessRolesCreateMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  accessRolesCreate(data,fetchOptions)
+          return  accessRolesCreate(data,requestOptions)
         }
 
 
@@ -819,7 +780,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Create Role
  */
 export const useAccessRolesCreate = <TError = AccessErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesCreate>>, TError,AccessRolesCreateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesCreate>>, TError,AccessRolesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof accessRolesCreate>>,
         TError,
@@ -878,23 +839,16 @@ export const getAccessRolesDeleteUrl = (roleId: string,) => {
 /**
  * @summary Delete Role
  */
-export const accessRolesDelete = async (roleId: string, options?: RequestInit): Promise<accessRolesDeleteResponse> => {
+export const accessRolesDelete = async (roleId: string, options?: Parameters<typeof apiFetch>[1]): Promise<accessRolesDeleteResponse> => {
 
-  const res = await fetch(getAccessRolesDeleteUrl(roleId),
+  return apiFetch<accessRolesDeleteResponse>(getAccessRolesDeleteUrl(roleId),
   {
     ...options,
     method: 'DELETE'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: accessRolesDeleteResponse['data'] = body ? JSON.parse(body) : undefined
-  return { data, status: res.status, headers: res.headers } as accessRolesDeleteResponse
-}
+);}
 
 
 
@@ -903,15 +857,15 @@ export const accessRolesDelete = async (roleId: string, options?: RequestInit): 
 export const getAccessRolesDeleteMutationKey = () => ['accessRolesDelete'] as const;
 
 export const getAccessRolesDeleteMutationOptions = <TError = AccessErrorBody | HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesDelete>>, TError,AccessRolesDeleteMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesDelete>>, TError,AccessRolesDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof accessRolesDelete>>, TError,AccessRolesDeleteMutationVariables, TContext> => {
 
 const mutationKey = getAccessRolesDeleteMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -919,7 +873,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessRolesDelete>>, AccessRolesDeleteMutationVariables> = (props) => {
           const {roleId} = props ?? {};
 
-          return  accessRolesDelete(roleId,fetchOptions)
+          return  accessRolesDelete(roleId,requestOptions)
         }
 
 
@@ -938,7 +892,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Delete Role
  */
 export const useAccessRolesDelete = <TError = AccessErrorBody | HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesDelete>>, TError,AccessRolesDeleteMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesDelete>>, TError,AccessRolesDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof accessRolesDelete>>,
         TError,
@@ -998,7 +952,7 @@ export const getAccessRolesUpdateUrl = (roleId: string,) => {
  * @summary Update Role
  */
 export const accessRolesUpdate = async (roleId: string,
-    roleUpdate: RoleUpdate, options?: RequestInit): Promise<accessRolesUpdateResponse> => {
+    roleUpdate: RoleUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<accessRolesUpdateResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1014,21 +968,14 @@ export const accessRolesUpdate = async (roleId: string,
     }
     return headers;
   };
-const res = await fetch(getAccessRolesUpdateUrl(roleId),
+return apiFetch<accessRolesUpdateResponse>(getAccessRolesUpdateUrl(roleId),
   {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(roleUpdate)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: accessRolesUpdateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as accessRolesUpdateResponse
-}
+);}
 
 
 
@@ -1037,15 +984,15 @@ const res = await fetch(getAccessRolesUpdateUrl(roleId),
 export const getAccessRolesUpdateMutationKey = () => ['accessRolesUpdate'] as const;
 
 export const getAccessRolesUpdateMutationOptions = <TError = AccessErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesUpdate>>, TError,AccessRolesUpdateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesUpdate>>, TError,AccessRolesUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof accessRolesUpdate>>, TError,AccessRolesUpdateMutationVariables, TContext> => {
 
 const mutationKey = getAccessRolesUpdateMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -1053,7 +1000,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessRolesUpdate>>, AccessRolesUpdateMutationVariables> = (props) => {
           const {roleId,data} = props ?? {};
 
-          return  accessRolesUpdate(roleId,data,fetchOptions)
+          return  accessRolesUpdate(roleId,data,requestOptions)
         }
 
 
@@ -1072,7 +1019,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Update Role
  */
 export const useAccessRolesUpdate = <TError = AccessErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesUpdate>>, TError,AccessRolesUpdateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesUpdate>>, TError,AccessRolesUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof accessRolesUpdate>>,
         TError,
@@ -1132,7 +1079,7 @@ export const getAccessRolesCloneUrl = (roleId: string,) => {
  * @summary Clone Role
  */
 export const accessRolesClone = async (roleId: string,
-    roleClone: RoleClone, options?: RequestInit): Promise<accessRolesCloneResponse> => {
+    roleClone: RoleClone, options?: Parameters<typeof apiFetch>[1]): Promise<accessRolesCloneResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1148,21 +1095,14 @@ export const accessRolesClone = async (roleId: string,
     }
     return headers;
   };
-const res = await fetch(getAccessRolesCloneUrl(roleId),
+return apiFetch<accessRolesCloneResponse>(getAccessRolesCloneUrl(roleId),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(roleClone)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: accessRolesCloneResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as accessRolesCloneResponse
-}
+);}
 
 
 
@@ -1171,15 +1111,15 @@ const res = await fetch(getAccessRolesCloneUrl(roleId),
 export const getAccessRolesCloneMutationKey = () => ['accessRolesClone'] as const;
 
 export const getAccessRolesCloneMutationOptions = <TError = AccessErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesClone>>, TError,AccessRolesCloneMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesClone>>, TError,AccessRolesCloneMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof accessRolesClone>>, TError,AccessRolesCloneMutationVariables, TContext> => {
 
 const mutationKey = getAccessRolesCloneMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -1187,7 +1127,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessRolesClone>>, AccessRolesCloneMutationVariables> = (props) => {
           const {roleId,data} = props ?? {};
 
-          return  accessRolesClone(roleId,data,fetchOptions)
+          return  accessRolesClone(roleId,data,requestOptions)
         }
 
 
@@ -1206,7 +1146,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Clone Role
  */
 export const useAccessRolesClone = <TError = AccessErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesClone>>, TError,AccessRolesCloneMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesClone>>, TError,AccessRolesCloneMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof accessRolesClone>>,
         TError,
@@ -1265,23 +1205,16 @@ export const getAccessRolesResetUrl = (roleId: string,) => {
 /**
  * @summary Reset Role
  */
-export const accessRolesReset = async (roleId: string, options?: RequestInit): Promise<accessRolesResetResponse> => {
+export const accessRolesReset = async (roleId: string, options?: Parameters<typeof apiFetch>[1]): Promise<accessRolesResetResponse> => {
 
-  const res = await fetch(getAccessRolesResetUrl(roleId),
+  return apiFetch<accessRolesResetResponse>(getAccessRolesResetUrl(roleId),
   {
     ...options,
     method: 'POST'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: accessRolesResetResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as accessRolesResetResponse
-}
+);}
 
 
 
@@ -1290,15 +1223,15 @@ export const accessRolesReset = async (roleId: string, options?: RequestInit): P
 export const getAccessRolesResetMutationKey = () => ['accessRolesReset'] as const;
 
 export const getAccessRolesResetMutationOptions = <TError = AccessErrorBody | HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesReset>>, TError,AccessRolesResetMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesReset>>, TError,AccessRolesResetMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof accessRolesReset>>, TError,AccessRolesResetMutationVariables, TContext> => {
 
 const mutationKey = getAccessRolesResetMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -1306,7 +1239,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessRolesReset>>, AccessRolesResetMutationVariables> = (props) => {
           const {roleId} = props ?? {};
 
-          return  accessRolesReset(roleId,fetchOptions)
+          return  accessRolesReset(roleId,requestOptions)
         }
 
 
@@ -1325,7 +1258,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Reset Role
  */
 export const useAccessRolesReset = <TError = AccessErrorBody | HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesReset>>, TError,AccessRolesResetMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesReset>>, TError,AccessRolesResetMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof accessRolesReset>>,
         TError,

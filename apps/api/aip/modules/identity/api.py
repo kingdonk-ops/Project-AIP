@@ -11,6 +11,11 @@ handler by overriding the ``get_external_login_handler`` dependency.
 Users (IDENTITY-02): ``get_user``, ``list_users``, ``find_by_email``, ``set_user_status`` and
 ``record_auth_event`` all take the connection from ``with_tenant`` and see only that tenant.
 ``Principal``, ``PrincipalResolver`` and the ``get_principal`` dependency describe the caller.
+
+Sessions (IDENTITY-03): ``issue_session``, ``rotate_session`` (IDENTITY-04 step-up),
+``revoke_session`` and ``revoke_all_for_user`` (IDENTITY-05 deprovisioning) take the caller's
+``with_tenant`` connection. ``add_session_middleware``, ``install_session_errors`` and
+``session_resolver`` are the app wiring ``aip.main`` uses.
 """
 
 from __future__ import annotations
@@ -18,9 +23,11 @@ from __future__ import annotations
 import os
 from typing import Protocol
 
+from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from aip.modules.identity.jit import JitLoginHandler
+from aip.modules.identity.login_session import session_login_handler
 from aip.modules.identity.principal import (
     PlatformPrincipalAdapter,
     Principal,
@@ -38,6 +45,17 @@ from aip.modules.identity.repository import (
     set_user_status,
 )
 from aip.modules.identity.schemas import VerifiedExternalIdentity
+from aip.modules.identity.sessions import (
+    issue_session,
+    revoke_all_for_user,
+    revoke_session,
+    rotate_session,
+)
+from aip.modules.identity.wiring import (
+    add_session_middleware,
+    install_session_errors,
+    session_resolver,
+)
 
 __all__ = [
     "ExternalLoginHandler",
@@ -50,13 +68,20 @@ __all__ = [
     "UserPage",
     "UserRow",
     "VerifiedExternalIdentity",
+    "add_session_middleware",
     "find_by_email",
     "get_api",
     "get_external_login_handler",
     "get_principal",
     "get_user",
+    "install_session_errors",
+    "issue_session",
     "list_users",
     "record_auth_event",
+    "revoke_all_for_user",
+    "revoke_session",
+    "rotate_session",
+    "session_resolver",
     "set_user_status",
     "stub_principal_resolver",
 ]
@@ -87,9 +112,12 @@ class PlaceholderLoginHandler:
         )
 
 
-def get_external_login_handler() -> ExternalLoginHandler:
-    """FastAPI dependency: JIT provisioning (IDENTITY-02). Overridable via dependency_overrides."""
-    return JitLoginHandler()
+def get_external_login_handler(request: Request) -> ExternalLoginHandler:
+    """FastAPI dependency: JIT provisioning (IDENTITY-02), then the app session (IDENTITY-03).
+
+    Overridable via ``dependency_overrides``.
+    """
+    return session_login_handler(request)
 
 
 class ModuleApi(Protocol):

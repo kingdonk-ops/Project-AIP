@@ -93,3 +93,23 @@ class AuthErrorResponse(BaseModel):
     """Body of a 401/403 on an authenticated route. Never names a tenant or a user."""
 
     detail: AuthErrorBody
+
+
+# --- sessions (IDENTITY-03) ----------------------------------------------------------------------
+
+
+class SessionOut(_CamelModel):
+    """One of the caller's own live sessions (the "Active sessions" page)."""
+
+    id: UUID
+    current: bool
+    audience: Literal["app", "portal", "device"]
+    aal: Literal[1, 2]
+    ip: str | None
+    user_agent: str | None
+    created_at: datetime
+    last_seen_at: datetime
+
+
+class SessionList(_CamelModel):
+    items: list[SessionOut]

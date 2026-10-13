@@ -256,3 +256,20 @@ async def test_callback_refusal_is_403_and_names_nothing(
     assert r.json()["code"] == "DOMAIN_NOT_CLAIMED"
     assert "acme" not in r.text and "kaefer" not in r.text and "@" not in r.text
     assert r.headers["cache-control"] == "no-store"
+
+
+async def test_the_callback_issues_an_app_session_and_redirects(
+    idb: TenantDb, login_client: httpx.AsyncClient, provider: StubProvider, app: FastAPI
+) -> None:
+    """IDENTITY-03 step 8: the default handler provisions, issues the session and answers 303."""
+    del app.dependency_overrides[get_external_login_handler]  # the real, session-issuing handler
+    r = await _sign_in(login_client, provider, ALICE, sub=str(uuid4()), acr="aal2")
+    assert r.status_code == 303, r.text
+    assert r.headers["location"] == "/"
+    set_cookies = r.headers.get_list("set-cookie")
+    sid = next(c for c in set_cookies if c.startswith("__Host-aip_sid="))
+    assert "eyJ" not in " ".join(set_cookies)
+    value = sid.split(";", 1)[0].split("=", 1)[1]
+    me = await login_client.get("/api/v1/me", headers={"cookie": f"__Host-aip_sid={value}"})
+    assert me.status_code == 200, me.text
+    assert me.json()["aal"] == 2

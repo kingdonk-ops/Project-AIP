@@ -57,6 +57,9 @@ x-app-env: &app-env
   KEYCLOAK_REALM: aip
   OIDC_CLIENT_ID: aip-api
   OIDC_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:-aip_api_dev_only_secret}
+  # IDENTITY-03: the aip-admin service account ends Keycloak sessions on logout and revocation.
+  KEYCLOAK_ADMIN_CLIENT_ID: aip-admin
+  KEYCLOAK_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:-aip_admin_dev_only_secret}
   APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8080}
   PREAUTH_COOKIE_KEY: ${PREAUTH_COOKIE_KEY:-ZGV2LW9ubHktcHJlYXV0aC1jb29raWUta2V5LWZha2U}
   PROJECTS_CURSOR_KEY: ${PROJECTS_CURSOR_KEY:-dev-only-projects-cursor-key-not-secret}

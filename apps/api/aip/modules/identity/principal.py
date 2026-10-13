@@ -37,6 +37,7 @@ __all__ = [
     "PlatformPrincipalAdapter",
     "Principal",
     "PrincipalResolver",
+    "SessionExpiredError",
     "StubHeaderPrincipalResolver",
     "get_principal",
     "stub_auth_enabled",
@@ -149,7 +150,19 @@ class PlatformPrincipalAdapter:
 _NOT_AUTHENTICATED = {"code": "NOT_AUTHENTICATED", "message": "not authenticated"}
 
 
-def _unauthenticated() -> HTTPException:
+class SessionExpiredError(Exception):
+    """A session cookie was presented but is unknown, revoked or expired (IDENTITY-03).
+
+    Rendered as 401 ``{"detail": {"code": "SESSION_EXPIRED", ...}}`` with both session cookies
+    cleared (``install_session_errors``).
+    """
+
+
+def _unauthenticated() -> Exception:
+    from aip.modules.identity.session_store import session_expired
+
+    if session_expired():
+        return SessionExpiredError()
     return HTTPException(status_code=401, detail=dict(_NOT_AUTHENTICATED))
 
 
