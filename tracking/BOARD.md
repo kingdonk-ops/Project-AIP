@@ -94,7 +94,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [ACCESS-02](tasks/ACCESS-02.md) | Roles, default role seed, tenant/project role assignment API | access | M | ACCESS-01, PROJECTS-01 | review | branch claude/p0-access-02-roles; project overrides and operator gate split to ACCESS-06 |
+| [ACCESS-02](tasks/ACCESS-02.md) | Roles, default role seed, tenant/project role assignment API | access | M | ACCESS-01, PROJECTS-01 | done | PR #61; project overrides and operator gate split to ACCESS-06 |
 | [IDENTITY-03](tasks/IDENTITY-03.md) | Server-side sessions (__Host- cookie, user_session), rotation, revocation | identity | M | DESIGN-02, IDENTITY-02 | todo |  |
 | [TENANCY-03](tasks/TENANCY-03.md) | Organisations and project-scoped role assignment | tenancy | M | PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | todo | convert to Python backend per ADR 0001 before starting  |
