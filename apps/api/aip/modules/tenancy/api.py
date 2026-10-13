@@ -10,22 +10,33 @@ Other modules may import only this file, and only these names:
 - ``access_for_status(status)`` / ``Denial``: whether a tenant in that status may be used, and if
   not the stable 403 code (unknown statuses deny);
 - ``TenantView``: the tenant as other modules see it (no key references);
-- ``region_exists(conn, code)``: whether ``code`` is a deployment region (PROJECTS-01).
+- ``region_exists(conn, code)``: whether ``code`` is a deployment region (PROJECTS-01);
+- ``assert_demo_has_no_real_customers`` / ``RealDataInDemoError`` / ``DEMO_ENV``: the demo
+  deployment's startup guard (OPS-11); the app refuses to start in ``demo`` when any tenant is
+  flagged as a real customer.
 """
 
 from __future__ import annotations
 
 from uuid import UUID
 
+from aip.modules.tenancy.demo_guard import (
+    DEMO_ENV,
+    RealDataInDemoError,
+    assert_demo_has_no_real_customers,
+)
 from aip.modules.tenancy.dependencies import require_active_tenant
 from aip.modules.tenancy.repository import load_tenant, region_exists
 from aip.modules.tenancy.schemas import TenantView
 from aip.modules.tenancy.service import Denial, TenantService, access_for_status
 
 __all__ = [
+    "DEMO_ENV",
     "Denial",
+    "RealDataInDemoError",
     "TenantView",
     "access_for_status",
+    "assert_demo_has_no_real_customers",
     "get_tenant",
     "load_tenant",
     "region_exists",

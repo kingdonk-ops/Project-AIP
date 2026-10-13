@@ -53,3 +53,29 @@ building the AWS pipeline yet (owner decision 2026-10-07). AWS staging (OPS-07/0
 ## Carried forward from DESIGN-02 security review (non-blocking)
 
 - Coolify serves the `apps/web` nginx image directly, with no CDN in front, and `apps/web/nginx.conf` only sets `X-Content-Type-Options` and `Referrer-Policy`. Add the CSP and `frame-ancestors 'none'` from `apps/web/security-headers.json` (and a `Permissions-Policy`) to nginx, repeating them inside any `location` block that uses `add_header`. HSTS belongs at the TLS terminator (Coolify's proxy or CloudFront); confirm it is on. Without this the demo can be framed (clickjacking) and has no CSP.
+
+## As built (2026-10-13)
+
+- `infra/coolify/docker-compose.coolify.yml`, `nginx.conf`, `env.example`, `README.md`;
+  `.github/workflows/deploy-coolify.yml`; `tools/smoke.py`. The stack pulls `aip-api`, `aip-migrator` and
+  `aip-web-demo` from GHCR by tag (`main` or a git SHA); nothing is built on the server.
+- Deviations: the web image stays on nginx (not Caddy; the existing `apps/web` image and the DESIGN-02 header
+  notes are nginx). The migrator keeps its own image (`infra/docker/migrator.Dockerfile`, as in the dev stack and
+  CI). Valkey stands in for Redis (STACK-05). Keycloak runs behind `web` under `/auth` on the demo origin
+  (`KC_HTTP_RELATIVE_PATH=/auth`), so the demo needs one domain; nginx proxies only the `aip` and `mock-idp`
+  realms and static resources there (404 for the admin console and API and the master realm), and passes upstream
+  the real client IP (`real_ip_recursive` over private hops) rather than a client-supplied `X-Forwarded-For`.
+- Guard: `tenants.is_real_customer` (migration `202610131600`) and `tenancy_has_real_customer()`; with
+  `AIP_ENV=demo` the API's start-up raises `RealDataInDemoError` if any live tenant has it set (and fails closed
+  without a database). Tested in `tenancy/tests/test_demo_guard_db.py`.
+- Banner: the demo web build (`VITE_AIP_DEMO=1`) puts the `shell.demoBanner` text in `index.html`, outside the React
+  root, so the smoke test sees it without running scripts.
+- Headers (DESIGN-02 carry-forward): CSP with `frame-ancestors 'none'`, `Permissions-Policy`, `Referrer-Policy` and
+  `nosniff` in both nginx configs, repeated in every location that sets its own headers (checked by
+  `tools/tests/test_coolify.py`); Keycloak's `/auth/` location omits our CSP because Keycloak sends its own. HSTS is
+  set at Coolify's Traefik (README step 5).
+- Not done here, owner steps (README): rotate the Coolify token, create the compose resource in the Coolify UI (the
+  API cannot), set the domain and environment variables, add `COOLIFY_WEBHOOK`/`COOLIFY_TOKEN` secrets and the
+  `DEMO_URL` variable, make the GHCR packages public. The acceptance checks that need the live server (redeploy
+  within 10 minutes, smoke against the demo URL) run in the workflow once those exist; the local compose
+  integration run needs Docker, which this environment does not have.

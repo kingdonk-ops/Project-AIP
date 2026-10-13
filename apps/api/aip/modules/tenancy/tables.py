@@ -9,7 +9,7 @@ check-schema`` compares them with the migrated database.
   ``with_tenant`` the app sees its own row only, and nothing when no tenant is set.
 """
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Table, Text, Uuid
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Table, Text, Uuid, text
 
 from aip.platform.db.metadata import metadata
 
@@ -32,6 +32,7 @@ tenants = Table(
     Column("deployment_shape", Text, nullable=False),
     Column("region_code", Text, ForeignKey("deployment_regions.code"), nullable=False),
     Column("kms_key_ref", Text, nullable=True),
+    Column("is_real_customer", Boolean, nullable=False, server_default=text("false")),
     Column("status", Text, nullable=False),
     Column("created_at", DateTime(timezone=True), nullable=False),
     Column("updated_at", DateTime(timezone=True), nullable=False),

@@ -1,0 +1,108 @@
+name: deploy-coolify
+
+# OPS-11: on every push to main, build the demo images, push them to GHCR (tagged with the git SHA
+# and `main`), then ask Coolify (bytedock.io) to redeploy the demo and smoke-test it. Synthetic data
+# only (ADR 0007). One-time setup and rollback: infra/coolify/README.md.
+#
+# Secrets (repository > Settings > Secrets): COOLIFY_WEBHOOK (the resource's deploy webhook URL) and
+# COOLIFY_TOKEN (a Coolify API token with deploy permission). Variable: DEMO_URL (https://<demo-host>).
+# Without them the images are still pushed and the deploy step says it was skipped.
+# No third-party actions: plain docker and curl.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-coolify
+  cancel-in-progress: false
+
+jobs:
+  images:
+    name: Build and push demo images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Log in to GHCR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+      - name: Build and push aip-api, aip-migrator and aip-web-demo
+        env:
+          SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          registry="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
+          build() {
+            local name="$1" dockerfile="$2"; shift 2
+            docker build -f "$dockerfile" "$@" \
+              --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+              --label "org.opencontainers.image.revision=${SHA}" \
+              -t "${registry}/${name}:${SHA}" -t "${registry}/${name}:main" .
+            docker push "${registry}/${name}:${SHA}"
+            docker push "${registry}/${name}:main"
+          }
+          build aip-api apps/api/Dockerfile --build-arg "GIT_SHA=${SHA}" --build-arg "BUILD_ID=${RUN_ID}"
+          build aip-migrator infra/docker/migrator.Dockerfile
+          build aip-web-demo apps/web/Dockerfile --build-arg VITE_AIP_DEMO=1
+
+  deploy:
+    name: Deploy to the Coolify demo and smoke-test it
+    needs: images
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: coolify-demo
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Trigger the Coolify deploy webhook
+        id: trigger
+        env:
+          COOLIFY_WEBHOOK: ${{ secrets.COOLIFY_WEBHOOK }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${COOLIFY_WEBHOOK}" ] || [ -z "${COOLIFY_TOKEN}" ]; then
+            echo "::notice::COOLIFY_WEBHOOK / COOLIFY_TOKEN are not set: images pushed, deploy skipped"
+            echo "deployed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Coolify answers 405 "This endpoint has changed to a POST request" on older webhook URLs.
+          code=$(curl -sS -o response.json -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer ${COOLIFY_TOKEN}" -H "Accept: application/json" "${COOLIFY_WEBHOOK}")
+          if [ "$code" = "405" ]; then
+            code=$(curl -sS -o response.json -w '%{http_code}' \
+              -H "Authorization: Bearer ${COOLIFY_TOKEN}" -H "Accept: application/json" "${COOLIFY_WEBHOOK}")
+          fi
+          python3 -c "import json,sys; d=json.load(open('response.json')); print({k: v for k, v in d.items() if k != 'token'})" || true
+          if [ "${code:0:1}" != "2" ]; then echo "::error::Coolify answered HTTP ${code}"; exit 1; fi
+          echo "deployed=true" >> "$GITHUB_OUTPUT"
+      - name: Wait for the new commit and smoke-test the demo
+        if: steps.trigger.outputs.deployed == 'true' && vars.DEMO_URL != ''
+        env:
+          DEMO_URL: ${{ vars.DEMO_URL }}
+          SHA: ${{ github.sha }}
+        run: |
+          # Up to 10 minutes for the rollout (OPS-11 acceptance), then the final smoke result.
+          for attempt in $(seq 1 40); do
+            if python3 tools/smoke.py "$DEMO_URL" --expect-commit "$SHA" > smoke.log 2>&1; then
+              cat smoke.log; exit 0
+            fi
+            sleep 15
+          done
+          cat smoke.log
+          echo "::error::the demo did not serve ${SHA} healthily within 10 minutes"
+          exit 1

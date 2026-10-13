@@ -19,9 +19,12 @@ def test_module_imports_and_manifest_validates() -> None:
 def test_api_exports_only_the_published_interface() -> None:
     api = importlib.import_module("aip.modules.tenancy.api")
     assert sorted(api.__all__) == [
+        "DEMO_ENV",
         "Denial",
+        "RealDataInDemoError",
         "TenantView",
         "access_for_status",
+        "assert_demo_has_no_real_customers",
         "get_tenant",
         "load_tenant",
         "region_exists",

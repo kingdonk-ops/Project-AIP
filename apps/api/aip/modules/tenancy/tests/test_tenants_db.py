@@ -161,10 +161,13 @@ def test_rls_is_enabled_and_forced_with_the_fail_closed_policy(tenancy_db: Fresh
     )
     assert rows == [(True, True)]
     policies = tenancy_db.fetch(
-        "SELECT policyname, cmd, qual, with_check FROM pg_policies WHERE tablename = 'tenants'"
+        "SELECT policyname, cmd, qual, with_check, roles FROM pg_policies "
+        "WHERE tablename = 'tenants' ORDER BY policyname"
     )
-    assert len(policies) == 1
-    name, cmd, qual, with_check = policies[0]
+    assert len(policies) == 2
+    # OPS-11: the demo guard's owner-only policy sees real-customer rows and nothing else.
+    assert policies[0] == ("real_customer_check", "SELECT", "is_real_customer", None, ["aip_owner"])
+    name, cmd, qual, with_check, _roles = policies[1]
     assert (name, cmd) == ("tenant_isolation", "ALL")
     for expr in (qual, with_check):
         assert "NULLIF(current_setting('app.tenant_id'::text, true), ''::text)" in expr

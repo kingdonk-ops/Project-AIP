@@ -144,6 +144,10 @@ GRANT ALL ON FUNCTION public.identity_resolve_session(p_sid_hash bytea) TO aip_a
 REVOKE ALL ON FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) TO aip_app;
 
+-- Name: FUNCTION tenancy_has_real_customer(); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.tenancy_has_real_customer() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.tenancy_has_real_customer() TO aip_app;
+
 -- Name: SEQUENCE procrastinate_events_id_seq; Type: ACL; Schema: public
 GRANT SELECT,USAGE ON SEQUENCE public.procrastinate_events_id_seq TO aip_jobs;
 GRANT USAGE ON SEQUENCE public.procrastinate_events_id_seq TO aip_app;
@@ -1075,6 +1079,16 @@ $$;
 
 ALTER FUNCTION public.procrastinate_update_heartbeat_v1(worker_id bigint) OWNER TO aip_owner;
 
+-- Name: tenancy_has_real_customer(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.tenancy_has_real_customer() RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+      SELECT EXISTS (SELECT 1 FROM tenants WHERE is_real_customer AND deleted_at IS NULL)
+    $$;
+
+ALTER FUNCTION public.tenancy_has_real_customer() OWNER TO aip_owner;
+
 -- Name: idx_procrastinate_jobs_worker_not_null; Type: INDEX; Schema: public
 CREATE INDEX idx_procrastinate_jobs_worker_not_null ON public.procrastinate_jobs USING btree (worker_id) WHERE ((worker_id IS NOT NULL) AND (status = 'doing'::public.procrastinate_job_status));
 
@@ -1278,6 +1292,9 @@ CREATE POLICY tenant_isolation ON public.tenant_auth_policy USING ((tenant_id = 
 
 -- Name: tenant_membership tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenant_membership USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: tenants real_customer_check; Type: POLICY; Schema: public
+CREATE POLICY real_customer_check ON public.tenants FOR SELECT TO aip_owner USING (is_real_customer);
 
 -- Name: tenants tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenants USING ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -1778,6 +1795,7 @@ CREATE TABLE public.tenants (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    is_real_customer boolean DEFAULT false NOT NULL,
     CONSTRAINT ck_tenants_deployment_shape CHECK ((deployment_shape = ANY (ARRAY['pooled'::text, 'siloed'::text]))),
     CONSTRAINT ck_tenants_id CHECK ((id <> '00000000-0000-0000-0000-000000000000'::uuid)),
     CONSTRAINT ck_tenants_kms_key_ref CHECK ((kms_key_ref <> ''::text)),
