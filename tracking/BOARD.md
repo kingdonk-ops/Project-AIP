@@ -105,6 +105,10 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [TERMS-05](tasks/TERMS-05.md) | Terms admin API and permissions | terms | M | TERMS-04 | todo | convert to Python backend per ADR 0001 before starting |
 | [DESIGN-04](tasks/DESIGN-04.md) | Record detail pattern, dialogs, toasts, empty/loading/error states | design | M | DESIGN-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [OPS-03](tasks/OPS-03.md) | Jobs API: my jobs, admin queue, cancel with permission | ops | M | OPS-02 | todo | convert to Python backend per ADR 0001 before starting |
+| [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | todo | AWS readiness |
+| [STACK-07](tasks/STACK-07.md) | TLS to Postgres and Redis (RDS and ElastiCache ready) | stack | S | OPS-02, STACK-05 | todo | AWS readiness |
+| [OPS-13](tasks/OPS-13.md) | Scheduled job trigger: one command for Coolify cron and EventBridge Scheduler | ops | S | OPS-02 | todo | AWS readiness |
+| [OPS-16](tasks/OPS-16.md) | RDS bootstrap runbook and the web hosting decision | ops | S | DATABASE-02 | todo | AWS readiness; needs an owner answer (ALB vs S3 + CloudFront) before OPS-07 |
 
 ### Wave 7
 
@@ -125,6 +129,8 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [OPS-07](tasks/OPS-07.md) | Terraform baseline for staging and the build-promote pipeline | ops | M | STACK-05 | todo | use infra/terraform (ADR 0004), not infrastructure/ |
 | [OPS-09](tasks/OPS-09.md) | Build once, scan, push to ECR, deploy staging, smoke | ops | M | OPS-07, STACK-05 | todo |  |
 | [OPS-10](tasks/OPS-10.md) | Cosign signing, prod promotion approval, digest rollback | ops | M | OPS-09 | todo | convert to Python backend per ADR 0001 before starting  |
+| [SECURITY-10](tasks/SECURITY-10.md) | Secret rotation without downtime (90-day Secrets Manager rotation) | security | M | IDENTITY-03, STACK-07 | todo | AWS readiness; adds an ADR |
+| [OPS-14](tasks/OPS-14.md) | AWS services beyond the baseline: Keycloak, Gotenberg, KMS and SES | ops | M | OPS-07, STACK-06 | todo | AWS readiness; Glacier IR lifecycle stays in OPS-06 |
 | [PLAN-R1](tasks/PLAN-R1.md) | Generate R1 task files just in time (ADR 0007; process in docs/reviews/07-delivery.md) | arch | M | ACCESS-02, APPROVALS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 
 ### Wave 8
@@ -139,6 +145,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [IDENTITY-05](tasks/IDENTITY-05.md) | SCIM 2.0 server; deprovision revokes everything in one transaction | identity | M | ACCESS-01, ARCH-05, IDENTITY-03 | todo |  |
 | [ACCESS-05](tasks/ACCESS-05.md) | Users & Roles UI, permission matrix page and export | access | M | ACCESS-02, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting; step-up is now a full redirect to Keycloak (`stepUpUrl`); map `mfaEnrolled` to `app_user.mfa_enrolled_at` (ADR 0005 rev 2) |
 | [PROJECTS-04](tasks/PROJECTS-04.md) | Work-type classification + project settings overrides | projects | M | PROJECTS-01, TERMS-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [OPS-15](tasks/OPS-15.md) | CloudWatch alarms, EventBridge schedules and secret-rotation Lambdas | ops | M | OPS-07, OPS-13, SECURITY-10 | todo | AWS readiness |
 | [PROJECTS-05](tasks/PROJECTS-05.md) | System sites are hidden and protected (owner decision) | projects | XS | PROJECTS-01 | done | ClaudeK: PR #58 |
 | [AUDIT-03](tasks/AUDIT-03.md) | Chain verifier CLI + S3 Object Lock anchoring job | audit | M | AUDIT-01, OPS-02, OPS-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [AUDIT-04](tasks/AUDIT-04.md) | Activity/timeline API + project activity tab | audit | M | ACCESS-01, AUDIT-02, DESIGN-04 | todo | convert to Python backend per ADR 0001 before starting  |
