@@ -50,7 +50,8 @@ const UNIT = "fixtures/*.spec.ts";
 const skeletonProjects: PlaywrightTestConfig["projects"] = process.env.E2E_SKELETON
   ? [
       { name: "web", testMatch: SKELETON, retries: 0, timeout: 120_000, use: { ...devices["Desktop Chrome"], actionTimeout: 15_000 } },
-      { name: "staging", testMatch: SKELETON, retries: 0, timeout: 120_000, use: { ...devices["Desktop Chrome"], actionTimeout: 15_000 } },
+      // No trace on the demo: a trace records typed values, and its credentials come from secrets.
+      { name: "staging", testMatch: SKELETON, retries: 0, timeout: 120_000, use: { ...devices["Desktop Chrome"], actionTimeout: 15_000, trace: "off" } },
     ]
   : [];
 

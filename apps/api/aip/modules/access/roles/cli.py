@@ -8,9 +8,10 @@ Idempotent. Tenants are named explicitly: under FORCE RLS no application role ca
 tenant, and new tenants are seeded by provisioning (TENANCY-05). Customised roles are reported,
 not changed.
 
-``bootstrap-admin --admin <tenant-id>,<email>,<idp-alias> [...]`` (TESTING-09, dev and demo only;
-refused when ``AIP_ENV=production``): make each email its tenant's ``tenant_admin`` before their
-first SSO sign-in, so the fixture tenants have someone who can create projects and assign roles.
+``bootstrap-admin --admin <tenant-id>,<email>,<idp-alias> [...]`` (TESTING-09; runs only when
+``AIP_ENV`` is development, demo or test): make each email its tenant's ``tenant_admin`` before
+their first SSO sign-in, so the fixture tenants have someone who can create projects and assign
+roles.
 Idempotent; run after ``seed-roles``.
 """
 
@@ -32,7 +33,10 @@ from aip.platform.context import RequestContext, new_request_id, use_context
 from aip.platform.db.engine import dispose_engine
 from aip.platform.db.session import with_tenant
 
-__all__ = ["main"]
+__all__ = ["BOOTSTRAP_ENVS", "main"]
+
+# Allowlist, not a production denylist: an unset or misspelled AIP_ENV must not grant admin.
+BOOTSTRAP_ENVS = frozenset({"development", "demo", "test"})
 
 _MODULES_DIR = Path(__file__).resolve().parents[2]
 
@@ -95,8 +99,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     if args.command == "bootstrap-admin":
-        if os.environ.get("AIP_ENV", "") == "production":
-            print("bootstrap-admin refuses to run when AIP_ENV=production", file=sys.stderr)
+        env = os.environ.get("AIP_ENV", "").strip().lower()
+        if env not in BOOTSTRAP_ENVS:
+            print(
+                f"bootstrap-admin runs only when AIP_ENV is one of {sorted(BOOTSTRAP_ENVS)}",
+                file=sys.stderr,
+            )
             return 1
         return asyncio.run(_bootstrap(args.admin))
     return asyncio.run(_seed(args.tenant))

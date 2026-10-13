@@ -286,10 +286,13 @@ async def ensure_invited_sso_user(
 
     Dev and demo bootstrap only (TESTING-09): the new user has a ``member`` membership and no
     Keycloak link, so the first SSO sign-in with that verified email links it (``decide_jit``
-    ``LINK``) and keeps any role assigned beforehand. Idempotent.
+    ``LINK``) and keeps any role assigned beforehand. Idempotent. ``ValueError`` for an existing
+    local or deactivated account (it could never use a role given here).
     """
     existing = await find_by_email(conn, email)
     if existing is not None:
+        if not existing.sso_managed or existing.status == "deactivated":
+            raise ValueError(f"{email} exists as a local or deactivated account; not bootstrapped")
         return existing.id
     user_id = await insert_user(
         conn,

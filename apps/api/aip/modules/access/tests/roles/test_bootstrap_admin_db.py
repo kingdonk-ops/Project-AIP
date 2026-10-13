@@ -73,10 +73,25 @@ async def test_bootstrap_without_seeded_roles_fails_loudly(db: TenantDb) -> None
         await _bootstrap([(TENANT_A_ID, EMAIL, "kaefer-oidc")])
 
 
-def test_bootstrap_refuses_production(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("AIP_ENV", "production")
+@pytest.mark.parametrize("env", ["production", "Production", "prod", "", "staging"])
+def test_bootstrap_runs_only_in_allowlisted_envs(monkeypatch: pytest.MonkeyPatch, env: str) -> None:
+    monkeypatch.setenv("AIP_ENV", env)
     argv = ["bootstrap-admin", "--admin", f"{TENANT_A_ID},{EMAIL},kaefer-oidc"]
     assert main(argv) == 1
+
+
+async def test_bootstrap_refuses_an_existing_local_account(db: TenantDb) -> None:
+    await seed_roles(TENANT_A_ID)
+    await su_fetch(
+        db,
+        "INSERT INTO app_user (id, tenant_id, email, display_name, user_class, status, sso_managed)"
+        " VALUES (gen_random_uuid(), $1, 'local.admin@kaefer.test', 'local', 'staff', 'active',"
+        " false) RETURNING 1",
+        TENANT_A_ID,
+    )
+    with pytest.raises(ValueError, match="local or deactivated"):
+        await _bootstrap([(TENANT_A_ID, "local.admin@kaefer.test", "kaefer-oidc")])
+    assert await _holders(db, "local.admin@kaefer.test") == []
 
 
 @pytest.mark.parametrize("value", ["nope", f"{TENANT_A_ID},not-an-email,x", "x,a@b.test,idp"])
