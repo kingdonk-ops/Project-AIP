@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.tenancy.schemas import TenantView
-from aip.modules.tenancy.tables import tenants
+from aip.modules.tenancy.tables import deployment_regions, tenants
 
 _COLUMNS = (
     tenants.c.id,
@@ -32,3 +32,9 @@ async def load_tenant(conn: AsyncConnection, tenant_id: UUID) -> TenantView | No
     if row is None:
         return None
     return TenantView.model_validate(dict(row))
+
+
+async def region_exists(conn: AsyncConnection, code: str) -> bool:
+    """Whether ``code`` is a deployment region (global reference data, readable by aip_app)."""
+    stmt = select(deployment_regions.c.code).where(deployment_regions.c.code == code)
+    return (await conn.execute(stmt)).first() is not None
