@@ -330,3 +330,18 @@ def test_normalise_type_maps_sqlalchemy_names_to_postgres_names(
     declared: str, migrated: str
 ) -> None:
     assert schema_check.normalise_type(declared) == schema_check.normalise_type(migrated)
+
+
+# Every alias, not a hand-picked few: a type the checker cannot parse fails here, not as a
+# confusing schema diff in the first migration that happens to use it (PROJECTS-01 found one).
+@pytest.mark.parametrize(
+    ("alias", "canonical"),
+    sorted(
+        {**schema_check._ALIASES, **schema_check._ZONELESS}.items()  # pyright: ignore[reportPrivateUsage]
+    ),
+)
+def test_every_type_alias_normalises_to_its_postgres_name(alias: str, canonical: str) -> None:
+    normalise = schema_check.normalise_type
+    assert normalise(alias) == normalise(canonical) == canonical
+    assert normalise(alias.upper()) == canonical
+    assert normalise(f"{alias}[]") == normalise(f"{canonical}[]")

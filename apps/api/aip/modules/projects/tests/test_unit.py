@@ -84,10 +84,43 @@ def test_cursor_round_trips_and_rejects_tampering() -> None:
         CursorCodec(b"other-key-of-32-bytes-0123456789").decode(cursor)
 
 
-def test_the_dev_cursor_key_is_refused_in_production(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("env", ["production", "staging", "demo"])
+def test_the_dev_cursor_key_is_refused_outside_dev_and_test(
+    monkeypatch: pytest.MonkeyPatch, env: str
+) -> None:
     monkeypatch.delenv("PROJECTS_CURSOR_KEY", raising=False)
-    monkeypatch.setenv("AIP_ENV", "production")
-    with pytest.raises(ValidationError, match="PROJECTS_CURSOR_KEY must be set"):
+    monkeypatch.setenv("AIP_ENV", env)
+    with pytest.raises(
+        ValidationError, match=f"PROJECTS_CURSOR_KEY must be set when AIP_ENV={env}"
+    ):
         ProjectsSettings()
     monkeypatch.setenv("PROJECTS_CURSOR_KEY", "a-real-secret-from-the-store-123")
     assert ProjectsSettings().cursor_key.get_secret_value().startswith("a-real")
+
+
+@pytest.mark.parametrize("env", ["", "development", "test"])
+def test_the_dev_cursor_key_is_allowed_in_dev_and_test(
+    monkeypatch: pytest.MonkeyPatch, env: str
+) -> None:
+    monkeypatch.delenv("PROJECTS_CURSOR_KEY", raising=False)
+    monkeypatch.setenv("AIP_ENV", env)
+    assert ProjectsSettings().aip_env == env
+
+
+async def test_server_startup_fails_without_a_cursor_key_outside_dev(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The check runs in the app lifespan, so a deploy fails at startup, not on a list request."""
+    from aip.main import create_app
+    from aip.modules.projects.settings import get_settings
+
+    monkeypatch.delenv("PROJECTS_CURSOR_KEY", raising=False)
+    monkeypatch.setenv("AIP_ENV", "staging")
+    get_settings.cache_clear()
+    app = create_app(env="test", tracing=False)
+    try:
+        with pytest.raises(ValidationError, match="PROJECTS_CURSOR_KEY"):
+            async with app.router.lifespan_context(app):
+                pass
+    finally:
+        get_settings.cache_clear()

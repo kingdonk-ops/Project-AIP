@@ -6,10 +6,12 @@ an active tenant. Explicit ``operation_id``s keep the generated client's hook na
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Request, Response, status
+from fastapi import APIRouter, Depends, FastAPI, Query, Request, Response, status
 
 from aip.modules.projects.schemas import (
     ErrorBody,
@@ -25,6 +27,7 @@ from aip.modules.projects.schemas import (
     SiteUpdate,
 )
 from aip.modules.projects.service import ProjectService, SiteService
+from aip.modules.projects.settings import get_settings
 from aip.modules.tenancy.api import require_active_tenant
 from aip.platform.access import AccessPrincipal, PolicyService, Resource, requires
 
@@ -171,6 +174,13 @@ async def delete_site(site_id: UUID) -> Response:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-router = APIRouter(dependencies=[Depends(require_active_tenant)])
+@asynccontextmanager
+async def _validate_settings(app: FastAPI) -> AsyncIterator[None]:
+    """Load the settings when the server starts, so a missing cursor key fails the deploy."""
+    get_settings()
+    yield
+
+
+router = APIRouter(dependencies=[Depends(require_active_tenant)], lifespan=_validate_settings)
 router.include_router(projects_router)
 router.include_router(sites_router)

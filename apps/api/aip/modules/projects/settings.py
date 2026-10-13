@@ -1,7 +1,9 @@
 """Projects settings (PROJECTS-01), read from the environment.
 
 ``PROJECTS_CURSOR_KEY`` signs list cursors. The dev default is obviously fake and refused in
-production, where the value comes from the secret store.
+every environment except development and test (so staging cannot run on a public key); deployed
+environments take the value from their secret store. ``routes.py`` loads the settings when the
+app starts, so a missing key fails the deploy instead of the first paged request.
 """
 
 from __future__ import annotations
@@ -12,6 +14,8 @@ from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEV_CURSOR_KEY = "dev-only-projects-cursor-key-not-secret"
+# Where the dev key is allowed; "" is an unset AIP_ENV (local runs and the test suite).
+DEV_KEY_ENVS = frozenset({"", "development", "test"})
 
 
 class ProjectsSettingsError(ValueError):
@@ -27,9 +31,12 @@ class ProjectsSettings(BaseSettings):
     )
 
     @model_validator(mode="after")
-    def _no_dev_key_in_production(self) -> ProjectsSettings:
-        if self.aip_env == "production" and self.cursor_key.get_secret_value() == DEV_CURSOR_KEY:
-            raise ProjectsSettingsError("PROJECTS_CURSOR_KEY must be set in production")
+    def _no_dev_key_outside_dev(self) -> ProjectsSettings:
+        dev_key = self.cursor_key.get_secret_value() == DEV_CURSOR_KEY
+        if dev_key and self.aip_env not in DEV_KEY_ENVS:
+            raise ProjectsSettingsError(
+                f"PROJECTS_CURSOR_KEY must be set when AIP_ENV={self.aip_env}"
+            )
         return self
 
 

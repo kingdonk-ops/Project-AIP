@@ -68,10 +68,11 @@ def normalise_type(spec: str) -> str:
         return s
     base, args, rest = m["base"], m["args"] or "", m["rest"].strip()
     base = _ALIASES.get(base, base)
-    if not rest and base in _ZONELESS:
+    array = rest if rest.startswith("[") else ""
+    if rest == array and base in _ZONELESS:  # nothing but an optional array suffix follows
         base = _ZONELESS[base]
         if args:  # timestamp(3) -> timestamp(3) without time zone
-            return f"{base.split(' ', 1)[0]}{args} {base.split(' ', 1)[1]}"
+            return f"{base.split(' ', 1)[0]}{args} {base.split(' ', 1)[1]}{array}"
     return f"{base}{args}{(' ' + rest) if rest and not rest.startswith('[') else rest}"
 
 
