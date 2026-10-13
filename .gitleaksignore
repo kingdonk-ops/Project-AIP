@@ -14,3 +14,6 @@
 # projects cursor signing secret as a Field default. The constant is an obviously fake placeholder, refused
 # outside development and test by ProjectsSettings.
 d7a52f33e6c04c99fb7e909b66482276f66544c5:apps/api/aip/modules/projects/settings.py:generic-api-key:26
+# The same line in the squash-merge commit of PR #56 on main (gitleaks fingerprints are per commit;
+# squash merges create new ones, so a reviewed finding needs its main commit listed too).
+6d037e3d5f15d3ec026d94d4d2d4cf3e7ccb85db:apps/api/aip/modules/projects/settings.py:generic-api-key:30
