@@ -1,0 +1,44 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+id = "projects"
+context = "projects"
+depends_on = ["tenancy"]
+permission_namespaces = ["project", "site"]
+subscribes = []
+settings = ["PROJECTS_CURSOR_KEY"]
+term_keys = []
+
+[[permissions]]
+code = "project.view"
+description = "View projects"
+
+[[permissions]]
+code = "project.create"
+description = "Create projects"
+
+[[permissions]]
+code = "project.update"
+description = "Edit projects and move them through their lifecycle"
+
+[[permissions]]
+code = "project.archive"
+description = "Archive projects"
+
+[[permissions]]
+code = "site.view"
+description = "View sites"
+
+[[permissions]]
+code = "site.manage"
+description = "Create, edit and delete sites"
+
+[[events]]
+name = "project.created"
+version = 1
+
+[[events]]
+name = "project.updated"
+version = 1
+
+[[events]]
+name = "project.archived"
+version = 1

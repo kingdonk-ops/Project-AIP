@@ -311,3 +311,37 @@ def test_snapshot_of_a_fresh_database_matches_the_committed_file(
     assert result.returncode == 0, result.stderr
     committed = (REPO_ROOT / "db" / "schema.snapshot.sql").read_text(encoding="utf-8")
     assert out.read_text(encoding="utf-8") == committed
+
+
+@pytest.mark.parametrize(
+    ("declared", "migrated"),
+    [
+        ("CHAR(3)", "character(3)"),
+        ("VARCHAR(10)", "character varying(10)"),
+        ("NUMERIC(9, 6)", "numeric(9,6)"),
+        ("TIMESTAMP", "timestamp without time zone"),
+        ("TIMESTAMP(3)", "timestamp(3) without time zone"),
+        ("TIMESTAMP WITH TIME ZONE", "timestamp with time zone"),
+        ("FLOAT", "double precision"),
+        ("TEXT[]", "text[]"),
+    ],
+)
+def test_normalise_type_maps_sqlalchemy_names_to_postgres_names(
+    declared: str, migrated: str
+) -> None:
+    assert schema_check.normalise_type(declared) == schema_check.normalise_type(migrated)
+
+
+# Every alias, not a hand-picked few: a type the checker cannot parse fails here, not as a
+# confusing schema diff in the first migration that happens to use it (PROJECTS-01 found one).
+@pytest.mark.parametrize(
+    ("alias", "canonical"),
+    sorted(
+        {**schema_check._ALIASES, **schema_check._ZONELESS}.items()  # pyright: ignore[reportPrivateUsage]
+    ),
+)
+def test_every_type_alias_normalises_to_its_postgres_name(alias: str, canonical: str) -> None:
+    normalise = schema_check.normalise_type
+    assert normalise(alias) == normalise(canonical) == canonical
+    assert normalise(alias.upper()) == canonical
+    assert normalise(f"{alias}[]") == normalise(f"{canonical}[]")

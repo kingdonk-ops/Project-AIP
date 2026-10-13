@@ -49,7 +49,11 @@ _ALIASES = {
     "decimal": "numeric",
 }
 _ZONELESS = {"timestamp": "timestamp without time zone", "time": "time without time zone"}
-_TYPE_RE = re.compile(r"^(?P<base>[a-z_][a-z0-9_ ]*?)\s*(?P<args>\([^)]*\))?(?P<rest>.*)$")
+# ``rest`` is empty, a space-led suffix (``with time zone``) or an array suffix (``[]``), so the
+# lazy ``base`` cannot stop after one letter (``char(3)`` must split as ``char`` + ``(3)``).
+_TYPE_RE = re.compile(
+    r"^(?P<base>[a-z_][a-z0-9_ ]*?)\s*(?P<args>\([^)]*\))?(?P<rest>(?:\s.*|\[.*)?)$"
+)
 
 Columns = dict[str, tuple[str, bool]]  # column -> (normalised type, nullable)
 
@@ -64,10 +68,11 @@ def normalise_type(spec: str) -> str:
         return s
     base, args, rest = m["base"], m["args"] or "", m["rest"].strip()
     base = _ALIASES.get(base, base)
-    if not rest and base in _ZONELESS:
+    array = rest if rest.startswith("[") else ""
+    if rest == array and base in _ZONELESS:  # nothing but an optional array suffix follows
         base = _ZONELESS[base]
         if args:  # timestamp(3) -> timestamp(3) without time zone
-            return f"{base.split(' ', 1)[0]}{args} {base.split(' ', 1)[1]}"
+            return f"{base.split(' ', 1)[0]}{args} {base.split(' ', 1)[1]}{array}"
     return f"{base}{args}{(' ' + rest) if rest and not rest.startswith('[') else rest}"
 
 

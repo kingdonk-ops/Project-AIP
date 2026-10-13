@@ -59,6 +59,7 @@ x-app-env: &app-env
   OIDC_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:-aip_api_dev_only_secret}
   APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8080}
   PREAUTH_COOKIE_KEY: ${PREAUTH_COOKIE_KEY:-ZGV2LW9ubHktcHJlYXV0aC1jb29raWUta2V5LWZha2U}
+  PROJECTS_CURSOR_KEY: ${PROJECTS_CURSOR_KEY:-dev-only-projects-cursor-key-not-secret}
 
 services:
   postgres:

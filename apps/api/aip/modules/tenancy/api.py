@@ -9,7 +9,8 @@ Other modules may import only this file, and only these names:
   ``with_tenant`` (IDENTITY-02's sign-in provisioning checks the tenant in its own transaction);
 - ``access_for_status(status)`` / ``Denial``: whether a tenant in that status may be used, and if
   not the stable 403 code (unknown statuses deny);
-- ``TenantView``: the tenant as other modules see it (no key references).
+- ``TenantView``: the tenant as other modules see it (no key references);
+- ``region_exists(conn, code)``: whether ``code`` is a deployment region (PROJECTS-01).
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from aip.modules.tenancy.dependencies import require_active_tenant
-from aip.modules.tenancy.repository import load_tenant
+from aip.modules.tenancy.repository import load_tenant, region_exists
 from aip.modules.tenancy.schemas import TenantView
 from aip.modules.tenancy.service import Denial, TenantService, access_for_status
 
@@ -27,6 +28,7 @@ __all__ = [
     "access_for_status",
     "get_tenant",
     "load_tenant",
+    "region_exists",
     "require_active_tenant",
 ]
 

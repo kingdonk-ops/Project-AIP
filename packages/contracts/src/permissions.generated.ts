@@ -10,7 +10,13 @@ export type PermissionCode =
   | "access.role_assignment.read"
   | "access.team.manage"
   | "identity.user.manage"
-  | "identity.user.read";
+  | "identity.user.read"
+  | "project.archive"
+  | "project.create"
+  | "project.update"
+  | "project.view"
+  | "site.manage"
+  | "site.view";
 
 export const PERMISSIONS = {
   "access.matrix.export": { module: "access", privileged: false },
@@ -21,4 +27,10 @@ export const PERMISSIONS = {
   "access.team.manage": { module: "access", privileged: false },
   "identity.user.manage": { module: "identity", privileged: true },
   "identity.user.read": { module: "identity", privileged: false },
+  "project.archive": { module: "projects", privileged: false },
+  "project.create": { module: "projects", privileged: false },
+  "project.update": { module: "projects", privileged: false },
+  "project.view": { module: "projects", privileged: false },
+  "site.manage": { module: "projects", privileged: false },
+  "site.view": { module: "projects", privileged: false },
 } as const satisfies Record<PermissionCode, { module: string; privileged: boolean }>;

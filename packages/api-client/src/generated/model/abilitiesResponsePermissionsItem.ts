@@ -12,4 +12,10 @@ export const AbilitiesResponsePermissionsItem = {
   accessteammanage: 'access.team.manage',
   identityusermanage: 'identity.user.manage',
   identityuserread: 'identity.user.read',
+  projectarchive: 'project.archive',
+  projectcreate: 'project.create',
+  projectupdate: 'project.update',
+  projectview: 'project.view',
+  sitemanage: 'site.manage',
+  siteview: 'site.view',
 } as const;
