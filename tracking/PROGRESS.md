@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-13 · DOCS-11 · PR #54 · Owner time-zone standard recorded as ADR 0025 (UTC instants, viewer-zone display, wall-clock future events, calendar-day expiry against UTC, confirmed by the owner).
 - 2026-10-13 · ARCH-05 · PR #55 · Append-only `domain_events` outbox with fail-closed RLS (aip_app insert/select, aip_jobs publish columns only, across tenants) and `emit()` that validates the payload first and takes tenant and actor from the request context.
 - 2026-10-13 · TESTING-11 · PR #53 · The JIT expired-membership test builds its dates from Postgres `current_date` instead of the local date, so it no longer fails when local time and UTC fall on different days.
 - 2026-10-13 · SECURITY-09 · PR #52 · FastAPI no longer serves `/docs`, `/redoc` or `/openapi.json` when `AIP_ENV=production` (404); other environments keep them and the schema is still built in process for codegen.
