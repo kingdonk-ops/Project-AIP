@@ -78,6 +78,10 @@ jobs:
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
           set -euo pipefail
+          # Secrets pasted into GitHub often carry a trailing newline, which curl rejects as a
+          # malformed URL (the second deploy failed that way). Neither value contains whitespace.
+          COOLIFY_WEBHOOK="$(printf '%s' "${COOLIFY_WEBHOOK}" | tr -d '[:space:]')"
+          COOLIFY_TOKEN="$(printf '%s' "${COOLIFY_TOKEN}" | tr -d '[:space:]')"
           if [ -z "${COOLIFY_WEBHOOK}" ] || [ -z "${COOLIFY_TOKEN}" ]; then
             echo "::notice::COOLIFY_WEBHOOK / COOLIFY_TOKEN are not set: images pushed, deploy skipped"
             echo "deployed=false" >> "$GITHUB_OUTPUT"
