@@ -85,7 +85,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [TERMS-07](tasks/TERMS-07.md) | Hard-coded string linter and coverage report | terms | M | TERMS-01 | todo | |
 | [TERMS-08](tasks/TERMS-08.md) | Frontend i18n provider and dictionary admin screen | terms | M | TERMS-05 | todo | |
 | [AUDIT-01](tasks/AUDIT-01.md) | Append-only hash-chained audit_log, writer role, REVOKE | audit | M | ARCH-05, DATABASE-05 | todo |  |
-| [DESIGN-03](tasks/DESIGN-03.md) | Register table standard (filters, server pagination, CSV) | design | M | DESIGN-02 | todo |  |
+| [DESIGN-03](tasks/DESIGN-03.md) | Register table standard (filters, server pagination, CSV) | design | M | DESIGN-02 | done | PR #63; projects switch split to PROJECTS-06 |
 | [PROJECTS-01](tasks/PROJECTS-01.md) | Projects + sites tables and CRUD API | projects | M | ACCESS-01, ARCH-05, DATABASE-02, TENANCY-01 | done | ClaudeK: PR #56 |
 | [PROJECTS-02](tasks/PROJECTS-02.md) | Projects register page + create form (M0 UI slice) | projects | M | DESIGN-02, PROJECTS-01, STACK-03 | done | ClaudeK: PR #60 |
 | [TESTING-09](tasks/TESTING-09.md) | Walking-skeleton e2e: two tenants, login, register, isolation (CI + Coolify demo) | testing | S | OPS-11, PROJECTS-02 | todo |  |
@@ -148,6 +148,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [PROJECTS-04](tasks/PROJECTS-04.md) | Work-type classification + project settings overrides | projects | M | PROJECTS-01, TERMS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [OPS-15](tasks/OPS-15.md) | CloudWatch alarms, EventBridge schedules and secret-rotation Lambdas | ops | M | OPS-07, OPS-13, SECURITY-10 | todo | AWS readiness |
 | [PROJECTS-05](tasks/PROJECTS-05.md) | System sites are hidden and protected (owner decision) | projects | XS | PROJECTS-01 | done | ClaudeK: PR #58 |
+| [PROJECTS-06](tasks/PROJECTS-06.md) | Projects register on RegisterTable, sort direction and CSV export | projects | S | DESIGN-03, PROJECTS-02 | todo | split from DESIGN-03 (2026-10-13) |
 | [AUDIT-03](tasks/AUDIT-03.md) | Chain verifier CLI + S3 Object Lock anchoring job | audit | M | AUDIT-01, OPS-02, OPS-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [AUDIT-04](tasks/AUDIT-04.md) | Activity/timeline API + project activity tab | audit | M | ACCESS-01, AUDIT-02, DESIGN-04 | todo | convert to Python backend per ADR 0001 before starting  |
 | [TENANCY-05](tasks/TENANCY-05.md) | Tenant settings, modules and provisioning | tenancy | M | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting; invite the first admin via IDENTITY-04 `create_invite` (ADR 0005 rev 2) |

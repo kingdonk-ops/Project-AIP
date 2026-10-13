@@ -52,3 +52,30 @@ export {
   TableCell,
 } from "./components/table";
 export { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "./components/tooltip";
+
+// DESIGN-03: the register table standard.
+export { RegisterTable, type RegisterTableProps } from "./register/RegisterTable";
+export { FilterBar, SEARCH_DEBOUNCE_MS, type FilterBarProps } from "./register/FilterBar";
+export {
+  ColumnChooser,
+  defaultColumns,
+  localStorageColumnPrefs,
+  type ColumnChooserProps,
+  type ColumnPrefsStore,
+} from "./register/ColumnChooser";
+export { decodeRegisterQuery, encodeRegisterQuery, type RegisterSpec } from "./register/url-state";
+export { csvCell, toCsv, type CsvColumn } from "./register/csv";
+export {
+  DEFAULT_PAGE_SIZE,
+  PAGE_SIZES,
+  type BulkAction,
+  type FilterValue,
+  type RegisterColumn,
+  type RegisterFilter,
+  type RegisterFilterOption,
+  type RegisterPage,
+  type RegisterQuery,
+  type RegisterQueryResult,
+  type SortDir,
+  type Translate,
+} from "./register/types";

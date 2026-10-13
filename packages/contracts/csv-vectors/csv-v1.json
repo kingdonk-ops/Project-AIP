@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "description": "DESIGN-03 CSV golden vectors: RFC 4180 quoting, UTF-8 BOM, CRLF line ends, formula-injection guard. Every CSV writer (packages/ui toCsv, the Python export endpoints) must reproduce `expected` byte for byte. `\\ufeff` is the BOM.",
+  "cases": [
+    {
+      "name": "plain values",
+      "columns": [{ "id": "code", "header": "Code" }, { "id": "name", "header": "Name" }],
+      "rows": [{ "code": "L592", "name": "Ichthys" }],
+      "expected": "﻿Code,Name\r\nL592,Ichthys\r\n"
+    },
+    {
+      "name": "comma, quote and newline are quoted",
+      "columns": [{ "id": "name" }],
+      "rows": [{ "name": "a, b" }, { "name": "say \"hi\"" }, { "name": "line1\nline2" }],
+      "expected": "﻿name\r\n\"a, b\"\r\n\"say \"\"hi\"\"\"\r\n\"line1\nline2\"\r\n"
+    },
+    {
+      "name": "formula payloads are neutralised",
+      "columns": [{ "id": "v" }],
+      "rows": [
+        { "v": "=HYPERLINK(\"x\")" },
+        { "v": "+1+1" },
+        { "v": "-2" },
+        { "v": "@SUM(A1)" },
+        { "v": "\tcmd" },
+        { "v": "\rcmd" }
+      ],
+      "expected": "﻿v\r\n\"'=HYPERLINK(\"\"x\"\")\"\r\n'+1+1\r\n'-2\r\n'@SUM(A1)\r\n'\tcmd\r\n\"'\rcmd\"\r\n"
+    },
+    {
+      "name": "empty, missing, numbers and booleans",
+      "columns": [{ "id": "a" }, { "id": "b" }, { "id": "c" }, { "id": "d" }],
+      "rows": [{ "a": "", "b": null, "c": 42, "d": true }, { "c": 0 }],
+      "expected": "﻿a,b,c,d\r\n,,42,true\r\n,,0,\r\n"
+    },
+    {
+      "name": "non-ASCII text",
+      "columns": [{ "id": "name" }],
+      "rows": [{ "name": "Café – Jürgen" }],
+      "expected": "﻿name\r\nCafé – Jürgen\r\n"
+    }
+  ]
+}
