@@ -140,3 +140,37 @@ After Keycloak signs a staff user in, the FastAPI backend issues every browser s
   (insert a tenant-scope `role_assignment` after `seed_default_roles`); TESTING-09 and OPS-11 rely on it.
 - The session's `aal` reaches `AccessPrincipal.aal` (see `aip.main.identity_access_principal`); privileged role
   assignment answers 403 `STEP_UP_REQUIRED` below `aal=2`, so the step-up flow must raise it.
+
+## As built (2026-10-13)
+
+- Backend: `identity/sessions.py` (rules, issue, rotate, revoke), `session_store.py` (Redis cache + SECURITY DEFINER
+  lookup, `SessionMiddleware`, `SessionPrincipalResolver`), `csrf.py`, `keycloak_admin.py` (plain `httpx`, so
+  `python-keycloak` and its LGPL `jwcrypto` stay out of the runtime path), `jobs.py`
+  (`identity.revoke_keycloak_sessions`), `login_session.py` (the callback issues the session and answers 303),
+  `wiring.py` (what `aip.main` installs). Migration `202610131500_identity_sessions`.
+- Deviations: `user_session` also stores `idle_seconds` (the idle window fixed at issue time, so sliding needs no
+  policy read). FORCE RLS applies to the definer functions' owner, so `user_session` has a SELECT-only policy for
+  `aip_owner` (precedent: `domain_events` `dispatcher_select`); whether the user is still active is checked in the
+  tenant's own transaction. CSRF applies to unsafe requests that carry the session cookie (a request without it has
+  no ambient credential). The header stub stays only as the resolver's fallback under `AIP_ENV=test` +
+  `AUTH_TEST_STUB=1`. The web fetch wrapper is the orval mutator in `packages/api-client/src/fetcher.ts`;
+  `apps/web/src/features/identity/csrf-fetch.ts` hooks its `SESSION_EXPIRED` signal to DESIGN-02's redirect.
+- Security review (2026-10-13): no blocking findings; fixed in this task: deactivating a user revokes their sessions
+  in the same transaction, back-channel body size checked before reading, JWKS forced refresh throttled to once per
+  30 s, touch skips expired sessions, CSRF always installed, Bearer exemption only without the session cookie,
+  revocation uses fixed SQL predicates.
+- Tested here: unit (cookies, expiry, aal, CSRF, logout-token claims, Keycloak admin over a mock transport, the
+  job) and integration on real Postgres and Redis (hash-only storage, rotation, commit/rollback of revocation with
+  exactly one job, idle/absolute timeouts, sliding, deactivation, 50 parallel two-tenant requests, logout,
+  `/me/sessions`, back-channel logout, cache purge, CSRF), plus the OIDC callback issuing the session (stub IdP).
+- **Moved to TESTING-09** (they need the compose stack with Keycloak and a browser): logout ending the Keycloak SSO
+  session (`get_sessions(carol)` empty, password form shown again), Keycloak `user_logout` calling the back-channel
+  endpoint, and the Playwright journeys (reload stays signed in, revoke another browser's session, logout clears
+  both cookies), together with the TENANCY-01, ACCESS-01 and ACCESS-02 e2e journeys carried here.
+
+## Carried forward to IDENTITY-04 (non-blocking, from the IDENTITY-03 security review)
+
+- Rate-limit `POST /api/v1/auth/oidc/backchannel-logout` per IP like `login/start`.
+- A revoked session can be re-cached by a request that read it just before the revoke committed (at most 60 s,
+  the cache TTL). If that window matters, add a short revoked tombstone in Redis or a versioned `SET`.
+- `auth_event.ip`/`user_agent` are still NULL for `login.succeeded`; the session row now records both.

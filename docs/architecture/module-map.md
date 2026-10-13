@@ -9,7 +9,7 @@ Regenerate with `uv run python tools/gen_module_map.py`.
 |---|---|---|---|
 | 1 | `ops` | platform | none |
 | 2 | `tenancy` | tenancy | none |
-| 3 | `identity` | identity | `tenancy` |
+| 3 | `identity` | identity | `ops`, `tenancy` |
 | 4 | `projects` | projects | `tenancy` |
 | 5 | `access` | identity | `identity`, `projects`, `tenancy` |
 
@@ -22,6 +22,7 @@ graph TD
     access --> identity
     access --> projects
     access --> tenancy
+    identity --> ops
     identity --> tenancy
     ops
     projects --> tenancy

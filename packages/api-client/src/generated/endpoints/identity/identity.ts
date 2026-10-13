@@ -21,12 +21,17 @@ import type {
 import type {
   AuthErrorResponse,
   ErrorResponse,
+  HTTPValidationError,
   LoginStartRequest,
   LoginStartResponse,
-  MeResponse
+  MeResponse,
+  SessionList
 } from '../../model';
 
+import { apiFetch } from '../../../fetcher';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -80,7 +85,7 @@ export const getIdentityLoginStartUrl = () => {
 /**
  * @summary Login Start
  */
-export const identityLoginStart = async (loginStartRequest: LoginStartRequest, options?: RequestInit): Promise<identityLoginStartResponse> => {
+export const identityLoginStart = async (loginStartRequest: LoginStartRequest, options?: Parameters<typeof apiFetch>[1]): Promise<identityLoginStartResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -96,21 +101,14 @@ export const identityLoginStart = async (loginStartRequest: LoginStartRequest, o
     }
     return headers;
   };
-const res = await fetch(getIdentityLoginStartUrl(),
+return apiFetch<identityLoginStartResponse>(getIdentityLoginStartUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(loginStartRequest)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: identityLoginStartResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as identityLoginStartResponse
-}
+);}
 
 
 
@@ -119,15 +117,15 @@ const res = await fetch(getIdentityLoginStartUrl(),
 export const getIdentityLoginStartMutationKey = () => ['identityLoginStart'] as const;
 
 export const getIdentityLoginStartMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityLoginStart>>, TError,IdentityLoginStartMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityLoginStart>>, TError,IdentityLoginStartMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof identityLoginStart>>, TError,IdentityLoginStartMutationVariables, TContext> => {
 
 const mutationKey = getIdentityLoginStartMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -135,7 +133,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof identityLoginStart>>, IdentityLoginStartMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  identityLoginStart(data,fetchOptions)
+          return  identityLoginStart(data,requestOptions)
         }
 
 
@@ -154,7 +152,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Login Start
  */
 export const useIdentityLoginStart = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityLoginStart>>, TError,IdentityLoginStartMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityLoginStart>>, TError,IdentityLoginStartMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof identityLoginStart>>,
         TError,
@@ -162,6 +160,184 @@ export const useIdentityLoginStart = <TError = ErrorResponse,
         TContext
       > => {
       return useMutation(getIdentityLoginStartMutationOptions(options), queryClient);
+    }
+    export type identityLogoutResponse204 = {
+  data: void
+  status: 204
+}
+
+export type identityLogoutResponseSuccess = (identityLogoutResponse204) & {
+  headers: Headers;
+};
+;
+
+export type identityLogoutResponse = (identityLogoutResponseSuccess)
+
+export const getIdentityLogoutUrl = () => {
+
+
+
+
+  return `/api/v1/auth/logout`
+}
+
+/**
+ * Revoke the current session (the Keycloak SSO session ends through the queued job).
+ * @summary Logout
+ */
+export const identityLogout = async ( options?: Parameters<typeof apiFetch>[1]): Promise<identityLogoutResponse> => {
+
+  return apiFetch<identityLogoutResponse>(getIdentityLogoutUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getIdentityLogoutMutationKey = () => ['identityLogout'] as const;
+
+export const getIdentityLogoutMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityLogout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof identityLogout>>, TError,void, TContext> => {
+
+const mutationKey = getIdentityLogoutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof identityLogout>>, void> = () => {
+
+
+          return  identityLogout(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IdentityLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof identityLogout>>>
+
+    export type IdentityLogoutMutationError = unknown
+
+
+    /**
+ * @summary Logout
+ */
+export const useIdentityLogout = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityLogout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof identityLogout>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getIdentityLogoutMutationOptions(options), queryClient);
+    }
+    export type identityBackchannelLogoutResponse200 = {
+  data: unknown
+  status: 200
+}
+
+export type identityBackchannelLogoutResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type identityBackchannelLogoutResponseSuccess = (identityBackchannelLogoutResponse200) & {
+  headers: Headers;
+};
+export type identityBackchannelLogoutResponseError = (identityBackchannelLogoutResponse400) & {
+  headers: Headers;
+};
+
+export type identityBackchannelLogoutResponse = (identityBackchannelLogoutResponseSuccess | identityBackchannelLogoutResponseError)
+
+export const getIdentityBackchannelLogoutUrl = () => {
+
+
+
+
+  return `/api/v1/auth/oidc/backchannel-logout`
+}
+
+/**
+ * @summary Backchannel Logout
+ */
+export const identityBackchannelLogout = async ( options?: Parameters<typeof apiFetch>[1]): Promise<identityBackchannelLogoutResponse> => {
+
+  return apiFetch<identityBackchannelLogoutResponse>(getIdentityBackchannelLogoutUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getIdentityBackchannelLogoutMutationKey = () => ['identityBackchannelLogout'] as const;
+
+export const getIdentityBackchannelLogoutMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityBackchannelLogout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof identityBackchannelLogout>>, TError,void, TContext> => {
+
+const mutationKey = getIdentityBackchannelLogoutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof identityBackchannelLogout>>, void> = () => {
+
+
+          return  identityBackchannelLogout(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IdentityBackchannelLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof identityBackchannelLogout>>>
+
+    export type IdentityBackchannelLogoutMutationError = ErrorResponse
+
+
+    /**
+ * @summary Backchannel Logout
+ */
+export const useIdentityBackchannelLogout = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityBackchannelLogout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof identityBackchannelLogout>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getIdentityBackchannelLogoutMutationOptions(options), queryClient);
     }
     export type identityOidcCallbackResponse200 = {
   data: unknown
@@ -198,23 +374,16 @@ export const getIdentityOidcCallbackUrl = () => {
 /**
  * @summary Oidc Callback
  */
-export const identityOidcCallback = async ( options?: RequestInit): Promise<identityOidcCallbackResponse> => {
+export const identityOidcCallback = async ( options?: Parameters<typeof apiFetch>[1]): Promise<identityOidcCallbackResponse> => {
 
-  const res = await fetch(getIdentityOidcCallbackUrl(),
+  return apiFetch<identityOidcCallbackResponse>(getIdentityOidcCallbackUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: identityOidcCallbackResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as identityOidcCallbackResponse
-}
+);}
 
 
 
@@ -227,16 +396,16 @@ export const getIdentityOidcCallbackQueryKey = () => {
     }
 
 
-export const getIdentityOidcCallbackQueryOptions = <TData = Awaited<ReturnType<typeof identityOidcCallback>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityOidcCallback>>, TError, TData>>, fetch?: RequestInit}
+export const getIdentityOidcCallbackQueryOptions = <TData = Awaited<ReturnType<typeof identityOidcCallback>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityOidcCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getIdentityOidcCallbackQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof identityOidcCallback>>> = ({ signal }) => identityOidcCallback({ ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof identityOidcCallback>>> = ({ signal }) => identityOidcCallback({ signal, ...requestOptions });
 
 
 
@@ -256,7 +425,7 @@ export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identi
           TError,
           Awaited<ReturnType<typeof identityOidcCallback>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identityOidcCallback>>, TError = ErrorResponse>(
@@ -266,11 +435,11 @@ export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identi
           TError,
           Awaited<ReturnType<typeof identityOidcCallback>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identityOidcCallback>>, TError = ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityOidcCallback>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityOidcCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -278,7 +447,7 @@ export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identi
  */
 
 export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identityOidcCallback>>, TError = ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityOidcCallback>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityOidcCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -329,23 +498,16 @@ export const getIdentityGetMeUrl = () => {
 /**
  * @summary Get Me
  */
-export const identityGetMe = async ( options?: RequestInit): Promise<identityGetMeResponse> => {
+export const identityGetMe = async ( options?: Parameters<typeof apiFetch>[1]): Promise<identityGetMeResponse> => {
 
-  const res = await fetch(getIdentityGetMeUrl(),
+  return apiFetch<identityGetMeResponse>(getIdentityGetMeUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: identityGetMeResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as identityGetMeResponse
-}
+);}
 
 
 
@@ -358,16 +520,16 @@ export const getIdentityGetMeQueryKey = () => {
     }
 
 
-export const getIdentityGetMeQueryOptions = <TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, fetch?: RequestInit}
+export const getIdentityGetMeQueryOptions = <TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getIdentityGetMeQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof identityGetMe>>> = ({ signal }) => identityGetMe({ ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof identityGetMe>>> = ({ signal }) => identityGetMe({ signal, ...requestOptions });
 
 
 
@@ -387,7 +549,7 @@ export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe
           TError,
           Awaited<ReturnType<typeof identityGetMe>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
@@ -397,11 +559,11 @@ export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe
           TError,
           Awaited<ReturnType<typeof identityGetMe>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -409,7 +571,7 @@ export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe
  */
 
 export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -425,3 +587,224 @@ export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe
 
 
 
+export type identityListMySessionsResponse200 = {
+  data: SessionList
+  status: 200
+}
+
+export type identityListMySessionsResponse401 = {
+  data: AuthErrorResponse
+  status: 401
+}
+
+export type identityListMySessionsResponseSuccess = (identityListMySessionsResponse200) & {
+  headers: Headers;
+};
+export type identityListMySessionsResponseError = (identityListMySessionsResponse401) & {
+  headers: Headers;
+};
+
+export type identityListMySessionsResponse = (identityListMySessionsResponseSuccess | identityListMySessionsResponseError)
+
+export const getIdentityListMySessionsUrl = () => {
+
+
+
+
+  return `/api/v1/me/sessions`
+}
+
+/**
+ * @summary List My Sessions
+ */
+export const identityListMySessions = async ( options?: Parameters<typeof apiFetch>[1]): Promise<identityListMySessionsResponse> => {
+
+  return apiFetch<identityListMySessionsResponse>(getIdentityListMySessionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getIdentityListMySessionsQueryKey = () => {
+    return [
+    `/api/v1/me/sessions`
+    ] as const;
+    }
+
+
+export const getIdentityListMySessionsQueryOptions = <TData = Awaited<ReturnType<typeof identityListMySessions>>, TError = AuthErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListMySessions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getIdentityListMySessionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof identityListMySessions>>> = ({ signal }) => identityListMySessions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof identityListMySessions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type IdentityListMySessionsQueryResult = NonNullable<Awaited<ReturnType<typeof identityListMySessions>>>
+export type IdentityListMySessionsQueryError = AuthErrorResponse
+
+
+export function useIdentityListMySessions<TData = Awaited<ReturnType<typeof identityListMySessions>>, TError = AuthErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListMySessions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof identityListMySessions>>,
+          TError,
+          Awaited<ReturnType<typeof identityListMySessions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useIdentityListMySessions<TData = Awaited<ReturnType<typeof identityListMySessions>>, TError = AuthErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListMySessions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof identityListMySessions>>,
+          TError,
+          Awaited<ReturnType<typeof identityListMySessions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useIdentityListMySessions<TData = Awaited<ReturnType<typeof identityListMySessions>>, TError = AuthErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListMySessions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List My Sessions
+ */
+
+export function useIdentityListMySessions<TData = Awaited<ReturnType<typeof identityListMySessions>>, TError = AuthErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListMySessions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getIdentityListMySessionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type identityRevokeMySessionResponse204 = {
+  data: void
+  status: 204
+}
+
+export type identityRevokeMySessionResponse401 = {
+  data: AuthErrorResponse
+  status: 401
+}
+
+export type identityRevokeMySessionResponse404 = {
+  data: AuthErrorResponse
+  status: 404
+}
+
+export type identityRevokeMySessionResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type identityRevokeMySessionResponseSuccess = (identityRevokeMySessionResponse204) & {
+  headers: Headers;
+};
+export type identityRevokeMySessionResponseError = (identityRevokeMySessionResponse401 | identityRevokeMySessionResponse404 | identityRevokeMySessionResponse422) & {
+  headers: Headers;
+};
+
+export type identityRevokeMySessionResponse = (identityRevokeMySessionResponseSuccess | identityRevokeMySessionResponseError)
+
+export const getIdentityRevokeMySessionUrl = (sessionId: string,) => {
+
+
+
+
+  return `/api/v1/me/sessions/${sessionId}`
+}
+
+/**
+ * @summary Revoke My Session
+ */
+export const identityRevokeMySession = async (sessionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<identityRevokeMySessionResponse> => {
+
+  return apiFetch<identityRevokeMySessionResponse>(getIdentityRevokeMySessionUrl(sessionId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getIdentityRevokeMySessionMutationKey = () => ['identityRevokeMySession'] as const;
+
+export const getIdentityRevokeMySessionMutationOptions = <TError = AuthErrorResponse | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityRevokeMySession>>, TError,IdentityRevokeMySessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof identityRevokeMySession>>, TError,IdentityRevokeMySessionMutationVariables, TContext> => {
+
+const mutationKey = getIdentityRevokeMySessionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof identityRevokeMySession>>, IdentityRevokeMySessionMutationVariables> = (props) => {
+          const {sessionId} = props ?? {};
+
+          return  identityRevokeMySession(sessionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IdentityRevokeMySessionMutationResult = NonNullable<Awaited<ReturnType<typeof identityRevokeMySession>>>
+
+    export type IdentityRevokeMySessionMutationError = AuthErrorResponse | HTTPValidationError
+    export type IdentityRevokeMySessionMutationVariables = {sessionId: string}
+
+    /**
+ * @summary Revoke My Session
+ */
+export const useIdentityRevokeMySession = <TError = AuthErrorResponse | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityRevokeMySession>>, TError,IdentityRevokeMySessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof identityRevokeMySession>>,
+        TError,
+        IdentityRevokeMySessionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getIdentityRevokeMySessionMutationOptions(options), queryClient);
+    }

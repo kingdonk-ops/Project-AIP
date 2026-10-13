@@ -17,6 +17,8 @@ export default defineConfig({
       override: {
         // scripts/add-generated-header.mjs writes our own header; orval's names its version.
         header: false,
+        // IDENTITY-03: every call goes through the CSRF-aware fetch in src/fetcher.ts.
+        mutator: { path: "./src/fetcher.ts", name: "apiFetch" },
       },
     },
   },

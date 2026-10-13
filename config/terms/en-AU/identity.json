@@ -1,0 +1,18 @@
+{
+  "identity.sessions.title": "Active sessions",
+  "identity.sessions.intro": "These are the browsers and devices signed in to your account. Sign out any you do not recognise.",
+  "identity.sessions.device": "Device",
+  "identity.sessions.ip": "IP address",
+  "identity.sessions.lastSeen": "Last active",
+  "identity.sessions.signedIn": "Signed in",
+  "identity.sessions.actions": "Actions",
+  "identity.sessions.current": "This device",
+  "identity.sessions.unknownDevice": "Unknown device",
+  "identity.sessions.signOut": "Sign out",
+  "identity.sessions.signOutLabel": "Sign out the session on {device}",
+  "identity.sessions.signingOut": "Signing out…",
+  "identity.sessions.loading": "Loading sessions…",
+  "identity.sessions.error": "Sessions could not be loaded. Try again.",
+  "identity.sessions.revokeFailed": "That session could not be signed out. Try again.",
+  "identity.sessions.empty": "No other sessions."
+}

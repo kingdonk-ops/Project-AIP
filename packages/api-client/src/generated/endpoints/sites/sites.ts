@@ -28,7 +28,10 @@ import type {
   SitesListParams
 } from '../../model';
 
+import { apiFetch } from '../../../fetcher';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -84,23 +87,16 @@ export const getSitesListUrl = (params?: SitesListParams,) => {
 /**
  * @summary List Sites
  */
-export const sitesList = async (params?: SitesListParams, options?: RequestInit): Promise<sitesListResponse> => {
+export const sitesList = async (params?: SitesListParams, options?: Parameters<typeof apiFetch>[1]): Promise<sitesListResponse> => {
 
-  const res = await fetch(getSitesListUrl(params),
+  return apiFetch<sitesListResponse>(getSitesListUrl(params),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: sitesListResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as sitesListResponse
-}
+);}
 
 
 
@@ -113,16 +109,16 @@ export const getSitesListQueryKey = (params?: SitesListParams,) => {
     }
 
 
-export const getSitesListQueryOptions = <TData = Awaited<ReturnType<typeof sitesList>>, TError = void>(params?: SitesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesList>>, TError, TData>>, fetch?: RequestInit}
+export const getSitesListQueryOptions = <TData = Awaited<ReturnType<typeof sitesList>>, TError = void>(params?: SitesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getSitesListQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof sitesList>>> = ({ signal }) => sitesList(params, { ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof sitesList>>> = ({ signal }) => sitesList(params, { signal, ...requestOptions });
 
 
 
@@ -142,7 +138,7 @@ export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TErr
           TError,
           Awaited<ReturnType<typeof sitesList>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TError = void>(
@@ -152,11 +148,11 @@ export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TErr
           TError,
           Awaited<ReturnType<typeof sitesList>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TError = void>(
- params?: SitesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesList>>, TError, TData>>, fetch?: RequestInit}
+ params?: SitesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -164,7 +160,7 @@ export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TErr
  */
 
 export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TError = void>(
- params?: SitesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesList>>, TError, TData>>, fetch?: RequestInit}
+ params?: SitesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -215,7 +211,7 @@ export const getSitesCreateUrl = () => {
 /**
  * @summary Create Site
  */
-export const sitesCreate = async (siteCreate: SiteCreate, options?: RequestInit): Promise<sitesCreateResponse> => {
+export const sitesCreate = async (siteCreate: SiteCreate, options?: Parameters<typeof apiFetch>[1]): Promise<sitesCreateResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -231,21 +227,14 @@ export const sitesCreate = async (siteCreate: SiteCreate, options?: RequestInit)
     }
     return headers;
   };
-const res = await fetch(getSitesCreateUrl(),
+return apiFetch<sitesCreateResponse>(getSitesCreateUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(siteCreate)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: sitesCreateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as sitesCreateResponse
-}
+);}
 
 
 
@@ -254,15 +243,15 @@ const res = await fetch(getSitesCreateUrl(),
 export const getSitesCreateMutationKey = () => ['sitesCreate'] as const;
 
 export const getSitesCreateMutationOptions = <TError = ErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesCreate>>, TError,SitesCreateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesCreate>>, TError,SitesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof sitesCreate>>, TError,SitesCreateMutationVariables, TContext> => {
 
 const mutationKey = getSitesCreateMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -270,7 +259,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof sitesCreate>>, SitesCreateMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  sitesCreate(data,fetchOptions)
+          return  sitesCreate(data,requestOptions)
         }
 
 
@@ -289,7 +278,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Create Site
  */
 export const useSitesCreate = <TError = ErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesCreate>>, TError,SitesCreateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesCreate>>, TError,SitesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sitesCreate>>,
         TError,
@@ -338,23 +327,16 @@ export const getSitesDeleteUrl = (siteId: string,) => {
 /**
  * @summary Delete Site
  */
-export const sitesDelete = async (siteId: string, options?: RequestInit): Promise<sitesDeleteResponse> => {
+export const sitesDelete = async (siteId: string, options?: Parameters<typeof apiFetch>[1]): Promise<sitesDeleteResponse> => {
 
-  const res = await fetch(getSitesDeleteUrl(siteId),
+  return apiFetch<sitesDeleteResponse>(getSitesDeleteUrl(siteId),
   {
     ...options,
     method: 'DELETE'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: sitesDeleteResponse['data'] = body ? JSON.parse(body) : undefined
-  return { data, status: res.status, headers: res.headers } as sitesDeleteResponse
-}
+);}
 
 
 
@@ -363,15 +345,15 @@ export const sitesDelete = async (siteId: string, options?: RequestInit): Promis
 export const getSitesDeleteMutationKey = () => ['sitesDelete'] as const;
 
 export const getSitesDeleteMutationOptions = <TError = ErrorBody | HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesDelete>>, TError,SitesDeleteMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesDelete>>, TError,SitesDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof sitesDelete>>, TError,SitesDeleteMutationVariables, TContext> => {
 
 const mutationKey = getSitesDeleteMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -379,7 +361,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof sitesDelete>>, SitesDeleteMutationVariables> = (props) => {
           const {siteId} = props ?? {};
 
-          return  sitesDelete(siteId,fetchOptions)
+          return  sitesDelete(siteId,requestOptions)
         }
 
 
@@ -398,7 +380,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Delete Site
  */
 export const useSitesDelete = <TError = ErrorBody | HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesDelete>>, TError,SitesDeleteMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesDelete>>, TError,SitesDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sitesDelete>>,
         TError,
@@ -442,23 +424,16 @@ export const getSitesGetUrl = (siteId: string,) => {
 /**
  * @summary Get Site
  */
-export const sitesGet = async (siteId: string, options?: RequestInit): Promise<sitesGetResponse> => {
+export const sitesGet = async (siteId: string, options?: Parameters<typeof apiFetch>[1]): Promise<sitesGetResponse> => {
 
-  const res = await fetch(getSitesGetUrl(siteId),
+  return apiFetch<sitesGetResponse>(getSitesGetUrl(siteId),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: sitesGetResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as sitesGetResponse
-}
+);}
 
 
 
@@ -471,16 +446,16 @@ export const getSitesGetQueryKey = (siteId: string,) => {
     }
 
 
-export const getSitesGetQueryOptions = <TData = Awaited<ReturnType<typeof sitesGet>>, TError = ErrorBody | HTTPValidationError>(siteId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesGet>>, TError, TData>>, fetch?: RequestInit}
+export const getSitesGetQueryOptions = <TData = Awaited<ReturnType<typeof sitesGet>>, TError = ErrorBody | HTTPValidationError>(siteId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getSitesGetQueryKey(siteId);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof sitesGet>>> = ({ signal }) => sitesGet(siteId, { ...(signal ? { signal } : {}), ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof sitesGet>>> = ({ signal }) => sitesGet(siteId, { signal, ...requestOptions });
 
 
 
@@ -500,7 +475,7 @@ export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError
           TError,
           Awaited<ReturnType<typeof sitesGet>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError = ErrorBody | HTTPValidationError>(
@@ -510,11 +485,11 @@ export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError
           TError,
           Awaited<ReturnType<typeof sitesGet>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError = ErrorBody | HTTPValidationError>(
- siteId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesGet>>, TError, TData>>, fetch?: RequestInit}
+ siteId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -522,7 +497,7 @@ export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError
  */
 
 export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError = ErrorBody | HTTPValidationError>(
- siteId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesGet>>, TError, TData>>, fetch?: RequestInit}
+ siteId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -579,7 +554,7 @@ export const getSitesUpdateUrl = (siteId: string,) => {
  * @summary Update Site
  */
 export const sitesUpdate = async (siteId: string,
-    siteUpdate: SiteUpdate, options?: RequestInit): Promise<sitesUpdateResponse> => {
+    siteUpdate: SiteUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<sitesUpdateResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -595,21 +570,14 @@ export const sitesUpdate = async (siteId: string,
     }
     return headers;
   };
-const res = await fetch(getSitesUpdateUrl(siteId),
+return apiFetch<sitesUpdateResponse>(getSitesUpdateUrl(siteId),
   {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(siteUpdate)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: sitesUpdateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as sitesUpdateResponse
-}
+);}
 
 
 
@@ -618,15 +586,15 @@ const res = await fetch(getSitesUpdateUrl(siteId),
 export const getSitesUpdateMutationKey = () => ['sitesUpdate'] as const;
 
 export const getSitesUpdateMutationOptions = <TError = ErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesUpdate>>, TError,SitesUpdateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesUpdate>>, TError,SitesUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof sitesUpdate>>, TError,SitesUpdateMutationVariables, TContext> => {
 
 const mutationKey = getSitesUpdateMutationKey();
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -634,7 +602,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof sitesUpdate>>, SitesUpdateMutationVariables> = (props) => {
           const {siteId,data} = props ?? {};
 
-          return  sitesUpdate(siteId,data,fetchOptions)
+          return  sitesUpdate(siteId,data,requestOptions)
         }
 
 
@@ -653,7 +621,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Update Site
  */
 export const useSitesUpdate = <TError = ErrorBody | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesUpdate>>, TError,SitesUpdateMutationVariables, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesUpdate>>, TError,SitesUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sitesUpdate>>,
         TError,
