@@ -139,7 +139,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [IDENTITY-05](tasks/IDENTITY-05.md) | SCIM 2.0 server; deprovision revokes everything in one transaction | identity | M | ACCESS-01, ARCH-05, IDENTITY-03 | todo |  |
 | [ACCESS-05](tasks/ACCESS-05.md) | Users & Roles UI, permission matrix page and export | access | M | ACCESS-02, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting; step-up is now a full redirect to Keycloak (`stepUpUrl`); map `mfaEnrolled` to `app_user.mfa_enrolled_at` (ADR 0005 rev 2) |
 | [PROJECTS-04](tasks/PROJECTS-04.md) | Work-type classification + project settings overrides | projects | M | PROJECTS-01, TERMS-02 | todo | convert to Python backend per ADR 0001 before starting  |
-| [PROJECTS-05](tasks/PROJECTS-05.md) | System sites are hidden and protected (owner decision) | projects | XS | PROJECTS-01 | in-progress | ClaudeK: p0/projects-05-system-sites |
+| [PROJECTS-05](tasks/PROJECTS-05.md) | System sites are hidden and protected (owner decision) | projects | XS | PROJECTS-01 | done | ClaudeK: PR #58 |
 | [AUDIT-03](tasks/AUDIT-03.md) | Chain verifier CLI + S3 Object Lock anchoring job | audit | M | AUDIT-01, OPS-02, OPS-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [AUDIT-04](tasks/AUDIT-04.md) | Activity/timeline API + project activity tab | audit | M | ACCESS-01, AUDIT-02, DESIGN-04 | todo | convert to Python backend per ADR 0001 before starting  |
 | [TENANCY-05](tasks/TENANCY-05.md) | Tenant settings, modules and provisioning | tenancy | M | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting; invite the first admin via IDENTITY-04 `create_invite` (ADR 0005 rev 2) |

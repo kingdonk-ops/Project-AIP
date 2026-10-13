@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-13 · PROJECTS-05 · PR #58 · System sites (the hidden per-project hierarchy root) are left out of the sites list and get, and editing or deleting one returns 409 `SITE_IS_SYSTEM` (owner decision).
 - 2026-10-13 · PROJECTS-01 · PR #56 · Projects and sites registers: RLS tables with per-tenant case-insensitive codes, permission-checked CRUD API with signed cursor pagination, optimistic concurrency and forward-only status, outbox events, generated client hooks; also fixed `aip-db check-schema` type parsing (aliases never applied).
 - 2026-10-13 · DOCS-11 · PR #54 · Owner time-zone standard recorded as ADR 0025 (UTC instants, viewer-zone display, wall-clock future events, calendar-day expiry against UTC, confirmed by the owner).
 - 2026-10-13 · ARCH-05 · PR #55 · Append-only `domain_events` outbox with fail-closed RLS (aip_app insert/select, aip_jobs publish columns only, across tenants) and `emit()` that validates the payload first and takes tenant and actor from the request context.
