@@ -54,7 +54,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [TENANCY-01](tasks/TENANCY-01.md) | Tenants, regions and tenant resolution | tenancy | M | DATABASE-02, IDENTITY-01 | done | PR #29 |
 | [TESTING-01](tasks/TESTING-01.md) | Testcontainers Postgres fixture with non-owner RLS role | testing | M | DATABASE-02 | done | PR #30 |
 | [OPS-11](tasks/OPS-11.md) | Coolify demo deployment of the walking skeleton (synthetic data only) | ops | M | DATABASE-08, STACK-05 | todo | owner decision: M0 deploys to Coolify (ADR 0007) |
-| [ARCH-05](tasks/ARCH-05.md) | domain_events outbox table and writer | arch | M | ARCH-04, DATABASE-02 | in-progress | ClaudeK: p0/arch-05-outbox |
+| [ARCH-05](tasks/ARCH-05.md) | domain_events outbox table and writer | arch | M | ARCH-04, DATABASE-02 | done | ClaudeK: PR #55 |
 | [DATABASE-04](tasks/DATABASE-04.md) | Base repository helpers: concurrency, ltree, soft delete, JSONB validation | database | M | DATABASE-02 | done | PR #28 |
 | [TERMS-01](tasks/TERMS-01.md) | Terms schema, default en-AU dictionary and loader | terms | M | DATABASE-02 | todo | |
 | [OPS-01](tasks/OPS-01.md) | Job tables and service | ops | M | DATABASE-08 | done | PR #17 |
@@ -66,7 +66,7 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 | [IDENTITY-02](tasks/IDENTITY-02.md) | Users and tenant membership, JIT provisioning, GET /me | identity | M | DATABASE-02, IDENTITY-01, TENANCY-01 | done | PR #37 |
 | [TENANCY-02](tasks/TENANCY-02.md) | Tenant-scoped key builders for Redis, queues, S3 and search | tenancy | S | ARCH-04, TENANCY-01 | done | PR #33 |
 | [ENT-01](tasks/ENT-01.md) | EntitlementService, tenant_subscription, tenant_usage; flags vs entitlements (ADR 0008) | tenancy | M | DATABASE-02, TENANCY-01 | todo |  |
-| [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | todo |  |
+| [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | todo | pick up the three low security findings in PR #55 (consumer ownership re-check, write-once publish columns, bounded last_error) |
 | [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | todo |  |
 | [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | todo | |
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
