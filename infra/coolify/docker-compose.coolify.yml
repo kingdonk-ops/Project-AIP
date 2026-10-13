@@ -8,7 +8,8 @@
 # built into the images instead (infra/coolify/images/, the web image's NGINX_CONF build arg).
 # Setup, environment variables, redeploy and rollback: infra/coolify/README.md. Every variable is
 # listed in infra/coolify/env.example. Secrets have no defaults (`${VAR:?}`): a missing one stops
-# the deploy instead of starting with a guessable value.
+# the deploy instead of starting with a guessable value. No message after `:?`: Coolify copies it
+# into the variable as its value (`${X:?set X}` became X="set X" on the first deploy).
 #
 # Routing: only `web` gets a domain in Coolify (port 8080). It serves the SPA, proxies /api/ to the
 # API and /auth/ to Keycloak (admin console blocked), so the demo needs one domain and Keycloak's
@@ -38,30 +39,30 @@ x-postgres-image: &postgres-image ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-po
 
 x-app-env: &app-env
   AIP_ENV: demo
-  DATABASE_URL: postgresql://aip_app:${AIP_APP_PASSWORD:?set AIP_APP_PASSWORD}@postgres:5432/aip
-  DATABASE_JOBS_URL: postgresql://aip_jobs:${AIP_JOBS_PASSWORD:?set AIP_JOBS_PASSWORD}@postgres:5432/aip
+  DATABASE_URL: postgresql://aip_app:${AIP_APP_PASSWORD:?}@postgres:5432/aip
+  DATABASE_JOBS_URL: postgresql://aip_jobs:${AIP_JOBS_PASSWORD:?}@postgres:5432/aip
   REDIS_URL: redis://valkey:6379/0
   OBJECT_STORE: minio
   OBJECT_STORE_BUCKET: aip
   OBJECT_STORE_ENDPOINT_URL: http://rustfs:9000
   OBJECT_STORE_REGION: us-east-1
-  OBJECT_STORE_ACCESS_KEY_ID: ${OBJECT_STORE_ACCESS_KEY_ID:?set OBJECT_STORE_ACCESS_KEY_ID}
-  OBJECT_STORE_SECRET_ACCESS_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:?set OBJECT_STORE_SECRET_ACCESS_KEY}
+  OBJECT_STORE_ACCESS_KEY_ID: ${OBJECT_STORE_ACCESS_KEY_ID:?}
+  OBJECT_STORE_SECRET_ACCESS_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:?}
   PDF_RENDERER: gotenberg
   GOTENBERG_URL: http://gotenberg:3000
   # Keycloak under /auth on the demo origin; the API talks to it inside the network.
   KEYCLOAK_URL: http://keycloak:8080/auth
-  KEYCLOAK_PUBLIC_URL: ${APP_ORIGIN:?set APP_ORIGIN}/auth
+  KEYCLOAK_PUBLIC_URL: ${APP_ORIGIN:?}/auth
   KEYCLOAK_REALM: aip
   OIDC_CLIENT_ID: aip-api
-  OIDC_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:?set AIP_API_CLIENT_SECRET}
+  OIDC_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:?}
   KEYCLOAK_ADMIN_CLIENT_ID: aip-admin
-  KEYCLOAK_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:?set AIP_ADMIN_CLIENT_SECRET}
-  APP_ORIGIN: ${APP_ORIGIN:?set APP_ORIGIN}
-  PREAUTH_COOKIE_KEY: ${PREAUTH_COOKIE_KEY:?set PREAUTH_COOKIE_KEY}
-  PROJECTS_CURSOR_KEY: ${PROJECTS_CURSOR_KEY:?set PROJECTS_CURSOR_KEY}
+  KEYCLOAK_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:?}
+  APP_ORIGIN: ${APP_ORIGIN:?}
+  PREAUTH_COOKIE_KEY: ${PREAUTH_COOKIE_KEY:?}
+  PROJECTS_CURSOR_KEY: ${PROJECTS_CURSOR_KEY:?}
 
-x-migrator-url: &migrator-url postgresql://aip_owner:${AIP_OWNER_PASSWORD:?set AIP_OWNER_PASSWORD}@postgres:5432/aip
+x-migrator-url: &migrator-url postgresql://aip_owner:${AIP_OWNER_PASSWORD:?}@postgres:5432/aip
 
 services:
   postgres:
@@ -70,10 +71,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_DB: aip
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data-v2:/var/lib/postgresql/data
       - postgres-backups:/backups:ro  # nightly dumps, read only here, for restores
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d aip"]
@@ -94,11 +95,11 @@ services:
     environment:
       PGHOST: postgres
       PGUSER: postgres
-      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
-      AIP_OWNER_PASSWORD: ${AIP_OWNER_PASSWORD:?set AIP_OWNER_PASSWORD}
-      AIP_APP_PASSWORD: ${AIP_APP_PASSWORD:?set AIP_APP_PASSWORD}
-      AIP_JOBS_PASSWORD: ${AIP_JOBS_PASSWORD:?set AIP_JOBS_PASSWORD}
-      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?}
+      AIP_OWNER_PASSWORD: ${AIP_OWNER_PASSWORD:?}
+      AIP_APP_PASSWORD: ${AIP_APP_PASSWORD:?}
+      AIP_JOBS_PASSWORD: ${AIP_JOBS_PASSWORD:?}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?}
     depends_on:
       postgres:
         condition: service_healthy
@@ -113,7 +114,7 @@ services:
     environment:
       PGHOST: postgres
       PGUSER: postgres
-      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?}
       RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
     entrypoint: ["bash", "-c"]
     command:
@@ -153,8 +154,8 @@ services:
     user: rustfs
     restart: unless-stopped
     environment:
-      RUSTFS_ACCESS_KEY: ${OBJECT_STORE_ACCESS_KEY_ID:?set OBJECT_STORE_ACCESS_KEY_ID}
-      RUSTFS_SECRET_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:?set OBJECT_STORE_SECRET_ACCESS_KEY}
+      RUSTFS_ACCESS_KEY: ${OBJECT_STORE_ACCESS_KEY_ID:?}
+      RUSTFS_SECRET_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:?}
       RUSTFS_ADDRESS: 0.0.0.0:9000
       RUSTFS_CONSOLE_ENABLE: "false"
     volumes:
@@ -203,24 +204,24 @@ services:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?}
       KC_HEALTH_ENABLED: "true"
       KC_HTTP_ENABLED: "true"
       KC_HTTP_PORT: "8080"
       KC_HTTP_RELATIVE_PATH: /auth
       KC_HTTP_MANAGEMENT_RELATIVE_PATH: /
       KC_PROXY_HEADERS: xforwarded
-      KC_HOSTNAME: ${APP_ORIGIN:?set APP_ORIGIN}/auth
+      KC_HOSTNAME: ${APP_ORIGIN:?}/auth
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
-      KEYCLOAK_PUBLIC_URL: ${APP_ORIGIN:?set APP_ORIGIN}/auth
+      KEYCLOAK_PUBLIC_URL: ${APP_ORIGIN:?}/auth
       KEYCLOAK_INTERNAL_URL: http://localhost:8080/auth
-      APP_ORIGIN: ${APP_ORIGIN:?set APP_ORIGIN}
-      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:?set WEBAUTHN_RP_ID}
-      AIP_API_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:?set AIP_API_CLIENT_SECRET}
-      AIP_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:?set AIP_ADMIN_CLIENT_SECRET}
-      MOCK_IDP_CLIENT_SECRET: ${MOCK_IDP_CLIENT_SECRET:?set MOCK_IDP_CLIENT_SECRET}
+      APP_ORIGIN: ${APP_ORIGIN:?}
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:?}
+      AIP_API_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:?}
+      AIP_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:?}
+      MOCK_IDP_CLIENT_SECRET: ${MOCK_IDP_CLIENT_SECRET:?}
       KC_SMTP_HOST: mailpit
       KC_SMTP_PORT: "1025"
     depends_on:
@@ -405,6 +406,9 @@ services:
       retries: 20
 
 volumes:
-  postgres-data:
+  # v2: the first deploy initialised `postgres-data` with a placeholder superuser password (the
+  # superuser password is set only when the volume is first created); a new volume starts clean.
+  # The old volume holds no data and can be removed in Coolify (Storages).
+  postgres-data-v2:
   postgres-backups:
   rustfs-data:

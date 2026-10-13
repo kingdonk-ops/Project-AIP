@@ -57,6 +57,8 @@ def test_secrets_are_required_and_have_no_default() -> None:
         uses = re.findall(r"\$\{" + name + r"(:[?-][^}]*)?\}", text)
         assert uses, f"{name} is not used"
         assert all(u.startswith(":?") for u in uses), f"{name} must be ${{{name}:?...}} everywhere"
+    # Coolify copies a `:?` message into the variable as its value, so there must be none.
+    assert not re.search(r"\$\{[A-Z0-9_]+:\?[^}]", text)
 
 
 def test_env_example_lists_every_variable_with_dummy_values() -> None:
@@ -77,7 +79,7 @@ def test_every_app_service_runs_as_demo(services: dict[str, dict[str, Any]]) -> 
 
 
 def test_data_lives_in_named_volumes_and_is_backed_up(services: dict[str, dict[str, Any]]) -> None:
-    assert "postgres-data:/var/lib/postgresql/data" in services["postgres"]["volumes"]
+    assert "postgres-data-v2:/var/lib/postgresql/data" in services["postgres"]["volumes"]
     assert "rustfs-data:/data" in services["rustfs"]["volumes"]
     backup = services["postgres-backup"]
     assert (
