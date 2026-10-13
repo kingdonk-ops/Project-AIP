@@ -28,7 +28,10 @@ FROM nginxinc/nginx-unprivileged:1.30.5-alpine AS runtime
 USER root
 RUN apk upgrade --no-cache tiff
 
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+# OPS-11: the Coolify demo build passes `--build-arg NGINX_CONF=infra/coolify/nginx.conf` (adds /auth
+# to Keycloak); Coolify cannot bind-mount it from the repository.
+ARG NGINX_CONF=apps/web/nginx.conf
+COPY ${NGINX_CONF} /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/apps/web/dist /usr/share/nginx/html
 
 # Compose and ECS run it as 10001 with a read-only root; nginx writes only to /tmp.

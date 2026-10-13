@@ -3,9 +3,13 @@
 # Coolify (bytedock.io) runs this file from the repository (Docker Compose build pack, location
 # /infra/coolify/docker-compose.coolify.yml). The app images are built and pushed to GHCR by
 # .github/workflows/deploy-coolify.yml and pulled here by tag; nothing is built on the server.
+# No service bind-mounts a file from the repository: Coolify resolves relative mount paths under the
+# app's own directory on the server, not the clone, so they would mount empty. Config files are
+# built into the images instead (infra/coolify/images/, the web image's NGINX_CONF build arg).
 # Setup, environment variables, redeploy and rollback: infra/coolify/README.md. Every variable is
 # listed in infra/coolify/env.example. Secrets have no defaults (`${VAR:?}`): a missing one stops
-# the deploy instead of starting with a guessable value.
+# the deploy instead of starting with a guessable value. No message after `:?`: Coolify copies it
+# into the variable as its value (`${X:?set X}` became X="set X" on the first deploy).
 #
 # Routing: only `web` gets a domain in Coolify (port 8080). It serves the SPA, proxies /api/ to the
 # API and /auth/ to Keycloak (admin console blocked), so the demo needs one domain and Keycloak's
@@ -31,53 +35,47 @@ x-oneshot: &oneshot
   restart: "no"
 
 x-api-image: &api-image ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-api:${AIP_IMAGE_TAG:-main}
+x-postgres-image: &postgres-image ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-postgres-demo:${AIP_IMAGE_TAG:-main}
 
 x-app-env: &app-env
   AIP_ENV: demo
-  DATABASE_URL: postgresql://aip_app:${AIP_APP_PASSWORD:?set AIP_APP_PASSWORD}@postgres:5432/aip
-  DATABASE_JOBS_URL: postgresql://aip_jobs:${AIP_JOBS_PASSWORD:?set AIP_JOBS_PASSWORD}@postgres:5432/aip
+  DATABASE_URL: postgresql://aip_app:${AIP_APP_PASSWORD:?}@postgres:5432/aip
+  DATABASE_JOBS_URL: postgresql://aip_jobs:${AIP_JOBS_PASSWORD:?}@postgres:5432/aip
   REDIS_URL: redis://valkey:6379/0
   OBJECT_STORE: minio
   OBJECT_STORE_BUCKET: aip
   OBJECT_STORE_ENDPOINT_URL: http://rustfs:9000
   OBJECT_STORE_REGION: us-east-1
-  OBJECT_STORE_ACCESS_KEY_ID: ${OBJECT_STORE_ACCESS_KEY_ID:?set OBJECT_STORE_ACCESS_KEY_ID}
-  OBJECT_STORE_SECRET_ACCESS_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:?set OBJECT_STORE_SECRET_ACCESS_KEY}
+  OBJECT_STORE_ACCESS_KEY_ID: ${OBJECT_STORE_ACCESS_KEY_ID:?}
+  OBJECT_STORE_SECRET_ACCESS_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:?}
   PDF_RENDERER: gotenberg
   GOTENBERG_URL: http://gotenberg:3000
   # Keycloak under /auth on the demo origin; the API talks to it inside the network.
   KEYCLOAK_URL: http://keycloak:8080/auth
-  KEYCLOAK_PUBLIC_URL: ${APP_ORIGIN:?set APP_ORIGIN}/auth
+  KEYCLOAK_PUBLIC_URL: ${APP_ORIGIN:?}/auth
   KEYCLOAK_REALM: aip
   OIDC_CLIENT_ID: aip-api
-  OIDC_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:?set AIP_API_CLIENT_SECRET}
+  OIDC_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:?}
   KEYCLOAK_ADMIN_CLIENT_ID: aip-admin
-  KEYCLOAK_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:?set AIP_ADMIN_CLIENT_SECRET}
-  APP_ORIGIN: ${APP_ORIGIN:?set APP_ORIGIN}
-  PREAUTH_COOKIE_KEY: ${PREAUTH_COOKIE_KEY:?set PREAUTH_COOKIE_KEY}
-  PROJECTS_CURSOR_KEY: ${PROJECTS_CURSOR_KEY:?set PROJECTS_CURSOR_KEY}
+  KEYCLOAK_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:?}
+  APP_ORIGIN: ${APP_ORIGIN:?}
+  PREAUTH_COOKIE_KEY: ${PREAUTH_COOKIE_KEY:?}
+  PROJECTS_CURSOR_KEY: ${PROJECTS_CURSOR_KEY:?}
 
-x-migrator-url: &migrator-url postgresql://aip_owner:${AIP_OWNER_PASSWORD:?set AIP_OWNER_PASSWORD}@postgres:5432/aip
+x-migrator-url: &migrator-url postgresql://aip_owner:${AIP_OWNER_PASSWORD:?}@postgres:5432/aip
 
 services:
   postgres:
-    image: pgvector/pgvector:0.8.7-pg16-bookworm
+    image: *postgres-image
     user: postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_DB: aip
-      # Read by docker/postgres/init/10-aip-bootstrap.sh on the first start only.
-      AIP_OWNER_PASSWORD: ${AIP_OWNER_PASSWORD:?set AIP_OWNER_PASSWORD}
-      AIP_APP_PASSWORD: ${AIP_APP_PASSWORD:?set AIP_APP_PASSWORD}
-      AIP_JOBS_PASSWORD: ${AIP_JOBS_PASSWORD:?set AIP_JOBS_PASSWORD}
-      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data-v2:/var/lib/postgresql/data
       - postgres-backups:/backups:ro  # nightly dumps, read only here, for restores
-      - ../docker/postgres/init:/docker-entrypoint-initdb.d:ro
-      - ../../db/bootstrap:/aip/bootstrap:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d aip"]
       interval: 5s
@@ -86,16 +84,37 @@ services:
       start_period: 20s
     security_opt: ["no-new-privileges:true"]
 
+  db-bootstrap:
+    # One-shot, every deploy, as the superuser: the AIP roles (with their passwords), schema aip_meta,
+    # extension vector, and Keycloak's role and database (infra/coolify/images/db-bootstrap.sh).
+    # Idempotent; the migrator and Keycloak wait for it.
+    image: *postgres-image
+    user: postgres
+    restart: "no"
+    command: ["/aip/db-bootstrap.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD:?}
+      AIP_OWNER_PASSWORD: ${AIP_OWNER_PASSWORD:?}
+      AIP_APP_PASSWORD: ${AIP_APP_PASSWORD:?}
+      AIP_JOBS_PASSWORD: ${AIP_JOBS_PASSWORD:?}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    security_opt: ["no-new-privileges:true"]
+
   postgres-backup:
     # Nightly pg_dump (custom format) of the app and Keycloak databases into the postgres-backups
     # volume, keeping BACKUP_RETENTION_DAYS days. Restore: README.md.
-    image: pgvector/pgvector:0.8.7-pg16-bookworm
+    image: *postgres-image
     user: postgres
     restart: unless-stopped
     environment:
       PGHOST: postgres
       PGUSER: postgres
-      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?}
       RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
     entrypoint: ["bash", "-c"]
     command:
@@ -135,8 +154,8 @@ services:
     user: rustfs
     restart: unless-stopped
     environment:
-      RUSTFS_ACCESS_KEY: ${OBJECT_STORE_ACCESS_KEY_ID:?set OBJECT_STORE_ACCESS_KEY_ID}
-      RUSTFS_SECRET_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:?set OBJECT_STORE_SECRET_ACCESS_KEY}
+      RUSTFS_ACCESS_KEY: ${OBJECT_STORE_ACCESS_KEY_ID:?}
+      RUSTFS_SECRET_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:?}
       RUSTFS_ADDRESS: 0.0.0.0:9000
       RUSTFS_CONSOLE_ENABLE: "false"
     volumes:
@@ -176,7 +195,8 @@ services:
   keycloak:
     # Imports realm `aip` and the stand-in customer IdP realm `mock-idp`. Served under /auth on the
     # demo origin through `web`, which blocks /auth/admin; the API uses keycloak:8080/auth inside.
-    image: quay.io/keycloak/keycloak:26.7.5
+    # Stock Keycloak plus the realm imports, theme and blocklist (infra/coolify/images/).
+    image: ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-keycloak-demo:${AIP_IMAGE_TAG:-main}
     user: "1000"
     restart: unless-stopped
     command: ["start", "--import-realm"]
@@ -184,34 +204,29 @@ services:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?}
       KC_HEALTH_ENABLED: "true"
       KC_HTTP_ENABLED: "true"
       KC_HTTP_PORT: "8080"
       KC_HTTP_RELATIVE_PATH: /auth
       KC_HTTP_MANAGEMENT_RELATIVE_PATH: /
       KC_PROXY_HEADERS: xforwarded
-      KC_HOSTNAME: ${APP_ORIGIN:?set APP_ORIGIN}/auth
+      KC_HOSTNAME: ${APP_ORIGIN:?}/auth
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
-      KEYCLOAK_PUBLIC_URL: ${APP_ORIGIN:?set APP_ORIGIN}/auth
+      KEYCLOAK_PUBLIC_URL: ${APP_ORIGIN:?}/auth
       KEYCLOAK_INTERNAL_URL: http://localhost:8080/auth
-      APP_ORIGIN: ${APP_ORIGIN:?set APP_ORIGIN}
-      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:?set WEBAUTHN_RP_ID}
-      AIP_API_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:?set AIP_API_CLIENT_SECRET}
-      AIP_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:?set AIP_ADMIN_CLIENT_SECRET}
-      MOCK_IDP_CLIENT_SECRET: ${MOCK_IDP_CLIENT_SECRET:?set MOCK_IDP_CLIENT_SECRET}
+      APP_ORIGIN: ${APP_ORIGIN:?}
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:?}
+      AIP_API_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:?}
+      AIP_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:?}
+      MOCK_IDP_CLIENT_SECRET: ${MOCK_IDP_CLIENT_SECRET:?}
       KC_SMTP_HOST: mailpit
       KC_SMTP_PORT: "1025"
-    volumes:
-      - ../keycloak/realm-aip.json:/opt/keycloak/data/import/realm-aip.json:ro
-      - ../keycloak/realm-mock-idp.json:/opt/keycloak/data/import/realm-mock-idp.json:ro
-      - ../keycloak/themes/aip:/opt/keycloak/themes/aip:ro
-      - ../keycloak/password-blocklist.txt:/opt/keycloak/data/password-blacklists/password-blocklist.txt:ro
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       mailpit:
         condition: service_healthy
     healthcheck:
@@ -237,8 +252,8 @@ services:
       DATABASE_MIGRATOR_URL: *migrator-url
       PYTHONDONTWRITEBYTECODE: "1"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
 
   tenancy-seed:
     # The fixture tenants kaefer-demo and tenant-b (synthetic, is_real_customer false).
@@ -283,10 +298,32 @@ services:
   object-store-init:
     <<: *oneshot
     image: *api-image
-    command: ["python", "/opt/aip/create_bucket.py"]
+    # infra/docker/create_bucket.py, inlined (Coolify cannot bind-mount it): create the bucket if
+    # it is missing, with the API's own OBJECT_STORE_* settings.
+    command:
+      - python
+      - -c
+      - |
+        import os
+        import boto3
+        from botocore.config import Config
+        from botocore.exceptions import ClientError
+        bucket = os.environ["OBJECT_STORE_BUCKET"]
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=os.environ["OBJECT_STORE_ENDPOINT_URL"],
+            region_name=os.environ["OBJECT_STORE_REGION"],
+            aws_access_key_id=os.environ["OBJECT_STORE_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["OBJECT_STORE_SECRET_ACCESS_KEY"],
+            config=Config(signature_version="s3v4", s3={"addressing_style": "path"}),
+        )
+        try:
+            s3.head_bucket(Bucket=bucket)
+            print(f"bucket {bucket} exists")
+        except ClientError:
+            s3.create_bucket(Bucket=bucket)
+            print(f"bucket {bucket} created")
     environment: *app-env
-    volumes:
-      - ../docker/create_bucket.py:/opt/aip/create_bucket.py:ro
     depends_on:
       rustfs:
         condition: service_healthy
@@ -352,10 +389,9 @@ services:
     # The only routed service: give it the demo domain in Coolify, container port 8080.
     <<: *app-hardening
     image: ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-web-demo:${AIP_IMAGE_TAG:-main}
+    # Built with infra/coolify/nginx.conf (security headers, /api and /auth proxies).
     environment:
       NGINX_ENTRYPOINT_QUIET_LOGS: "1"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     expose:
       - "8080"
     depends_on:
@@ -370,6 +406,9 @@ services:
       retries: 20
 
 volumes:
-  postgres-data:
+  # v2: the first deploy initialised `postgres-data` with a placeholder superuser password (the
+  # superuser password is set only when the volume is first created); a new volume starts clean.
+  # The old volume holds no data and can be removed in Coolify (Storages).
+  postgres-data-v2:
   postgres-backups:
   rustfs-data:

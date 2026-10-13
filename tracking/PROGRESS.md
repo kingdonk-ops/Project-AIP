@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-13 · OPS-11 (fix) · PR #65 · First Coolify deploy failed (migrator exit 1): Coolify mounts repository files empty, so the Postgres bootstrap never ran. Config is now built into images (`aip-postgres-demo`, `aip-keycloak-demo`, the web image's `NGINX_CONF`), an idempotent `db-bootstrap` one-shot runs every deploy, and a test forbids repo bind mounts.
 - 2026-10-13 · OPS-11 · PR #64 · Coolify demo stack (GHCR images by tag, no host ports, required secrets, nightly pg_dump), nginx security headers and a Keycloak `/auth` allowlist, real-customer start-up guard for `AIP_ENV=demo`, demo banner, deploy workflow with `tools/smoke.py`; live deploy waits on the owner's one-time Coolify setup.
 - 2026-10-13 · DESIGN-03 · PR #63 · `RegisterTable` standard in `@aip/ui` (filters, URL state, cursor paging and sorting, column chooser, permission-gated bulk actions, server-side CSV export link, accessible states) with CSV golden vectors shared by `toCsv` and the Python writer; the projects register switch is split to PROJECTS-06.
 - 2026-10-13 · IDENTITY-03 · PR #62 · App-issued `__Host-` sessions backed by `user_session` (hash only, Redis-cached, idle/absolute expiry, rotation), CSRF double-submit, logout and per-session revocation that also end the Keycloak SSO session via a queued job, back-channel logout and an Active sessions page; live-Keycloak and Playwright journeys carried to TESTING-09.
