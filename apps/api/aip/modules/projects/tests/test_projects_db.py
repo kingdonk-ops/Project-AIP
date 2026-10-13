@@ -348,3 +348,30 @@ async def test_sites_crud_and_a_site_in_use_cannot_be_deleted(client: httpx.Asyn
     assert (await client.delete(url, headers=ALICE)).status_code == 404
     listed = (await client.get(SITES, headers=ALICE)).json()
     assert listed["items"] == []
+
+
+async def test_system_sites_are_hidden_and_cannot_be_changed(
+    client: httpx.AsyncClient, db: TenantDb
+) -> None:
+    """PROJECTS-05: the hidden per-project hierarchy root is never shown, edited or deleted."""
+    system_id = "00000000-0000-4000-8000-0000000005e1"
+    await su_execute(
+        db,
+        "INSERT INTO sites (id, tenant_id, code, name, is_system) VALUES"
+        f" ('{system_id}', '{TENANT_A_ID}', 'SYS-L592', 'L592 hierarchy root', true)",
+    )
+    assert (
+        await client.post(SITES, json={"code": "KIPS", "name": "Ichthys"}, headers=ALICE)
+    ).status_code == 201
+
+    listed = (await client.get(SITES, headers=ALICE)).json()
+    assert [s["code"] for s in listed["items"]] == ["KIPS"]
+    assert (await client.get(SITES, params={"q": "SYS"}, headers=ALICE)).json()["items"] == []
+    assert (await client.get(f"{SITES}/{system_id}", headers=ALICE)).status_code == 404
+
+    for method, body in (("PATCH", {"name": "Renamed"}), ("PATCH", {}), ("DELETE", None)):
+        response = await client.request(method, f"{SITES}/{system_id}", json=body, headers=ALICE)
+        assert (response.status_code, response.json()) == (409, {"code": "SITE_IS_SYSTEM"})
+    assert await su_fetch(db, f"SELECT name, deleted_at FROM sites WHERE id = '{system_id}'") == [
+        ("L592 hierarchy root", None)
+    ]
