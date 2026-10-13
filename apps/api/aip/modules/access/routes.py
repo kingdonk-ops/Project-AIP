@@ -3,6 +3,7 @@
 - ``GET /api/v1/access/me/abilities?projectId=``: ``authenticated()``. The caller's permission
   codes for the tenant, or for one project when ``projectId`` is given (tenant grants plus that
   project's grants). The UI uses it to hide actions; the API still checks every call.
+- ACCESS-02: roles and role assignments (``aip.modules.access.roles.routes``).
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
+from aip.modules.access.roles.routes import router as roles_router
 from aip.modules.access.schemas import AbilitiesResponse
 from aip.platform.access import AccessPrincipal, PolicyService, Resource, authenticated
 
@@ -35,3 +37,6 @@ async def get_my_abilities(
     codes = await policy.allowed_permissions(principal, Resource(project_id=project_id))
     response.headers["Cache-Control"] = "no-store"
     return AbilitiesResponse(permissions=codes)
+
+
+router.include_router(roles_router)

@@ -1,0 +1,13 @@
+{
+  "access.role.tenant_admin.name": "Tenant Admin",
+  "access.role.project_manager.name": "Project Manager",
+  "access.role.qaqc_manager.name": "QA/QC Manager",
+  "access.role.hse_officer.name": "HSE Officer",
+  "access.role.supervisor.name": "Supervisor",
+  "access.role.inspector.name": "Inspector",
+  "access.role.field_worker.name": "Field Worker",
+  "access.role.document_controller.name": "Document Controller",
+  "access.role.client_reviewer.name": "Client Reviewer",
+  "access.role.subcontractor.name": "Subcontractor",
+  "access.role.auditor.name": "Auditor"
+}

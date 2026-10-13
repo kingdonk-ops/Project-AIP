@@ -28,12 +28,13 @@ APP_SERVICES = {
     "migrator",
     "tenancy-seed",
     "identity-seed",
+    "access-seed",
     "object-store-init",
     "web",
     "sandbox",
 }
 # One-shot jobs: they exit 0 and their dependents wait on service_completed_successfully.
-ONE_SHOT = {"migrator", "tenancy-seed", "identity-seed", "object-store-init"}
+ONE_SHOT = {"migrator", "tenancy-seed", "identity-seed", "access-seed", "object-store-init"}
 DEFAULT_SERVICES = {
     "postgres",
     "valkey",
@@ -44,6 +45,7 @@ DEFAULT_SERVICES = {
     "migrator",
     "tenancy-seed",
     "identity-seed",
+    "access-seed",
     "object-store-init",
     "api",
     "worker",
@@ -143,6 +145,15 @@ def test_one_shots_gate_their_dependents(services: dict[str, dict[str, Any]]) ->
     # TENANCY-01: login_directory references tenants, so the tenants are seeded first.
     assert (
         services["identity-seed"]["depends_on"]["tenancy-seed"]["condition"]
+        == "service_completed_successfully"
+    )
+    # ACCESS-02: the system roles exist before the API serves, and need the tenants first.
+    assert (
+        services["api"]["depends_on"]["access-seed"]["condition"]
+        == "service_completed_successfully"
+    )
+    assert (
+        services["access-seed"]["depends_on"]["tenancy-seed"]["condition"]
         == "service_completed_successfully"
     )
     assert (

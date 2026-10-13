@@ -199,6 +199,18 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_workers TO aip_j
 GRANT SELECT,INSERT,UPDATE ON TABLE public.projects TO aip_app;
 GRANT SELECT ON TABLE public.projects TO aip_readonly;
 
+-- Name: TABLE role; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.role TO aip_app;
+GRANT SELECT ON TABLE public.role TO aip_readonly;
+
+-- Name: TABLE role_assignment; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.role_assignment TO aip_app;
+GRANT SELECT ON TABLE public.role_assignment TO aip_readonly;
+
+-- Name: TABLE role_permission; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.role_permission TO aip_app;
+GRANT SELECT ON TABLE public.role_permission TO aip_readonly;
+
 -- Name: TABLE sites; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.sites TO aip_app;
 GRANT SELECT ON TABLE public.sites TO aip_readonly;
@@ -287,6 +299,26 @@ ALTER TABLE ONLY public.procrastinate_workers
 ALTER TABLE ONLY public.projects
     ADD CONSTRAINT pk_projects PRIMARY KEY (id);
 
+-- Name: projects uq_projects_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT uq_projects_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: role pk_role; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role
+    ADD CONSTRAINT pk_role PRIMARY KEY (id);
+
+-- Name: role uq_role_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role
+    ADD CONSTRAINT uq_role_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: role_assignment pk_role_assignment; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_assignment
+    ADD CONSTRAINT pk_role_assignment PRIMARY KEY (id);
+
+-- Name: role_permission pk_role_permission; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_permission
+    ADD CONSTRAINT pk_role_permission PRIMARY KEY (id);
+
 -- Name: sites pk_sites; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.sites
     ADD CONSTRAINT pk_sites PRIMARY KEY (id);
@@ -359,6 +391,38 @@ ALTER TABLE ONLY public.projects
 -- Name: projects fk_projects_site_id_tenant_id_sites; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.projects
     ADD CONSTRAINT fk_projects_site_id_tenant_id_sites FOREIGN KEY (site_id, tenant_id) REFERENCES public.sites(id, tenant_id);
+
+-- Name: role fk_role_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role
+    ADD CONSTRAINT fk_role_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: role_assignment fk_role_assignment_approved_by_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_assignment
+    ADD CONSTRAINT fk_role_assignment_approved_by_tenant_id_app_user FOREIGN KEY (approved_by, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
+-- Name: role_assignment fk_role_assignment_created_by_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_assignment
+    ADD CONSTRAINT fk_role_assignment_created_by_tenant_id_app_user FOREIGN KEY (created_by, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
+-- Name: role_assignment fk_role_assignment_project_id_tenant_id_projects; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_assignment
+    ADD CONSTRAINT fk_role_assignment_project_id_tenant_id_projects FOREIGN KEY (project_id, tenant_id) REFERENCES public.projects(id, tenant_id);
+
+-- Name: role_assignment fk_role_assignment_role_id_tenant_id_role; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_assignment
+    ADD CONSTRAINT fk_role_assignment_role_id_tenant_id_role FOREIGN KEY (role_id, tenant_id) REFERENCES public.role(id, tenant_id);
+
+-- Name: role_assignment fk_role_assignment_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_assignment
+    ADD CONSTRAINT fk_role_assignment_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
+-- Name: role_permission fk_role_permission_permission_code_permission; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_permission
+    ADD CONSTRAINT fk_role_permission_permission_code_permission FOREIGN KEY (permission_code) REFERENCES public.permission(code);
+
+-- Name: role_permission fk_role_permission_role_id_tenant_id_role; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_permission
+    ADD CONSTRAINT fk_role_permission_role_id_tenant_id_role FOREIGN KEY (role_id, tenant_id) REFERENCES public.role(id, tenant_id);
 
 -- Name: tenant_membership fk_tenant_membership_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_membership
@@ -1015,6 +1079,24 @@ CREATE INDEX ix_projects_tenant_id_site_id ON public.projects USING btree (tenan
 -- Name: ix_projects_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_projects_tenant_id_status ON public.projects USING btree (tenant_id, status);
 
+-- Name: ix_role_assignment_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_role_assignment_tenant_id ON public.role_assignment USING btree (tenant_id);
+
+-- Name: ix_role_assignment_tenant_id_project_id; Type: INDEX; Schema: public
+CREATE INDEX ix_role_assignment_tenant_id_project_id ON public.role_assignment USING btree (tenant_id, project_id);
+
+-- Name: ix_role_assignment_tenant_id_role_id; Type: INDEX; Schema: public
+CREATE INDEX ix_role_assignment_tenant_id_role_id ON public.role_assignment USING btree (tenant_id, role_id);
+
+-- Name: ix_role_assignment_tenant_id_user_id; Type: INDEX; Schema: public
+CREATE INDEX ix_role_assignment_tenant_id_user_id ON public.role_assignment USING btree (tenant_id, user_id);
+
+-- Name: ix_role_permission_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_role_permission_tenant_id ON public.role_permission USING btree (tenant_id);
+
+-- Name: ix_role_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_role_tenant_id ON public.role USING btree (tenant_id);
+
 -- Name: ix_sites_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_sites_tenant_id ON public.sites USING btree (tenant_id);
 
@@ -1066,6 +1148,15 @@ CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs US
 -- Name: uq_projects_tenant_id_upper_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_projects_tenant_id_upper_code ON public.projects USING btree (tenant_id, upper(code)) WHERE (deleted_at IS NULL);
 
+-- Name: uq_role_assignment_live; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_role_assignment_live ON public.role_assignment USING btree (tenant_id, user_id, role_id, scope_type, COALESCE(project_id, '00000000-0000-0000-0000-000000000000'::uuid)) WHERE ((deleted_at IS NULL) AND (scope_type = ANY (ARRAY['tenant'::text, 'project'::text])));
+
+-- Name: uq_role_permission_role_id_permission_code; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_role_permission_role_id_permission_code ON public.role_permission USING btree (role_id, permission_code) WHERE (deleted_at IS NULL);
+
+-- Name: uq_role_tenant_id_code; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_role_tenant_id_code ON public.role USING btree (tenant_id, code) WHERE (deleted_at IS NULL);
+
 -- Name: uq_sites_tenant_id_upper_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_sites_tenant_id_upper_code ON public.sites USING btree (tenant_id, upper(code)) WHERE (deleted_at IS NULL);
 
@@ -1099,6 +1190,15 @@ CREATE POLICY tenant_isolation ON public.jobs USING ((tenant_id = (NULLIF(curren
 -- Name: projects tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.projects USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: role tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.role USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: role_assignment tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.role_assignment USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: role_permission tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.role_permission USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: sites tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.sites USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -1128,6 +1228,15 @@ ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
 
 -- Name: projects; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+
+-- Name: role; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.role ENABLE ROW LEVEL SECURITY;
+
+-- Name: role_assignment; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.role_assignment ENABLE ROW LEVEL SECURITY;
+
+-- Name: role_permission; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.role_permission ENABLE ROW LEVEL SECURITY;
 
 -- Name: sites; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.sites ENABLE ROW LEVEL SECURITY;
@@ -1446,6 +1555,70 @@ CREATE TABLE public.projects (
 ALTER TABLE ONLY public.projects FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.projects OWNER TO aip_owner;
+
+-- Name: role; Type: TABLE; Schema: public
+CREATE TABLE public.role (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    code text NOT NULL,
+    name_term_key text,
+    name text,
+    is_system boolean DEFAULT false NOT NULL,
+    customised_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_role_code CHECK ((code ~ '^[a-z][a-z0-9_]{1,62}$'::text)),
+    CONSTRAINT ck_role_customised_system CHECK (((customised_at IS NULL) OR is_system)),
+    CONSTRAINT ck_role_named CHECK (((name_term_key IS NOT NULL) OR (name <> ''::text)))
+);
+
+ALTER TABLE ONLY public.role FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.role OWNER TO aip_owner;
+
+-- Name: role_assignment; Type: TABLE; Schema: public
+CREATE TABLE public.role_assignment (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    role_id uuid NOT NULL,
+    scope_type text NOT NULL,
+    project_id uuid,
+    team_id uuid,
+    asset_path public.ltree,
+    source text DEFAULT 'manual'::text NOT NULL,
+    valid_from timestamp with time zone DEFAULT now() NOT NULL,
+    valid_to timestamp with time zone,
+    approved_by uuid,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_role_assignment_scope CHECK ((((scope_type = 'tenant'::text) AND (project_id IS NULL) AND (team_id IS NULL) AND (asset_path IS NULL)) OR ((scope_type = 'project'::text) AND (project_id IS NOT NULL) AND (team_id IS NULL) AND (asset_path IS NULL)) OR ((scope_type = 'team'::text) AND (team_id IS NOT NULL) AND (asset_path IS NULL)) OR ((scope_type = 'asset_subtree'::text) AND (asset_path IS NOT NULL) AND (team_id IS NULL)))),
+    CONSTRAINT ck_role_assignment_scope_type CHECK ((scope_type = ANY (ARRAY['tenant'::text, 'project'::text, 'team'::text, 'asset_subtree'::text]))),
+    CONSTRAINT ck_role_assignment_source CHECK ((source = ANY (ARRAY['manual'::text, 'scim'::text, 'delegation'::text]))),
+    CONSTRAINT ck_role_assignment_valid CHECK (((valid_to IS NULL) OR (valid_to > valid_from)))
+);
+
+ALTER TABLE ONLY public.role_assignment FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.role_assignment OWNER TO aip_owner;
+
+-- Name: role_permission; Type: TABLE; Schema: public
+CREATE TABLE public.role_permission (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    role_id uuid NOT NULL,
+    permission_code text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone
+);
+
+ALTER TABLE ONLY public.role_permission FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.role_permission OWNER TO aip_owner;
 
 -- Name: sites; Type: TABLE; Schema: public
 CREATE TABLE public.sites (
