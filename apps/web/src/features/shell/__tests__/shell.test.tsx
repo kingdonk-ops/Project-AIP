@@ -59,7 +59,9 @@ describe("app shell", () => {
     expect(screen.getByRole("main")).toBeTruthy();
     expect(screen.getAllByText("Kaefer Demo").length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: "Home" })).toBeTruthy();
+    expect(screen.getByRole("list", { name: "My Work" })).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Projects" })).toBeNull();
+    expect(screen.queryByRole("list", { name: "Work and assets" })).toBeNull();
     expect(await blocking(container)).toEqual([]);
   });
 

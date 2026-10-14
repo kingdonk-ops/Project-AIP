@@ -45,7 +45,9 @@ test("@skeleton @staging tenant A creates a project, tenant B cannot see or fetc
     // (a) A signs in, creates E2E-<runId> and sees it as Draft in the register.
     await loginAs(pageA, users.a);
     await pageA.goto("/projects");
-    await pageA.getByRole("link", { name: "Create project" }).click();
+    // The header always has "Create project"; on an empty register the empty state shows a second one once
+    // the list loads, so take the header's (first in the page) instead of racing the list request.
+    await pageA.getByRole("link", { name: "Create project" }).first().click();
     await pageA.getByLabel("Project code").fill(code);
     await pageA.getByLabel("Name").fill(name);
     const created = pageA.waitForResponse(
