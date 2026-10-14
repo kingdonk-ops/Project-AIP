@@ -444,6 +444,14 @@ def test_ordinary_grants_are_not_sensitive(tmp_path: Path) -> None:
     assert sql_messages(tmp_path, "GRANT SELECT ON t TO aip_owner, aip_readonly") == []
 
 
+def test_revoking_truncate_is_not_sensitive(tmp_path: Path) -> None:
+    # DATABASE-05: append_only_table.sql.tpl takes TRUNCATE away; only granting or running it is.
+    revoke = "REVOKE UPDATE, DELETE, TRUNCATE ON t FROM aip_app, aip_jobs"
+    assert sql_messages(tmp_path, revoke) == []
+    assert SENSITIVE_MSG in sql_messages(tmp_path, f"{revoke}; TRUNCATE t")
+    assert SENSITIVE_MSG in sql_messages(tmp_path, "GRANT TRUNCATE ON t TO aip_app")
+
+
 def test_do_blocks_only_in_the_baseline(tmp_path: Path) -> None:
     assert DO_MSG in sql_messages(tmp_path, "DO $$ BEGIN PERFORM 1; END $$;")
     assert DO_MSG in sql_messages(tmp_path, "SELECT 1; do language plpgsql $x$ BEGIN END $x$")

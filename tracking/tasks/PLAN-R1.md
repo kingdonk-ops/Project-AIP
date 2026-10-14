@@ -142,3 +142,10 @@ Backlog, after R1 and after the TENANCY-07 export: the sealed archive bundle for
 
 Backlog for the offline module, after R1 (ADR 0024): check-out token and epoch, pre-sync command list, quarantine store for refused uploads, targeted client purge with an encrypted recovery snapshot, second approver for signed work, the `inspections.checkout.unblock` permission, a "revoke device" action for lost tablets, and the admin page with required reason codes.
 
+
+## Carried forward: append-only evidence tables (DATABASE-05, 2026-10-14)
+
+The tasks that create `inspection_responses`, `audit_log`, `sync_operations` and `activity` render them from
+`db/templates/append_only_table.sql.tpl` and register them in `partition_settings` in the same revision. The
+inspections task that creates `inspection_current_responses` adds the DATABASE-05 check: submit a response twice
+for the same field, then the view returns the latest value and the history lists both entries.
