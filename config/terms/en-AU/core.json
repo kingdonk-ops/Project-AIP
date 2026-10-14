@@ -1,0 +1,18 @@
+{
+  "record.type.variation": {
+    "text": "Variation",
+    "description": "Record type name: a change to agreed scope; markets may call it a change order or client instruction (blueprint terms/README.md renaming examples)."
+  },
+  "record.type.ncr": {
+    "text": "NCR",
+    "description": "Record type name: a non-conformance report (blueprint terms/README.md renaming examples)."
+  },
+  "record.type.defect": {
+    "text": "Defect",
+    "description": "Record type name: a defect record; markets may call it a punch or deficiency (blueprint terms/README.md renaming examples)."
+  },
+  "record.type.work_pack": {
+    "text": "Work pack",
+    "description": "Record type name: a grouped package of work; markets may call it a campaign (blueprint terms/README.md renaming examples)."
+  }
+}

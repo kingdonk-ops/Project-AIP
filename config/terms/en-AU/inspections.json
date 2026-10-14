@@ -1,0 +1,90 @@
+{
+  "inspection.status.draft": {
+    "text": "Draft",
+    "description": "Inspection status label: the 'draft' stage of the inspection lifecycle (blueprint inspections/README.md lifecycle; owner decision: neutral codes with these stages as defaults)."
+  },
+  "inspection.status.assignable": {
+    "text": "Assignable",
+    "description": "Inspection status label: the 'assignable' stage of the inspection lifecycle (blueprint inspections/README.md lifecycle; owner decision: neutral codes with these stages as defaults)."
+  },
+  "inspection.status.assigned": {
+    "text": "Assigned",
+    "description": "Inspection status label: the 'assigned' stage of the inspection lifecycle (blueprint inspections/README.md lifecycle; owner decision: neutral codes with these stages as defaults)."
+  },
+  "inspection.status.in_progress": {
+    "text": "In progress",
+    "description": "Inspection status label: the 'in progress' stage of the inspection lifecycle (blueprint inspections/README.md lifecycle; owner decision: neutral codes with these stages as defaults)."
+  },
+  "inspection.status.inspector_review": {
+    "text": "Inspector review",
+    "description": "Inspection status label: the 'inspector review' stage of the inspection lifecycle (blueprint inspections/README.md lifecycle; owner decision: neutral codes with these stages as defaults)."
+  },
+  "inspection.status.supervisor_review": {
+    "text": "Supervisor review",
+    "description": "Inspection status label: the 'supervisor review' stage of the inspection lifecycle (blueprint inspections/README.md lifecycle; owner decision: neutral codes with these stages as defaults)."
+  },
+  "inspection.status.client_review": {
+    "text": "Client review",
+    "description": "Inspection status label: the 'client review' stage of the inspection lifecycle (blueprint inspections/README.md lifecycle; owner decision: neutral codes with these stages as defaults)."
+  },
+  "inspection.status.completed": {
+    "text": "Completed",
+    "description": "Inspection status label: the 'completed' stage of the inspection lifecycle (blueprint inspections/README.md lifecycle; owner decision: neutral codes with these stages as defaults)."
+  },
+  "inspection.status.rejected": {
+    "text": "Rejected",
+    "description": "Inspection status label: the 'rejected' stage of the inspection lifecycle (blueprint inspections/README.md lifecycle; owner decision: neutral codes with these stages as defaults)."
+  },
+  "inspection.kind.inspection": {
+    "text": "Inspection",
+    "description": "Inspection kind: a standard inspection filled in from a template against an asset (blueprint inspections/README.md)."
+  },
+  "inspection.kind.itp": {
+    "text": "ITP",
+    "description": "Inspection kind: an inspection and test plan whose steps carry hold, witness, review and surveillance points (blueprint inspections/README.md)."
+  },
+  "inspection.kind.rfi": {
+    "text": "RFI",
+    "description": "Inspection kind that is a hold point, not a request for information (owner decision: keep RFI as hold point)."
+  },
+  "itp.point_type.hold": {
+    "text": "Hold point",
+    "description": "ITP point type label: a point that blocks downstream tasks until released (blueprint inspections/README.md)."
+  },
+  "itp.point_type.witness": {
+    "text": "Witness point",
+    "description": "ITP point type label: a point that notifies with a notice period and waiver rule (blueprint inspections/README.md)."
+  },
+  "itp.point_type.review": {
+    "text": "Review point",
+    "description": "ITP point type label: a review point on an ITP step (blueprint inspections/README.md)."
+  },
+  "itp.point_type.surveillance": {
+    "text": "Surveillance point",
+    "description": "ITP point type label: a point that is sampled rather than checked every time (blueprint inspections/README.md)."
+  },
+  "itp.step.status.pending": {
+    "text": "Pending",
+    "description": "ITP step status label: the step is pending (blueprint inspections/README.md, itp_steps status pending/ready/in_progress/released/waived/rejected)."
+  },
+  "itp.step.status.ready": {
+    "text": "Ready",
+    "description": "ITP step status label: the step is ready (blueprint inspections/README.md, itp_steps status pending/ready/in_progress/released/waived/rejected)."
+  },
+  "itp.step.status.in_progress": {
+    "text": "In progress",
+    "description": "ITP step status label: the step is in progress (blueprint inspections/README.md, itp_steps status pending/ready/in_progress/released/waived/rejected)."
+  },
+  "itp.step.status.released": {
+    "text": "Released",
+    "description": "ITP step status label: the step is released (blueprint inspections/README.md, itp_steps status pending/ready/in_progress/released/waived/rejected)."
+  },
+  "itp.step.status.waived": {
+    "text": "Waived",
+    "description": "ITP step status label: the step is waived (blueprint inspections/README.md, itp_steps status pending/ready/in_progress/released/waived/rejected)."
+  },
+  "itp.step.status.rejected": {
+    "text": "Rejected",
+    "description": "ITP step status label: the step is rejected (blueprint inspections/README.md, itp_steps status pending/ready/in_progress/released/waived/rejected)."
+  }
+}

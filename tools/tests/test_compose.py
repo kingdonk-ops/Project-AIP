@@ -26,6 +26,7 @@ APP_SERVICES = {
     "api",
     "worker",
     "migrator",
+    "terms-load",
     "tenancy-seed",
     "identity-seed",
     "access-seed",
@@ -37,6 +38,7 @@ APP_SERVICES = {
 # One-shot jobs: they exit 0 and their dependents wait on service_completed_successfully.
 ONE_SHOT = {
     "migrator",
+    "terms-load",
     "tenancy-seed",
     "identity-seed",
     "access-seed",
@@ -51,6 +53,7 @@ DEFAULT_SERVICES = {
     "keycloak",
     "mailpit",
     "migrator",
+    "terms-load",
     "tenancy-seed",
     "identity-seed",
     "access-seed",
@@ -171,10 +174,11 @@ def test_one_shots_gate_their_dependents(services: dict[str, dict[str, Any]]) ->
             services[dependent]["depends_on"][dependency]["condition"]
             == "service_completed_successfully"
         )
-    assert (
-        services["tenancy-seed"]["depends_on"]["migrator"]["condition"]
-        == "service_completed_successfully"
-    )
+    for after_migrator in ("tenancy-seed", "terms-load"):  # TERMS-01: right after the migrator
+        assert (
+            services[after_migrator]["depends_on"]["migrator"]["condition"]
+            == "service_completed_successfully"
+        )
 
 
 def test_keycloak_imports_the_realms_theme_and_blocklist(
