@@ -24,7 +24,7 @@ from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, urljoin, urlsplit
 
 import httpx
 import pytest
@@ -359,6 +359,17 @@ async def test_login_page_uses_the_aip_theme(api: httpx.AsyncClient, browser: Br
     assert isinstance(page, Page)
     assert "css/aip.css" in page.html
     assert re.search(r"Sign in to AIP|Work email", page.html), page.html[:2000]
+    # DESIGN-07: Keycloak serves the token colours and the self-hosted IBM Plex Sans files.
+    href = re.search(r'href="([^"]*css/aip\.css)"', page.html)
+    assert href, "aip.css link not found"
+    css_url = urljoin(page.url, href.group(1))
+    css = browser.client.get(css_url)
+    assert css.status_code == 200 and "#0f766e" in css.text and '"IBM Plex Sans"' in css.text
+    fonts = re.findall(r'url\("([^"]+\.woff2)"\)', css.text)
+    assert len(fonts) == 3, fonts
+    for font in fonts:
+        r = browser.client.get(urljoin(css_url, font))
+        assert r.status_code == 200 and r.content[:4] == b"wOF2", font
 
 
 async def test_brute_force_locks_the_account(

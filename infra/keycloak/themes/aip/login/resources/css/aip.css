@@ -1,17 +1,51 @@
-/* AIP login theme overrides on keycloak.v2 (PatternFly 5). IDENTITY-01.
- * Placeholder values until the DESIGN-01 tokens merge; keep the custom property names in step with
- * packages/ui tokens when they land. */
+/* AIP login theme overrides on keycloak.v2 (PatternFly 5). IDENTITY-01, DESIGN-07.
+ * Keycloak's pages cannot import packages/ui, so the shared values repeat the @aip/ui tokens
+ * (packages/ui/src/tokens/tokens.css). tools/tests/test_login_theme.py fails if they drift apart.
+ * IBM Plex Sans is self-hosted from ../fonts (SIL OFL 1.1, licence in ../fonts/OFL.txt, ADR 0014),
+ * copied from @fontsource/ibm-plex-sans 5.3.0, so no request leaves the Keycloak origin. */
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("../fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("../fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("../fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2");
+}
+
 :root {
-  --aip-color-brand: #0b5cad;
-  --aip-color-brand-hover: #094a8b;
-  --aip-color-surface: #f5f7fa;
-  --aip-color-text: #1b1f24;
-  --aip-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Shared with the design tokens (checked by tools/tests/test_login_theme.py). */
+  --aip-color-brand: #0f766e; /* --accent */
+  --aip-color-brand-hover: #0b5c55; /* the high-contrast --accent, one step darker */
+  --aip-color-on-brand: #ffffff; /* --accent-foreground */
+  --aip-color-surface: #fafafa; /* --surface-muted */
+  --aip-color-text: #171717; /* --foreground */
+  --aip-color-text-muted: #525252; /* --foreground-muted */
+  --aip-color-border: #d4d4d4; /* --border */
+  --aip-color-danger: #b91c1c; /* --status-danger */
+  --aip-font-family: "IBM Plex Sans", system-ui, sans-serif; /* --font-sans */
 
   --pf-v5-global--primary-color--100: var(--aip-color-brand);
   --pf-v5-global--primary-color--200: var(--aip-color-brand-hover);
+  --pf-v5-global--primary-color--light-100: var(--aip-color-on-brand);
   --pf-v5-global--link--Color: var(--aip-color-brand);
   --pf-v5-global--link--Color--hover: var(--aip-color-brand-hover);
+  --pf-v5-global--Color--100: var(--aip-color-text);
+  --pf-v5-global--Color--200: var(--aip-color-text-muted);
+  --pf-v5-global--BorderColor--100: var(--aip-color-border);
+  --pf-v5-global--danger-color--100: var(--aip-color-danger);
   --pf-v5-global--FontFamily--text: var(--aip-font-family);
   --pf-v5-global--FontFamily--heading: var(--aip-font-family);
 }
@@ -19,6 +53,15 @@
 .pf-v5-c-login {
   background: var(--aip-color-surface);
   color: var(--aip-color-text);
+  font-family: var(--aip-font-family);
+}
+
+.pf-v5-c-button.pf-m-primary {
+  background-color: var(--aip-color-brand);
+  color: var(--aip-color-on-brand);
+}
+.pf-v5-c-button.pf-m-primary:hover {
+  background-color: var(--aip-color-brand-hover);
 }
 
 #kc-header-wrapper {
@@ -28,10 +71,10 @@
   color: var(--aip-color-brand);
 }
 
-/* Visible keyboard focus on every control (WCAG 2.2 AA). */
+/* Visible keyboard focus on every control (WCAG 2.2 AA): 2px accent, as in the app. */
 .pf-v5-c-button:focus-visible,
 .pf-v5-c-form-control:focus-within,
 a:focus-visible {
-  outline: 3px solid var(--aip-color-brand);
+  outline: 2px solid var(--aip-color-brand);
   outline-offset: 2px;
 }
