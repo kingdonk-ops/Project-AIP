@@ -1,0 +1,22 @@
+{
+  "access.method.ground": {
+    "text": "Ground",
+    "description": "Access method label for scope work: Ground (blueprint scope_work/README.md access methods)."
+  },
+  "access.method.rope_access": {
+    "text": "Rope access",
+    "description": "Access method label for scope work: Rope access (blueprint scope_work/README.md access methods)."
+  },
+  "access.method.scaffold": {
+    "text": "Scaffold",
+    "description": "Access method label for scope work: Scaffold (blueprint scope_work/README.md access methods)."
+  },
+  "access.method.mewp": {
+    "text": "MEWP",
+    "description": "Access method label for scope work: MEWP (blueprint scope_work/README.md access methods). MEWP and Ladder are separate methods (owner decision: split MEWP and Ladder)."
+  },
+  "access.method.ladder": {
+    "text": "Ladder",
+    "description": "Access method label for scope work: Ladder (blueprint scope_work/README.md access methods). MEWP and Ladder are separate methods (owner decision: split MEWP and Ladder)."
+  }
+}

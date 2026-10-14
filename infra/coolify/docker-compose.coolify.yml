@@ -255,6 +255,17 @@ services:
       db-bootstrap:
         condition: service_completed_successfully
 
+  terms-load:
+    # The platform en-AU dictionary into term_key as aip_owner (TERMS-01). Idempotent.
+    <<: *oneshot
+    image: *api-image
+    command: ["python", "-m", "aip.modules.terms.loader", "config/terms/en-AU"]
+    environment:
+      DATABASE_MIGRATOR_URL: *migrator-url
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+
   tenancy-seed:
     # The fixture tenants kaefer-demo and tenant-b (synthetic, is_real_customer false).
     <<: *oneshot
@@ -363,6 +374,8 @@ services:
     environment: *app-env
     depends_on:
       migrator:
+        condition: service_completed_successfully
+      terms-load:
         condition: service_completed_successfully
       identity-seed:
         condition: service_completed_successfully

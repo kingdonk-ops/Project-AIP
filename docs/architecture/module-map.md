@@ -12,6 +12,7 @@ Regenerate with `uv run python tools/gen_module_map.py`.
 | 3 | `identity` | identity | `ops`, `tenancy` |
 | 4 | `projects` | projects | `tenancy` |
 | 5 | `access` | identity | `identity`, `projects`, `tenancy` |
+| 6 | `terms` | terms | none |
 
 ## Dependencies
 
@@ -27,4 +28,5 @@ graph TD
     ops
     projects --> tenancy
     tenancy
+    terms
 ```

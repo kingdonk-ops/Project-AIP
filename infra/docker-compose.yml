@@ -232,6 +232,20 @@ services:
         condition: service_healthy
     restart: "no"
 
+  terms-load:
+    # One-shot: the platform en-AU dictionary into term_key as aip_owner (TERMS-01), right after
+    # the migrator. Idempotent upsert; runs in every environment (it is platform data, not a seed).
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    command: ["python", "-m", "aip.modules.terms.loader", "config/terms/en-AU"]
+    environment:
+      DATABASE_MIGRATOR_URL: ${DATABASE_MIGRATOR_URL:-postgresql://aip_owner:aip_owner_dev_only@postgres:5432/aip}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    restart: "no"
+
   tenancy-seed:
     # One-shot: the fixture tenants kaefer-demo and tenant-b (TENANCY-01). Idempotent; refuses to
     # run when AIP_ENV=production. Runs before identity-seed (login_directory references tenants).
@@ -336,6 +350,8 @@ services:
       - "127.0.0.1:${AIP_API_PORT:-8000}:8000"
     depends_on:
       migrator:
+        condition: service_completed_successfully
+      terms-load:
         condition: service_completed_successfully
       identity-seed:
         condition: service_completed_successfully

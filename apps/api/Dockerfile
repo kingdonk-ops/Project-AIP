@@ -85,6 +85,8 @@ COPY --from=build /opt/venv /opt/venv
 # The readiness probe compares the database revision with this script directory's head.
 COPY apps/api/alembic.ini apps/api/alembic.ini
 COPY apps/api/migrations apps/api/migrations
+# The platform dictionary loaded by `python -m aip.modules.terms.loader` (TERMS-01).
+COPY config/terms config/terms
 
 USER 10001:10001
 

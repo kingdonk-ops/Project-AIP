@@ -35,9 +35,22 @@ from aip.platform.context import RequestContext
 from aip.platform.db.engine import get_engine
 from aip.platform.db.errors import InvalidTenantError
 
-__all__ = ["TenantRef", "before_tenant", "tenant_uuid", "with_tenant"]
+__all__ = [
+    "PLATFORM_TENANT_ID",
+    "PlatformTenantError",
+    "TenantRef",
+    "before_tenant",
+    "tenant_uuid",
+    "with_platform_tenant",
+    "with_tenant",
+]
 
 TenantRef = UUID | str | RequestContext
+
+# ADR 0028: the reserved tenant of platform rows (terms defaults, built-in packs). Not a row in
+# ``tenants``; ``with_tenant`` refuses it, so only ``with_platform_tenant`` (as aip_owner) binds it.
+PLATFORM_TENANT_ID = UUID(int=0)
+_PLATFORM_WRITER = "aip_owner"
 
 _SET_TENANT = text("SELECT set_config('app.tenant_id', :tenant_id, true)")
 
@@ -87,4 +100,26 @@ async def before_tenant(*, engine: AsyncEngine | None = None) -> AsyncGenerator[
     """
     bound = get_engine() if engine is None else engine
     async with bound.begin() as conn:
+        yield conn
+
+
+class PlatformTenantError(RuntimeError):
+    """``with_platform_tenant`` was given an engine that does not log in as ``aip_owner``."""
+
+
+@asynccontextmanager
+async def with_platform_tenant(engine: AsyncEngine) -> AsyncGenerator[AsyncConnection]:
+    """Yield an ``aip_owner`` connection in a transaction bound to ``PLATFORM_TENANT_ID``.
+
+    For deploy-time loaders of platform rows (``python -m aip.modules.terms.loader``). The engine
+    comes from ``create_migrator_engine(DATABASE_MIGRATOR_URL)``; any other login is refused
+    before the tenant is set, because the platform-row policies let only ``aip_owner`` write.
+    """
+    async with engine.begin() as conn:
+        user = (await conn.execute(text("SELECT current_user"))).scalar_one()
+        if user != _PLATFORM_WRITER:
+            raise PlatformTenantError(
+                f"platform rows are written as {_PLATFORM_WRITER}, not {user}"
+            )
+        await conn.execute(_SET_TENANT, {"tenant_id": str(PLATFORM_TENANT_ID)})
         yield conn

@@ -188,6 +188,10 @@ GRANT SELECT,INSERT ON TABLE public.domain_events TO aip_app;
 GRANT SELECT ON TABLE public.domain_events TO aip_jobs;
 GRANT SELECT ON TABLE public.domain_events TO aip_readonly;
 
+-- Name: TABLE glossary_entry; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.glossary_entry TO aip_app;
+GRANT SELECT ON TABLE public.glossary_entry TO aip_readonly;
+
 -- Name: TABLE job_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.job_events TO aip_app;
 GRANT SELECT,INSERT ON TABLE public.job_events TO aip_jobs;
@@ -197,6 +201,10 @@ GRANT SELECT ON TABLE public.job_events TO aip_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.jobs TO aip_app;
 GRANT SELECT ON TABLE public.jobs TO aip_readonly;
 GRANT SELECT ON TABLE public.jobs TO aip_jobs;
+
+-- Name: TABLE locale_settings; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.locale_settings TO aip_app;
+GRANT SELECT ON TABLE public.locale_settings TO aip_readonly;
 
 -- Name: TABLE partition_settings; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.partition_settings TO aip_jobs;
@@ -249,6 +257,26 @@ GRANT SELECT ON TABLE public.tenant_membership TO aip_readonly;
 GRANT SELECT ON TABLE public.tenants TO aip_app;
 GRANT SELECT ON TABLE public.tenants TO aip_readonly;
 
+-- Name: TABLE term_alias; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.term_alias TO aip_app;
+GRANT SELECT ON TABLE public.term_alias TO aip_readonly;
+
+-- Name: TABLE term_key; Type: ACL; Schema: public
+GRANT SELECT ON TABLE public.term_key TO aip_app;
+GRANT SELECT ON TABLE public.term_key TO aip_readonly;
+
+-- Name: TABLE term_override; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.term_override TO aip_app;
+GRANT SELECT ON TABLE public.term_override TO aip_readonly;
+
+-- Name: TABLE term_pack; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.term_pack TO aip_app;
+GRANT SELECT ON TABLE public.term_pack TO aip_readonly;
+
+-- Name: TABLE term_pack_version; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.term_pack_version TO aip_app;
+GRANT SELECT ON TABLE public.term_pack_version TO aip_readonly;
+
 -- Name: TABLE user_session; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.user_session TO aip_app;
 GRANT SELECT ON TABLE public.user_session TO aip_readonly;
@@ -277,6 +305,10 @@ ALTER TABLE ONLY public.deployment_regions
 ALTER TABLE ONLY public.domain_events
     ADD CONSTRAINT pk_domain_events PRIMARY KEY (id);
 
+-- Name: glossary_entry pk_glossary_entry; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.glossary_entry
+    ADD CONSTRAINT pk_glossary_entry PRIMARY KEY (id);
+
 -- Name: job_events pk_job_events; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
     ADD CONSTRAINT pk_job_events PRIMARY KEY (id);
@@ -292,6 +324,10 @@ ALTER TABLE ONLY public.jobs
 -- Name: jobs uq_jobs_id_tenant_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.jobs
     ADD CONSTRAINT uq_jobs_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: locale_settings pk_locale_settings; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.locale_settings
+    ADD CONSTRAINT pk_locale_settings PRIMARY KEY (id);
 
 -- Name: login_directory login_directory_pkey; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.login_directory
@@ -376,6 +412,34 @@ ALTER TABLE ONLY public.tenants
 -- Name: tenants uq_tenants_slug; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenants
     ADD CONSTRAINT uq_tenants_slug UNIQUE (slug);
+
+-- Name: term_alias pk_term_alias; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.term_alias
+    ADD CONSTRAINT pk_term_alias PRIMARY KEY (id);
+
+-- Name: term_key pk_term_key; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.term_key
+    ADD CONSTRAINT pk_term_key PRIMARY KEY (id);
+
+-- Name: term_override pk_term_override; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.term_override
+    ADD CONSTRAINT pk_term_override PRIMARY KEY (id);
+
+-- Name: term_pack pk_term_pack; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.term_pack
+    ADD CONSTRAINT pk_term_pack PRIMARY KEY (id);
+
+-- Name: term_pack uq_term_pack_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.term_pack
+    ADD CONSTRAINT uq_term_pack_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: term_pack_version pk_term_pack_version; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.term_pack_version
+    ADD CONSTRAINT pk_term_pack_version PRIMARY KEY (id);
+
+-- Name: term_pack_version uq_term_pack_version_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.term_pack_version
+    ADD CONSTRAINT uq_term_pack_version_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: user_session pk_user_session; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.user_session
@@ -485,6 +549,18 @@ ALTER TABLE ONLY public.tenant_membership
 -- Name: tenants fk_tenants_region_code_deployment_regions; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenants
     ADD CONSTRAINT fk_tenants_region_code_deployment_regions FOREIGN KEY (region_code) REFERENCES public.deployment_regions(code);
+
+-- Name: term_override fk_term_override_key_term_key; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.term_override
+    ADD CONSTRAINT fk_term_override_key_term_key FOREIGN KEY (key) REFERENCES public.term_key(key);
+
+-- Name: term_pack fk_term_pack_active_version_id_tenant_id_term_pack_version; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.term_pack
+    ADD CONSTRAINT fk_term_pack_active_version_id_tenant_id_term_pack_version FOREIGN KEY (active_version_id, tenant_id) REFERENCES public.term_pack_version(id, tenant_id);
+
+-- Name: term_pack_version fk_term_pack_version_pack_id_tenant_id_term_pack; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.term_pack_version
+    ADD CONSTRAINT fk_term_pack_version_pack_id_tenant_id_term_pack FOREIGN KEY (pack_id, tenant_id) REFERENCES public.term_pack(id, tenant_id);
 
 -- Name: user_session fk_user_session_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.user_session
@@ -1272,6 +1348,15 @@ CREATE INDEX ix_domain_events_event_name_occurred_at ON public.domain_events USI
 -- Name: ix_domain_events_tenant_id_occurred_at_pending; Type: INDEX; Schema: public
 CREATE INDEX ix_domain_events_tenant_id_occurred_at_pending ON public.domain_events USING btree (tenant_id, occurred_at) WHERE ((published_at IS NULL) AND (dead_lettered_at IS NULL));
 
+-- Name: ix_glossary_entry_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_glossary_entry_tenant_id ON public.glossary_entry USING btree (tenant_id);
+
+-- Name: ix_glossary_entry_tenant_id_abbreviation; Type: INDEX; Schema: public
+CREATE INDEX ix_glossary_entry_tenant_id_abbreviation ON public.glossary_entry USING btree (tenant_id, abbreviation);
+
+-- Name: ix_glossary_entry_tenant_id_neutral_concept_code; Type: INDEX; Schema: public
+CREATE INDEX ix_glossary_entry_tenant_id_neutral_concept_code ON public.glossary_entry USING btree (tenant_id, neutral_concept_code);
+
 -- Name: ix_job_events_tenant_id_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_job_events_tenant_id_occurred_at ON public.job_events USING btree (tenant_id, occurred_at);
 
@@ -1286,6 +1371,9 @@ CREATE INDEX ix_jobs_tenant_id_requested_by_created_at ON public.jobs USING btre
 
 -- Name: ix_jobs_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_jobs_tenant_id_status ON public.jobs USING btree (tenant_id, status) WHERE (deleted_at IS NULL);
+
+-- Name: ix_locale_settings_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_locale_settings_tenant_id ON public.locale_settings USING btree (tenant_id);
 
 -- Name: ix_login_directory_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_login_directory_tenant_id ON public.login_directory USING btree (tenant_id);
@@ -1335,6 +1423,30 @@ CREATE INDEX ix_tenants_region_code ON public.tenants USING btree (region_code);
 -- Name: ix_tenants_status; Type: INDEX; Schema: public
 CREATE INDEX ix_tenants_status ON public.tenants USING btree (status);
 
+-- Name: ix_term_alias_alias_trgm; Type: INDEX; Schema: public
+CREATE INDEX ix_term_alias_alias_trgm ON public.term_alias USING gin (alias public.gin_trgm_ops);
+
+-- Name: ix_term_alias_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_term_alias_tenant_id ON public.term_alias USING btree (tenant_id);
+
+-- Name: ix_term_key_module_id; Type: INDEX; Schema: public
+CREATE INDEX ix_term_key_module_id ON public.term_key USING btree (module_id);
+
+-- Name: ix_term_key_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_term_key_tenant_id ON public.term_key USING btree (tenant_id);
+
+-- Name: ix_term_override_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_term_override_tenant_id ON public.term_override USING btree (tenant_id);
+
+-- Name: ix_term_override_tenant_id_key; Type: INDEX; Schema: public
+CREATE INDEX ix_term_override_tenant_id_key ON public.term_override USING btree (tenant_id, key);
+
+-- Name: ix_term_pack_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_term_pack_tenant_id ON public.term_pack USING btree (tenant_id);
+
+-- Name: ix_term_pack_version_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_term_pack_version_tenant_id ON public.term_pack_version USING btree (tenant_id);
+
 -- Name: ix_user_session_kc_sid; Type: INDEX; Schema: public
 CREATE INDEX ix_user_session_kc_sid ON public.user_session USING btree (kc_sid) WHERE (revoked_at IS NULL);
 
@@ -1377,6 +1489,9 @@ CREATE UNIQUE INDEX uq_app_user_tenant_id_keycloak_user_id ON public.app_user US
 -- Name: uq_jobs_tenant_id_job_type_idempotency_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs USING btree (tenant_id, job_type, idempotency_key) WHERE (idempotency_key IS NOT NULL);
 
+-- Name: uq_locale_settings_tenant_id_project_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_locale_settings_tenant_id_project_id ON public.locale_settings USING btree (tenant_id, COALESCE(project_id, '00000000-0000-0000-0000-000000000000'::uuid)) WHERE (deleted_at IS NULL);
+
 -- Name: uq_projects_tenant_id_upper_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_projects_tenant_id_upper_code ON public.projects USING btree (tenant_id, upper(code)) WHERE (deleted_at IS NULL);
 
@@ -1394,6 +1509,21 @@ CREATE UNIQUE INDEX uq_sites_tenant_id_upper_code ON public.sites USING btree (t
 
 -- Name: uq_tenant_membership_tenant_id_user_id_organisation_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_tenant_membership_tenant_id_user_id_organisation_id ON public.tenant_membership USING btree (tenant_id, user_id, organisation_id) NULLS NOT DISTINCT WHERE (deleted_at IS NULL);
+
+-- Name: uq_term_alias_tenant_id_alias_target_type_locale; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_term_alias_tenant_id_alias_target_type_locale ON public.term_alias USING btree (tenant_id, alias, target_type, locale) WHERE (deleted_at IS NULL);
+
+-- Name: uq_term_key_key; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_term_key_key ON public.term_key USING btree (key);
+
+-- Name: uq_term_override_scope_key_locale; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_term_override_scope_key_locale ON public.term_override USING btree (tenant_id, level, COALESCE(client_org_id, project_id, '00000000-0000-0000-0000-000000000000'::uuid), key, locale) WHERE (deleted_at IS NULL);
+
+-- Name: uq_term_pack_tenant_id_code; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_term_pack_tenant_id_code ON public.term_pack USING btree (tenant_id, code);
+
+-- Name: uq_term_pack_version_pack_id_version; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_term_pack_version_pack_id_version ON public.term_pack_version USING btree (pack_id, version);
 
 -- Name: access_settings tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.access_settings USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -1413,11 +1543,23 @@ CREATE POLICY dispatcher_update ON public.domain_events FOR UPDATE TO aip_jobs U
 -- Name: domain_events tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.domain_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: glossary_entry platform_read; Type: POLICY; Schema: public
+CREATE POLICY platform_read ON public.glossary_entry FOR SELECT USING ((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid));
+
+-- Name: glossary_entry tenant_write; Type: POLICY; Schema: public
+CREATE POLICY tenant_write ON public.glossary_entry USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
+
 -- Name: job_events tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.job_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: jobs tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.jobs USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: locale_settings platform_read; Type: POLICY; Schema: public
+CREATE POLICY platform_read ON public.locale_settings FOR SELECT USING ((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid));
+
+-- Name: locale_settings tenant_write; Type: POLICY; Schema: public
+CREATE POLICY tenant_write ON public.locale_settings USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
 
 -- Name: projects tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.projects USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -1446,6 +1588,36 @@ CREATE POLICY real_customer_check ON public.tenants FOR SELECT TO aip_owner USIN
 -- Name: tenants tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenants USING ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: term_alias platform_read; Type: POLICY; Schema: public
+CREATE POLICY platform_read ON public.term_alias FOR SELECT USING ((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid));
+
+-- Name: term_alias tenant_write; Type: POLICY; Schema: public
+CREATE POLICY tenant_write ON public.term_alias USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
+
+-- Name: term_key platform_read; Type: POLICY; Schema: public
+CREATE POLICY platform_read ON public.term_key FOR SELECT USING ((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid));
+
+-- Name: term_key tenant_write; Type: POLICY; Schema: public
+CREATE POLICY tenant_write ON public.term_key USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
+
+-- Name: term_override platform_read; Type: POLICY; Schema: public
+CREATE POLICY platform_read ON public.term_override FOR SELECT USING ((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid));
+
+-- Name: term_override tenant_write; Type: POLICY; Schema: public
+CREATE POLICY tenant_write ON public.term_override USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
+
+-- Name: term_pack platform_read; Type: POLICY; Schema: public
+CREATE POLICY platform_read ON public.term_pack FOR SELECT USING ((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid));
+
+-- Name: term_pack tenant_write; Type: POLICY; Schema: public
+CREATE POLICY tenant_write ON public.term_pack USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
+
+-- Name: term_pack_version platform_read; Type: POLICY; Schema: public
+CREATE POLICY platform_read ON public.term_pack_version FOR SELECT USING ((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid));
+
+-- Name: term_pack_version tenant_write; Type: POLICY; Schema: public
+CREATE POLICY tenant_write ON public.term_pack_version USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
+
 -- Name: user_session session_lookup; Type: POLICY; Schema: public
 CREATE POLICY session_lookup ON public.user_session FOR SELECT TO aip_owner USING (true);
 
@@ -1464,11 +1636,17 @@ ALTER TABLE public.auth_event ENABLE ROW LEVEL SECURITY;
 -- Name: domain_events; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.domain_events ENABLE ROW LEVEL SECURITY;
 
+-- Name: glossary_entry; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.glossary_entry ENABLE ROW LEVEL SECURITY;
+
 -- Name: job_events; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.job_events ENABLE ROW LEVEL SECURITY;
 
 -- Name: jobs; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
+
+-- Name: locale_settings; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.locale_settings ENABLE ROW LEVEL SECURITY;
 
 -- Name: projects; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
@@ -1493,6 +1671,21 @@ ALTER TABLE public.tenant_membership ENABLE ROW LEVEL SECURITY;
 
 -- Name: tenants; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+
+-- Name: term_alias; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.term_alias ENABLE ROW LEVEL SECURITY;
+
+-- Name: term_key; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.term_key ENABLE ROW LEVEL SECURITY;
+
+-- Name: term_override; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.term_override ENABLE ROW LEVEL SECURITY;
+
+-- Name: term_pack; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.term_pack ENABLE ROW LEVEL SECURITY;
+
+-- Name: term_pack_version; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.term_pack_version ENABLE ROW LEVEL SECURITY;
 
 -- Name: user_session; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.user_session ENABLE ROW LEVEL SECURITY;
@@ -1653,6 +1846,25 @@ ALTER TABLE ONLY public.domain_events FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.domain_events OWNER TO aip_owner;
 
+-- Name: glossary_entry; Type: TABLE; Schema: public
+CREATE TABLE public.glossary_entry (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    term text NOT NULL,
+    abbreviation text,
+    definition text NOT NULL,
+    neutral_concept_code text,
+    locale text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_glossary_entry_term CHECK ((term <> ''::text))
+);
+
+ALTER TABLE ONLY public.glossary_entry FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.glossary_entry OWNER TO aip_owner;
+
 -- Name: job_events; Type: TABLE; Schema: public
 CREATE TABLE public.job_events (
     id uuid NOT NULL,
@@ -1698,6 +1910,28 @@ CREATE TABLE public.jobs (
 ALTER TABLE ONLY public.jobs FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.jobs OWNER TO aip_owner;
+
+-- Name: locale_settings; Type: TABLE; Schema: public
+CREATE TABLE public.locale_settings (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    project_id uuid,
+    locale text DEFAULT 'en-AU'::text NOT NULL,
+    date_format text,
+    number_format text,
+    unit_system text DEFAULT 'metric'::text NOT NULL,
+    unit_overrides jsonb DEFAULT '{}'::jsonb NOT NULL,
+    timezone text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_locale_settings_unit_overrides CHECK ((jsonb_typeof(unit_overrides) = 'object'::text)),
+    CONSTRAINT ck_locale_settings_unit_system CHECK ((unit_system = ANY (ARRAY['metric'::text, 'imperial'::text])))
+);
+
+ALTER TABLE ONLY public.locale_settings FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.locale_settings OWNER TO aip_owner;
 
 -- Name: login_directory; Type: TABLE; Schema: public
 CREATE TABLE public.login_directory (
@@ -1967,6 +2201,110 @@ CREATE TABLE public.tenants (
 ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.tenants OWNER TO aip_owner;
+
+-- Name: term_alias; Type: TABLE; Schema: public
+CREATE TABLE public.term_alias (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    alias text NOT NULL,
+    target_type text NOT NULL,
+    target_code text NOT NULL,
+    locale text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_term_alias_alias CHECK (((alias <> ''::text) AND (alias = lower(alias)))),
+    CONSTRAINT ck_term_alias_target_type CHECK ((target_type = ANY (ARRAY['entity_type'::text, 'field'::text, 'status'::text])))
+);
+
+ALTER TABLE ONLY public.term_alias FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.term_alias OWNER TO aip_owner;
+
+-- Name: term_key; Type: TABLE; Schema: public
+CREATE TABLE public.term_key (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    key text NOT NULL,
+    module_id text NOT NULL,
+    default_locale text DEFAULT 'en-AU'::text NOT NULL,
+    default_text text NOT NULL,
+    description text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_term_key_default_text CHECK ((default_text <> ''::text)),
+    CONSTRAINT ck_term_key_key CHECK ((key ~ '^[a-z][a-z0-9_]*(\.[A-Za-z0-9_-]+)+$'::text)),
+    CONSTRAINT ck_term_key_module_id CHECK ((module_id ~ '^[a-z][a-z0-9_]*$'::text))
+);
+
+ALTER TABLE ONLY public.term_key FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.term_key OWNER TO aip_owner;
+
+-- Name: term_override; Type: TABLE; Schema: public
+CREATE TABLE public.term_override (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    level text NOT NULL,
+    client_org_id uuid,
+    project_id uuid,
+    key text NOT NULL,
+    locale text NOT NULL,
+    text text NOT NULL,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_term_override_level CHECK ((((level = 'tenant'::text) AND (client_org_id IS NULL) AND (project_id IS NULL)) OR ((level = 'client'::text) AND (client_org_id IS NOT NULL) AND (project_id IS NULL)) OR ((level = 'project'::text) AND (project_id IS NOT NULL) AND (client_org_id IS NULL)))),
+    CONSTRAINT ck_term_override_sync_version CHECK ((sync_version >= 1)),
+    CONSTRAINT ck_term_override_text CHECK ((text <> ''::text))
+);
+
+ALTER TABLE ONLY public.term_override FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.term_override OWNER TO aip_owner;
+
+-- Name: term_pack; Type: TABLE; Schema: public
+CREATE TABLE public.term_pack (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    code text NOT NULL,
+    name text NOT NULL,
+    active_version_id uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_term_pack_code CHECK ((code ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text)),
+    CONSTRAINT ck_term_pack_name CHECK ((name <> ''::text))
+);
+
+ALTER TABLE ONLY public.term_pack FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.term_pack OWNER TO aip_owner;
+
+-- Name: term_pack_version; Type: TABLE; Schema: public
+CREATE TABLE public.term_pack_version (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    pack_id uuid NOT NULL,
+    version integer NOT NULL,
+    contents jsonb NOT NULL,
+    contents_sha256 text NOT NULL,
+    change_summary jsonb,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_term_pack_version_contents CHECK ((jsonb_typeof(contents) = 'object'::text)),
+    CONSTRAINT ck_term_pack_version_sha256 CHECK ((contents_sha256 ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_term_pack_version_version CHECK ((version >= 1))
+);
+
+ALTER TABLE ONLY public.term_pack_version FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.term_pack_version OWNER TO aip_owner;
 
 -- Name: user_session; Type: TABLE; Schema: public
 CREATE TABLE public.user_session (
