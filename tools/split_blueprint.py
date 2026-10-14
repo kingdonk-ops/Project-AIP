@@ -48,6 +48,15 @@ def split_on(lines, pattern):
     return chunks
 
 
+# ADR 0018 replaced the blueprint's nav sections; keep this pointer on regeneration (DESIGN-06).
+SITE_HIERARCHY_NOTE = (
+    "> **Superseded for navigation by [ADR 0018](../adr/0018-module-groups-and-navigation.md):** "
+    "the rail uses the job-area groups in "
+    "[`module-groups-and-navigation.md`](../architecture/module-groups-and-navigation.md). "
+    "The sections below are the original blueprint text."
+)
+
+
 def write(path, text):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text.rstrip() + "\n")
@@ -93,7 +102,8 @@ def main(src):
     write(BP / "02-advisor-summaries.md", "# Advisor summaries\n\n"
           "> Background only. Where advisors disagree with `01-decisions.md`, the decision wins.\n\n"
           + "\n".join(sec("Advisor summaries")))
-    write(BP / "03-site-hierarchy.md", "# Site hierarchy (navigation)\n\n" + "\n".join(sec("Site hierarchy")))
+    write(BP / "03-site-hierarchy.md", "# Site hierarchy (navigation)\n\n" + SITE_HIERARCHY_NOTE
+          + "\n\n" + "\n".join(sec("Site hierarchy")))
     write(BP / "04-code-layout.md",
           "# Folders, files and shared code\n\n"
           "> NOTE: this section describes the old AIP codebase, which is NOT used. The backend is a greenfield\n"

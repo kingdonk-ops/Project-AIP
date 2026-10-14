@@ -1,23 +1,43 @@
 import { describe, expect, it, vi } from "vitest";
 import securityHeaders from "../../../../security-headers.json";
-import { visibleNavGroups, type NavItem } from "../nav-registry";
+import { NAV_SECTIONS, registerNavItem, visibleNavGroups, type NavItem } from "../nav-registry";
 import { safeNext } from "../safe-next";
 import { t } from "../t";
 
 describe("nav registry", () => {
   const items: NavItem[] = [
-    { id: "projects", section: "work", to: "/projects", icon: "folder", termKey: "shell.nav.projects", permission: "project.view" },
-    { id: "audit", section: "insight", to: "/audit", icon: "shield", termKey: "shell.nav.audit", permission: "audit.view" },
+    { id: "audit", section: "settings", to: "/audit", icon: "shield", termKey: "shell.nav.audit", permission: "audit.view" },
+    { id: "projects", section: "work-assets", to: "/projects", icon: "folder", termKey: "shell.nav.projects", permission: "project.view" },
+    { id: "home", section: "my-work", to: "/", icon: "home", termKey: "shell.nav.home" },
   ];
+
+  it("declares the ADR 0018 job-area groups in menu order, after My Work", () => {
+    expect(NAV_SECTIONS).toEqual(["my-work", "work-assets", "quality", "field", "documents", "insight", "settings"]);
+  });
+
+  it("returns groups in menu order whatever the registration order, dropping empty ones", () => {
+    const groups = visibleNavGroups(items, ["project.view", "audit.view"]);
+    expect(groups.map((g) => g.section)).toEqual(["my-work", "work-assets", "settings"]);
+  });
+
+  it("has a terminology label for every group", () => {
+    for (const section of NAV_SECTIONS) expect(t(`shell.nav.section.${section}`)).not.toMatch(/^⟦/);
+  });
+
+  it("refuses a top-level group ADR 0018 does not declare", () => {
+    const register = (item: NavItem) => item;
+    // @ts-expect-error: a module adds one entry to an existing group and never a new top-level group (ADR 0018).
+    register({ id: "x", section: "work", to: "/x", icon: "home", termKey: "shell.nav.home" });
+    expect(typeof registerNavItem).toBe("function");
+  });
 
   it("renders only the items the principal may see", () => {
     const groups = visibleNavGroups(items, ["project.view"]);
-    expect(groups.flatMap((g) => g.items)).toHaveLength(1);
-    expect(groups[0]?.items[0]?.id).toBe("projects");
+    expect(groups.flatMap((g) => g.items.map((i) => i.id))).toEqual(["home", "projects"]);
   });
 
-  it("renders nothing when no permission matches", () => {
-    expect(visibleNavGroups(items, [])).toEqual([]);
+  it("renders only ungated items when no permission matches", () => {
+    expect(visibleNavGroups(items, []).flatMap((g) => g.items.map((i) => i.id))).toEqual(["home"]);
   });
 });
 
