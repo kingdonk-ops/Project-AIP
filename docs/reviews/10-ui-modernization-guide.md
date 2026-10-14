@@ -61,3 +61,11 @@ All pass 4.5:1 for 12–14px text. Muted text `#525252` on the `#fafafa` canvas 
 SLA hours, ITPs, NCRs, RFIs, punch items, expiring calibrations and certificates come from R1/P1 modules
 (inspections, issues, equipment, eligibility). In P0 only the approvals inbox (APPROVALS-06) and the audit activity
 feed (AUDIT-04) exist, so DESIGN-12 ships with those two sources and a provider interface that R1 modules plug into.
+
+## Owner answers (2026-10-14)
+
+- Nav groups: keep ADR 0018. Home / My Work: build alongside R1. Mobile bottom bar: field app; the web app keeps the
+  drawer.
+- **Added:** each user chooses whether records open in a side panel (the Blade, default) or as a full detail page,
+  on the "My display preferences" page (`/settings/design/preferences`). Both modes render the same detail body, so
+  modules build it once. → DESIGN-13.

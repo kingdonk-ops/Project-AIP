@@ -161,6 +161,7 @@ tasks still `todo` below remain before M0 is closed.
 | [DESIGN-05](tasks/DESIGN-05.md) | Tenant accent theme + visual regression | design | S | DESIGN-03, DESIGN-09 | todo | convert to Python backend per ADR 0001 before starting; after DESIGN-09 so baselines are taken once on the new look |
 | [DESIGN-10](tasks/DESIGN-10.md) | Scope bar as a breadcrumb (tenant › organisation › project › asset) | design | S | DESIGN-09, PROJECTS-03 | todo | UI modernization guide (docs/reviews/10) |
 | [DESIGN-11](tasks/DESIGN-11.md) | Blade (slide-out detail), KPI strip and work-queue patterns | design | M | DESIGN-04, DESIGN-09 | todo | UI modernization guide (docs/reviews/10) |
+| [DESIGN-13](tasks/DESIGN-13.md) | My display preferences page, with a choice of side panel or full page for record details | design | M | DESIGN-04, DESIGN-11, ACCESS-01 | todo | owner request 2026-10-14 |
 
 ### Wave 9: P0-core exit
 
@@ -190,7 +191,7 @@ tasks still `todo` below remain before M0 is closed.
 | [OPS-12](tasks/OPS-12.md) | Operator console on its own origin and realm (ADR 0017) | ops | M | IDENTITY-04, OPS-07, PLAN-R1, TENANCY-05 | todo | after the AWS pipeline |
 | [ENT-03](tasks/ENT-03.md) | Billing state (good standing, past due, restricted, suspended) and enforcement (ADR 0023) | tenancy | M | ENT-01, PLAN-R1, TENANCY-05 | todo | an operator moves the state, never a payment event |
 | [ENT-04](tasks/ENT-04.md) | Operator console pages: entitlement overrides and billing state (ADR 0023) | tenancy | M | ENT-03, OPS-12, PLAN-R1 | todo | on the operator origin |
-| [DESIGN-12](tasks/DESIGN-12.md) | Home / My Work page (`/`) with work-item providers | design | M | APPROVALS-06, AUDIT-04, DESIGN-11, PLAN-R1 | todo | UI modernization guide (docs/reviews/10); P0 sources are approvals and activity, R1 modules add providers |
+| [DESIGN-12](tasks/DESIGN-12.md) | Home / My Work page (`/`) with work-item providers | design | M | APPROVALS-06, AUDIT-04, DESIGN-11, DESIGN-13, PLAN-R1 | todo | UI modernization guide (docs/reviews/10); P0 sources are approvals and activity, R1 modules add providers |
 
 ### Moved out of P0: re-scoped by PLAN-R1 (ADR 0007)
 

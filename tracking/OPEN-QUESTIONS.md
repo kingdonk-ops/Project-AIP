@@ -31,6 +31,7 @@ becomes an ADR update. **Bold** questions block M0.
 - 2026-10-13 — **Web hosting on AWS:** web apps run as nginx containers on Fargate behind one ALB with host-based routing, not S3 + CloudFront, because more sites (portal, operator console, marketing) will share the platform. → ADR 0026 (supersedes ADR 0004's Delivery bullet), OPS-07, OPS-09.
 - 2026-10-10 — **Confirmations:** target date for "Kaefer live" 2027-03-31 with offline operation out of R1, and the four offline-timer adjustments (ADR 0007, ADR 0010); the lighter company set CRM + DocuSeal + Xero; Microsoft 365 Business Premium; Amazon SES in Sydney; included database size 5 GB, 20 GB and 100 GB for Essentials, Professional and Enterprise; the three role-specification adjustments (ADR 0020). The owner reports code ownership confirmed (keep the written confirmation on file).
 - 2026-10-11 — **Decisions (items 20, 23, 26 to 30):** error tracking is our own sink (OPS-05) plus CloudWatch in Sydney, no hosted Sentry; `security@` mailbox on Microsoft 365 once the domain records are confirmed, owner is the named security owner while solo; 7-year retention, two audit streams, chain checkpoints and Glacier Instant Retrieval confirmed (ADR 0021); offboarding lifecycle confirmed, archive plan post-R1, sealed bundle plus standalone viewer, lawyer to finalise wording (ADR 0022); hosted lightweight CRM (HubSpot Free or Starter, or Attio), Twenty not self-hosted; ADR 0023 points 1, 4, 7, 9, 12 confirmed; "24) confirm" covered items 23, 26 and 27; ADR 0008 adjustment D confirmed (no on-premises deployment; siloed deployment only on contract, after R1).
+- 2026-10-14 — **UI modernization guide (items 32, 34, 35):** keep ADR 0018's nav groups (DESIGN-06); build Home / My Work alongside R1 (DESIGN-12); the mobile bottom bar goes with the offline field app, and the web app keeps the drawer. The owner also asked for a per-user choice of side panel or full page for record details, set in profile settings. → docs/reviews/10, DESIGN-13.
 - 2026-10-13 — **Time zones:** UTC everywhere internally, local time only at presentation; future scheduled events keep wall-clock time plus the IANA zone; calendar-day expiry (membership `valid_to`) is checked against one reference zone, UTC (the current behaviour), confirmed by the owner. → ADR 0025.
 - 2026-10-09 — **LGPL exceptions:** owner confirmed the `psycopg` and `psycopg-pool` LGPL-3.0 exceptions (required by Procrastinate, imported unmodified; expire 2027-04-06). → ADR 0016.
 
@@ -46,12 +47,7 @@ Nothing blocks M0 now.
 
 ### UI modernization guide ([`docs/reviews/10-ui-modernization-guide.md`](../docs/reviews/10-ui-modernization-guide.md))
 
-The tasks go ahead on the defaults below unless the owner says otherwise.
-
-32. **Nav groups:** the guide's grouping differs from ADR 0018 (Documents is its own group; notifications and search are header utilities; audit is under Settings). Default: keep ADR 0018 (DESIGN-06). Amend the ADR instead?
-33. **High-contrast outdoor theme:** default keeps solid status chips there and uses the tinted chips only in the standard theme (DESIGN-09). OK?
-34. **Home / My Work timing:** the KPIs and queue need ITPs, NCRs, RFIs and calibrations, which arrive with R1. Default: build the patterns in P0 (DESIGN-11) and the page alongside R1 with approvals and activity as its first sources (DESIGN-12). Should a thinner Home ship earlier, before the approvals inbox?
-35. **Mobile bottom bar** (Today, Capture, Offline checklists, Sync): default puts it in the field app with offline work (P1, out of R1 per ADR 0007), with the web app keeping the drawer. OK?
+33. **High-contrast outdoor theme:** the default keeps solid status chips there and uses tinted chips only in the standard theme (DESIGN-09). The owner's reply ("2im") was unclear; DESIGN-09 proceeds on the default until confirmed.
 
 ## Also waiting on the owner
 
