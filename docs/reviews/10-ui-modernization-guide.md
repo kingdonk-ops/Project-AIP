@@ -69,3 +69,10 @@ feed (AUDIT-04) exist, so DESIGN-12 ships with those two sources and a provider 
 - **Added:** each user chooses whether records open in a side panel (the Blade, default) or as a full detail page,
   on the "My display preferences" page (`/settings/design/preferences`). Both modes render the same detail body, so
   modules build it once. → DESIGN-13.
+- **Added (branding):** the header's top-left shows the company name followed by "AIP" (DESIGN-14). Tenant admins
+  match their company colours by choosing a preset palette or entering custom accent and header colours, each
+  contrast-checked, and can let users choose their own colours (on by default). Users choose from the presets only
+  (DESIGN-05, DESIGN-13).
+- **Caution on red, green and amber accents:** they share hues with the danger, success and warning status colours,
+  so a red primary button can look like a delete button. Status always carries an icon and text, and danger buttons
+  keep their icon, so meaning never depends on colour alone. Kaefer red stays allowed.

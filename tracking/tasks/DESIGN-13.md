@@ -7,7 +7,7 @@
 | Module | [`design`](../../docs/blueprint/modules/design/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | DESIGN-04, DESIGN-11, ACCESS-01 |
+| Depends on | DESIGN-04, DESIGN-05, DESIGN-11, ACCESS-01 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
@@ -33,7 +33,8 @@ content: a module writes its detail body once and both containers host it.
 
 - **files**:
   - apps/api/migrations/versions/<rev>_user_ui_pref.py (`user_ui_pref` per the data model, plus
-    `detail_open_mode text not null default 'panel'` with a check `in ('panel','page')`)
+    `detail_open_mode text not null default 'panel'` with a check `in ('panel','page')`, and `colour_preset text`
+    nullable, null meaning "use my company's colours")
   - apps/api/aip/modules/design/ (module scaffold via `tools/new_module.py design` if not present; `GET/PUT
     /api/v1/design/preferences` for the current user only; tests)
   - packages/ui/src/patterns/open-record.tsx (new: `OpenRecordProvider`, `useOpenRecord()`) and its test
@@ -58,12 +59,16 @@ content: a module writes its detail body once and both containers host it.
     both render it, so the two modes never drift. The Blade header gains "Open full page" (to `href`).
   - 5. **Preferences page.** `/settings/design/preferences`, single-column form per routes.md: density, contrast
     theme, "Open records in" (radio: Side panel, Full page, each with a one-line description), reset columns, clear
-    recents (disabled until recent items exist). Save shows a success toast (DESIGN-04). Reachable from the user menu
+    recents (disabled until recent items exist), and **Colours**: "Use my company's colours" (default) or one of
+    the DESIGN-05 presets, shown as swatches with a live preview. The section is hidden, and any stored choice is
+    ignored, when the tenant admin has turned off "Let users choose their own colours". Users pick presets only, no
+    free hex, so every choice is already contrast-checked. Save shows a success toast (DESIGN-04). Reachable from the user menu
     in the header. Density and contrast apply immediately via `data-density`/`data-contrast` on `<html>`.
   - 6. Load the preferences once in the session context so the first click already uses the saved mode.
 - **acceptance**:
   - A user who picks "Full page" and clicks a project row lands on its detail page; Back returns to the register
     with the same filters and the row focused. Switching back to "Side panel" opens the Blade instead.
+  - A user who picks the Purple preset sees purple accents; other users in the tenant keep the company colours.
   - The choice persists across sign-out and on another browser.
   - Another user, and another tenant, cannot read or change the preference (RLS and API).
   - Every label comes from terminology keys; axe passes on the preferences page and with the Blade open.

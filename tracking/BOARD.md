@@ -109,6 +109,7 @@ tasks still `todo` below remain before M0 is closed.
 | [DESIGN-06](tasks/DESIGN-06.md) | Nav rail sections follow the ADR 0018 job-area menu | design | S | DESIGN-02 | todo | design review 2026-10-14 |
 | [DESIGN-07](tasks/DESIGN-07.md) | Keycloak login theme uses the design tokens and IBM Plex | design | S | DESIGN-01, IDENTITY-01 | todo | design review 2026-10-14 |
 | [DESIGN-08](tasks/DESIGN-08.md) | Shell and register polish: mobile drawer backdrop, table overflow, login width, link buttons | design | S | DESIGN-03, PROJECTS-06 | todo | design review 2026-10-14 |
+| [DESIGN-14](tasks/DESIGN-14.md) | Header brand lockup: company name followed by "AIP" | design | XS | DESIGN-02 | todo | owner request 2026-10-14 |
 | [OPS-03](tasks/OPS-03.md) | Jobs API: my jobs, admin queue, cancel with permission | ops | M | OPS-02 | todo | convert to Python backend per ADR 0001 before starting |
 | [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | todo | AWS readiness |
 | [STACK-07](tasks/STACK-07.md) | TLS to Postgres and Redis (RDS and ElastiCache ready) | stack | S | OPS-02, STACK-05 | todo | AWS readiness |
@@ -156,12 +157,12 @@ tasks still `todo` below remain before M0 is closed.
 | [PROJECTS-06](tasks/PROJECTS-06.md) | Projects register on RegisterTable, sort direction and CSV export | projects | S | DESIGN-03, PROJECTS-02 | todo | split from DESIGN-03 (2026-10-13) |
 | [AUDIT-03](tasks/AUDIT-03.md) | Chain verifier CLI + S3 Object Lock anchoring job | audit | M | AUDIT-01, OPS-02, OPS-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [AUDIT-04](tasks/AUDIT-04.md) | Activity/timeline API + project activity tab | audit | M | ACCESS-01, AUDIT-02, DESIGN-04 | todo | convert to Python backend per ADR 0001 before starting  |
-| [TENANCY-05](tasks/TENANCY-05.md) | Tenant settings, modules and provisioning | tenancy | M | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting; invite the first admin via IDENTITY-04 `create_invite` (ADR 0005 rev 2) |
+| [TENANCY-05](tasks/TENANCY-05.md) | Tenant settings, modules and provisioning | tenancy | M | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting; invite the first admin via IDENTITY-04 `create_invite` (ADR 0005 rev 2); the tenant admin can edit the company display name shown in the header (DESIGN-14) |
 | [DESIGN-09](tasks/DESIGN-09.md) | Canvas and panels, tinted status chips, input icons, button hierarchy | design | S | DESIGN-08 | todo | UI modernization guide (docs/reviews/10) |
-| [DESIGN-05](tasks/DESIGN-05.md) | Tenant accent theme + visual regression | design | S | DESIGN-03, DESIGN-09 | todo | convert to Python backend per ADR 0001 before starting; after DESIGN-09 so baselines are taken once on the new look |
+| [DESIGN-05](tasks/DESIGN-05.md) | Tenant colours (company or preset), user colour choice switch + visual regression | design | S | DESIGN-03, DESIGN-09 | todo | convert to Python backend per ADR 0001 before starting; after DESIGN-09 so baselines are taken once on the new look |
 | [DESIGN-10](tasks/DESIGN-10.md) | Scope bar as a breadcrumb (tenant › organisation › project › asset) | design | S | DESIGN-09, PROJECTS-03 | todo | UI modernization guide (docs/reviews/10) |
 | [DESIGN-11](tasks/DESIGN-11.md) | Blade (slide-out detail), KPI strip and work-queue patterns | design | M | DESIGN-04, DESIGN-09 | todo | UI modernization guide (docs/reviews/10) |
-| [DESIGN-13](tasks/DESIGN-13.md) | My display preferences page, with a choice of side panel or full page for record details | design | M | DESIGN-04, DESIGN-11, ACCESS-01 | todo | owner request 2026-10-14 |
+| [DESIGN-13](tasks/DESIGN-13.md) | My display preferences page, with a choice of side panel or full page for record details | design | M | DESIGN-04, DESIGN-05, DESIGN-11, ACCESS-01 | todo | owner request 2026-10-14; also each user's colour preset |
 
 ### Wave 9: P0-core exit
 

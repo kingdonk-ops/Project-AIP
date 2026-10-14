@@ -49,6 +49,9 @@ Nothing blocks M0 now.
 
 33. **High-contrast outdoor theme:** the default keeps solid status chips there and uses tinted chips only in the standard theme (DESIGN-09). The owner's reply ("2im") was unclear; DESIGN-09 proceeds on the default until confirmed.
 
+36. **Company name at sign-up:** today tenants are provisioned by the operator (ADR 0017) and the first admin is invited (TENANCY-05); there is no self-service sign-up. The company name typed at provisioning becomes the header name, and the tenant admin can edit it later. Is that what "when the tenant admin registers" means, or do you want self-service sign-up (a larger change: payment, verification and abuse controls)?
+37. **How many colours:** the specs use two company colours (the accent for buttons, links and focus, and an optional header colour). Is that enough, or do you need a logo upload too (planned with tenant branding) or a second accent?
+
 ## Also waiting on the owner
 
 - Coolify API key: owner decided (2026-10-08) to keep the key that was pasted in chat for now. Rotate it before any
