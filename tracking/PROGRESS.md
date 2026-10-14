@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-14 · DESIGN-09..12 (specs) · — · Owner's UI modernization guide recorded as docs/reviews/10 with an ADR reconciliation and contrast checks; four design tasks added (panels and tinted chips, breadcrumb scope bar, blade/KPI/queue patterns, Home / My Work); DESIGN-05 now follows DESIGN-09; questions 32–35 opened.
 - 2026-10-13 · TESTING-09 · PR #67 · Walking skeleton end to end: real Keycloak sign-in for kaefer-demo and tenant-b admins (`aip-access bootstrap-admin` seeds them in dev and the demo), create a project, the other tenant sees nothing and gets 404, unset-tenant RLS test on `projects`; CI job `e2e-skeleton` on compose and the same spec after each Coolify deploy.
 - 2026-10-13 · OPS-11 (fix) · PR #65 · First Coolify deploy failed (migrator exit 1): Coolify mounts repository files empty, so the Postgres bootstrap never ran. Config is now built into images (`aip-postgres-demo`, `aip-keycloak-demo`, the web image's `NGINX_CONF`), an idempotent `db-bootstrap` one-shot runs every deploy, and a test forbids repo bind mounts.
 - 2026-10-13 · OPS-11 · PR #64 · Coolify demo stack (GHCR images by tag, no host ports, required secrets, nightly pg_dump), nginx security headers and a Keycloak `/auth` allowlist, real-customer start-up guard for `AIP_ENV=demo`, demo banner, deploy workflow with `tools/smoke.py`; live deploy waits on the owner's one-time Coolify setup.

@@ -7,7 +7,7 @@
 | Module | [`design`](../../docs/blueprint/modules/design/README.md) |
 | Phase | P0 |
 | Size | S |
-| Depends on | DESIGN-03 |
+| Depends on | DESIGN-03, DESIGN-09 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

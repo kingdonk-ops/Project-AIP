@@ -44,6 +44,15 @@ Nothing blocks M0 now.
 21. **Make the `Project-AIP` repository private.** It is public today and holds the threat model, security reviews and Keycloak realm config. Private repositories use GitHub Actions minutes, so check Settings, Billing and plans first.
 31. Confirm ADR 0024's adjustments to the remote un-block specification: no Super Admin default, refused uploads quarantined (not dropped), a second approver when signed work is on the tablet, a separate revoke-device action for lost tablets, and browser storage in place of the native Android pieces.
 
+### UI modernization guide ([`docs/reviews/10-ui-modernization-guide.md`](../docs/reviews/10-ui-modernization-guide.md))
+
+The tasks go ahead on the defaults below unless the owner says otherwise.
+
+32. **Nav groups:** the guide's grouping differs from ADR 0018 (Documents is its own group; notifications and search are header utilities; audit is under Settings). Default: keep ADR 0018 (DESIGN-06). Amend the ADR instead?
+33. **High-contrast outdoor theme:** default keeps solid status chips there and uses the tinted chips only in the standard theme (DESIGN-09). OK?
+34. **Home / My Work timing:** the KPIs and queue need ITPs, NCRs, RFIs and calibrations, which arrive with R1. Default: build the patterns in P0 (DESIGN-11) and the page alongside R1 with approvals and activity as its first sources (DESIGN-12). Should a thinner Home ship earlier, before the approvals inbox?
+35. **Mobile bottom bar** (Today, Capture, Offline checklists, Sync): default puts it in the field app with offline work (P1, out of R1 per ADR 0007), with the web app keeping the drawer. OK?
+
 ## Also waiting on the owner
 
 - Coolify API key: owner decided (2026-10-08) to keep the key that was pasted in chat for now. Rotate it before any
