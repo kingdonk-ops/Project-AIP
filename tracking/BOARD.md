@@ -58,7 +58,7 @@ tasks still `todo` below remain before M0 is closed.
 | [OPS-11](tasks/OPS-11.md) | Coolify demo deployment of the walking skeleton (synthetic data only) | ops | M | DATABASE-08, STACK-05 | done | PR #64; owner one-time setup in infra/coolify/README.md |
 | [ARCH-05](tasks/ARCH-05.md) | domain_events outbox table and writer | arch | M | ARCH-04, DATABASE-02 | done | ClaudeK: PR #55 |
 | [DATABASE-04](tasks/DATABASE-04.md) | Base repository helpers: concurrency, ltree, soft delete, JSONB validation | database | M | DATABASE-02 | done | PR #28 |
-| [TERMS-01](tasks/TERMS-01.md) | Terms schema, default en-AU dictionary and loader | terms | M | DATABASE-02 | review | `p0/terms-dictionary-loader`, PR #74 |
+| [TERMS-01](tasks/TERMS-01.md) | Terms schema, default en-AU dictionary and loader | terms | M | DATABASE-02 | done | PR #74; ADR 0028 (platform tenant) proposed, needs owner sign-off |
 | [OPS-01](tasks/OPS-01.md) | Job tables and service | ops | M | DATABASE-08 | done | PR #17 |
 
 ### Wave 4
