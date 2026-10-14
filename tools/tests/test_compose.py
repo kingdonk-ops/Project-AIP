@@ -179,6 +179,11 @@ def test_one_shots_gate_their_dependents(services: dict[str, dict[str, Any]]) ->
             services[after_migrator]["depends_on"]["migrator"]["condition"]
             == "service_completed_successfully"
         )
+    # A one-shot nothing waits on fails `up --wait` ("exited (0)"); the API starts after the
+    # platform dictionary is loaded.
+    assert (
+        services["api"]["depends_on"]["terms-load"]["condition"] == "service_completed_successfully"
+    )
 
 
 def test_keycloak_imports_the_realms_theme_and_blocklist(

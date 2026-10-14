@@ -351,6 +351,8 @@ services:
     depends_on:
       migrator:
         condition: service_completed_successfully
+      terms-load:
+        condition: service_completed_successfully
       identity-seed:
         condition: service_completed_successfully
       access-seed:
