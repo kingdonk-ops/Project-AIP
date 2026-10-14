@@ -107,7 +107,7 @@ tasks still `todo` below remain before M0 is closed.
 | [TERMS-05](tasks/TERMS-05.md) | Terms admin API and permissions | terms | M | TERMS-04 | todo | convert to Python backend per ADR 0001 before starting |
 | [DESIGN-04](tasks/DESIGN-04.md) | Record detail pattern, dialogs, toasts, empty/loading/error states | design | M | DESIGN-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [DESIGN-06](tasks/DESIGN-06.md) | Nav rail sections follow the ADR 0018 job-area menu | design | S | DESIGN-02 | todo | design review 2026-10-14 |
-| [DESIGN-07](tasks/DESIGN-07.md) | Keycloak login theme uses the design tokens and IBM Plex | design | S | DESIGN-01, IDENTITY-01 | todo | design review 2026-10-14 |
+| [DESIGN-07](tasks/DESIGN-07.md) | Keycloak login theme uses the design tokens and IBM Plex | design | S | DESIGN-01, IDENTITY-01 | review | `claude/p0-design-07-login-theme`; design review 2026-10-14 |
 | [DESIGN-08](tasks/DESIGN-08.md) | Shell and register polish: mobile drawer backdrop, table overflow, login width, link buttons | design | S | DESIGN-03, PROJECTS-06 | todo | design review 2026-10-14 |
 | [OPS-03](tasks/OPS-03.md) | Jobs API: my jobs, admin queue, cancel with permission | ops | M | OPS-02 | todo | convert to Python backend per ADR 0001 before starting |
 | [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | todo | AWS readiness |
