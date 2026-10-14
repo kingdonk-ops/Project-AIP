@@ -128,6 +128,13 @@ GRANT INSERT(task_name) ON TABLE public.procrastinate_jobs TO aip_app;
 REVOKE ALL ON FUNCTION public.access_sync_permissions(p_catalogue jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.access_sync_permissions(p_catalogue jsonb) TO aip_app;
 
+-- Name: FUNCTION aip_convert_to_partitioned(p_table text); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.aip_convert_to_partitioned(p_table text) FROM PUBLIC;
+
+-- Name: FUNCTION aip_ensure_partitions(p_table text, p_months_ahead integer); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead integer) TO aip_jobs;
+
 -- Name: FUNCTION identity_register_email(p_email public.citext, p_tenant uuid); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) TO aip_app;
@@ -190,6 +197,9 @@ GRANT SELECT ON TABLE public.job_events TO aip_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.jobs TO aip_app;
 GRANT SELECT ON TABLE public.jobs TO aip_readonly;
 GRANT SELECT ON TABLE public.jobs TO aip_jobs;
+
+-- Name: TABLE partition_settings; Type: ACL; Schema: public
+GRANT SELECT ON TABLE public.partition_settings TO aip_jobs;
 
 -- Name: TABLE permission; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.permission TO aip_app;
@@ -290,6 +300,10 @@ ALTER TABLE ONLY public.login_directory
 -- Name: login_directory uq_login_directory_kind_key; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.login_directory
     ADD CONSTRAINT uq_login_directory_kind_key UNIQUE (kind, key);
+
+-- Name: partition_settings pk_partition_settings; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.partition_settings
+    ADD CONSTRAINT pk_partition_settings PRIMARY KEY (table_name);
 
 -- Name: permission pk_permission; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.permission
@@ -544,6 +558,139 @@ CREATE FUNCTION public.access_sync_permissions(p_catalogue jsonb) RETURNS void
     $$;
 
 ALTER FUNCTION public.access_sync_permissions(p_catalogue jsonb) OWNER TO aip_owner;
+
+-- Name: aip_convert_to_partitioned(text); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.aip_convert_to_partitioned(p_table text) RETURNS bigint
+    LANGUAGE plpgsql
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+    DECLARE
+      v_new text := p_table || '_p';
+      v_old regclass := to_regclass(format('public.%I', p_table));
+      v_target regclass := to_regclass(format('public.%I', v_new));
+      v_cols text;
+      v_old_count bigint;
+      v_new_count bigint;
+      v_old_sum text;
+      v_new_sum text;
+      v_name text;
+    BEGIN
+      IF v_old IS NULL OR (SELECT relkind FROM pg_class WHERE oid = v_old) <> 'r' THEN
+        RAISE EXCEPTION 'aip_convert_to_partitioned: % is not a plain table', p_table
+          USING ERRCODE = '42809';
+      END IF;
+      IF v_target IS NULL OR (SELECT relkind FROM pg_class WHERE oid = v_target) <> 'p' THEN
+        RAISE EXCEPTION 'aip_convert_to_partitioned: render % from append_only_table.sql.tpl first',
+          v_new USING ERRCODE = '42809';
+      END IF;
+      EXECUTE format('LOCK TABLE public.%I IN ACCESS EXCLUSIVE MODE', p_table);
+
+      SELECT string_agg(format('%I', a.attname), ', ' ORDER BY a.attnum) INTO v_cols
+      FROM pg_attribute AS a
+      WHERE a.attrelid = v_target AND a.attnum > 0 AND NOT a.attisdropped;
+
+      EXECUTE format('ALTER TABLE public.%I NO FORCE ROW LEVEL SECURITY', p_table);
+      EXECUTE format('ALTER TABLE public.%I NO FORCE ROW LEVEL SECURITY', v_new);
+      EXECUTE format('INSERT INTO public.%I (%s) SELECT %s FROM public.%I',
+                     v_new, v_cols, v_cols, p_table);
+      EXECUTE format('SELECT count(*), md5(string_agg(ROW(%s)::text, '','' ORDER BY id)) '
+                     'FROM public.%I', v_cols, p_table)
+        INTO v_old_count, v_old_sum;
+      EXECUTE format('SELECT count(*), md5(string_agg(ROW(%s)::text, '','' ORDER BY id)) '
+                     'FROM public.%I', v_cols, v_new)
+        INTO v_new_count, v_new_sum;
+      IF v_old_count <> v_new_count OR v_old_sum IS DISTINCT FROM v_new_sum THEN
+        RAISE EXCEPTION
+          'aip_convert_to_partitioned: % copy differs (count % -> %, checksum % -> %)',
+          p_table, v_old_count, v_new_count, v_old_sum, v_new_sum;
+      END IF;
+
+      EXECUTE format('DROP TABLE public.%I', p_table);
+      EXECUTE format('ALTER TABLE public.%I RENAME TO %I', v_new, p_table);
+      EXECUTE format('ALTER TABLE public.%I FORCE ROW LEVEL SECURITY', p_table);
+      -- The template names follow the table: pk_/ix_<table>_p..., <table>_p_default, ...
+      FOR v_name IN
+        SELECT c.relname FROM pg_index AS i JOIN pg_class AS c ON c.oid = i.indexrelid
+        WHERE i.indrelid = v_target AND strpos(c.relname, v_new) > 0
+      LOOP
+        EXECUTE format('ALTER INDEX public.%I RENAME TO %I',
+                       v_name, replace(v_name, v_new, p_table));
+      END LOOP;
+      FOR v_name IN
+        SELECT c.relname FROM pg_inherits AS h JOIN pg_class AS c ON c.oid = h.inhrelid
+        WHERE h.inhparent = v_target AND left(c.relname, length(v_new) + 1) = v_new || '_'
+      LOOP
+        EXECUTE format('ALTER TABLE public.%I RENAME TO %I',
+                       v_name, p_table || substr(v_name, length(v_new) + 1));
+      END LOOP;
+      RETURN v_new_count;
+    END
+    $$;
+
+ALTER FUNCTION public.aip_convert_to_partitioned(p_table text) OWNER TO aip_owner;
+
+-- Name: aip_ensure_partitions(text, integer); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead integer) RETURNS SETOF text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $_$
+    DECLARE
+      v_parent regclass;
+      v_column text;
+      v_default text;
+      v_month timestamp := date_trunc('month', now() AT TIME ZONE 'UTC');
+      v_from timestamptz;
+      v_to timestamptz;
+      v_name text;
+    BEGIN
+      IF p_months_ahead IS NULL OR p_months_ahead NOT BETWEEN 0 AND 24 THEN
+        RAISE EXCEPTION 'aip_ensure_partitions: months_ahead must be 0 to 24, got %', p_months_ahead
+          USING ERRCODE = '22023';
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM public.partition_settings AS s WHERE s.table_name = p_table) THEN
+        RAISE EXCEPTION 'aip_ensure_partitions: % is not listed in partition_settings', p_table
+          USING ERRCODE = '22023';
+      END IF;
+      SELECT pt.partrelid, a.attname, d.relname INTO v_parent, v_column, v_default
+      FROM pg_partitioned_table AS pt
+      JOIN pg_class AS c ON c.oid = pt.partrelid
+      JOIN pg_attribute AS a ON a.attrelid = pt.partrelid AND a.attnum = pt.partattrs[0]
+      LEFT JOIN pg_class AS d ON d.oid = pt.partdefid
+      WHERE c.relnamespace = 'public'::regnamespace AND c.relname = p_table
+        AND pt.partstrat = 'r' AND pt.partnatts = 1 AND a.atttypid = 'timestamptz'::regtype;
+      IF v_parent IS NULL THEN
+        RAISE EXCEPTION 'aip_ensure_partitions: % is not range-partitioned on a timestamptz column',
+          p_table USING ERRCODE = '22023';
+      END IF;
+
+      FOR i IN 0..p_months_ahead LOOP
+        v_from := (v_month + make_interval(months => i)) AT TIME ZONE 'UTC';
+        v_to := (v_month + make_interval(months => i + 1)) AT TIME ZONE 'UTC';
+        v_name := p_table || '_' || to_char(v_month + make_interval(months => i), 'YYYY_MM');
+        CONTINUE WHEN to_regclass(format('public.%I', v_name)) IS NOT NULL;
+
+        EXECUTE format('CREATE TABLE public.%I '
+                       '(LIKE public.%I INCLUDING DEFAULTS INCLUDING CONSTRAINTS)',
+                       v_name, p_table);
+        IF v_default IS NOT NULL THEN
+          -- Attaching scans the default partition anyway; lock it first so no row for this month
+          -- can arrive between the move and the attach.
+          EXECUTE format('LOCK TABLE public.%I IN ACCESS EXCLUSIVE MODE', v_default);
+          EXECUTE format('WITH moved AS (DELETE FROM public.%I '
+                         'WHERE %I >= $1 AND %I < $2 RETURNING *) '
+                         'INSERT INTO public.%I SELECT * FROM moved',
+                         v_default, v_column, v_column, v_name)
+            USING v_from, v_to;
+        END IF;
+        EXECUTE format('ALTER TABLE public.%I ATTACH PARTITION public.%I '
+                       'FOR VALUES FROM (%L) TO (%L)',
+                       p_table, v_name, v_from, v_to);
+        RETURN NEXT v_name;
+      END LOOP;
+    END
+    $_$;
+
+ALTER FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead integer) OWNER TO aip_owner;
 
 -- Name: identity_register_email(public.citext, uuid); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) RETURNS void
@@ -1565,6 +1712,19 @@ CREATE TABLE public.login_directory (
 );
 
 ALTER TABLE public.login_directory OWNER TO aip_owner;
+
+-- Name: partition_settings; Type: TABLE; Schema: public
+CREATE TABLE public.partition_settings (
+    table_name text NOT NULL,
+    partition_interval text DEFAULT 'month'::text NOT NULL,
+    months_ahead integer DEFAULT 3 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_partition_settings_interval CHECK ((partition_interval = 'month'::text)),
+    CONSTRAINT ck_partition_settings_months_ahead CHECK (((months_ahead >= 0) AND (months_ahead <= 24)))
+);
+
+ALTER TABLE public.partition_settings OWNER TO aip_owner;
 
 -- Name: permission; Type: TABLE; Schema: public
 CREATE TABLE public.permission (

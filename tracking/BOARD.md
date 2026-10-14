@@ -74,7 +74,7 @@ tasks still `todo` below remain before M0 is closed.
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
 | [TESTING-10](tasks/TESTING-10.md) | Worker shutdown test waits for registration instead of a fixed sleep | testing | XS | OPS-02 | done | PR #48 |
 | [TESTING-11](tasks/TESTING-11.md) | JIT membership test uses the database date, not the local date | testing | XS | IDENTITY-02 | done | ClaudeK: PR #53 |
-| [DATABASE-05](tasks/DATABASE-05.md) | Append-only grants and time partitioning | database | M | DATABASE-02 | todo | |
+| [DATABASE-05](tasks/DATABASE-05.md) | Append-only grants and time partitioning | database | M | DATABASE-02 | done | PR #70; inspections view check carried to PLAN-R1 |
 | [SECURITY-02](tasks/SECURITY-02.md) | Security schema with RLS and append-only grants | security | M | DATABASE-02 | todo | |
 
 ### Wave 5: M0 walking skeleton exit
@@ -108,7 +108,7 @@ tasks still `todo` below remain before M0 is closed.
 | [TERMS-05](tasks/TERMS-05.md) | Terms admin API and permissions | terms | M | TERMS-04 | todo | convert to Python backend per ADR 0001 before starting |
 | [DESIGN-04](tasks/DESIGN-04.md) | Record detail pattern, dialogs, toasts, empty/loading/error states | design | M | DESIGN-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [DESIGN-06](tasks/DESIGN-06.md) | Nav rail sections follow the ADR 0018 job-area menu | design | S | DESIGN-02 | done | PR #72; design review 2026-10-14 |
-| [DESIGN-07](tasks/DESIGN-07.md) | Keycloak login theme uses the design tokens and IBM Plex | design | S | DESIGN-01, IDENTITY-01 | todo | design review 2026-10-14 |
+| [DESIGN-07](tasks/DESIGN-07.md) | Keycloak login theme uses the design tokens and IBM Plex | design | S | DESIGN-01, IDENTITY-01 | done | PR #73; design review 2026-10-14 |
 | [DESIGN-08](tasks/DESIGN-08.md) | Shell and register polish: mobile drawer backdrop, table overflow, login width, link buttons | design | S | DESIGN-03, PROJECTS-06 | todo | design review 2026-10-14 |
 | [OPS-03](tasks/OPS-03.md) | Jobs API: my jobs, admin queue, cancel with permission | ops | M | OPS-02 | todo | convert to Python backend per ADR 0001 before starting |
 | [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | todo | AWS readiness |
