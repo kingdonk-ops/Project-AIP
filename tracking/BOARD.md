@@ -74,7 +74,7 @@ tasks still `todo` below remain before M0 is closed.
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
 | [TESTING-10](tasks/TESTING-10.md) | Worker shutdown test waits for registration instead of a fixed sleep | testing | XS | OPS-02 | done | PR #48 |
 | [TESTING-11](tasks/TESTING-11.md) | JIT membership test uses the database date, not the local date | testing | XS | IDENTITY-02 | done | ClaudeK: PR #53 |
-| [DATABASE-05](tasks/DATABASE-05.md) | Append-only grants and time partitioning | database | M | DATABASE-02 | review | PR #70; inspections view check carried to PLAN-R1 |
+| [DATABASE-05](tasks/DATABASE-05.md) | Append-only grants and time partitioning | database | M | DATABASE-02 | done | PR #70; inspections view check carried to PLAN-R1 |
 | [SECURITY-02](tasks/SECURITY-02.md) | Security schema with RLS and append-only grants | security | M | DATABASE-02 | todo | |
 
 ### Wave 5: M0 walking skeleton exit
@@ -91,6 +91,7 @@ tasks still `todo` below remain before M0 is closed.
 | [PROJECTS-01](tasks/PROJECTS-01.md) | Projects + sites tables and CRUD API | projects | M | ACCESS-01, ARCH-05, DATABASE-02, TENANCY-01 | done | ClaudeK: PR #56 |
 | [PROJECTS-02](tasks/PROJECTS-02.md) | Projects register page + create form (M0 UI slice) | projects | M | DESIGN-02, PROJECTS-01, STACK-03 | done | ClaudeK: PR #60 |
 | [TESTING-09](tasks/TESTING-09.md) | Walking-skeleton e2e: two tenants, login, register, isolation (CI + Coolify demo) | testing | S | OPS-11, PROJECTS-02 | done | PR #67; owner: make `e2e-skeleton` a required check, add E2E_* secrets to coolify-demo |
+| [QA-1](tasks/QA-1.md) | Walking-skeleton: "Create project" link is ambiguous on an empty register | testing | XS | TESTING-09 | done | PR #71; the same locator fix also landed in #72 |
 
 ### Wave 6
 
