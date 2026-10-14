@@ -19,8 +19,8 @@ Works on the Python AST and the SQL string literals of each revision. Rules:
   optional) and ``SET NOT NULL`` need ``# contract: <expand revision id>`` on the ``op.execute``
   call's lines or in the comment block just above it. So do the security-sensitive
   ``NO FORCE``/``DISABLE ROW LEVEL SECURITY``, ``GRANT aip_owner``, ``SECURITY DEFINER``,
-  ``TRUNCATE`` and ``DROP SCHEMA``. They are found anywhere in the SQL, including dollar-quoted
-  bodies, string literals (``EXECUTE 'DROP ...'``) and quoted identifiers;
+  ``TRUNCATE`` (except in a ``REVOKE``) and ``DROP SCHEMA``. They are found anywhere in the SQL,
+  including dollar-quoted bodies, string literals (``EXECUTE 'DROP ...'``) and quoted identifiers;
 - string literals may be standard (``'...'``), escape (``E'...'``) or dollar-quoted; quoted
   identifiers (``"..."``) are parsed so they cannot hide a comment marker;
 - a single head;
@@ -67,9 +67,11 @@ _SENSITIVE_RES = (
     re.compile(r"\bDISABLE\s+ROW\s+LEVEL\s+SECURITY\b"),
     re.compile(r"\bGRANT\s+(?:[A-Z0-9_]+\s*,\s*)*AIP_OWNER\b"),
     re.compile(r"\bSECURITY\s+DEFINER\b"),
-    re.compile(r"\bTRUNCATE\b"),
     re.compile(r"\bDROP\s+SCHEMA\b"),
 )
+_TRUNCATE_RE = re.compile(r"\bTRUNCATE\b")
+# Revoking TRUNCATE (append_only_table.sql.tpl, DATABASE-05) is not sensitive; anything else is.
+_REVOKE_RE = re.compile(r"(?:^|;)\s*REVOKE\b[^;]*")
 _TENANT_SET_RE = re.compile(
     r"\b(?:SET|RESET)\s+(?:SESSION\s+|LOCAL\s+)?APP\.TENANT_ID\b"
     r"|\bALTER\s+(?:ROLE|USER|DATABASE|SYSTEM)\b[^;]*\bAPP\.TENANT_ID\b"
@@ -266,7 +268,9 @@ def _sql_findings(sql: str, *, is_baseline: bool, has_contract: bool) -> list[st
     if not has_contract:
         if _destructive(bare):
             found.append(MSG_CONTRACT)
-        if any(rx.search(bare) for rx in _SENSITIVE_RES):
+        if any(rx.search(bare) for rx in _SENSITIVE_RES) or _TRUNCATE_RE.search(
+            _REVOKE_RE.sub(";", bare)
+        ):
             found.append(MSG_SENSITIVE)
     return list(dict.fromkeys(found))
 

@@ -11,7 +11,8 @@ A revision creates a tenant table with::
 
 Placeholders are ``{{name}}``. Every placeholder must be given and every argument must be used,
 so a typo fails at migration time instead of producing odd SQL. ``table`` must be a plain
-snake_case identifier that is not a reserved word and does not start with ``pg_``; ``columns``
+snake_case identifier that is not a reserved word and does not start with ``pg_`` (so must
+``partition_column`` in ``append_only_table``, DATABASE-05); ``columns``
 must be a non-empty column list with no statement separator, comment, quote or ``$`` (so it
 cannot open a string, a quoted name or a dollar-quoted body that swallows the rest).
 ``aip-db lint`` renders the same call and lints the resulting SQL.
@@ -36,7 +37,7 @@ _BLOCK_RE = re.compile(
     r"^\{\{#([a-z_][a-z0-9_]*)\}\}\n(.*?)^\{\{/\1\}\}\n", re.DOTALL | re.MULTILINE
 )
 _BLOCKS = frozenset({"sync"})  # optional blocks a template may declare; each is a bool argument
-_IDENTIFIER_VARS = frozenset({"table"})
+_IDENTIFIER_VARS = frozenset({"table", "partition_column"})
 _FORBIDDEN_IN_LISTS = (";", "--", "/*", "'", '"', "$")
 
 # PostgreSQL 16 keywords that cannot be a table name unquoted: "reserved" and "reserved (can be
