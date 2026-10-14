@@ -23,17 +23,17 @@ Cross-module references (``users``, ``projects``, contacts companies) are plain 
 modules may not reach into each other's tables. Within terms, pack references include
 ``tenant_id`` so a pack can never point at another tenant's version.
 
-Revision ID: 202610141000
-Revises: 202610131600
-Create Date: 2026-10-14 10:00:00+00:00
+Revision ID: 202610141200
+Revises: 202610141100
+Create Date: 2026-10-14 12:00:00+00:00
 """
 
 from alembic import op
 
 from aip.platform.db.templates import render_template
 
-revision: str = "202610141000"
-down_revision: str | None = "202610131600"
+revision: str = "202610141200"
+down_revision: str | None = "202610141100"
 branch_labels = None
 depends_on = None
 

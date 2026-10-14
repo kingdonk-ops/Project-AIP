@@ -202,6 +202,10 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.jobs TO aip_app;
 GRANT SELECT ON TABLE public.jobs TO aip_readonly;
 GRANT SELECT ON TABLE public.jobs TO aip_jobs;
 
+-- Name: TABLE locale_settings; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.locale_settings TO aip_app;
+GRANT SELECT ON TABLE public.locale_settings TO aip_readonly;
+
 -- Name: TABLE partition_settings; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.partition_settings TO aip_jobs;
 

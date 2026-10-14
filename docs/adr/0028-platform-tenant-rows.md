@@ -36,4 +36,4 @@ cannot bind it by accident.
   "0 rows with no tenant" must target tenant-only tables.
 - Unique indexes that span tenants (for example `term_key (key)`) make a key's existence visible
   across tenants. That is acceptable for platform-defined keys.
-- A future platform table copies the two policies from `202610141000_terms_tables`.
+- A future platform table copies the two policies from `202610141200_terms_tables`.

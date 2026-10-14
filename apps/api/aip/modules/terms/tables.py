@@ -1,6 +1,6 @@
 """SQLAlchemy Core declarations for the terminology dictionary (TERMS-01, ADR 0002).
 
-Created only by the Alembic revision ``202610141000_terms_tables``; ``aip-db check-schema``
+Created only by the Alembic revision ``202610141200_terms_tables``; ``aip-db check-schema``
 compares these declarations with the migrated database. Every table is tenant-scoped with FORCE
 ROW LEVEL SECURITY; rows of the platform tenant (the nil UUID, ADR 0028) are readable by every
 tenant and writable only by ``aip_owner``. ``aip_app`` has no DELETE (soft delete) and only
