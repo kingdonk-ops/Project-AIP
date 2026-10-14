@@ -32,6 +32,7 @@ becomes an ADR update. **Bold** questions block M0.
 - 2026-10-10 — **Confirmations:** target date for "Kaefer live" 2027-03-31 with offline operation out of R1, and the four offline-timer adjustments (ADR 0007, ADR 0010); the lighter company set CRM + DocuSeal + Xero; Microsoft 365 Business Premium; Amazon SES in Sydney; included database size 5 GB, 20 GB and 100 GB for Essentials, Professional and Enterprise; the three role-specification adjustments (ADR 0020). The owner reports code ownership confirmed (keep the written confirmation on file).
 - 2026-10-11 — **Decisions (items 20, 23, 26 to 30):** error tracking is our own sink (OPS-05) plus CloudWatch in Sydney, no hosted Sentry; `security@` mailbox on Microsoft 365 once the domain records are confirmed, owner is the named security owner while solo; 7-year retention, two audit streams, chain checkpoints and Glacier Instant Retrieval confirmed (ADR 0021); offboarding lifecycle confirmed, archive plan post-R1, sealed bundle plus standalone viewer, lawyer to finalise wording (ADR 0022); hosted lightweight CRM (HubSpot Free or Starter, or Attio), Twenty not self-hosted; ADR 0023 points 1, 4, 7, 9, 12 confirmed; "24) confirm" covered items 23, 26 and 27; ADR 0008 adjustment D confirmed (no on-premises deployment; siloed deployment only on contract, after R1).
 - 2026-10-14 — **UI modernization guide (items 32, 34, 35):** keep ADR 0018's nav groups (DESIGN-06); build Home / My Work alongside R1 (DESIGN-12); the mobile bottom bar goes with the offline field app, and the web app keeps the drawer. The owner also asked for a per-user choice of side panel or full page for record details, set in profile settings. → docs/reviews/10, DESIGN-13.
+- 2026-10-14 — **High-contrast status chips (item 33):** solid chips in the outdoor high-contrast theme; tinted chips only in the standard theme. → DESIGN-09.
 - 2026-10-13 — **Time zones:** UTC everywhere internally, local time only at presentation; future scheduled events keep wall-clock time plus the IANA zone; calendar-day expiry (membership `valid_to`) is checked against one reference zone, UTC (the current behaviour), confirmed by the owner. → ADR 0025.
 - 2026-10-09 — **LGPL exceptions:** owner confirmed the `psycopg` and `psycopg-pool` LGPL-3.0 exceptions (required by Procrastinate, imported unmodified; expire 2027-04-06). → ADR 0016.
 
@@ -39,15 +40,12 @@ Nothing blocks M0 now.
 
 ## Needed before P0-core exit / R1
 
-
 ### Company systems and compliance ([ADR 0017](../docs/adr/0017-company-systems-and-contract-link.md), [`docs/internal/internal.md`](../docs/internal/internal.md))
 
 21. **Make the `Project-AIP` repository private.** It is public today and holds the threat model, security reviews and Keycloak realm config. Private repositories use GitHub Actions minutes, so check Settings, Billing and plans first.
 31. Confirm ADR 0024's adjustments to the remote un-block specification: no Super Admin default, refused uploads quarantined (not dropped), a second approver when signed work is on the tablet, a separate revoke-device action for lost tablets, and browser storage in place of the native Android pieces.
 
 ### UI modernization guide ([`docs/reviews/10-ui-modernization-guide.md`](../docs/reviews/10-ui-modernization-guide.md))
-
-33. **High-contrast outdoor theme:** the default keeps solid status chips there and uses tinted chips only in the standard theme (DESIGN-09). The owner's reply ("2im") was unclear; DESIGN-09 proceeds on the default until confirmed.
 
 36. **Company name at sign-up:** today tenants are provisioned by the operator (ADR 0017) and the first admin is invited (TENANCY-05); there is no self-service sign-up. The company name typed at provisioning becomes the header name, and the tenant admin can edit it later. Is that what "when the tenant admin registers" means, or do you want self-service sign-up (a larger change: payment, verification and abuse controls)?
 37. **How many colours:** the specs use two company colours (the accent for buttons, links and focus, and an optional header colour). Is that enough, or do you need a logo upload too (planned with tenant branding) or a second accent?

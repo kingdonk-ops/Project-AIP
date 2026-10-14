@@ -46,7 +46,7 @@ baselines are taken once on the new look.
     Panel borders are decorative; control borders (inputs, checkboxes, selects) stay on `--border-strong` for 3:1.
   - 3. **Status chips.** `StatusChip` uses the tint as background and the full-strength tone as text and icon, with
     a 1px border in the tone at low opacity (or none; pick one and note it in the PR). Under `[data-contrast="high"]`
-    keep the current solid chips. The icon + label requirement stays.
+    keep the current solid chips (owner confirmed 2026-10-14). The icon + label requirement stays.
   - 4. **Inputs.** `Input` takes an optional `icon?: IconName` that renders a 14px leading icon inside the 32px
     (`--control-h`) field, decorative (`aria-hidden`), with padding so text never sits under it. The FilterBar search
     uses `icon="search"`.
