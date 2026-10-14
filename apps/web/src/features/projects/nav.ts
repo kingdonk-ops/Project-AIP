@@ -6,7 +6,8 @@ import { registerNavItem } from "../shell/nav-registry";
 
 registerNavItem({
   id: "projects",
-  section: "work",
+  // Work and assets until PROJECTS-03 moves projects to the scope-bar switcher and Settings (ADR 0018).
+  section: "work-assets",
   to: "/projects",
   icon: "folder",
   termKey: "projects.nav.title",

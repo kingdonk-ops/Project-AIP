@@ -1,7 +1,12 @@
 import type { IconName } from "@aip/ui";
 
-/** Section order follows docs/blueprint/03-site-hierarchy.md (Work, Assets, Quality, ..., Insight). */
-export const NAV_SECTIONS = ["work", "assets", "quality", "insight"] as const;
+/**
+ * Rail groups in menu order: My Work (home), then the ADR 0018 job-area groups. A module adds one entry to an
+ * existing group and never a new top-level group, so `NavItem.section` only accepts these values. Where each module
+ * surfaces is in docs/architecture/module-groups-and-navigation.md.
+ */
+export const NAV_SECTIONS = ["my-work", "work-assets", "quality", "field", "documents", "insight", "settings"] as const;
+/** One of the declared rail groups (ADR 0018). */
 export type NavSection = (typeof NAV_SECTIONS)[number];
 
 export interface NavItem {
@@ -17,8 +22,8 @@ export interface NavItem {
 }
 
 const items: NavItem[] = [
-  { id: "home", section: "work", to: "/", icon: "home", termKey: "shell.nav.home" },
-  { id: "projects", section: "work", to: "/projects", icon: "folder", termKey: "shell.nav.projects", permission: "project.view" },
+  { id: "home", section: "my-work", to: "/", icon: "home", termKey: "shell.nav.home" },
+  { id: "projects", section: "work-assets", to: "/projects", icon: "folder", termKey: "shell.nav.projects", permission: "project.view" },
 ];
 
 /** Features register their entry here (module scope, at import time). Re-registering an id replaces it. */
