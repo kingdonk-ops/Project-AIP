@@ -2074,7 +2074,7 @@ CREATE TABLE public.term_key (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
     CONSTRAINT ck_term_key_default_text CHECK ((default_text <> ''::text)),
-    CONSTRAINT ck_term_key_key CHECK ((key ~ '^[a-z][a-z0-9_]*(\.[A-Za-z0-9_]+)+$'::text)),
+    CONSTRAINT ck_term_key_key CHECK ((key ~ '^[a-z][a-z0-9_]*(\.[A-Za-z0-9_-]+)+$'::text)),
     CONSTRAINT ck_term_key_module_id CHECK ((module_id ~ '^[a-z][a-z0-9_]*$'::text))
 );
 

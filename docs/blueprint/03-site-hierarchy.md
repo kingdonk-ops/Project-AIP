@@ -1,5 +1,7 @@
 # Site hierarchy (navigation)
 
+> **Superseded for navigation by [ADR 0018](../adr/0018-module-groups-and-navigation.md):** the rail uses the job-area groups in [`module-groups-and-navigation.md`](../architecture/module-groups-and-navigation.md). The sections below are the original blueprint text.
+
 
 - **nav**:
   -

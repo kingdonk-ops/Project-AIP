@@ -48,8 +48,9 @@ __all__ = [
 ]
 
 URL_ENV = "DATABASE_MIGRATOR_URL"
-# Dotted, lower-case first segment; later segments may be camelCase (the shell files use it).
-_KEY_RE = re.compile(r"^[a-z][a-z0-9_]*(\.[A-Za-z0-9_]+)+$")
+# Dotted, lower-case first segment; later segments may be camelCase or kebab-case (the shell
+# files use both, e.g. ``shell.nav.section.my-work``).
+_KEY_RE = re.compile(r"^[a-z][a-z0-9_]*(\.[A-Za-z0-9_-]+)+$")
 _MODULE_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 _LOCALE_RE = re.compile(r"^[a-z]{2,3}(-[A-Z]{2})?$")
 # An internal status or workflow code (two or more snake_case words) must never be display text.

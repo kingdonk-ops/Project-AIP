@@ -55,7 +55,7 @@ def upgrade() -> None:
         """
     ALTER TABLE term_key ALTER COLUMN default_locale SET DEFAULT 'en-AU';
     ALTER TABLE term_key
-      ADD CONSTRAINT ck_term_key_key CHECK (key ~ '^[a-z][a-z0-9_]*(\\.[A-Za-z0-9_]+)+$'),
+      ADD CONSTRAINT ck_term_key_key CHECK (key ~ '^[a-z][a-z0-9_]*(\\.[A-Za-z0-9_-]+)+$'),
       ADD CONSTRAINT ck_term_key_module_id CHECK (module_id ~ '^[a-z][a-z0-9_]*$'),
       ADD CONSTRAINT ck_term_key_default_text CHECK (default_text <> '');
 
