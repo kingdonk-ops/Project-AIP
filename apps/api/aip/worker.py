@@ -4,11 +4,12 @@
 
     uv run python -m aip.worker --queues default,outbox [--concurrency 4]
 
-Imports every enabled module's ``jobs.py`` (where handlers call ``ops.register``), then runs the
-Procrastinate worker for the given queues. It connects as ``aip_jobs`` (``DATABASE_JOBS_URL``) and
-each job runs inside ``with_tenant(payload.tenant_id)``. SIGTERM/SIGINT stop it gracefully: no new
-job is fetched and in-flight jobs finish (up to ``--shutdown-timeout`` seconds, then they are
-aborted and recovered later as stalled). Peak memory above 95% of ``WORKER_MEMORY_LIMIT_MB`` also
+Imports every enabled module's ``jobs.py`` (where handlers call ``ops.register``) and the
+platform's own periodic jobs (``PLATFORM_JOB_MODULES``), then runs the Procrastinate worker for
+the given queues. It connects as ``aip_jobs`` (``DATABASE_JOBS_URL``) and each job runs inside
+``with_tenant(payload.tenant_id)``. SIGTERM/SIGINT stop it gracefully: no new job is fetched and
+in-flight jobs finish (up to ``--shutdown-timeout`` seconds, then they are aborted and recovered
+later as stalled). Peak memory above 95% of ``WORKER_MEMORY_LIMIT_MB`` also
 triggers that graceful stop, so the orchestrator restarts the process.
 
 Gotenberg (``pdf``) and sandbox (``scan``) work run in their own worker processes: start one
@@ -36,9 +37,12 @@ from aip.platform.modules.registry import (
 )
 from aip.platform.observability.logging import configure_logging
 
-__all__ = ["check_jobs_login", "import_job_modules", "main", "parse_args"]
+__all__ = ["PLATFORM_JOB_MODULES", "check_jobs_login", "import_job_modules", "main", "parse_args"]
 
 logger = logging.getLogger(__name__)
+
+# Platform jobs that belong to no module: the daily partition maintenance (DATABASE-05).
+PLATFORM_JOB_MODULES: tuple[str, ...] = ("aip.platform.db.jobs",)
 
 
 def import_job_modules(package: str | None = None) -> list[str]:
@@ -111,6 +115,8 @@ async def _run(queues: list[str], concurrency: int, shutdown_timeout: float) -> 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     configure_logging()
+    for name in PLATFORM_JOB_MODULES:
+        importlib.import_module(name)
     imported = import_job_modules()
     logger.info("job modules loaded: %s", ", ".join(imported) or "none")
     # Procrastinate's signal handler turns SIGTERM into a graceful stop.

@@ -85,3 +85,60 @@ def test_sync_block_is_dropped_by_default_and_kept_with_sync_true() -> None:
     )
     assert "{{" not in synced
     sql_statements(synced)  # still parses into statements the migration lint understands
+
+
+# --- DATABASE-05: append_only_table.sql.tpl ------------------------------------------------------
+
+
+def _append_only(partition_column: str = "created_at") -> str:
+    return render_template(
+        "append_only_table",
+        table="evidence",
+        columns="body text NOT NULL",
+        partition_column=partition_column,
+    )
+
+
+def test_append_only_table_is_range_partitioned_with_a_default_partition() -> None:
+    sql = _append_only()
+    create = next(s for s in sql_statements(sql) if s.startswith("CREATE TABLE EVIDENCE ("))
+    assert "PARTITION BY RANGE (CREATED_AT)" in create
+    # A partitioned table's primary key must include the partition column.
+    assert "CONSTRAINT PK_EVIDENCE PRIMARY KEY (ID, CREATED_AT)" in create
+    assert "CREATE TABLE evidence_default PARTITION OF evidence DEFAULT" in sql
+    assert "{{" not in sql
+
+
+def test_append_only_table_has_no_update_or_soft_delete_columns() -> None:
+    create = next(
+        s for s in sql_statements(_append_only()) if s.startswith("CREATE TABLE EVIDENCE (")
+    )
+    assert "TENANT_ID UUID NOT NULL" in create
+    assert "CREATED_AT TIMESTAMPTZ NOT NULL DEFAULT NOW()" in create
+    assert "UPDATED_AT" not in create
+    assert "DELETED_AT" not in create
+
+
+def test_append_only_table_has_forced_rls_and_insert_only_grants() -> None:
+    sql = _append_only()
+    assert "ALTER TABLE evidence FORCE ROW LEVEL SECURITY" in sql
+    assert "USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)" in sql
+    assert "GRANT SELECT, INSERT ON evidence TO aip_app" in sql
+    assert "GRANT SELECT ON evidence TO aip_readonly" in sql
+    assert "REVOKE UPDATE, DELETE, TRUNCATE ON evidence FROM aip_app, aip_jobs, aip_readonly" in sql
+    assert "UPDATE, DELETE ON evidence TO" not in sql
+
+
+@pytest.mark.parametrize(
+    ("partition_column", "message"),
+    [
+        ("created_at; DROP TABLE y", "snake_case identifier"),
+        ("Created", "snake_case identifier"),
+        ("order", "reserved word"),
+    ],
+)
+def test_append_only_partition_column_must_be_an_identifier(
+    partition_column: str, message: str
+) -> None:
+    with pytest.raises(TemplateError, match=message):
+        _append_only(partition_column=partition_column)
