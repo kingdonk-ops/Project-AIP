@@ -78,6 +78,9 @@ from aip.platform.events.registry import (
 )
 from aip.platform.events.routes import create_router as create_events_router
 from aip.platform.events.subscribers import verify_manifest_subscribers
+from aip.platform.flags import requires_flag
+from aip.platform.flags.routes import FLAGS_MANAGE_PERMISSION
+from aip.platform.flags.routes import create_router as create_flags_router
 from aip.platform.http import install_error_handlers
 from aip.platform.modules.registry import load_modules
 from aip.platform.modules.routes import create_router as create_modules_router
@@ -183,6 +186,15 @@ def create_app(
                 "request_id": ctx.request_id,
             }
 
+        # ARCH-08: test-only route behind the bim release flag.
+        @v1.get(
+            "/_fixtures/bim-probe",
+            include_in_schema=False,
+            dependencies=[Depends(authenticated()), Depends(requires_flag("bim"))],
+        )
+        async def bim_probe() -> dict[str, str]:  # pyright: ignore[reportUnusedFunction]
+            return {"status": "ok"}
+
     v1.include_router(create_modules_router(modules))
     # ARCH-06: the event catalogue is gated by platform.events.manage, which the ops module
     # declares. Mount it only when that permission is in the catalogue, so an app built from a
@@ -191,6 +203,9 @@ def create_app(
         # ARCH-07: before the catalogue, whose /{event_name} would match dead-letter.
         v1.include_router(create_dead_letter_router())
         v1.include_router(create_events_router(modules))  # /admin/platform/events
+    # ARCH-08: tenant feature flags. The nav reads them always; changing one needs
+    # tenant.flags.manage, mounted only when tenancy (which declares it) is in the module set.
+    v1.include_router(create_flags_router(manage=FLAGS_MANAGE_PERMISSION in catalogue))
     for module in modules:
         v1.include_router(module.router)
 

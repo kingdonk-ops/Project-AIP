@@ -40,6 +40,7 @@ from aip.platform.events.outbox import EventValidationError
 __all__ = [
     "CONTRACTS_DIR",
     "PLATFORM_EVENT_DEPRECATED",
+    "PLATFORM_FLAG_CHANGED",
     "PLATFORM_OUTBOX_DISCARDED",
     "PLATFORM_OUTBOX_RETRIED",
     "PLATFORM_OUTBOX_THRESHOLD_EXCEEDED",
@@ -66,6 +67,8 @@ PLATFORM_EVENT_DEPRECATED = "platform.event.deprecated"
 PLATFORM_OUTBOX_RETRIED = "platform.outbox.retried"
 PLATFORM_OUTBOX_DISCARDED = "platform.outbox.discarded"
 PLATFORM_OUTBOX_THRESHOLD_EXCEEDED = "platform.outbox.dead_letter_threshold_exceeded"
+# ARCH-08: a tenant's release flag changed (aip.platform.flags).
+PLATFORM_FLAG_CHANGED = "platform.flag.changed"
 
 
 class DuplicateEventError(ValueError):
@@ -244,11 +247,23 @@ class OutboxThresholdExceededPayload(BaseModel):
     threshold: int
 
 
+class FlagChangedPayload(BaseModel):
+    """``platform.flag.changed`` v1: a tenant's release flag was switched (ARCH-08)."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel, populate_by_name=True, serialize_by_alias=True, extra="forbid"
+    )
+
+    flag: str
+    enabled: bool
+
+
 _PLATFORM_EVENTS: tuple[tuple[str, type[BaseModel]], ...] = (
     (PLATFORM_EVENT_DEPRECATED, EventDeprecatedPayload),
     (PLATFORM_OUTBOX_RETRIED, OutboxRetriedPayload),
     (PLATFORM_OUTBOX_DISCARDED, OutboxDiscardedPayload),
     (PLATFORM_OUTBOX_THRESHOLD_EXCEEDED, OutboxThresholdExceededPayload),
+    (PLATFORM_FLAG_CHANGED, FlagChangedPayload),
 )
 
 

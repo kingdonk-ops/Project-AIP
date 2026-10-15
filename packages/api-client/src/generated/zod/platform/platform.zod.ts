@@ -275,3 +275,33 @@ export const PlatformVersionResponse = zod.object({
 })
 }).describe('Body of GET /api/v1/platform/version. Changing it changes the generated client.')
 
+/**
+ * @summary List Flags
+ */
+export const PlatformListFlagsResponse = zod.object({
+  "flags": zod.array(zod.object({
+  "enabled": zod.boolean(),
+  "flag": zod.string()
+}))
+})
+
+/**
+ * @summary Set Flag
+ */
+export const platformSetFlagPathFlagMax = 63;
+
+
+
+export const PlatformSetFlagParams = zod.object({
+  "flag": zod.string().max(platformSetFlagPathFlagMax)
+})
+
+export const PlatformSetFlagBody = zod.object({
+  "enabled": zod.boolean()
+})
+
+export const PlatformSetFlagResponse = zod.object({
+  "enabled": zod.boolean(),
+  "flag": zod.string()
+})
+

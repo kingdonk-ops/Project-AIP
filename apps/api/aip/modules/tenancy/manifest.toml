@@ -4,9 +4,13 @@
 #   Region labels are the terminology keys in deployment_regions.label_key.
 # ENT-01: entitlements (plans in code, subscription, overrides, monthly usage) and
 #   GET /api/v1/settings/plan-and-usage. The operator routes live in the ops module (ADR 0029).
+# ARCH-08: tenancy also owns the `tenant` permission namespace for tenant-wide settings whose
+#   pages live under aip.platform.* (permissions come only from manifests, ACCESS-01):
+#   tenant.flags.manage gates PUT /api/v1/settings/flags/{flag} (aip.platform.flags).
 id = "tenancy"
 context = "tenancy"
 depends_on = []
+permission_namespaces = ["tenancy", "tenant"]
 subscribes = []
 settings = ["ENTITLEMENTS_DB_ESTIMATE_METHOD", "ENTITLEMENTS_DB_ESTIMATE_URL"]
 term_keys = [
@@ -18,6 +22,10 @@ term_keys = [
 [[permissions]]
 code = "tenancy.plan.read"
 description = "Read the tenant plan, features, limits and usage (read-only)"
+
+[[permissions]]
+code = "tenant.flags.manage"
+description = "Switch the tenant's release flags for deferred modules (BIM, AI)"
 
 [[events]]
 name = "tenant.entitlements_changed"

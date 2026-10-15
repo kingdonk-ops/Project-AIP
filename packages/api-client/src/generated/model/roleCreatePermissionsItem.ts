@@ -23,6 +23,7 @@ export const RoleCreatePermissionsItem = {
   sitemanage: 'site.manage',
   siteview: 'site.view',
   tenancyplanread: 'tenancy.plan.read',
+  tenantflagsmanage: 'tenant.flags.manage',
   termscoverageread: 'terms.coverage.read',
   uploadsadmin: 'uploads.admin',
   uploadscreate: 'uploads.create',

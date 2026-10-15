@@ -26,6 +26,9 @@ import type {
   EntitlementErrorBody,
   EventCatalogue,
   EventDetail,
+  FeatureFlag,
+  FeatureFlagPut,
+  FeatureFlags,
   HTTPValidationError,
   HealthResponse,
   ModuleInfo,
@@ -1625,3 +1628,222 @@ export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVer
 
 
 
+export type platformListFlagsResponse200 = {
+  data: FeatureFlags
+  status: 200
+}
+
+export type platformListFlagsResponseSuccess = (platformListFlagsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type platformListFlagsResponse = (platformListFlagsResponseSuccess)
+
+export const getPlatformListFlagsUrl = () => {
+
+
+
+
+  return `/api/v1/settings/flags`
+}
+
+/**
+ * @summary List Flags
+ */
+export const platformListFlags = async ( options?: Parameters<typeof apiFetch>[1]): Promise<platformListFlagsResponse> => {
+
+  return apiFetch<platformListFlagsResponse>(getPlatformListFlagsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPlatformListFlagsQueryKey = () => {
+    return [
+    `/api/v1/settings/flags`
+    ] as const;
+    }
+
+
+export const getPlatformListFlagsQueryOptions = <TData = Awaited<ReturnType<typeof platformListFlags>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListFlags>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPlatformListFlagsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformListFlags>>> = ({ signal }) => platformListFlags({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof platformListFlags>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PlatformListFlagsQueryResult = NonNullable<Awaited<ReturnType<typeof platformListFlags>>>
+export type PlatformListFlagsQueryError = unknown
+
+
+export function usePlatformListFlags<TData = Awaited<ReturnType<typeof platformListFlags>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListFlags>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformListFlags>>,
+          TError,
+          Awaited<ReturnType<typeof platformListFlags>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformListFlags<TData = Awaited<ReturnType<typeof platformListFlags>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListFlags>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformListFlags>>,
+          TError,
+          Awaited<ReturnType<typeof platformListFlags>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformListFlags<TData = Awaited<ReturnType<typeof platformListFlags>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListFlags>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Flags
+ */
+
+export function usePlatformListFlags<TData = Awaited<ReturnType<typeof platformListFlags>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListFlags>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPlatformListFlagsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type platformSetFlagResponse200 = {
+  data: FeatureFlag
+  status: 200
+}
+
+export type platformSetFlagResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type platformSetFlagResponseSuccess = (platformSetFlagResponse200) & {
+  headers: Headers;
+};
+export type platformSetFlagResponseError = (platformSetFlagResponse422) & {
+  headers: Headers;
+};
+
+export type platformSetFlagResponse = (platformSetFlagResponseSuccess | platformSetFlagResponseError)
+
+export const getPlatformSetFlagUrl = (flag: string,) => {
+
+
+
+
+  return `/api/v1/settings/flags/${flag}`
+}
+
+/**
+ * @summary Set Flag
+ */
+export const platformSetFlag = async (flag: string,
+    featureFlagPut: FeatureFlagPut, options?: Parameters<typeof apiFetch>[1]): Promise<platformSetFlagResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<platformSetFlagResponse>(getPlatformSetFlagUrl(flag),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(featureFlagPut)
+  }
+);}
+
+
+
+
+
+export const getPlatformSetFlagMutationKey = () => ['platformSetFlag'] as const;
+
+export const getPlatformSetFlagMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformSetFlag>>, TError,PlatformSetFlagMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof platformSetFlag>>, TError,PlatformSetFlagMutationVariables, TContext> => {
+
+const mutationKey = getPlatformSetFlagMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof platformSetFlag>>, PlatformSetFlagMutationVariables> = (props) => {
+          const {flag,data} = props ?? {};
+
+          return  platformSetFlag(flag,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlatformSetFlagMutationResult = NonNullable<Awaited<ReturnType<typeof platformSetFlag>>>
+    export type PlatformSetFlagMutationBody = FeatureFlagPut
+    export type PlatformSetFlagMutationError = HTTPValidationError
+    export type PlatformSetFlagMutationVariables = {flag: string;data: FeatureFlagPut}
+
+    /**
+ * @summary Set Flag
+ */
+export const usePlatformSetFlag = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformSetFlag>>, TError,PlatformSetFlagMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof platformSetFlag>>,
+        TError,
+        PlatformSetFlagMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPlatformSetFlagMutationOptions(options), queryClient);
+    }

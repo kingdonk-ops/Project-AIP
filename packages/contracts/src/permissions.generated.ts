@@ -22,6 +22,7 @@ export type PermissionCode =
   | "site.manage"
   | "site.view"
   | "tenancy.plan.read"
+  | "tenant.flags.manage"
   | "terms.coverage.read"
   | "uploads.admin"
   | "uploads.create"
@@ -47,6 +48,7 @@ export const PERMISSIONS = {
   "site.manage": { module: "projects", privileged: false },
   "site.view": { module: "projects", privileged: false },
   "tenancy.plan.read": { module: "tenancy", privileged: false },
+  "tenant.flags.manage": { module: "tenancy", privileged: false },
   "terms.coverage.read": { module: "terms", privileged: false },
   "uploads.admin": { module: "uploads", privileged: false },
   "uploads.create": { module: "uploads", privileged: false },

@@ -26,6 +26,7 @@
                 "site.manage",
                 "site.view",
                 "tenancy.plan.read",
+                "tenant.flags.manage",
                 "terms.coverage.read",
                 "uploads.admin",
                 "uploads.create",
@@ -676,6 +677,56 @@
           "schema"
         ],
         "title": "EventVersionDetail",
+        "type": "object"
+      },
+      "FeatureFlag": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "flag": {
+            "title": "Flag",
+            "type": "string"
+          }
+        },
+        "required": [
+          "flag",
+          "enabled"
+        ],
+        "title": "FeatureFlag",
+        "type": "object"
+      },
+      "FeatureFlagPut": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "FeatureFlagPut",
+        "type": "object"
+      },
+      "FeatureFlags": {
+        "additionalProperties": false,
+        "properties": {
+          "flags": {
+            "items": {
+              "$ref": "#/components/schemas/FeatureFlag"
+            },
+            "title": "Flags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "flags"
+        ],
+        "title": "FeatureFlags",
         "type": "object"
       },
       "FeatureOut": {
@@ -1829,6 +1880,7 @@
                 "site.manage",
                 "site.view",
                 "tenancy.plan.read",
+                "tenant.flags.manage",
                 "terms.coverage.read",
                 "uploads.admin",
                 "uploads.create",
@@ -1939,6 +1991,7 @@
                 "site.manage",
                 "site.view",
                 "tenancy.plan.read",
+                "tenant.flags.manage",
                 "terms.coverage.read",
                 "uploads.admin",
                 "uploads.create",
@@ -2016,6 +2069,7 @@
                     "site.manage",
                     "site.view",
                     "tenancy.plan.read",
+                    "tenant.flags.manage",
                     "terms.coverage.read",
                     "uploads.admin",
                     "uploads.create",
@@ -4922,6 +4976,80 @@
         "summary": "Update Project",
         "tags": [
           "projects"
+        ]
+      }
+    },
+    "/api/v1/settings/flags": {
+      "get": {
+        "operationId": "platform_list_flags",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureFlags"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Flags",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/settings/flags/{flag}": {
+      "put": {
+        "operationId": "platform_set_flag",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "flag",
+            "required": true,
+            "schema": {
+              "maxLength": 63,
+              "title": "Flag",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeatureFlagPut"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureFlag"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Flag",
+        "tags": [
+          "platform"
         ]
       }
     },
