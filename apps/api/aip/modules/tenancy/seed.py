@@ -9,6 +9,10 @@ fixture values (name, slug, region, ``active``, not deleted). Refuses to run, be
 when ``AIP_ENV=production``. Run it before ``python -m aip.modules.identity.seeds``: the login
 directory references these tenants.
 
+ENT-01: each fixture tenant also gets a sandbox subscription (``kaefer-demo`` on ``professional``,
+``tenant-b`` on ``core``), upserted the same way; a re-run restores it and bumps the entitlement
+version so caches drop the old values.
+
 The ids are the shared fixture ids (AGENTS.md, ``apps/api/tests/conftest.py``, the identity seeds).
 """
 
@@ -18,7 +22,8 @@ import asyncio
 import os
 import sys
 from dataclasses import dataclass
-from uuid import UUID
+from datetime import date
+from uuid import UUID, uuid4
 
 from sqlalchemy import text
 
@@ -34,13 +39,14 @@ class FixtureTenant:
     slug: str
     name: str
     region_code: str
+    plan_code: str
     status: str = "active"
     deployment_shape: str = "pooled"
 
 
 FIXTURE_TENANTS: tuple[FixtureTenant, ...] = (
-    FixtureTenant(KAEFER_DEMO_ID, "kaefer-demo", "Kaefer Demo", "ap-southeast-2"),
-    FixtureTenant(TENANT_B_ID, "tenant-b", "Tenant B", "ap-southeast-2"),
+    FixtureTenant(KAEFER_DEMO_ID, "kaefer-demo", "Kaefer Demo", "ap-southeast-2", "professional"),
+    FixtureTenant(TENANT_B_ID, "tenant-b", "Tenant B", "ap-southeast-2", "core"),
 )
 
 _SET_TENANT = text("SELECT set_config('app.tenant_id', :tenant_id, true)")
@@ -54,6 +60,33 @@ _UPSERT = text(
           deployment_shape = EXCLUDED.deployment_shape,
           region_code = EXCLUDED.region_code,
           status = EXCLUDED.status,
+          deleted_at = NULL,
+          updated_at = now()
+    """
+)
+
+# Synthetic sandbox terms for the fixtures (no contract reference: sandbox needs none, ADR 0017).
+FIXTURE_STARTS_ON = date(2026, 7, 1)
+FIXTURE_RENEWAL_DATE = date(2027, 6, 30)
+
+_UPSERT_SUBSCRIPTION = text(
+    """
+    INSERT INTO tenant_subscription
+        (id, tenant_id, plan_code, plan_version, term, starts_on, renewal_date, status)
+    VALUES (:id, :tenant_id, :plan_code, 1, 'sandbox', :starts_on, :renewal_date, 'active')
+    ON CONFLICT (tenant_id) DO UPDATE
+      SET plan_code = EXCLUDED.plan_code,
+          plan_version = EXCLUDED.plan_version,
+          term = EXCLUDED.term,
+          starts_on = EXCLUDED.starts_on,
+          ends_on = NULL,
+          renewal_date = EXCLUDED.renewal_date,
+          seat_limits = '{}'::jsonb,
+          storage_gb = NULL,
+          add_ons = '{}'::text[],
+          contract_ref = NULL,
+          status = EXCLUDED.status,
+          entitlement_version = tenant_subscription.entitlement_version + 1,
           deleted_at = NULL,
           updated_at = now()
     """
@@ -86,6 +119,16 @@ async def seed(url: str, *, env: str | None = None) -> int:
                         "deployment_shape": tenant.deployment_shape,
                         "region_code": tenant.region_code,
                         "status": tenant.status,
+                    },
+                )
+                await conn.execute(
+                    _UPSERT_SUBSCRIPTION,
+                    {
+                        "id": uuid4(),
+                        "tenant_id": tenant.id,
+                        "plan_code": tenant.plan_code,
+                        "starts_on": FIXTURE_STARTS_ON,
+                        "renewal_date": FIXTURE_RENEWAL_DATE,
                     },
                 )
     finally:

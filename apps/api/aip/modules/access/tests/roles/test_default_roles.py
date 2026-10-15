@@ -83,3 +83,13 @@ def test_the_real_catalogue_gives_tenant_admin_role_management() -> None:
     assert {"access.role.manage", "access.role_assignment.manage"} <= roles["tenant_admin"]
     assert roles["project_manager"] == {"access.role.read", "project.view", "project.archive"}
     assert roles["inspector"] == {"project.view"}
+
+
+def test_default_roles_never_get_operator_only_codes() -> None:
+    catalogue = [
+        ("platform.tenants.manage", "ops"),
+        ("ops.job.view", "ops"),
+        ("project.view", "projects"),
+    ]
+    granted = default_permissions(catalogue)
+    assert not any(c.startswith("platform.") for codes in granted.values() for c in codes)

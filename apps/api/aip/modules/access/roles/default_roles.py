@@ -9,6 +9,7 @@ here. ``default_permissions`` expands each level over the permission catalogue:
   approve adds approve and sign; admin adds manage and export (``LEVEL_VERBS``);
 - a verb no level names is granted only at ``admin`` (fail closed), and a matrix module with no
   catalogue entries is skipped with a log line;
+- ``platform.*`` codes (operator-only, ADR 0029) are never granted to a tenant role;
 - Client Reviewer is read-only plus sign-off (owner decision 2026-10-10, see the matrix note), so
   for ``SIGN_OFF_ONLY_ROLES`` the ``approve`` level adds approve and sign on top of view only.
 
@@ -25,6 +26,7 @@ __all__ = [
     "LEVELS",
     "LEVEL_VERBS",
     "MATRIX",
+    "OPERATOR_ONLY_PREFIX",
     "ROLE_CODES",
     "SIGN_OFF_ONLY_ROLES",
     "Level",
@@ -38,6 +40,10 @@ logger = logging.getLogger(__name__)
 
 Level = Literal["none", "view", "create", "edit", "approve", "admin"]
 LEVELS: Final[tuple[Level, ...]] = ("none", "view", "create", "edit", "approve", "admin")
+
+# Operator-only permission codes (ADR 0029: the ops module's platform namespace). Tenant roles,
+# default or custom, can never hold them: they act across tenants.
+OPERATOR_ONLY_PREFIX: Final = "platform."
 
 # The verbs each level adds on top of the levels below it.
 LEVEL_VERBS: Final[Mapping[Level, frozenset[str]]] = {
@@ -926,6 +932,8 @@ def default_permissions(
     """Each default role's permission codes, from ``(code, module_id)`` catalogue pairs."""
     by_module: dict[str, list[str]] = {}
     for code, module_id in catalogue:
+        if code.startswith(OPERATOR_ONLY_PREFIX):
+            continue
         by_module.setdefault(module_id, []).append(code)
     granted: dict[str, set[str]] = {role: set() for role in ROLE_CODES}
     skipped: list[str] = []

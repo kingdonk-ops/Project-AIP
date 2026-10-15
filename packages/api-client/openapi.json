@@ -16,12 +16,14 @@
                 "identity.user.manage",
                 "identity.user.read",
                 "platform.events.manage",
+                "platform.tenants.manage",
                 "project.archive",
                 "project.create",
                 "project.update",
                 "project.view",
                 "site.manage",
                 "site.view",
+                "tenancy.plan.read",
                 "uploads.admin",
                 "uploads.create",
                 "uploads.view"
@@ -244,6 +246,31 @@
         "title": "AuthErrorResponse",
         "type": "object"
       },
+      "DbEstimate": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "title": "Bytes",
+            "type": "integer"
+          },
+          "capturedAt": {
+            "format": "date-time",
+            "title": "Capturedat",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bytes",
+          "method",
+          "capturedAt"
+        ],
+        "title": "DbEstimate",
+        "type": "object"
+      },
       "Dependencies": {
         "properties": {
           "alembic": {
@@ -332,6 +359,31 @@
           "deprecatedBy"
         ],
         "title": "DeprecateResult",
+        "type": "object"
+      },
+      "EntitlementErrorBody": {
+        "description": "403 ``NOT_ENTITLED`` / ``LIMIT_REACHED``, 422 ``CONTRACT_REF_REQUIRED`` and the like.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "EntitlementErrorBody",
         "type": "object"
       },
       "ErrorBody": {
@@ -493,6 +545,37 @@
         "title": "EventVersionDetail",
         "type": "object"
       },
+      "FeatureOut": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "plan",
+              "add_on",
+              "override",
+              "toggle",
+              "none"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "enabled",
+          "source"
+        ],
+        "title": "FeatureOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -518,6 +601,67 @@
           "status"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "LimitOut": {
+        "additionalProperties": false,
+        "description": "``limit`` null is unlimited; ``used`` null means nothing measures it yet.",
+        "properties": {
+          "action": {
+            "enum": [
+              "BLOCK",
+              "WARN",
+              "OVERAGE"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "source": {
+            "enum": [
+              "plan",
+              "add_on",
+              "override",
+              "toggle",
+              "none"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "used": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used"
+          }
+        },
+        "required": [
+          "key",
+          "limit",
+          "used",
+          "action",
+          "source"
+        ],
+        "title": "LimitOut",
         "type": "object"
       },
       "LoginStartRequest": {
@@ -768,6 +912,251 @@
           "depends_on"
         ],
         "title": "ModuleInfo",
+        "type": "object"
+      },
+      "OverrideCreate": {
+        "additionalProperties": false,
+        "description": "A boolean for ``feature.*``; a count, or null for unlimited, for ``limit.*``.",
+        "properties": {
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiresat"
+          },
+          "key": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "reason"
+        ],
+        "title": "OverrideCreate",
+        "type": "object"
+      },
+      "OverrideOut": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiresat"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "value",
+          "reason",
+          "expiresAt",
+          "createdAt"
+        ],
+        "title": "OverrideOut",
+        "type": "object"
+      },
+      "PlanAndUsage": {
+        "additionalProperties": false,
+        "description": "The read-only \"Plan and usage\" page. No prices, invoices or payment data.",
+        "properties": {
+          "contractRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractref"
+          },
+          "dbEstimate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DbEstimate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/FeatureOut"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "limits": {
+            "items": {
+              "$ref": "#/components/schemas/LimitOut"
+            },
+            "title": "Limits",
+            "type": "array"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan"
+          },
+          "planVersion": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planversion"
+          },
+          "renewalDate": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewaldate"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active",
+                  "expired",
+                  "suspended"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "term": {
+            "anyOf": [
+              {
+                "enum": [
+                  "annual",
+                  "multi_year",
+                  "trial",
+                  "sandbox"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term"
+          },
+          "usagePeriod": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usageperiod"
+          }
+        },
+        "required": [
+          "plan",
+          "planVersion",
+          "term",
+          "status",
+          "renewalDate",
+          "contractRef",
+          "usagePeriod",
+          "features",
+          "limits",
+          "dbEstimate"
+        ],
+        "title": "PlanAndUsage",
         "type": "object"
       },
       "ProjectCreate": {
@@ -1256,12 +1645,14 @@
                 "identity.user.manage",
                 "identity.user.read",
                 "platform.events.manage",
+                "platform.tenants.manage",
                 "project.archive",
                 "project.create",
                 "project.update",
                 "project.view",
                 "site.manage",
                 "site.view",
+                "tenancy.plan.read",
                 "uploads.admin",
                 "uploads.create",
                 "uploads.view"
@@ -1361,12 +1752,14 @@
                 "identity.user.manage",
                 "identity.user.read",
                 "platform.events.manage",
+                "platform.tenants.manage",
                 "project.archive",
                 "project.create",
                 "project.update",
                 "project.view",
                 "site.manage",
                 "site.view",
+                "tenancy.plan.read",
                 "uploads.admin",
                 "uploads.create",
                 "uploads.view"
@@ -1433,12 +1826,14 @@
                     "identity.user.manage",
                     "identity.user.read",
                     "platform.events.manage",
+                    "platform.tenants.manage",
                     "project.archive",
                     "project.create",
                     "project.update",
                     "project.view",
                     "site.manage",
                     "site.view",
+                    "tenancy.plan.read",
                     "uploads.admin",
                     "uploads.create",
                     "uploads.view"
@@ -1952,6 +2347,280 @@
           }
         },
         "title": "SiteUpdate",
+        "type": "object"
+      },
+      "SubscriptionOut": {
+        "additionalProperties": false,
+        "properties": {
+          "addOns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Addons",
+            "type": "array"
+          },
+          "contractRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractref"
+          },
+          "endsOn": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endson"
+          },
+          "entitlementVersion": {
+            "title": "Entitlementversion",
+            "type": "integer"
+          },
+          "planCode": {
+            "title": "Plancode",
+            "type": "string"
+          },
+          "planVersion": {
+            "title": "Planversion",
+            "type": "integer"
+          },
+          "renewalDate": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewaldate"
+          },
+          "seatLimits": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Seatlimits",
+            "type": "object"
+          },
+          "startsOn": {
+            "format": "date",
+            "title": "Startson",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "expired",
+              "suspended"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "storageGb": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storagegb"
+          },
+          "tenantId": {
+            "format": "uuid",
+            "title": "Tenantid",
+            "type": "string"
+          },
+          "term": {
+            "enum": [
+              "annual",
+              "multi_year",
+              "trial",
+              "sandbox"
+            ],
+            "title": "Term",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenantId",
+          "planCode",
+          "planVersion",
+          "term",
+          "startsOn",
+          "endsOn",
+          "renewalDate",
+          "seatLimits",
+          "storageGb",
+          "addOns",
+          "contractRef",
+          "status",
+          "entitlementVersion"
+        ],
+        "title": "SubscriptionOut",
+        "type": "object"
+      },
+      "SubscriptionPut": {
+        "additionalProperties": false,
+        "description": "An operator sets the subscription; ``contract_ref`` is required for production terms.",
+        "properties": {
+          "addOns": {
+            "default": [],
+            "items": {
+              "maxLength": 50,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Addons",
+            "type": "array"
+          },
+          "contractRef": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractref"
+          },
+          "endsOn": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endson"
+          },
+          "planCode": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Plancode",
+            "type": "string"
+          },
+          "planVersion": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planversion"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "renewalDate": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewaldate"
+          },
+          "seatLimits": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minimum": 0.0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "default": {},
+            "propertyNames": {
+              "enum": [
+                "full",
+                "portal"
+              ]
+            },
+            "title": "Seatlimits",
+            "type": "object"
+          },
+          "startsOn": {
+            "format": "date",
+            "title": "Startson",
+            "type": "string"
+          },
+          "status": {
+            "default": "active",
+            "enum": [
+              "active",
+              "expired",
+              "suspended"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "storageGb": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storagegb"
+          },
+          "term": {
+            "enum": [
+              "annual",
+              "multi_year",
+              "trial",
+              "sandbox"
+            ],
+            "title": "Term",
+            "type": "string"
+          }
+        },
+        "required": [
+          "planCode",
+          "term",
+          "startsOn",
+          "reason"
+        ],
+        "title": "SubscriptionPut",
         "type": "object"
       },
       "TenantErrorBody": {
@@ -3390,6 +4059,200 @@
         ]
       }
     },
+    "/api/v1/platform/tenants/{tenant_id}/entitlement-overrides": {
+      "post": {
+        "operationId": "platform_add_entitlement_override",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OverrideCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverrideOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntitlementErrorBody"
+                }
+              }
+            },
+            "description": "No such tenant or override."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntitlementErrorBody"
+                }
+              }
+            },
+            "description": "Invalid plan, key, value or contract."
+          }
+        },
+        "summary": "Add Override",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/tenants/{tenant_id}/entitlement-overrides/{override_id}": {
+      "delete": {
+        "operationId": "platform_remove_entitlement_override",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "override_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Override Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "reason",
+            "required": true,
+            "schema": {
+              "maxLength": 500,
+              "minLength": 1,
+              "pattern": "\\S",
+              "title": "Reason",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntitlementErrorBody"
+                }
+              }
+            },
+            "description": "No such tenant or override."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntitlementErrorBody"
+                }
+              }
+            },
+            "description": "Invalid plan, key, value or contract."
+          }
+        },
+        "summary": "Remove Override",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/tenants/{tenant_id}/subscription": {
+      "put": {
+        "operationId": "platform_put_tenant_subscription",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionPut"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntitlementErrorBody"
+                }
+              }
+            },
+            "description": "No such tenant or override."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntitlementErrorBody"
+                }
+              }
+            },
+            "description": "Invalid plan, key, value or contract."
+          }
+        },
+        "summary": "Put Subscription",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
     "/api/v1/platform/version": {
       "get": {
         "operationId": "platform_version",
@@ -3691,6 +4554,27 @@
         "summary": "Update Project",
         "tags": [
           "projects"
+        ]
+      }
+    },
+    "/api/v1/settings/plan-and-usage": {
+      "get": {
+        "operationId": "tenancy_plan_and_usage",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanAndUsage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Plan And Usage",
+        "tags": [
+          "tenancy"
         ]
       }
     },

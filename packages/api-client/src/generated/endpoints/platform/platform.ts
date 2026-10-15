@@ -20,13 +20,19 @@ import type {
 
 import type {
   DeprecateResult,
+  EntitlementErrorBody,
   EventCatalogue,
   EventDetail,
   HTTPValidationError,
   HealthResponse,
   ModuleInfo,
+  OverrideCreate,
+  OverrideOut,
   PlatformListEventsParams,
   PlatformLive200,
+  PlatformRemoveEntitlementOverrideParams,
+  SubscriptionOut,
+  SubscriptionPut,
   VersionResponse
 } from '../../model';
 
@@ -846,7 +852,339 @@ export function usePlatformListModules<TData = Awaited<ReturnType<typeof platfor
 
 
 
-export type platformVersionResponse200 = {
+export type platformAddEntitlementOverrideResponse201 = {
+  data: OverrideOut
+  status: 201
+}
+
+export type platformAddEntitlementOverrideResponse404 = {
+  data: EntitlementErrorBody
+  status: 404
+}
+
+export type platformAddEntitlementOverrideResponse422 = {
+  data: EntitlementErrorBody
+  status: 422
+}
+
+export type platformAddEntitlementOverrideResponseSuccess = (platformAddEntitlementOverrideResponse201) & {
+  headers: Headers;
+};
+export type platformAddEntitlementOverrideResponseError = (platformAddEntitlementOverrideResponse404 | platformAddEntitlementOverrideResponse422) & {
+  headers: Headers;
+};
+
+export type platformAddEntitlementOverrideResponse = (platformAddEntitlementOverrideResponseSuccess | platformAddEntitlementOverrideResponseError)
+
+export const getPlatformAddEntitlementOverrideUrl = (tenantId: string,) => {
+
+
+
+
+  return `/api/v1/platform/tenants/${tenantId}/entitlement-overrides`
+}
+
+/**
+ * @summary Add Override
+ */
+export const platformAddEntitlementOverride = async (tenantId: string,
+    overrideCreate: OverrideCreate, options?: Parameters<typeof apiFetch>[1]): Promise<platformAddEntitlementOverrideResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<platformAddEntitlementOverrideResponse>(getPlatformAddEntitlementOverrideUrl(tenantId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(overrideCreate)
+  }
+);}
+
+
+
+
+
+export const getPlatformAddEntitlementOverrideMutationKey = () => ['platformAddEntitlementOverride'] as const;
+
+export const getPlatformAddEntitlementOverrideMutationOptions = <TError = EntitlementErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformAddEntitlementOverride>>, TError,PlatformAddEntitlementOverrideMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof platformAddEntitlementOverride>>, TError,PlatformAddEntitlementOverrideMutationVariables, TContext> => {
+
+const mutationKey = getPlatformAddEntitlementOverrideMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof platformAddEntitlementOverride>>, PlatformAddEntitlementOverrideMutationVariables> = (props) => {
+          const {tenantId,data} = props ?? {};
+
+          return  platformAddEntitlementOverride(tenantId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlatformAddEntitlementOverrideMutationResult = NonNullable<Awaited<ReturnType<typeof platformAddEntitlementOverride>>>
+    export type PlatformAddEntitlementOverrideMutationBody = OverrideCreate
+    export type PlatformAddEntitlementOverrideMutationError = EntitlementErrorBody
+    export type PlatformAddEntitlementOverrideMutationVariables = {tenantId: string;data: OverrideCreate}
+
+    /**
+ * @summary Add Override
+ */
+export const usePlatformAddEntitlementOverride = <TError = EntitlementErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformAddEntitlementOverride>>, TError,PlatformAddEntitlementOverrideMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof platformAddEntitlementOverride>>,
+        TError,
+        PlatformAddEntitlementOverrideMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPlatformAddEntitlementOverrideMutationOptions(options), queryClient);
+    }
+    export type platformRemoveEntitlementOverrideResponse204 = {
+  data: void
+  status: 204
+}
+
+export type platformRemoveEntitlementOverrideResponse404 = {
+  data: EntitlementErrorBody
+  status: 404
+}
+
+export type platformRemoveEntitlementOverrideResponse422 = {
+  data: EntitlementErrorBody
+  status: 422
+}
+
+export type platformRemoveEntitlementOverrideResponseSuccess = (platformRemoveEntitlementOverrideResponse204) & {
+  headers: Headers;
+};
+export type platformRemoveEntitlementOverrideResponseError = (platformRemoveEntitlementOverrideResponse404 | platformRemoveEntitlementOverrideResponse422) & {
+  headers: Headers;
+};
+
+export type platformRemoveEntitlementOverrideResponse = (platformRemoveEntitlementOverrideResponseSuccess | platformRemoveEntitlementOverrideResponseError)
+
+export const getPlatformRemoveEntitlementOverrideUrl = (tenantId: string,
+    overrideId: string,
+    params: PlatformRemoveEntitlementOverrideParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/platform/tenants/${tenantId}/entitlement-overrides/${overrideId}?${stringifiedParams}` : `/api/v1/platform/tenants/${tenantId}/entitlement-overrides/${overrideId}`
+}
+
+/**
+ * @summary Remove Override
+ */
+export const platformRemoveEntitlementOverride = async (tenantId: string,
+    overrideId: string,
+    params: PlatformRemoveEntitlementOverrideParams, options?: Parameters<typeof apiFetch>[1]): Promise<platformRemoveEntitlementOverrideResponse> => {
+
+  return apiFetch<platformRemoveEntitlementOverrideResponse>(getPlatformRemoveEntitlementOverrideUrl(tenantId,overrideId,params),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getPlatformRemoveEntitlementOverrideMutationKey = () => ['platformRemoveEntitlementOverride'] as const;
+
+export const getPlatformRemoveEntitlementOverrideMutationOptions = <TError = EntitlementErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformRemoveEntitlementOverride>>, TError,PlatformRemoveEntitlementOverrideMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof platformRemoveEntitlementOverride>>, TError,PlatformRemoveEntitlementOverrideMutationVariables, TContext> => {
+
+const mutationKey = getPlatformRemoveEntitlementOverrideMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof platformRemoveEntitlementOverride>>, PlatformRemoveEntitlementOverrideMutationVariables> = (props) => {
+          const {tenantId,overrideId,params} = props ?? {};
+
+          return  platformRemoveEntitlementOverride(tenantId,overrideId,params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlatformRemoveEntitlementOverrideMutationResult = NonNullable<Awaited<ReturnType<typeof platformRemoveEntitlementOverride>>>
+
+    export type PlatformRemoveEntitlementOverrideMutationError = EntitlementErrorBody
+    export type PlatformRemoveEntitlementOverrideMutationVariables = {tenantId: string;overrideId: string;params: PlatformRemoveEntitlementOverrideParams}
+
+    /**
+ * @summary Remove Override
+ */
+export const usePlatformRemoveEntitlementOverride = <TError = EntitlementErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformRemoveEntitlementOverride>>, TError,PlatformRemoveEntitlementOverrideMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof platformRemoveEntitlementOverride>>,
+        TError,
+        PlatformRemoveEntitlementOverrideMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPlatformRemoveEntitlementOverrideMutationOptions(options), queryClient);
+    }
+    export type platformPutTenantSubscriptionResponse200 = {
+  data: SubscriptionOut
+  status: 200
+}
+
+export type platformPutTenantSubscriptionResponse404 = {
+  data: EntitlementErrorBody
+  status: 404
+}
+
+export type platformPutTenantSubscriptionResponse422 = {
+  data: EntitlementErrorBody
+  status: 422
+}
+
+export type platformPutTenantSubscriptionResponseSuccess = (platformPutTenantSubscriptionResponse200) & {
+  headers: Headers;
+};
+export type platformPutTenantSubscriptionResponseError = (platformPutTenantSubscriptionResponse404 | platformPutTenantSubscriptionResponse422) & {
+  headers: Headers;
+};
+
+export type platformPutTenantSubscriptionResponse = (platformPutTenantSubscriptionResponseSuccess | platformPutTenantSubscriptionResponseError)
+
+export const getPlatformPutTenantSubscriptionUrl = (tenantId: string,) => {
+
+
+
+
+  return `/api/v1/platform/tenants/${tenantId}/subscription`
+}
+
+/**
+ * @summary Put Subscription
+ */
+export const platformPutTenantSubscription = async (tenantId: string,
+    subscriptionPut: SubscriptionPut, options?: Parameters<typeof apiFetch>[1]): Promise<platformPutTenantSubscriptionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<platformPutTenantSubscriptionResponse>(getPlatformPutTenantSubscriptionUrl(tenantId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(subscriptionPut)
+  }
+);}
+
+
+
+
+
+export const getPlatformPutTenantSubscriptionMutationKey = () => ['platformPutTenantSubscription'] as const;
+
+export const getPlatformPutTenantSubscriptionMutationOptions = <TError = EntitlementErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformPutTenantSubscription>>, TError,PlatformPutTenantSubscriptionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof platformPutTenantSubscription>>, TError,PlatformPutTenantSubscriptionMutationVariables, TContext> => {
+
+const mutationKey = getPlatformPutTenantSubscriptionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof platformPutTenantSubscription>>, PlatformPutTenantSubscriptionMutationVariables> = (props) => {
+          const {tenantId,data} = props ?? {};
+
+          return  platformPutTenantSubscription(tenantId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlatformPutTenantSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof platformPutTenantSubscription>>>
+    export type PlatformPutTenantSubscriptionMutationBody = SubscriptionPut
+    export type PlatformPutTenantSubscriptionMutationError = EntitlementErrorBody
+    export type PlatformPutTenantSubscriptionMutationVariables = {tenantId: string;data: SubscriptionPut}
+
+    /**
+ * @summary Put Subscription
+ */
+export const usePlatformPutTenantSubscription = <TError = EntitlementErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformPutTenantSubscription>>, TError,PlatformPutTenantSubscriptionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof platformPutTenantSubscription>>,
+        TError,
+        PlatformPutTenantSubscriptionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPlatformPutTenantSubscriptionMutationOptions(options), queryClient);
+    }
+    export type platformVersionResponse200 = {
   data: VersionResponse
   status: 200
 }

@@ -6,6 +6,7 @@ import { appRoute } from "./routes/_app";
 import { homeRoute } from "./routes/_app/index";
 import { projectsIndexRoute } from "./routes/_app/projects/index";
 import { projectsNewRoute } from "./routes/_app/projects/new";
+import { billingRoute } from "./routes/_app/settings/billing";
 import { sessionsRoute } from "./routes/_app/settings/profile/sessions";
 import { loginRoute } from "./routes/login";
 
@@ -23,7 +24,7 @@ const devRoutes = import.meta.env.PROD
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, sessionsRoute]),
+  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, sessionsRoute, billingRoute]),
   ...devRoutes,
 ]);
 

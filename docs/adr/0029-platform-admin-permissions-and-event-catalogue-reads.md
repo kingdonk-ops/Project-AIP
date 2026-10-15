@@ -59,3 +59,12 @@ questions had no existing answer:
   decision.
 - Modules now register events with `register_event(..., owner)` instead of the old
   `event_schemas.register(...)`; `emit` defaults to the process-wide registry.
+
+## Amendment (2026-10-15, ENT-01 security review)
+
+`platform.*` codes are **operator-only**: no tenant role, default or custom, may hold one. The ACCESS-02 role
+service refuses them on create, update and clone (422 `OPERATOR_ONLY_PERMISSION`), and the default-role expansion
+skips them. Without this a stepped-up tenant admin could put `platform.tenants.manage` in a custom role, assign it
+to themselves and change any tenant's subscription. Until the operator realm (ADR 0017, OPS-12) issues operator
+principals, nobody holds these codes in a running deployment, so the operator routes answer 403 to everyone
+(fail closed); tests grant them through a test grant provider.

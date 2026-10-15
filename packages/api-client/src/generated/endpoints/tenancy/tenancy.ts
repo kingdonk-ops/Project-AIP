@@ -15,6 +15,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  PlanAndUsage,
   TenantErrorResponse,
   TenantView
 } from '../../model';
@@ -154,6 +155,118 @@ export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyG
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getTenancyGetMyTenantQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type tenancyPlanAndUsageResponse200 = {
+  data: PlanAndUsage
+  status: 200
+}
+
+export type tenancyPlanAndUsageResponseSuccess = (tenancyPlanAndUsageResponse200) & {
+  headers: Headers;
+};
+;
+
+export type tenancyPlanAndUsageResponse = (tenancyPlanAndUsageResponseSuccess)
+
+export const getTenancyPlanAndUsageUrl = () => {
+
+
+
+
+  return `/api/v1/settings/plan-and-usage`
+}
+
+/**
+ * @summary Plan And Usage
+ */
+export const tenancyPlanAndUsage = async ( options?: Parameters<typeof apiFetch>[1]): Promise<tenancyPlanAndUsageResponse> => {
+
+  return apiFetch<tenancyPlanAndUsageResponse>(getTenancyPlanAndUsageUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getTenancyPlanAndUsageQueryKey = () => {
+    return [
+    `/api/v1/settings/plan-and-usage`
+    ] as const;
+    }
+
+
+export const getTenancyPlanAndUsageQueryOptions = <TData = Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTenancyPlanAndUsageQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof tenancyPlanAndUsage>>> = ({ signal }) => tenancyPlanAndUsage({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TenancyPlanAndUsageQueryResult = NonNullable<Awaited<ReturnType<typeof tenancyPlanAndUsage>>>
+export type TenancyPlanAndUsageQueryError = unknown
+
+
+export function useTenancyPlanAndUsage<TData = Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof tenancyPlanAndUsage>>,
+          TError,
+          Awaited<ReturnType<typeof tenancyPlanAndUsage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTenancyPlanAndUsage<TData = Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof tenancyPlanAndUsage>>,
+          TError,
+          Awaited<ReturnType<typeof tenancyPlanAndUsage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTenancyPlanAndUsage<TData = Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Plan And Usage
+ */
+
+export function useTenancyPlanAndUsage<TData = Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTenancyPlanAndUsageQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

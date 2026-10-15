@@ -14,3 +14,33 @@ export const TenancyGetMyTenantResponse = zod.object({
   "status": zod.enum(['provisioning', 'active', 'suspended', 'offboarding', 'offboarded'])
 }).describe('The caller\'s tenant as other modules and the API see it.')
 
+/**
+ * @summary Plan And Usage
+ */
+export const TenancyPlanAndUsageResponse = zod.object({
+  "contractRef": zod.union([zod.string(),zod.null()]),
+  "dbEstimate": zod.union([zod.object({
+  "bytes": zod.int(),
+  "capturedAt": zod.iso.datetime({"offset":true}),
+  "method": zod.string()
+}),zod.null()]),
+  "features": zod.array(zod.object({
+  "enabled": zod.boolean(),
+  "key": zod.string(),
+  "source": zod.enum(['plan', 'add_on', 'override', 'toggle', 'none'])
+})),
+  "limits": zod.array(zod.object({
+  "action": zod.enum(['BLOCK', 'WARN', 'OVERAGE']),
+  "key": zod.string(),
+  "limit": zod.union([zod.int(),zod.null()]),
+  "source": zod.enum(['plan', 'add_on', 'override', 'toggle', 'none']),
+  "used": zod.union([zod.number(),zod.null()])
+}).describe('``limit`` null is unlimited; ``used`` null means nothing measures it yet.')),
+  "plan": zod.union([zod.string(),zod.null()]),
+  "planVersion": zod.union([zod.int(),zod.null()]),
+  "renewalDate": zod.union([zod.iso.date(),zod.null()]),
+  "status": zod.union([zod.enum(['active', 'expired', 'suspended']),zod.null()]),
+  "term": zod.union([zod.enum(['annual', 'multi_year', 'trial', 'sandbox']),zod.null()]),
+  "usagePeriod": zod.union([zod.iso.date(),zod.null()])
+}).describe('The read-only "Plan and usage" page. No prices, invoices or payment data.')
+

@@ -90,6 +90,113 @@ export const PlatformListModulesResponseItem = zod.object({
 export const PlatformListModulesResponse = zod.array(PlatformListModulesResponseItem)
 
 /**
+ * @summary Add Override
+ */
+export const PlatformAddEntitlementOverrideParams = zod.object({
+  "tenant_id": zod.uuid()
+})
+
+export const platformAddEntitlementOverrideBodyKeyMax = 100;
+
+export const platformAddEntitlementOverrideBodyReasonMax = 500;
+
+export const platformAddEntitlementOverrideBodyValueTwoMin = 0;
+
+
+
+export const PlatformAddEntitlementOverrideBody = zod.object({
+  "expiresAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "key": zod.string().min(1).max(platformAddEntitlementOverrideBodyKeyMax),
+  "reason": zod.string().min(1).max(platformAddEntitlementOverrideBodyReasonMax),
+  "value": zod.union([zod.boolean(),zod.int().min(platformAddEntitlementOverrideBodyValueTwoMin),zod.null()])
+}).describe('A boolean for ``feature.*``; a count, or null for unlimited, for ``limit.*``.')
+
+export const PlatformAddEntitlementOverrideResponse = zod.object({
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "expiresAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "id": zod.uuid(),
+  "key": zod.string(),
+  "reason": zod.string(),
+  "value": zod.union([zod.boolean(),zod.int(),zod.null()])
+})
+
+/**
+ * @summary Remove Override
+ */
+export const PlatformRemoveEntitlementOverrideParams = zod.object({
+  "tenant_id": zod.uuid(),
+  "override_id": zod.uuid()
+})
+
+export const platformRemoveEntitlementOverrideQueryReasonMax = 500;
+
+
+export const platformRemoveEntitlementOverrideQueryReasonRegExp = new RegExp('\\S');
+
+
+export const PlatformRemoveEntitlementOverrideQueryParams = zod.object({
+  "reason": zod.string().min(1).max(platformRemoveEntitlementOverrideQueryReasonMax).regex(platformRemoveEntitlementOverrideQueryReasonRegExp)
+})
+
+export const PlatformRemoveEntitlementOverrideResponse = zod.void()
+
+/**
+ * @summary Put Subscription
+ */
+export const PlatformPutTenantSubscriptionParams = zod.object({
+  "tenant_id": zod.uuid()
+})
+
+export const platformPutTenantSubscriptionBodyAddOnsItemMax = 50;
+
+export const platformPutTenantSubscriptionBodyAddOnsDefault = [];
+export const platformPutTenantSubscriptionBodyContractRefOneMax = 200;
+
+export const platformPutTenantSubscriptionBodyPlanCodeMax = 50;
+
+
+export const platformPutTenantSubscriptionBodyReasonMax = 500;
+
+export const platformPutTenantSubscriptionBodySeatLimitsOneMin = 0;
+
+export const platformPutTenantSubscriptionBodySeatLimitsDefault = {};
+export const platformPutTenantSubscriptionBodyStatusDefault = `active`;
+export const platformPutTenantSubscriptionBodyStorageGbOneMin = 0;
+
+
+
+export const PlatformPutTenantSubscriptionBody = zod.object({
+  "addOns": zod.array(zod.string().min(1).max(platformPutTenantSubscriptionBodyAddOnsItemMax)).default(platformPutTenantSubscriptionBodyAddOnsDefault),
+  "contractRef": zod.union([zod.string().min(1).max(platformPutTenantSubscriptionBodyContractRefOneMax),zod.null()]).optional(),
+  "endsOn": zod.union([zod.iso.date(),zod.null()]).optional(),
+  "planCode": zod.string().min(1).max(platformPutTenantSubscriptionBodyPlanCodeMax),
+  "planVersion": zod.union([zod.int().min(1),zod.null()]).optional(),
+  "reason": zod.string().min(1).max(platformPutTenantSubscriptionBodyReasonMax),
+  "renewalDate": zod.union([zod.iso.date(),zod.null()]).optional(),
+  "seatLimits": zod.record(zod.string(), zod.union([zod.int().min(platformPutTenantSubscriptionBodySeatLimitsOneMin),zod.null()])).default(platformPutTenantSubscriptionBodySeatLimitsDefault),
+  "startsOn": zod.iso.date(),
+  "status": zod.enum(['active', 'expired', 'suspended']).default(platformPutTenantSubscriptionBodyStatusDefault),
+  "storageGb": zod.union([zod.int().min(platformPutTenantSubscriptionBodyStorageGbOneMin),zod.null()]).optional(),
+  "term": zod.enum(['annual', 'multi_year', 'trial', 'sandbox'])
+}).describe('An operator sets the subscription; ``contract_ref`` is required for production terms.')
+
+export const PlatformPutTenantSubscriptionResponse = zod.object({
+  "addOns": zod.array(zod.string()),
+  "contractRef": zod.union([zod.string(),zod.null()]),
+  "endsOn": zod.union([zod.iso.date(),zod.null()]),
+  "entitlementVersion": zod.int(),
+  "planCode": zod.string(),
+  "planVersion": zod.int(),
+  "renewalDate": zod.union([zod.iso.date(),zod.null()]),
+  "seatLimits": zod.record(zod.string(), zod.union([zod.int(),zod.null()])),
+  "startsOn": zod.iso.date(),
+  "status": zod.enum(['active', 'expired', 'suspended']),
+  "storageGb": zod.union([zod.int(),zod.null()]),
+  "tenantId": zod.uuid(),
+  "term": zod.enum(['annual', 'multi_year', 'trial', 'sandbox'])
+})
+
+/**
  * @summary Version
  */
 export const PlatformVersionResponse = zod.object({

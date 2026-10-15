@@ -67,7 +67,7 @@ tasks still `todo` below remain before M0 is closed.
 |---|---|---|---|---|---|---|
 | [IDENTITY-02](tasks/IDENTITY-02.md) | Users and tenant membership, JIT provisioning, GET /me | identity | M | DATABASE-02, IDENTITY-01, TENANCY-01 | done | PR #37 |
 | [TENANCY-02](tasks/TENANCY-02.md) | Tenant-scoped key builders for Redis, queues, S3 and search | tenancy | S | ARCH-04, TENANCY-01 | done | PR #33 |
-| [ENT-01](tasks/ENT-01.md) | EntitlementService, tenant_subscription, tenant_usage; flags vs entitlements (ADR 0008) | tenancy | M | DATABASE-02, TENANCY-01 | in-progress | ClaudeK: p0/tenancy-entitlements |
+| [ENT-01](tasks/ENT-01.md) | EntitlementService, tenant_subscription, tenant_usage; flags vs entitlements (ADR 0008) | tenancy | M | DATABASE-02, TENANCY-01 | review | ClaudeK: p0/tenancy-entitlements |
 | [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | done | PR #78 |
 | [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | todo |  |
 | [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | todo | |
@@ -195,6 +195,7 @@ tasks still `todo` below remain before M0 is closed.
 | [OPS-12](tasks/OPS-12.md) | Operator console on its own origin and realm (ADR 0017) | ops | M | IDENTITY-04, OPS-07, PLAN-R1, TENANCY-05 | todo | after the AWS pipeline |
 | [ENT-03](tasks/ENT-03.md) | Billing state (good standing, past due, restricted, suspended) and enforcement (ADR 0023) | tenancy | M | ENT-01, PLAN-R1, TENANCY-05 | todo | an operator moves the state, never a payment event |
 | [ENT-04](tasks/ENT-04.md) | Operator console pages: entitlement overrides and billing state (ADR 0023) | tenancy | M | ENT-03, OPS-12, PLAN-R1 | todo | on the operator origin |
+| [ENT-05](tasks/ENT-05.md) | Usage sources (identity seats, uploads storage) and project toggles for entitlements | tenancy | S | ENT-01, UPLOADS-02 | todo | found in ENT-01: the registries exist but nothing plugs in yet |
 | [DESIGN-12](tasks/DESIGN-12.md) | Home / My Work page (`/`) with work-item providers | design | M | APPROVALS-06, AUDIT-04, DESIGN-11, DESIGN-13, PLAN-R1 | todo | UI modernization guide (docs/reviews/10); P0 sources are approvals and activity, R1 modules add providers |
 
 ### Moved out of P0: re-scoped by PLAN-R1 (ADR 0007)

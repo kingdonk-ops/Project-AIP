@@ -12,12 +12,14 @@ export type PermissionCode =
   | "identity.user.manage"
   | "identity.user.read"
   | "platform.events.manage"
+  | "platform.tenants.manage"
   | "project.archive"
   | "project.create"
   | "project.update"
   | "project.view"
   | "site.manage"
   | "site.view"
+  | "tenancy.plan.read"
   | "uploads.admin"
   | "uploads.create"
   | "uploads.view";
@@ -32,12 +34,14 @@ export const PERMISSIONS = {
   "identity.user.manage": { module: "identity", privileged: true },
   "identity.user.read": { module: "identity", privileged: false },
   "platform.events.manage": { module: "ops", privileged: true },
+  "platform.tenants.manage": { module: "ops", privileged: true },
   "project.archive": { module: "projects", privileged: false },
   "project.create": { module: "projects", privileged: false },
   "project.update": { module: "projects", privileged: false },
   "project.view": { module: "projects", privileged: false },
   "site.manage": { module: "projects", privileged: false },
   "site.view": { module: "projects", privileged: false },
+  "tenancy.plan.read": { module: "tenancy", privileged: false },
   "uploads.admin": { module: "uploads", privileged: false },
   "uploads.create": { module: "uploads", privileged: false },
   "uploads.view": { module: "uploads", privileged: false },
