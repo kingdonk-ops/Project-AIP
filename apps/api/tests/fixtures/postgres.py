@@ -69,12 +69,14 @@ OWNER_PASSWORD = "aip_owner_test_only"  # throwaway test credential, not a secre
 APP = "aip_app"
 JOBS = "aip_jobs"
 READONLY = "aip_readonly"
+AUDIT_WRITER = "aip_audit_writer"
 # Throwaway test credentials (not secrets), passed to the bootstrap as aip.<role>_password.
 ROLE_PASSWORDS = {
     OWNER: OWNER_PASSWORD,
     APP: "aip_app_test_only",
     JOBS: "aip_jobs_test_only",
     READONLY: "aip_readonly_test_only",
+    AUDIT_WRITER: "aip_audit_writer_test_only",
 }
 # Advisory-lock key (any bigint) serialising cluster-wide DDL between concurrent test runs.
 CLUSTER_DDL_LOCK_KEY = 7_340_113_001
@@ -83,6 +85,7 @@ _PASSWORD_SETTINGS = {
     APP: "aip.app_password",
     JOBS: "aip.jobs_password",
     READONLY: "aip.readonly_password",
+    AUDIT_WRITER: "aip.audit_writer_password",
 }
 
 
@@ -220,7 +223,8 @@ def pg_superuser_url() -> Iterator[str]:
 
 
 def _with_role_cleanup(url: str) -> Iterator[str]:
-    roles = (APP, JOBS, READONLY, OWNER)  # runtime roles first: they hold grants, not objects
+    # runtime roles first: they hold grants, not objects
+    roles = (APP, JOBS, READONLY, AUDIT_WRITER, OWNER)
     existed = {
         r[0] for r in fetch(url, "SELECT rolname FROM pg_roles WHERE rolname = ANY($1)", roles)
     }
@@ -479,3 +483,61 @@ class OwnerSeeder:
 @pytest.fixture
 def owner_conn_for_seeding_only(migrated_db: FreshDb) -> OwnerSeeder:
     return OwnerSeeder(migrated_db)
+
+
+# --- audit writer and raw connections (AUDIT-01) -----------------------------------------------
+# The DB-engine boundary scan (tests/arch/test_db_engine_boundary.py) forbids creating engines or
+# raw connections anywhere under aip/, including module tests, so the audit tests' engine and
+# asyncpg connections live here instead. ``audit_writer_tenant`` is imported lazily so this module
+# keeps starting without the full app.
+
+
+@dataclass
+class Writer:
+    """Opens ``aip_audit_writer`` transactions on the migrated database (AUDIT-01).
+
+    The pool is large enough for the concurrency test; ``tenant`` yields a tenant-bound writer
+    connection, exactly as ``audit_writer_tenant`` does in production.
+    """
+
+    engine: AsyncEngine
+
+    def tenant(self, tenant: TenantRef) -> Any:
+        from aip.platform.db.session import audit_writer_tenant
+
+        return audit_writer_tenant(tenant, engine=self.engine)
+
+
+@pytest.fixture
+async def writer(migrated_db: FreshDb) -> AsyncIterator[Writer]:
+    engine = create_app_engine(
+        EngineSettings(url=migrated_db.role_url(AUDIT_WRITER), pool_size=25, max_overflow=0)
+    )
+    try:
+        yield Writer(engine)
+    finally:
+        await engine.dispose()
+
+
+@asynccontextmanager
+async def db_connection(url: str) -> AsyncIterator[Any]:
+    """A raw asyncpg connection on ``url`` (owner/superuser probes that bypass ``with_tenant``)."""
+    conn: Any = await asyncpg.connect(url)  # pyright: ignore[reportUnknownMemberType]
+    try:
+        yield conn
+    finally:
+        await conn.close()
+
+
+@asynccontextmanager
+async def owner_conn_with_tenant(db: FreshDb, tenant: UUID) -> AsyncIterator[Any]:
+    """An ``aip_owner`` connection with ``app.tenant_id`` set, so FORCE RLS lets it see the tenant's
+    rows (the audit trigger, not a missing grant, is what must then stop an edit)."""
+    conn: Any = await asyncpg.connect(db.owner_url)  # pyright: ignore[reportUnknownMemberType]
+    try:
+        # Session-level is fine here (this file is outside aip/, so the session-setting scan does
+        # not apply); each statement the test runs is its own autocommit transaction.
+        await conn.execute("SELECT set_config('app.tenant_id', $1, false)", str(tenant))
+        yield conn
+    finally:
+        await conn.close()
