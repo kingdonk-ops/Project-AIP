@@ -1,9 +1,10 @@
 # Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
 # OPS-04: the health probes live in health.py and are mounted by aip.main outside the registry,
-# so AIP_DISABLED_MODULES can never remove them; routes.router is intentionally empty.
+# so AIP_DISABLED_MODULES can never remove them. routes.router mounts only the operator API for
+# tenant entitlements (ENT-01, platform_tenants.py), which calls tenancy's published api.
 id = "ops"
 context = "platform"
-depends_on = []
+depends_on = ["tenancy"]
 # ops is the platform-context module, so it owns the `platform` permission namespace: the codes
 # that gate the operator/platform-admin surfaces (ARCH-06's event catalogue, later dead-letter and
 # replay). The pages live under aip.platform.*, but permissions come only from manifests (ACCESS-01),
@@ -17,4 +18,9 @@ term_keys = []
 [[permissions]]
 code = "platform.events.manage"
 description = "Manage the domain-event catalogue (deprecate event versions)."
+privileged = true
+
+[[permissions]]
+code = "platform.tenants.manage"
+description = "Set tenant subscriptions and entitlement overrides (operators only)."
 privileged = true

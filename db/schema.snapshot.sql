@@ -257,9 +257,21 @@ GRANT SELECT ON TABLE public.sites TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_auth_policy TO aip_app;
 GRANT SELECT ON TABLE public.tenant_auth_policy TO aip_readonly;
 
+-- Name: TABLE tenant_entitlement_override; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_entitlement_override TO aip_app;
+GRANT SELECT ON TABLE public.tenant_entitlement_override TO aip_readonly;
+
 -- Name: TABLE tenant_membership; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.tenant_membership TO aip_app;
 GRANT SELECT ON TABLE public.tenant_membership TO aip_readonly;
+
+-- Name: TABLE tenant_subscription; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_subscription TO aip_app;
+GRANT SELECT ON TABLE public.tenant_subscription TO aip_readonly;
+
+-- Name: TABLE tenant_usage; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_usage TO aip_app;
+GRANT SELECT ON TABLE public.tenant_usage TO aip_readonly;
 
 -- Name: TABLE tenants; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.tenants TO aip_app;
@@ -417,9 +429,29 @@ ALTER TABLE ONLY public.sites
 ALTER TABLE ONLY public.tenant_auth_policy
     ADD CONSTRAINT pk_tenant_auth_policy PRIMARY KEY (tenant_id);
 
+-- Name: tenant_entitlement_override pk_tenant_entitlement_override; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_entitlement_override
+    ADD CONSTRAINT pk_tenant_entitlement_override PRIMARY KEY (id);
+
 -- Name: tenant_membership pk_tenant_membership; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_membership
     ADD CONSTRAINT pk_tenant_membership PRIMARY KEY (id);
+
+-- Name: tenant_subscription pk_tenant_subscription; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_subscription
+    ADD CONSTRAINT pk_tenant_subscription PRIMARY KEY (id);
+
+-- Name: tenant_subscription uq_tenant_subscription_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_subscription
+    ADD CONSTRAINT uq_tenant_subscription_tenant_id UNIQUE (tenant_id);
+
+-- Name: tenant_usage pk_tenant_usage; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_usage
+    ADD CONSTRAINT pk_tenant_usage PRIMARY KEY (id);
+
+-- Name: tenant_usage uq_tenant_usage_tenant_id_period; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_usage
+    ADD CONSTRAINT uq_tenant_usage_tenant_id_period UNIQUE (tenant_id, period);
 
 -- Name: tenants pk_tenants; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenants
@@ -558,6 +590,10 @@ ALTER TABLE ONLY public.role_permission
 ALTER TABLE ONLY public.tenant_auth_policy
     ADD CONSTRAINT fk_tenant_auth_policy_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
+-- Name: tenant_entitlement_override fk_tenant_entitlement_override_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_entitlement_override
+    ADD CONSTRAINT fk_tenant_entitlement_override_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
 -- Name: tenant_membership fk_tenant_membership_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_membership
     ADD CONSTRAINT fk_tenant_membership_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
@@ -565,6 +601,14 @@ ALTER TABLE ONLY public.tenant_membership
 -- Name: tenant_membership fk_tenant_membership_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_membership
     ADD CONSTRAINT fk_tenant_membership_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
+-- Name: tenant_subscription fk_tenant_subscription_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_subscription
+    ADD CONSTRAINT fk_tenant_subscription_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: tenant_usage fk_tenant_usage_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_usage
+    ADD CONSTRAINT fk_tenant_usage_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 -- Name: tenants fk_tenants_region_code_deployment_regions; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenants
@@ -1446,11 +1490,23 @@ CREATE INDEX ix_role_tenant_id ON public.role USING btree (tenant_id);
 -- Name: ix_sites_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_sites_tenant_id ON public.sites USING btree (tenant_id);
 
+-- Name: ix_tenant_entitlement_override_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_tenant_entitlement_override_tenant_id ON public.tenant_entitlement_override USING btree (tenant_id);
+
+-- Name: ix_tenant_entitlement_override_tenant_id_key; Type: INDEX; Schema: public
+CREATE INDEX ix_tenant_entitlement_override_tenant_id_key ON public.tenant_entitlement_override USING btree (tenant_id, key) WHERE (deleted_at IS NULL);
+
 -- Name: ix_tenant_membership_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_tenant_membership_tenant_id ON public.tenant_membership USING btree (tenant_id);
 
 -- Name: ix_tenant_membership_tenant_id_user_id; Type: INDEX; Schema: public
 CREATE INDEX ix_tenant_membership_tenant_id_user_id ON public.tenant_membership USING btree (tenant_id, user_id);
+
+-- Name: ix_tenant_subscription_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_tenant_subscription_tenant_id ON public.tenant_subscription USING btree (tenant_id);
+
+-- Name: ix_tenant_usage_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_tenant_usage_tenant_id ON public.tenant_usage USING btree (tenant_id);
 
 -- Name: ix_tenants_region_code; Type: INDEX; Schema: public
 CREATE INDEX ix_tenants_region_code ON public.tenants USING btree (region_code);
@@ -1629,8 +1685,17 @@ CREATE POLICY tenant_isolation ON public.sites USING ((tenant_id = (NULLIF(curre
 -- Name: tenant_auth_policy tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenant_auth_policy USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: tenant_entitlement_override tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.tenant_entitlement_override USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: tenant_membership tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenant_membership USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: tenant_subscription tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.tenant_subscription USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: tenant_usage tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.tenant_usage USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: tenants real_customer_check; Type: POLICY; Schema: public
 CREATE POLICY real_customer_check ON public.tenants FOR SELECT TO aip_owner USING (is_real_customer);
@@ -1719,8 +1784,17 @@ ALTER TABLE public.sites ENABLE ROW LEVEL SECURITY;
 -- Name: tenant_auth_policy; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenant_auth_policy ENABLE ROW LEVEL SECURITY;
 
+-- Name: tenant_entitlement_override; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.tenant_entitlement_override ENABLE ROW LEVEL SECURITY;
+
 -- Name: tenant_membership; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenant_membership ENABLE ROW LEVEL SECURITY;
+
+-- Name: tenant_subscription; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.tenant_subscription ENABLE ROW LEVEL SECURITY;
+
+-- Name: tenant_usage; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.tenant_usage ENABLE ROW LEVEL SECURITY;
 
 -- Name: tenants; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
@@ -2230,6 +2304,26 @@ ALTER TABLE ONLY public.tenant_auth_policy FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.tenant_auth_policy OWNER TO aip_owner;
 
+-- Name: tenant_entitlement_override; Type: TABLE; Schema: public
+CREATE TABLE public.tenant_entitlement_override (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    key text NOT NULL,
+    value jsonb,
+    reason text NOT NULL,
+    expires_at timestamp with time zone,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_tenant_entitlement_override_key CHECK ((key ~ '^(feature|limit)\.[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$'::text)),
+    CONSTRAINT ck_tenant_entitlement_override_reason CHECK ((btrim(reason) <> ''::text))
+);
+
+ALTER TABLE ONLY public.tenant_entitlement_override FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.tenant_entitlement_override OWNER TO aip_owner;
+
 -- Name: tenant_membership; Type: TABLE; Schema: public
 CREATE TABLE public.tenant_membership (
     id uuid NOT NULL,
@@ -2249,6 +2343,68 @@ CREATE TABLE public.tenant_membership (
 ALTER TABLE ONLY public.tenant_membership FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.tenant_membership OWNER TO aip_owner;
+
+-- Name: tenant_subscription; Type: TABLE; Schema: public
+CREATE TABLE public.tenant_subscription (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    plan_code text NOT NULL,
+    plan_version integer NOT NULL,
+    term text NOT NULL,
+    starts_on date NOT NULL,
+    ends_on date,
+    renewal_date date,
+    seat_limits jsonb DEFAULT '{}'::jsonb NOT NULL,
+    storage_gb integer,
+    add_ons text[] DEFAULT '{}'::text[] NOT NULL,
+    contract_ref text,
+    status text NOT NULL,
+    entitlement_version bigint DEFAULT 1 NOT NULL,
+    updated_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_tenant_subscription_contract_ref CHECK (((term <> ALL (ARRAY['annual'::text, 'multi_year'::text])) OR (COALESCE(btrim(contract_ref), ''::text) <> ''::text))),
+    CONSTRAINT ck_tenant_subscription_dates CHECK (((ends_on IS NULL) OR (ends_on >= starts_on))),
+    CONSTRAINT ck_tenant_subscription_entitlement_version CHECK ((entitlement_version >= 1)),
+    CONSTRAINT ck_tenant_subscription_plan_code CHECK ((plan_code <> ''::text)),
+    CONSTRAINT ck_tenant_subscription_plan_version CHECK ((plan_version >= 1)),
+    CONSTRAINT ck_tenant_subscription_seat_limits CHECK ((jsonb_typeof(seat_limits) = 'object'::text)),
+    CONSTRAINT ck_tenant_subscription_status CHECK ((status = ANY (ARRAY['active'::text, 'expired'::text, 'suspended'::text]))),
+    CONSTRAINT ck_tenant_subscription_storage_gb CHECK ((storage_gb >= 0)),
+    CONSTRAINT ck_tenant_subscription_term CHECK ((term = ANY (ARRAY['annual'::text, 'multi_year'::text, 'trial'::text, 'sandbox'::text])))
+);
+
+ALTER TABLE ONLY public.tenant_subscription FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.tenant_subscription OWNER TO aip_owner;
+
+-- Name: tenant_usage; Type: TABLE; Schema: public
+CREATE TABLE public.tenant_usage (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    period date NOT NULL,
+    active_users jsonb DEFAULT '{}'::jsonb NOT NULL,
+    storage_bytes bigint DEFAULT 0 NOT NULL,
+    jobs_count bigint DEFAULT 0 NOT NULL,
+    ai_spend_cents bigint DEFAULT 0 NOT NULL,
+    db_bytes_est bigint,
+    db_estimate_method text,
+    db_estimated_at timestamp with time zone,
+    over_limit jsonb DEFAULT '{}'::jsonb NOT NULL,
+    captured_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_tenant_usage_active_users CHECK ((jsonb_typeof(active_users) = 'object'::text)),
+    CONSTRAINT ck_tenant_usage_counts CHECK (((storage_bytes >= 0) AND (jobs_count >= 0) AND (ai_spend_cents >= 0) AND ((db_bytes_est IS NULL) OR (db_bytes_est >= 0)))),
+    CONSTRAINT ck_tenant_usage_over_limit CHECK ((jsonb_typeof(over_limit) = 'object'::text)),
+    CONSTRAINT ck_tenant_usage_period CHECK ((EXTRACT(day FROM period) = (1)::numeric))
+);
+
+ALTER TABLE ONLY public.tenant_usage FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.tenant_usage OWNER TO aip_owner;
 
 -- Name: tenants; Type: TABLE; Schema: public
 CREATE TABLE public.tenants (

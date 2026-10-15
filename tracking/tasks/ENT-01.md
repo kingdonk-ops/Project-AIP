@@ -103,3 +103,37 @@ Provide a single `EntitlementService.check(tenant, feature | limit)` that resolv
 - Plan numbers stay in code (ADR 0023 point 1). Offline timers are not entitlements.
 - Tests: version bump invalidates a cached decision; `WARN` allows and records; `OVERAGE` allows and appears in the usage snapshot; `BLOCK` at 100% storage refuses an upload but not an export.
 
+## As built (ClaudeK, 2026-10-15)
+
+Where the build differs from the steps above, and why:
+
+- **Operator routes live in the ops module** (`aip/modules/ops/platform_tenants.py`), not in
+  `tenancy/routes.py`: `tools/ci/check_manifests.py` requires a module to declare every permission its
+  routes use, and ADR 0029 gives the `platform.*` namespace to ops. They call tenancy's published `api`.
+  `ops` now depends on `tenancy`. `DELETE` takes the override id in the path and `reason` as a query parameter.
+- **No `cachetools` dependency**: a small in-process TTL map (60 s) keyed by the TENANCY-02 `redis_key`
+  plus the tenant's `entitlement_version`. Each check reads the version (one row), so a change from any
+  process applies at once (ADR 0023 point 3); writes in the process also drop the entry.
+- **Tables follow the hard rule** (uuid `id` PK from the tenant template): `tenant_subscription` has
+  `UNIQUE (tenant_id)` and `tenant_usage` has `UNIQUE (tenant_id, period)` instead of those columns as the
+  primary key. `tenant_usage` adds `db_bytes_est`, `db_estimate_method` and `over_limit` (WARN/OVERAGE peaks).
+- **Seats**: plans use `limit.seats.full` and `limit.seats.portal` (ADR 0008 table). The subscription's
+  `seat_limits` accepts `full` and `portal`; each contracted amount replaces the plan's
+  `limit.seats.<class>`.
+- **Plan table choices**: `feature.reporting_feed` is add-on only (adjustment C), `feature.bim` is add-on
+  only, enterprise full seats are unlimited unless contracted, `core` database size is 5 GB (OPEN-QUESTIONS 24).
+- **Scheduled run** (owner, 2026-10-15, ADR 0008 amendment): `snapshot_cli --period YYYY-MM --tenant <id>
+  [...]` runs daily: it sweeps expired overrides (one `tenant.entitlements_changed` event each, the audit
+  record until AUDIT-01) and upserts usage. The `row-bytes-v1` database estimate runs only weekly (Sunday)
+  and on the last day of the month (`--db-estimate due|always|skip`). Built-in options, off by default:
+  `single_pass` (option 3, needs an owner-approved cross-tenant read role and its own URL) and a read
+  replica via `ENTITLEMENTS_DB_ESTIMATE_URL` (option 4). It needs explicit tenants because `aip_app` cannot list them; OPS-13
+  schedules it.
+- **Security review fix (ADR 0029 amendment)**: tenant roles can no longer hold `platform.*` codes
+  (422 `OPERATOR_ONLY_PERMISSION`; default roles skip them), so only real operators reach the operator
+  API. No principal holds `platform.tenants.manage` until the operator realm exists (OPS-12).
+  Also from the review: subscriptions that have not started grant nothing, contracted seats are
+  `full`/`portal` only, unknown override keys and plan versions are refused, override expiry needs a
+  time zone, and the operator context is cleared of the operator's own tenant details.
+- **Not wired yet** (ENT-05): no module registers a `UsageSource` or `ScopeToggleProvider`, so seats and
+  storage show 0 used until identity and uploads plug in.

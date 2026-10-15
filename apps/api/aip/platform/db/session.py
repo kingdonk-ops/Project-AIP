@@ -29,17 +29,24 @@ from contextlib import asynccontextmanager
 from uuid import UUID
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from aip.platform.context import RequestContext
-from aip.platform.db.engine import get_engine
+from aip.platform.db.engine import (
+    EngineSettings,
+    _async_url,  # pyright: ignore[reportPrivateUsage]
+    create_app_engine,
+    get_engine,
+)
 from aip.platform.db.errors import InvalidTenantError
 
 __all__ = [
     "PLATFORM_TENANT_ID",
     "PlatformTenantError",
     "TenantRef",
+    "app_engine_for",
     "before_tenant",
+    "cross_tenant_readonly",
     "tenant_uuid",
     "with_platform_tenant",
     "with_tenant",
@@ -123,3 +130,39 @@ async def with_platform_tenant(engine: AsyncEngine) -> AsyncGenerator[AsyncConne
             )
         await conn.execute(_SET_TENANT, {"tenant_id": str(PLATFORM_TENANT_ID)})
         yield conn
+
+
+@asynccontextmanager
+async def app_engine_for(url: str) -> AsyncGenerator[AsyncEngine]:
+    """A separate bounded ``aip_app`` engine on ``url`` (say a read replica), disposed on exit.
+
+    Use it only as ``with_tenant(tenant, engine=...)``, so RLS still applies. ENT-01's database-size
+    estimate reads from a replica this way (``ENTITLEMENTS_DB_ESTIMATE_URL``). A privileged login is
+    refused, as for the main engine.
+    """
+    engine = create_app_engine(EngineSettings(url=url, pool_size=1, max_overflow=0))
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
+
+
+@asynccontextmanager
+async def cross_tenant_readonly(url: str) -> AsyncGenerator[AsyncConnection]:
+    """A short READ ONLY transaction on ``url`` with no tenant bound, for approved aggregates only.
+
+    It exists for ENT-01's ``single_pass`` database-size estimate (ADR 0008 amendment), which needs
+    a role that reads across tenants. No such role exists until the owner approves one in an ADR,
+    so nothing configures it by default. The transaction is read-only and always rolled back; the
+    caller may return only aggregates (tenant id and byte counts), never rows.
+    """
+    engine = create_async_engine(_async_url(url), pool_size=1, max_overflow=0)
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SET TRANSACTION READ ONLY"))
+            try:
+                yield conn
+            finally:
+                await conn.rollback()
+    finally:
+        await engine.dispose()

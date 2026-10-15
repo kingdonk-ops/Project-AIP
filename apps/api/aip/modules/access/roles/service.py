@@ -11,6 +11,8 @@ Guards (error codes in brackets):
 - a role with live assignments cannot be deleted [409 ROLE_IN_USE];
 - a role's permissions must be live catalogue codes [422 UNKNOWN_PERMISSION], except that a
   deprecated code the role already holds may be kept (editors must never hide it);
+- a role can never hold an operator-only ``platform.*`` code, even one it already holds
+  [422 OPERATOR_ONLY_PERMISSION]: those act across tenants (ADR 0029, ENT-01);
 - any change that touches a privileged permission needs an actor who is tenant_admin at tenant
   scope [403 TENANT_ADMIN_REQUIRED] with ``aal=2`` [403 STEP_UP_REQUIRED]: creating or cloning a
   role that holds one, changing the permissions or resetting a role that holds or would hold one,
@@ -42,7 +44,7 @@ from aip.modules.access.events import (
 )
 from aip.modules.access.repository import bump_access_version
 from aip.modules.access.roles import repository as repo
-from aip.modules.access.roles.default_roles import ROLE_CODES
+from aip.modules.access.roles.default_roles import OPERATOR_ONLY_PREFIX, ROLE_CODES
 from aip.modules.access.roles.schemas import (
     AssignmentCreate,
     AssignmentOut,
@@ -161,6 +163,10 @@ async def _checked_permissions(
 ) -> set[str]:
     """``codes`` as a set; each must be a live catalogue code or one the role already holds."""
     wanted = set(codes)
+    if operator_only := sorted(c for c in wanted if c.startswith(OPERATOR_ONLY_PREFIX)):
+        raise DomainError(
+            422, "OPERATOR_ONLY_PERMISSION", field="permissions", permissions=operator_only
+        )
     allowed = await _live_codes(conn) | set(already_held)
     if unknown := sorted(wanted - allowed):
         raise DomainError(422, "UNKNOWN_PERMISSION", field="permissions", permissions=unknown)

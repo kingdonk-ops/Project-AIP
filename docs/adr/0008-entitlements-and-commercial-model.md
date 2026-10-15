@@ -79,3 +79,19 @@ Plan code `archive`: for customers who must keep records after leaving. Their da
 and files in cold storage and is read through a separate archive area with one or two auditor seats (search and export only).
 The tenant's rows leave the shared database, so the plan carries no database-size charge. Not part of R1. The price is set in
 the company systems.
+
+## Amendment (2026-10-15, owner): database-size estimate cadence and methods
+
+- The estimate in adjustment A runs **weekly (Sunday) and on the last day of each month** (UTC dates), not
+  nightly. It only feeds the monthly true-up invoice (ENT-02) and the 80%/95% warnings, and a tenant moves
+  through a 20 GB block over months. The daily entitlement command still sweeps expired overrides and
+  snapshots the other usage figures; on other days the month's row keeps the last estimate.
+- Two built-in options, chosen by setting, default off:
+  - **Single pass** (`ENTITLEMENTS_DB_ESTIMATE_METHOD=single_pass`): one `GROUP BY tenant_id` scan per table for
+    all tenants instead of one scan per tenant. It must read across tenants, so it needs a read-only role that
+    bypasses RLS, which today's rules forbid. It refuses to run without its own
+    `ENTITLEMENTS_DB_ESTIMATE_URL`, and the role needs a separate owner-approved ADR before any deployment
+    configures one.
+  - **Read replica** (`ENTITLEMENTS_DB_ESTIMATE_URL` with the default `per_tenant` method): the estimate reads
+    from another database, for example an RDS read replica, as `aip_app` with RLS on. Results are still written
+    to the primary.

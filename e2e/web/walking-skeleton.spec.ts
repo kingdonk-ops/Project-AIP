@@ -3,6 +3,7 @@
 // it afterwards so the demo does not fill up. Runs against the compose stack in CI (`--project web`)
 // and against the Coolify demo after each deploy (`--project staging`). No fixed sleeps: every wait
 // is a web-first assertion, and each assertion names the M0 property it proves.
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { CSRF_COOKIE, loginAs } from "../fixtures/login";
 import { runId } from "../fixtures/run-id";
@@ -96,6 +97,41 @@ test("@skeleton @staging tenant A creates a project, tenant B cannot see or fetc
         version = patched.json.syncVersion as number;
       }
     }
+    await contextA.close();
+    await contextB.close();
+  }
+});
+
+// ENT-01: the read-only Plan and usage page. The seeds give kaefer-demo a sandbox subscription on
+// professional and tenant-b one on core, so each admin sees only their own plan, and no control on
+// the page changes a plan or takes a payment.
+test("@skeleton @staging each tenant admin reads only their own plan and usage", async ({ browser }) => {
+  const contextA = await browser.newContext();
+  const contextB = await browser.newContext();
+  const pageA = await contextA.newPage();
+  const pageB = await contextB.newPage();
+  try {
+    await loginAs(pageA, users.a);
+    await pageA.goto("/settings/billing");
+    await expect(pageA.getByRole("heading", { name: "Plan and usage", level: 1 })).toBeVisible();
+    const summary = pageA.getByRole("region", { name: "Subscription" });
+    await expect(summary.getByText("Professional"), "ENT-01: kaefer-demo is on professional").toBeVisible();
+    await expect(summary.getByText("30 June 2027"), "ENT-01: the renewal date is shown").toBeVisible();
+    const usage = pageA.getByRole("table", { name: "Usage against limits" });
+    await expect(usage.getByRole("row", { name: /Full users/ }), "ENT-01: full seats against the limit").toContainText("5");
+    await expect(usage.getByRole("row", { name: /Reviewer seats/ }), "ENT-01: reviewer seats against the limit").toContainText("20");
+    const page = pageA.getByRole("region", { name: "Plan and usage" });
+    await expect(page.getByRole("button"), "ENT-01: no plan change or payment control").toHaveCount(0);
+    await expect(page.getByText(/change plan|invoice|payment/i)).toHaveCount(0);
+    const axe = await new AxeBuilder({ page: pageA }).analyze();
+    expect(axe.violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
+
+    await loginAs(pageB, users.b);
+    await pageB.goto("/settings/billing");
+    const summaryB = pageB.getByRole("region", { name: "Subscription" });
+    await expect(summaryB.getByText("Essentials"), "ENT-01: tenant-b sees its own plan (core)").toBeVisible();
+    await expect(summaryB.getByText("Professional"), "ENT-01: tenant-b never sees the kaefer-demo plan").toHaveCount(0);
+  } finally {
     await contextA.close();
     await contextB.close();
   }

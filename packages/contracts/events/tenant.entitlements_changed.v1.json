@@ -1,0 +1,81 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "after": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "After"
+    },
+    "before": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Before"
+    },
+    "change": {
+      "enum": [
+        "subscription",
+        "override_added",
+        "override_removed",
+        "override_expired"
+      ],
+      "title": "Change",
+      "type": "string"
+    },
+    "entitlementVersion": {
+      "title": "Entitlementversion",
+      "type": "integer"
+    },
+    "key": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Key"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason"
+    },
+    "tenantId": {
+      "format": "uuid",
+      "title": "Tenantid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "tenantId",
+    "entitlementVersion",
+    "change"
+  ],
+  "title": "EntitlementsChanged",
+  "type": "object"
+}

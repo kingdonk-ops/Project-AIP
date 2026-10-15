@@ -565,3 +565,32 @@ async def test_only_a_tenant_admin_can_remove_a_privileged_assignment(
     response = await client.delete(f"{ASSIGNMENTS}/{other_admin}", headers=ADMIN2)
     assert (response.status_code, response.json()) == (403, {"code": "TENANT_ADMIN_REQUIRED"})
     assert (await client.delete(f"{ASSIGNMENTS}/{other_admin}", headers=ALICE)).status_code == 204
+
+
+@pytest.mark.parametrize("code", ["platform.tenants.manage", "platform.events.manage"])
+async def test_no_tenant_role_can_hold_an_operator_permission(
+    client: httpx.AsyncClient, code: str
+) -> None:
+    # ENT-01 security review: a stepped-up tenant admin must not grant themselves operator powers.
+    body = {
+        "code": "operator_wannabe",
+        "name": "Operator",
+        "permissions": ["access.role.read", code],
+    }
+    created = await client.post(ROLES, json=body, headers=ALICE)
+    assert created.status_code == 422
+    assert created.json() == {
+        "code": "OPERATOR_ONLY_PERMISSION",
+        "field": "permissions",
+        "permissions": [code],
+    }
+
+    roles = {r["code"]: r for r in (await client.get(ROLES, headers=ALICE)).json()["items"]}
+    admin = roles["tenant_admin"]
+    assert not [c for c in admin["permissions"] if c.startswith("platform.")]
+    patched = await client.patch(
+        f"{ROLES}/{admin['id']}",
+        json={"permissions": [*admin["permissions"], code]},
+        headers=ALICE,
+    )
+    assert (patched.status_code, patched.json()["code"]) == (422, "OPERATOR_ONLY_PERMISSION")

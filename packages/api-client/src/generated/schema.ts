@@ -385,6 +385,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/tenants/{tenant_id}/entitlement-overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Override */
+        post: operations["platform_add_entitlement_override"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{tenant_id}/entitlement-overrides/{override_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Override */
+        delete: operations["platform_remove_entitlement_override"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{tenant_id}/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Subscription */
+        put: operations["platform_put_tenant_subscription"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/version": {
         parameters: {
             query?: never;
@@ -436,6 +487,23 @@ export interface paths {
         head?: never;
         /** Update Project */
         patch: operations["projects_update"];
+        trace?: never;
+    };
+    "/api/v1/settings/plan-and-usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plan And Usage */
+        get: operations["tenancy_plan_and_usage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/sites": {
@@ -536,7 +604,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -620,6 +688,18 @@ export interface components {
         AuthErrorResponse: {
             detail: components["schemas"]["AuthErrorBody"];
         };
+        /** DbEstimate */
+        DbEstimate: {
+            /** Bytes */
+            bytes: number;
+            /**
+             * Capturedat
+             * Format: date-time
+             */
+            capturedAt: string;
+            /** Method */
+            method: string;
+        };
         /** Dependencies */
         Dependencies: {
             /** Alembic */
@@ -655,6 +735,16 @@ export interface components {
             status: "active" | "deprecated";
             /** Version */
             version: number;
+        };
+        /**
+         * EntitlementErrorBody
+         * @description 403 ``NOT_ENTITLED`` / ``LIMIT_REACHED``, 422 ``CONTRACT_REF_REQUIRED`` and the like.
+         */
+        EntitlementErrorBody: {
+            /** Code */
+            code: string;
+            /** Key */
+            key?: string | null;
         };
         /**
          * ErrorBody
@@ -719,6 +809,18 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** FeatureOut */
+        FeatureOut: {
+            /** Enabled */
+            enabled: boolean;
+            /** Key */
+            key: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "plan" | "add_on" | "override" | "toggle" | "none";
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -731,6 +833,28 @@ export interface components {
         HealthResponse: {
             /** Status */
             status: string;
+        };
+        /**
+         * LimitOut
+         * @description ``limit`` null is unlimited; ``used`` null means nothing measures it yet.
+         */
+        LimitOut: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "BLOCK" | "WARN" | "OVERAGE";
+            /** Key */
+            key: string;
+            /** Limit */
+            limit: number | null;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "plan" | "add_on" | "override" | "toggle" | "none";
+            /** Used */
+            used: number | null;
         };
         /** LoginStartRequest */
         LoginStartRequest: {
@@ -836,6 +960,66 @@ export interface components {
             depends_on: string[];
             /** Id */
             id: string;
+        };
+        /**
+         * OverrideCreate
+         * @description A boolean for ``feature.*``; a count, or null for unlimited, for ``limit.*``.
+         */
+        OverrideCreate: {
+            /** Expiresat */
+            expiresAt?: string | null;
+            /** Key */
+            key: string;
+            /** Reason */
+            reason: string;
+            /** Value */
+            value: boolean | number | null;
+        };
+        /** OverrideOut */
+        OverrideOut: {
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Expiresat */
+            expiresAt: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Key */
+            key: string;
+            /** Reason */
+            reason: string;
+            /** Value */
+            value: boolean | number | null;
+        };
+        /**
+         * PlanAndUsage
+         * @description The read-only "Plan and usage" page. No prices, invoices or payment data.
+         */
+        PlanAndUsage: {
+            /** Contractref */
+            contractRef: string | null;
+            dbEstimate: components["schemas"]["DbEstimate"] | null;
+            /** Features */
+            features: components["schemas"]["FeatureOut"][];
+            /** Limits */
+            limits: components["schemas"]["LimitOut"][];
+            /** Plan */
+            plan: string | null;
+            /** Planversion */
+            planVersion: number | null;
+            /** Renewaldate */
+            renewalDate: string | null;
+            /** Status */
+            status: ("active" | "expired" | "suspended") | null;
+            /** Term */
+            term: ("annual" | "multi_year" | "trial" | "sandbox") | null;
+            /** Usageperiod */
+            usagePeriod: string | null;
         };
         /** ProjectCreate */
         ProjectCreate: {
@@ -958,7 +1142,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -983,7 +1167,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -995,7 +1179,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * Scope
@@ -1161,6 +1345,97 @@ export interface components {
             name?: string | null;
             /** Timezone */
             timezone?: string | null;
+        };
+        /** SubscriptionOut */
+        SubscriptionOut: {
+            /** Addons */
+            addOns: string[];
+            /** Contractref */
+            contractRef: string | null;
+            /** Endson */
+            endsOn: string | null;
+            /** Entitlementversion */
+            entitlementVersion: number;
+            /** Plancode */
+            planCode: string;
+            /** Planversion */
+            planVersion: number;
+            /** Renewaldate */
+            renewalDate: string | null;
+            /** Seatlimits */
+            seatLimits: {
+                [key: string]: number | null;
+            };
+            /**
+             * Startson
+             * Format: date
+             */
+            startsOn: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "expired" | "suspended";
+            /** Storagegb */
+            storageGb: number | null;
+            /**
+             * Tenantid
+             * Format: uuid
+             */
+            tenantId: string;
+            /**
+             * Term
+             * @enum {string}
+             */
+            term: "annual" | "multi_year" | "trial" | "sandbox";
+        };
+        /**
+         * SubscriptionPut
+         * @description An operator sets the subscription; ``contract_ref`` is required for production terms.
+         */
+        SubscriptionPut: {
+            /**
+             * Addons
+             * @default []
+             */
+            addOns: string[];
+            /** Contractref */
+            contractRef?: string | null;
+            /** Endson */
+            endsOn?: string | null;
+            /** Plancode */
+            planCode: string;
+            /** Planversion */
+            planVersion?: number | null;
+            /** Reason */
+            reason: string;
+            /** Renewaldate */
+            renewalDate?: string | null;
+            /**
+             * Seatlimits
+             * @default {}
+             */
+            seatLimits: {
+                [key: string]: number | null;
+            };
+            /**
+             * Startson
+             * Format: date
+             */
+            startsOn: string;
+            /**
+             * Status
+             * @default active
+             * @enum {string}
+             */
+            status: "active" | "expired" | "suspended";
+            /** Storagegb */
+            storageGb?: number | null;
+            /**
+             * Term
+             * @enum {string}
+             */
+            term: "annual" | "multi_year" | "trial" | "sandbox";
         };
         /** TenantErrorBody */
         TenantErrorBody: {
@@ -2265,6 +2540,135 @@ export interface operations {
             };
         };
     };
+    platform_add_entitlement_override: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverrideCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverrideOut"];
+                };
+            };
+            /** @description No such tenant or override. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementErrorBody"];
+                };
+            };
+            /** @description Invalid plan, key, value or contract. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementErrorBody"];
+                };
+            };
+        };
+    };
+    platform_remove_entitlement_override: {
+        parameters: {
+            query: {
+                reason: string;
+            };
+            header?: never;
+            path: {
+                tenant_id: string;
+                override_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such tenant or override. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementErrorBody"];
+                };
+            };
+            /** @description Invalid plan, key, value or contract. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementErrorBody"];
+                };
+            };
+        };
+    };
+    platform_put_tenant_subscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionPut"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionOut"];
+                };
+            };
+            /** @description No such tenant or override. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementErrorBody"];
+                };
+            };
+            /** @description Invalid plan, key, value or contract. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementErrorBody"];
+                };
+            };
+        };
+    };
     platform_version: {
         parameters: {
             query?: never;
@@ -2447,6 +2851,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    tenancy_plan_and_usage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanAndUsage"];
+                };
             };
         };
     };
