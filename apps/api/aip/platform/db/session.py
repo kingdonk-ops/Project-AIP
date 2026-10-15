@@ -36,6 +36,7 @@ from aip.platform.db.engine import (
     EngineSettings,
     _async_url,  # pyright: ignore[reportPrivateUsage]
     create_app_engine,
+    get_audit_writer_engine,
     get_engine,
 )
 from aip.platform.db.errors import InvalidTenantError
@@ -48,6 +49,7 @@ __all__ = [
     "TenantRef",
     "app_engine_for",
     "as_jobs_role",
+    "audit_writer_tenant",
     "before_tenant",
     "cross_tenant_readonly",
     "tenant_uuid",
@@ -97,6 +99,25 @@ async def with_tenant(
     """
     tenant_id = tenant_uuid(tenant)  # before any pool checkout
     bound = get_engine() if engine is None else engine
+    async with bound.begin() as conn:
+        await conn.execute(_SET_TENANT, {"tenant_id": str(tenant_id)})
+        yield conn
+
+
+@asynccontextmanager
+async def audit_writer_tenant(
+    tenant: TenantRef, *, engine: AsyncEngine | None = None
+) -> AsyncGenerator[AsyncConnection]:
+    """Yield an ``aip_audit_writer`` connection in a transaction bound to ``tenant`` (AUDIT-01).
+
+    This is the only connection that may INSERT into ``audit_log`` and maintain the chain heads and
+    checkpoints. It behaves like ``with_tenant`` — validates the tenant id, opens a transaction and
+    sets ``app.tenant_id`` transaction-locally so RLS applies — but on the audit-writer engine
+    instead of the ``aip_app`` one. The repository's ``append_audit_entries`` takes the connection
+    this yields. ``engine`` defaults to the process-wide audit-writer engine; tests pass their own.
+    """
+    tenant_id = tenant_uuid(tenant)  # before any pool checkout
+    bound = get_audit_writer_engine() if engine is None else engine
     async with bound.begin() as conn:
         await conn.execute(_SET_TENANT, {"tenant_id": str(tenant_id)})
         yield conn

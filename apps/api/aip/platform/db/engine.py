@@ -39,19 +39,23 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from aip.platform.db.errors import DatabaseConfigError
 
 __all__ = [
+    "AUDIT_WRITER_DATABASE_URL_ENV",
     "DATABASE_URL_ENV",
     "JOBS_DATABASE_URL_ENV",
     "EngineSettings",
     "PoolMode",
     "create_app_engine",
+    "dispose_audit_writer_engine",
     "dispose_engine",
     "dispose_jobs_engine",
+    "get_audit_writer_engine",
     "get_engine",
     "get_jobs_engine",
 ]
 
 DATABASE_URL_ENV = "DATABASE_URL"
 JOBS_DATABASE_URL_ENV = "DATABASE_JOBS_URL"
+AUDIT_WRITER_DATABASE_URL_ENV = "DATABASE_AUDIT_WRITER_URL"
 POOL_MODE_ENV = "DB_POOL_MODE"
 POOL_SIZE_ENV = "DB_POOL_SIZE"
 MAX_OVERFLOW_ENV = "DB_MAX_OVERFLOW"
@@ -245,5 +249,35 @@ async def dispose_jobs_engine() -> None:
     """Close the worker engine's pool (worker shutdown, tests)."""
     global _jobs_engine
     engine, _jobs_engine = _jobs_engine, None
+    if engine is not None:
+        await engine.dispose()
+
+
+_audit_writer_engine: AsyncEngine | None = None
+
+
+def get_audit_writer_engine() -> AsyncEngine:
+    """The engine connecting as ``aip_audit_writer`` (``DATABASE_AUDIT_WRITER_URL``, AUDIT-01).
+
+    ``aip_audit_writer`` is the only role that may INSERT into ``audit_log`` and maintain the chain
+    heads and checkpoints. It is NOSUPERUSER, NOBYPASSRLS and owns nothing, so the same refusal of
+    privileged logins applies and RLS still binds it. Used only through
+    ``aip.platform.db.session.audit_writer_tenant``.
+    """
+    global _audit_writer_engine
+    if _audit_writer_engine is None:
+        env = dict(os.environ)
+        url = env.get(AUDIT_WRITER_DATABASE_URL_ENV, "")
+        if not url:
+            raise DatabaseConfigError(f"{AUDIT_WRITER_DATABASE_URL_ENV} is not set")
+        env[DATABASE_URL_ENV] = url
+        _audit_writer_engine = create_app_engine(EngineSettings.from_env(env))
+    return _audit_writer_engine
+
+
+async def dispose_audit_writer_engine() -> None:
+    """Close the audit-writer engine's pool (application shutdown, tests)."""
+    global _audit_writer_engine
+    engine, _audit_writer_engine = _audit_writer_engine, None
     if engine is not None:
         await engine.dispose()

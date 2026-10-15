@@ -10,6 +10,8 @@ export const RoleCreatePermissionsItem = {
   accessrole_assignmentmanage: 'access.role_assignment.manage',
   accessrole_assignmentread: 'access.role_assignment.read',
   accessteammanage: 'access.team.manage',
+  auditactivityview: 'audit.activity.view',
+  auditlogread: 'audit.log.read',
   identityusermanage: 'identity.user.manage',
   identityuserread: 'identity.user.read',
   platformeventsmanage: 'platform.events.manage',

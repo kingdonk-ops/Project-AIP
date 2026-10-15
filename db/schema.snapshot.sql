@@ -5,6 +5,7 @@ GRANT USAGE ON SCHEMA aip_meta TO aip_app;
 GRANT USAGE ON SCHEMA public TO aip_app;
 GRANT USAGE ON SCHEMA public TO aip_jobs;
 GRANT USAGE ON SCHEMA public TO aip_readonly;
+GRANT USAGE ON SCHEMA public TO aip_audit_writer;
 
 -- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -
 COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiST';
@@ -200,6 +201,20 @@ GRANT SELECT ON TABLE public.access_settings TO aip_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.app_user TO aip_app;
 GRANT SELECT ON TABLE public.app_user TO aip_readonly;
 
+-- Name: TABLE audit_chain_checkpoints; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.audit_chain_checkpoints TO aip_audit_writer;
+GRANT SELECT ON TABLE public.audit_chain_checkpoints TO aip_app;
+GRANT SELECT ON TABLE public.audit_chain_checkpoints TO aip_readonly;
+
+-- Name: TABLE audit_chain_heads; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.audit_chain_heads TO aip_audit_writer;
+GRANT SELECT ON TABLE public.audit_chain_heads TO aip_readonly;
+
+-- Name: TABLE audit_log; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.audit_log TO aip_audit_writer;
+GRANT SELECT ON TABLE public.audit_log TO aip_app;
+GRANT SELECT ON TABLE public.audit_log TO aip_readonly;
+
 -- Name: TABLE auth_event; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.auth_event TO aip_app;
 GRANT SELECT ON TABLE public.auth_event TO aip_readonly;
@@ -366,6 +381,22 @@ ALTER TABLE ONLY public.app_user
 -- Name: app_user uq_app_user_id_tenant_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.app_user
     ADD CONSTRAINT uq_app_user_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: audit_chain_checkpoints pk_audit_chain_checkpoints; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.audit_chain_checkpoints
+    ADD CONSTRAINT pk_audit_chain_checkpoints PRIMARY KEY (tenant_id, stream, segment);
+
+-- Name: audit_chain_heads pk_audit_chain_heads; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.audit_chain_heads
+    ADD CONSTRAINT pk_audit_chain_heads PRIMARY KEY (tenant_id, stream);
+
+-- Name: audit_log pk_audit_log; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.audit_log
+    ADD CONSTRAINT pk_audit_log PRIMARY KEY (id);
+
+-- Name: audit_log uq_audit_log_tenant_id_stream_seq; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.audit_log
+    ADD CONSTRAINT uq_audit_log_tenant_id_stream_seq UNIQUE (tenant_id, stream, seq);
 
 -- Name: auth_event pk_auth_event; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.auth_event
@@ -925,6 +956,18 @@ CREATE FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead intege
     $_$;
 
 ALTER FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead integer) OWNER TO aip_owner;
+
+-- Name: audit_log_forbid_mutation(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.audit_log_forbid_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'pg_catalog'
+    AS $$
+    BEGIN
+      RAISE EXCEPTION 'audit_log is append-only' USING ERRCODE = 'restrict_violation';
+    END
+    $$;
+
+ALTER FUNCTION public.audit_log_forbid_mutation() OWNER TO aip_owner;
 
 -- Name: domain_events_write_once(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.domain_events_write_once() RETURNS trigger
@@ -1590,6 +1633,21 @@ CREATE INDEX ix_app_user_tenant_id_organisation_id ON public.app_user USING btre
 -- Name: ix_app_user_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_app_user_tenant_id_status ON public.app_user USING btree (tenant_id, status) WHERE (deleted_at IS NULL);
 
+-- Name: ix_audit_log_asset_path; Type: INDEX; Schema: public
+CREATE INDEX ix_audit_log_asset_path ON public.audit_log USING gist (asset_path);
+
+-- Name: ix_audit_log_flags; Type: INDEX; Schema: public
+CREATE INDEX ix_audit_log_flags ON public.audit_log USING gin (flags) WHERE (flags <> '{}'::text[]);
+
+-- Name: ix_audit_log_record_table_record_id_occurred_at; Type: INDEX; Schema: public
+CREATE INDEX ix_audit_log_record_table_record_id_occurred_at ON public.audit_log USING btree (record_table, record_id, occurred_at);
+
+-- Name: ix_audit_log_tenant_id_actor_id_occurred_at; Type: INDEX; Schema: public
+CREATE INDEX ix_audit_log_tenant_id_actor_id_occurred_at ON public.audit_log USING btree (tenant_id, actor_id, occurred_at);
+
+-- Name: ix_audit_log_tenant_id_project_id_occurred_at; Type: INDEX; Schema: public
+CREATE INDEX ix_audit_log_tenant_id_project_id_occurred_at ON public.audit_log USING btree (tenant_id, project_id, occurred_at DESC);
+
 -- Name: ix_auth_event_tenant_id_event_type_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_auth_event_tenant_id_event_type_occurred_at ON public.auth_event USING btree (tenant_id, event_type, occurred_at);
 
@@ -1824,6 +1882,9 @@ CREATE UNIQUE INDEX uq_app_user_tenant_id_email ON public.app_user USING btree (
 -- Name: uq_app_user_tenant_id_keycloak_user_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_app_user_tenant_id_keycloak_user_id ON public.app_user USING btree (tenant_id, keycloak_user_id) WHERE (keycloak_user_id IS NOT NULL);
 
+-- Name: uq_audit_log_tenant_id_source_event_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_audit_log_tenant_id_source_event_id ON public.audit_log USING btree (tenant_id, source_event_id) WHERE (source_event_id IS NOT NULL);
+
 -- Name: uq_control_records_tenant_id_control_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_control_records_tenant_id_control_key ON public.control_records USING btree (tenant_id, control_key) WHERE (deleted_at IS NULL);
 
@@ -1904,6 +1965,15 @@ CREATE POLICY tenant_isolation ON public.access_settings USING ((tenant_id = (NU
 
 -- Name: app_user tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.app_user USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: audit_chain_checkpoints tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.audit_chain_checkpoints USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: audit_chain_heads tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.audit_chain_heads USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: audit_log tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.audit_log USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: auth_event tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.auth_event USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -2042,6 +2112,15 @@ ALTER TABLE public.access_settings ENABLE ROW LEVEL SECURITY;
 
 -- Name: app_user; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.app_user ENABLE ROW LEVEL SECURITY;
+
+-- Name: audit_chain_checkpoints; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.audit_chain_checkpoints ENABLE ROW LEVEL SECURITY;
+
+-- Name: audit_chain_heads; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.audit_chain_heads ENABLE ROW LEVEL SECURITY;
+
+-- Name: audit_log; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 
 -- Name: auth_event; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.auth_event ENABLE ROW LEVEL SECURITY;
@@ -2253,6 +2332,80 @@ CREATE TABLE public.app_user (
 ALTER TABLE ONLY public.app_user FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.app_user OWNER TO aip_owner;
+
+-- Name: audit_chain_checkpoints; Type: TABLE; Schema: public
+CREATE TABLE public.audit_chain_checkpoints (
+    tenant_id uuid NOT NULL,
+    stream text NOT NULL,
+    segment text NOT NULL,
+    last_seq bigint NOT NULL,
+    last_hash bytea NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_audit_chain_checkpoints_last_hash CHECK ((octet_length(last_hash) = 32)),
+    CONSTRAINT ck_audit_chain_checkpoints_last_seq CHECK ((last_seq > 0)),
+    CONSTRAINT ck_audit_chain_checkpoints_segment CHECK ((segment ~ '^\d{4}-\d{2}$'::text)),
+    CONSTRAINT ck_audit_chain_checkpoints_stream CHECK ((stream = ANY (ARRAY['audit'::text, 'security'::text])))
+);
+
+ALTER TABLE ONLY public.audit_chain_checkpoints FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.audit_chain_checkpoints OWNER TO aip_owner;
+
+-- Name: audit_chain_heads; Type: TABLE; Schema: public
+CREATE TABLE public.audit_chain_heads (
+    tenant_id uuid NOT NULL,
+    stream text NOT NULL,
+    last_seq bigint DEFAULT 0 NOT NULL,
+    last_hash bytea NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_audit_chain_heads_last_hash CHECK ((octet_length(last_hash) = 32)),
+    CONSTRAINT ck_audit_chain_heads_last_seq CHECK ((last_seq >= 0)),
+    CONSTRAINT ck_audit_chain_heads_stream CHECK ((stream = ANY (ARRAY['audit'::text, 'security'::text])))
+);
+
+ALTER TABLE ONLY public.audit_chain_heads FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.audit_chain_heads OWNER TO aip_owner;
+
+-- Name: audit_log; Type: TABLE; Schema: public
+CREATE TABLE public.audit_log (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    stream text NOT NULL,
+    seq bigint NOT NULL,
+    project_id uuid,
+    asset_id uuid,
+    asset_path public.ltree,
+    actor_id uuid,
+    on_behalf_of_id uuid,
+    auth_strength text,
+    source_module text,
+    record_table text,
+    record_id uuid,
+    event_type text NOT NULL,
+    summary_key text,
+    payload jsonb,
+    reason_for_change text,
+    flags text[] DEFAULT '{}'::text[] NOT NULL,
+    source_ip inet,
+    device text,
+    source_event_id uuid,
+    supersedes_id uuid,
+    prev_hash bytea NOT NULL,
+    hash bytea NOT NULL,
+    occurred_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_audit_log_event_type CHECK ((event_type <> ''::text)),
+    CONSTRAINT ck_audit_log_hash CHECK ((octet_length(hash) = 32)),
+    CONSTRAINT ck_audit_log_prev_hash CHECK ((octet_length(prev_hash) = 32)),
+    CONSTRAINT ck_audit_log_seq CHECK ((seq > 0)),
+    CONSTRAINT ck_audit_log_stream CHECK ((stream = ANY (ARRAY['audit'::text, 'security'::text])))
+);
+
+ALTER TABLE ONLY public.audit_log FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.audit_log OWNER TO aip_owner;
 
 -- Name: auth_event; Type: TABLE; Schema: public
 CREATE TABLE public.auth_event (
@@ -3161,6 +3314,9 @@ ALTER TABLE ONLY public.restore_test_records ATTACH PARTITION public.restore_tes
 
 -- Name: access_settings trg_access_settings_version_guard; Type: TRIGGER; Schema: public
 CREATE TRIGGER trg_access_settings_version_guard BEFORE UPDATE ON public.access_settings FOR EACH ROW EXECUTE FUNCTION public.access_settings_version_guard();
+
+-- Name: audit_log audit_log_append_only; Type: TRIGGER; Schema: public
+CREATE TRIGGER audit_log_append_only BEFORE DELETE OR UPDATE ON public.audit_log FOR EACH ROW EXECUTE FUNCTION public.audit_log_forbid_mutation();
 
 -- Name: domain_events domain_events_write_once; Type: TRIGGER; Schema: public
 CREATE TRIGGER domain_events_write_once BEFORE UPDATE ON public.domain_events FOR EACH ROW EXECUTE FUNCTION public.domain_events_write_once();

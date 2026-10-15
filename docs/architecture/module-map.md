@@ -7,14 +7,15 @@ Regenerate with `uv run python tools/gen_module_map.py`.
 
 | Order | Module | Context | Depends on |
 |---|---|---|---|
-| 1 | `security` | security | none |
-| 2 | `tenancy` | tenancy | none |
-| 3 | `ops` | platform | `tenancy` |
-| 4 | `identity` | identity | `ops`, `tenancy` |
-| 5 | `projects` | projects | `tenancy` |
-| 6 | `access` | identity | `identity`, `projects`, `tenancy` |
-| 7 | `terms` | terms | none |
-| 8 | `uploads` | uploads | `projects`, `tenancy` |
+| 1 | `audit` | audit | none |
+| 2 | `security` | security | none |
+| 3 | `tenancy` | tenancy | none |
+| 4 | `ops` | platform | `tenancy` |
+| 5 | `identity` | identity | `ops`, `tenancy` |
+| 6 | `projects` | projects | `tenancy` |
+| 7 | `access` | identity | `identity`, `projects`, `tenancy` |
+| 8 | `terms` | terms | none |
+| 9 | `uploads` | uploads | `projects`, `tenancy` |
 
 ## Dependencies
 
@@ -25,6 +26,7 @@ graph TD
     access --> identity
     access --> projects
     access --> tenancy
+    audit
     identity --> ops
     identity --> tenancy
     ops --> tenancy
