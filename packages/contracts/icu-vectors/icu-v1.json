@@ -1,0 +1,242 @@
+{
+  "version": 1,
+  "description": "TERMS-03 ICU MessageFormat golden vectors. The Python formatter (aip.modules.terms.icu) and the i18next-icu client (TERMS-08) must both turn `message` with `args` in `locale` into `expected` exactly. Numbers use CLDR symbols for the locale; a float is read as its shortest round-tripping decimal (ICU's reading) and ties round half away from zero (Intl's halfExpand).",
+  "cases": [
+    {
+      "name": "plural one",
+      "message": "{n, plural, one {# defect} other {# defects}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 1
+      },
+      "expected": "1 defect"
+    },
+    {
+      "name": "plural other",
+      "message": "{n, plural, one {# defect} other {# defects}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 3
+      },
+      "expected": "3 defects"
+    },
+    {
+      "name": "zero is other in English",
+      "message": "{n, plural, one {# defect} other {# defects}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 0
+      },
+      "expected": "0 defects"
+    },
+    {
+      "name": "exact =0 beats the category",
+      "message": "{n, plural, =0 {No defects} one {# defect} other {# defects}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 0
+      },
+      "expected": "No defects"
+    },
+    {
+      "name": "hash is grouped for the locale",
+      "message": "{n, plural, one {# defect} other {# defects}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 1000
+      },
+      "expected": "1,000 defects"
+    },
+    {
+      "name": "a fraction is other in English",
+      "message": "{n, plural, one {# metre} other {# metres}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 1.5
+      },
+      "expected": "1.5 metres"
+    },
+    {
+      "name": "offset: exact match uses the raw value",
+      "message": "{n, plural, offset:1 =0 {Nobody} =1 {{name}} one {{name} and # other} other {{name} and # others}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 1,
+        "name": "Alice"
+      },
+      "expected": "Alice"
+    },
+    {
+      "name": "offset: category and hash use value minus offset (one)",
+      "message": "{n, plural, offset:1 =0 {Nobody} =1 {{name}} one {{name} and # other} other {{name} and # others}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 2,
+        "name": "Alice"
+      },
+      "expected": "Alice and 1 other"
+    },
+    {
+      "name": "offset: category and hash use value minus offset (other)",
+      "message": "{n, plural, offset:1 =0 {Nobody} =1 {{name}} one {{name} and # other} other {{name} and # others}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 3,
+        "name": "Alice"
+      },
+      "expected": "Alice and 2 others"
+    },
+    {
+      "name": "select a listed option",
+      "message": "{status, select, open {Open} closed {Closed} other {Unknown}}",
+      "locale": "en-AU",
+      "args": {
+        "status": "closed"
+      },
+      "expected": "Closed"
+    },
+    {
+      "name": "select falls back to other",
+      "message": "{status, select, open {Open} closed {Closed} other {Unknown}}",
+      "locale": "en-AU",
+      "args": {
+        "status": "archived"
+      },
+      "expected": "Unknown"
+    },
+    {
+      "name": "plural nested in select",
+      "message": "{role, select, lead {{n, plural, one {Lead of # crew} other {Lead of # crews}}} other {{n, plural, one {Member of # crew} other {Member of # crews}}}}",
+      "locale": "en-AU",
+      "args": {
+        "role": "lead",
+        "n": 2
+      },
+      "expected": "Lead of 2 crews"
+    },
+    {
+      "name": "simple string argument",
+      "message": "Inspection {code} is due",
+      "locale": "en-AU",
+      "args": {
+        "code": "ITP-7"
+      },
+      "expected": "Inspection ITP-7 is due"
+    },
+    {
+      "name": "number argument is grouped",
+      "message": "{x, number} m",
+      "locale": "en-AU",
+      "args": {
+        "x": 1234.5
+      },
+      "expected": "1,234.5 m"
+    },
+    {
+      "name": "integer style rounds",
+      "message": "{x, number, integer}",
+      "locale": "en-AU",
+      "args": {
+        "x": 3.7
+      },
+      "expected": "4"
+    },
+    {
+      "name": "percent style",
+      "message": "{p, number, percent} complete",
+      "locale": "en-AU",
+      "args": {
+        "p": 0.25
+      },
+      "expected": "25% complete"
+    },
+    {
+      "name": "apostrophes and quoted braces",
+      "message": "It''s '{'{n, plural, one {# day} other {# days}}'}'",
+      "locale": "en-AU",
+      "args": {
+        "n": 2
+      },
+      "expected": "It's {2 days}"
+    },
+    {
+      "name": "selectordinal two",
+      "message": "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 22
+      },
+      "expected": "22nd"
+    },
+    {
+      "name": "selectordinal teen",
+      "message": "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}",
+      "locale": "en-AU",
+      "args": {
+        "n": 13
+      },
+      "expected": "13th"
+    },
+    {
+      "name": "French zero is one",
+      "message": "{n, plural, one {# défaut} other {# défauts}}",
+      "locale": "fr-FR",
+      "args": {
+        "n": 0
+      },
+      "expected": "0 défaut"
+    },
+    {
+      "name": "German number symbols",
+      "message": "{x, number} mm",
+      "locale": "de-DE",
+      "args": {
+        "x": 1234.5
+      },
+      "expected": "1.234,5 mm"
+    },
+    {
+      "name": "no arguments",
+      "message": "Completed",
+      "locale": "en-AU",
+      "args": {},
+      "expected": "Completed"
+    },
+    {
+      "name": "a tie rounds half away from zero",
+      "message": "{x, number}",
+      "locale": "en-AU",
+      "args": {
+        "x": 2.0625
+      },
+      "expected": "2.063"
+    },
+    {
+      "name": "a percent tie rounds half away from zero",
+      "message": "{p, number, percent}",
+      "locale": "en-AU",
+      "args": {
+        "p": 0.125
+      },
+      "expected": "13%"
+    },
+    {
+      "name": "booleans select by their JavaScript string",
+      "message": "{s, select, true {Yes} other {No}}",
+      "locale": "en-AU",
+      "args": {
+        "s": true
+      },
+      "expected": "Yes"
+    },
+    {
+      "name": "a whole float prints without a fraction",
+      "message": "{x} items",
+      "locale": "en-AU",
+      "args": {
+        "x": 3.0
+      },
+      "expected": "3 items"
+    }
+  ]
+}
