@@ -43,14 +43,14 @@ _ERRORS: dict[int | str, dict[str, Any]] = {
 }
 
 router = APIRouter(
-    prefix="/platform/tenants/{tenant_id}",
+    prefix="/platform/tenants",
     tags=["platform"],
     dependencies=[Depends(requires("platform.tenants.manage")), Depends(require_active_tenant)],
 )
 
 
 @router.put(
-    "/subscription",
+    "/{tenant_id}/subscription",
     operation_id="platform_put_tenant_subscription",
     response_model=SubscriptionOut,
     responses=_ERRORS,
@@ -62,7 +62,7 @@ async def put_subscription(
 
 
 @router.post(
-    "/entitlement-overrides",
+    "/{tenant_id}/entitlement-overrides",
     operation_id="platform_add_entitlement_override",
     response_model=OverrideOut,
     status_code=status.HTTP_201_CREATED,
@@ -75,7 +75,7 @@ async def add_override(
 
 
 @router.delete(
-    "/entitlement-overrides/{override_id}",
+    "/{tenant_id}/entitlement-overrides/{override_id}",
     operation_id="platform_remove_entitlement_override",
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,

@@ -36,9 +36,10 @@ from typing import Literal, Protocol
 from uuid import UUID
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.tenancy.entitlements.usage import estimate_db_bytes, tenant_tables
+from aip.platform.db.session import cross_tenant_readonly
 
 __all__ = [
     "METHOD_ENV",
@@ -127,18 +128,10 @@ async def estimate_all_tenants(conn: AsyncConnection) -> dict[UUID, int]:
 class SinglePassEstimator:
     """Option 3: all tenants at once, cross-tenant and read-only (needs owner approval)."""
 
-    def __init__(self, engine: AsyncEngine) -> None:
-        self.engine = engine
-
-    @classmethod
-    def from_url(cls, url: str) -> SinglePassEstimator:
-        async_url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        return cls(create_async_engine(async_url, pool_size=1, max_overflow=0))
+    def __init__(self, url: str) -> None:
+        self._url = url
 
     async def estimate(self, tenants: Sequence[UUID]) -> dict[UUID, int]:
-        async with self.engine.connect() as conn:
-            await conn.execute(text("SET TRANSACTION READ ONLY"))
+        async with cross_tenant_readonly(self._url) as conn:
             sizes = await estimate_all_tenants(conn)
-            await conn.rollback()
-        wanted = set(tenants)
-        return {tenant_id: sizes.get(tenant_id, 0) for tenant_id in wanted}
+        return {tenant_id: sizes.get(tenant_id, 0) for tenant_id in set(tenants)}

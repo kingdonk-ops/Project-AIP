@@ -31,7 +31,7 @@ from datetime import date
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.tenancy.entitlements.db_estimate import (
     DbEstimateConfigError,
@@ -44,10 +44,10 @@ from aip.modules.tenancy.entitlements.db_estimate import (
     db_estimate_due,
 )
 from aip.modules.tenancy.entitlements.service import EntitlementService
-from aip.platform.db.engine import EngineSettings, create_app_engine, dispose_engine
-from aip.platform.db.session import with_tenant
+from aip.platform.db.engine import dispose_engine
+from aip.platform.db.session import app_engine_for, with_tenant
 
-__all__ = ["RunResult", "build_estimator", "main", "parse_period", "run"]
+__all__ = ["RunResult", "check_settings", "main", "open_estimator", "parse_period", "run"]
 
 DbEstimateMode = Literal["due", "always", "skip"]
 
@@ -90,32 +90,33 @@ async def run(
     return RunResult(expired, estimate)
 
 
-@dataclass(frozen=True, slots=True)
-class BuiltEstimator:
-    estimator: DbEstimator
-    engine: AsyncEngine | None = None  # disposed after the run
+def check_settings(method: DbEstimateMethod, url: str | None) -> None:
+    """Raise ``DbEstimateConfigError`` when ``method`` cannot run with ``url``."""
+    if method == "single_pass" and url is None:
+        raise DbEstimateConfigError(
+            "single_pass needs its own ENTITLEMENTS_DB_ESTIMATE_URL (a cross-tenant read-only "
+            "role, which needs owner approval); it never runs on the app connection"
+        )
 
 
-def build_estimator(method: DbEstimateMethod, url: str | None) -> BuiltEstimator:
-    """The estimator for ``method`` and ``url``; ``DbEstimateConfigError`` if inconsistent."""
-    if method == "single_pass":
-        if url is None:
-            raise DbEstimateConfigError(
-                "single_pass needs its own ENTITLEMENTS_DB_ESTIMATE_URL (a cross-tenant read-only "
-                "role, which needs owner approval); it never runs on the app connection"
-            )
-        single = SinglePassEstimator.from_url(url)
-        return BuiltEstimator(single, single.engine)
+@asynccontextmanager
+async def open_estimator(method: DbEstimateMethod, url: str | None) -> AsyncIterator[DbEstimator]:
+    """The estimator for ``method`` and ``url``, with any extra connection closed on exit."""
+    check_settings(method, url)
+    if method == "single_pass" and url is not None:
+        yield SinglePassEstimator(url)
+        return
     if url is None:
-        return BuiltEstimator(PerTenantEstimator(with_tenant))
-    engine = create_app_engine(EngineSettings(url=url, pool_size=1, max_overflow=0))
+        yield PerTenantEstimator(with_tenant)
+        return
+    async with app_engine_for(url) as engine:
 
-    @asynccontextmanager
-    async def on_replica(tenant_id: UUID) -> AsyncIterator[AsyncConnection]:
-        async with with_tenant(tenant_id, engine=engine) as conn:
-            yield conn
+        @asynccontextmanager
+        async def on_replica(tenant_id: UUID) -> AsyncIterator[AsyncConnection]:
+            async with with_tenant(tenant_id, engine=engine) as conn:
+                yield conn
 
-    return BuiltEstimator(PerTenantEstimator(on_replica), engine)
+        yield PerTenantEstimator(on_replica)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -132,23 +133,26 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         method = configured_method(args.db_method)
         url = configured_url(args.db_url)
-        built = None if args.db_estimate == "skip" else build_estimator(method, url)
+        if args.db_estimate != "skip":
+            check_settings(method, url)
     except DbEstimateConfigError as exc:
         print(f"entitlements: {exc}", file=sys.stderr)
         return 2
 
     async def _main() -> RunResult:
+        service = EntitlementService()
         try:
-            return await run(
-                EntitlementService(),
-                args.tenants,
-                args.period,
-                estimator=None if built is None else built.estimator,
-                db_estimate=args.db_estimate,
-            )
+            if args.db_estimate == "skip":
+                return await run(service, args.tenants, args.period, estimator=None)
+            async with open_estimator(method, url) as estimator:
+                return await run(
+                    service,
+                    args.tenants,
+                    args.period,
+                    estimator=estimator,
+                    db_estimate=args.db_estimate,
+                )
         finally:
-            if built is not None and built.engine is not None:
-                await built.engine.dispose()
             await dispose_engine()
 
     result = asyncio.run(_main())

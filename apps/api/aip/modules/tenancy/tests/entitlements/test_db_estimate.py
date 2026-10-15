@@ -17,7 +17,7 @@ from aip.modules.tenancy.entitlements.db_estimate import (
     db_estimate_due,
 )
 from aip.modules.tenancy.entitlements.service import EntitlementService
-from aip.modules.tenancy.entitlements.snapshot_cli import build_estimator, main, run
+from aip.modules.tenancy.entitlements.snapshot_cli import check_settings, main, open_estimator, run
 
 from .conftest import FakeClock, su_execute, su_fetch
 
@@ -48,7 +48,7 @@ def test_settings_are_validated() -> None:
     with pytest.raises(DbEstimateConfigError):
         configured_method("nightly_magic")
     with pytest.raises(DbEstimateConfigError):
-        build_estimator("single_pass", None)  # never on the app connection
+        check_settings("single_pass", None)  # never on the app connection
 
 
 def test_the_cli_refuses_single_pass_without_its_own_url(
@@ -125,19 +125,11 @@ async def test_single_pass_and_the_replica_path_agree_on_the_ratio(db: TenantDb)
 
     # Option 3: one GROUP BY scan per table, on a connection that reads across tenants (the test
     # superuser stands in for the role the owner would have to approve).
-    single = SinglePassEstimator.from_url(db.db.superuser_url)
-    try:
-        by_single = await single.estimate(tenants)
-    finally:
-        await single.engine.dispose()
+    by_single = await SinglePassEstimator(db.db.superuser_url).estimate(tenants)
 
     # Option 4: per tenant as aip_app on another connection URL (a replica in production).
-    built = build_estimator("per_tenant", db.db.app_url)
-    try:
-        by_replica = await built.estimator.estimate(tenants)
-    finally:
-        assert built.engine is not None
-        await built.engine.dispose()
+    async with open_estimator("per_tenant", db.db.app_url) as replica:
+        by_replica = await replica.estimate(tenants)
     by_primary = await PerTenantEstimator(db.with_tenant).estimate(tenants)
 
     assert by_replica == by_primary
