@@ -3,7 +3,13 @@ id = "terms"
 context = "terms"
 depends_on = []
 permissions = []
-events = []
-subscribes = []
-settings = []
+settings = ["REDIS_URL"]
 term_keys = []
+
+[[events]]
+name = "terms.pack.activated"
+version = 1
+
+[[subscribes]]
+name = "terms.pack.activated"
+version = 1

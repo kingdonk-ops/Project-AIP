@@ -1,0 +1,31 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "packId": {
+      "format": "uuid",
+      "title": "Packid",
+      "type": "string"
+    },
+    "version": {
+      "title": "Version",
+      "type": "integer"
+    },
+    "versionId": {
+      "format": "uuid",
+      "title": "Versionid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "packId",
+    "versionId",
+    "version",
+    "code"
+  ],
+  "title": "PackActivated",
+  "type": "object"
+}
