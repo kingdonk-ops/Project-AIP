@@ -16,6 +16,10 @@ Code that commits inside the block cannot keep going: SQLAlchemy refuses further
 the closed ``begin()`` transaction. Any connection used without a tenant set fails closed under
 RLS anyway: 0 rows, and writes are rejected.
 
+``after_commit(conn, hook)`` registers an async hook that runs once the transaction has really
+committed (not on rollback): use it for cache invalidation. SQLAlchemy's ``commit`` event fires
+*before* the database commit, so a cache bumped there can be refilled with the old rows.
+
 Do not nest ``with_tenant`` calls. Each call takes its own connection and transaction, so an
 inner call needs a second connection while the outer one is still held. With a small pool and
 ``max_overflow=0`` (the default), concurrent requests that each hold one connection and wait for
@@ -24,10 +28,11 @@ a second can stall until ``DB_POOL_TIMEOUT``. Pass the outer ``conn`` down inste
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from uuid import UUID
 
+import structlog
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
@@ -42,10 +47,13 @@ from aip.platform.db.errors import InvalidTenantError
 
 __all__ = [
     "PLATFORM_TENANT_ID",
+    "AfterCommitHook",
     "DbEngine",
     "JobsRoleError",
+    "NoTransactionHookError",
     "PlatformTenantError",
     "TenantRef",
+    "after_commit",
     "app_engine_for",
     "as_jobs_role",
     "before_tenant",
@@ -56,6 +64,26 @@ __all__ = [
 ]
 
 TenantRef = UUID | str | RequestContext
+AfterCommitHook = Callable[[], Awaitable[None]]
+
+logger = structlog.stdlib.get_logger(__name__)
+_AFTER_COMMIT = "aip.after_commit_hooks"
+
+
+class NoTransactionHookError(RuntimeError):
+    """``after_commit`` was called on a connection not opened by ``with_tenant``."""
+
+
+def after_commit(conn: AsyncConnection, hook: AfterCommitHook) -> None:
+    """Run ``hook`` after ``with_tenant``'s transaction on ``conn`` commits (never on rollback).
+
+    A failing hook is logged, not raised: the data is already committed.
+    """
+    hooks: list[AfterCommitHook] | None = conn.info.get(_AFTER_COMMIT)
+    if hooks is None:
+        raise NoTransactionHookError("after_commit needs a with_tenant connection")
+    hooks.append(hook)
+
 
 # ADR 0028: the reserved tenant of platform rows (terms defaults, built-in packs). Not a row in
 # ``tenants``; ``with_tenant`` refuses it, so only ``with_platform_tenant`` (as aip_owner) binds it.
@@ -97,9 +125,19 @@ async def with_tenant(
     """
     tenant_id = tenant_uuid(tenant)  # before any pool checkout
     bound = get_engine() if engine is None else engine
+    hooks: list[AfterCommitHook] = []
     async with bound.begin() as conn:
         await conn.execute(_SET_TENANT, {"tenant_id": str(tenant_id)})
-        yield conn
+        conn.info[_AFTER_COMMIT] = hooks  # conn.info outlives the checkout: always removed
+        try:
+            yield conn
+        finally:
+            conn.info.pop(_AFTER_COMMIT, None)
+    for hook in hooks:  # reached only when the commit succeeded
+        try:
+            await hook()
+        except Exception:
+            logger.warning("db.after_commit_hook_failed", exc_info=True)
 
 
 @asynccontextmanager

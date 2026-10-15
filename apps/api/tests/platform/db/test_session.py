@@ -29,7 +29,12 @@ from aip.platform.access import authenticated
 from aip.platform.context import RequestContext, get_context
 from aip.platform.db.engine import EngineSettings, PoolMode, connect_args, create_app_engine
 from aip.platform.db.errors import DatabaseConfigError, InvalidTenantError
-from aip.platform.db.session import tenant_uuid, with_tenant
+from aip.platform.db.session import (
+    NoTransactionHookError,
+    after_commit,
+    tenant_uuid,
+    with_tenant,
+)
 from aip.platform.db.templates import render_template
 
 if TYPE_CHECKING:  # fixtures come from conftest.py; this import is for type hints only
@@ -291,6 +296,67 @@ async def test_error_inside_with_tenant_rolls_back_and_leaves_no_tenant(rls_db: 
             assert (await conn.execute(COUNT)).scalar_one() == 0
     finally:
         await engine.dispose()
+
+
+async def test_after_commit_hooks_run_once_the_commit_is_visible(app_engine: AsyncEngine) -> None:
+    new_row = uuid.uuid4()
+    found = text("SELECT count(*) FROM rls_probe WHERE id = :id")
+    seen: list[int] = []
+
+    async def hook() -> None:
+        # Another connection already sees the row: the commit has really happened.
+        async with with_tenant(TENANT_A_ID, engine=app_engine) as other:
+            seen.append((await other.execute(found, {"id": new_row})).scalar_one())
+
+    async with with_tenant(TENANT_A_ID, engine=app_engine) as conn:
+        await conn.execute(
+            text("INSERT INTO rls_probe (id, tenant_id) VALUES (:id, :t)"),
+            {"id": new_row, "t": TENANT_A_ID},
+        )
+        after_commit(conn, hook)
+        assert seen == []
+    assert seen == [1]
+
+
+async def test_after_commit_hooks_never_run_on_rollback(app_engine: AsyncEngine) -> None:
+    ran: list[str] = []
+
+    async def hook() -> None:
+        ran.append("ran")
+
+    with pytest.raises(RuntimeError, match="boom"):
+        async with with_tenant(TENANT_A_ID, engine=app_engine) as conn:
+            after_commit(conn, hook)
+            raise RuntimeError("boom")
+    async with with_tenant(TENANT_A_ID, engine=app_engine):
+        pass  # the same pooled connection carries no leftover hook
+    assert ran == []
+
+
+async def test_a_failing_after_commit_hook_does_not_fail_the_committed_block(
+    app_engine: AsyncEngine,
+) -> None:
+    ran: list[str] = []
+
+    async def failing() -> None:
+        raise RuntimeError("cache down")
+
+    async def second() -> None:
+        ran.append("second")
+
+    async with with_tenant(TENANT_A_ID, engine=app_engine) as conn:
+        after_commit(conn, failing)
+        after_commit(conn, second)
+    assert ran == ["second"]
+
+
+async def test_after_commit_needs_a_with_tenant_connection(app_engine: AsyncEngine) -> None:
+    async def hook() -> None:
+        return None
+
+    async with app_engine.begin() as conn:
+        with pytest.raises(NoTransactionHookError):
+            after_commit(conn, hook)
 
 
 async def test_commit_inside_the_block_cannot_continue_without_the_tenant(

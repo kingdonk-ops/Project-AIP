@@ -206,6 +206,40 @@ async def test_an_uncommitted_override_is_never_cached(
     assert await resolve_as(terms_db, TENANT_A_ID) == "Hold point"
 
 
+async def test_an_uncommitted_pack_activation_is_never_cached(
+    terms_db: TenantDb, redis_cache: RedisTermsCache
+) -> None:
+    async with terms_db.with_tenant(TENANT_A_ID) as conn:
+        pack_id = await insert_pack(conn, TENANT_A_ID, "au-mining")
+
+    class RollbackError(Exception):
+        pass
+
+    c = ctx()
+    with pytest.raises(RollbackError):
+        async with use_context(c), terms_db.with_tenant(c) as conn:
+            version_id = await insert_version(conn, TENANT_A_ID, pack_id, 1, "Never active")
+            await activate_pack_version(
+                conn, tenant_id=TENANT_A_ID, pack_id=pack_id, version_id=version_id
+            )
+            assert await resolve(conn, HOLD, "en-AU", tenant_id=TENANT_A_ID) == "Never active"
+            raise RollbackError
+    assert await resolve_as(terms_db, TENANT_A_ID) == "Hold point"
+
+
+async def test_an_unreadable_cache_entry_is_a_miss(
+    terms_db: TenantDb, redis_server: RedisServer, redis_cache: RedisTermsCache
+) -> None:
+    from redis.asyncio import Redis
+
+    client = Redis.from_url(redis_server.url)  # pyright: ignore[reportUnknownMemberType]
+    try:
+        await client.set(f"t:{TENANT_A_ID}:terms:0", b"not json")
+        assert await resolve_as(terms_db, TENANT_A_ID) == "Hold point"
+    finally:
+        await client.aclose()
+
+
 async def test_tenant_b_overrides_never_reach_tenant_a(
     terms_db: TenantDb, redis_cache: RedisTermsCache
 ) -> None:

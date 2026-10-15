@@ -7,14 +7,14 @@ a better locale beats a more specific level in a worse one. A key found nowhere 
 visible ``⟦key⟧`` and logs ``terms.miss``, so a raw key or internal code never reaches a user.
 
 The merged maps are cached per tenant (:mod:`.cache`). Override writes made here bump the cache
-version after commit; until then, resolves on the writing connection bypass the cache so they
-neither see stale text nor cache uncommitted text. Resolves in this process wait for pending bumps
-of their tenant, so a write followed by a resolve never reads the old version.
+version once the transaction has committed (``after_commit``, awaited before ``with_tenant``
+returns, so the writer's next resolve reads the new version); until then, resolves on the writing
+connection bypass the cache so they neither see stale text nor cache uncommitted text. Pack
+activation does the same, and the ``terms.pack.activated`` subscriber bumps after delivery.
 """
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
@@ -24,6 +24,7 @@ import structlog
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from aip.platform.db.session import after_commit
 from aip.platform.events import Aggregate, emit
 
 from . import repository
@@ -49,7 +50,6 @@ logger = structlog.stdlib.get_logger(__name__)
 
 FALLBACK_LOCALE = "en-AU"
 _DIRTY = "aip.terms.dirty_tenants"  # conn.info: tenants with uncommitted override writes
-_pending_bumps: dict[UUID, set[asyncio.Task[None]]] = {}
 
 
 class TenantMismatchError(ValueError):
@@ -149,9 +149,6 @@ async def _layers(
 ) -> Layers:
     if await repository.bound_tenant(conn) != tenant_id:
         raise TenantMismatchError("tenant_id differs from the connection's with_tenant tenant")
-    pending = _pending_bumps.get(tenant_id)
-    if pending:
-        await asyncio.gather(*pending, return_exceptions=True)
     dirty: set[UUID] = conn.info.get(_DIRTY, set())
     version = None if tenant_id in dirty else await get_cache().version(tenant_id)
 
@@ -226,50 +223,36 @@ async def bulk_resolve(
 # --- writes ------------------------------------------------------------------------------------
 
 
-def _bump_after_commit(conn: AsyncConnection, tenant_id: UUID) -> None:
+def _mark_dirty(conn: AsyncConnection, tenant_id: UUID) -> None:
+    """Bypass the cache for ``tenant_id`` on ``conn`` until its transaction ends."""
     dirty: set[UUID] = conn.info.setdefault(_DIRTY, set())
     if tenant_id in dirty:
-        return  # already scheduled for this transaction
+        return
     dirty.add(tenant_id)
-    loop = asyncio.get_running_loop()
     sync_conn = conn.sync_connection
     assert sync_conn is not None
 
-    fired = False  # commit and rollback listeners are both "once": whichever runs first wins
-
-    def _after_commit(_conn: object) -> None:
-        nonlocal fired
-        if fired:
-            return
-        fired = True
-        dirty.discard(tenant_id)
-        task = loop.create_task(get_cache().bump(tenant_id))
-        tasks = _pending_bumps.setdefault(tenant_id, set())
-        tasks.add(task)
-        task.add_done_callback(lambda t: _bump_done(tenant_id, t))
-
-    def _after_rollback(_conn: object) -> None:
-        nonlocal fired
-        if fired:
-            return
-        fired = True
+    def _clear(_conn: object) -> None:
         dirty.discard(tenant_id)
 
-    event.listen(sync_conn, "commit", _after_commit, once=True)
-    event.listen(sync_conn, "rollback", _after_rollback, once=True)
+    # Both are "once"; whichever does not fire stays registered and later just discards again.
+    event.listen(sync_conn, "commit", _clear, once=True)
+    event.listen(sync_conn, "rollback", _clear, once=True)
 
 
-def _bump_done(tenant_id: UUID, task: asyncio.Task[None]) -> None:
-    tasks = _pending_bumps.get(tenant_id)
-    if tasks is not None:
-        tasks.discard(task)
-        if not tasks:
-            _pending_bumps.pop(tenant_id, None)
-    if not task.cancelled() and task.exception() is not None:
-        # The cache TTL still bounds how long the old text can be served.
-        logger.warning(
-            "terms.cache_bump_failed", tenant_id=str(tenant_id), error=repr(task.exception())
-        )
+def _bump_after_commit(conn: AsyncConnection, tenant_id: UUID) -> None:
+    if tenant_id in conn.info.get(_DIRTY, set()):
+        return  # already scheduled for this transaction
+    _mark_dirty(conn, tenant_id)
+
+    async def bump() -> None:
+        try:
+            await get_cache().bump(tenant_id)
+        except Exception:
+            # The cache TTL still bounds how long the old text can be served.
+            logger.warning("terms.cache_bump_failed", tenant_id=str(tenant_id), exc_info=True)
+
+    after_commit(conn, bump)
 
 
 async def set_override(
@@ -322,6 +305,7 @@ async def activate_pack_version(
         conn, tenant_id=tenant_id, pack_id=pack_id, version_id=version_id
     ):
         raise PackNotFoundError(f"pack {pack_id} not found")
+    _mark_dirty(conn, tenant_id)  # the outbox subscriber bumps the cache once delivered
     await emit(
         conn,
         TERMS_PACK_ACTIVATED,
