@@ -1,0 +1,31 @@
+{
+  "additionalProperties": false,
+  "description": "``platform.outbox.discarded`` v1: an operator dropped a dead-lettered event.",
+  "properties": {
+    "eventId": {
+      "format": "uuid",
+      "title": "Eventid",
+      "type": "string"
+    },
+    "eventName": {
+      "title": "Eventname",
+      "type": "string"
+    },
+    "eventVersion": {
+      "title": "Eventversion",
+      "type": "integer"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "eventId",
+    "eventName",
+    "eventVersion",
+    "reason"
+  ],
+  "title": "OutboxDiscardedPayload",
+  "type": "object"
+}

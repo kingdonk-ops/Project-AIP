@@ -40,6 +40,9 @@ from aip.platform.events.outbox import EventValidationError
 __all__ = [
     "CONTRACTS_DIR",
     "PLATFORM_EVENT_DEPRECATED",
+    "PLATFORM_OUTBOX_DISCARDED",
+    "PLATFORM_OUTBOX_RETRIED",
+    "PLATFORM_OUTBOX_THRESHOLD_EXCEEDED",
     "PLATFORM_OWNER",
     "DuplicateEventError",
     "EventDeprecatedPayload",
@@ -59,6 +62,10 @@ CONTRACTS_DIR = Path(__file__).resolve().parents[5] / "packages" / "contracts" /
 
 PLATFORM_OWNER = "platform"
 PLATFORM_EVENT_DEPRECATED = "platform.event.deprecated"
+# ARCH-07: the dead-letter queue's audit events and the per-tenant threshold alert.
+PLATFORM_OUTBOX_RETRIED = "platform.outbox.retried"
+PLATFORM_OUTBOX_DISCARDED = "platform.outbox.discarded"
+PLATFORM_OUTBOX_THRESHOLD_EXCEEDED = "platform.outbox.dead_letter_threshold_exceeded"
 
 
 class DuplicateEventError(ValueError):
@@ -201,10 +208,55 @@ class EventDeprecatedPayload(BaseModel):
     deprecated_by: UUID | None = None
 
 
+class OutboxRetriedPayload(BaseModel):
+    """``platform.outbox.retried`` v1: an operator put a dead-lettered event back in the queue."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel, populate_by_name=True, serialize_by_alias=True, extra="forbid"
+    )
+
+    event_id: UUID
+    event_name: str
+    event_version: int
+
+
+class OutboxDiscardedPayload(BaseModel):
+    """``platform.outbox.discarded`` v1: an operator dropped a dead-lettered event."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel, populate_by_name=True, serialize_by_alias=True, extra="forbid"
+    )
+
+    event_id: UUID
+    event_name: str
+    event_version: int
+    reason: str
+
+
+class OutboxThresholdExceededPayload(BaseModel):
+    """``platform.outbox.dead_letter_threshold_exceeded`` v1, in the affected tenant's outbox."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel, populate_by_name=True, serialize_by_alias=True, extra="forbid"
+    )
+
+    count: int
+    threshold: int
+
+
+_PLATFORM_EVENTS: tuple[tuple[str, type[BaseModel]], ...] = (
+    (PLATFORM_EVENT_DEPRECATED, EventDeprecatedPayload),
+    (PLATFORM_OUTBOX_RETRIED, OutboxRetriedPayload),
+    (PLATFORM_OUTBOX_DISCARDED, OutboxDiscardedPayload),
+    (PLATFORM_OUTBOX_THRESHOLD_EXCEEDED, OutboxThresholdExceededPayload),
+)
+
+
 def register_platform_events(reg: EventRegistry = registry) -> None:
-    """Register the catalogue's own platform-owned events (idempotent across ``create_app``)."""
-    if reg.spec(PLATFORM_EVENT_DEPRECATED, 1) is None:
-        reg.register(PLATFORM_EVENT_DEPRECATED, 1, EventDeprecatedPayload, PLATFORM_OWNER)
+    """Register the platform-owned events (idempotent across ``create_app``)."""
+    for name, model in _PLATFORM_EVENTS:
+        if reg.spec(name, 1) is None:
+            reg.register(name, 1, model, PLATFORM_OWNER)
 
 
 def verify_released_schemas(

@@ -1,0 +1,26 @@
+{
+  "additionalProperties": false,
+  "description": "``platform.outbox.retried`` v1: an operator put a dead-lettered event back in the queue.",
+  "properties": {
+    "eventId": {
+      "format": "uuid",
+      "title": "Eventid",
+      "type": "string"
+    },
+    "eventName": {
+      "title": "Eventname",
+      "type": "string"
+    },
+    "eventVersion": {
+      "title": "Eventversion",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "eventId",
+    "eventName",
+    "eventVersion"
+  ],
+  "title": "OutboxRetriedPayload",
+  "type": "object"
+}

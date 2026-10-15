@@ -4,7 +4,8 @@
 Created only by their Alembic revisions (``202610131000_domain_events`` and
 ``202610150900_event_catalogue``); ``aip-db check-schema`` compares these declarations with the
 migrated database. ``domain_events`` is append-only (no ``updated_at``/``deleted_at``): ``aip_app``
-inserts and reads, ``aip_jobs`` updates only the publish columns. ``platform_event_status`` is a
+inserts and reads, ``aip_jobs`` updates only the publish and backoff columns, and the
+ARCH-07 dead-letter functions alone set the discard columns. ``platform_event_status`` is a
 global catalogue table (no ``tenant_id``, no RLS; on the schema-guard allow-list).
 """
 
@@ -35,6 +36,11 @@ domain_events = Table(
     Column("attempts", Integer, nullable=False, server_default=text("0")),
     Column("dead_lettered_at", TIMESTAMP(timezone=True), nullable=True),
     Column("last_error", Text, nullable=True),
+    # ARCH-07: dispatch backoff and the operator's discard decision.
+    Column("next_attempt_at", TIMESTAMP(timezone=True), nullable=True),
+    Column("discarded_at", TIMESTAMP(timezone=True), nullable=True),
+    Column("discarded_by", UUID(as_uuid=True), nullable=True),
+    Column("discard_reason", Text, nullable=True),
 )
 
 # ARCH-06: the catalogue's deprecation flag per event version. Global (no tenant_id, no RLS).
