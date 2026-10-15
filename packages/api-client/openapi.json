@@ -15,6 +15,7 @@
                 "access.team.manage",
                 "identity.user.manage",
                 "identity.user.read",
+                "platform.events.manage",
                 "project.archive",
                 "project.create",
                 "project.update",
@@ -283,6 +284,53 @@
         "title": "Dependencies",
         "type": "object"
       },
+      "DeprecateResult": {
+        "additionalProperties": false,
+        "properties": {
+          "deprecatedAt": {
+            "format": "date-time",
+            "title": "Deprecatedat",
+            "type": "string"
+          },
+          "deprecatedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deprecatedby"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "deprecated"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "status",
+          "deprecatedAt",
+          "deprecatedBy"
+        ],
+        "title": "DeprecateResult",
+        "type": "object"
+      },
       "ErrorBody": {
         "description": "A domain error: a stable ``code`` (``PROJECT_CODE_TAKEN``, ``SITE_IN_USE``, ...).",
         "properties": {
@@ -313,6 +361,133 @@
           "detail"
         ],
         "title": "ErrorResponse",
+        "type": "object"
+      },
+      "EventCatalogue": {
+        "additionalProperties": false,
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/EventSummary"
+            },
+            "title": "Events",
+            "type": "array"
+          }
+        },
+        "required": [
+          "events"
+        ],
+        "title": "EventCatalogue",
+        "type": "object"
+      },
+      "EventDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/EventVersionDetail"
+            },
+            "title": "Versions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "versions"
+        ],
+        "title": "EventDetail",
+        "type": "object"
+      },
+      "EventSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "failed24h": {
+            "title": "Failed24H",
+            "type": "integer"
+          },
+          "module": {
+            "title": "Module",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "published24h": {
+            "title": "Published24H",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "deprecated"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subscribers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subscribers",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "module",
+          "status",
+          "subscribers",
+          "published24h",
+          "failed24h"
+        ],
+        "title": "EventSummary",
+        "type": "object"
+      },
+      "EventVersionDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "schema": {
+            "additionalProperties": true,
+            "title": "Schema",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "deprecated"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subscribers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subscribers",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "status",
+          "subscribers",
+          "schema"
+        ],
+        "title": "EventVersionDetail",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -1077,6 +1252,7 @@
                 "access.team.manage",
                 "identity.user.manage",
                 "identity.user.read",
+                "platform.events.manage",
                 "project.archive",
                 "project.create",
                 "project.update",
@@ -1178,6 +1354,7 @@
                 "access.team.manage",
                 "identity.user.manage",
                 "identity.user.read",
+                "platform.events.manage",
                 "project.archive",
                 "project.create",
                 "project.update",
@@ -1246,6 +1423,7 @@
                     "access.team.manage",
                     "identity.user.manage",
                     "identity.user.read",
+                    "platform.events.manage",
                     "project.archive",
                     "project.create",
                     "project.update",
@@ -2490,6 +2668,186 @@
         "tags": [
           "access",
           "access"
+        ]
+      }
+    },
+    "/api/v1/admin/platform/events": {
+      "get": {
+        "operationId": "platform_list_events",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Module"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "active",
+                    "deprecated"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventCatalogue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Events",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/admin/platform/events/{event_name}": {
+      "get": {
+        "operationId": "platform_get_event",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_name",
+            "required": true,
+            "schema": {
+              "title": "Event Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Event",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/admin/platform/events/{event_name}/versions/{version}/deprecate": {
+      "post": {
+        "operationId": "platform_deprecate_event_version",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_name",
+            "required": true,
+            "schema": {
+              "title": "Event Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Version",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeprecateResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Deprecate Event Version",
+        "tags": [
+          "platform"
         ]
       }
     },

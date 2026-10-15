@@ -1,0 +1,33 @@
+{
+  "additionalProperties": false,
+  "description": "Payload of ``platform.event.deprecated`` v1 (emitted when an operator deprecates it).",
+  "properties": {
+    "deprecatedBy": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deprecatedby"
+    },
+    "eventName": {
+      "title": "Eventname",
+      "type": "string"
+    },
+    "eventVersion": {
+      "title": "Eventversion",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "eventName",
+    "eventVersion"
+  ],
+  "title": "EventDeprecatedPayload",
+  "type": "object"
+}

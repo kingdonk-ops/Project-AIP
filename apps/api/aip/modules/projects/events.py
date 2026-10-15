@@ -14,7 +14,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
-from aip.platform.events import event_schemas
+from aip.platform.events import register_event
 
 __all__ = ["PROJECT_ARCHIVED", "PROJECT_CREATED", "PROJECT_UPDATED", "ProjectEvent"]
 
@@ -36,4 +36,4 @@ class ProjectEvent(BaseModel):
 
 
 for _name in (PROJECT_CREATED, PROJECT_UPDATED, PROJECT_ARCHIVED):
-    event_schemas.register(_name, 1, ProjectEvent)
+    register_event(_name, 1, ProjectEvent, "projects")

@@ -68,7 +68,7 @@ tasks still `todo` below remain before M0 is closed.
 | [IDENTITY-02](tasks/IDENTITY-02.md) | Users and tenant membership, JIT provisioning, GET /me | identity | M | DATABASE-02, IDENTITY-01, TENANCY-01 | done | PR #37 |
 | [TENANCY-02](tasks/TENANCY-02.md) | Tenant-scoped key builders for Redis, queues, S3 and search | tenancy | S | ARCH-04, TENANCY-01 | done | PR #33 |
 | [ENT-01](tasks/ENT-01.md) | EntitlementService, tenant_subscription, tenant_usage; flags vs entitlements (ADR 0008) | tenancy | M | DATABASE-02, TENANCY-01 | todo |  |
-| [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | todo |  |
+| [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | review | ClaudeK: p0/arch-event-registry-catalogue |
 | [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | todo |  |
 | [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | todo | |
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
@@ -92,7 +92,7 @@ tasks still `todo` below remain before M0 is closed.
 | [PROJECTS-02](tasks/PROJECTS-02.md) | Projects register page + create form (M0 UI slice) | projects | M | DESIGN-02, PROJECTS-01, STACK-03 | done | ClaudeK: PR #60 |
 | [TESTING-09](tasks/TESTING-09.md) | Walking-skeleton e2e: two tenants, login, register, isolation (CI + Coolify demo) | testing | S | OPS-11, PROJECTS-02 | done | PR #67; owner: make `e2e-skeleton` a required check, add E2E_* secrets to coolify-demo |
 | [QA-1](tasks/QA-1.md) | Walking-skeleton: "Create project" link is ambiguous on an empty register | testing | XS | TESTING-09 | done | PR #71; the same locator fix also landed in #72 |
-| [QA-2](tasks/QA-2.md) | Flaky ops runner test: whole-table procrastinate_jobs count races the periodic job | ops | XS | DATABASE-05 | review | ClaudeK: qa/ops-runner-flaky-job-count |
+| [QA-2](tasks/QA-2.md) | Flaky ops runner test: whole-table procrastinate_jobs count races the periodic job | ops | XS | DATABASE-05 | done | ClaudeK: PR #80 |
 
 ### Wave 6
 

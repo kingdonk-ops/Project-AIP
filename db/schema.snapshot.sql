@@ -151,6 +151,10 @@ GRANT ALL ON FUNCTION public.identity_resolve_session(p_sid_hash bytea) TO aip_a
 REVOKE ALL ON FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) TO aip_app;
 
+-- Name: FUNCTION platform_event_counts(since timestamp with time zone); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.platform_event_counts(since timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.platform_event_counts(since timestamp with time zone) TO aip_app;
+
 -- Name: FUNCTION tenancy_has_real_customer(); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.tenancy_has_real_customer() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.tenancy_has_real_customer() TO aip_app;
@@ -212,6 +216,10 @@ GRANT SELECT ON TABLE public.partition_settings TO aip_jobs;
 -- Name: TABLE permission; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.permission TO aip_app;
 GRANT SELECT ON TABLE public.permission TO aip_readonly;
+
+-- Name: TABLE platform_event_status; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.platform_event_status TO aip_app;
+GRANT SELECT ON TABLE public.platform_event_status TO aip_readonly;
 
 -- Name: TABLE procrastinate_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_events TO aip_jobs;
@@ -344,6 +352,10 @@ ALTER TABLE ONLY public.partition_settings
 -- Name: permission pk_permission; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.permission
     ADD CONSTRAINT pk_permission PRIMARY KEY (code);
+
+-- Name: platform_event_status pk_platform_event_status; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.platform_event_status
+    ADD CONSTRAINT pk_platform_event_status PRIMARY KEY (event_name, event_version);
 
 -- Name: procrastinate_events procrastinate_events_pkey; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.procrastinate_events
@@ -838,6 +850,21 @@ CREATE FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) RETURNS TABLE(
     $$;
 
 ALTER FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) OWNER TO aip_owner;
+
+-- Name: platform_event_counts(timestamp with time zone); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.platform_event_counts(since timestamp with time zone) RETURNS TABLE(event_name text, event_version integer, published bigint, failed bigint)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+      SELECT d.event_name, d.event_version,
+             count(*) FILTER (WHERE d.published_at IS NOT NULL) AS published,
+             count(*) FILTER (WHERE d.dead_lettered_at IS NOT NULL) AS failed
+      FROM public.domain_events AS d
+      WHERE d.occurred_at >= since
+      GROUP BY d.event_name, d.event_version;
+    $$;
+
+ALTER FUNCTION public.platform_event_counts(since timestamp with time zone) OWNER TO aip_owner;
 
 -- Name: procrastinate_cancel_job_v1(bigint, boolean, boolean); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.procrastinate_cancel_job_v1(job_id bigint, abort boolean, delete_job boolean) RETURNS bigint
@@ -1540,6 +1567,9 @@ CREATE POLICY dispatcher_select ON public.domain_events FOR SELECT TO aip_jobs U
 -- Name: domain_events dispatcher_update; Type: POLICY; Schema: public
 CREATE POLICY dispatcher_update ON public.domain_events FOR UPDATE TO aip_jobs USING (true) WITH CHECK (true);
 
+-- Name: domain_events platform_counts_owner_read; Type: POLICY; Schema: public
+CREATE POLICY platform_counts_owner_read ON public.domain_events FOR SELECT TO aip_owner USING (true);
+
 -- Name: domain_events tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.domain_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -1975,6 +2005,23 @@ CREATE TABLE public.permission (
 );
 
 ALTER TABLE public.permission OWNER TO aip_owner;
+
+-- Name: platform_event_status; Type: TABLE; Schema: public
+CREATE TABLE public.platform_event_status (
+    event_name text NOT NULL,
+    event_version integer NOT NULL,
+    status text DEFAULT 'active'::text NOT NULL,
+    deprecated_at timestamp with time zone,
+    deprecated_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_platform_event_status_deprecated CHECK (((status = 'deprecated'::text) = (deprecated_at IS NOT NULL))),
+    CONSTRAINT ck_platform_event_status_event_name CHECK ((event_name <> ''::text)),
+    CONSTRAINT ck_platform_event_status_event_version CHECK ((event_version >= 1)),
+    CONSTRAINT ck_platform_event_status_status CHECK ((status = ANY (ARRAY['active'::text, 'deprecated'::text])))
+);
+
+ALTER TABLE public.platform_event_status OWNER TO aip_owner;
 
 -- Name: procrastinate_events; Type: TABLE; Schema: public
 CREATE TABLE public.procrastinate_events (
