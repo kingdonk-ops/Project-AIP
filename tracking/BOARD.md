@@ -85,7 +85,7 @@ tasks still `todo` below remain before M0 is closed.
 | [ACCESS-01](tasks/ACCESS-01.md) | Permission catalogue from manifests + PolicyService.can + Nest guard (deny by default) | access | M | ARCH-02, ARCH-04, IDENTITY-02 | done | ClaudeK: PR #51 |
 | [ARCH-07](tasks/ARCH-07.md) | Outbox dispatcher, retries and dead-letter | arch | M | ARCH-06 | done | ClaudeK: PR #83; PR #55 low findings closed (manifest-listed subscribers, write-once publish/discard, bounded last_error); ADR 0030 |
 | [TERMS-03](tasks/TERMS-03.md) | ICU formatting and unit conversion | terms | M | TERMS-02 | todo | |
-| [TERMS-07](tasks/TERMS-07.md) | Hard-coded string linter and coverage report | terms | M | TERMS-01 | todo | |
+| [TERMS-07](tasks/TERMS-07.md) | Hard-coded string linter and coverage report | terms | M | TERMS-01 | in-progress | ClaudeK, branch claudeK/terms-07 |
 | [TERMS-08](tasks/TERMS-08.md) | Frontend i18n provider and dictionary admin screen | terms | M | TERMS-05 | todo | |
 | [AUDIT-01](tasks/AUDIT-01.md) | Append-only hash-chained audit_log, writer role, REVOKE | audit | M | ARCH-05, DATABASE-05 | review | ClaudeK: PR #85 |
 | [DESIGN-03](tasks/DESIGN-03.md) | Register table standard (filters, server pagination, CSV) | design | M | DESIGN-02 | done | PR #63; projects switch split to PROJECTS-06 |
