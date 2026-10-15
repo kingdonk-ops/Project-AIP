@@ -69,7 +69,7 @@ tasks still `todo` below remain before M0 is closed.
 | [TENANCY-02](tasks/TENANCY-02.md) | Tenant-scoped key builders for Redis, queues, S3 and search | tenancy | S | ARCH-04, TENANCY-01 | done | PR #33 |
 | [ENT-01](tasks/ENT-01.md) | EntitlementService, tenant_subscription, tenant_usage; flags vs entitlements (ADR 0008) | tenancy | M | DATABASE-02, TENANCY-01 | done | ClaudeK: PR #82; security review fixed in PR (ADR 0029 amendment); estimate cadence ADR 0008 amendment |
 | [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | done | PR #78 |
-| [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | todo |  |
+| [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | done | ClaudeK: PR #91; ECC code + security review fixed in PR (traverse is breadth-first, see PR) |
 | [ARCH-09](tasks/ARCH-09.md) | Event catalogue and dead-letter admin pages | arch | M | ARCH-07, DESIGN-03, DESIGN-04 | todo | web stream; APIs from ARCH-06/ARCH-07; replay, CSV export and payload drawer out of scope |
 | [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | done | ClaudeK; PR #87 |
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
@@ -87,7 +87,7 @@ tasks still `todo` below remain before M0 is closed.
 | [TERMS-03](tasks/TERMS-03.md) | ICU formatting and unit conversion | terms | M | TERMS-02 | done | ClaudeK; PR #88 |
 | [TERMS-07](tasks/TERMS-07.md) | Hard-coded string linter and coverage report | terms | M | TERMS-01 | todo | |
 | [TERMS-08](tasks/TERMS-08.md) | Frontend i18n provider and dictionary admin screen | terms | M | TERMS-05 | todo | |
-| [AUDIT-01](tasks/AUDIT-01.md) | Append-only hash-chained audit_log, writer role, REVOKE | audit | M | ARCH-05, DATABASE-05 | review | ClaudeK: PR #85 |
+| [AUDIT-01](tasks/AUDIT-01.md) | Append-only hash-chained audit_log, writer role, REVOKE | audit | M | ARCH-05, DATABASE-05 | done | ClaudeK: PR #85 |
 | [DESIGN-03](tasks/DESIGN-03.md) | Register table standard (filters, server pagination, CSV) | design | M | DESIGN-02 | done | PR #63; projects switch split to PROJECTS-06 |
 | [PROJECTS-01](tasks/PROJECTS-01.md) | Projects + sites tables and CRUD API | projects | M | ACCESS-01, ARCH-05, DATABASE-02, TENANCY-01 | done | ClaudeK: PR #56 |
 | [PROJECTS-02](tasks/PROJECTS-02.md) | Projects register page + create form (M0 UI slice) | projects | M | DESIGN-02, PROJECTS-01, STACK-03 | done | ClaudeK: PR #60 |

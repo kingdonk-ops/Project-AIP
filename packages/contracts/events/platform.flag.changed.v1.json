@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "description": "``platform.flag.changed`` v1: a tenant's release flag was switched (ARCH-08).",
+  "properties": {
+    "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+    },
+    "flag": {
+      "title": "Flag",
+      "type": "string"
+    }
+  },
+  "required": [
+    "flag",
+    "enabled"
+  ],
+  "title": "FlagChangedPayload",
+  "type": "object"
+}

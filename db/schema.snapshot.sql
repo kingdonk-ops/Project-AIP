@@ -294,6 +294,10 @@ GRANT SELECT ON TABLE public.projects TO aip_readonly;
 GRANT SELECT,INSERT ON TABLE public.provenance_entries TO aip_app;
 GRANT SELECT ON TABLE public.provenance_entries TO aip_readonly;
 
+-- Name: TABLE record_links; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.record_links TO aip_app;
+GRANT SELECT ON TABLE public.record_links TO aip_readonly;
+
 -- Name: TABLE restore_test_records; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.restore_test_records TO aip_app;
 GRANT SELECT ON TABLE public.restore_test_records TO aip_readonly;
@@ -321,6 +325,10 @@ GRANT SELECT ON TABLE public.tenant_auth_policy TO aip_readonly;
 -- Name: TABLE tenant_entitlement_override; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_entitlement_override TO aip_app;
 GRANT SELECT ON TABLE public.tenant_entitlement_override TO aip_readonly;
+
+-- Name: TABLE tenant_feature_flags; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_feature_flags TO aip_app;
+GRANT SELECT ON TABLE public.tenant_feature_flags TO aip_readonly;
 
 -- Name: TABLE tenant_membership; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.tenant_membership TO aip_app;
@@ -514,6 +522,10 @@ ALTER TABLE ONLY public.provenance_entries
 ALTER TABLE ONLY public.provenance_entries_default
     ADD CONSTRAINT provenance_entries_default_pkey PRIMARY KEY (id, created_at);
 
+-- Name: record_links pk_record_links; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.record_links
+    ADD CONSTRAINT pk_record_links PRIMARY KEY (id);
+
 -- Name: restore_test_records pk_restore_test_records; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.restore_test_records
     ADD CONSTRAINT pk_restore_test_records PRIMARY KEY (id, created_at);
@@ -553,6 +565,10 @@ ALTER TABLE ONLY public.tenant_auth_policy
 -- Name: tenant_entitlement_override pk_tenant_entitlement_override; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_entitlement_override
     ADD CONSTRAINT pk_tenant_entitlement_override PRIMARY KEY (id);
+
+-- Name: tenant_feature_flags pk_tenant_feature_flags; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_feature_flags
+    ADD CONSTRAINT pk_tenant_feature_flags PRIMARY KEY (id);
 
 -- Name: tenant_membership pk_tenant_membership; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_membership
@@ -679,6 +695,10 @@ ALTER TABLE ONLY public.projects
 ALTER TABLE ONLY public.projects
     ADD CONSTRAINT fk_projects_site_id_tenant_id_sites FOREIGN KEY (site_id, tenant_id) REFERENCES public.sites(id, tenant_id);
 
+-- Name: record_links fk_record_links_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.record_links
+    ADD CONSTRAINT fk_record_links_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
 -- Name: role fk_role_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.role
     ADD CONSTRAINT fk_role_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
@@ -718,6 +738,10 @@ ALTER TABLE ONLY public.tenant_auth_policy
 -- Name: tenant_entitlement_override fk_tenant_entitlement_override_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_entitlement_override
     ADD CONSTRAINT fk_tenant_entitlement_override_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: tenant_feature_flags fk_tenant_feature_flags_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.tenant_feature_flags
+    ADD CONSTRAINT fk_tenant_feature_flags_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 -- Name: tenant_membership fk_tenant_membership_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_membership
@@ -1744,6 +1768,12 @@ CREATE INDEX ix_provenance_entries_tenant_id ON ONLY public.provenance_entries U
 -- Name: ix_provenance_entries_tenant_id_recorded_at; Type: INDEX; Schema: public
 CREATE INDEX ix_provenance_entries_tenant_id_recorded_at ON ONLY public.provenance_entries USING btree (tenant_id, recorded_at DESC);
 
+-- Name: ix_record_links_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_record_links_tenant_id ON public.record_links USING btree (tenant_id);
+
+-- Name: ix_record_links_to; Type: INDEX; Schema: public
+CREATE INDEX ix_record_links_to ON public.record_links USING btree (tenant_id, to_type, to_id) WHERE (deleted_at IS NULL);
+
 -- Name: ix_restore_test_records_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_restore_test_records_tenant_id ON ONLY public.restore_test_records USING btree (tenant_id);
 
@@ -1776,6 +1806,9 @@ CREATE INDEX ix_tenant_entitlement_override_tenant_id ON public.tenant_entitleme
 
 -- Name: ix_tenant_entitlement_override_tenant_id_key; Type: INDEX; Schema: public
 CREATE INDEX ix_tenant_entitlement_override_tenant_id_key ON public.tenant_entitlement_override USING btree (tenant_id, key) WHERE (deleted_at IS NULL);
+
+-- Name: ix_tenant_feature_flags_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_tenant_feature_flags_tenant_id ON public.tenant_feature_flags USING btree (tenant_id);
 
 -- Name: ix_tenant_membership_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_tenant_membership_tenant_id ON public.tenant_membership USING btree (tenant_id);
@@ -1930,6 +1963,12 @@ CREATE UNIQUE INDEX uq_term_pack_version_pack_id_version ON public.term_pack_ver
 -- Name: uq_upload_sessions_client_request_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_upload_sessions_client_request_id ON public.upload_sessions USING btree (tenant_id, requested_by, client_request_id) WHERE (client_request_id IS NOT NULL);
 
+-- Name: ux_record_links_live; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_record_links_live ON public.record_links USING btree (tenant_id, from_type, from_id, to_type, to_id, link_kind) WHERE (deleted_at IS NULL);
+
+-- Name: ux_tenant_feature_flags_live; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_tenant_feature_flags_live ON public.tenant_feature_flags USING btree (tenant_id, flag) WHERE (deleted_at IS NULL);
+
 -- Name: evidence_items_default_pkey; Type: INDEX ATTACH; Schema: public
 ALTER INDEX public.pk_evidence_items ATTACH PARTITION public.evidence_items_default_pkey;
 
@@ -2029,6 +2068,9 @@ CREATE POLICY tenant_isolation ON public.projects USING ((tenant_id = (NULLIF(cu
 -- Name: provenance_entries tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.provenance_entries USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: record_links tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.record_links USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: restore_test_records tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.restore_test_records USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -2049,6 +2091,9 @@ CREATE POLICY tenant_isolation ON public.tenant_auth_policy USING ((tenant_id = 
 
 -- Name: tenant_entitlement_override tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenant_entitlement_override USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: tenant_feature_flags tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.tenant_feature_flags USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: tenant_membership tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenant_membership USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -2158,6 +2203,9 @@ ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 -- Name: provenance_entries; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.provenance_entries ENABLE ROW LEVEL SECURITY;
 
+-- Name: record_links; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.record_links ENABLE ROW LEVEL SECURITY;
+
 -- Name: restore_test_records; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.restore_test_records ENABLE ROW LEVEL SECURITY;
 
@@ -2178,6 +2226,9 @@ ALTER TABLE public.tenant_auth_policy ENABLE ROW LEVEL SECURITY;
 
 -- Name: tenant_entitlement_override; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenant_entitlement_override ENABLE ROW LEVEL SECURITY;
+
+-- Name: tenant_feature_flags; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.tenant_feature_flags ENABLE ROW LEVEL SECURITY;
 
 -- Name: tenant_membership; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenant_membership ENABLE ROW LEVEL SECURITY;
@@ -2847,6 +2898,30 @@ CREATE TABLE public.provenance_entries_default (
 
 ALTER TABLE public.provenance_entries_default OWNER TO aip_owner;
 
+-- Name: record_links; Type: TABLE; Schema: public
+CREATE TABLE public.record_links (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    from_type text NOT NULL,
+    from_id uuid NOT NULL,
+    to_type text NOT NULL,
+    to_id uuid NOT NULL,
+    asset_id uuid,
+    link_kind text NOT NULL,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_record_links_from_type CHECK ((from_type ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
+    CONSTRAINT ck_record_links_link_kind CHECK ((link_kind ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
+    CONSTRAINT ck_record_links_not_self CHECK (((from_type <> to_type) OR (from_id <> to_id))),
+    CONSTRAINT ck_record_links_to_type CHECK ((to_type ~ '^[a-z][a-z0-9_]{0,62}$'::text))
+);
+
+ALTER TABLE ONLY public.record_links FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.record_links OWNER TO aip_owner;
+
 -- Name: restore_test_records; Type: TABLE; Schema: public
 CREATE TABLE public.restore_test_records (
     id uuid NOT NULL,
@@ -3019,6 +3094,23 @@ CREATE TABLE public.tenant_entitlement_override (
 ALTER TABLE ONLY public.tenant_entitlement_override FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.tenant_entitlement_override OWNER TO aip_owner;
+
+-- Name: tenant_feature_flags; Type: TABLE; Schema: public
+CREATE TABLE public.tenant_feature_flags (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    flag text NOT NULL,
+    enabled boolean NOT NULL,
+    updated_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_tenant_feature_flags_flag CHECK ((flag ~ '^[a-z][a-z0-9_]{0,62}$'::text))
+);
+
+ALTER TABLE ONLY public.tenant_feature_flags FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.tenant_feature_flags OWNER TO aip_owner;
 
 -- Name: tenant_membership; Type: TABLE; Schema: public
 CREATE TABLE public.tenant_membership (

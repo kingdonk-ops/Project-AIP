@@ -23,7 +23,12 @@ from aip.platform.db.migrator import (
 )
 
 # Platform services that own tables (modules are found by scanning ``aip/modules``).
-PLATFORM_TABLES = ("aip.platform.db.tables", "aip.platform.events.tables")
+PLATFORM_TABLES = (
+    "aip.platform.db.tables",
+    "aip.platform.events.tables",
+    "aip.platform.flags.tables",
+    "aip.platform.links.tables",
+)
 
 
 def load_declared_tables() -> MetaData:

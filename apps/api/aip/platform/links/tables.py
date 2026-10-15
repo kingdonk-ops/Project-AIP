@@ -1,0 +1,33 @@
+"""SQLAlchemy Core declaration of ``record_links`` (ARCH-08, ADR 0002).
+
+Created only by the Alembic revision ``202610161000_record_links_feature_flags``; ``aip-db
+check-schema`` compares this declaration with the migrated database. A tenant table: FORCE RLS on
+``app.tenant_id``, soft delete only (``aip_app`` has no DELETE), and at most one live row per
+``(tenant_id, from_type, from_id, to_type, to_id, link_kind)``.
+"""
+
+from __future__ import annotations
+
+from sqlalchemy import Column, ForeignKey, Table, Text, text
+from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
+
+from aip.platform.db.metadata import metadata
+
+__all__ = ["record_links"]
+
+record_links = Table(
+    "record_links",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("tenant_id", UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False),
+    Column("from_type", Text, nullable=False),
+    Column("from_id", UUID(as_uuid=True), nullable=False),
+    Column("to_type", Text, nullable=False),
+    Column("to_id", UUID(as_uuid=True), nullable=False),
+    Column("asset_id", UUID(as_uuid=True), nullable=True),
+    Column("link_kind", Text, nullable=False),
+    Column("created_by", UUID(as_uuid=True), nullable=True),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", TIMESTAMP(timezone=True), nullable=True),
+)
