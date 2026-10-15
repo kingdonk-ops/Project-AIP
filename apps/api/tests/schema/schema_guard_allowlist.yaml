@@ -28,6 +28,12 @@ tables:
   - table: partition_settings
     reason: Global partition-maintenance settings; holds no tenant data.
     checks_skipped: [tenant_id, rls, force_rls, policy]
+  - table: platform_event_status
+    reason: >-
+      Global event catalogue (ARCH-06): the deprecation flag per event name+version, mirrored from
+      the registry. Holds no tenant data. aip_app may SELECT/INSERT/UPDATE it through the
+      platform.events.manage-gated deprecate endpoint; aip_readonly may SELECT.
+    checks_skipped: [tenant_id, rls, force_rls, policy]
   - table: procrastinate_*
     reason: >-
       Procrastinate queue internals (ADR 0003). Payloads carry tenant_id; the worker restores

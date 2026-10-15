@@ -3,6 +3,66 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary List Events
+ */
+
+
+
+export const PlatformListEventsQueryParams = zod.object({
+  "module": zod.union([zod.string(),zod.null()]).optional(),
+  "status": zod.union([zod.enum(['active', 'deprecated']),zod.null()]).optional(),
+  "version": zod.union([zod.int().min(1),zod.null()]).optional()
+})
+
+export const PlatformListEventsResponse = zod.object({
+  "events": zod.array(zod.object({
+  "failed24h": zod.int(),
+  "module": zod.string(),
+  "name": zod.string(),
+  "published24h": zod.int(),
+  "status": zod.enum(['active', 'deprecated']),
+  "subscribers": zod.array(zod.string()),
+  "version": zod.int()
+}))
+})
+
+/**
+ * @summary Get Event
+ */
+export const PlatformGetEventParams = zod.object({
+  "event_name": zod.string()
+})
+
+export const PlatformGetEventResponse = zod.object({
+  "name": zod.string(),
+  "versions": zod.array(zod.object({
+  "schema": zod.record(zod.string(), zod.unknown()),
+  "status": zod.enum(['active', 'deprecated']),
+  "subscribers": zod.array(zod.string()),
+  "version": zod.int()
+}))
+})
+
+/**
+ * @summary Deprecate Event Version
+ */
+
+
+
+export const PlatformDeprecateEventVersionParams = zod.object({
+  "event_name": zod.string(),
+  "version": zod.int().min(1)
+})
+
+export const PlatformDeprecateEventVersionResponse = zod.object({
+  "deprecatedAt": zod.iso.datetime({"offset":true}),
+  "deprecatedBy": zod.union([zod.uuid(),zod.null()]),
+  "name": zod.string(),
+  "status": zod.enum(['active', 'deprecated']),
+  "version": zod.int()
+})
+
+/**
  * @summary Health
  */
 export const PlatformHealthResponse = zod.object({

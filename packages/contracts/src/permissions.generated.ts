@@ -11,6 +11,7 @@ export type PermissionCode =
   | "access.team.manage"
   | "identity.user.manage"
   | "identity.user.read"
+  | "platform.events.manage"
   | "project.archive"
   | "project.create"
   | "project.update"
@@ -27,6 +28,7 @@ export const PERMISSIONS = {
   "access.team.manage": { module: "access", privileged: false },
   "identity.user.manage": { module: "identity", privileged: true },
   "identity.user.read": { module: "identity", privileged: false },
+  "platform.events.manage": { module: "ops", privileged: true },
   "project.archive": { module: "projects", privileged: false },
   "project.create": { module: "projects", privileged: false },
   "project.update": { module: "projects", privileged: false },

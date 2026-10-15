@@ -68,7 +68,7 @@ tasks still `todo` below remain before M0 is closed.
 | [IDENTITY-02](tasks/IDENTITY-02.md) | Users and tenant membership, JIT provisioning, GET /me | identity | M | DATABASE-02, IDENTITY-01, TENANCY-01 | done | PR #37 |
 | [TENANCY-02](tasks/TENANCY-02.md) | Tenant-scoped key builders for Redis, queues, S3 and search | tenancy | S | ARCH-04, TENANCY-01 | done | PR #33 |
 | [ENT-01](tasks/ENT-01.md) | EntitlementService, tenant_subscription, tenant_usage; flags vs entitlements (ADR 0008) | tenancy | M | DATABASE-02, TENANCY-01 | todo |  |
-| [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | todo |  |
+| [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | in-progress | ClaudeK: p0/arch-event-registry-catalogue |
 | [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | todo |  |
 | [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | todo | |
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |

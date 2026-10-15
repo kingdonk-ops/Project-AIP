@@ -17,7 +17,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
-from aip.platform.events import event_schemas
+from aip.platform.events import register_event
 
 __all__ = [
     "ROLE_ASSIGNMENT_CREATED",
@@ -59,6 +59,6 @@ class RoleAssignmentEvent(BaseModel):
     approved_by: UUID | None = None
 
 
-event_schemas.register(ROLE_CHANGED, 1, RoleChangedEvent)
+register_event(ROLE_CHANGED, 1, RoleChangedEvent, "access")
 for _name in (ROLE_ASSIGNMENT_CREATED, ROLE_ASSIGNMENT_REMOVED):
-    event_schemas.register(_name, 1, RoleAssignmentEvent)
+    register_event(_name, 1, RoleAssignmentEvent, "access")

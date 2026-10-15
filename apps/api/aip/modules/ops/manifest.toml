@@ -4,8 +4,17 @@
 id = "ops"
 context = "platform"
 depends_on = []
-permissions = []
+# ops is the platform-context module, so it owns the `platform` permission namespace: the codes
+# that gate the operator/platform-admin surfaces (ARCH-06's event catalogue, later dead-letter and
+# replay). The pages live under aip.platform.*, but permissions come only from manifests (ACCESS-01),
+# so they are declared here.
+permission_namespaces = ["ops", "platform"]
 events = []
 subscribes = []
 settings = []
 term_keys = []
+
+[[permissions]]
+code = "platform.events.manage"
+description = "Manage the domain-event catalogue (deprecate event versions)."
+privileged = true
