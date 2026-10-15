@@ -71,7 +71,7 @@ tasks still `todo` below remain before M0 is closed.
 | [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | done | PR #78 |
 | [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | todo |  |
 | [ARCH-09](tasks/ARCH-09.md) | Event catalogue and dead-letter admin pages | arch | M | ARCH-07, DESIGN-03, DESIGN-04 | todo | web stream; APIs from ARCH-06/ARCH-07; replay, CSV export and payload drawer out of scope |
-| [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | in-progress | ClaudeK, branch p0/terms-resolver |
+| [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | done | ClaudeK; PR TBD |
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
 | [TESTING-10](tasks/TESTING-10.md) | Worker shutdown test waits for registration instead of a fixed sleep | testing | XS | OPS-02 | done | PR #48 |
 | [TESTING-11](tasks/TESTING-11.md) | JIT membership test uses the database date, not the local date | testing | XS | IDENTITY-02 | done | ClaudeK: PR #53 |
