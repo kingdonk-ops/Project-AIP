@@ -101,7 +101,7 @@ tasks still `todo` below remain before M0 is closed.
 |---|---|---|---|---|---|---|
 | [ACCESS-02](tasks/ACCESS-02.md) | Roles, default role seed, tenant/project role assignment API | access | M | ACCESS-01, PROJECTS-01 | done | PR #61; project overrides and operator gate split to ACCESS-06 |
 | [IDENTITY-03](tasks/IDENTITY-03.md) | Server-side sessions (__Host- cookie, user_session), rotation, revocation | identity | M | DESIGN-02, IDENTITY-02 | done | PR #62; live Keycloak + Playwright journeys carried to TESTING-09 |
-| [TENANCY-03](tasks/TENANCY-03.md) | Organisations and project-scoped role assignment | tenancy | M | PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting |
+| [TENANCY-03](tasks/TENANCY-03.md) | Organisations and project-scoped role assignment | tenancy | M | PROJECTS-01 | in-progress | ClaudeK: branch claudeK/tenancy-03; converted per ADR 0001 and narrowed to the API (page and invite e2e → TENANCY-08, org-isolation golden tests → TENANCY-09) |
 | [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [APPROVALS-01](tasks/APPROVALS-01.md) | Versioned workflow definitions/instances + pure state-machine evaluator | approvals | M | ARCH-02, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | done | PR #79 (stream B); SSE-KMS wiring → UPLOADS-07  |
@@ -128,6 +128,7 @@ tasks still `todo` below remain before M0 is closed.
 | [PROJECTS-03](tasks/PROJECTS-03.md) | Project membership, header switcher, X-Project-Id enforcement | projects | M | ACCESS-02, ARCH-04 | todo | convert to Python backend per ADR 0001 before starting  |
 | [IDENTITY-04](tasks/IDENTITY-04.md) | Invite/accept via Keycloak admin API; MFA enforcement and step-up | identity | M | ACCESS-01, IDENTITY-03, STACK-02 | todo |  |
 | [IDENTITY-07](tasks/IDENTITY-07.md) | Sign-off assurance: per-tenant minimum, method recording, step-up and countersign decision | identity | M | IDENTITY-04 | todo | ADR 0010 |
+| [TENANCY-08](tasks/TENANCY-08.md) | Organisations settings page and invite journey | tenancy | M | IDENTITY-04, TENANCY-03 | todo | split from TENANCY-03 (2026-10-16) |
 | [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01, IDENTITY-07 | todo | convert to Python backend per ADR 0001 before starting; calls check_signoff_assurance (ADR 0010) |
 | [UPLOADS-02](tasks/UPLOADS-02.md) | Scan worker: ClamAV, magic bytes, caps, fail-closed release | uploads | M | ARCH-05, OPS-02, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-03](tasks/UPLOADS-03.md) | Resumable S3 multipart uploads | uploads | M | UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
@@ -205,6 +206,7 @@ tasks still `todo` below remain before M0 is closed.
 |---|---|---|---|---|---|---|
 | [DATABASE-03](tasks/DATABASE-03.md) | tenant_id backfill and RLS on all existing tables | database | M | DATABASE-02, PLAN-R1, TENANCY-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [TENANCY-04](tasks/TENANCY-04.md) | Asset sharing with party-scoped visibility profiles | tenancy | M | PLAN-R1, TENANCY-03 | todo | convert to Python backend per ADR 0001 before starting |
+| [TENANCY-09](tasks/TENANCY-09.md) | Organisation-level isolation golden tests | tenancy | S | TENANCY-03, TENANCY-04 | todo | split from TENANCY-03 (2026-10-16): needs assets and asset sharing |
 | [TESTING-06](tasks/TESTING-06.md) | Hold-point and completion-gate scenarios on CUI data, plus golden report | testing | M | PLAN-R1, TESTING-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-07](tasks/TESTING-07.md) | Offline sync convergence property tests | testing | M | PLAN-R1, TESTING-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [TERMS-04](tasks/TERMS-04.md) | Pack import, diff, dry-run, apply and rollback | terms | M | PLAN-R1, TERMS-02 | todo | convert to Python backend per ADR 0001 before starting |
