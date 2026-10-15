@@ -26,7 +26,12 @@ from aip.platform.access import AccessPrincipal, PolicyService, Resource, authen
 
 __all__ = ["router"]
 
-_NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"model": UploadErrorBody}}
+# Explicit descriptions keep the generated OpenAPI spec identical across Python versions: without
+# one, FastAPI falls back to ``http.HTTPStatus(code).phrase``, and 413's phrase changed between
+# 3.12 ("Request Entity Too Large") and 3.13 ("Content Too Large").
+_NOT_FOUND: dict[int | str, dict[str, Any]] = {
+    404: {"model": UploadErrorBody, "description": "Not found"}
+}
 _INVALID: dict[int | str, dict[str, Any]] = {422: {"description": "Validation error"}}
 
 sessions_router = APIRouter(prefix="/uploads/sessions", tags=["uploads"])
@@ -39,10 +44,13 @@ sessions_router = APIRouter(prefix="/uploads/sessions", tags=["uploads"])
     status_code=status.HTTP_201_CREATED,
     responses={
         **_INVALID,
-        400: {"model": UploadErrorBody},
-        413: {"model": UploadErrorBody},
-        415: {"model": UploadErrorBody},
-        429: {"model": UploadErrorBody},
+        400: {"model": UploadErrorBody, "description": "Invalid declared size"},
+        413: {
+            "model": UploadErrorBody,
+            "description": "Too large for a single part; use multipart",
+        },
+        415: {"model": UploadErrorBody, "description": "Unsupported declared type"},
+        429: {"model": UploadErrorBody, "description": "Too many open upload sessions"},
     },
 )
 async def create_session(
@@ -60,7 +68,14 @@ async def create_session(
     "/{session_id}/confirm",
     operation_id="uploads_confirm_session",
     response_model=SessionStatus,
-    responses={**_NOT_FOUND, 409: {"model": UploadErrorBody}, 422: {"model": UploadErrorBody}},
+    responses={
+        **_NOT_FOUND,
+        409: {
+            "model": UploadErrorBody,
+            "description": "Session not awaiting bytes, or object missing",
+        },
+        422: {"model": UploadErrorBody, "description": "Uploaded object is larger than declared"},
+    },
     dependencies=[Depends(authenticated())],
 )
 async def confirm_session(session_id: UUID) -> SessionStatus:

@@ -2467,7 +2467,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionCreated"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Invalid declared size */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -2476,7 +2476,7 @@ export interface operations {
                     "application/json": components["schemas"]["UploadErrorBody"];
                 };
             };
-            /** @description Request Entity Too Large */
+            /** @description Too large for a single part; use multipart */
             413: {
                 headers: {
                     [name: string]: unknown;
@@ -2485,7 +2485,7 @@ export interface operations {
                     "application/json": components["schemas"]["UploadErrorBody"];
                 };
             };
-            /** @description Unsupported Media Type */
+            /** @description Unsupported declared type */
             415: {
                 headers: {
                     [name: string]: unknown;
@@ -2501,7 +2501,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Too Many Requests */
+            /** @description Too many open upload sessions */
             429: {
                 headers: {
                     [name: string]: unknown;
@@ -2532,7 +2532,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionStatus"];
                 };
             };
-            /** @description Not Found */
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2541,7 +2541,7 @@ export interface operations {
                     "application/json": components["schemas"]["UploadErrorBody"];
                 };
             };
-            /** @description Conflict */
+            /** @description Session not awaiting bytes, or object missing */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -2550,7 +2550,7 @@ export interface operations {
                     "application/json": components["schemas"]["UploadErrorBody"];
                 };
             };
-            /** @description Unprocessable Entity */
+            /** @description Uploaded object is larger than declared */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -2581,7 +2581,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionStatus"];
                 };
             };
-            /** @description Not Found */
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;
