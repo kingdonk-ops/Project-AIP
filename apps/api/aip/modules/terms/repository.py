@@ -27,6 +27,7 @@ __all__ = [
     "pack_version",
     "set_active_version",
     "tenant_default_locale",
+    "unit_system",
     "upsert_override",
 ]
 
@@ -41,6 +42,13 @@ _DEFAULTS = text(
 _DEFAULT_LOCALE = text(
     "SELECT locale FROM locale_settings"
     " WHERE tenant_id = :tenant AND project_id IS NULL AND deleted_at IS NULL"
+)
+# The project row (when asked for) sorts before the tenant row (project_id NULL).
+_UNIT_SYSTEM = text(
+    "SELECT unit_system FROM locale_settings"
+    " WHERE tenant_id = :tenant AND deleted_at IS NULL"
+    " AND (project_id IS NULL OR project_id = :project)"
+    " ORDER BY project_id NULLS LAST LIMIT 1"
 )
 # Packs merge in code order, so with two active packs the later code wins a shared key.
 _ACTIVE_PACKS = text(
@@ -115,6 +123,14 @@ async def defaults(conn: AsyncConnection) -> Texts:
 
 async def tenant_default_locale(conn: AsyncConnection, tenant_id: UUID) -> str | None:
     return (await conn.execute(_DEFAULT_LOCALE, {"tenant": tenant_id})).scalar_one_or_none()
+
+
+async def unit_system(
+    conn: AsyncConnection, tenant_id: UUID, project_id: UUID | None
+) -> str | None:
+    """The project's ``unit_system``, else the tenant's (``None`` when neither has a row)."""
+    params = {"tenant": tenant_id, "project": project_id}
+    return (await conn.execute(_UNIT_SYSTEM, params)).scalar_one_or_none()
 
 
 async def active_pack_contents(conn: AsyncConnection, tenant_id: UUID) -> list[Mapping[str, Any]]:
