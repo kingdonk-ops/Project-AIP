@@ -76,7 +76,7 @@ tasks still `todo` below remain before M0 is closed.
 | [TESTING-10](tasks/TESTING-10.md) | Worker shutdown test waits for registration instead of a fixed sleep | testing | XS | OPS-02 | done | PR #48 |
 | [TESTING-11](tasks/TESTING-11.md) | JIT membership test uses the database date, not the local date | testing | XS | IDENTITY-02 | done | ClaudeK: PR #53 |
 | [DATABASE-05](tasks/DATABASE-05.md) | Append-only grants and time partitioning | database | M | DATABASE-02 | done | PR #70; inspections view check carried to PLAN-R1 |
-| [SECURITY-02](tasks/SECURITY-02.md) | Security schema with RLS and append-only grants | security | M | DATABASE-02 | todo | |
+| [SECURITY-02](tasks/SECURITY-02.md) | Security schema with RLS and append-only grants | security | M | DATABASE-02 | done | ClaudeK: branch p0/security-schema; security review fixed in PR, column-UPDATE findings carried to SECURITY-04 and SECURITY-05 |
 
 ### Wave 5: M0 walking skeleton exit
 
@@ -187,8 +187,8 @@ tasks still `todo` below remain before M0 is closed.
 | [TENANCY-06](tasks/TENANCY-06.md) | Quotas and support-access grants | tenancy | M | PLAN-R1, TENANCY-02, TENANCY-05 | todo | convert to Python backend per ADR 0001 before starting |
 | [TENANCY-07](tasks/TENANCY-07.md) | Offboarding, crypto-shred and deletion certificate | tenancy | M | AUDIT-05, PLAN-R1, TENANCY-05 | todo | convert to Python backend per ADR 0001 before starting |
 | [SECURITY-03](tasks/SECURITY-03.md) | Control catalogue service, baseline seed and admin router | security | M | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting |
-| [SECURITY-04](tasks/SECURITY-04.md) | Breach register with NDB clock | security | S | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting |
-| [SECURITY-05](tasks/SECURITY-05.md) | Quarterly access review generator | security | M | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting |
+| [SECURITY-04](tasks/SECURITY-04.md) | Breach register with NDB clock | security | S | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting; from SECURITY-02 review: aip_app still has UPDATE on detected_at and assessment_due_at, so restrict them (column grants or trigger) |
+| [SECURITY-05](tasks/SECURITY-05.md) | Quarterly access review generator | security | M | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting; from SECURITY-02 review: aip_app can still UPDATE a signed_off access_reviews row, so add the lock trigger |
 | [SECURITY-06](tasks/SECURITY-06.md) | Data classification tags, field masking and EXIF GPS control | security | M | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting |
 | [OPS-05](tasks/OPS-05.md) | Client error sink | ops | M | OPS-04, PLAN-R1 | todo | convert to Python backend per ADR 0001 before starting |
 | [OPS-06](tasks/OPS-06.md) | Storage lifecycle renderer with evidence-expiry guard | ops | S | PLAN-R1 | todo | convert to Python backend per ADR 0001 before starting |

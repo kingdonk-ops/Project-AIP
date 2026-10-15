@@ -189,6 +189,10 @@ GRANT USAGE ON SEQUENCE public.procrastinate_jobs_id_seq TO aip_app;
 -- Name: SEQUENCE procrastinate_periodic_defers_id_seq; Type: ACL; Schema: public
 GRANT SELECT,USAGE ON SEQUENCE public.procrastinate_periodic_defers_id_seq TO aip_jobs;
 
+-- Name: TABLE access_reviews; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.access_reviews TO aip_app;
+GRANT SELECT ON TABLE public.access_reviews TO aip_readonly;
+
 -- Name: TABLE access_settings; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.access_settings TO aip_app;
 GRANT SELECT ON TABLE public.access_settings TO aip_readonly;
@@ -215,6 +219,18 @@ GRANT SELECT ON TABLE public.audit_log TO aip_readonly;
 GRANT SELECT,INSERT ON TABLE public.auth_event TO aip_app;
 GRANT SELECT ON TABLE public.auth_event TO aip_readonly;
 
+-- Name: TABLE breach_incidents; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.breach_incidents TO aip_app;
+GRANT SELECT ON TABLE public.breach_incidents TO aip_readonly;
+
+-- Name: TABLE control_records; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.control_records TO aip_app;
+GRANT SELECT ON TABLE public.control_records TO aip_readonly;
+
+-- Name: TABLE data_map_entries; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.data_map_entries TO aip_app;
+GRANT SELECT ON TABLE public.data_map_entries TO aip_readonly;
+
 -- Name: TABLE deployment_regions; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.deployment_regions TO aip_app;
 GRANT SELECT ON TABLE public.deployment_regions TO aip_jobs;
@@ -224,6 +240,10 @@ GRANT SELECT ON TABLE public.deployment_regions TO aip_readonly;
 GRANT SELECT,INSERT ON TABLE public.domain_events TO aip_app;
 GRANT SELECT ON TABLE public.domain_events TO aip_jobs;
 GRANT SELECT ON TABLE public.domain_events TO aip_readonly;
+
+-- Name: TABLE evidence_items; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.evidence_items TO aip_app;
+GRANT SELECT ON TABLE public.evidence_items TO aip_readonly;
 
 -- Name: TABLE glossary_entry; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.glossary_entry TO aip_app;
@@ -269,6 +289,14 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_workers TO aip_j
 -- Name: TABLE projects; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.projects TO aip_app;
 GRANT SELECT ON TABLE public.projects TO aip_readonly;
+
+-- Name: TABLE provenance_entries; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.provenance_entries TO aip_app;
+GRANT SELECT ON TABLE public.provenance_entries TO aip_readonly;
+
+-- Name: TABLE restore_test_records; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.restore_test_records TO aip_app;
+GRANT SELECT ON TABLE public.restore_test_records TO aip_readonly;
 
 -- Name: TABLE role; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.role TO aip_app;
@@ -338,6 +366,10 @@ GRANT SELECT ON TABLE public.upload_sessions TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.user_session TO aip_app;
 GRANT SELECT ON TABLE public.user_session TO aip_readonly;
 
+-- Name: access_reviews pk_access_reviews; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.access_reviews
+    ADD CONSTRAINT pk_access_reviews PRIMARY KEY (id);
+
 -- Name: access_settings pk_access_settings; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.access_settings
     ADD CONSTRAINT pk_access_settings PRIMARY KEY (id);
@@ -370,6 +402,22 @@ ALTER TABLE ONLY public.audit_log
 ALTER TABLE ONLY public.auth_event
     ADD CONSTRAINT pk_auth_event PRIMARY KEY (id);
 
+-- Name: breach_incidents pk_breach_incidents; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.breach_incidents
+    ADD CONSTRAINT pk_breach_incidents PRIMARY KEY (id);
+
+-- Name: control_records pk_control_records; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.control_records
+    ADD CONSTRAINT pk_control_records PRIMARY KEY (id);
+
+-- Name: control_records uq_control_records_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.control_records
+    ADD CONSTRAINT uq_control_records_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: data_map_entries pk_data_map_entries; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.data_map_entries
+    ADD CONSTRAINT pk_data_map_entries PRIMARY KEY (id);
+
 -- Name: deployment_regions pk_deployment_regions; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.deployment_regions
     ADD CONSTRAINT pk_deployment_regions PRIMARY KEY (code);
@@ -377,6 +425,14 @@ ALTER TABLE ONLY public.deployment_regions
 -- Name: domain_events pk_domain_events; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.domain_events
     ADD CONSTRAINT pk_domain_events PRIMARY KEY (id);
+
+-- Name: evidence_items pk_evidence_items; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.evidence_items
+    ADD CONSTRAINT pk_evidence_items PRIMARY KEY (id, created_at);
+
+-- Name: evidence_items_default evidence_items_default_pkey; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.evidence_items_default
+    ADD CONSTRAINT evidence_items_default_pkey PRIMARY KEY (id, created_at);
 
 -- Name: glossary_entry pk_glossary_entry; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.glossary_entry
@@ -449,6 +505,22 @@ ALTER TABLE ONLY public.projects
 -- Name: projects uq_projects_id_tenant_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.projects
     ADD CONSTRAINT uq_projects_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: provenance_entries pk_provenance_entries; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.provenance_entries
+    ADD CONSTRAINT pk_provenance_entries PRIMARY KEY (id, created_at);
+
+-- Name: provenance_entries_default provenance_entries_default_pkey; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.provenance_entries_default
+    ADD CONSTRAINT provenance_entries_default_pkey PRIMARY KEY (id, created_at);
+
+-- Name: restore_test_records pk_restore_test_records; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.restore_test_records
+    ADD CONSTRAINT pk_restore_test_records PRIMARY KEY (id, created_at);
+
+-- Name: restore_test_records_default restore_test_records_default_pkey; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.restore_test_records_default
+    ADD CONSTRAINT restore_test_records_default_pkey PRIMARY KEY (id, created_at);
 
 -- Name: role pk_role; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.role
@@ -574,6 +646,10 @@ ALTER TABLE ONLY public.auth_event
 -- Name: auth_event fk_auth_event_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.auth_event
     ADD CONSTRAINT fk_auth_event_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
+-- Name: evidence_items fk_evidence_items_control_id_tenant_id_control_records; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE public.evidence_items
+    ADD CONSTRAINT fk_evidence_items_control_id_tenant_id_control_records FOREIGN KEY (control_id, tenant_id) REFERENCES public.control_records(id, tenant_id);
 
 -- Name: job_events fk_job_events_job_id_tenant_id_jobs; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
@@ -1530,11 +1606,20 @@ CREATE FUNCTION public.tenancy_has_real_customer() RETURNS boolean
 
 ALTER FUNCTION public.tenancy_has_real_customer() OWNER TO aip_owner;
 
+-- Name: evidence_items_default_tenant_id_control_id_collected_at_idx; Type: INDEX; Schema: public
+CREATE INDEX evidence_items_default_tenant_id_control_id_collected_at_idx ON public.evidence_items_default USING btree (tenant_id, control_id, collected_at DESC);
+
+-- Name: evidence_items_default_tenant_id_idx; Type: INDEX; Schema: public
+CREATE INDEX evidence_items_default_tenant_id_idx ON public.evidence_items_default USING btree (tenant_id);
+
 -- Name: idx_procrastinate_jobs_worker_not_null; Type: INDEX; Schema: public
 CREATE INDEX idx_procrastinate_jobs_worker_not_null ON public.procrastinate_jobs USING btree (worker_id) WHERE ((worker_id IS NOT NULL) AND (status = 'doing'::public.procrastinate_job_status));
 
 -- Name: idx_procrastinate_workers_last_heartbeat; Type: INDEX; Schema: public
 CREATE INDEX idx_procrastinate_workers_last_heartbeat ON public.procrastinate_workers USING btree (last_heartbeat);
+
+-- Name: ix_access_reviews_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_access_reviews_tenant_id ON public.access_reviews USING btree (tenant_id);
 
 -- Name: ix_access_settings_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_access_settings_tenant_id ON public.access_settings USING btree (tenant_id);
@@ -1569,6 +1654,27 @@ CREATE INDEX ix_auth_event_tenant_id_event_type_occurred_at ON public.auth_event
 -- Name: ix_auth_event_tenant_id_user_id_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_auth_event_tenant_id_user_id_occurred_at ON public.auth_event USING btree (tenant_id, user_id, occurred_at DESC);
 
+-- Name: ix_breach_incidents_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_breach_incidents_tenant_id ON public.breach_incidents USING btree (tenant_id);
+
+-- Name: ix_breach_incidents_tenant_id_assessment_due_at; Type: INDEX; Schema: public
+CREATE INDEX ix_breach_incidents_tenant_id_assessment_due_at ON public.breach_incidents USING btree (tenant_id, assessment_due_at) WHERE (status = ANY (ARRAY['open'::text, 'assessing'::text]));
+
+-- Name: ix_breach_incidents_tenant_id_status; Type: INDEX; Schema: public
+CREATE INDEX ix_breach_incidents_tenant_id_status ON public.breach_incidents USING btree (tenant_id, status);
+
+-- Name: ix_control_records_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_control_records_tenant_id ON public.control_records USING btree (tenant_id);
+
+-- Name: ix_control_records_tenant_id_status; Type: INDEX; Schema: public
+CREATE INDEX ix_control_records_tenant_id_status ON public.control_records USING btree (tenant_id, status);
+
+-- Name: ix_data_map_entries_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_data_map_entries_tenant_id ON public.data_map_entries USING btree (tenant_id);
+
+-- Name: ix_data_map_entries_tenant_id_classification; Type: INDEX; Schema: public
+CREATE INDEX ix_data_map_entries_tenant_id_classification ON public.data_map_entries USING btree (tenant_id, classification);
+
 -- Name: ix_domain_events_aggregate_type_aggregate_id; Type: INDEX; Schema: public
 CREATE INDEX ix_domain_events_aggregate_type_aggregate_id ON public.domain_events USING btree (aggregate_type, aggregate_id);
 
@@ -1583,6 +1689,12 @@ CREATE INDEX ix_domain_events_pending ON public.domain_events USING btree (occur
 
 -- Name: ix_domain_events_tenant_id_dead_letter; Type: INDEX; Schema: public
 CREATE INDEX ix_domain_events_tenant_id_dead_letter ON public.domain_events USING btree (tenant_id) WHERE ((dead_lettered_at IS NOT NULL) AND (discarded_at IS NULL));
+
+-- Name: ix_evidence_items_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_evidence_items_tenant_id ON ONLY public.evidence_items USING btree (tenant_id);
+
+-- Name: ix_evidence_items_tenant_id_control_id_collected_at; Type: INDEX; Schema: public
+CREATE INDEX ix_evidence_items_tenant_id_control_id_collected_at ON ONLY public.evidence_items USING btree (tenant_id, control_id, collected_at DESC);
 
 -- Name: ix_glossary_entry_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_glossary_entry_tenant_id ON public.glossary_entry USING btree (tenant_id);
@@ -1625,6 +1737,18 @@ CREATE INDEX ix_projects_tenant_id_site_id ON public.projects USING btree (tenan
 
 -- Name: ix_projects_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_projects_tenant_id_status ON public.projects USING btree (tenant_id, status);
+
+-- Name: ix_provenance_entries_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_provenance_entries_tenant_id ON ONLY public.provenance_entries USING btree (tenant_id);
+
+-- Name: ix_provenance_entries_tenant_id_recorded_at; Type: INDEX; Schema: public
+CREATE INDEX ix_provenance_entries_tenant_id_recorded_at ON ONLY public.provenance_entries USING btree (tenant_id, recorded_at DESC);
+
+-- Name: ix_restore_test_records_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_restore_test_records_tenant_id ON ONLY public.restore_test_records USING btree (tenant_id);
+
+-- Name: ix_restore_test_records_tenant_id_created_at; Type: INDEX; Schema: public
+CREATE INDEX ix_restore_test_records_tenant_id_created_at ON ONLY public.restore_test_records USING btree (tenant_id, created_at DESC);
 
 -- Name: ix_role_assignment_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_role_assignment_tenant_id ON public.role_assignment USING btree (tenant_id);
@@ -1734,6 +1858,21 @@ CREATE UNIQUE INDEX procrastinate_jobs_queueing_lock_idx_v1 ON public.procrastin
 -- Name: procrastinate_periodic_defers_job_id_fkey_v1; Type: INDEX; Schema: public
 CREATE INDEX procrastinate_periodic_defers_job_id_fkey_v1 ON public.procrastinate_periodic_defers USING btree (job_id);
 
+-- Name: provenance_entries_default_tenant_id_idx; Type: INDEX; Schema: public
+CREATE INDEX provenance_entries_default_tenant_id_idx ON public.provenance_entries_default USING btree (tenant_id);
+
+-- Name: provenance_entries_default_tenant_id_recorded_at_idx; Type: INDEX; Schema: public
+CREATE INDEX provenance_entries_default_tenant_id_recorded_at_idx ON public.provenance_entries_default USING btree (tenant_id, recorded_at DESC);
+
+-- Name: restore_test_records_default_tenant_id_created_at_idx; Type: INDEX; Schema: public
+CREATE INDEX restore_test_records_default_tenant_id_created_at_idx ON public.restore_test_records_default USING btree (tenant_id, created_at DESC);
+
+-- Name: restore_test_records_default_tenant_id_idx; Type: INDEX; Schema: public
+CREATE INDEX restore_test_records_default_tenant_id_idx ON public.restore_test_records_default USING btree (tenant_id);
+
+-- Name: uq_access_reviews_tenant_id_quarter; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_access_reviews_tenant_id_quarter ON public.access_reviews USING btree (tenant_id, quarter) WHERE (deleted_at IS NULL);
+
 -- Name: uq_access_settings_tenant_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_access_settings_tenant_id ON public.access_settings USING btree (tenant_id) WHERE (deleted_at IS NULL);
 
@@ -1745,6 +1884,9 @@ CREATE UNIQUE INDEX uq_app_user_tenant_id_keycloak_user_id ON public.app_user US
 
 -- Name: uq_audit_log_tenant_id_source_event_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_audit_log_tenant_id_source_event_id ON public.audit_log USING btree (tenant_id, source_event_id) WHERE (source_event_id IS NOT NULL);
+
+-- Name: uq_control_records_tenant_id_control_key; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_control_records_tenant_id_control_key ON public.control_records USING btree (tenant_id, control_key) WHERE (deleted_at IS NULL);
 
 -- Name: uq_jobs_tenant_id_job_type_idempotency_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs USING btree (tenant_id, job_type, idempotency_key) WHERE (idempotency_key IS NOT NULL);
@@ -1788,6 +1930,36 @@ CREATE UNIQUE INDEX uq_term_pack_version_pack_id_version ON public.term_pack_ver
 -- Name: uq_upload_sessions_client_request_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_upload_sessions_client_request_id ON public.upload_sessions USING btree (tenant_id, requested_by, client_request_id) WHERE (client_request_id IS NOT NULL);
 
+-- Name: evidence_items_default_pkey; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.pk_evidence_items ATTACH PARTITION public.evidence_items_default_pkey;
+
+-- Name: evidence_items_default_tenant_id_control_id_collected_at_idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_evidence_items_tenant_id_control_id_collected_at ATTACH PARTITION public.evidence_items_default_tenant_id_control_id_collected_at_idx;
+
+-- Name: evidence_items_default_tenant_id_idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_evidence_items_tenant_id ATTACH PARTITION public.evidence_items_default_tenant_id_idx;
+
+-- Name: provenance_entries_default_pkey; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.pk_provenance_entries ATTACH PARTITION public.provenance_entries_default_pkey;
+
+-- Name: provenance_entries_default_tenant_id_idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_provenance_entries_tenant_id ATTACH PARTITION public.provenance_entries_default_tenant_id_idx;
+
+-- Name: provenance_entries_default_tenant_id_recorded_at_idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_provenance_entries_tenant_id_recorded_at ATTACH PARTITION public.provenance_entries_default_tenant_id_recorded_at_idx;
+
+-- Name: restore_test_records_default_pkey; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.pk_restore_test_records ATTACH PARTITION public.restore_test_records_default_pkey;
+
+-- Name: restore_test_records_default_tenant_id_created_at_idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_restore_test_records_tenant_id_created_at ATTACH PARTITION public.restore_test_records_default_tenant_id_created_at_idx;
+
+-- Name: restore_test_records_default_tenant_id_idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_restore_test_records_tenant_id ATTACH PARTITION public.restore_test_records_default_tenant_id_idx;
+
+-- Name: access_reviews tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.access_reviews USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: access_settings tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.access_settings USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -1806,6 +1978,15 @@ CREATE POLICY tenant_isolation ON public.audit_log USING ((tenant_id = (NULLIF(c
 -- Name: auth_event tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.auth_event USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: breach_incidents tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.breach_incidents USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: control_records tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.control_records USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: data_map_entries tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.data_map_entries USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: domain_events dispatcher_select; Type: POLICY; Schema: public
 CREATE POLICY dispatcher_select ON public.domain_events FOR SELECT TO aip_jobs USING (true);
 
@@ -1820,6 +2001,9 @@ CREATE POLICY platform_counts_owner_read ON public.domain_events FOR SELECT TO a
 
 -- Name: domain_events tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.domain_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: evidence_items tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.evidence_items USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: glossary_entry platform_read; Type: POLICY; Schema: public
 CREATE POLICY platform_read ON public.glossary_entry FOR SELECT USING ((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid));
@@ -1841,6 +2025,12 @@ CREATE POLICY tenant_write ON public.locale_settings USING (((tenant_id = (NULLI
 
 -- Name: projects tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.projects USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: provenance_entries tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.provenance_entries USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: restore_test_records tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.restore_test_records USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: role tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.role USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -1914,6 +2104,9 @@ CREATE POLICY session_lookup ON public.user_session FOR SELECT TO aip_owner USIN
 -- Name: user_session tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.user_session USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: access_reviews; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.access_reviews ENABLE ROW LEVEL SECURITY;
+
 -- Name: access_settings; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.access_settings ENABLE ROW LEVEL SECURITY;
 
@@ -1932,8 +2125,20 @@ ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 -- Name: auth_event; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.auth_event ENABLE ROW LEVEL SECURITY;
 
+-- Name: breach_incidents; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.breach_incidents ENABLE ROW LEVEL SECURITY;
+
+-- Name: control_records; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.control_records ENABLE ROW LEVEL SECURITY;
+
+-- Name: data_map_entries; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.data_map_entries ENABLE ROW LEVEL SECURITY;
+
 -- Name: domain_events; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.domain_events ENABLE ROW LEVEL SECURITY;
+
+-- Name: evidence_items; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.evidence_items ENABLE ROW LEVEL SECURITY;
 
 -- Name: glossary_entry; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.glossary_entry ENABLE ROW LEVEL SECURITY;
@@ -1949,6 +2154,12 @@ ALTER TABLE public.locale_settings ENABLE ROW LEVEL SECURITY;
 
 -- Name: projects; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+
+-- Name: provenance_entries; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.provenance_entries ENABLE ROW LEVEL SECURITY;
+
+-- Name: restore_test_records; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.restore_test_records ENABLE ROW LEVEL SECURITY;
 
 -- Name: role; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.role ENABLE ROW LEVEL SECURITY;
@@ -2049,6 +2260,30 @@ ALTER SEQUENCE public.procrastinate_jobs_id_seq OWNED BY public.procrastinate_jo
 
 -- Name: procrastinate_periodic_defers_id_seq; Type: SEQUENCE OWNED BY; Schema: public
 ALTER SEQUENCE public.procrastinate_periodic_defers_id_seq OWNED BY public.procrastinate_periodic_defers.id;
+
+-- Name: access_reviews; Type: TABLE; Schema: public
+CREATE TABLE public.access_reviews (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    quarter text NOT NULL,
+    status text DEFAULT 'open'::text NOT NULL,
+    snapshot jsonb NOT NULL,
+    decisions jsonb DEFAULT '{}'::jsonb NOT NULL,
+    signed_off_by uuid,
+    signed_off_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_access_reviews_decisions CHECK ((jsonb_typeof(decisions) = 'object'::text)),
+    CONSTRAINT ck_access_reviews_quarter CHECK ((quarter ~ '^[0-9]{4}-Q[1-4]$'::text)),
+    CONSTRAINT ck_access_reviews_signed_off CHECK (((status = 'signed_off'::text) = ((signed_off_by IS NOT NULL) AND (signed_off_at IS NOT NULL)))),
+    CONSTRAINT ck_access_reviews_snapshot CHECK ((jsonb_typeof(snapshot) = 'object'::text)),
+    CONSTRAINT ck_access_reviews_status CHECK ((status = ANY (ARRAY['open'::text, 'in_review'::text, 'signed_off'::text])))
+);
+
+ALTER TABLE ONLY public.access_reviews FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.access_reviews OWNER TO aip_owner;
 
 -- Name: access_settings; Type: TABLE; Schema: public
 CREATE TABLE public.access_settings (
@@ -2191,6 +2426,77 @@ ALTER TABLE ONLY public.auth_event FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.auth_event OWNER TO aip_owner;
 
+-- Name: breach_incidents; Type: TABLE; Schema: public
+CREATE TABLE public.breach_incidents (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    detected_at timestamp with time zone NOT NULL,
+    description text NOT NULL,
+    data_categories jsonb DEFAULT '[]'::jsonb NOT NULL,
+    individuals_affected integer,
+    serious_harm_likely boolean,
+    assessment_due_at timestamp with time zone NOT NULL,
+    oaic_notified_at timestamp with time zone,
+    individuals_notified_at timestamp with time zone,
+    status text DEFAULT 'open'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_breach_incidents_data_categories CHECK ((jsonb_typeof(data_categories) = 'array'::text)),
+    CONSTRAINT ck_breach_incidents_description CHECK ((description <> ''::text)),
+    CONSTRAINT ck_breach_incidents_individuals_affected CHECK ((individuals_affected >= 0)),
+    CONSTRAINT ck_breach_incidents_status CHECK ((status = ANY (ARRAY['open'::text, 'assessing'::text, 'notified'::text, 'closed'::text])))
+);
+
+ALTER TABLE ONLY public.breach_incidents FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.breach_incidents OWNER TO aip_owner;
+
+-- Name: control_records; Type: TABLE; Schema: public
+CREATE TABLE public.control_records (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    control_key text NOT NULL,
+    title text NOT NULL,
+    framework_mappings jsonb DEFAULT '{}'::jsonb NOT NULL,
+    owner_user_id uuid,
+    status text DEFAULT 'specified'::text NOT NULL,
+    evidence_source text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_control_records_control_key CHECK ((control_key <> ''::text)),
+    CONSTRAINT ck_control_records_framework_mappings CHECK ((jsonb_typeof(framework_mappings) = 'object'::text)),
+    CONSTRAINT ck_control_records_status CHECK ((status = ANY (ARRAY['specified'::text, 'implemented'::text, 'proven'::text]))),
+    CONSTRAINT ck_control_records_title CHECK ((title <> ''::text))
+);
+
+ALTER TABLE ONLY public.control_records FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.control_records OWNER TO aip_owner;
+
+-- Name: data_map_entries; Type: TABLE; Schema: public
+CREATE TABLE public.data_map_entries (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    data_category text NOT NULL,
+    classification text NOT NULL,
+    system_location text NOT NULL,
+    region text NOT NULL,
+    purpose text NOT NULL,
+    retention_rule text NOT NULL,
+    sub_processor text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_data_map_entries_classification CHECK ((classification = ANY (ARRAY['public'::text, 'internal'::text, 'sensitive'::text, 'health'::text]))),
+    CONSTRAINT ck_data_map_entries_data_category CHECK ((data_category <> ''::text))
+);
+
+ALTER TABLE ONLY public.data_map_entries FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.data_map_entries OWNER TO aip_owner;
+
 -- Name: deployment_regions; Type: TABLE; Schema: public
 CREATE TABLE public.deployment_regions (
     code text NOT NULL,
@@ -2236,6 +2542,49 @@ CREATE TABLE public.domain_events (
 ALTER TABLE ONLY public.domain_events FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.domain_events OWNER TO aip_owner;
+
+-- Name: evidence_items; Type: TABLE; Schema: public
+CREATE TABLE public.evidence_items (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    control_id uuid NOT NULL,
+    evidence_type text NOT NULL,
+    document_id uuid,
+    storage_key text,
+    content_hash text,
+    collected_at timestamp with time zone NOT NULL,
+    period_start date,
+    period_end date,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_evidence_items_content_hash CHECK ((content_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_evidence_items_evidence_type CHECK ((evidence_type = ANY (ARRAY['ci_artefact'::text, 'screenshot'::text, 'report'::text, 'sign_off'::text]))),
+    CONSTRAINT ck_evidence_items_period CHECK ((period_end >= period_start))
+)
+PARTITION BY RANGE (created_at);
+
+ALTER TABLE ONLY public.evidence_items FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.evidence_items OWNER TO aip_owner;
+
+-- Name: evidence_items_default; Type: TABLE; Schema: public
+CREATE TABLE public.evidence_items_default (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    control_id uuid NOT NULL,
+    evidence_type text NOT NULL,
+    document_id uuid,
+    storage_key text,
+    content_hash text,
+    collected_at timestamp with time zone NOT NULL,
+    period_start date,
+    period_end date,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_evidence_items_content_hash CHECK ((content_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_evidence_items_evidence_type CHECK ((evidence_type = ANY (ARRAY['ci_artefact'::text, 'screenshot'::text, 'report'::text, 'sign_off'::text]))),
+    CONSTRAINT ck_evidence_items_period CHECK ((period_end >= period_start))
+);
+
+ALTER TABLE public.evidence_items_default OWNER TO aip_owner;
 
 -- Name: glossary_entry; Type: TABLE; Schema: public
 CREATE TABLE public.glossary_entry (
@@ -2460,6 +2809,92 @@ CREATE TABLE public.projects (
 ALTER TABLE ONLY public.projects FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.projects OWNER TO aip_owner;
+
+-- Name: provenance_entries; Type: TABLE; Schema: public
+CREATE TABLE public.provenance_entries (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    feature text NOT NULL,
+    reference_source text NOT NULL,
+    own_spec_path text NOT NULL,
+    author text NOT NULL,
+    legal_review_ref text,
+    recorded_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_provenance_entries_author CHECK ((author <> ''::text)),
+    CONSTRAINT ck_provenance_entries_feature CHECK ((feature <> ''::text))
+)
+PARTITION BY RANGE (created_at);
+
+ALTER TABLE ONLY public.provenance_entries FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.provenance_entries OWNER TO aip_owner;
+
+-- Name: provenance_entries_default; Type: TABLE; Schema: public
+CREATE TABLE public.provenance_entries_default (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    feature text NOT NULL,
+    reference_source text NOT NULL,
+    own_spec_path text NOT NULL,
+    author text NOT NULL,
+    legal_review_ref text,
+    recorded_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_provenance_entries_author CHECK ((author <> ''::text)),
+    CONSTRAINT ck_provenance_entries_feature CHECK ((feature <> ''::text))
+);
+
+ALTER TABLE public.provenance_entries_default OWNER TO aip_owner;
+
+-- Name: restore_test_records; Type: TABLE; Schema: public
+CREATE TABLE public.restore_test_records (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    environment text NOT NULL,
+    backup_taken_at timestamp with time zone NOT NULL,
+    restore_started_at timestamp with time zone NOT NULL,
+    restore_completed_at timestamp with time zone,
+    rpo_achieved_seconds integer,
+    rto_achieved_seconds integer,
+    result text NOT NULL,
+    evidence_item_id uuid,
+    performed_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_restore_test_records_completed CHECK ((restore_completed_at >= restore_started_at)),
+    CONSTRAINT ck_restore_test_records_environment CHECK ((environment <> ''::text)),
+    CONSTRAINT ck_restore_test_records_result CHECK ((result = ANY (ARRAY['pass'::text, 'fail'::text]))),
+    CONSTRAINT ck_restore_test_records_rpo CHECK ((rpo_achieved_seconds >= 0)),
+    CONSTRAINT ck_restore_test_records_rto CHECK ((rto_achieved_seconds >= 0))
+)
+PARTITION BY RANGE (created_at);
+
+ALTER TABLE ONLY public.restore_test_records FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.restore_test_records OWNER TO aip_owner;
+
+-- Name: restore_test_records_default; Type: TABLE; Schema: public
+CREATE TABLE public.restore_test_records_default (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    environment text NOT NULL,
+    backup_taken_at timestamp with time zone NOT NULL,
+    restore_started_at timestamp with time zone NOT NULL,
+    restore_completed_at timestamp with time zone,
+    rpo_achieved_seconds integer,
+    rto_achieved_seconds integer,
+    result text NOT NULL,
+    evidence_item_id uuid,
+    performed_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_restore_test_records_completed CHECK ((restore_completed_at >= restore_started_at)),
+    CONSTRAINT ck_restore_test_records_environment CHECK ((environment <> ''::text)),
+    CONSTRAINT ck_restore_test_records_result CHECK ((result = ANY (ARRAY['pass'::text, 'fail'::text]))),
+    CONSTRAINT ck_restore_test_records_rpo CHECK ((rpo_achieved_seconds >= 0)),
+    CONSTRAINT ck_restore_test_records_rto CHECK ((rto_achieved_seconds >= 0))
+);
+
+ALTER TABLE public.restore_test_records_default OWNER TO aip_owner;
 
 -- Name: role; Type: TABLE; Schema: public
 CREATE TABLE public.role (
@@ -2867,6 +3302,15 @@ CREATE TABLE public.user_session (
 ALTER TABLE ONLY public.user_session FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.user_session OWNER TO aip_owner;
+
+-- Name: evidence_items_default; Type: TABLE ATTACH; Schema: public
+ALTER TABLE ONLY public.evidence_items ATTACH PARTITION public.evidence_items_default DEFAULT;
+
+-- Name: provenance_entries_default; Type: TABLE ATTACH; Schema: public
+ALTER TABLE ONLY public.provenance_entries ATTACH PARTITION public.provenance_entries_default DEFAULT;
+
+-- Name: restore_test_records_default; Type: TABLE ATTACH; Schema: public
+ALTER TABLE ONLY public.restore_test_records ATTACH PARTITION public.restore_test_records_default DEFAULT;
 
 -- Name: access_settings trg_access_settings_version_guard; Type: TRIGGER; Schema: public
 CREATE TRIGGER trg_access_settings_version_guard BEFORE UPDATE ON public.access_settings FOR EACH ROW EXECUTE FUNCTION public.access_settings_version_guard();

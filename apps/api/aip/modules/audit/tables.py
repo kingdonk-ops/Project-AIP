@@ -1,6 +1,6 @@
 """SQLAlchemy Core declarations for the audit store (AUDIT-01, ADR 0002).
 
-Created only by the Alembic revision ``202610151900_audit_log_chain``; ``aip-db check-schema``
+Created only by the Alembic revision ``202610152000_audit_log_chain``; ``aip-db check-schema``
 compares these declarations with the migrated database.
 
 ``audit_log`` is append-only (ADR 0002 / DATABASE-05): corrections are new rows carrying
