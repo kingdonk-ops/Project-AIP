@@ -287,3 +287,10 @@ async def test_rendering_without_a_scope_is_refused() -> None:
     template = template_environment().from_string("{{ 1 | fmt_measure('mm') }}")
     with pytest.raises(RuntimeError, match="TemplateScope"):
         await template.render_async()
+
+
+async def test_template_environment_autoescapes_by_default_and_honours_an_explicit_choice() -> None:
+    source = "{{ v }}"
+    escaped = await template_environment().from_string(source).render_async(v="<b>")
+    plain = await template_environment(autoescape=False).from_string(source).render_async(v="<b>")
+    assert (escaped, plain) == ("&lt;b&gt;", "<b>")

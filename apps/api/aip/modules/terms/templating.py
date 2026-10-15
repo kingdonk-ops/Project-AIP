@@ -118,10 +118,12 @@ def template_environment(
     """An async, strict-undefined environment with the terms filters (HTML autoescaped)."""
     env = Environment(
         loader=loader,
-        autoescape=select_autoescape(default_for_string=True) if autoescape is None else autoescape,
+        autoescape=select_autoescape(default_for_string=True),
         enable_async=True,
         undefined=StrictUndefined,
     )
+    if autoescape is not None:  # an explicit choice, e.g. a plain-text email body
+        env.autoescape = autoescape
     register_filters(env)
     return env
 
