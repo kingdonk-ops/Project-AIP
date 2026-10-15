@@ -1,0 +1,62 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "enum": [
+        "created",
+        "updated",
+        "deleted",
+        "reset",
+        "seeded"
+      ],
+      "title": "Action",
+      "type": "string"
+    },
+    "after": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "After"
+    },
+    "before": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Before"
+    },
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "roleId": {
+      "format": "uuid",
+      "title": "Roleid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "roleId",
+    "code",
+    "action"
+  ],
+  "title": "RoleChangedEvent",
+  "type": "object"
+}

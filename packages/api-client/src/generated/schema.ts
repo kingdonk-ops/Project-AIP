@@ -127,6 +127,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/platform/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Events */
+        get: operations["platform_list_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/platform/events/{event_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Event */
+        get: operations["platform_get_event"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/platform/events/{event_name}/versions/{version}/deprecate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deprecate Event Version */
+        post: operations["platform_deprecate_event_version"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login/start": {
         parameters: {
             query?: never;
@@ -485,7 +536,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -586,6 +637,25 @@ export interface components {
             /** Sqlalchemy */
             sqlalchemy: string;
         };
+        /** DeprecateResult */
+        DeprecateResult: {
+            /**
+             * Deprecatedat
+             * Format: date-time
+             */
+            deprecatedAt: string;
+            /** Deprecatedby */
+            deprecatedBy: string | null;
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "deprecated";
+            /** Version */
+            version: number;
+        };
         /**
          * ErrorBody
          * @description A domain error: a stable ``code`` (``PROJECT_CODE_TAKEN``, ``SITE_IN_USE``, ...).
@@ -600,6 +670,54 @@ export interface components {
             code: string;
             /** Detail */
             detail: string;
+        };
+        /** EventCatalogue */
+        EventCatalogue: {
+            /** Events */
+            events: components["schemas"]["EventSummary"][];
+        };
+        /** EventDetail */
+        EventDetail: {
+            /** Name */
+            name: string;
+            /** Versions */
+            versions: components["schemas"]["EventVersionDetail"][];
+        };
+        /** EventSummary */
+        EventSummary: {
+            /** Failed24H */
+            failed24h: number;
+            /** Module */
+            module: string;
+            /** Name */
+            name: string;
+            /** Published24H */
+            published24h: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "deprecated";
+            /** Subscribers */
+            subscribers: string[];
+            /** Version */
+            version: number;
+        };
+        /** EventVersionDetail */
+        EventVersionDetail: {
+            /** Schema */
+            schema: {
+                [key: string]: unknown;
+            };
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "deprecated";
+            /** Subscribers */
+            subscribers: string[];
+            /** Version */
+            version: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -840,7 +958,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -865,7 +983,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -877,7 +995,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * Scope
@@ -1670,6 +1788,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    platform_list_events: {
+        parameters: {
+            query?: {
+                module?: string | null;
+                status?: ("active" | "deprecated") | null;
+                version?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventCatalogue"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    platform_get_event: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    platform_deprecate_event_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_name: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeprecateResult"];
                 };
             };
             /** @description Validation Error */

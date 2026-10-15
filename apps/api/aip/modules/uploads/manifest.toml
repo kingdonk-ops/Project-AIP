@@ -18,11 +18,7 @@ description = "View upload sessions and their scan status"
 code = "uploads.admin"
 description = "Administer uploads: view any session's status and the quarantine review list"
 
-# Emitted from UPLOADS-02 once a scanned object is released or rejected.
-[[events]]
-name = "upload.completed"
-version = 1
-
-[[events]]
-name = "upload.rejected"
-version = 1
+# ``upload.completed`` / ``upload.rejected`` are emitted on release in UPLOADS-02. They are declared
+# there, together with their registered payload models and frozen schemas: ARCH-06's
+# verify_manifest_events (ADR 0029) fails boot if a manifest declares an event with no registered
+# model, and UPLOADS-01 emits nothing, so declaring them here would require speculative payloads.

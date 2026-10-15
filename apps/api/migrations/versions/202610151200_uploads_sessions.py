@@ -10,7 +10,7 @@ queue's idempotency key, unique per (tenant, requester) among the rows that carr
 is nullable with no FK yet — UPLOADS-02 adds ``stored_files`` and the FK on release.
 
 Revision ID: 202610151200
-Revises: 202610141200
+Revises: 202610150900
 Create Date: 2026-10-15 12:00:00+00:00
 """
 
@@ -19,7 +19,7 @@ from alembic import op
 from aip.platform.db.templates import render_template
 
 revision: str = "202610151200"
-down_revision: str | None = "202610141200"
+down_revision: str | None = "202610150900"
 branch_labels = None
 depends_on = None
 

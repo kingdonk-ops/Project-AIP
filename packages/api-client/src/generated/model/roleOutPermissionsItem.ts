@@ -12,6 +12,7 @@ export const RoleOutPermissionsItem = {
   accessteammanage: 'access.team.manage',
   identityusermanage: 'identity.user.manage',
   identityuserread: 'identity.user.read',
+  platformeventsmanage: 'platform.events.manage',
   projectarchive: 'project.archive',
   projectcreate: 'project.create',
   projectupdate: 'project.update',

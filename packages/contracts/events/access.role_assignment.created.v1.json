@@ -1,0 +1,76 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "approvedBy": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approvedby"
+    },
+    "assignmentId": {
+      "format": "uuid",
+      "title": "Assignmentid",
+      "type": "string"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Projectid"
+    },
+    "roleCode": {
+      "title": "Rolecode",
+      "type": "string"
+    },
+    "roleId": {
+      "format": "uuid",
+      "title": "Roleid",
+      "type": "string"
+    },
+    "scopeType": {
+      "title": "Scopetype",
+      "type": "string"
+    },
+    "userId": {
+      "format": "uuid",
+      "title": "Userid",
+      "type": "string"
+    },
+    "validTo": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Validto"
+    }
+  },
+  "required": [
+    "assignmentId",
+    "userId",
+    "roleId",
+    "roleCode",
+    "scopeType"
+  ],
+  "title": "RoleAssignmentEvent",
+  "type": "object"
+}

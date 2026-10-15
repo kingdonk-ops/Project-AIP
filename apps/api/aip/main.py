@@ -66,6 +66,13 @@ from aip.platform.context import (
     RequestContextMiddleware,
     get_context,
 )
+from aip.platform.events.registry import (
+    load_module_events,
+    register_platform_events,
+    verify_manifest_events,
+    verify_released_schemas,
+)
+from aip.platform.events.routes import create_router as create_events_router
 from aip.platform.http import install_error_handlers
 from aip.platform.modules.registry import load_modules
 from aip.platform.modules.routes import create_router as create_modules_router
@@ -109,6 +116,12 @@ def create_app(
     configure_logging()
     validate_capability_settings()  # unknown OBJECT_STORE / PDF_RENDERER stops startup (STACK-02)
     modules = load_modules(modules_package, disabled_modules)
+    # ARCH-06: load each module's events.py and the platform events, then fail fast if a manifest
+    # and its registered models disagree or a released payload schema drifted from its contract.
+    load_module_events(modules)
+    register_platform_events()
+    verify_manifest_events(modules)
+    verify_released_schemas()
     catalogue = build_catalogue(module.manifest for module in modules)  # ACCESS-01
     policy = PolicyService(catalogue)
     if any(module.manifest.id == "access" for module in modules):
@@ -165,6 +178,11 @@ def create_app(
             }
 
     v1.include_router(create_modules_router(modules))
+    # ARCH-06: the event catalogue is gated by platform.events.manage, which the ops module
+    # declares. Mount it only when that permission is in the catalogue, so an app built from a
+    # module set without ops (test fixtures) does not mount routes whose permission is absent.
+    if "platform.events.manage" in catalogue:
+        v1.include_router(create_events_router(modules))  # /admin/platform/events
     for module in modules:
         v1.include_router(module.router)
 

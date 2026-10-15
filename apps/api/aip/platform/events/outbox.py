@@ -24,13 +24,10 @@ from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.platform.context import get_context, new_request_id
-from aip.platform.events.lookup import DictEventSchemaLookup, EventSchemaLookup
+from aip.platform.events.lookup import EventSchemaLookup
 from aip.platform.events.tables import domain_events
 
-__all__ = ["Aggregate", "EventValidationError", "emit", "event_schemas"]
-
-# The process-wide payload models; modules register theirs at import time (ARCH-06 replaces it).
-event_schemas = DictEventSchemaLookup()
+__all__ = ["Aggregate", "EventValidationError", "emit"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,7 +78,12 @@ async def emit(
     Raises ``EventValidationError`` before touching the database if the event is unknown or the
     payload is invalid, and ``ContextMissingError`` outside a request context.
     """
-    body = _validate(event_schemas if schemas is None else schemas, event_name, version, payload)
+    if schemas is None:
+        # Lazy import: the registry (ARCH-06) imports EventValidationError from this module.
+        from aip.platform.events.registry import registry
+
+        schemas = registry
+    body = _validate(schemas, event_name, version, payload)
     ctx = get_context()
     event_id = UUID(new_request_id())  # the platform's UUIDv7 generator
     await conn.execute(
