@@ -23,6 +23,7 @@ export const RoleOutPermissionsItem = {
   sitemanage: 'site.manage',
   siteview: 'site.view',
   tenancyplanread: 'tenancy.plan.read',
+  termscoverageread: 'terms.coverage.read',
   uploadsadmin: 'uploads.admin',
   uploadscreate: 'uploads.create',
   uploadsview: 'uploads.view',

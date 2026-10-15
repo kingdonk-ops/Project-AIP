@@ -594,6 +594,23 @@ export interface paths {
         patch: operations["sites_update"];
         trace?: never;
     };
+    "/api/v1/terms/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Coverage */
+        get: operations["terms_coverage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/uploads/sessions": {
         parameters: {
             query?: never;
@@ -655,7 +672,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -959,6 +976,22 @@ export interface components {
             /** Used */
             used: number | null;
         };
+        /**
+         * LintFindingOut
+         * @description One raw label found by the TERMS-07 scanner (lines and columns 1-based).
+         */
+        LintFindingOut: {
+            /** Column */
+            column: number;
+            /** File */
+            file: string;
+            /** Line */
+            line: number;
+            /** Suggestedkey */
+            suggestedKey: string | null;
+            /** Term */
+            term: string;
+        };
         /** LoginStartRequest */
         LoginStartRequest: {
             /** Email */
@@ -1245,7 +1278,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -1270,7 +1303,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -1282,7 +1315,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * Scope
@@ -1580,6 +1613,18 @@ export interface components {
              * @enum {string}
              */
             status: "provisioning" | "active" | "suspended" | "offboarding" | "offboarded";
+        };
+        /**
+         * TermsCoverage
+         * @description Body of GET /api/v1/terms/coverage: the findings baked into the running build.
+         */
+        TermsCoverage: {
+            /** Available */
+            available: boolean;
+            /** Commit */
+            commit: string;
+            /** Findings */
+            findings: components["schemas"]["LintFindingOut"][];
         };
         /**
          * UploadErrorBody
@@ -3281,6 +3326,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    terms_coverage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TermsCoverage"];
+                };
             };
         };
     };

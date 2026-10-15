@@ -39,6 +39,10 @@ RUN uv sync --frozen --no-dev --package aip --no-install-workspace
 # The package itself, installed non-editable so the runtime stage needs only /opt/venv.
 # Tests are left out by .dockerignore.
 COPY apps/api apps/api
+# TERMS-07: bake the hard-coded label report into the package for GET /api/v1/terms/coverage. The
+# scanner is standard-library only; --report-only, because the CI terms-lint job is the gate.
+COPY config/terms /src/config/terms
+RUN python -I apps/api/aip/modules/terms/lint.py --root /src --report-only       --out apps/api/aip/modules/terms/data/lint_findings.json
 RUN uv sync --frozen --no-dev --package aip --no-editable
 
 # Strip guard (SECURITY-08): no forbidden module, dev-only module, test file or debug route in the

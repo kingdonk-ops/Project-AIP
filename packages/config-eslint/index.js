@@ -4,6 +4,9 @@
 // including the generated packages/api-client), never another app. A package may import its own
 // files and other packages, never an app.
 //
+// Terms (TERMS-07): `aip/no-hardcoded-labels` rejects default dictionary texts (ITP, NCR, Variation)
+// as JSX text or label-prop literals in every app and package that uses this config.
+//
 // Usage in apps/<name>/eslint.config.js:
 //   import aip from "@aip/config-eslint";
 //   export default [...aip];
@@ -12,6 +15,8 @@ import boundaries from "eslint-plugin-boundaries";
 import globals from "globals";
 import { fileURLToPath } from "node:url";
 import tseslint from "typescript-eslint";
+
+import noHardcodedLabels from "./rules/no-hardcoded-labels.js";
 
 /** The monorepo root, so element patterns match no matter which app runs `eslint .`. */
 export const ROOT = fileURLToPath(new URL("../../", import.meta.url));
@@ -65,7 +70,15 @@ export const boundariesConfig = {
   },
 };
 
-/** TypeScript + boundaries. Apps append their own framework rules (React hooks etc.). */
+export const termsConfig = {
+  files: SOURCE_FILES,
+  // Tests render components with sample labels; the rule guards shipped UI only.
+  ignores: ["**/*.test.*", "**/__fixtures/**"],
+  plugins: { aip: { rules: { "no-hardcoded-labels": noHardcodedLabels } } },
+  rules: { "aip/no-hardcoded-labels": "error" },
+};
+
+/** TypeScript + boundaries + terms. Apps append their own framework rules (React hooks etc.). */
 export default tseslint.config(
   { ignores: ["**/dist/", "**/node_modules/", "**/coverage/"] },
   {
@@ -74,4 +87,5 @@ export default tseslint.config(
     languageOptions: { ecmaVersion: 2022, globals: globals.browser },
   },
   boundariesConfig,
+  termsConfig,
 );
