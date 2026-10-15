@@ -19,4 +19,7 @@ export const AbilitiesResponsePermissionsItem = {
   projectview: 'project.view',
   sitemanage: 'site.manage',
   siteview: 'site.view',
+  uploadsadmin: 'uploads.admin',
+  uploadscreate: 'uploads.create',
+  uploadsview: 'uploads.view',
 } as const;

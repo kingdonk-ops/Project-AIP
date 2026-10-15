@@ -109,7 +109,12 @@ async def test_system_roles_match_the_access_matrix(client: httpx.AsyncClient) -
     inspector = roles["inspector"]
     assert inspector["isSystem"] is True
     assert inspector["nameTermKey"] == "access.role.inspector.name"
-    assert inspector["permissions"] == ["project.view", "site.view"]
+    assert inspector["permissions"] == [
+        "project.view",
+        "site.view",
+        "uploads.create",
+        "uploads.view",
+    ]
     assert "access.role.manage" in roles["tenant_admin"]["permissions"]
     assert "identity.user.manage" in roles["tenant_admin"]["permissions"]
     assert "project.archive" in roles["project_manager"]["permissions"]
@@ -327,7 +332,7 @@ async def test_editing_a_system_role_customises_it_and_takes_effect(
     assert not await can(app, CAROL_ID, "project.view")
 
     (event,) = [e for e in await events(db, "access.role.changed") if e["action"] == "updated"]
-    assert event["before"] == ["project.view", "site.view"]
+    assert event["before"] == ["project.view", "site.view", "uploads.view"]
     assert event["after"] == ["site.view"]
 
 
@@ -382,9 +387,12 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
     response = await client.post(f"{ROLES}/{reviewer}/reset", headers=ALICE)
     assert response.status_code == 200, response.text
     assert response.json()["customisedAt"] is None
-    assert response.json()["permissions"] == ["project.view", "site.view"]
+    assert response.json()["permissions"] == ["project.view", "site.view", "uploads.view"]
     (event,) = [e for e in await events(db, "access.role.changed") if e["action"] == "reset"]
-    assert (event["before"], event["after"]) == (["site.view"], ["project.view", "site.view"])
+    assert (event["before"], event["after"]) == (
+        ["site.view"],
+        ["project.view", "site.view", "uploads.view"],
+    )
 
 
 async def test_system_roles_keep_their_code_and_cannot_be_deleted(
@@ -418,7 +426,12 @@ async def test_custom_role_lifecycle(client: httpx.AsyncClient, db: TenantDb) ->
     )
     assert clone.status_code == 201
     assert clone.json()["isSystem"] is False
-    assert clone.json()["permissions"] == ["project.view", "site.view"]
+    assert clone.json()["permissions"] == [
+        "project.view",
+        "site.view",
+        "uploads.create",
+        "uploads.view",
+    ]
 
     assignment = (await assign(client, CAROL_ID, "viewer")).json()
     response = await client.delete(f"{ROLES}/{viewer}", headers=ALICE)

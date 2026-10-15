@@ -6,5 +6,5 @@
 export interface RoleUpdate {
   code?: string | null;
   name?: string | null;
-  permissions?: ('access.matrix.export' | 'access.role.manage' | 'access.role.read' | 'access.role_assignment.manage' | 'access.role_assignment.read' | 'access.team.manage' | 'identity.user.manage' | 'identity.user.read' | 'platform.events.manage' | 'project.archive' | 'project.create' | 'project.update' | 'project.view' | 'site.manage' | 'site.view')[] | null;
+  permissions?: ('access.matrix.export' | 'access.role.manage' | 'access.role.read' | 'access.role_assignment.manage' | 'access.role_assignment.read' | 'access.team.manage' | 'identity.user.manage' | 'identity.user.read' | 'platform.events.manage' | 'project.archive' | 'project.create' | 'project.update' | 'project.view' | 'site.manage' | 'site.view' | 'uploads.admin' | 'uploads.create' | 'uploads.view')[] | null;
 }
