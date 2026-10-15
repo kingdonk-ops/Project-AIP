@@ -6,7 +6,7 @@ Integration tests run on real Postgres (migrations applied as ``aip_owner``) and
 
 from __future__ import annotations
 
-from typing import Any, get_args
+from typing import get_args
 from uuid import UUID
 
 import asyncpg
@@ -16,7 +16,12 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncConnection
 from tests.conftest import TENANT_A_ID, TENANT_B_ID
-from tests.fixtures.postgres import TenantDb, _execute  # pyright: ignore[reportPrivateUsage]
+from tests.fixtures.postgres import (
+    TenantDb,
+    _execute,  # pyright: ignore[reportPrivateUsage]
+    _fetch,  # pyright: ignore[reportPrivateUsage]
+)
+from tests.schema.test_schema_guard import guard
 
 from aip.modules.security.schemas import ControlRecordCreate, ControlStatus
 from aip.modules.security.tables import (
@@ -29,7 +34,6 @@ from aip.modules.security.tables import (
     restore_test_records,
 )
 from aip.platform.context import new_request_id
-from aip.platform.db.schema_guard import inspect_schema
 
 SECURITY_TABLES = (
     control_records,
@@ -142,21 +146,16 @@ def test_mutable_tables_soft_delete_and_append_only_tables_have_no_updated_at() 
 
 
 async def test_schema_guard_passes_for_all_seven_tables(tenant_db: TenantDb) -> None:
-    conn: Any = await asyncpg.connect(tenant_db.db.owner_url)  # pyright: ignore[reportUnknownMemberType]
-    try:
-        names = {t.name for t in SECURITY_TABLES}
-        rows = await conn.fetch(
-            "SELECT relname, relrowsecurity, relforcerowsecurity FROM pg_class"
-            " WHERE relname = ANY($1::text[]) AND relkind IN ('r', 'p')",
-            list(names),
-        )
-        assert {r["relname"]: (r["relrowsecurity"], r["relforcerowsecurity"]) for r in rows} == {
-            name: (True, True) for name in names
-        }
-        violations = [v for v in await inspect_schema(conn) if v.table in names]
-        assert violations == []
-    finally:
-        await conn.close()
+    names = {t.name for t in SECURITY_TABLES}
+    rows = await _fetch(
+        tenant_db.db.owner_url,
+        "SELECT relname, relrowsecurity, relforcerowsecurity FROM pg_class"
+        " WHERE relname = ANY($1::text[]) AND relkind IN ('r', 'p')",
+        list(names),
+    )
+    assert {r[0]: (r[1], r[2]) for r in rows} == {name: (True, True) for name in names}
+    violations = [v for v in await guard(tenant_db.db.owner_url) if v.table in names]
+    assert violations == []
 
 
 @pytest.mark.parametrize("table", APPEND_ONLY)
@@ -199,17 +198,10 @@ async def test_delete_restore_test_records_raises_insufficient_privilege(
 async def test_append_only_tables_refuse_truncate_by_aip_jobs(
     tenant_db: TenantDb, table: str
 ) -> None:
-    conn: Any = await asyncpg.connect(tenant_db.db.role_url("aip_jobs"))  # pyright: ignore[reportUnknownMemberType]
-    try:
-        for statement in (
-            f"TRUNCATE {table}",
-            f"DELETE FROM {table}",
-            f"UPDATE {table} SET id = id",
-        ):
-            with pytest.raises(asyncpg.InsufficientPrivilegeError):
-                await conn.execute(statement)
-    finally:
-        await conn.close()
+    url = tenant_db.db.role_url("aip_jobs")
+    for statement in (f"TRUNCATE {table}", f"DELETE FROM {table}", f"UPDATE {table} SET id = id"):
+        with pytest.raises(asyncpg.InsufficientPrivilegeError):
+            await _execute(url, statement)
 
 
 @pytest.mark.parametrize("table", MUTABLE)
@@ -290,3 +282,62 @@ async def test_writes_without_a_tenant_fail_closed(tenant_db: TenantDb) -> None:
                 {"id": new_id(), "tenant": TENANT_A_ID},
             )
     assert sqlstate(caught.value) == "42501"
+
+
+# --- integration: review follow-ups (partitions, every runtime role, reads) ------------------
+
+RUNTIME_ROLES = ("aip_app", "aip_jobs", "aip_readonly")
+
+
+@pytest.mark.parametrize("table", APPEND_ONLY)
+async def test_no_runtime_role_can_change_an_append_only_table_or_its_partitions(
+    tenant_db: TenantDb, table: str
+) -> None:
+    owner = tenant_db.db.owner_url
+    await _fetch(owner, "SELECT aip_ensure_partitions($1, 1)", table)
+    children = [
+        r[0]
+        for r in await _fetch(
+            owner,
+            "SELECT c.relname FROM pg_inherits h JOIN pg_class c ON c.oid = h.inhrelid"
+            " WHERE h.inhparent = $1::regclass",
+            table,
+        )
+    ]
+    assert f"{table}_default" in children and len(children) >= 3, children
+    for rel in (table, *children):
+        for role in RUNTIME_ROLES:
+            for priv in ("UPDATE", "DELETE", "TRUNCATE"):
+                held = await _fetch(
+                    owner, "SELECT has_table_privilege($1, $2, $3)", role, rel, priv
+                )
+                assert held == [(False,)], (role, rel, priv)
+    # Partitions are reached only through the parent: no grants of their own.
+    granted = await _fetch(
+        owner,
+        "SELECT c.relname FROM pg_inherits h JOIN pg_class c ON c.oid = h.inhrelid"
+        " WHERE h.inhparent = $1::regclass AND c.relacl IS NOT NULL",
+        table,
+    )
+    assert granted == []
+
+
+async def test_another_tenants_append_only_rows_are_invisible(tenant_db: TenantDb) -> None:
+    async with tenant_db.with_tenant(TENANT_A_ID) as conn:
+        await seed_append_only(conn)
+    for table in APPEND_ONLY:
+        async with tenant_db.with_tenant(TENANT_B_ID) as conn:
+            assert (await conn.execute(text(f"SELECT count(*) FROM {table}"))).scalar() == 0, table
+        async with tenant_db.with_tenant(TENANT_A_ID) as conn:
+            assert (await conn.execute(text(f"SELECT count(*) FROM {table}"))).scalar() == 1, table
+
+
+@pytest.mark.parametrize("table", [t.name for t in SECURITY_TABLES])
+async def test_aip_readonly_cannot_write(tenant_db: TenantDb, table: str) -> None:
+    scoped = f"SELECT set_config('app.tenant_id', '{TENANT_A_ID}', true); "
+    # The role defaults to read-only transactions; lift that so the grants themselves are tested.
+    scoped = "SET TRANSACTION READ WRITE; " + scoped
+    url = tenant_db.db.role_url("aip_readonly")
+    for statement in (f"DELETE FROM {table}", f"UPDATE {table} SET id = id", f"TRUNCATE {table}"):
+        with pytest.raises(asyncpg.InsufficientPrivilegeError):
+            await _execute(url, scoped + statement)

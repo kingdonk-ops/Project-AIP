@@ -207,9 +207,9 @@ def upgrade() -> None:
       ADD CONSTRAINT ck_breach_incidents_description CHECK (description <> '');
 
     CREATE INDEX ix_breach_incidents_tenant_id_status ON breach_incidents (tenant_id, status);
-    -- The NDB clock sweep: open incidents by due time.
-    CREATE INDEX ix_breach_incidents_assessment_due_at
-      ON breach_incidents (assessment_due_at) WHERE status IN ('open', 'assessing');
+    -- The NDB clock sweep, run per tenant through with_tenant: open incidents by due time.
+    CREATE INDEX ix_breach_incidents_tenant_id_assessment_due_at
+      ON breach_incidents (tenant_id, assessment_due_at) WHERE status IN ('open', 'assessing');
 
     REVOKE DELETE ON breach_incidents FROM aip_app;
     """)

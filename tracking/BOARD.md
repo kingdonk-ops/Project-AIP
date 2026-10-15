@@ -186,8 +186,8 @@ tasks still `todo` below remain before M0 is closed.
 | [TENANCY-06](tasks/TENANCY-06.md) | Quotas and support-access grants | tenancy | M | PLAN-R1, TENANCY-02, TENANCY-05 | todo | convert to Python backend per ADR 0001 before starting |
 | [TENANCY-07](tasks/TENANCY-07.md) | Offboarding, crypto-shred and deletion certificate | tenancy | M | AUDIT-05, PLAN-R1, TENANCY-05 | todo | convert to Python backend per ADR 0001 before starting |
 | [SECURITY-03](tasks/SECURITY-03.md) | Control catalogue service, baseline seed and admin router | security | M | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting |
-| [SECURITY-04](tasks/SECURITY-04.md) | Breach register with NDB clock | security | S | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting |
-| [SECURITY-05](tasks/SECURITY-05.md) | Quarterly access review generator | security | M | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting |
+| [SECURITY-04](tasks/SECURITY-04.md) | Breach register with NDB clock | security | S | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting; from SECURITY-02 review: aip_app still has UPDATE on detected_at and assessment_due_at, so restrict them (column grants or trigger) |
+| [SECURITY-05](tasks/SECURITY-05.md) | Quarterly access review generator | security | M | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting; from SECURITY-02 review: aip_app can still UPDATE a signed_off access_reviews row, so add the lock trigger |
 | [SECURITY-06](tasks/SECURITY-06.md) | Data classification tags, field masking and EXIF GPS control | security | M | PLAN-R1, SECURITY-02 | todo | convert to Python backend per ADR 0001 before starting |
 | [OPS-05](tasks/OPS-05.md) | Client error sink | ops | M | OPS-04, PLAN-R1 | todo | convert to Python backend per ADR 0001 before starting |
 | [OPS-06](tasks/OPS-06.md) | Storage lifecycle renderer with evidence-expiry guard | ops | S | PLAN-R1 | todo | convert to Python backend per ADR 0001 before starting |

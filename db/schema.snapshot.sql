@@ -1500,11 +1500,11 @@ CREATE INDEX ix_auth_event_tenant_id_event_type_occurred_at ON public.auth_event
 -- Name: ix_auth_event_tenant_id_user_id_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_auth_event_tenant_id_user_id_occurred_at ON public.auth_event USING btree (tenant_id, user_id, occurred_at DESC);
 
--- Name: ix_breach_incidents_assessment_due_at; Type: INDEX; Schema: public
-CREATE INDEX ix_breach_incidents_assessment_due_at ON public.breach_incidents USING btree (assessment_due_at) WHERE (status = ANY (ARRAY['open'::text, 'assessing'::text]));
-
 -- Name: ix_breach_incidents_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_breach_incidents_tenant_id ON public.breach_incidents USING btree (tenant_id);
+
+-- Name: ix_breach_incidents_tenant_id_assessment_due_at; Type: INDEX; Schema: public
+CREATE INDEX ix_breach_incidents_tenant_id_assessment_due_at ON public.breach_incidents USING btree (tenant_id, assessment_due_at) WHERE (status = ANY (ARRAY['open'::text, 'assessing'::text]));
 
 -- Name: ix_breach_incidents_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_breach_incidents_tenant_id_status ON public.breach_incidents USING btree (tenant_id, status);
