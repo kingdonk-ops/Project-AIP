@@ -71,7 +71,7 @@ tasks still `todo` below remain before M0 is closed.
 | [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | done | PR #78 |
 | [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | todo |  |
 | [ARCH-09](tasks/ARCH-09.md) | Event catalogue and dead-letter admin pages | arch | M | ARCH-07, DESIGN-03, DESIGN-04 | todo | web stream; APIs from ARCH-06/ARCH-07; replay, CSV export and payload drawer out of scope |
-| [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | todo | |
+| [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | done | ClaudeK; PR #87 |
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
 | [TESTING-10](tasks/TESTING-10.md) | Worker shutdown test waits for registration instead of a fixed sleep | testing | XS | OPS-02 | done | PR #48 |
 | [TESTING-11](tasks/TESTING-11.md) | JIT membership test uses the database date, not the local date | testing | XS | IDENTITY-02 | done | ClaudeK: PR #53 |
@@ -84,7 +84,7 @@ tasks still `todo` below remain before M0 is closed.
 |---|---|---|---|---|---|---|
 | [ACCESS-01](tasks/ACCESS-01.md) | Permission catalogue from manifests + PolicyService.can + Nest guard (deny by default) | access | M | ARCH-02, ARCH-04, IDENTITY-02 | done | ClaudeK: PR #51 |
 | [ARCH-07](tasks/ARCH-07.md) | Outbox dispatcher, retries and dead-letter | arch | M | ARCH-06 | done | ClaudeK: PR #83; PR #55 low findings closed (manifest-listed subscribers, write-once publish/discard, bounded last_error); ADR 0030 |
-| [TERMS-03](tasks/TERMS-03.md) | ICU formatting and unit conversion | terms | M | TERMS-02 | todo | |
+| [TERMS-03](tasks/TERMS-03.md) | ICU formatting and unit conversion | terms | M | TERMS-02 | done | ClaudeK; PR #88 |
 | [TERMS-07](tasks/TERMS-07.md) | Hard-coded string linter and coverage report | terms | M | TERMS-01 | done | PR #TBD (ClaudeK) |
 | [TERMS-08](tasks/TERMS-08.md) | Frontend i18n provider and dictionary admin screen | terms | M | TERMS-05 | todo | |
 | [AUDIT-01](tasks/AUDIT-01.md) | Append-only hash-chained audit_log, writer role, REVOKE | audit | M | ARCH-05, DATABASE-05 | review | ClaudeK: PR #85 |

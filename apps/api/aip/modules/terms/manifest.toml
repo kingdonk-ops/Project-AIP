@@ -2,11 +2,17 @@
 id = "terms"
 context = "terms"
 depends_on = []
-events = []
-subscribes = []
-settings = ["TERMS_LINT_FINDINGS"]
+settings = ["REDIS_URL", "TERMS_LINT_FINDINGS"]
 term_keys = []
 
 [[permissions]]
 code = "terms.coverage.read"
 description = "View the hard-coded label coverage report"
+
+[[events]]
+name = "terms.pack.activated"
+version = 1
+
+[[subscribes]]
+name = "terms.pack.activated"
+version = 1

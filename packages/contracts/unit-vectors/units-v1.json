@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "description": "TERMS-03 unit conversion golden vectors. Storage is SI (mm, bar, degC). `to_display` cases convert a stored `value` in SI `unit` into `system`'s display unit; `expected.value` must match within 1e-9 relative (1e-12 absolute near zero) and `expected.text` is the en-AU display string, rounded half away from zero to the unit's decimals, reading the float as its shortest round-tripping decimal as ICU does (so 1.005 is a tie and shows 1.01). `to_si` cases convert a typed `value` in display `unit` back to SI. Factors: 1 in = 25.4 mm, 1 psi = 0.0689475729 bar, degF = degC x 9/5 + 32.",
+  "units": {
+    "mm": { "symbol": "mm", "si": "mm", "decimals": 2 },
+    "in": { "symbol": "in", "si": "mm", "decimals": 2 },
+    "bar": { "symbol": "bar", "si": "bar", "decimals": 2 },
+    "psi": { "symbol": "psi", "si": "bar", "decimals": 2 },
+    "degC": { "symbol": "°C", "si": "degC", "decimals": 1 },
+    "degF": { "symbol": "°F", "si": "degC", "decimals": 1 }
+  },
+  "systems": {
+    "metric": { "mm": "mm", "bar": "bar", "degC": "degC" },
+    "imperial": { "mm": "in", "bar": "psi", "degC": "degF" }
+  },
+  "to_display": [
+    { "name": "one inch", "value": 25.4, "unit": "mm", "system": "imperial", "expected": { "value": 1, "unit": "in", "text": "1.00 in" } },
+    { "name": "quarter inch", "value": 6.35, "unit": "mm", "system": "imperial", "expected": { "value": 0.25, "unit": "in", "text": "0.25 in" } },
+    { "name": "metric keeps mm", "value": 6.35, "unit": "mm", "system": "metric", "expected": { "value": 6.35, "unit": "mm", "text": "6.35 mm" } },
+    { "name": "metric groups thousands", "value": 1234.5, "unit": "mm", "system": "metric", "expected": { "value": 1234.5, "unit": "mm", "text": "1,234.50 mm" } },
+    { "name": "a metre in inches", "value": 1000, "unit": "mm", "system": "imperial", "expected": { "value": 39.37007874015748, "unit": "in", "text": "39.37 in" } },
+    { "name": "ten bar in psi", "value": 10, "unit": "bar", "system": "imperial", "expected": { "value": 145.03773773020922, "unit": "psi", "text": "145.04 psi" } },
+    { "name": "metric keeps bar", "value": 1, "unit": "bar", "system": "metric", "expected": { "value": 1, "unit": "bar", "text": "1.00 bar" } },
+    { "name": "boiling point", "value": 100, "unit": "degC", "system": "imperial", "expected": { "value": 212, "unit": "degF", "text": "212.0 °F" } },
+    { "name": "freezing point", "value": 0, "unit": "degC", "system": "imperial", "expected": { "value": 32, "unit": "degF", "text": "32.0 °F" } },
+    { "name": "minus forty is the same", "value": -40, "unit": "degC", "system": "imperial", "expected": { "value": -40, "unit": "degF", "text": "-40.0 °F" } },
+    { "name": "metric keeps degC", "value": 21.5, "unit": "degC", "system": "metric", "expected": { "value": 21.5, "unit": "degC", "text": "21.5 °C" } },
+    { "name": "a shortest-form tie rounds up", "value": 1.005, "unit": "mm", "system": "metric", "expected": { "value": 1.005, "unit": "mm", "text": "1.01 mm" } },
+    { "name": "negative millimetres", "value": -12.7, "unit": "mm", "system": "imperial", "expected": { "value": -0.5, "unit": "in", "text": "-0.50 in" } }
+  ],
+  "to_si": [
+    { "name": "inch to mm", "value": 1, "unit": "in", "expected": 25.4 },
+    { "name": "psi to bar", "value": 14.5, "unit": "psi", "expected": 0.99973980705 },
+    { "name": "degF to degC", "value": 212, "unit": "degF", "expected": 100 },
+    { "name": "freezing degF", "value": 32, "unit": "degF", "expected": 0 },
+    { "name": "SI unit is unchanged", "value": 25.4, "unit": "mm", "expected": 25.4 }
+  ]
+}

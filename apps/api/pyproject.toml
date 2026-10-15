@@ -27,6 +27,8 @@ dependencies = [
     "structlog>=26.1.0",
     "uvicorn[standard]>=0.32",
     "pyicumessageformat>=1.0",
+    "babel>=2.16",
+    "jinja2>=3.1",
 ]
 
 [project.scripts]
@@ -44,6 +46,7 @@ dev = [
     "pyyaml>=6",
     "testcontainers[keycloak,postgres,redis]>=4.8",
     "types-aioboto3[s3]>=13.2",
+    "hypothesis>=6.100",
 ]
 
 [build-system]
