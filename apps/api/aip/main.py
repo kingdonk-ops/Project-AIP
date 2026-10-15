@@ -203,9 +203,9 @@ def create_app(
         # ARCH-07: before the catalogue, whose /{event_name} would match dead-letter.
         v1.include_router(create_dead_letter_router())
         v1.include_router(create_events_router(modules))  # /admin/platform/events
-    # ARCH-08: tenant feature flags, gated by tenant.flags.manage (declared by tenancy).
-    if FLAGS_MANAGE_PERMISSION in catalogue:
-        v1.include_router(create_flags_router())  # /settings/flags
+    # ARCH-08: tenant feature flags. The nav reads them always; changing one needs
+    # tenant.flags.manage, mounted only when tenancy (which declares it) is in the module set.
+    v1.include_router(create_flags_router(manage=FLAGS_MANAGE_PERMISSION in catalogue))
     for module in modules:
         v1.include_router(module.router)
 

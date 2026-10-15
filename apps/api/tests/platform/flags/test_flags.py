@@ -8,6 +8,7 @@ and ``bob`` (tenant B) do not. ``GET /api/v1/_fixtures/bim-probe`` is the test-o
 
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from collections.abc import AsyncIterator
@@ -265,3 +266,24 @@ async def test_an_unknown_flag_is_404_and_a_bad_body_is_422(client: httpx.AsyncC
     assert unknown.status_code == 404
     bad = await client.put(f"{FLAGS}/bim", json={"enabled": "yes", "extra": 1}, headers=ALICE)
     assert bad.status_code == 422
+
+
+async def test_concurrent_changes_leave_events_matching_the_stored_value(
+    app: FastAPI,
+    tenant_db: TenantDb,  # noqa: F811
+) -> None:
+    await asyncio.gather(
+        set_flag(TENANT_A_ID, ALICE_ID, "bim", True),
+        set_flag(TENANT_A_ID, ALICE_ID, "bim", False),
+        set_flag(TENANT_A_ID, ALICE_ID, "bim", True),
+    )
+    async with with_tenant(TENANT_A_ID) as conn:
+        stored = await FlagService().is_enabled(conn, "bim")
+    events = await flag_events(tenant_db, TENANT_A_ID)
+    values = [(json.loads(p) if isinstance(p, str) else p)["enabled"] for p, _ in events]
+    # Every event is a real change from the value before it, and the last one is what is stored.
+    previous = False
+    for value in values:
+        assert value != previous
+        previous = value
+    assert previous == stored

@@ -1,7 +1,7 @@
 """Tenant feature-flag settings API (ARCH-08).
 
-Mounted by ``aip.main`` under ``/api/v1`` when ``tenant.flags.manage`` is in the permission
-catalogue (the tenancy module declares it).
+Mounted by ``aip.main`` under ``/api/v1``. The ``PUT`` is added only when ``tenant.flags.manage``
+is in the permission catalogue (the tenancy module declares it); the ``GET`` is always there.
 
 - ``GET /settings/flags``: every known flag's effective value for the caller's tenant. Any signed-in
   user may read it, because the web nav uses it to show or hide deferred modules.
@@ -47,7 +47,7 @@ class FeatureFlagPut(_Model):
     enabled: StrictBool
 
 
-def create_router() -> APIRouter:
+def create_router(*, manage: bool = True) -> APIRouter:
     router = APIRouter(prefix="/settings/flags", tags=["platform"])
 
     @router.get("", response_model=FeatureFlags, dependencies=[Depends(authenticated())])
@@ -57,6 +57,9 @@ def create_router() -> APIRouter:
         return FeatureFlags(
             flags=[FeatureFlag(flag=flag, enabled=enabled) for flag, enabled in values.items()]
         )
+
+    if not manage:
+        return router
 
     @router.put(
         "/{flag}",

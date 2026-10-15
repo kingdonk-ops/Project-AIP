@@ -85,16 +85,21 @@ class FlagChange:
 _SELECT_ONE = text(
     "SELECT enabled FROM tenant_feature_flags WHERE flag = :flag AND deleted_at IS NULL"
 )
-_SELECT_ONE_FOR_UPDATE = text(
-    "SELECT enabled FROM tenant_feature_flags WHERE flag = :flag AND deleted_at IS NULL FOR UPDATE"
-)
 _SELECT_ALL = text("SELECT flag, enabled FROM tenant_feature_flags WHERE deleted_at IS NULL")
-_UPSERT = text("""
+# ``set`` first makes sure a live row exists (holding the default), then locks it, so concurrent
+# changes of one flag serialise and each compares against the value the previous one committed.
+_ENSURE_ROW = text("""
 INSERT INTO tenant_feature_flags (id, tenant_id, flag, enabled, updated_by)
-VALUES (:id, NULLIF(current_setting('app.tenant_id', true), '')::uuid, :flag, :enabled, :by)
-ON CONFLICT (tenant_id, flag) WHERE deleted_at IS NULL
-DO UPDATE SET enabled = EXCLUDED.enabled, updated_by = EXCLUDED.updated_by, updated_at = now()
-RETURNING id
+VALUES (:id, NULLIF(current_setting('app.tenant_id', true), '')::uuid, :flag, :default, NULL)
+ON CONFLICT (tenant_id, flag) WHERE deleted_at IS NULL DO NOTHING
+""")
+_LOCK_ROW = text("""
+SELECT id, enabled FROM tenant_feature_flags
+WHERE flag = :flag AND deleted_at IS NULL FOR UPDATE
+""")
+_UPDATE = text("""
+UPDATE tenant_feature_flags SET enabled = :enabled, updated_by = :by, updated_at = now()
+WHERE id = :id
 """)
 
 
@@ -115,21 +120,14 @@ class FlagService:
         """Store ``enabled`` for the tenant; emit ``platform.flag.changed`` if it changed."""
         default = check_flag(flag)
         ctx = get_context()
-        stored: bool | None = (
-            await conn.execute(_SELECT_ONE_FOR_UPDATE, {"flag": flag})
-        ).scalar_one_or_none()
-        before = default if stored is None else stored
-        row_id: UUID = (
-            await conn.execute(
-                _UPSERT,
-                {
-                    "id": UUID(new_request_id()),
-                    "flag": flag,
-                    "enabled": enabled,
-                    "by": ctx.actor_id,
-                },
-            )
-        ).scalar_one()
+        await conn.execute(
+            _ENSURE_ROW, {"id": UUID(new_request_id()), "flag": flag, "default": default}
+        )
+        row = (await conn.execute(_LOCK_ROW, {"flag": flag})).one()
+        row_id: UUID = row.id
+        before: bool = row.enabled
+        if before != enabled:
+            await conn.execute(_UPDATE, {"id": row_id, "enabled": enabled, "by": ctx.actor_id})
         changed = before != enabled
         if changed:
             await emit(

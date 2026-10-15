@@ -7,10 +7,18 @@ a request, e.g. in a job); neither comes from the caller.
 
 - ``link`` is idempotent: linking the same pair with the same kind again returns the live row's id.
 - ``unlink`` soft-deletes the live link; linking again afterwards creates a new row.
-- ``traverse`` follows links outward from a record, breadth by depth, up to ``MAX_DEPTH`` hops.
-  A recursive CTE carries the visited path, so a cycle ends at the record that closes it: for
-  ``a -> b -> c -> a`` the walk from ``a`` is ``b, c, a`` and stops. Each record is reported once,
-  at its shortest depth, ordered by depth, then type, then id.
+- ``traverse`` follows links outward from a record breadth-first, up to ``MAX_DEPTH`` hops, one
+  query per depth over the whole frontier with a visited set. Each record is reported and expanded
+  once, at its shortest depth (ordered by depth, then type, then id), so a cycle ends at the record
+  that closes it (``a -> b -> c -> a`` from ``a`` is ``b, c, a``) and the cost grows with the
+  records reached, not with the number of paths (a recursive CTE with a visited-*path* array, as
+  first specified, expands every simple path: about fan-out^depth rows on a dense graph).
+
+Contract for callers: a link stores ids only. ``link`` does not check that either record or the
+asset exists or that the caller may see them (the platform cannot read module tables), so a module
+must authorise both ends before linking, and must re-read every record ``traverse`` returns through
+its own service (RLS and ``requires()``) before showing it. Linking an existing pair and kind again
+returns the live link unchanged, including its original ``asset_id``.
 """
 
 from __future__ import annotations
@@ -50,6 +58,8 @@ def _actor() -> UUID | None:
         return None
 
 
+# DO UPDATE (a no-op on updated_at) rather than DO NOTHING: it locks the live row and returns its
+# id in the same statement, so a concurrent ``unlink`` cannot make the id vanish between two reads.
 _INSERT = text("""
 INSERT INTO record_links
   (id, tenant_id, from_type, from_id, to_type, to_id, asset_id, link_kind, created_by)
@@ -57,14 +67,8 @@ VALUES
   (:id, NULLIF(current_setting('app.tenant_id', true), '')::uuid, :from_type, :from_id,
    :to_type, :to_id, :asset_id, :kind, :created_by)
 ON CONFLICT (tenant_id, from_type, from_id, to_type, to_id, link_kind) WHERE deleted_at IS NULL
-DO NOTHING
+DO UPDATE SET updated_at = record_links.updated_at
 RETURNING id
-""")
-
-_EXISTING = text("""
-SELECT id FROM record_links
-WHERE from_type = :from_type AND from_id = :from_id AND to_type = :to_type AND to_id = :to_id
-  AND link_kind = :kind AND deleted_at IS NULL
 """)
 
 _UNLINK = text("""
@@ -74,28 +78,13 @@ WHERE from_type = :from_type AND from_id = :from_id AND to_type = :to_type AND t
 RETURNING id
 """)
 
-# ``path`` holds "type:id" keys of every record on the way here, the start included. An edge back
-# to a record on the path is still reported (``closes``) but never followed.
-_TRAVERSE = text("""
-WITH RECURSIVE walk (ref_type, ref_id, depth, path, closes) AS (
-  SELECT l.to_type, l.to_id, 1,
-         ARRAY[CAST(:start_key AS text), l.to_type || ':' || l.to_id::text],
-         (l.to_type || ':' || l.to_id::text) = CAST(:start_key AS text)
-  FROM record_links l
-  WHERE l.from_type = :from_type AND l.from_id = :from_id AND l.deleted_at IS NULL
-  UNION ALL
-  SELECT l.to_type, l.to_id, w.depth + 1,
-         w.path || (l.to_type || ':' || l.to_id::text),
-         (l.to_type || ':' || l.to_id::text) = ANY (w.path)
-  FROM walk w
-  JOIN record_links l
-    ON l.from_type = w.ref_type AND l.from_id = w.ref_id AND l.deleted_at IS NULL
-  WHERE NOT w.closes AND w.depth < :max_depth
-)
-SELECT ref_type, ref_id, min(depth) AS depth
-FROM walk
-GROUP BY ref_type, ref_id
-ORDER BY depth, ref_type, ref_id
+# One hop from a whole frontier: the distinct live targets (any kind) of the given records.
+_NEXT = text("""
+SELECT DISTINCT l.to_type, l.to_id
+FROM record_links l
+JOIN unnest(CAST(:types AS text[]), CAST(:ids AS uuid[])) AS f (ref_type, ref_id)
+  ON l.from_type = f.ref_type AND l.from_id = f.ref_id
+WHERE l.deleted_at IS NULL
 """)
 
 
@@ -130,7 +119,7 @@ class LinkService:
         if from_ref == to_ref:
             raise ValueError("a record cannot link to itself")
         params = _pair(from_ref, to_ref, kind)
-        inserted = (
+        return (
             await conn.execute(
                 _INSERT,
                 {
@@ -140,10 +129,7 @@ class LinkService:
                     "created_by": _actor(),
                 },
             )
-        ).scalar_one_or_none()
-        if inserted is not None:
-            return inserted
-        return (await conn.execute(_EXISTING, params)).scalar_one()
+        ).scalar_one()
 
     async def unlink(
         self, conn: AsyncConnection, from_ref: RecordRef, to_ref: RecordRef, kind: str
@@ -159,13 +145,21 @@ class LinkService:
         """Every record reachable from ``ref`` within ``max_depth`` hops, as ``(ref, depth)``."""
         if not 1 <= max_depth <= MAX_DEPTH:
             raise ValueError(f"max_depth must be between 1 and {MAX_DEPTH}, got {max_depth}")
-        rows = await conn.execute(
-            _TRAVERSE,
-            {
-                "from_type": ref.type,
-                "from_id": ref.id,
-                "start_key": f"{ref.type}:{ref.id}",
-                "max_depth": max_depth,
-            },
-        )
-        return [(RecordRef(row.ref_type, row.ref_id), row.depth) for row in rows]
+        found: list[tuple[RecordRef, int]] = []
+        seen: set[RecordRef] = set()  # the start is not in it: a cycle back to it is reported once
+        frontier = [ref]
+        for depth in range(1, max_depth + 1):
+            rows = await conn.execute(
+                _NEXT,
+                {"types": [r.type for r in frontier], "ids": [r.id for r in frontier]},
+            )
+            level = sorted(
+                {RecordRef(row.to_type, row.to_id) for row in rows} - seen,
+                key=lambda r: (r.type, r.id),
+            )
+            if not level:
+                break
+            seen.update(level)
+            found.extend((r, depth) for r in level)
+            frontier = [r for r in level if r != ref]  # the start was already expanded
+        return found

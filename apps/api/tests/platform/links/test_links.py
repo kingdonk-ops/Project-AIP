@@ -7,6 +7,7 @@ because ``record_links.tenant_id`` references ``tenants``.
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from typing import Any, cast
 from uuid import UUID, uuid4
@@ -227,3 +228,29 @@ async def test_aip_app_cannot_hard_delete_a_link(db: TenantDb) -> None:
         async with db.with_tenant(TENANT_A_ID) as conn:
             await conn.execute(text("DELETE FROM record_links"))
     assert getattr(caught.value.orig, "sqlstate", None) == "42501"
+
+
+async def test_concurrent_links_of_one_pair_make_one_row(db: TenantDb) -> None:
+    a, b = ref("fixture_defect"), ref("fixture_ncr")
+
+    async def link_once() -> UUID:
+        async with db.with_tenant(TENANT_A_ID) as conn:
+            return await links.link(conn, a, b, "follows")
+
+    first, second = await asyncio.gather(link_once(), link_once())
+    assert first == second
+    assert await count_links(db, TENANT_A_ID) == 1
+
+
+async def test_a_dense_two_way_graph_reports_each_record_once(db: TenantDb) -> None:
+    records = [ref("fixture_ncr") for _ in range(12)]
+    async with db.with_tenant(TENANT_A_ID) as conn:
+        for x in records:
+            for y in records:
+                if x != y:
+                    await links.link(conn, x, y, "relates_to")
+        result = await links.traverse(conn, records[0])
+    others = set(records[1:])
+    assert {found for found, depth in result if depth == 1} == others
+    assert result[-1] == (records[0], 2)  # back to the start once, then nothing new
+    assert len(result) == len(records)
