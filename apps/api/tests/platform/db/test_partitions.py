@@ -201,7 +201,8 @@ async def test_ensure_partitions_moves_default_rows_and_creates_months_ahead(
     created = await partition_jobs.ensure_all_partitions(jobs_engine, today=_today())
 
     expected = [partition_name("evidence_probe", month_start(_today(), n)) for n in range(4)]
-    assert created == {"evidence_probe": expected}
+    # Scoped to the probe: real append-only tables (SECURITY-02 on) are registered too.
+    assert created["evidence_probe"] == expected
     existing = {
         r[0]
         for r in await _db_fetch(
@@ -224,9 +225,9 @@ async def test_ensure_partitions_is_idempotent(
     await _create_probe(owner_conn_for_seeding_only, months_ahead=1)
     first = await partition_jobs.ensure_all_partitions(jobs_engine, today=_today())
     assert len(first["evidence_probe"]) == 2
-    assert await partition_jobs.ensure_all_partitions(jobs_engine, today=_today()) == {
-        "evidence_probe": []
-    }
+    again = await partition_jobs.ensure_all_partitions(jobs_engine, today=_today())
+    assert "evidence_probe" in again
+    assert all(not made for made in again.values())  # nothing new for any registered table
 
 
 async def test_periodic_task_runs_the_maintenance(
