@@ -103,7 +103,7 @@ tasks still `todo` below remain before M0 is closed.
 | [TENANCY-03](tasks/TENANCY-03.md) | Organisations and project-scoped role assignment | tenancy | M | PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [APPROVALS-01](tasks/APPROVALS-01.md) | Versioned workflow definitions/instances + pure state-machine evaluator | approvals | M | ARCH-02, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
-| [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | review | p0/uploads-sessions-presign (stream B); Python per ADR 0001; SSE-KMS wiring → UPLOADS-07  |
+| [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | done | PR #79 (stream B); SSE-KMS wiring → UPLOADS-07  |
 | [DATABASE-07](tasks/DATABASE-07.md) | Isolation test generator across all tables and routes | database | M | ACCESS-01, STACK-03, TESTING-02 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-04](tasks/TESTING-04.md) | Generated permission-matrix and IDOR tests | testing | M | ACCESS-01, STACK-03 | todo | convert to Python backend per ADR 0001 before starting |
 | [TERMS-05](tasks/TERMS-05.md) | Terms admin API and permissions | terms | M | TERMS-04 | todo | convert to Python backend per ADR 0001 before starting |
