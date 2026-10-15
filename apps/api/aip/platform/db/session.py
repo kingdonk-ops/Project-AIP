@@ -42,9 +42,12 @@ from aip.platform.db.errors import InvalidTenantError
 
 __all__ = [
     "PLATFORM_TENANT_ID",
+    "DbEngine",
+    "JobsRoleError",
     "PlatformTenantError",
     "TenantRef",
     "app_engine_for",
+    "as_jobs_role",
     "before_tenant",
     "cross_tenant_readonly",
     "tenant_uuid",
@@ -60,6 +63,10 @@ PLATFORM_TENANT_ID = UUID(int=0)
 _PLATFORM_WRITER = "aip_owner"
 
 _SET_TENANT = text("SELECT set_config('app.tenant_id', :tenant_id, true)")
+_JOBS_ROLE = "aip_jobs"
+
+DbEngine = AsyncEngine
+"""The engine type, for code outside ``aip.platform.db`` that is handed an engine to pass on."""
 
 
 def tenant_uuid(tenant: object) -> UUID:
@@ -129,6 +136,26 @@ async def with_platform_tenant(engine: AsyncEngine) -> AsyncGenerator[AsyncConne
                 f"platform rows are written as {_PLATFORM_WRITER}, not {user}"
             )
         await conn.execute(_SET_TENANT, {"tenant_id": str(PLATFORM_TENANT_ID)})
+        yield conn
+
+
+class JobsRoleError(RuntimeError):
+    """``as_jobs_role`` was given an engine that does not log in as ``aip_jobs``."""
+
+
+@asynccontextmanager
+async def as_jobs_role(engine: AsyncEngine) -> AsyncGenerator[AsyncConnection]:
+    """Yield an ``aip_jobs`` connection in a transaction with no tenant bound (ADR 0003, 0030).
+
+    Only for the outbox dispatcher's cross-tenant claim and outcome writes: ``aip_jobs`` reads every
+    tenant's ``domain_events`` through its own policies and may update only the dispatch columns.
+    The engine comes from ``get_jobs_engine()`` (tests pass their own); any other login is refused
+    before a statement runs, so this can never become a tenant-less ``aip_app`` connection.
+    """
+    async with engine.begin() as conn:
+        user = (await conn.execute(text("SELECT current_user"))).scalar_one()
+        if user != _JOBS_ROLE:
+            raise JobsRoleError(f"the outbox dispatcher runs as {_JOBS_ROLE}, not {user}")
         yield conn
 
 

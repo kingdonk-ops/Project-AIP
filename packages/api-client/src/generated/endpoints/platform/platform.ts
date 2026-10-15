@@ -19,7 +19,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  DeadLetterAction,
+  DeadLetterPage,
   DeprecateResult,
+  DiscardRequest,
   EntitlementErrorBody,
   EventCatalogue,
   EventDetail,
@@ -28,6 +31,7 @@ import type {
   ModuleInfo,
   OverrideCreate,
   OverrideOut,
+  PlatformListDeadLettersParams,
   PlatformListEventsParams,
   PlatformLive200,
   PlatformRemoveEntitlementOverrideParams,
@@ -184,7 +188,332 @@ export function usePlatformListEvents<TData = Awaited<ReturnType<typeof platform
 
 
 
-export type platformGetEventResponse200 = {
+export type platformListDeadLettersResponse200 = {
+  data: DeadLetterPage
+  status: 200
+}
+
+export type platformListDeadLettersResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type platformListDeadLettersResponseSuccess = (platformListDeadLettersResponse200) & {
+  headers: Headers;
+};
+export type platformListDeadLettersResponseError = (platformListDeadLettersResponse422) & {
+  headers: Headers;
+};
+
+export type platformListDeadLettersResponse = (platformListDeadLettersResponseSuccess | platformListDeadLettersResponseError)
+
+export const getPlatformListDeadLettersUrl = (params?: PlatformListDeadLettersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/admin/platform/events/dead-letter?${stringifiedParams}` : `/api/v1/admin/platform/events/dead-letter`
+}
+
+/**
+ * @summary List Dead Letters
+ */
+export const platformListDeadLetters = async (params?: PlatformListDeadLettersParams, options?: Parameters<typeof apiFetch>[1]): Promise<platformListDeadLettersResponse> => {
+
+  return apiFetch<platformListDeadLettersResponse>(getPlatformListDeadLettersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPlatformListDeadLettersQueryKey = (params?: PlatformListDeadLettersParams,) => {
+    return [
+    `/api/v1/admin/platform/events/dead-letter`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getPlatformListDeadLettersQueryOptions = <TData = Awaited<ReturnType<typeof platformListDeadLetters>>, TError = HTTPValidationError>(params?: PlatformListDeadLettersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDeadLetters>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPlatformListDeadLettersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformListDeadLetters>>> = ({ signal }) => platformListDeadLetters(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof platformListDeadLetters>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PlatformListDeadLettersQueryResult = NonNullable<Awaited<ReturnType<typeof platformListDeadLetters>>>
+export type PlatformListDeadLettersQueryError = HTTPValidationError
+
+
+export function usePlatformListDeadLetters<TData = Awaited<ReturnType<typeof platformListDeadLetters>>, TError = HTTPValidationError>(
+ params: undefined |  PlatformListDeadLettersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDeadLetters>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformListDeadLetters>>,
+          TError,
+          Awaited<ReturnType<typeof platformListDeadLetters>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformListDeadLetters<TData = Awaited<ReturnType<typeof platformListDeadLetters>>, TError = HTTPValidationError>(
+ params?: PlatformListDeadLettersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDeadLetters>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformListDeadLetters>>,
+          TError,
+          Awaited<ReturnType<typeof platformListDeadLetters>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformListDeadLetters<TData = Awaited<ReturnType<typeof platformListDeadLetters>>, TError = HTTPValidationError>(
+ params?: PlatformListDeadLettersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDeadLetters>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Dead Letters
+ */
+
+export function usePlatformListDeadLetters<TData = Awaited<ReturnType<typeof platformListDeadLetters>>, TError = HTTPValidationError>(
+ params?: PlatformListDeadLettersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDeadLetters>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPlatformListDeadLettersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type platformDiscardDeadLetterResponse200 = {
+  data: DeadLetterAction
+  status: 200
+}
+
+export type platformDiscardDeadLetterResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type platformDiscardDeadLetterResponseSuccess = (platformDiscardDeadLetterResponse200) & {
+  headers: Headers;
+};
+export type platformDiscardDeadLetterResponseError = (platformDiscardDeadLetterResponse422) & {
+  headers: Headers;
+};
+
+export type platformDiscardDeadLetterResponse = (platformDiscardDeadLetterResponseSuccess | platformDiscardDeadLetterResponseError)
+
+export const getPlatformDiscardDeadLetterUrl = (eventId: string,) => {
+
+
+
+
+  return `/api/v1/admin/platform/events/dead-letter/${eventId}/discard`
+}
+
+/**
+ * @summary Discard Dead Letter
+ */
+export const platformDiscardDeadLetter = async (eventId: string,
+    discardRequest: DiscardRequest, options?: Parameters<typeof apiFetch>[1]): Promise<platformDiscardDeadLetterResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<platformDiscardDeadLetterResponse>(getPlatformDiscardDeadLetterUrl(eventId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(discardRequest)
+  }
+);}
+
+
+
+
+
+export const getPlatformDiscardDeadLetterMutationKey = () => ['platformDiscardDeadLetter'] as const;
+
+export const getPlatformDiscardDeadLetterMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformDiscardDeadLetter>>, TError,PlatformDiscardDeadLetterMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof platformDiscardDeadLetter>>, TError,PlatformDiscardDeadLetterMutationVariables, TContext> => {
+
+const mutationKey = getPlatformDiscardDeadLetterMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof platformDiscardDeadLetter>>, PlatformDiscardDeadLetterMutationVariables> = (props) => {
+          const {eventId,data} = props ?? {};
+
+          return  platformDiscardDeadLetter(eventId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlatformDiscardDeadLetterMutationResult = NonNullable<Awaited<ReturnType<typeof platformDiscardDeadLetter>>>
+    export type PlatformDiscardDeadLetterMutationBody = DiscardRequest
+    export type PlatformDiscardDeadLetterMutationError = HTTPValidationError
+    export type PlatformDiscardDeadLetterMutationVariables = {eventId: string;data: DiscardRequest}
+
+    /**
+ * @summary Discard Dead Letter
+ */
+export const usePlatformDiscardDeadLetter = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformDiscardDeadLetter>>, TError,PlatformDiscardDeadLetterMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof platformDiscardDeadLetter>>,
+        TError,
+        PlatformDiscardDeadLetterMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPlatformDiscardDeadLetterMutationOptions(options), queryClient);
+    }
+    export type platformRetryDeadLetterResponse200 = {
+  data: DeadLetterAction
+  status: 200
+}
+
+export type platformRetryDeadLetterResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type platformRetryDeadLetterResponseSuccess = (platformRetryDeadLetterResponse200) & {
+  headers: Headers;
+};
+export type platformRetryDeadLetterResponseError = (platformRetryDeadLetterResponse422) & {
+  headers: Headers;
+};
+
+export type platformRetryDeadLetterResponse = (platformRetryDeadLetterResponseSuccess | platformRetryDeadLetterResponseError)
+
+export const getPlatformRetryDeadLetterUrl = (eventId: string,) => {
+
+
+
+
+  return `/api/v1/admin/platform/events/dead-letter/${eventId}/retry`
+}
+
+/**
+ * @summary Retry Dead Letter
+ */
+export const platformRetryDeadLetter = async (eventId: string, options?: Parameters<typeof apiFetch>[1]): Promise<platformRetryDeadLetterResponse> => {
+
+  return apiFetch<platformRetryDeadLetterResponse>(getPlatformRetryDeadLetterUrl(eventId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPlatformRetryDeadLetterMutationKey = () => ['platformRetryDeadLetter'] as const;
+
+export const getPlatformRetryDeadLetterMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformRetryDeadLetter>>, TError,PlatformRetryDeadLetterMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof platformRetryDeadLetter>>, TError,PlatformRetryDeadLetterMutationVariables, TContext> => {
+
+const mutationKey = getPlatformRetryDeadLetterMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof platformRetryDeadLetter>>, PlatformRetryDeadLetterMutationVariables> = (props) => {
+          const {eventId} = props ?? {};
+
+          return  platformRetryDeadLetter(eventId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlatformRetryDeadLetterMutationResult = NonNullable<Awaited<ReturnType<typeof platformRetryDeadLetter>>>
+
+    export type PlatformRetryDeadLetterMutationError = HTTPValidationError
+    export type PlatformRetryDeadLetterMutationVariables = {eventId: string}
+
+    /**
+ * @summary Retry Dead Letter
+ */
+export const usePlatformRetryDeadLetter = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformRetryDeadLetter>>, TError,PlatformRetryDeadLetterMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof platformRetryDeadLetter>>,
+        TError,
+        PlatformRetryDeadLetterMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPlatformRetryDeadLetterMutationOptions(options), queryClient);
+    }
+    export type platformGetEventResponse200 = {
   data: EventDetail
   status: 200
 }

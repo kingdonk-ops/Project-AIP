@@ -119,11 +119,17 @@ async def drain(
 
 
 async def drain_all(db: FreshDb, *, concurrency: int = 1) -> None:
-    """``drain`` until nothing is waiting: a ``wait=False`` worker leaves lock-blocked jobs."""
+    """``drain`` until nothing is waiting: a ``wait=False`` worker leaves lock-blocked jobs.
+
+    Only the drained ``default`` queue counts: the worker's periodic deferrer also queues
+    ``dispatch_outbox`` on ``outbox`` every few seconds (ARCH-07), which this worker never runs.
+    """
     for _ in range(20):
         await drain(db, concurrency=concurrency)
         if await sfetch(
-            db, "SELECT count(*) FROM procrastinate_jobs WHERE status IN ('todo','doing')"
+            db,
+            "SELECT count(*) FROM procrastinate_jobs"
+            " WHERE status IN ('todo','doing') AND queue_name = 'default'",
         ) == [(0,)]:
             return
     raise AssertionError("queue did not drain")

@@ -27,6 +27,68 @@ export const PlatformListEventsResponse = zod.object({
 })
 
 /**
+ * @summary List Dead Letters
+ */
+export const platformListDeadLettersQueryLimitDefault = 50;
+export const platformListDeadLettersQueryLimitMax = 200;
+
+
+
+export const PlatformListDeadLettersQueryParams = zod.object({
+  "limit": zod.int().min(1).max(platformListDeadLettersQueryLimitMax).default(platformListDeadLettersQueryLimitDefault),
+  "after": zod.union([zod.uuid(),zod.null()]).optional()
+})
+
+export const PlatformListDeadLettersResponse = zod.object({
+  "items": zod.array(zod.object({
+  "attempts": zod.int(),
+  "deadLetteredAt": zod.iso.datetime({"offset":true}),
+  "eventName": zod.string(),
+  "eventVersion": zod.int(),
+  "id": zod.uuid(),
+  "lastError": zod.union([zod.string(),zod.null()]),
+  "tenantId": zod.uuid()
+})),
+  "nextAfter": zod.union([zod.uuid(),zod.null()])
+})
+
+/**
+ * @summary Discard Dead Letter
+ */
+export const PlatformDiscardDeadLetterParams = zod.object({
+  "event_id": zod.uuid()
+})
+
+export const platformDiscardDeadLetterBodyReasonMax = 1000;
+
+
+
+export const PlatformDiscardDeadLetterBody = zod.object({
+  "reason": zod.string().min(1).max(platformDiscardDeadLetterBodyReasonMax)
+})
+
+export const PlatformDiscardDeadLetterResponse = zod.object({
+  "action": zod.string(),
+  "eventName": zod.string(),
+  "eventVersion": zod.int(),
+  "id": zod.uuid()
+})
+
+/**
+ * @summary Retry Dead Letter
+ */
+export const PlatformRetryDeadLetterParams = zod.object({
+  "event_id": zod.uuid()
+})
+
+export const PlatformRetryDeadLetterResponse = zod.object({
+  "action": zod.string(),
+  "eventName": zod.string(),
+  "eventVersion": zod.int(),
+  "id": zod.uuid()
+})
+
+/**
  * @summary Get Event
  */
 export const PlatformGetEventParams = zod.object({

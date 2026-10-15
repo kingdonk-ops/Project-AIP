@@ -29,6 +29,7 @@ from collections.abc import Sequence
 
 from aip.modules.ops.runner import memory_guard
 from aip.platform.db.engine import dispose_engine, dispose_jobs_engine, get_jobs_engine
+from aip.platform.events.jobs import active_subscribers
 from aip.platform.jobs.app import DEFAULT_QUEUE, QUEUES, run_worker
 from aip.platform.modules.registry import (
     DEFAULT_MODULES_PACKAGE,
@@ -41,8 +42,12 @@ __all__ = ["PLATFORM_JOB_MODULES", "check_jobs_login", "import_job_modules", "ma
 
 logger = logging.getLogger(__name__)
 
-# Platform jobs that belong to no module: the daily partition maintenance (DATABASE-05).
-PLATFORM_JOB_MODULES: tuple[str, ...] = ("aip.platform.db.jobs",)
+# Platform jobs that belong to no module: the daily partition maintenance (DATABASE-05) and
+# the outbox dispatcher (ARCH-07).
+PLATFORM_JOB_MODULES: tuple[str, ...] = (
+    "aip.platform.db.jobs",
+    "aip.platform.events.jobs",
+)
 
 
 def import_job_modules(package: str | None = None) -> list[str]:
@@ -118,6 +123,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     for name in PLATFORM_JOB_MODULES:
         importlib.import_module(name)
     imported = import_job_modules()
+    active_subscribers()  # ARCH-07: a subscriber missing from its manifest stops boot
     logger.info("job modules loaded: %s", ", ".join(imported) or "none")
     # Procrastinate's signal handler turns SIGTERM into a graceful stop.
     memory_guard.on_exceeded = lambda: signal.raise_signal(signal.SIGTERM)
