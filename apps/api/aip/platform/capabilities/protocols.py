@@ -22,6 +22,26 @@ class PresignedRequest:
     headers: Mapping[str, str] = field(default_factory=dict[str, str])
 
 
+@dataclass(frozen=True)
+class PresignedPost:
+    """A presigned browser POST (RFC 1867 form upload): the form ``url`` and the ``fields`` the
+    client must send verbatim. The signed policy (built by the caller as ``conditions``) pins the
+    key, the content length and the content type, so the app is never in the byte path (UPLOADS-01).
+    """
+
+    url: str
+    fields: Mapping[str, str] = field(default_factory=dict[str, str])
+
+
+@dataclass(frozen=True)
+class ObjectHead:
+    """The metadata of a stored object, from a ``head`` request (UPLOADS-01 confirm step)."""
+
+    size_bytes: int
+    content_type: str | None = None
+    sse_kms_key_id: str | None = None
+
+
 @runtime_checkable
 class ObjectStore(Protocol):
     """Blob storage: AWS S3 in production, RustFS/MinIO on Coolify and in dev.
@@ -38,11 +58,32 @@ class ObjectStore(Protocol):
         """Return the object's bytes. Raises ``ObjectNotFoundError`` when there is none."""
         ...
 
+    async def head(self, key: ObjectKey) -> ObjectHead:
+        """Return the object's metadata. Raises ``ObjectNotFoundError`` when there is none."""
+        ...
+
     async def presign_put(
         self, key: ObjectKey, *, expires_s: int, kms_key_id: str | None = None
     ) -> PresignedRequest: ...
 
     async def presign_get(self, key: ObjectKey, *, expires_s: int) -> PresignedRequest: ...
+
+    async def presign_post(
+        self,
+        key: ObjectKey,
+        *,
+        expires_s: int,
+        fields: Mapping[str, str] | None = None,
+        conditions: Sequence[object] | None = None,
+    ) -> PresignedPost:
+        """Presign a browser POST to ``key``.
+
+        ``fields`` are form fields echoed back to the client; ``conditions`` is the S3 POST policy
+        the server signs (the caller builds it, e.g. ``["content-length-range", 1, n]`` and
+        ``["eq", "$Content-Type", mime]``). The key is always pinned to ``key``. Both adapters
+        enforce ``1 <= expires_s <= 604800``.
+        """
+        ...
 
     async def delete(self, key: ObjectKey) -> None:
         """Delete the object. Deleting a missing key is not an error."""
@@ -122,10 +163,12 @@ class IdentityProvider(Protocol):
 
 __all__ = [
     "IdentityProvider",
+    "ObjectHead",
     "ObjectStore",
     "Ocr",
     "OcrResult",
     "PdfRenderer",
+    "PresignedPost",
     "PresignedRequest",
     "SealResult",
     "Sealer",

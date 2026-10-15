@@ -31,9 +31,11 @@ from aip.platform.capabilities.errors import (
 from aip.platform.capabilities.keys import ObjectKey, tenant_key
 from aip.platform.capabilities.protocols import (
     IdentityProvider,
+    ObjectHead,
     ObjectStore,
     Ocr,
     PdfRenderer,
+    PresignedPost,
     PresignedRequest,
     Sealer,
 )
@@ -112,11 +114,13 @@ __all__ = [
     "CapabilityError",
     "CapabilitySettings",
     "IdentityProvider",
+    "ObjectHead",
     "ObjectKey",
     "ObjectNotFoundError",
     "ObjectStore",
     "Ocr",
     "PdfRenderer",
+    "PresignedPost",
     "PresignedRequest",
     "RenderError",
     "RenderTimeoutError",

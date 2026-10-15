@@ -285,6 +285,10 @@ GRANT SELECT ON TABLE public.term_pack TO aip_readonly;
 GRANT SELECT,INSERT ON TABLE public.term_pack_version TO aip_app;
 GRANT SELECT ON TABLE public.term_pack_version TO aip_readonly;
 
+-- Name: TABLE upload_sessions; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.upload_sessions TO aip_app;
+GRANT SELECT ON TABLE public.upload_sessions TO aip_readonly;
+
 -- Name: TABLE user_session; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.user_session TO aip_app;
 GRANT SELECT ON TABLE public.user_session TO aip_readonly;
@@ -452,6 +456,10 @@ ALTER TABLE ONLY public.term_pack_version
 -- Name: term_pack_version uq_term_pack_version_id_tenant_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.term_pack_version
     ADD CONSTRAINT uq_term_pack_version_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: upload_sessions pk_upload_sessions; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.upload_sessions
+    ADD CONSTRAINT pk_upload_sessions PRIMARY KEY (id);
 
 -- Name: user_session pk_user_session; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.user_session
@@ -1474,6 +1482,15 @@ CREATE INDEX ix_term_pack_tenant_id ON public.term_pack USING btree (tenant_id);
 -- Name: ix_term_pack_version_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_term_pack_version_tenant_id ON public.term_pack_version USING btree (tenant_id);
 
+-- Name: ix_upload_sessions_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_upload_sessions_tenant_id ON public.upload_sessions USING btree (tenant_id);
+
+-- Name: ix_upload_sessions_tenant_requested_by_created; Type: INDEX; Schema: public
+CREATE INDEX ix_upload_sessions_tenant_requested_by_created ON public.upload_sessions USING btree (tenant_id, requested_by, created_at DESC);
+
+-- Name: ix_upload_sessions_tenant_status_expires; Type: INDEX; Schema: public
+CREATE INDEX ix_upload_sessions_tenant_status_expires ON public.upload_sessions USING btree (tenant_id, status, expires_at);
+
 -- Name: ix_user_session_kc_sid; Type: INDEX; Schema: public
 CREATE INDEX ix_user_session_kc_sid ON public.user_session USING btree (kc_sid) WHERE (revoked_at IS NULL);
 
@@ -1551,6 +1568,9 @@ CREATE UNIQUE INDEX uq_term_pack_tenant_id_code ON public.term_pack USING btree 
 
 -- Name: uq_term_pack_version_pack_id_version; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_term_pack_version_pack_id_version ON public.term_pack_version USING btree (pack_id, version);
+
+-- Name: uq_upload_sessions_client_request_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_upload_sessions_client_request_id ON public.upload_sessions USING btree (tenant_id, requested_by, client_request_id) WHERE (client_request_id IS NOT NULL);
 
 -- Name: access_settings tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.access_settings USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -1648,6 +1668,9 @@ CREATE POLICY platform_read ON public.term_pack_version FOR SELECT USING ((tenan
 -- Name: term_pack_version tenant_write; Type: POLICY; Schema: public
 CREATE POLICY tenant_write ON public.term_pack_version USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
 
+-- Name: upload_sessions tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.upload_sessions USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: user_session session_lookup; Type: POLICY; Schema: public
 CREATE POLICY session_lookup ON public.user_session FOR SELECT TO aip_owner USING (true);
 
@@ -1716,6 +1739,9 @@ ALTER TABLE public.term_pack ENABLE ROW LEVEL SECURITY;
 
 -- Name: term_pack_version; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.term_pack_version ENABLE ROW LEVEL SECURITY;
+
+-- Name: upload_sessions; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.upload_sessions ENABLE ROW LEVEL SECURITY;
 
 -- Name: user_session; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.user_session ENABLE ROW LEVEL SECURITY;
@@ -2352,6 +2378,42 @@ CREATE TABLE public.term_pack_version (
 ALTER TABLE ONLY public.term_pack_version FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.term_pack_version OWNER TO aip_owner;
+
+-- Name: upload_sessions; Type: TABLE; Schema: public
+CREATE TABLE public.upload_sessions (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    project_id uuid NOT NULL,
+    requested_by uuid NOT NULL,
+    declared_filename text NOT NULL,
+    declared_mime text NOT NULL,
+    declared_size_bytes numeric NOT NULL,
+    mode text NOT NULL,
+    s3_upload_id text,
+    quarantine_key text NOT NULL,
+    chunk_size integer,
+    parts_received jsonb,
+    client_file_hash text,
+    status text NOT NULL,
+    reject_reason text,
+    priority integer DEFAULT 0 NOT NULL,
+    client_request_id uuid,
+    expires_at timestamp with time zone NOT NULL,
+    file_id uuid,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_upload_sessions_declared_size CHECK ((declared_size_bytes > (0)::numeric)),
+    CONSTRAINT ck_upload_sessions_mode CHECK ((mode = ANY (ARRAY['single'::text, 'multipart'::text]))),
+    CONSTRAINT ck_upload_sessions_priority CHECK ((priority >= 0)),
+    CONSTRAINT ck_upload_sessions_status CHECK ((status = ANY (ARRAY['requested'::text, 'uploading'::text, 'uploaded'::text, 'scanning'::text, 'validating'::text, 'released'::text, 'rejected'::text, 'expired'::text, 'aborted'::text]))),
+    CONSTRAINT ck_upload_sessions_sync_version CHECK ((sync_version >= 1))
+);
+
+ALTER TABLE ONLY public.upload_sessions FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.upload_sessions OWNER TO aip_owner;
 
 -- Name: user_session; Type: TABLE; Schema: public
 CREATE TABLE public.user_session (
