@@ -28,6 +28,7 @@ import sys
 from collections.abc import Sequence
 
 from aip.modules.ops.runner import memory_guard
+from aip.modules.terms.api import install as install_term_resolver
 from aip.platform.db.engine import dispose_engine, dispose_jobs_engine, get_jobs_engine
 from aip.platform.events.jobs import active_subscribers
 from aip.platform.jobs.app import DEFAULT_QUEUE, QUEUES, run_worker
@@ -124,6 +125,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         importlib.import_module(name)
     imported = import_job_modules()
     active_subscribers()  # ARCH-07: a subscriber missing from its manifest stops boot
+    install_term_resolver()  # TERMS-02: the aip.platform.terms port for emails and PDFs
     logger.info("job modules loaded: %s", ", ".join(imported) or "none")
     # Procrastinate's signal handler turns SIGTERM into a graceful stop.
     memory_guard.on_exceeded = lambda: signal.raise_signal(signal.SIGTERM)

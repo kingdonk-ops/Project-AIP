@@ -46,6 +46,7 @@ from aip.modules.identity.api import (
 from aip.modules.ops.health import ReadinessChecker
 from aip.modules.ops.health import router as health_router
 from aip.modules.tenancy.api import DEMO_ENV, assert_demo_has_no_real_customers
+from aip.modules.terms.api import install as install_term_resolver
 from aip.platform.access import (
     AccessPrincipal,
     PolicyService,
@@ -195,6 +196,8 @@ def create_app(
 
     app.include_router(v1)
     app.state.modules = modules
+    if any(module.id == "terms" for module in modules):
+        install_term_resolver()  # TERMS-02: the aip.platform.terms port for emails and PDFs
 
     @app.exception_handler(ContextMissingError)
     async def context_missing(  # pyright: ignore[reportUnusedFunction]

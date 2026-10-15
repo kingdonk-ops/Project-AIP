@@ -11,3 +11,6 @@ from tests.fixtures.postgres import (  # noqa: F401 - re-exported pytest fixture
     pg_superuser_url,  # pyright: ignore[reportUnusedImport]
     tenant_db,  # pyright: ignore[reportUnusedImport]
 )
+from tests.fixtures.redis import (
+    redis_server,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
