@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "description": "``platform.outbox.dead_letter_threshold_exceeded`` v1, in the affected tenant's outbox.",
+  "properties": {
+    "count": {
+      "title": "Count",
+      "type": "integer"
+    },
+    "threshold": {
+      "title": "Threshold",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "count",
+    "threshold"
+  ],
+  "title": "OutboxThresholdExceededPayload",
+  "type": "object"
+}

@@ -70,6 +70,9 @@ GRANT UPDATE(dead_lettered_at) ON TABLE public.domain_events TO aip_jobs;
 -- Name: COLUMN domain_events.last_error; Type: ACL; Schema: public
 GRANT UPDATE(last_error) ON TABLE public.domain_events TO aip_jobs;
 
+-- Name: COLUMN domain_events.next_attempt_at; Type: ACL; Schema: public
+GRANT UPDATE(next_attempt_at) ON TABLE public.domain_events TO aip_jobs;
+
 -- Name: COLUMN domain_events.published_at; Type: ACL; Schema: public
 GRANT UPDATE(published_at) ON TABLE public.domain_events TO aip_jobs;
 
@@ -135,6 +138,9 @@ REVOKE ALL ON FUNCTION public.aip_convert_to_partitioned(p_table text) FROM PUBL
 REVOKE ALL ON FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead integer) TO aip_jobs;
 
+-- Name: FUNCTION domain_events_write_once(); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.domain_events_write_once() FROM PUBLIC;
+
 -- Name: FUNCTION identity_register_email(p_email public.citext, p_tenant uuid); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) TO aip_app;
@@ -150,6 +156,18 @@ GRANT ALL ON FUNCTION public.identity_resolve_session(p_sid_hash bytea) TO aip_a
 -- Name: FUNCTION identity_sessions_by_kc_sid(p_kc_sid text); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) TO aip_app;
+
+-- Name: FUNCTION outbox_dead_letters(lim integer, after uuid); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.outbox_dead_letters(lim integer, after uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.outbox_dead_letters(lim integer, after uuid) TO aip_app;
+
+-- Name: FUNCTION outbox_discard(event_id uuid, reason text, actor uuid); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.outbox_discard(event_id uuid, reason text, actor uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.outbox_discard(event_id uuid, reason text, actor uuid) TO aip_app;
+
+-- Name: FUNCTION outbox_retry(event_id uuid); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.outbox_retry(event_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.outbox_retry(event_id uuid) TO aip_app;
 
 -- Name: FUNCTION platform_event_counts(since timestamp with time zone); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.platform_event_counts(since timestamp with time zone) FROM PUBLIC;
@@ -832,6 +850,28 @@ CREATE FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead intege
 
 ALTER FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead integer) OWNER TO aip_owner;
 
+-- Name: domain_events_write_once(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.domain_events_write_once() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+    BEGIN
+      IF OLD.published_at IS NOT NULL
+         AND NEW.published_at IS DISTINCT FROM OLD.published_at THEN
+        RAISE EXCEPTION 'domain_events.published_at is write-once' USING ERRCODE = '55000';
+      END IF;
+      IF OLD.discarded_at IS NOT NULL AND (
+           NEW.discarded_at IS DISTINCT FROM OLD.discarded_at
+           OR NEW.discarded_by IS DISTINCT FROM OLD.discarded_by
+           OR NEW.discard_reason IS DISTINCT FROM OLD.discard_reason) THEN
+        RAISE EXCEPTION 'domain_events discard columns are write-once' USING ERRCODE = '55000';
+      END IF;
+      RETURN NEW;
+    END;
+    $$;
+
+ALTER FUNCTION public.domain_events_write_once() OWNER TO aip_owner;
+
 -- Name: identity_register_email(public.citext, uuid); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -902,6 +942,62 @@ CREATE FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) RETURNS TABLE(
     $$;
 
 ALTER FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) OWNER TO aip_owner;
+
+-- Name: outbox_dead_letters(integer, uuid); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.outbox_dead_letters(lim integer, after uuid) RETURNS TABLE(id uuid, tenant_id uuid, event_name text, event_version integer, attempts integer, last_error text, dead_lettered_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+      SELECT d.id, d.tenant_id, d.event_name, d.event_version, d.attempts, d.last_error,
+             d.dead_lettered_at
+      FROM public.domain_events AS d
+      WHERE d.dead_lettered_at IS NOT NULL
+        AND d.discarded_at IS NULL
+        AND d.published_at IS NULL
+        AND (after IS NULL OR d.id > after)
+      ORDER BY d.id
+      LIMIT least(greatest(coalesce(lim, 50), 1), 500);
+    $$;
+
+ALTER FUNCTION public.outbox_dead_letters(lim integer, after uuid) OWNER TO aip_owner;
+
+-- Name: outbox_discard(uuid, text, uuid); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.outbox_discard(event_id uuid, reason text, actor uuid) RETURNS TABLE(event_name text, event_version integer)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+    BEGIN
+      IF reason IS NULL OR btrim(reason) = '' THEN
+        RAISE EXCEPTION 'a discard reason is required' USING ERRCODE = '22023';
+      END IF;
+      RETURN QUERY
+      UPDATE public.domain_events AS d
+         SET discarded_at = now(), discarded_by = actor, discard_reason = btrim(reason)
+       WHERE d.id = event_id
+         AND d.dead_lettered_at IS NOT NULL
+         AND d.discarded_at IS NULL
+         AND d.published_at IS NULL
+      RETURNING d.event_name, d.event_version;
+    END;
+    $$;
+
+ALTER FUNCTION public.outbox_discard(event_id uuid, reason text, actor uuid) OWNER TO aip_owner;
+
+-- Name: outbox_retry(uuid); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.outbox_retry(event_id uuid) RETURNS TABLE(event_name text, event_version integer)
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+      UPDATE public.domain_events AS d
+         SET dead_lettered_at = NULL, attempts = 0, next_attempt_at = NULL
+       WHERE d.id = event_id
+         AND d.dead_lettered_at IS NOT NULL
+         AND d.discarded_at IS NULL
+         AND d.published_at IS NULL
+      RETURNING d.event_name, d.event_version;
+    $$;
+
+ALTER FUNCTION public.outbox_retry(event_id uuid) OWNER TO aip_owner;
 
 -- Name: platform_event_counts(timestamp with time zone); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.platform_event_counts(since timestamp with time zone) RETURNS TABLE(event_name text, event_version integer, published bigint, failed bigint)
@@ -1424,8 +1520,11 @@ CREATE INDEX ix_domain_events_asset_id ON public.domain_events USING btree (asse
 -- Name: ix_domain_events_event_name_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_domain_events_event_name_occurred_at ON public.domain_events USING btree (event_name, occurred_at);
 
--- Name: ix_domain_events_tenant_id_occurred_at_pending; Type: INDEX; Schema: public
-CREATE INDEX ix_domain_events_tenant_id_occurred_at_pending ON public.domain_events USING btree (tenant_id, occurred_at) WHERE ((published_at IS NULL) AND (dead_lettered_at IS NULL));
+-- Name: ix_domain_events_pending; Type: INDEX; Schema: public
+CREATE INDEX ix_domain_events_pending ON public.domain_events USING btree (next_attempt_at NULLS FIRST, occurred_at) WHERE ((published_at IS NULL) AND (dead_lettered_at IS NULL));
+
+-- Name: ix_domain_events_tenant_id_dead_letter; Type: INDEX; Schema: public
+CREATE INDEX ix_domain_events_tenant_id_dead_letter ON public.domain_events USING btree (tenant_id) WHERE ((dead_lettered_at IS NOT NULL) AND (discarded_at IS NULL));
 
 -- Name: ix_glossary_entry_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_glossary_entry_tenant_id ON public.glossary_entry USING btree (tenant_id);
@@ -1642,6 +1741,9 @@ CREATE POLICY dispatcher_select ON public.domain_events FOR SELECT TO aip_jobs U
 
 -- Name: domain_events dispatcher_update; Type: POLICY; Schema: public
 CREATE POLICY dispatcher_update ON public.domain_events FOR UPDATE TO aip_jobs USING (true) WITH CHECK (true);
+
+-- Name: domain_events outbox_owner_update; Type: POLICY; Schema: public
+CREATE POLICY outbox_owner_update ON public.domain_events FOR UPDATE TO aip_owner USING (true) WITH CHECK (true);
 
 -- Name: domain_events platform_counts_owner_read; Type: POLICY; Schema: public
 CREATE POLICY platform_counts_owner_read ON public.domain_events FOR SELECT TO aip_owner USING (true);
@@ -1966,10 +2068,16 @@ CREATE TABLE public.domain_events (
     attempts integer DEFAULT 0 NOT NULL,
     dead_lettered_at timestamp with time zone,
     last_error text,
+    next_attempt_at timestamp with time zone,
+    discarded_at timestamp with time zone,
+    discarded_by uuid,
+    discard_reason text,
     CONSTRAINT ck_domain_events_aggregate_type CHECK ((aggregate_type <> ''::text)),
     CONSTRAINT ck_domain_events_attempts CHECK ((attempts >= 0)),
+    CONSTRAINT ck_domain_events_discard_reason CHECK (((char_length(discard_reason) <= 1000) AND ((discarded_at IS NULL) OR (btrim(COALESCE(discard_reason, ''::text)) <> ''::text)))),
     CONSTRAINT ck_domain_events_event_name CHECK ((event_name <> ''::text)),
-    CONSTRAINT ck_domain_events_event_version CHECK ((event_version >= 1))
+    CONSTRAINT ck_domain_events_event_version CHECK ((event_version >= 1)),
+    CONSTRAINT ck_domain_events_last_error CHECK ((char_length(last_error) <= 4000))
 );
 
 ALTER TABLE ONLY public.domain_events FORCE ROW LEVEL SECURITY;
@@ -2609,6 +2717,9 @@ ALTER TABLE public.user_session OWNER TO aip_owner;
 
 -- Name: access_settings trg_access_settings_version_guard; Type: TRIGGER; Schema: public
 CREATE TRIGGER trg_access_settings_version_guard BEFORE UPDATE ON public.access_settings FOR EACH ROW EXECUTE FUNCTION public.access_settings_version_guard();
+
+-- Name: domain_events domain_events_write_once; Type: TRIGGER; Schema: public
+CREATE TRIGGER domain_events_write_once BEFORE UPDATE ON public.domain_events FOR EACH ROW EXECUTE FUNCTION public.domain_events_write_once();
 
 -- Name: procrastinate_jobs procrastinate_jobs_notify_queue_job_aborted_v1; Type: TRIGGER; Schema: public
 CREATE TRIGGER procrastinate_jobs_notify_queue_job_aborted_v1 AFTER UPDATE OF abort_requested ON public.procrastinate_jobs FOR EACH ROW WHEN (((old.abort_requested = false) AND (new.abort_requested = true) AND (new.status = 'doing'::public.procrastinate_job_status))) EXECUTE FUNCTION public.procrastinate_notify_queue_abort_job_v1();
