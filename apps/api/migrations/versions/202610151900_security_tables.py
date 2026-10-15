@@ -19,7 +19,7 @@ at its control through ``(control_id, tenant_id)``, so evidence can never attach
 tenant's control. Cross-module references (``users``, ``documents``) are plain uuid columns.
 
 Revision ID: 202610151900
-Revises: 202610151500
+Revises: 202610151800
 Create Date: 2026-10-15 19:00:00+00:00
 """
 
@@ -28,7 +28,7 @@ from alembic import op
 from aip.platform.db.templates import render_template
 
 revision: str = "202610151900"
-down_revision: str | None = "202610151500"
+down_revision: str | None = "202610151800"
 branch_labels = None
 depends_on = None
 
