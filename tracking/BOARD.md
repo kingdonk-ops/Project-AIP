@@ -76,7 +76,7 @@ tasks still `todo` below remain before M0 is closed.
 | [TESTING-10](tasks/TESTING-10.md) | Worker shutdown test waits for registration instead of a fixed sleep | testing | XS | OPS-02 | done | PR #48 |
 | [TESTING-11](tasks/TESTING-11.md) | JIT membership test uses the database date, not the local date | testing | XS | IDENTITY-02 | done | ClaudeK: PR #53 |
 | [DATABASE-05](tasks/DATABASE-05.md) | Append-only grants and time partitioning | database | M | DATABASE-02 | done | PR #70; inspections view check carried to PLAN-R1 |
-| [SECURITY-02](tasks/SECURITY-02.md) | Security schema with RLS and append-only grants | security | M | DATABASE-02 | in-progress | ClaudeK: branch p0/security-schema |
+| [SECURITY-02](tasks/SECURITY-02.md) | Security schema with RLS and append-only grants | security | M | DATABASE-02 | done | ClaudeK: branch p0/security-schema; security review fixed in PR, column-UPDATE findings carried to SECURITY-04 and SECURITY-05 |
 
 ### Wave 5: M0 walking skeleton exit
 
