@@ -1521,7 +1521,7 @@ CREATE INDEX ix_domain_events_asset_id ON public.domain_events USING btree (asse
 CREATE INDEX ix_domain_events_event_name_occurred_at ON public.domain_events USING btree (event_name, occurred_at);
 
 -- Name: ix_domain_events_pending; Type: INDEX; Schema: public
-CREATE INDEX ix_domain_events_pending ON public.domain_events USING btree (next_attempt_at NULLS FIRST, occurred_at) WHERE ((published_at IS NULL) AND (dead_lettered_at IS NULL));
+CREATE INDEX ix_domain_events_pending ON public.domain_events USING btree (occurred_at) WHERE ((published_at IS NULL) AND (dead_lettered_at IS NULL) AND (discarded_at IS NULL));
 
 -- Name: ix_domain_events_tenant_id_dead_letter; Type: INDEX; Schema: public
 CREATE INDEX ix_domain_events_tenant_id_dead_letter ON public.domain_events USING btree (tenant_id) WHERE ((dead_lettered_at IS NOT NULL) AND (discarded_at IS NULL));

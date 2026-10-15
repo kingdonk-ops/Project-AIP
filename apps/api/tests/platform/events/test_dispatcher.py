@@ -247,28 +247,71 @@ async def test_a_failing_subscriber_does_not_block_other_events(
     )
     attempts, last_error, published_at, wait_s, dead = row
     assert attempts == 1 and published_at is None and dead is None
-    assert "widgets.count_widget" in last_error and "RuntimeError" in last_error
+    assert last_error == "widgets.count_widget: RuntimeError"  # never the message
     assert 0 < float(wait_s) <= 2.0
     # Not due yet: an immediate second batch leaves it alone.
     again = await dispatch_batch(jobs_engine, app_engine, counting(calls), DispatchSettings())
     assert again.claimed == 0
 
 
-async def test_a_long_error_is_truncated(
+async def test_the_error_message_is_never_stored(
     migrated_db: FreshDb, app_engine: AsyncEngine, jobs_engine: AsyncEngine
 ) -> None:
     (event_id,) = await seed(app_engine, TENANT_A_ID, ALICE_ID, 1)
     reg = SubscriberRegistry()
 
     async def noisy(conn: AsyncConnection, event: DomainEvent) -> None:
-        raise ValueError("x" * 10_000)
+        await conn.execute(
+            text("SELECT 1 / 0 WHERE :secret <> ''"), {"secret": "tenant-data" * 500}
+        )
 
     reg.register("widget.created", 1, noisy, "widgets")
     await dispatch_batch(jobs_engine, app_engine, reg)
-    rows = await su_fetch(
-        migrated_db, f"SELECT char_length(last_error) FROM domain_events WHERE id = '{event_id}'"
+    ((last_error,),) = await su_fetch(
+        migrated_db, f"SELECT last_error FROM domain_events WHERE id = '{event_id}'"
     )
-    assert rows == [(LAST_ERROR_MAX,)]
+    assert last_error.startswith("widgets.noisy: DBAPIError") and "[22012]" in last_error
+    assert "tenant-data" not in last_error and len(last_error) <= LAST_ERROR_MAX
+
+
+async def test_a_delivery_that_never_finishes_still_dead_letters(
+    migrated_db: FreshDb, app_engine: AsyncEngine, jobs_engine: AsyncEngine
+) -> None:
+    (event_id,) = await seed(app_engine, TENANT_A_ID, ALICE_ID, 1)
+    reg = SubscriberRegistry()
+
+    async def hangs(conn: AsyncConnection, event: DomainEvent) -> None:
+        raise asyncio.CancelledError  # the worker cancelled the job mid-delivery
+
+    reg.register("widget.created", 1, hangs, "widgets")
+    settings = DispatchSettings(max_attempts=1, lease_s=0.2)
+    with pytest.raises(asyncio.CancelledError):
+        await dispatch_batch(jobs_engine, app_engine, reg, settings)
+    # The try was counted at claim and the event is leased, so nobody takes it at once.
+    assert (await dispatch_batch(jobs_engine, app_engine, reg, settings)).claimed == 0
+    await asyncio.sleep(0.3)
+    result = await dispatch_batch(jobs_engine, app_engine, reg, settings)
+    assert (result.claimed, result.dead_lettered) == (1, 1)
+    ((attempts, last_error, dead),) = await su_fetch(
+        migrated_db,
+        "SELECT attempts, last_error, dead_lettered_at IS NOT NULL FROM domain_events"
+        f" WHERE id = '{event_id}'",
+    )
+    assert (attempts, dead) == (2, True) and "lease expired" in last_error
+
+
+async def test_subscribers_cannot_change_the_payload(
+    migrated_db: FreshDb, app_engine: AsyncEngine, jobs_engine: AsyncEngine
+) -> None:
+    await seed(app_engine, TENANT_A_ID, ALICE_ID, 1)
+    reg = SubscriberRegistry()
+
+    async def meddles(conn: AsyncConnection, event: DomainEvent) -> None:
+        event.payload["name"] = "changed"  # type: ignore[index]
+
+    reg.register("widget.created", 1, meddles, "widgets")
+    result = await dispatch_batch(jobs_engine, app_engine, reg)
+    assert result.retried == 1
 
 
 async def test_retry_after_dead_letter_redelivers_once(
@@ -300,7 +343,7 @@ async def test_retry_after_dead_letter_redelivers_once(
         "SELECT published_at IS NOT NULL, attempts, dead_lettered_at FROM domain_events"
         f" WHERE id = '{event_id}'",
     )
-    assert row == (True, 0, None)
+    assert row == (True, 1, None)  # attempts counts tries; the retry started again at 0
     # Once published, a retry finds nothing to do.
     async with app_engine.begin() as conn:
         again = await conn.execute(text("SELECT * FROM outbox_retry(:id)"), {"id": event_id})

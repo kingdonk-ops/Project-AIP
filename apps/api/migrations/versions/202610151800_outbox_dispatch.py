@@ -10,14 +10,18 @@ ARCH-07 (ADR 0003, ADR 0030): what the outbox dispatcher and the dead-letter que
 - ``last_error`` is bounded (4000 characters); the dispatcher truncates before writing.
 - Write-once: once ``published_at`` or ``discarded_at`` is set, no role (not even a SECURITY
   DEFINER function) may change or clear it (``domain_events_write_once`` trigger).
-- The dispatcher's partial index becomes ``(next_attempt_at NULLS FIRST, occurred_at)`` over
-  unpublished, live events; a second partial index serves the per-tenant dead-letter counts.
+- The dispatcher's partial index becomes ``(occurred_at)`` over unpublished, live, undiscarded
+  events, matching the claim's ``ORDER BY occurred_at`` (the ``next_attempt_at`` filter is
+  applied on top); a second partial index serves the per-tenant dead-letter counts.
 - Three ``SECURITY DEFINER`` functions owned by ``aip_owner``, ``EXECUTE`` to ``aip_app`` only, for
   the ``platform.events.manage``-gated dead-letter API: ``outbox_dead_letters`` lists dead-lettered
   events across tenants (never a payload), ``outbox_retry`` puts one back in the queue and
   ``outbox_discard`` drops one with a reason. ``aip_owner`` already reads every tenant's events
   (``platform_counts_owner_read``); a matching ``FOR UPDATE TO aip_owner`` policy lets these
-  functions, and nothing else, change them.
+  functions change them. That policy holds for any ``aip_owner`` session, so it is only as
+  narrow as the rule that ``aip_owner`` never logs in at runtime (migrations and these
+  functions only). ``aip_app`` can call the functions directly; the route's
+  ``platform.events.manage`` check is the authorisation (accepted risk, ADR 0030).
 
 Revision ID: 202610151800
 Revises: 202610151500
@@ -47,8 +51,8 @@ def upgrade() -> None:
 
     DROP INDEX ix_domain_events_tenant_id_occurred_at_pending;
     CREATE INDEX ix_domain_events_pending
-      ON domain_events (next_attempt_at NULLS FIRST, occurred_at)
-      WHERE published_at IS NULL AND dead_lettered_at IS NULL;
+      ON domain_events (occurred_at)
+      WHERE published_at IS NULL AND dead_lettered_at IS NULL AND discarded_at IS NULL;
     CREATE INDEX ix_domain_events_tenant_id_dead_letter
       ON domain_events (tenant_id)
       WHERE dead_lettered_at IS NOT NULL AND discarded_at IS NULL;
@@ -80,8 +84,8 @@ def upgrade() -> None:
       BEFORE UPDATE ON domain_events
       FOR EACH ROW EXECUTE FUNCTION domain_events_write_once();
 
-    -- Only the dead-letter functions below run as aip_owner; permissive policies are OR'd, so
-    -- this does not loosen any runtime role's isolation.
+    -- For the dead-letter functions below (aip_owner never logs in at runtime). Permissive
+    -- policies are OR'd, so this does not loosen any runtime role's isolation.
     CREATE POLICY outbox_owner_update ON domain_events
       FOR UPDATE TO aip_owner USING (true) WITH CHECK (true);
     """)

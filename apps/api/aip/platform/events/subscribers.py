@@ -9,7 +9,8 @@ A module reacts to another module's events by registering a handler in its own `
 The dispatcher calls the handler on an ``aip_app`` connection inside ``with_tenant`` for the
 event's tenant, so RLS applies as for a request. A handler may run more than once for the same
 event (a retry after a later subscriber failed, or a crash before the publish was recorded), so it
-must be idempotent on ``event.id``.
+must be idempotent on ``event.id``. Every subscriber of an event shares one transaction: a
+handler must never commit or roll back ``conn`` itself, and ``event.payload`` is read-only.
 
 The owning module is the package that contains the ``events.py`` (``aip.modules.<id>.events``).
 Each subscription must also be listed under ``subscribes`` in that module's manifest;

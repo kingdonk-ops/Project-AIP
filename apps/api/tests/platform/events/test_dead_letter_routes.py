@@ -124,7 +124,7 @@ async def test_operator_sees_the_journey_from_failure_to_retry(
     (item,) = listed.json()["items"]
     assert item["id"] == str(event_id) and item["tenantId"] == str(TENANT_A_ID)
     assert item["eventName"] == "widget.created" and item["attempts"] == 1
-    assert "fixture subscriber is set to fail" in item["lastError"]
+    assert item["lastError"] == "widgets.feed_widget: RuntimeError"
     assert "payload" not in item
 
     monkeypatch.setenv(FAIL_FLAG, "0")
