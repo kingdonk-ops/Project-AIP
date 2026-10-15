@@ -1,0 +1,10 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+# SECURITY-02 is schema only; permissions and events arrive with the routes (SECURITY-03..06).
+id = "security"
+context = "security"
+depends_on = []
+permissions = []
+events = []
+subscribes = []
+settings = []
+term_keys = []
