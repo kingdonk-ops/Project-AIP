@@ -41,10 +41,10 @@ from uuid import UUID
 
 import structlog
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine
 
 from aip.platform.context import RequestContext, use_context
-from aip.platform.db.session import with_tenant
+from aip.platform.db.session import DbEngine as AsyncEngine
+from aip.platform.db.session import as_jobs_role, with_tenant
 from aip.platform.events.outbox import Aggregate, emit
 from aip.platform.events.registry import PLATFORM_OUTBOX_THRESHOLD_EXCEEDED
 from aip.platform.events.subscribers import DomainEvent, Subscriber, SubscriberRegistry
@@ -215,7 +215,7 @@ async def _record_failure(
 ) -> Outcome:
     outcome = failure_outcome(event.attempts, s.max_attempts)
     delay = backoff(event.attempts, s.backoff_base_s, s.backoff_cap_s)
-    async with jobs_engine.begin() as conn:
+    async with as_jobs_role(jobs_engine) as conn:
         await conn.execute(
             _FAILED,
             {
@@ -247,7 +247,7 @@ async def dispatch_batch(
 ) -> BatchResult:
     """Claim, deliver and record one batch; return what happened to it."""
     s = settings or DispatchSettings()
-    async with jobs_engine.begin() as claim:
+    async with as_jobs_role(jobs_engine) as claim:
         rows = (
             (
                 await claim.execute(
@@ -289,7 +289,7 @@ async def dispatch_batch(
             else:
                 retried += 1
             continue
-        async with jobs_engine.begin() as conn:
+        async with as_jobs_role(jobs_engine) as conn:
             await conn.execute(_PUBLISHED, {"id": event.id})
         published += 1
     return BatchResult(len(rows), published, retried, dead)
@@ -314,7 +314,7 @@ async def alert_dead_letter_thresholds(
     jobs_engine: AsyncEngine, app_engine: AsyncEngine, threshold: int
 ) -> list[UUID]:
     """Emit the threshold event for each tenant over ``threshold`` (at most hourly); return them."""
-    async with jobs_engine.connect() as conn:
+    async with as_jobs_role(jobs_engine) as conn:
         over = (await conn.execute(_DEAD_LETTER_COUNTS, {"threshold": threshold})).all()
     alerted: list[UUID] = []
     for tenant_id, count in over:

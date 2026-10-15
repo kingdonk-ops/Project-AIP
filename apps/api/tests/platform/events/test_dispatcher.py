@@ -31,7 +31,7 @@ from aip.platform.db.engine import (
     dispose_engine,
     dispose_jobs_engine,
 )
-from aip.platform.db.session import with_tenant
+from aip.platform.db.session import JobsRoleError, as_jobs_role, with_tenant
 from aip.platform.events import Aggregate, emit
 from aip.platform.events import jobs as outbox_jobs
 from aip.platform.events.dispatcher import (
@@ -200,6 +200,12 @@ def counting(calls: Counter[UUID], *, fail_on: set[UUID] | None = None) -> Subsc
 
     reg.register("widget.created", 1, count_widget, "widgets")
     return reg
+
+
+async def test_the_dispatcher_refuses_any_login_but_aip_jobs(app_engine: AsyncEngine) -> None:
+    with pytest.raises(JobsRoleError, match="aip_jobs"):
+        async with as_jobs_role(app_engine):
+            pass
 
 
 async def test_two_dispatchers_deliver_each_event_exactly_once(
