@@ -15,13 +15,18 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Request, status
 
 from aip.modules.tenancy.api import require_active_tenant
-from aip.modules.uploads.schemas import ErrorBody, SessionCreate, SessionCreated, SessionStatus
+from aip.modules.uploads.schemas import (
+    SessionCreate,
+    SessionCreated,
+    SessionStatus,
+    UploadErrorBody,
+)
 from aip.modules.uploads.service import UploadSessionService
 from aip.platform.access import AccessPrincipal, PolicyService, Resource, authenticated
 
 __all__ = ["router"]
 
-_NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"model": ErrorBody}}
+_NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"model": UploadErrorBody}}
 _INVALID: dict[int | str, dict[str, Any]] = {422: {"description": "Validation error"}}
 
 sessions_router = APIRouter(prefix="/uploads/sessions", tags=["uploads"])
@@ -34,10 +39,10 @@ sessions_router = APIRouter(prefix="/uploads/sessions", tags=["uploads"])
     status_code=status.HTTP_201_CREATED,
     responses={
         **_INVALID,
-        400: {"model": ErrorBody},
-        413: {"model": ErrorBody},
-        415: {"model": ErrorBody},
-        429: {"model": ErrorBody},
+        400: {"model": UploadErrorBody},
+        413: {"model": UploadErrorBody},
+        415: {"model": UploadErrorBody},
+        429: {"model": UploadErrorBody},
     },
 )
 async def create_session(
@@ -55,7 +60,7 @@ async def create_session(
     "/{session_id}/confirm",
     operation_id="uploads_confirm_session",
     response_model=SessionStatus,
-    responses={**_NOT_FOUND, 409: {"model": ErrorBody}, 422: {"model": ErrorBody}},
+    responses={**_NOT_FOUND, 409: {"model": UploadErrorBody}, 422: {"model": UploadErrorBody}},
     dependencies=[Depends(authenticated())],
 )
 async def confirm_session(session_id: UUID) -> SessionStatus:

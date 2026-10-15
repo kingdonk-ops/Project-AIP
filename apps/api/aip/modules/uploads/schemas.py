@@ -17,10 +17,10 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 __all__ = [
-    "ErrorBody",
     "SessionCreate",
     "SessionCreated",
     "SessionStatus",
+    "UploadErrorBody",
 ]
 
 # S3's single-object ceiling (5 TiB). Larger declared sizes are a schema error; the single-part
@@ -75,7 +75,7 @@ class SessionStatus(_Out):
     reject_reason: str | None = None
 
 
-class ErrorBody(_Out):
+class UploadErrorBody(_Out):
     """A domain error: a stable ``code`` (``UNSUPPORTED_TYPE``, ``USE_MULTIPART``, ...)."""
 
     code: str

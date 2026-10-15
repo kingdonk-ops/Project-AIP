@@ -424,6 +424,57 @@ export interface paths {
         patch: operations["sites_update"];
         trace?: never;
     };
+    "/api/v1/uploads/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Session */
+        post: operations["uploads_create_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/uploads/sessions/{session_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm Session */
+        post: operations["uploads_confirm_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/uploads/sessions/{session_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Session Status */
+        get: operations["uploads_session_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -434,7 +485,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -789,7 +840,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -814,7 +865,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -826,7 +877,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "identity.user.manage" | "identity.user.read" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * Scope
@@ -840,6 +891,43 @@ export interface components {
              * @enum {string}
              */
             type: "tenant" | "project" | "team" | "asset_subtree";
+        };
+        /** SessionCreate */
+        SessionCreate: {
+            /** Clientrequestid */
+            clientRequestId?: string | null;
+            /** Declaredmime */
+            declaredMime: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Projectid
+             * Format: uuid
+             */
+            projectId: string;
+            /** Sha256 */
+            sha256?: string | null;
+            /** Sizebytes */
+            sizeBytes: number;
+        };
+        /** SessionCreated */
+        SessionCreated: {
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+            /** Fields */
+            fields: {
+                [key: string]: string;
+            };
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Url */
+            url: string;
         };
         /** SessionList */
         SessionList: {
@@ -882,6 +970,13 @@ export interface components {
             lastSeenAt: string;
             /** Useragent */
             userAgent: string | null;
+        };
+        /** SessionStatus */
+        SessionStatus: {
+            /** Rejectreason */
+            rejectReason?: string | null;
+            /** Status */
+            status: string;
         };
         /** SiteCreate */
         SiteCreate: {
@@ -989,6 +1084,14 @@ export interface components {
              * @enum {string}
              */
             status: "provisioning" | "active" | "suspended" | "offboarding" | "offboarded";
+        };
+        /**
+         * UploadErrorBody
+         * @description A domain error: a stable ``code`` (``UNSUPPORTED_TYPE``, ``USE_MULTIPART``, ...).
+         */
+        UploadErrorBody: {
+            /** Code */
+            code: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -2339,6 +2442,162 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    uploads_create_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionCreated"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadErrorBody"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadErrorBody"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadErrorBody"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadErrorBody"];
+                };
+            };
+        };
+    };
+    uploads_confirm_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionStatus"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadErrorBody"];
+                };
+            };
+        };
+    };
+    uploads_session_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionStatus"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

@@ -20,7 +20,10 @@
                 "project.update",
                 "project.view",
                 "site.manage",
-                "site.view"
+                "site.view",
+                "uploads.admin",
+                "uploads.create",
+                "uploads.view"
               ],
               "title": "PermissionCode",
               "type": "string"
@@ -1082,7 +1085,10 @@
                 "project.update",
                 "project.view",
                 "site.manage",
-                "site.view"
+                "site.view",
+                "uploads.admin",
+                "uploads.create",
+                "uploads.view"
               ],
               "title": "PermissionCode",
               "type": "string"
@@ -1183,7 +1189,10 @@
                 "project.update",
                 "project.view",
                 "site.manage",
-                "site.view"
+                "site.view",
+                "uploads.admin",
+                "uploads.create",
+                "uploads.view"
               ],
               "title": "PermissionCode",
               "type": "string"
@@ -1251,7 +1260,10 @@
                     "project.update",
                     "project.view",
                     "site.manage",
-                    "site.view"
+                    "site.view",
+                    "uploads.admin",
+                    "uploads.create",
+                    "uploads.view"
                   ],
                   "title": "PermissionCode",
                   "type": "string"
@@ -1300,6 +1312,99 @@
           "type"
         ],
         "title": "Scope",
+        "type": "object"
+      },
+      "SessionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "clientRequestId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clientrequestid"
+          },
+          "declaredMime": {
+            "maxLength": 255,
+            "minLength": 3,
+            "title": "Declaredmime",
+            "type": "string"
+          },
+          "filename": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Filename",
+            "type": "string"
+          },
+          "projectId": {
+            "format": "uuid",
+            "title": "Projectid",
+            "type": "string"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "sizeBytes": {
+            "maximum": 5497558138880.0,
+            "minimum": 0.0,
+            "title": "Sizebytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "projectId",
+          "filename",
+          "declaredMime",
+          "sizeBytes"
+        ],
+        "title": "SessionCreate",
+        "type": "object"
+      },
+      "SessionCreated": {
+        "properties": {
+          "expiresAt": {
+            "format": "date-time",
+            "title": "Expiresat",
+            "type": "string"
+          },
+          "fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "object"
+          },
+          "sessionId": {
+            "format": "uuid",
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "url",
+          "fields",
+          "expiresAt"
+        ],
+        "title": "SessionCreated",
         "type": "object"
       },
       "SessionList": {
@@ -1393,6 +1498,30 @@
           "lastSeenAt"
         ],
         "title": "SessionOut",
+        "type": "object"
+      },
+      "SessionStatus": {
+        "properties": {
+          "rejectReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejectreason"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "SessionStatus",
         "type": "object"
       },
       "SiteCreate": {
@@ -1728,6 +1857,20 @@
           "status"
         ],
         "title": "TenantView",
+        "type": "object"
+      },
+      "UploadErrorBody": {
+        "description": "A domain error: a stable ``code`` (``UNSUPPORTED_TYPE``, ``USE_MULTIPART``, ...).",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "UploadErrorBody",
         "type": "object"
       },
       "ValidationError": {
@@ -3476,6 +3619,196 @@
         "summary": "Update Site",
         "tags": [
           "sites"
+        ]
+      }
+    },
+    "/api/v1/uploads/sessions": {
+      "post": {
+        "operationId": "uploads_create_session",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionCreated"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadErrorBody"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadErrorBody"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadErrorBody"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Create Session",
+        "tags": [
+          "uploads"
+        ]
+      }
+    },
+    "/api/v1/uploads/sessions/{session_id}/confirm": {
+      "post": {
+        "operationId": "uploads_confirm_session",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Confirm Session",
+        "tags": [
+          "uploads"
+        ]
+      }
+    },
+    "/api/v1/uploads/sessions/{session_id}/status": {
+      "get": {
+        "operationId": "uploads_session_status",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Session Status",
+        "tags": [
+          "uploads"
         ]
       }
     }
