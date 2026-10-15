@@ -68,7 +68,7 @@ tasks still `todo` below remain before M0 is closed.
 | [IDENTITY-02](tasks/IDENTITY-02.md) | Users and tenant membership, JIT provisioning, GET /me | identity | M | DATABASE-02, IDENTITY-01, TENANCY-01 | done | PR #37 |
 | [TENANCY-02](tasks/TENANCY-02.md) | Tenant-scoped key builders for Redis, queues, S3 and search | tenancy | S | ARCH-04, TENANCY-01 | done | PR #33 |
 | [ENT-01](tasks/ENT-01.md) | EntitlementService, tenant_subscription, tenant_usage; flags vs entitlements (ADR 0008) | tenancy | M | DATABASE-02, TENANCY-01 | todo |  |
-| [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | review | ClaudeK: p0/arch-event-registry-catalogue |
+| [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | done | PR #78 |
 | [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | todo |  |
 | [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | todo | |
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
@@ -103,7 +103,7 @@ tasks still `todo` below remain before M0 is closed.
 | [TENANCY-03](tasks/TENANCY-03.md) | Organisations and project-scoped role assignment | tenancy | M | PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [APPROVALS-01](tasks/APPROVALS-01.md) | Versioned workflow definitions/instances + pure state-machine evaluator | approvals | M | ARCH-02, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
-| [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | review | p0/uploads-sessions-presign (stream B); Python per ADR 0001; SSE-KMS wiring → UPLOADS-07  |
+| [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | done | PR #79 (stream B); SSE-KMS wiring → UPLOADS-07  |
 | [DATABASE-07](tasks/DATABASE-07.md) | Isolation test generator across all tables and routes | database | M | ACCESS-01, STACK-03, TESTING-02 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-04](tasks/TESTING-04.md) | Generated permission-matrix and IDOR tests | testing | M | ACCESS-01, STACK-03 | todo | convert to Python backend per ADR 0001 before starting |
 | [TERMS-05](tasks/TERMS-05.md) | Terms admin API and permissions | terms | M | TERMS-04 | todo | convert to Python backend per ADR 0001 before starting |
