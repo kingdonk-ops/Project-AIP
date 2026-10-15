@@ -1,4 +1,4 @@
-# ADR 0030: audit_log is not range-partitioned; monthly segments are logical
+# ADR 0031: audit_log is not range-partitioned; monthly segments are logical
 
 - **Status:** accepted
 - **Date:** 2026-10-15

@@ -144,6 +144,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/platform/events/dead-letter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Dead Letters */
+        get: operations["platform_list_dead_letters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/platform/events/dead-letter/{event_id}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Discard Dead Letter */
+        post: operations["platform_discard_dead_letter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/platform/events/dead-letter/{event_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Dead Letter */
+        post: operations["platform_retry_dead_letter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/platform/events/{event_name}": {
         parameters: {
             query?: never;
@@ -700,6 +751,53 @@ export interface components {
             /** Method */
             method: string;
         };
+        /** DeadLetter */
+        DeadLetter: {
+            /** Attempts */
+            attempts: number;
+            /**
+             * Deadletteredat
+             * Format: date-time
+             */
+            deadLetteredAt: string;
+            /** Eventname */
+            eventName: string;
+            /** Eventversion */
+            eventVersion: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lasterror */
+            lastError: string | null;
+            /**
+             * Tenantid
+             * Format: uuid
+             */
+            tenantId: string;
+        };
+        /** DeadLetterAction */
+        DeadLetterAction: {
+            /** Action */
+            action: string;
+            /** Eventname */
+            eventName: string;
+            /** Eventversion */
+            eventVersion: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /** DeadLetterPage */
+        DeadLetterPage: {
+            /** Items */
+            items: components["schemas"]["DeadLetter"][];
+            /** Nextafter */
+            nextAfter: string | null;
+        };
         /** Dependencies */
         Dependencies: {
             /** Alembic */
@@ -735,6 +833,11 @@ export interface components {
             status: "active" | "deprecated";
             /** Version */
             version: number;
+        };
+        /** DiscardRequest */
+        DiscardRequest: {
+            /** Reason */
+            reason: string;
         };
         /**
          * EntitlementErrorBody
@@ -2096,6 +2199,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventCatalogue"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    platform_list_dead_letters: {
+        parameters: {
+            query?: {
+                limit?: number;
+                after?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    platform_discard_dead_letter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscardRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterAction"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    platform_retry_dead_letter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterAction"];
                 };
             };
             /** @description Validation Error */

@@ -273,6 +273,120 @@
         "title": "DbEstimate",
         "type": "object"
       },
+      "DeadLetter": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "deadLetteredAt": {
+            "format": "date-time",
+            "title": "Deadletteredat",
+            "type": "string"
+          },
+          "eventName": {
+            "title": "Eventname",
+            "type": "string"
+          },
+          "eventVersion": {
+            "title": "Eventversion",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lasterror"
+          },
+          "tenantId": {
+            "format": "uuid",
+            "title": "Tenantid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenantId",
+          "eventName",
+          "eventVersion",
+          "attempts",
+          "lastError",
+          "deadLetteredAt"
+        ],
+        "title": "DeadLetter",
+        "type": "object"
+      },
+      "DeadLetterAction": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "eventName": {
+            "title": "Eventname",
+            "type": "string"
+          },
+          "eventVersion": {
+            "title": "Eventversion",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "eventName",
+          "eventVersion",
+          "action"
+        ],
+        "title": "DeadLetterAction",
+        "type": "object"
+      },
+      "DeadLetterPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DeadLetter"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "nextAfter": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextafter"
+          }
+        },
+        "required": [
+          "items",
+          "nextAfter"
+        ],
+        "title": "DeadLetterPage",
+        "type": "object"
+      },
       "Dependencies": {
         "properties": {
           "alembic": {
@@ -361,6 +475,22 @@
           "deprecatedBy"
         ],
         "title": "DeprecateResult",
+        "type": "object"
+      },
+      "DiscardRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "DiscardRequest",
         "type": "object"
       },
       "EntitlementErrorBody": {
@@ -3572,6 +3702,164 @@
           }
         },
         "summary": "List Events",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/admin/platform/events/dead-letter": {
+      "get": {
+        "operationId": "platform_list_dead_letters",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeadLetterPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Dead Letters",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/admin/platform/events/dead-letter/{event_id}/discard": {
+      "post": {
+        "operationId": "platform_discard_dead_letter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeadLetterAction"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discard Dead Letter",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/admin/platform/events/dead-letter/{event_id}/retry": {
+      "post": {
+        "operationId": "platform_retry_dead_letter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeadLetterAction"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Dead Letter",
         "tags": [
           "platform"
         ]

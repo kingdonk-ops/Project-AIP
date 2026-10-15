@@ -10,7 +10,7 @@
 --                 subject to RLS.
 --   aip_audit_writer  the only role that may INSERT into audit_log and maintain the chain heads
 --                 and checkpoints (AUDIT-01). LOGIN, no BYPASSRLS, owns nothing. The audit
---                 revision 202610151600 refuses to run if it is missing or privileged.
+--                 revision 202610151900 refuses to run if it is missing or privileged.
 -- None of them is SUPERUSER, CREATEDB, CREATEROLE, REPLICATION or BYPASSRLS. The revision
 -- 202610072200_platform_roles refuses to run if any of them is missing or privileged.
 --

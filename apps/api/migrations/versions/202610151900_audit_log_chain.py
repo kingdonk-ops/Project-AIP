@@ -1,12 +1,12 @@
 """audit_log_chain
 
-AUDIT-01 (ADR 0002, ADR 0021, ADR 0030): the tamper-evident audit store.
+AUDIT-01 (ADR 0002, ADR 0021, ADR 0031): the tamper-evident audit store.
 
 - ``audit_log``: append-only, per-tenant, per-stream hash-chained event log. No ``updated_at`` and
   no ``deleted_at`` (a correction is a new row with ``supersedes_id``, never an edit). It is **not**
   range-partitioned: the chain needs a table-wide ``UNIQUE (tenant_id, stream, seq)`` and a partial
   ``UNIQUE (tenant_id, source_event_id)``, which a native partition's unique indexes cannot provide
-  without the partition key (ADR 0030). A ``BEFORE UPDATE OR DELETE`` trigger raises
+  without the partition key (ADR 0031). A ``BEFORE UPDATE OR DELETE`` trigger raises
   ``audit_log is append-only`` so even the owner cannot rewrite the chain by accident; UPDATE,
   DELETE and TRUNCATE are also revoked from PUBLIC and every runtime role.
 - ``audit_chain_heads``: the current ``(last_seq, last_hash)`` per ``(tenant_id, stream)``, locked
@@ -20,15 +20,15 @@ Only ``aip_audit_writer`` may INSERT into ``audit_log`` and maintain the heads a
 bootstrap (``db/bootstrap/00_cluster.sql``, ADR 0012); this revision verifies it is present and
 unprivileged, then grants it.
 
-Revision ID: 202610151600
-Revises: 202610151500
-Create Date: 2026-10-15 16:00:00+00:00
+Revision ID: 202610151900
+Revises: 202610151800
+Create Date: 2026-10-15 19:00:00+00:00
 """
 
 from alembic import op
 
-revision: str = "202610151600"
-down_revision: str | None = "202610151500"
+revision: str = "202610151900"
+down_revision: str | None = "202610151800"
 branch_labels = None
 depends_on = None
 

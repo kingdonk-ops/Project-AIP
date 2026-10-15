@@ -1,6 +1,6 @@
 """SQLAlchemy Core declarations for the audit store (AUDIT-01, ADR 0002).
 
-Created only by the Alembic revision ``202610151600_audit_log_chain``; ``aip-db check-schema``
+Created only by the Alembic revision ``202610151900_audit_log_chain``; ``aip-db check-schema``
 compares these declarations with the migrated database.
 
 ``audit_log`` is append-only (ADR 0002 / DATABASE-05): corrections are new rows carrying
@@ -10,7 +10,7 @@ the tamper-evident chain needs a table-wide ``UNIQUE (tenant_id, stream, seq)`` 
 ``UNIQUE (tenant_id, source_event_id)``, and a native partition's unique indexes would have to
 include the partition key, which these do not. The monthly "segments" of ADR 0021 are therefore
 logical: they are recorded in ``audit_chain_checkpoints`` and a retention job (AUDIT-05) removes an
-old segment's rows, rather than dropping a partition. See ADR 0030.
+old segment's rows, rather than dropping a partition. See ADR 0031.
 
 ``audit_chain_heads`` and ``audit_chain_checkpoints`` are writer-maintained bookkeeping, keyed on
 natural columns rather than a surrogate uuid (an intentional, task-specified deviation from the
