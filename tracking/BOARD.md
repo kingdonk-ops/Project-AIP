@@ -102,7 +102,7 @@ tasks still `todo` below remain before M0 is closed.
 | [TENANCY-03](tasks/TENANCY-03.md) | Organisations and project-scoped role assignment | tenancy | M | PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [APPROVALS-01](tasks/APPROVALS-01.md) | Versioned workflow definitions/instances + pure state-machine evaluator | approvals | M | ARCH-02, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
-| [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | review | p0/uploads-sessions-presign (stream B); Python per ADR 0001; SSE-KMS wiring → UPLOADS-07  |
 | [DATABASE-07](tasks/DATABASE-07.md) | Isolation test generator across all tables and routes | database | M | ACCESS-01, STACK-03, TESTING-02 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-04](tasks/TESTING-04.md) | Generated permission-matrix and IDOR tests | testing | M | ACCESS-01, STACK-03 | todo | convert to Python backend per ADR 0001 before starting |
 | [TERMS-05](tasks/TERMS-05.md) | Terms admin API and permissions | terms | M | TERMS-04 | todo | convert to Python backend per ADR 0001 before starting |
@@ -171,6 +171,7 @@ tasks still `todo` below remain before M0 is closed.
 |---|---|---|---|---|---|---|
 | [APPROVALS-06](tasks/APPROVALS-06.md) | Approvals inbox API + page | approvals | M | APPROVALS-04, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-06](tasks/UPLOADS-06.md) | Upload tray + scan status chip | uploads | M | DESIGN-03, UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [UPLOADS-07](tasks/UPLOADS-07.md) | Enforce per-tenant SSE-KMS on the presigned upload (ADR 0006) | uploads | S | TENANCY-05, UPLOADS-01 | todo | found in UPLOADS-01: presign policy built, key source awaits TENANCY-05 exposing it via the tenancy interface  |
 | [IDENTITY-06](tasks/IDENTITY-06.md) | OAuth2 client-credentials API clients (ES256, scoped, expiring) | identity | S | ACCESS-01, IDENTITY-02 | todo |  |
 | [AUDIT-05](tasks/AUDIT-05.md) | Legal hold + recycle bin (replaces DATABASE-06) | audit | M | AUDIT-01, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
 | [SECURITY-07](tasks/SECURITY-07.md) | Tenant IP allow-list and session policy | security | M | IDENTITY-03 | todo |  |

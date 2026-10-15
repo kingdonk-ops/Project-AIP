@@ -83,6 +83,63 @@ async def test_presigned_put_then_presigned_get(object_store: StoreUnderTest) ->
     assert await object_store.store.get(key) == body
 
 
+async def test_head_returns_size_and_content_type(object_store: StoreUnderTest) -> None:
+    key = tenant_key(T1, "conformance", uuid.uuid4().hex, "h.pdf")
+    await object_store.store.put(key, b"%PDF-head-xyz", content_type="application/pdf")
+    head = await object_store.store.head(key)
+    assert head.size_bytes == len(b"%PDF-head-xyz")
+    assert head.content_type == "application/pdf"
+
+
+async def test_head_missing_key_raises_not_found(object_store: StoreUnderTest) -> None:
+    key = tenant_key(T1, "conformance", uuid.uuid4().hex, "nope.pdf")
+    with pytest.raises(ObjectNotFoundError):
+        await object_store.store.head(key)
+
+
+async def test_presigned_post_then_confirm_round_trip(object_store: StoreUnderTest) -> None:
+    key = tenant_key(T1, "conformance", uuid.uuid4().hex, "p.bin")
+    body = b"posted body " + uuid.uuid4().bytes
+    post = await object_store.store.presign_post(
+        key,
+        expires_s=300,
+        fields={"Content-Type": "application/octet-stream"},
+        conditions=[
+            ["content-length-range", 1, len(body)],
+            ["eq", "$Content-Type", "application/octet-stream"],
+        ],
+    )
+    async with httpx.AsyncClient() as client:
+        response = await client.post(post.url, data=dict(post.fields), files={"file": body})
+        assert response.status_code in (200, 204), response.text
+    head = await object_store.store.head(key)
+    assert head.size_bytes == len(body)
+    assert await object_store.store.get(key) == body
+
+
+async def test_presigned_post_refuses_oversized_object(object_store: StoreUnderTest) -> None:
+    key = tenant_key(T1, "conformance", uuid.uuid4().hex, "big.bin")
+    post = await object_store.store.presign_post(
+        key, expires_s=300, conditions=[["content-length-range", 1, 8]]
+    )
+    async with httpx.AsyncClient() as client:
+        response = await client.post(post.url, data=dict(post.fields), files={"file": b"0" * 64})
+        assert response.status_code in (400, 403), response.text
+    with pytest.raises(ObjectNotFoundError):
+        await object_store.store.head(key)
+
+
+@pytest.mark.parametrize("expires_s", [0, -1, 7 * 24 * 60 * 60 + 1])
+async def test_presign_rejects_out_of_range_expiry(
+    object_store: StoreUnderTest, expires_s: int
+) -> None:
+    key = tenant_key(T1, "conformance", uuid.uuid4().hex, "exp.bin")
+    with pytest.raises(ValueError, match="expires_s"):
+        await object_store.store.presign_post(key, expires_s=expires_s)
+    with pytest.raises(ValueError, match="expires_s"):
+        await object_store.store.presign_put(key, expires_s=expires_s)
+
+
 async def test_delete_then_get_raises_not_found(object_store: StoreUnderTest) -> None:
     key = tenant_key(T1, "conformance", uuid.uuid4().hex, "d.txt")
     await object_store.store.put(key, b"x", content_type="text/plain")

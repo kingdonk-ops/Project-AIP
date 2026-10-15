@@ -9,7 +9,7 @@ A client is opened per call: aioboto3 clients are bound to an event loop, and pr
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Mapping, Sequence
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -19,7 +19,7 @@ from botocore.exceptions import ClientError
 
 from aip.platform.capabilities.errors import ObjectNotFoundError
 from aip.platform.capabilities.keys import ObjectKey
-from aip.platform.capabilities.protocols import PresignedRequest
+from aip.platform.capabilities.protocols import ObjectHead, PresignedPost, PresignedRequest
 
 if TYPE_CHECKING:
     from types_aiobotocore_s3.client import S3Client
@@ -29,6 +29,14 @@ AddressingStyle = Literal["auto", "virtual", "path"]
 SSE_HEADER = "x-amz-server-side-encryption"
 SSE_KMS_KEY_HEADER = "x-amz-server-side-encryption-aws-kms-key-id"
 _NOT_FOUND_CODES = frozenset({"NoSuchKey", "404", "NotFound"})
+# S3 bounds a presigned URL's lifetime to one week; reject anything outside it (STACK-02 review).
+MIN_EXPIRES_S = 1
+MAX_EXPIRES_S = 7 * 24 * 60 * 60  # 604800
+
+
+def _check_expires(expires_s: int) -> None:
+    if not (MIN_EXPIRES_S <= expires_s <= MAX_EXPIRES_S):
+        raise ValueError(f"expires_s must be between {MIN_EXPIRES_S} and {MAX_EXPIRES_S} seconds")
 
 
 class S3ObjectStore:
@@ -102,9 +110,24 @@ class S3ObjectStore:
             async with response["Body"] as stream:
                 return await stream.read()
 
+    async def head(self, key: ObjectKey) -> ObjectHead:
+        async with self._client() as s3:
+            try:
+                response = await s3.head_object(Bucket=self.bucket, Key=key)
+            except ClientError as exc:
+                if exc.response.get("Error", {}).get("Code") in _NOT_FOUND_CODES:
+                    raise ObjectNotFoundError(key) from None
+                raise
+        return ObjectHead(
+            size_bytes=response["ContentLength"],
+            content_type=response.get("ContentType"),
+            sse_kms_key_id=response.get("SSEKMSKeyId"),
+        )
+
     async def presign_put(
         self, key: ObjectKey, *, expires_s: int, kms_key_id: str | None = None
     ) -> PresignedRequest:
+        _check_expires(expires_s)
         sse = self._sse_params(kms_key_id)
         async with self._client() as s3:
             url = await s3.generate_presigned_url(
@@ -119,6 +142,7 @@ class S3ObjectStore:
         return PresignedRequest(method="PUT", url=url, headers=headers)
 
     async def presign_get(self, key: ObjectKey, *, expires_s: int) -> PresignedRequest:
+        _check_expires(expires_s)
         async with self._client() as s3:
             url = await s3.generate_presigned_url(
                 "get_object",
@@ -127,6 +151,25 @@ class S3ObjectStore:
                 HttpMethod="GET",
             )
         return PresignedRequest(method="GET", url=url)
+
+    async def presign_post(
+        self,
+        key: ObjectKey,
+        *,
+        expires_s: int,
+        fields: Mapping[str, str] | None = None,
+        conditions: Sequence[object] | None = None,
+    ) -> PresignedPost:
+        _check_expires(expires_s)
+        async with self._client() as s3:
+            post = await s3.generate_presigned_post(
+                Bucket=self.bucket,
+                Key=key,
+                Fields=dict(fields) if fields else None,
+                Conditions=list(conditions) if conditions else None,
+                ExpiresIn=expires_s,
+            )
+        return PresignedPost(url=post["url"], fields=dict(post["fields"]))
 
     async def delete(self, key: ObjectKey) -> None:
         async with self._client() as s3:

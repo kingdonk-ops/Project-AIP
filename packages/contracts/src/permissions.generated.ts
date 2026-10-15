@@ -16,7 +16,10 @@ export type PermissionCode =
   | "project.update"
   | "project.view"
   | "site.manage"
-  | "site.view";
+  | "site.view"
+  | "uploads.admin"
+  | "uploads.create"
+  | "uploads.view";
 
 export const PERMISSIONS = {
   "access.matrix.export": { module: "access", privileged: false },
@@ -33,4 +36,7 @@ export const PERMISSIONS = {
   "project.view": { module: "projects", privileged: false },
   "site.manage": { module: "projects", privileged: false },
   "site.view": { module: "projects", privileged: false },
+  "uploads.admin": { module: "uploads", privileged: false },
+  "uploads.create": { module: "uploads", privileged: false },
+  "uploads.view": { module: "uploads", privileged: false },
 } as const satisfies Record<PermissionCode, { module: string; privileged: boolean }>;

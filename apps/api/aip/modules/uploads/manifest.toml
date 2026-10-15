@@ -1,0 +1,28 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+id = "uploads"
+context = "uploads"
+depends_on = ["tenancy", "projects"]
+permission_namespaces = ["uploads"]
+settings = []
+term_keys = []
+
+[[permissions]]
+code = "uploads.create"
+description = "Start an upload session and presign into quarantine"
+
+[[permissions]]
+code = "uploads.view"
+description = "View upload sessions and their scan status"
+
+[[permissions]]
+code = "uploads.admin"
+description = "Administer uploads: view any session's status and the quarantine review list"
+
+# Emitted from UPLOADS-02 once a scanned object is released or rejected.
+[[events]]
+name = "upload.completed"
+version = 1
+
+[[events]]
+name = "upload.rejected"
+version = 1
