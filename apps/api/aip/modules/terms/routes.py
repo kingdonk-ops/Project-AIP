@@ -36,8 +36,7 @@ async def coverage() -> TermsCoverage:
     path = Path(os.environ.get(FINDINGS_ENV) or BAKED_FINDINGS)
     commit = os.environ.get("GIT_SHA") or "unknown"
     try:
-        raw = path.read_text(encoding="utf-8")
-    except FileNotFoundError:
+        findings = _FINDINGS.validate_python(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, ValueError):  # missing (a dev run), unreadable or not a findings list
         return TermsCoverage(commit=commit, available=False, findings=[])
-    findings = _FINDINGS.validate_python(json.loads(raw))
     return TermsCoverage(commit=commit, available=True, findings=findings)

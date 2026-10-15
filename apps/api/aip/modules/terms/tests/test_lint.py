@@ -56,6 +56,11 @@ def test_j2_outside_a_templates_folder_and_tests_folders_are_not_scanned(tmp_pat
     assert _scan(tmp_path) == []
 
 
+def test_line_numbers_count_newlines_only(tmp_path: Path) -> None:
+    _write(tmp_path, "templates/x.j2", "a\fb\nRaise NCR\n")
+    assert [f.line for f in _scan(tmp_path)] == [2]
+
+
 # --- schemas.py ---------------------------------------------------------------------------------
 
 

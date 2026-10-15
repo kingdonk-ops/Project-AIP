@@ -1,4 +1,4 @@
-// no-hardcoded-labels (TERMS-07): JSX text and string literals in the aria-label, title, placeholder
+// no-hardcoded-labels (TERMS-07): JSX text (and literal children) and string literals in the aria-label, title, placeholder
 // and label props must not carry a default dictionary text (ITP, NCR, Variation ...); use t(key).
 //
 // The deny-list is read from config/terms/en-AU/*.json when linting starts and follows the Python
@@ -62,17 +62,20 @@ export function findTerms(text, terms) {
   return hits.sort((a, b) => a.offset - b.offset);
 }
 
-/** The string a label prop holds when it is a plain literal, else null. */
-function propString(value) {
-  if (!value) return null;
-  if (value.type === "Literal") return typeof value.value === "string" ? value.value : null;
-  if (value.type !== "JSXExpressionContainer") return null;
-  const expression = value.expression;
+/** The string an expression holds when it is a plain literal, else null. */
+function literalString(expression) {
   if (expression.type === "Literal" && typeof expression.value === "string") return expression.value;
   if (expression.type === "TemplateLiteral" && expression.expressions.length === 0) {
     return expression.quasis[0].value.cooked ?? null;
   }
   return null;
+}
+
+/** The string a label prop holds when it is a plain literal, else null. */
+function propString(value) {
+  if (!value) return null;
+  if (value.type === "Literal") return literalString(value);
+  return value.type === "JSXExpressionContainer" ? literalString(value.expression) : null;
 }
 
 /** @type {import("eslint").Rule.RuleModule} */
@@ -101,6 +104,12 @@ export default {
     return {
       JSXText(node) {
         check(node, node.value);
+      },
+      // A literal child such as <span>{"NCR"}</span> is text too.
+      JSXExpressionContainer(node) {
+        if (node.parent.type !== "JSXElement" && node.parent.type !== "JSXFragment") return;
+        const text = literalString(node.expression);
+        if (text !== null) check(node.expression, text);
       },
       JSXAttribute(node) {
         if (node.name.type !== "JSXIdentifier" || !LABEL_PROPS.has(node.name.name)) return;

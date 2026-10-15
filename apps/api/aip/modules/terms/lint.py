@@ -136,7 +136,7 @@ def _scanned(sources: Path, pattern: str) -> Iterator[Path]:
 
 def _template_hits(source: str, terms: Sequence[Term]) -> Iterator[tuple[int, int, Term]]:
     blanked = _JINJA_RE.sub(lambda m: re.sub(r"[^\n]", " ", m.group()), source)
-    for number, line in enumerate(blanked.splitlines(), 1):
+    for number, line in enumerate(blanked.split("\n"), 1):  # as ast counts lines
         for offset, term in find_terms(line, terms):
             yield number, offset + 1, term
 
@@ -229,7 +229,7 @@ def scan(
     ]
     for path, kind in jobs:
         source = path.read_text(encoding="utf-8")
-        lines = source.splitlines()
+        lines = source.split("\n")
         file = _relative(path, base)
         hits = (
             _template_hits(source, terms)

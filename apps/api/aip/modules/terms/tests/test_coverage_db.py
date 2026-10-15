@@ -127,3 +127,14 @@ async def test_a_build_without_a_findings_file_reports_unavailable(
     response = await client.get("/api/v1/terms/coverage", headers=headers(ALICE_ID))
     assert response.status_code == 200
     assert response.json() == {"commit": COMMIT, "available": False, "findings": []}
+
+
+async def test_a_corrupt_findings_file_reports_unavailable_not_500(
+    client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    broken = tmp_path / "broken.json"
+    broken.write_text('{"not": "a list"', encoding="utf-8")
+    monkeypatch.setenv("TERMS_LINT_FINDINGS", str(broken))
+    response = await client.get("/api/v1/terms/coverage", headers=headers(ALICE_ID))
+    assert response.status_code == 200
+    assert response.json()["available"] is False
