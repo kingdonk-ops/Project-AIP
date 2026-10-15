@@ -42,11 +42,9 @@ PROJECT_A2_ID = UUID("00000000-0000-4000-8000-0000000000a2")
 CAROL_ID = UUID("00000000-0000-4000-8000-0000000ca401")
 
 SEED_TENANTS_SQL = (
-    "INSERT INTO tenants (id, name, slug, deployment_shape, region_code, status, "
-    "created_at, updated_at) VALUES "
-    f"('{TENANT_A_ID}', 'Kaefer Demo', 'kaefer-demo', 'pool', 'ap-southeast-2', 'active', "
-    "now(), now()), "
-    f"('{TENANT_B_ID}', 'Tenant B', 'tenant-b', 'pool', 'ap-southeast-2', 'active', now(), now())"
+    "INSERT INTO tenants (id, name, slug, region_code, status, created_at, updated_at) VALUES "
+    f"('{TENANT_A_ID}', 'Kaefer Demo', 'kaefer-demo', 'ap-southeast-2', 'active', now(), now()), "
+    f"('{TENANT_B_ID}', 'Tenant B', 'tenant-b', 'ap-southeast-2', 'active', now(), now())"
 )
 
 
