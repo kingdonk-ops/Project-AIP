@@ -8,6 +8,9 @@
 --   aip_jobs      the worker (Procrastinate tables and outbox publish columns, granted later).
 --   aip_readonly  reporting. Granted SELECT only, which is what keeps it read-only; still
 --                 subject to RLS.
+--   aip_audit_writer  the only role that may INSERT into audit_log and maintain the chain heads
+--                 and checkpoints (AUDIT-01). LOGIN, no BYPASSRLS, owns nothing. The audit
+--                 revision 202610151600 refuses to run if it is missing or privileged.
 -- None of them is SUPERUSER, CREATEDB, CREATEROLE, REPLICATION or BYPASSRLS. The revision
 -- 202610072200_platform_roles refuses to run if any of them is missing or privileged.
 --
@@ -34,7 +37,8 @@ BEGIN
       ('aip_owner', 'aip.owner_password'),
       ('aip_app', 'aip.app_password'),
       ('aip_jobs', 'aip.jobs_password'),
-      ('aip_readonly', 'aip.readonly_password')
+      ('aip_readonly', 'aip.readonly_password'),
+      ('aip_audit_writer', 'aip.audit_writer_password')
     ) AS r (name, setting)
   LOOP
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = spec.name) THEN
@@ -73,7 +77,8 @@ BEGIN
   -- Only the AIP roles may connect to this database (the owner and superusers always can).
   EXECUTE format('REVOKE CONNECT, TEMPORARY ON DATABASE %I FROM PUBLIC', current_database());
   EXECUTE format(
-    'GRANT CONNECT ON DATABASE %I TO aip_app, aip_jobs, aip_readonly', current_database());
+    'GRANT CONNECT ON DATABASE %I TO aip_app, aip_jobs, aip_readonly, aip_audit_writer',
+    current_database());
 END
 $bootstrap$;
 

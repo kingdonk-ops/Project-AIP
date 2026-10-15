@@ -10,7 +10,7 @@ export const AccessGetMyAbilitiesQueryParams = zod.object({
 })
 
 export const AccessGetMyAbilitiesResponse = zod.object({
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'audit.activity.view', 'audit.log.read', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 }).describe('Body of GET /api/v1/access/me/abilities: what the caller may do (the UI hides the rest).')
 
 /**
@@ -86,7 +86,7 @@ export const AccessRolesListResponse = zod.object({
   "isSystem": zod.boolean(),
   "name": zod.union([zod.string(),zod.null()]),
   "nameTermKey": zod.union([zod.string(),zod.null()]),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'audit.activity.view', 'audit.log.read', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 }))
 })
 
@@ -103,7 +103,7 @@ export const accessRolesCreateBodyPermissionsMax = 500;
 export const AccessRolesCreateBody = zod.object({
   "code": zod.string().regex(accessRolesCreateBodyCodeRegExp),
   "name": zod.string().min(1).max(accessRolesCreateBodyNameMax),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view'])).max(accessRolesCreateBodyPermissionsMax)
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'audit.activity.view', 'audit.log.read', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view'])).max(accessRolesCreateBodyPermissionsMax)
 })
 
 export const AccessRolesCreateResponse = zod.object({
@@ -113,7 +113,7 @@ export const AccessRolesCreateResponse = zod.object({
   "isSystem": zod.boolean(),
   "name": zod.union([zod.string(),zod.null()]),
   "nameTermKey": zod.union([zod.string(),zod.null()]),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'audit.activity.view', 'audit.log.read', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 })
 
 /**
@@ -142,7 +142,7 @@ export const accessRolesUpdateBodyPermissionsOneMax = 500;
 export const AccessRolesUpdateBody = zod.object({
   "code": zod.union([zod.string().regex(accessRolesUpdateBodyCodeOneRegExp),zod.null()]).optional(),
   "name": zod.union([zod.string().min(1).max(accessRolesUpdateBodyNameOneMax),zod.null()]).optional(),
-  "permissions": zod.union([zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view'])).max(accessRolesUpdateBodyPermissionsOneMax),zod.null()]).optional()
+  "permissions": zod.union([zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'audit.activity.view', 'audit.log.read', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view'])).max(accessRolesUpdateBodyPermissionsOneMax),zod.null()]).optional()
 }).describe('Every field optional. A system role keeps its code and name (409 SYSTEM_ROLE_IMMUTABLE).')
 
 export const AccessRolesUpdateResponse = zod.object({
@@ -152,7 +152,7 @@ export const AccessRolesUpdateResponse = zod.object({
   "isSystem": zod.boolean(),
   "name": zod.union([zod.string(),zod.null()]),
   "nameTermKey": zod.union([zod.string(),zod.null()]),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'audit.activity.view', 'audit.log.read', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 })
 
 /**
@@ -179,7 +179,7 @@ export const AccessRolesCloneResponse = zod.object({
   "isSystem": zod.boolean(),
   "name": zod.union([zod.string(),zod.null()]),
   "nameTermKey": zod.union([zod.string(),zod.null()]),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'audit.activity.view', 'audit.log.read', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 })
 
 /**
@@ -196,6 +196,6 @@ export const AccessRolesResetResponse = zod.object({
   "isSystem": zod.boolean(),
   "name": zod.union([zod.string(),zod.null()]),
   "nameTermKey": zod.union([zod.string(),zod.null()]),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'audit.activity.view', 'audit.log.read', 'identity.user.manage', 'identity.user.read', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'site.manage', 'site.view', 'tenancy.plan.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 })
 

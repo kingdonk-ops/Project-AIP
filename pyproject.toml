@@ -71,3 +71,10 @@ name = "platform-never-imports-modules"
 type = "forbidden"
 source_modules = ["aip.platform"]
 forbidden_modules = ["aip.modules"]
+
+[[tool.importlinter.contracts]]
+id = "audit-chain-hash-is-pure"
+name = "audit-chain-hash-is-pure (AUDIT-01)"
+type = "forbidden"
+source_modules = ["aip.modules.audit.chain_hash"]
+forbidden_modules = ["aip.platform", "aip.modules"]

@@ -1,0 +1,39 @@
+{
+  "hash_spec_version": 1,
+  "description": "AUDIT-01 golden hash-chain entry; compute_hash(GENESIS_PREV_HASH, entry) must equal expected_hash_hex.",
+  "genesis_prev_hash_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+  "entry": {
+    "tenant_id": "00000000-0000-4000-8000-00000000000a",
+    "stream": "audit",
+    "seq": 1,
+    "occurred_at": "2026-10-07T01:02:03.000004Z",
+    "actor_id": "00000000-0000-4000-8000-0000000a11ce",
+    "on_behalf_of_id": null,
+    "auth_strength": "totp",
+    "source_module": "projects",
+    "record_table": "projects",
+    "record_id": "00000000-0000-4000-8000-0000000000a1",
+    "event_type": "project.updated",
+    "summary_key": "audit.project.updated",
+    "payload": {
+      "before": {
+        "status": "draft",
+        "name": "Rig 7"
+      },
+      "after": {
+        "name": "Rig 7",
+        "status": "active"
+      }
+    },
+    "reason_for_change": "activated after kickoff",
+    "flags": [
+      "override",
+      "force_unlock"
+    ],
+    "project_id": "00000000-0000-4000-8000-0000000000a1",
+    "asset_id": "00000000-0000-4000-8000-0000000000f1",
+    "source_event_id": "00000000-0000-4000-8000-00000000e001",
+    "supersedes_id": null
+  },
+  "expected_hash_hex": "38f221da085b45097d32686334ce30582947191c26ae8c788f5762c128f6338b"
+}

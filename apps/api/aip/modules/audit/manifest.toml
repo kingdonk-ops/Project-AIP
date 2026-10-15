@@ -1,0 +1,16 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+id = "audit"
+context = "audit"
+depends_on = []
+subscribes = []
+settings = []
+term_keys = []
+
+# Audit read permissions are separate from tenant admin (AUDIT-01); they are enforced in AUDIT-04.
+[[permissions]]
+code = "audit.log.read"
+description = "Read raw audit log entries and verify the hash chain"
+
+[[permissions]]
+code = "audit.activity.view"
+description = "View the activity feed and project timeline built over the audit log"
