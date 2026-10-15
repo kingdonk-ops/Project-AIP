@@ -304,8 +304,12 @@ async def test_the_same_succeeded_job_delivered_twice_runs_the_handler_once(
     assert calls == [job.id]
     row = await job_row(tx, TENANT_A_ID, job.id)
     assert (row.status, row.result_ref, row.attempts) == ("succeeded", "s3://result", 1)
+    # Count only this test's jobs: draining runs the worker, which can defer the daily periodic
+    # db.ensure_partitions job in the same queue, so a whole-table count races with that job.
     queue = await sfetch(
-        queue_db, "SELECT status::text, count(*) FROM procrastinate_jobs GROUP BY 1"
+        queue_db,
+        "SELECT status::text, count(*) FROM procrastinate_jobs "
+        "WHERE task_name LIKE 'test.job.%' GROUP BY 1",
     )
     assert queue == [("succeeded", 3)]
 
