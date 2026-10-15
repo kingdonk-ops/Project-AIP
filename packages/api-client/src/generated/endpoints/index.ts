@@ -5,4 +5,5 @@ export * from './platform/platform';
 export * from './projects/projects';
 export * from './sites/sites';
 export * from './tenancy/tenancy';
+export * from './terms/terms';
 export * from './uploads/uploads';

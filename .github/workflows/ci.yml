@@ -277,6 +277,36 @@ jobs:
       - name: Web build output exists
         run: test -f apps/web/dist/index.html
 
+  # TERMS-07: no default dictionary text (ITP, NCR, Variation ...) as a raw label in Jinja templates,
+  # schema label fields (Python scanner) or JSX (ESLint aip/no-hardcoded-labels). The API image bakes
+  # the same scanner report in for GET /api/v1/terms/coverage (apps/api/Dockerfile).
+  terms-lint:
+    name: Terms lint (hard-coded labels)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Python scanner (templates, schema label fields)
+        run: python -I apps/api/aip/modules/terms/lint.py --out terms-lint-findings.json
+      - name: Upload the findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terms-lint-findings
+          path: terms-lint-findings.json
+          if-no-files-found: warn
+      - name: ESLint no-hardcoded-labels (apps and packages)
+        run: pnpm -r lint
+
   # ARCH-03: a required status check in branch protection. Module boundaries and repo layout.
   boundaries:
     name: boundaries

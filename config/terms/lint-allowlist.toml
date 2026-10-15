@@ -1,0 +1,15 @@
+# Allow-list for the hard-coded label scanner (TERMS-07, python -m aip.modules.terms.lint).
+#
+# One [[allow]] table per tolerated occurrence of a default dictionary text:
+#   path         glob on the repo-relative file, e.g. "apps/api/aip/modules/x/templates/*.j2"
+#   line_pattern regular expression searched in that source line
+#   term         the dictionary text as the scanner reports it, e.g. "NCR"
+#   reason       why this is not a user-facing label; an entry without one allows nothing and is
+#                reported as a finding itself
+#
+# Example:
+#   [[allow]]
+#   path = "apps/api/aip/modules/x/templates/report.j2"
+#   line_pattern = "AS/NZS .* NCR"
+#   term = "NCR"
+#   reason = "Quoted title of a standard, not our record type"

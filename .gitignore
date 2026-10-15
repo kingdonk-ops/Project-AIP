@@ -17,3 +17,6 @@ coverage/
 .import_linter_cache/
 test-results/
 playwright-report/
+# TERMS-07: written by the scanner, baked into the API image (apps/api/Dockerfile).
+terms-lint-findings.json
+apps/api/aip/modules/terms/data/

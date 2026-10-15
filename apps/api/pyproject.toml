@@ -55,3 +55,5 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["aip"]
+# Git-ignored, so listed explicitly: the image build writes it (TERMS-07).
+artifacts = ["aip/modules/terms/data/lint_findings.json"]

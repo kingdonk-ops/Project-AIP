@@ -27,6 +27,7 @@
                 "site.view",
                 "tenancy.plan.read",
                 "tenant.flags.manage",
+                "terms.coverage.read",
                 "uploads.admin",
                 "uploads.create",
                 "uploads.view"
@@ -845,6 +846,47 @@
           "source"
         ],
         "title": "LimitOut",
+        "type": "object"
+      },
+      "LintFindingOut": {
+        "description": "One raw label found by the TERMS-07 scanner (lines and columns 1-based).",
+        "properties": {
+          "column": {
+            "title": "Column",
+            "type": "integer"
+          },
+          "file": {
+            "title": "File",
+            "type": "string"
+          },
+          "line": {
+            "title": "Line",
+            "type": "integer"
+          },
+          "suggestedKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggestedkey"
+          },
+          "term": {
+            "title": "Term",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "line",
+          "column",
+          "term",
+          "suggestedKey"
+        ],
+        "title": "LintFindingOut",
         "type": "object"
       },
       "LoginStartRequest": {
@@ -1839,6 +1881,7 @@
                 "site.view",
                 "tenancy.plan.read",
                 "tenant.flags.manage",
+                "terms.coverage.read",
                 "uploads.admin",
                 "uploads.create",
                 "uploads.view"
@@ -1949,6 +1992,7 @@
                 "site.view",
                 "tenancy.plan.read",
                 "tenant.flags.manage",
+                "terms.coverage.read",
                 "uploads.admin",
                 "uploads.create",
                 "uploads.view"
@@ -2026,6 +2070,7 @@
                     "site.view",
                     "tenancy.plan.read",
                     "tenant.flags.manage",
+                    "terms.coverage.read",
                     "uploads.admin",
                     "uploads.create",
                     "uploads.view"
@@ -2896,6 +2941,33 @@
           "status"
         ],
         "title": "TenantView",
+        "type": "object"
+      },
+      "TermsCoverage": {
+        "description": "Body of GET /api/v1/terms/coverage: the findings baked into the running build.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "commit": {
+            "title": "Commit",
+            "type": "string"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/LintFindingOut"
+            },
+            "title": "Findings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "commit",
+          "available",
+          "findings"
+        ],
+        "title": "TermsCoverage",
         "type": "object"
       },
       "UploadErrorBody": {
@@ -5285,6 +5357,27 @@
         "summary": "Update Site",
         "tags": [
           "sites"
+        ]
+      }
+    },
+    "/api/v1/terms/coverage": {
+      "get": {
+        "operationId": "terms_coverage",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TermsCoverage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Coverage",
+        "tags": [
+          "terms"
         ]
       }
     },

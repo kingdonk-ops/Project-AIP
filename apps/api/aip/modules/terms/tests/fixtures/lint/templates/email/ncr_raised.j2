@@ -1,0 +1,4 @@
+{# TERMS-07 fixture: one raw label in a text node (line 3); expressions are never flagged. #}
+<p>Hello {{ recipient.display_name }},</p>
+<p>Raise NCR {{ record.number }} today.</p>
+<p>{{ t("record.type.ncr") }} {% if "Variation" in tags %}{{ t("record.type.variation") }}{% endif %}</p>

@@ -5,4 +5,5 @@ export * from './platform/platform.zod';
 export * from './projects/projects.zod';
 export * from './sites/sites.zod';
 export * from './tenancy/tenancy.zod';
+export * from './terms/terms.zod';
 export * from './uploads/uploads.zod';
