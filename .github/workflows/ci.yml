@@ -39,6 +39,8 @@ jobs:
     env:
       UV_PYTHON: ${{ matrix.python }}
       AIP_TEST_DATABASE_URL: postgresql://aip_test:aip_test@localhost:5432/aip_test
+      # DATABASE-07: the generated per-table isolation results, uploaded below as evidence.
+      AIP_ISOLATION_RESULTS: ${{ github.workspace }}/isolation-results-${{ matrix.python }}.json
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -57,6 +59,13 @@ jobs:
         run: uv run pyright
       - name: Pytest
         run: uv run pytest -q
+      - name: Upload the per-table isolation results (DATABASE-07)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolation-results-${{ matrix.python }}
+          path: isolation-results-${{ matrix.python }}.json
+          if-no-files-found: error
 
   db:
     name: Database (bootstrap, migrate, snapshot, check-schema, lint, migrator image)
