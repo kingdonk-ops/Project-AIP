@@ -30,6 +30,7 @@ RUSTFS_IMAGE = os.environ.get("AIP_TEST_RUSTFS_IMAGE", "rustfs/rustfs:1.0.1")
 # 4.x is the last LocalStack line that runs S3 and KMS without an auth token.
 LOCALSTACK_IMAGE = os.environ.get("AIP_TEST_LOCALSTACK_IMAGE", "localstack/localstack:4.4")
 GOTENBERG_IMAGE = os.environ.get("AIP_TEST_GOTENBERG_IMAGE", "gotenberg/gotenberg:8")
+MAILPIT_IMAGE = os.environ.get("AIP_TEST_MAILPIT_IMAGE", "axllent/mailpit:v1.31.2")
 
 RUSTFS_KEY = "rustfsadmin"  # test-only default credentials of the RustFS image
 LOCALSTACK_KEY = "test"  # LocalStack accepts any credentials
@@ -139,7 +140,7 @@ def _s3_ready(backend: S3Backend) -> bool:
 
 def _localstack_ready(url: str) -> bool:
     services = httpx.get(f"{url}/_localstack/health", timeout=5).json().get("services", {})
-    return all(services.get(s) in ("available", "running") for s in ("s3", "kms"))
+    return all(services.get(s) in ("available", "running") for s in ("s3", "kms", "ses"))
 
 
 def _gotenberg_ready(url: str) -> bool:
@@ -168,14 +169,14 @@ def rustfs() -> Iterator[S3Backend]:
 
 @pytest.fixture(scope="session")
 def localstack() -> Iterator[S3Backend]:
-    """LocalStack S3 + KMS, driven by the ``s3`` adapter."""
+    """LocalStack S3 + KMS (the ``s3`` adapter) and SES (the ``ses`` mailer, STACK-06)."""
     url = os.environ.get("AIP_TEST_LOCALSTACK_URL")
     if url:
         yield S3Backend("s3", url, LOCALSTACK_KEY, LOCALSTACK_KEY)
         return
     if not _docker_reachable():
         _unavailable("LocalStack", "AIP_TEST_LOCALSTACK_URL")
-    env = {"SERVICES": "s3,kms", "AWS_DEFAULT_REGION": REGION}
+    env = {"SERVICES": "s3,kms,ses", "AWS_DEFAULT_REGION": REGION}
     with _container(LOCALSTACK_IMAGE, 4566, env, _localstack_ready, "LocalStack") as endpoint:
         yield S3Backend("s3", endpoint, LOCALSTACK_KEY, LOCALSTACK_KEY)
 
@@ -192,10 +193,55 @@ def gotenberg_url() -> Iterator[str]:
         yield endpoint
 
 
+@dataclass(frozen=True)
+class Mailpit:
+    """A Mailpit server: SMTP on ``smtp_host:smtp_port``, its REST API at ``api_url``."""
+
+    smtp_host: str
+    smtp_port: int
+    api_url: str
+
+    def messages(self) -> list[dict[str, Any]]:
+        return httpx.get(f"{self.api_url}/api/v1/messages", timeout=10).json()["messages"]
+
+    def clear(self) -> None:
+        httpx.delete(f"{self.api_url}/api/v1/messages", timeout=10)
+
+
+@pytest.fixture(scope="session")
+def mailpit() -> Iterator[Mailpit]:
+    """Mailpit (MIT), the compose stack's SMTP sink (STACK-06)."""
+    api = os.environ.get("AIP_TEST_MAILPIT_URL")
+    if api:
+        host = os.environ.get("AIP_TEST_MAILPIT_SMTP_HOST", "localhost")
+        port = int(os.environ.get("AIP_TEST_MAILPIT_SMTP_PORT", "1025"))
+        yield Mailpit(host, port, api.rstrip("/"))
+        return
+    if not _docker_reachable():
+        _unavailable("Mailpit", "AIP_TEST_MAILPIT_URL")
+    from testcontainers.core.container import (  # pyright: ignore[reportMissingTypeStubs]
+        DockerContainer,
+    )
+
+    container: Any = DockerContainer(MAILPIT_IMAGE)
+    container.with_exposed_ports(1025, 8025)
+    with container:
+        host = container.get_container_host_ip()
+        server = Mailpit(
+            host,
+            int(container.get_exposed_port(1025)),
+            f"http://{host}:{container.get_exposed_port(8025)}",
+        )
+        _wait_until(lambda: httpx.get(f"{server.api_url}/readyz", timeout=5).is_success, "Mailpit")
+        yield server
+
+
 @pytest.fixture
 def clean_capability_env(monkeypatch: pytest.MonkeyPatch) -> pytest.MonkeyPatch:
     """Remove every capability variable so a test sees only what it sets."""
     for name in list(os.environ):
-        if name.startswith(("OBJECT_STORE", "PDF_RENDERER", "GOTENBERG_")):
+        if name.startswith(
+            ("OBJECT_STORE", "PDF_RENDERER", "GOTENBERG_", "MAILER", "SMTP_", "SES_", "MAIL_FROM")
+        ):
             monkeypatch.delenv(name, raising=False)
     return monkeypatch

@@ -49,6 +49,13 @@ x-app-env: &app-env
   OBJECT_STORE_SECRET_ACCESS_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:-rustfs_dev_only_secret}
   PDF_RENDERER: ${PDF_RENDERER:-gotenberg}
   GOTENBERG_URL: ${GOTENBERG_URL:-http://gotenberg:3000}
+  # STACK-06: transactional email goes through the `ops.send_email` job. Mailpit here (UI on
+  # :8025); MAILER=ses in AWS (SES in ap-southeast-2, credentials from the ECS task role).
+  # Fixed here (like KC_SMTP_* below): the dev stack always mails Mailpit.
+  MAILER: smtp
+  SMTP_HOST: mailpit
+  SMTP_PORT: "1025"
+  MAIL_FROM: "AIP <no-reply@aip.local>"
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
   # Staff sign-in (IDENTITY-01, ADR 0005). The API calls Keycloak inside the network; browsers and
   # token issuers use the published port.
@@ -187,6 +194,9 @@ services:
       AIP_API_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:-aip_api_dev_only_secret}
       AIP_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:-aip_admin_dev_only_secret}
       MOCK_IDP_CLIENT_SECRET: ${MOCK_IDP_CLIENT_SECRET:-mock_idp_dev_only_secret}
+      # Keycloak sends its own verify and reset mails (ADR 0005). In AWS point it at SES SMTP:
+      # KC_SMTP_HOST=email-smtp.ap-southeast-2.amazonaws.com, KC_SMTP_PORT=587, STARTTLS on, and
+      # the SES SMTP credentials (derived from an IAM user's key; never committed).
       KC_SMTP_HOST: mailpit
       KC_SMTP_PORT: "1025"
     volumes:
@@ -437,12 +447,13 @@ services:
     restart: "no"
 
   localstack:
-    # S3 + KMS emulator for the `s3` adapter and per-tenant keys (ADR 0006, proposed). Optional:
+    # S3 + KMS emulator for the `s3` adapter and per-tenant keys (ADR 0006, proposed), and SES for
+    # MAILER=ses (STACK-06; SES_ENDPOINT_URL=http://localstack:4566). Optional:
     #   docker compose -f infra/docker-compose.yml --profile aws up -d localstack
     image: localstack/localstack:4.4.0
     profiles: [aws]
     environment:
-      SERVICES: s3,kms
+      SERVICES: s3,kms,ses
       AWS_DEFAULT_REGION: ap-southeast-2
     ports:
       - "127.0.0.1:${AIP_LOCALSTACK_PORT:-4566}:4566"

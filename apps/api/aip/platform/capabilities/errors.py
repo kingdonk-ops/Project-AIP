@@ -51,3 +51,7 @@ class RenderTimeoutError(RenderError):
 
 class RenderTooLargeError(RenderError):
     """The rendered PDF exceeds the response size cap."""
+
+
+class MailError(CapabilityError):
+    """A mail provider refused or failed a send (the message is retried by its job)."""

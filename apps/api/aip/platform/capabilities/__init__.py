@@ -4,6 +4,7 @@ Calling code asks for a capability and gets the protocol type::
 
     store = get_object_store()          # OBJECT_STORE=s3|minio
     renderer = get_pdf_renderer()       # PDF_RENDERER=gotenberg
+    mailer = get_mailer()               # MAILER=smtp|ses (STACK-06; call it from a job only)
 
 Swapping a library means adding one adapter file, one entry in the table below and changing the
 environment variable. Calling code never changes. ``validate_capability_settings()`` runs at app
@@ -19,8 +20,11 @@ from pydantic import SecretStr
 from aip.platform.capabilities.adapters.gotenberg import GotenbergPdfRenderer
 from aip.platform.capabilities.adapters.minio import MinioObjectStore
 from aip.platform.capabilities.adapters.s3 import S3ObjectStore
+from aip.platform.capabilities.adapters.ses import SesMailer
+from aip.platform.capabilities.adapters.smtp import SmtpMailer
 from aip.platform.capabilities.errors import (
     CapabilityError,
+    MailError,
     ObjectNotFoundError,
     RenderError,
     RenderTimeoutError,
@@ -30,7 +34,9 @@ from aip.platform.capabilities.errors import (
 )
 from aip.platform.capabilities.keys import ObjectKey, tenant_key
 from aip.platform.capabilities.protocols import (
+    EmailMessage,
     IdentityProvider,
+    Mailer,
     ObjectHead,
     ObjectStore,
     Ocr,
@@ -75,12 +81,36 @@ def _gotenberg(settings: CapabilitySettings) -> PdfRenderer:
     )
 
 
+def _smtp(settings: CapabilitySettings) -> Mailer:
+    return SmtpMailer(
+        host=settings.smtp_host,
+        port=settings.smtp_port,
+        starttls=settings.smtp_starttls,
+        username=settings.smtp_username,
+        password=_secret(settings.smtp_password),
+        timeout_s=settings.smtp_timeout_s,
+    )
+
+
+def _ses(settings: CapabilitySettings) -> Mailer:
+    return SesMailer(
+        region=settings.ses_region,
+        endpoint_url=settings.ses_endpoint_url,
+        configuration_set=settings.ses_configuration_set,
+    )
+
+
 OBJECT_STORE_ADAPTERS: Mapping[str, Callable[[CapabilitySettings], ObjectStore]] = {
     "s3": _s3,
     "minio": _minio,
 }
 PDF_RENDERER_ADAPTERS: Mapping[str, Callable[[CapabilitySettings], PdfRenderer]] = {
     "gotenberg": _gotenberg,
+}
+
+MAILER_ADAPTERS: Mapping[str, Callable[[CapabilitySettings], Mailer]] = {
+    "smtp": _smtp,
+    "ses": _ses,
 }
 
 
@@ -96,6 +126,7 @@ def validate_capability_settings(settings: CapabilitySettings | None = None) -> 
     settings = settings or CapabilitySettings()
     _pick("OBJECT_STORE", settings.object_store, OBJECT_STORE_ADAPTERS)
     _pick("PDF_RENDERER", settings.pdf_renderer, PDF_RENDERER_ADAPTERS)
+    _pick("MAILER", settings.mailer, MAILER_ADAPTERS)
 
 
 def get_object_store(settings: CapabilitySettings | None = None) -> ObjectStore:
@@ -108,12 +139,21 @@ def get_pdf_renderer(settings: CapabilitySettings | None = None) -> PdfRenderer:
     return _pick("PDF_RENDERER", settings.pdf_renderer, PDF_RENDERER_ADAPTERS)(settings)
 
 
+def get_mailer(settings: CapabilitySettings | None = None) -> Mailer:
+    settings = settings or CapabilitySettings()
+    return _pick("MAILER", settings.mailer, MAILER_ADAPTERS)(settings)
+
+
 __all__ = [
+    "MAILER_ADAPTERS",
     "OBJECT_STORE_ADAPTERS",
     "PDF_RENDERER_ADAPTERS",
     "CapabilityError",
     "CapabilitySettings",
+    "EmailMessage",
     "IdentityProvider",
+    "MailError",
+    "Mailer",
     "ObjectHead",
     "ObjectKey",
     "ObjectNotFoundError",
@@ -128,6 +168,7 @@ __all__ = [
     "Sealer",
     "SecretInConfigError",
     "UnknownAdapterError",
+    "get_mailer",
     "get_object_store",
     "get_pdf_renderer",
     "parse_adapter_config",
