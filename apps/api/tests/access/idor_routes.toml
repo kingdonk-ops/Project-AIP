@@ -1,0 +1,98 @@
+# TESTING-04: every API route with a path parameter, by "METHOD /path".
+#
+# Tenant A's admin calls it with tenant B's id (seeded by the DATABASE-07 generator into `table`)
+# and must get 403 or 404, never 2xx, with B's row unchanged. A route that is not here fails the
+# build; one that cannot have a cross-tenant case says why with `skip` and a `reason`.
+#
+#   ["PATCH /api/v1/things/{thing_id}"]
+#   table = "things"
+#   body = '{"name": "iso"}'     # a valid request body, so the handler (not validation) answers
+#   query = "reason=iso"         # required query parameters
+
+["DELETE /api/v1/access/role-assignments/{assignment_id}"]
+table = "role_assignment"
+
+["DELETE /api/v1/access/roles/{role_id}"]
+table = "role"
+
+["PATCH /api/v1/access/roles/{role_id}"]
+table = "role"
+body = '{"name": "Isolation probe"}'
+
+["POST /api/v1/access/roles/{role_id}/clone"]
+table = "role"
+body = '{"code": "iso_clone", "name": "Isolation clone"}'
+
+["POST /api/v1/access/roles/{role_id}/reset"]
+table = "role"
+
+["DELETE /api/v1/me/sessions/{session_id}"]
+table = "user_session"
+
+["GET /api/v1/projects/{project_id}"]
+table = "projects"
+
+["PATCH /api/v1/projects/{project_id}"]
+table = "projects"
+body = '{"name": "Isolation probe", "syncVersion": 1}'
+
+["GET /api/v1/settings/organisations/{organisation_id}"]
+table = "organisations"
+
+["PATCH /api/v1/settings/organisations/{organisation_id}"]
+table = "organisations"
+body = '{"name": "Isolation probe", "syncVersion": 1}'
+
+["GET /api/v1/sites/{site_id}"]
+table = "sites"
+
+["PATCH /api/v1/sites/{site_id}"]
+table = "sites"
+body = '{"name": "Isolation probe"}'
+
+["DELETE /api/v1/sites/{site_id}"]
+table = "sites"
+
+["GET /api/v1/uploads/sessions/{session_id}/status"]
+table = "upload_sessions"
+
+["POST /api/v1/uploads/sessions/{session_id}/confirm"]
+table = "upload_sessions"
+
+["PUT /api/v1/settings/flags/{flag}"]
+skip = true
+reason = "The path names a release flag (code), not a row; the row is the caller's own tenant's."
+
+["GET /api/v1/admin/platform/events/{event_name}"]
+skip = true
+reason = "Global event catalogue (ADR 0029): event names are code, not tenant data."
+
+["POST /api/v1/admin/platform/events/{event_name}/versions/{version}/deprecate"]
+skip = true
+reason = "Global event catalogue (ADR 0029): operator-only, no tenant rows."
+
+["POST /api/v1/admin/platform/events/dead-letter/{event_id}/discard"]
+skip = true
+reason = "Operator dead-letter queue (ADR 0029/0030): crosses tenants by design, platform.events.manage only."
+
+["POST /api/v1/admin/platform/events/dead-letter/{event_id}/retry"]
+skip = true
+reason = "Operator dead-letter queue (ADR 0029/0030): crosses tenants by design, platform.events.manage only."
+
+["POST /api/v1/platform/tenants/{tenant_id}/entitlement-overrides"]
+skip = true
+reason = "Operator API (ADR 0029): the path names the target tenant on purpose; platform.tenants.manage only."
+
+["DELETE /api/v1/platform/tenants/{tenant_id}/entitlement-overrides/{override_id}"]
+skip = true
+reason = "Operator API (ADR 0029): the path names the target tenant on purpose; platform.tenants.manage only."
+
+["PUT /api/v1/platform/tenants/{tenant_id}/subscription"]
+skip = true
+reason = "Operator API (ADR 0029): the path names the target tenant on purpose; platform.tenants.manage only."
+
+["POST /api/v1/jobs/{job_id}/cancel"]
+table = "jobs"
+
+["POST /api/v1/jobs/{job_id}/retry"]
+table = "jobs"
