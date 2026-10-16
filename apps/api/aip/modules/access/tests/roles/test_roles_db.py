@@ -112,6 +112,7 @@ async def test_system_roles_match_the_access_matrix(client: httpx.AsyncClient) -
     assert inspector["isSystem"] is True
     assert inspector["nameTermKey"] == "access.role.inspector.name"
     assert inspector["permissions"] == [
+        "approvals.view",
         "project.view",
         "site.view",
         "uploads.create",
@@ -334,7 +335,7 @@ async def test_editing_a_system_role_customises_it_and_takes_effect(
     assert not await can(app, CAROL_ID, "project.view")
 
     (event,) = [e for e in await events(db, "access.role.changed") if e["action"] == "updated"]
-    assert event["before"] == ["project.view", "site.view", "uploads.view"]
+    assert event["before"] == ["approvals.view", "project.view", "site.view", "uploads.view"]
     assert event["after"] == ["site.view"]
 
 
@@ -389,11 +390,16 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
     response = await client.post(f"{ROLES}/{reviewer}/reset", headers=ALICE)
     assert response.status_code == 200, response.text
     assert response.json()["customisedAt"] is None
-    assert response.json()["permissions"] == ["project.view", "site.view", "uploads.view"]
+    assert response.json()["permissions"] == [
+        "approvals.view",
+        "project.view",
+        "site.view",
+        "uploads.view",
+    ]
     (event,) = [e for e in await events(db, "access.role.changed") if e["action"] == "reset"]
     assert (event["before"], event["after"]) == (
         ["site.view"],
-        ["project.view", "site.view", "uploads.view"],
+        ["approvals.view", "project.view", "site.view", "uploads.view"],
     )
 
 
@@ -429,6 +435,7 @@ async def test_custom_role_lifecycle(client: httpx.AsyncClient, db: TenantDb) ->
     assert clone.status_code == 201
     assert clone.json()["isSystem"] is False
     assert clone.json()["permissions"] == [
+        "approvals.view",
         "project.view",
         "site.view",
         "uploads.create",

@@ -1,6 +1,7 @@
 # APPROVALS-01 — Versioned workflow definitions/instances + pure state-machine evaluator
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
+<!-- hand-edited: converted to the Python backend per ADR 0001 (2026-10-16), see "Python mapping" -->
 
 | Field | Value |
 |---|---|
@@ -16,6 +17,19 @@
 2. [`docs/blueprint/modules/approvals/README.md`](../../docs/blueprint/modules/approvals/README.md)
 3. ADRs: [0002](../../docs/adr/0002-data-access-and-migrations.md) (Kysely, `db/migrations`, `withTenant`), [0004](../../docs/adr/0004-repository-layout.md) (module layout)
 4. Only for column lists: [`data-model.md`](../../docs/blueprint/modules/approvals/data-model.md) (`workflow_definitions`, `workflow_instances`, `workflow_definition_audit`)
+
+## Python mapping (ADR 0001)
+
+| Spec says | Build |
+|---|---|
+| `db/migrations/<ts>_approvals_workflows.sql`, `db/templates/` | Alembic revision `apps/api/migrations/versions/<ts>_approvals_workflows.py` rendering `tenant_table` (definitions, instances with `sync=True`) and `append_only_table` (audit, registered in `partition_settings`) |
+| `manifest.json`, `module.ts`, `tools/new-module.ts` | `apps/api/aip/modules/approvals/` from `python tools/new_module.py approvals`; `manifest.toml` |
+| Zod `WorkflowDefinitionSpec` | Pydantic models in `schemas.py`; `validate_spec()` raises `pydantic.ValidationError` with the issue at the exact `loc` |
+| `engine/evaluator.ts` | `engine/evaluator.py`: `available_transitions`, `apply_transition` (pure, imports only `schemas`) |
+| `withTenant`, Kysely | `with_tenant` connection passed in; SQLAlchemy Core `text()` |
+| `definitions.repository.ts` / `.service.ts`, `instances.service.ts` | `repository.py`, `service.py` (`DefinitionsService`), `instances.py` (`start_instance`) |
+| `evaluator.spec.ts` (fast-check), `definitions.int.spec.ts` | `tests/test_evaluator.py` (Hypothesis), `tests/test_definitions_db.py` (Testcontainers, `aip_app`) |
+| `api.ts` exports | `api.py`: `ApprovalsApi.start_instance`, `.get_active_definition`, `available_transitions` and the spec types |
 
 ## Spec
 
