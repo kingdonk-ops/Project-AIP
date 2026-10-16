@@ -10,6 +10,7 @@ import {
 } from "@aip/ui";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { JobsButton } from "../jobs/MyJobsDrawer";
 import type { Session } from "./session";
 import { t } from "./t";
 
@@ -48,6 +49,7 @@ export function Header({ session, navOpen, onToggleNav, onSignOut }: HeaderProps
       <span className="shell-header__tenant">{session.tenant.name}</span>
       <div className="shell-header__slot" data-slot="project-switcher" />
       <div className="shell-header__slot shell-header__slot--grow" data-slot="search" />
+      <JobsButton />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" aria-label={t("shell.userMenu.label")} className="shell-header__user">
