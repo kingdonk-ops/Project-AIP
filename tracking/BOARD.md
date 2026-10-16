@@ -117,7 +117,7 @@ tasks still `todo` below remain before M0 is closed.
 | [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | done | ClaudeK: PR #103; AWS readiness; SES v1 API (LocalStack community lacks sesv2) |
 | [STACK-07](tasks/STACK-07.md) | TLS to Postgres and Redis (RDS and ElastiCache ready) | stack | S | OPS-02, STACK-05 | todo | AWS readiness |
 | [OPS-13](tasks/OPS-13.md) | Scheduled job trigger: one command for Coolify cron and EventBridge Scheduler | ops | S | OPS-02 | todo | AWS readiness |
-| [OPS-16](tasks/OPS-16.md) | RDS bootstrap runbook | ops | S | DATABASE-02 | todo | AWS readiness |
+| [OPS-16](tasks/OPS-16.md) | RDS bootstrap runbook | ops | S | DATABASE-02 | in-progress | ClaudeK: branch claudeK/ops-16; AWS readiness |
 
 ### Wave 7
 
