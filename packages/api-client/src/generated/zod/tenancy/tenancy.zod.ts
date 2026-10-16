@@ -15,6 +15,107 @@ export const TenancyGetMyTenantResponse = zod.object({
 }).describe('The caller\'s tenant as other modules and the API see it.')
 
 /**
+ * @summary List Organisations
+ */
+export const organisationsListQueryTypeDefault = [];
+export const organisationsListQueryStatusDefault = [];
+
+export const OrganisationsListQueryParams = zod.object({
+  "type": zod.array(zod.enum(['owner', 'client', 'subcontractor'])).default(organisationsListQueryTypeDefault),
+  "status": zod.array(zod.enum(['active', 'inactive'])).default(organisationsListQueryStatusDefault)
+})
+
+export const OrganisationsListResponse = zod.object({
+  "items": zod.array(zod.object({
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "registrationNumber": zod.union([zod.string(),zod.null()]),
+  "status": zod.enum(['active', 'inactive']),
+  "syncVersion": zod.int(),
+  "type": zod.enum(['owner', 'client', 'subcontractor']),
+  "updatedAt": zod.iso.datetime({"offset":true})
+}))
+}).describe('Every live organisation that matches, by name (a tenant has tens, not thousands).')
+
+/**
+ * @summary Create Organisation
+ */
+export const organisationsCreateBodyNameMax = 200;
+
+export const organisationsCreateBodyRegistrationNumberOneMax = 50;
+
+
+
+export const OrganisationsCreateBody = zod.object({
+  "name": zod.string().min(1).max(organisationsCreateBodyNameMax),
+  "registrationNumber": zod.union([zod.string().min(1).max(organisationsCreateBodyRegistrationNumberOneMax),zod.null()]).optional(),
+  "type": zod.enum(['owner', 'client', 'subcontractor'])
+})
+
+export const OrganisationsCreateResponse = zod.object({
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "registrationNumber": zod.union([zod.string(),zod.null()]),
+  "status": zod.enum(['active', 'inactive']),
+  "syncVersion": zod.int(),
+  "type": zod.enum(['owner', 'client', 'subcontractor']),
+  "updatedAt": zod.iso.datetime({"offset":true})
+})
+
+/**
+ * @summary Get Organisation
+ */
+export const OrganisationsGetParams = zod.object({
+  "organisation_id": zod.uuid()
+})
+
+export const OrganisationsGetResponse = zod.object({
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "registrationNumber": zod.union([zod.string(),zod.null()]),
+  "status": zod.enum(['active', 'inactive']),
+  "syncVersion": zod.int(),
+  "type": zod.enum(['owner', 'client', 'subcontractor']),
+  "updatedAt": zod.iso.datetime({"offset":true})
+})
+
+/**
+ * @summary Update Organisation
+ */
+export const OrganisationsUpdateParams = zod.object({
+  "organisation_id": zod.uuid()
+})
+
+export const organisationsUpdateBodyNameOneMax = 200;
+
+export const organisationsUpdateBodyRegistrationNumberOneMax = 50;
+
+
+
+
+export const OrganisationsUpdateBody = zod.object({
+  "name": zod.union([zod.string().min(1).max(organisationsUpdateBodyNameOneMax),zod.null()]).optional(),
+  "registrationNumber": zod.union([zod.string().min(1).max(organisationsUpdateBodyRegistrationNumberOneMax),zod.null()]).optional(),
+  "status": zod.union([zod.enum(['active', 'inactive']),zod.null()]).optional(),
+  "syncVersion": zod.int().min(1),
+  "type": zod.union([zod.enum(['owner', 'client', 'subcontractor']),zod.null()]).optional()
+}).describe('Only the fields sent are changed; ``syncVersion`` is the version the client last read.')
+
+export const OrganisationsUpdateResponse = zod.object({
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "registrationNumber": zod.union([zod.string(),zod.null()]),
+  "status": zod.enum(['active', 'inactive']),
+  "syncVersion": zod.int(),
+  "type": zod.enum(['owner', 'client', 'subcontractor']),
+  "updatedAt": zod.iso.datetime({"offset":true})
+})
+
+/**
  * @summary Plan And Usage
  */
 export const TenancyPlanAndUsageResponse = zod.object({

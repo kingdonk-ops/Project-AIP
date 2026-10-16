@@ -25,6 +25,8 @@
                 "project.view",
                 "site.manage",
                 "site.view",
+                "tenancy.organisation.manage",
+                "tenancy.organisation.read",
                 "tenancy.plan.read",
                 "tenant.flags.manage",
                 "terms.coverage.read",
@@ -1139,6 +1141,216 @@
         "title": "ModuleInfo",
         "type": "object"
       },
+      "OrganisationCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "registrationNumber": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registrationnumber"
+          },
+          "type": {
+            "enum": [
+              "owner",
+              "client",
+              "subcontractor"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "title": "OrganisationCreate",
+        "type": "object"
+      },
+      "OrganisationErrorBody": {
+        "description": "A domain error: a stable ``code`` (``ORGANISATION_NAME_TAKEN``, ``NOT_FOUND``, ...).",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "OrganisationErrorBody",
+        "type": "object"
+      },
+      "OrganisationList": {
+        "description": "Every live organisation that matches, by name (a tenant has tens, not thousands).",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrganisationOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "OrganisationList",
+        "type": "object"
+      },
+      "OrganisationOut": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "registrationNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registrationnumber"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "type": {
+            "enum": [
+              "owner",
+              "client",
+              "subcontractor"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "registrationNumber",
+          "status",
+          "syncVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "OrganisationOut",
+        "type": "object"
+      },
+      "OrganisationUpdate": {
+        "additionalProperties": false,
+        "description": "Only the fields sent are changed; ``syncVersion`` is the version the client last read.",
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "registrationNumber": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registrationnumber"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active",
+                  "inactive"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "syncVersion": {
+            "minimum": 1.0,
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "owner",
+                  "client",
+                  "subcontractor"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          }
+        },
+        "required": [
+          "syncVersion"
+        ],
+        "title": "OrganisationUpdate",
+        "type": "object"
+      },
       "OverrideCreate": {
         "additionalProperties": false,
         "description": "A boolean for ``feature.*``; a count, or null for unlimited, for ``limit.*``.",
@@ -1879,6 +2091,8 @@
                 "project.view",
                 "site.manage",
                 "site.view",
+                "tenancy.organisation.manage",
+                "tenancy.organisation.read",
                 "tenancy.plan.read",
                 "tenant.flags.manage",
                 "terms.coverage.read",
@@ -1990,6 +2204,8 @@
                 "project.view",
                 "site.manage",
                 "site.view",
+                "tenancy.organisation.manage",
+                "tenancy.organisation.read",
                 "tenancy.plan.read",
                 "tenant.flags.manage",
                 "terms.coverage.read",
@@ -2068,6 +2284,8 @@
                     "project.view",
                     "site.manage",
                     "site.view",
+                    "tenancy.organisation.manage",
+                    "tenancy.organisation.read",
                     "tenancy.plan.read",
                     "tenant.flags.manage",
                     "terms.coverage.read",
@@ -5050,6 +5268,230 @@
         "summary": "Set Flag",
         "tags": [
           "platform"
+        ]
+      }
+    },
+    "/api/v1/settings/organisations": {
+      "get": {
+        "operationId": "organisations_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "default": [],
+              "items": {
+                "enum": [
+                  "owner",
+                  "client",
+                  "subcontractor"
+                ],
+                "type": "string"
+              },
+              "title": "Type",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": [],
+              "items": {
+                "enum": [
+                  "active",
+                  "inactive"
+                ],
+                "type": "string"
+              },
+              "title": "Status",
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "summary": "List Organisations",
+        "tags": [
+          "tenancy",
+          "organisations"
+        ]
+      },
+      "post": {
+        "operationId": "organisations_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganisationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "summary": "Create Organisation",
+        "tags": [
+          "tenancy",
+          "organisations"
+        ]
+      }
+    },
+    "/api/v1/settings/organisations/{organisation_id}": {
+      "get": {
+        "operationId": "organisations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organisation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Organisation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Organisation",
+        "tags": [
+          "tenancy",
+          "organisations"
+        ]
+      },
+      "patch": {
+        "operationId": "organisations_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organisation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Organisation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganisationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "summary": "Update Organisation",
+        "tags": [
+          "tenancy",
+          "organisations"
         ]
       }
     },

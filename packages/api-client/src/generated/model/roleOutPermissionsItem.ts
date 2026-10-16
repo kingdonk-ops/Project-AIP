@@ -22,6 +22,8 @@ export const RoleOutPermissionsItem = {
   projectview: 'project.view',
   sitemanage: 'site.manage',
   siteview: 'site.view',
+  tenancyorganisationmanage: 'tenancy.organisation.manage',
+  tenancyorganisationread: 'tenancy.organisation.read',
   tenancyplanread: 'tenancy.plan.read',
   tenantflagsmanage: 'tenant.flags.manage',
   termscoverageread: 'terms.coverage.read',
