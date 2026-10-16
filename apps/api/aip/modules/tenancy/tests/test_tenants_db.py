@@ -204,6 +204,17 @@ def test_seed_twice_keeps_two_tenants_and_three_regions(tenancy_db: FreshDb) -> 
     ]
 
 
+def test_seed_gives_each_tenant_one_owner_organisation(tenancy_db: FreshDb) -> None:
+    assert asyncio.run(seed(tenancy_db.owner_url, env="test")) == 2  # a re-run adds none
+    rows = tenancy_db.fetch(
+        "SELECT tenant_id, name, org_type, status FROM organisations ORDER BY name"
+    )
+    assert rows == [
+        (KAEFER_DEMO_ID, "Kaefer Demo", "owner", "active"),
+        (TENANT_B_ID, "Tenant B", "owner", "active"),
+    ]
+
+
 def test_login_directory_must_point_at_a_real_tenant(tenancy_db: FreshDb) -> None:
     tenancy_db.execute(
         "INSERT INTO login_directory (kind, key, tenant_id) "

@@ -13,6 +13,9 @@ ENT-01: each fixture tenant also gets a sandbox subscription (``kaefer-demo`` on
 ``tenant-b`` on ``core``), upserted the same way; a re-run restores it and bumps the entitlement
 version so caches drop the old values.
 
+TENANCY-03: each fixture tenant also gets its ``owner`` organisation, named after the tenant;
+a re-run leaves an existing live one (same name, ignoring case) as it is.
+
 The ids are the shared fixture ids (AGENTS.md, ``apps/api/tests/conftest.py``, the identity seeds).
 """
 
@@ -92,6 +95,14 @@ _UPSERT_SUBSCRIPTION = text(
     """
 )
 
+_INSERT_OWNER_ORGANISATION = text(
+    """
+    INSERT INTO organisations (id, tenant_id, name, org_type, status)
+    VALUES (:id, :tenant_id, :name, 'owner', 'active')
+    ON CONFLICT (tenant_id, lower(name)) WHERE deleted_at IS NULL DO NOTHING
+    """
+)
+
 
 class SeedRefusedError(RuntimeError):
     pass
@@ -130,6 +141,10 @@ async def seed(url: str, *, env: str | None = None) -> int:
                         "starts_on": FIXTURE_STARTS_ON,
                         "renewal_date": FIXTURE_RENEWAL_DATE,
                     },
+                )
+                await conn.execute(
+                    _INSERT_OWNER_ORGANISATION,
+                    {"id": uuid4(), "tenant_id": tenant.id, "name": tenant.name},
                 )
     finally:
         await engine.dispose()

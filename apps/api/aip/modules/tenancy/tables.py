@@ -9,6 +9,8 @@ check-schema`` compares them with the migrated database.
   ``with_tenant`` the app sees its own row only, and nothing when no tenant is set.
 - ``tenant_subscription``, ``tenant_entitlement_override``, ``tenant_usage`` (ENT-01, revision
   ``202610151500_tenancy_entitlements``): tenant template tables with FORCE RLS.
+- ``organisations`` (TENANCY-03, revision ``202610161200_tenancy_organisations``): owner,
+  client and subcontractor parties in a tenant; FORCE RLS, soft delete, ``sync_version``.
 """
 
 from datetime import datetime
@@ -122,4 +124,20 @@ tenant_usage = Table(
     Column("captured_at", _TS, nullable=False, server_default=text("now()")),
     *_standard(),
     UniqueConstraint("tenant_id", "period", name="uq_tenant_usage_tenant_id_period"),
+)
+
+
+# --- TENANCY-03: revision 202610161200_tenancy_organisations ---------------------------------
+
+organisations = Table(
+    "organisations",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("tenant_id", Uuid, nullable=False),
+    Column("name", Text, nullable=False),
+    Column("org_type", Text, nullable=False),
+    Column("registration_number", Text, nullable=True),
+    Column("status", Text, nullable=False, server_default=text("'active'")),
+    Column("sync_version", Integer, nullable=False, server_default=text("1")),
+    *_standard(),
 )

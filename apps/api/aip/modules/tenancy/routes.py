@@ -3,6 +3,8 @@
 - ``GET /api/v1/me/tenant``: the caller's own tenant, guarded by ``require_active_tenant``.
 - ``GET /api/v1/settings/plan-and-usage`` (``tenancy.plan.read``): the tenant's plan, features,
   limits and latest usage, read-only (ENT-01 step 7). Nothing here changes a plan.
+- ``/api/v1/settings/organisations`` (TENANCY-03): ``aip.modules.tenancy.organisations.routes``,
+  included here behind ``require_active_tenant``.
 
 The operator API that changes subscriptions and overrides is mounted by the ops module
 (``aip.modules.ops.platform_tenants``), which owns the ``platform.*`` permissions (ADR 0029).
@@ -18,6 +20,7 @@ from fastapi import APIRouter, Depends, Response
 from aip.modules.tenancy.dependencies import require_active_tenant
 from aip.modules.tenancy.entitlements.dependencies import get_entitlement_service
 from aip.modules.tenancy.entitlements.service import EntitlementService
+from aip.modules.tenancy.organisations.routes import router as organisations_router
 from aip.modules.tenancy.schemas import PlanAndUsage, TenantErrorResponse, TenantView
 from aip.platform.access import authenticated, requires
 from aip.platform.context import get_context
@@ -59,3 +62,6 @@ async def get_my_tenant(
 async def plan_and_usage(entitlements: Entitlements, response: Response) -> PlanAndUsage:
     response.headers["Cache-Control"] = "no-store"
     return await entitlements.plan_and_usage(get_context().tenant_id)
+
+
+router.include_router(organisations_router, dependencies=[Depends(require_active_tenant)])
