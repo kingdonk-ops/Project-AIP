@@ -3,6 +3,9 @@ import { createRoute, createRouter, lazyRouteComponent, type RouterHistory } fro
 import type { SessionPort } from "./features/shell/session";
 import { rootRoute } from "./routes/__root";
 import { appRoute } from "./routes/_app";
+import { platformDeadLetterRoute } from "./routes/_app/admin/platform/events/dead-letter";
+import { platformEventDetailRoute } from "./routes/_app/admin/platform/events/$eventName";
+import { platformEventsRoute } from "./routes/_app/admin/platform/events/index";
 import { homeRoute } from "./routes/_app/index";
 import { projectsIndexRoute } from "./routes/_app/projects/index";
 import { projectsNewRoute } from "./routes/_app/projects/new";
@@ -29,7 +32,7 @@ const devRoutes = import.meta.env.PROD
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, sessionsRoute, billingRoute]),
+  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, sessionsRoute, billingRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute]),
   ...devRoutes,
 ]);
 
