@@ -1,4 +1,4 @@
-"""STACK-06: the ``Mailer`` capability (adapter selection, SMTP against Mailpit, SES against LocalStack)."""
+"""STACK-06: the Mailer capability: adapter selection, SMTP to Mailpit, SES to LocalStack."""
 
 from __future__ import annotations
 
