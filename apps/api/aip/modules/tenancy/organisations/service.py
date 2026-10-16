@@ -34,6 +34,7 @@ from aip.platform.http import DomainError
 __all__ = ["OrganisationService"]
 
 _UNIQUE_VIOLATION: Final = "23505"
+_NAME_INDEX: Final = "uq_organisations_tenant_id_lower_name"
 NAME_TAKEN: Final = "ORGANISATION_NAME_TAKEN"
 
 
@@ -49,7 +50,11 @@ async def _unique_name() -> AsyncIterator[None]:
     try:
         yield
     except IntegrityError as exc:
-        if getattr(exc.orig, "sqlstate", None) == _UNIQUE_VIOLATION:
+        cause = getattr(exc.orig, "__cause__", None)  # the driver's own error
+        if (
+            getattr(exc.orig, "sqlstate", None) == _UNIQUE_VIOLATION
+            and getattr(cause, "constraint_name", None) == _NAME_INDEX
+        ):
             raise DomainError(409, NAME_TAKEN) from None
         raise
 

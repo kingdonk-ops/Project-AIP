@@ -634,3 +634,44 @@ async def test_default_roles_get_the_organisation_permissions(client: httpx.Asyn
     assert "tenancy.organisation.read" in manager
     assert "tenancy.organisation.manage" not in manager
     assert "tenancy.organisation.read" not in roles["inspector"]["permissions"]
+
+
+async def test_has_role_ignores_expired_deleted_and_inactive(
+    client: httpx.AsyncClient, db: TenantDb
+) -> None:
+    async def holds(user: UUID, code: str) -> bool:
+        async with with_tenant(TENANT_A_ID) as conn:
+            return await has_role(conn, user, code)
+
+    await su_assign(db, TENANT_A_ID, DAVE_ID, "supervisor")  # Dave is deactivated
+    assert not await holds(DAVE_ID, "supervisor")
+
+    await su_assign(db, TENANT_A_ID, CAROL_ID, "supervisor")
+    assert await holds(CAROL_ID, "supervisor")
+    await su_execute(
+        db,
+        "UPDATE role_assignment SET valid_from = now() - interval '2 days',"
+        f" valid_to = now() - interval '1 day' WHERE user_id = '{CAROL_ID}'",
+    )
+    assert not await holds(CAROL_ID, "supervisor")  # expired
+
+    await su_assign(db, TENANT_A_ID, CAROL_ID, "hse_officer")
+    await su_execute(
+        db, f"UPDATE role_assignment SET deleted_at = now() WHERE user_id = '{CAROL_ID}'"
+    )
+    assert not await holds(CAROL_ID, "hse_officer")  # assignment soft-deleted
+
+    await su_assign(db, TENANT_A_ID, CAROL_ID, "field_worker")
+    assert await holds(CAROL_ID, "field_worker")
+    await su_execute(
+        db,
+        "UPDATE role SET deleted_at = now()"
+        f" WHERE tenant_id = '{TENANT_A_ID}' AND code = 'field_worker'",
+    )
+    assert not await holds(CAROL_ID, "field_worker")  # role soft-deleted
+
+
+async def test_the_auditor_reads_organisations(client: httpx.AsyncClient) -> None:
+    roles = {r["code"]: r for r in (await client.get(ROLES, headers=ALICE)).json()["items"]}
+    assert "tenancy.organisation.read" in roles["auditor"]["permissions"]
+    assert "tenancy.organisation.manage" not in roles["auditor"]["permissions"]

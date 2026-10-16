@@ -253,12 +253,14 @@ async def has_role(
     conn: AsyncConnection, user_id: UUID, role_code: str, project_id: UUID | None = None
 ) -> bool:
     """Whether the user actively holds role ``role_code`` at tenant scope, or (with
-    ``project_id``) on that project. Team and asset-subtree scopes never count here."""
+    ``project_id``) on that project. Team and asset-subtree scopes never count here. Matches only
+    the connection's tenant, also on a connection that bypasses RLS."""
     row = await conn.execute(
         text(
             "SELECT EXISTS (SELECT 1 FROM role_assignment ra"
             " JOIN role r ON r.id = ra.role_id AND r.deleted_at IS NULL"
             " WHERE ra.user_id = :user AND r.code = :code AND"
+            " ra.tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid AND"
             " (ra.scope_type = 'tenant' OR"
             "  (ra.scope_type = 'project' AND ra.project_id = CAST(:project AS uuid))) AND"
             f" {ACTIVE_ASSIGNMENT})"

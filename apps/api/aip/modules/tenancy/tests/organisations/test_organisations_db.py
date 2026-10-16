@@ -146,3 +146,30 @@ async def test_the_table_forces_rls_and_aip_app_cannot_delete(db: TenantDb) -> N
         db, "SELECT has_table_privilege('aip_app', 'organisations', 'DELETE')"
     )
     assert can_delete is False
+
+
+async def test_renaming_onto_a_taken_name_is_409(client: httpx.AsyncClient) -> None:
+    assert (await create(client, ALICE)).status_code == 201
+    other = (await create(client, ALICE, name="BHP")).json()
+    patch = {"syncVersion": 1, "name": "RIO TINTO"}
+    response = await client.patch(f"{ORGS}/{other['id']}", json=patch, headers=ALICE)
+    assert (response.status_code, response.json()) == (409, {"code": "ORGANISATION_NAME_TAKEN"})
+
+
+async def test_a_patch_cannot_set_protected_fields(client: httpx.AsyncClient) -> None:
+    org_id = (await create(client, ALICE)).json()["id"]
+    for field, value in (
+        ("tenantId", str(UUID(int=1))),
+        ("id", str(UUID(int=2))),
+        ("deletedAt", "2026-01-01T00:00:00Z"),
+    ):
+        patch = {"syncVersion": 1, field: value}
+        response = await client.patch(f"{ORGS}/{org_id}", json=patch, headers=ALICE)
+        assert response.status_code == 422, field
+
+
+async def test_an_unknown_id_is_404(client: httpx.AsyncClient) -> None:
+    missing = str(UUID(int=7))
+    assert (await client.get(f"{ORGS}/{missing}", headers=ALICE)).status_code == 404
+    patch = {"syncVersion": 1, "name": "Ghost"}
+    assert (await client.patch(f"{ORGS}/{missing}", json=patch, headers=ALICE)).status_code == 404
