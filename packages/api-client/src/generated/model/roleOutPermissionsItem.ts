@@ -10,6 +10,8 @@ export const RoleOutPermissionsItem = {
   accessrole_assignmentmanage: 'access.role_assignment.manage',
   accessrole_assignmentread: 'access.role_assignment.read',
   accessteammanage: 'access.team.manage',
+  approvalsdesign: 'approvals.design',
+  approvalsview: 'approvals.view',
   auditactivityview: 'audit.activity.view',
   auditlogread: 'audit.log.read',
   identityusermanage: 'identity.user.manage',
