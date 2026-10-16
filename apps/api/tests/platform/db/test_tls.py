@@ -23,7 +23,9 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
+from psycopg.conninfo import conninfo_to_dict
 from sqlalchemy import text
+from tests.fixtures.postgres import _docker_reachable  # pyright: ignore[reportPrivateUsage]
 
 from aip.modules.ops.health import ReadinessChecker
 from aip.platform.db.engine import EngineSettings, create_app_engine
@@ -31,7 +33,6 @@ from aip.platform.db.errors import DatabaseConfigError
 from aip.platform.db.migrator.cli import main as aip_db
 from aip.platform.db.tls import RDS_CA_BUNDLE, DbTls, check_transport_security, redis_tls_kwargs
 from aip.platform.jobs.app import jobs_conninfo
-from tests.fixtures.postgres import _docker_reachable  # pyright: ignore[reportPrivateUsage]
 
 PROD = {"AIP_ENV": "production"}
 
@@ -66,25 +67,32 @@ def test_dev_runs_in_plain_text_but_an_unknown_mode_fails_everywhere() -> None:
         check_transport_security({"AIP_ENV": "development", "DB_SSLMODE": "prefer"})
 
 
+def test_verify_full_defaults_to_the_rds_bundle() -> None:
+    assert DbTls.from_env({"DB_SSLMODE": "verify-full"}).root_cert == RDS_CA_BUNDLE
+    assert DbTls.from_env({"DB_SSLMODE": "verify-full", "DB_SSLROOTCERT": "/x.pem"}).root_cert == (
+        "/x.pem"
+    )
+
+
 def test_asyncpg_and_psycopg_get_the_same_verify_full_settings(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
+    ca = _pki(tmp_path).ca
     monkeypatch.setenv("DB_SSLMODE", "verify-full")
-    monkeypatch.delenv("DB_SSLROOTCERT", raising=False)
+    monkeypatch.setenv("DB_SSLROOTCERT", str(ca))
     monkeypatch.setenv("DATABASE_JOBS_URL", "postgresql://aip_jobs:pw@db:5432/aip")
     tls = DbTls.from_env()
-    assert tls.root_cert == RDS_CA_BUNDLE
     context = tls.asyncpg_ssl()
     assert isinstance(context, ssl.SSLContext)
     assert context.check_hostname and context.verify_mode == ssl.CERT_REQUIRED
-    conninfo = psycopg.conninfo.conninfo_to_dict(jobs_conninfo())
-    assert (conninfo["sslmode"], conninfo["sslrootcert"]) == ("verify-full", RDS_CA_BUNDLE)
+    conninfo = conninfo_to_dict(jobs_conninfo())
+    assert (conninfo["sslmode"], conninfo["sslrootcert"]) == ("verify-full", str(ca))
 
 
 def test_require_encrypts_without_verifying_and_disable_adds_nothing() -> None:
     context = DbTls("require").asyncpg_ssl()
     assert isinstance(context, ssl.SSLContext) and context.verify_mode == ssl.CERT_NONE
-    assert DbTls("disable").asyncpg_connect_args() == {}
+    assert DbTls("disable").asyncpg_connect_args() == {"ssl": False}  # not asyncpg's "prefer"
     assert DbTls("disable").libpq_params() == {"sslmode": "disable"}
 
 
@@ -158,6 +166,7 @@ def _pki(directory: Path) -> Pki:
     )
     for path in (pki.ca, pki.cert, pki.key):
         path.chmod(0o644)
+    directory.chmod(0o755)  # the containers' service users must be able to enter it
     return pki
 
 
@@ -241,7 +250,7 @@ async def test_the_engine_connects_with_verify_full_and_plain_text_is_refused(
     monkeypatch.setenv("DB_SSLMODE", "disable")
     plain = create_app_engine(EngineSettings(url=url, pool_size=1, max_overflow=0))
     try:
-        with pytest.raises(Exception, match="no pg_hba.conf entry|SSL off|rejected"):
+        with pytest.raises(Exception, match=r"no pg_hba.conf entry|SSL off|rejected"):
             async with plain.connect() as conn:
                 await conn.execute(text("SELECT 1"))
     finally:

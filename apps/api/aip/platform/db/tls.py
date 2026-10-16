@@ -74,8 +74,12 @@ class DbTls:
         return ssl.create_default_context(cafile=self.root_cert)
 
     def asyncpg_connect_args(self) -> dict[str, Any]:
-        """Extra ``connect_args`` for SQLAlchemy's asyncpg dialect (empty when TLS is off)."""
-        return {} if self.mode == "disable" else {"ssl": self.asyncpg_ssl()}
+        """``connect_args`` for SQLAlchemy's asyncpg dialect.
+
+        Always explicit: asyncpg's own default is ``prefer``, which would use TLS whenever the
+        server offers it, so ``disable`` passes ``ssl=False``.
+        """
+        return {"ssl": self.asyncpg_ssl()}
 
     def libpq_params(self) -> dict[str, str]:
         """``sslmode`` and ``sslrootcert`` for a libpq/psycopg conninfo."""
