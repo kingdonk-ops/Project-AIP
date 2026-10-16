@@ -425,8 +425,9 @@ def test_mock_idp_users_cannot_edit_their_profile(keycloak: Keycloak) -> None:
         user_realm_name="master",
     )
     actions = {a["alias"]: a for a in admin.get_required_actions()}  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
-    for alias in ("UPDATE_PROFILE", "UPDATE_EMAIL"):
+    for alias in ("UPDATE_PROFILE", "UPDATE_EMAIL", "VERIFY_PROFILE", "UPDATE_PASSWORD", "CONFIGURE_TOTP"):
         assert alias not in actions or actions[alias]["enabled"] is False, alias
+    assert actions["UPDATE_PROFILE"]["enabled"] is False  # listed in the realm, so imported
     profile = admin.connection.raw_get("admin/realms/mock-idp/users/profile").json()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
     edit = {a["name"]: a["permissions"]["edit"] for a in profile["attributes"]}  # pyright: ignore[reportUnknownVariableType]
     for name in ("email", "firstName", "lastName", "username"):
@@ -461,7 +462,7 @@ def _mock_idp_pages_with_kc_action(keycloak_url: str, action: str) -> list[Page]
     return browser.pages
 
 
-@pytest.mark.parametrize("action", ["UPDATE_PROFILE", "UPDATE_EMAIL"])
+@pytest.mark.parametrize("action", ["UPDATE_PROFILE", "UPDATE_EMAIL", "VERIFY_PROFILE"])
 def test_mock_idp_refuses_an_application_initiated_profile_update(
     keycloak: Keycloak, action: str
 ) -> None:
