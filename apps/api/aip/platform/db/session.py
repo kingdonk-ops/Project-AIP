@@ -45,6 +45,7 @@ from aip.platform.db.engine import (
     get_engine,
 )
 from aip.platform.db.errors import InvalidTenantError
+from aip.platform.db.tls import DbTls
 
 __all__ = [
     "PLATFORM_TENANT_ID",
@@ -242,7 +243,12 @@ async def cross_tenant_readonly(url: str) -> AsyncGenerator[AsyncConnection]:
     so nothing configures it by default. The transaction is read-only and always rolled back; the
     caller may return only aggregates (tenant id and byte counts), never rows.
     """
-    engine = create_async_engine(_async_url(url), pool_size=1, max_overflow=0)
+    engine = create_async_engine(
+        _async_url(url),
+        pool_size=1,
+        max_overflow=0,
+        connect_args=DbTls.from_env().asyncpg_connect_args(),
+    )
     try:
         async with engine.connect() as conn:
             await conn.execute(text("SET TRANSACTION READ ONLY"))
