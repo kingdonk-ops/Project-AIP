@@ -58,7 +58,14 @@ jobs:
       - name: Pyright
         run: uv run pyright
       - name: Pytest
-        run: uv run pytest -q
+        run: uv run pytest -q --junitxml=pytest-${{ matrix.python }}.xml
+      - name: Upload the permission-matrix and IDOR results as JUnit XML (TESTING-04)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-junit-${{ matrix.python }}
+          path: pytest-${{ matrix.python }}.xml
+          if-no-files-found: error
       - name: Upload the per-table isolation results (DATABASE-07)
         if: always()
         uses: actions/upload-artifact@v4
