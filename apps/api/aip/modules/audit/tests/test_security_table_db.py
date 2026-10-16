@@ -63,3 +63,11 @@ async def test_even_the_owner_cannot_update_or_delete(migrated_db: FreshDb) -> N
         ):
             with pytest.raises(asyncpg.PostgresError, match="is append-only"):
                 await conn.execute(sql)
+
+
+async def test_audit_log_takes_only_the_audit_stream(migrated_db: FreshDb) -> None:
+    check = await _one(
+        migrated_db.superuser_url,
+        "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conname = 'ck_audit_log_stream'",
+    )
+    assert check == "CHECK ((stream = 'audit'::text))"

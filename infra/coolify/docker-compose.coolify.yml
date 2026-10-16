@@ -41,7 +41,6 @@ x-app-env: &app-env
   AIP_ENV: demo
   DATABASE_URL: postgresql://aip_app:${AIP_APP_PASSWORD:?}@postgres:5432/aip
   DATABASE_JOBS_URL: postgresql://aip_jobs:${AIP_JOBS_PASSWORD:?}@postgres:5432/aip
-  DATABASE_AUDIT_WRITER_URL: postgresql://aip_audit_writer:${AIP_AUDIT_WRITER_PASSWORD:?}@postgres:5432/aip
   REDIS_URL: redis://valkey:6379/0
   OBJECT_STORE: minio
   OBJECT_STORE_BUCKET: aip
@@ -408,6 +407,8 @@ services:
     stop_grace_period: 70s
     environment:
       <<: *app-env
+      # Only the worker writes the audit chains (AUDIT-02).
+      DATABASE_AUDIT_WRITER_URL: postgresql://aip_audit_writer:${AIP_AUDIT_WRITER_PASSWORD:?}@postgres:5432/aip
       WORKER_MEMORY_LIMIT_MB: "1024"
     depends_on:
       migrator:

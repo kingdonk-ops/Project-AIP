@@ -33,7 +33,9 @@ from aip.modules.audit.tables import (
 )
 from aip.platform.context import new_request_id
 
-__all__ = ["append_audit_entries", "append_security_events"]
+__all__ = ["AUDIT_STREAM", "append_audit_entries", "append_security_events"]
+
+AUDIT_STREAM = "audit"
 
 
 def _uuid7() -> UUID:
@@ -41,9 +43,23 @@ def _uuid7() -> UUID:
     return UUID(new_request_id())
 
 
-def _segment(entry: AuditEntryIn | SecurityEventIn) -> str:
-    """The monthly segment label (UTC ``YYYY-MM``) an entry belongs to (ADR 0021)."""
-    return entry.occurred_at.astimezone(UTC).strftime("%Y-%m")
+async def _latest_segment(conn: AsyncConnection, tenant_id: UUID, stream: str) -> str:
+    """The newest checkpointed segment of the chain (``""`` when there is none yet)."""
+    stmt = select(func.max(audit_chain_checkpoints.c.segment)).where(
+        audit_chain_checkpoints.c.tenant_id == tenant_id,
+        audit_chain_checkpoints.c.stream == stream,
+    )
+    return (await conn.execute(stmt)).scalar_one() or ""
+
+
+def _segment(entry: AuditEntryIn | SecurityEventIn, floor: str = "") -> str:
+    """The monthly segment (UTC ``YYYY-MM``) an entry closes (ADR 0021).
+
+    Normally the month of ``occurred_at``. A late write (an outbox retry of an older event) never
+    reopens an earlier segment: it joins the chain's newest one (``floor``), so each segment's
+    checkpoint covers one contiguous run of ``seq`` and an old segment can still be removed.
+    """
+    return max(entry.occurred_at.astimezone(UTC).strftime("%Y-%m"), floor)
 
 
 async def _lock_head(conn: AsyncConnection, tenant_id: UUID, stream: str) -> tuple[int, bytes]:
@@ -180,10 +196,15 @@ async def append_audit_entries(
     ``source_event_id`` already exists is skipped and reports the stored ``seq`` (idempotent
     redelivery). The returned list is aligned with ``entries``.
     """
+    if stream != AUDIT_STREAM:
+        # The security stream lives in security_audit_events (AUDIT-02); appending it here would
+        # share the (tenant, 'security') head with that table and break both chains.
+        raise ValueError(f"audit_log takes only the {AUDIT_STREAM!r} stream, not {stream!r}")
     if not entries:
         return []
 
     last_seq, last_hash = await _lock_head(conn, tenant_id, stream)
+    floor = await _latest_segment(conn, tenant_id, stream)
     existing = await _existing_seqs(
         conn, tenant_id, {e.source_event_id for e in entries if e.source_event_id is not None}
     )
@@ -200,7 +221,9 @@ async def append_audit_entries(
         running_seq += 1
         row_hash = compute_hash(running_hash, _chain_entry(tenant_id, stream, running_seq, entry))
         rows.append(_row(tenant_id, stream, running_seq, entry, running_hash, row_hash))
-        segments[_segment(entry)] = (running_seq, row_hash)
+        segment = _segment(entry, floor)
+        floor = segment
+        segments[segment] = (running_seq, row_hash)
         if sid is not None:
             existing[sid] = running_seq  # dedupe a repeat within this same batch
         running_hash = row_hash
@@ -234,6 +257,7 @@ async def append_security_events(
     if not entries:
         return []
     last_seq, last_hash = await _lock_head(conn, tenant_id, SECURITY_STREAM)
+    floor = await _latest_segment(conn, tenant_id, SECURITY_STREAM)
     ids = {e.source_event_id for e in entries if e.source_event_id is not None}
     existing: dict[UUID, int] = {}
     if ids:
@@ -262,7 +286,9 @@ async def append_security_events(
         }
         row["hash"] = compute_hash(running_hash, security_chain_entry(row))
         rows.append(row)
-        segments[_segment(entry)] = (running_seq, row["hash"])
+        segment = _segment(entry, floor)
+        floor = segment
+        segments[segment] = (running_seq, row["hash"])
         if sid is not None:
             existing[sid] = running_seq
         running_hash = row["hash"]

@@ -19,8 +19,9 @@ returns only the subscribers of modules that are actually loaded, so a disabled 
 never run.
 
 A **catch-all** subscription (``@subscriber(ANY_EVENT, 1)``, listed in the manifest as
-``[[subscribes]] name = "*"``, AUDIT-02) receives every event, of any name and version, after
-the event's own subscribers and in the same transaction. The audit writer is the only one.
+``[[subscribes]] name = "*"``, AUDIT-02) receives every event, of any name and version, before
+the event's own subscribers and in the same transaction, so an event is audited even when one
+of its own subscribers keeps failing. The audit writer is the only one.
 """
 
 from __future__ import annotations
@@ -131,9 +132,9 @@ class SubscriberRegistry:
         return list(self._subs)
 
     def for_event(self, event_name: str, version: int) -> list[Subscriber]:
-        """The event's own subscribers, then the catch-all ones."""
+        """The catch-all subscribers, then the event's own."""
         own = [s for s in self._subs if s.event_name == event_name and s.version == version]
-        return own + [s for s in self._subs if s.event_name == ANY_EVENT]
+        return [s for s in self._subs if s.event_name == ANY_EVENT] + own
 
     def for_modules(self, module_ids: Iterable[str]) -> SubscriberRegistry:
         """A registry holding only the subscribers owned by ``module_ids`` (the loaded modules)."""

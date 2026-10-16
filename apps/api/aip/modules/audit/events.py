@@ -4,7 +4,7 @@
   (for example a sensitive read), published by ``AuditApi.record_security_event`` so it gets the
   outbox's ordering and idempotency. The writer routes it to ``security_audit_events``.
 - The catch-all subscriber ``write_audit_entries`` (``"*"``, AUDIT-02 step 2): every event of every
-  loaded module goes into the audit chains (``writer.write_event``), after the event's own
+  loaded module goes into the audit chains (``writer.write_event``), before the event's own
   subscribers. Modules only emit; they never write audit rows themselves.
 """
 

@@ -11,8 +11,9 @@ checkpoints are the ``stream = 'security'`` rows of ``audit_chain_heads`` and
 raises for every role including the owner; UPDATE, DELETE and TRUNCATE are revoked from PUBLIC and
 every runtime role; only ``aip_audit_writer`` inserts; FORCE RLS on ``tenant_id``. There is no
 mutable column (SIEM forwarding is out of scope). ``source_ip`` and ``device`` are stored for
-querying but, as in ``audit_log``, are not part of the hashed contract
-(``aip.modules.audit.security_chain``).
+querying and, unlike in ``audit_log``, are hashed: they are this stream's main forensic fields
+(``aip.modules.audit.security_chain``). ``audit_log`` is narrowed to ``stream = 'audit'``, so the
+``(tenant, 'security')`` chain head belongs to this table alone.
 
 Revision ID: 202610161300
 Revises: 202610161200
@@ -83,6 +84,12 @@ def upgrade() -> None:
     CREATE TRIGGER security_audit_events_append_only
       BEFORE UPDATE OR DELETE ON security_audit_events
       FOR EACH ROW EXECUTE FUNCTION security_audit_events_forbid_mutation();
+    """)
+
+    # No audit_log row has stream 'security' (nothing wrote it before this revision).
+    op.execute("""
+    ALTER TABLE audit_log DROP CONSTRAINT ck_audit_log_stream;
+    ALTER TABLE audit_log ADD CONSTRAINT ck_audit_log_stream CHECK (stream = 'audit');
     """)
 
     op.execute("""

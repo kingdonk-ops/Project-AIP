@@ -37,11 +37,9 @@ x-api-build: &api-build
 x-app-env: &app-env
   AIP_ENV: ${AIP_ENV:-development}
   # The request path connects as aip_app (DATABASE-02: the engine refuses owner logins); the
-  # worker connects as aip_jobs (OPS-02, ADR 0003) and writes the audit chains as aip_audit_writer
-  # (AUDIT-02).
+  # worker connects as aip_jobs (OPS-02, ADR 0003).
   DATABASE_URL: ${DATABASE_URL:-postgresql://aip_app:aip_app_dev_only@postgres:5432/aip}
   DATABASE_JOBS_URL: ${DATABASE_JOBS_URL:-postgresql://aip_jobs:aip_jobs_dev_only@postgres:5432/aip}
-  DATABASE_AUDIT_WRITER_URL: ${DATABASE_AUDIT_WRITER_URL:-postgresql://aip_audit_writer:aip_audit_writer_dev_only@postgres:5432/aip}
   REDIS_URL: ${REDIS_URL:-redis://valkey:6379/0}
   OBJECT_STORE: ${OBJECT_STORE:-minio}
   OBJECT_STORE_BUCKET: ${OBJECT_STORE_BUCKET:-aip}
@@ -390,6 +388,8 @@ services:
     stop_grace_period: 70s
     environment:
       <<: *app-env
+      # Only the worker writes the audit chains (AUDIT-02): the other services get no writer login.
+      DATABASE_AUDIT_WRITER_URL: ${DATABASE_AUDIT_WRITER_URL:-postgresql://aip_audit_writer:aip_audit_writer_dev_only@postgres:5432/aip}
       WORKER_MEMORY_LIMIT_MB: ${WORKER_MEMORY_LIMIT_MB:-1024}
     depends_on:
       migrator:

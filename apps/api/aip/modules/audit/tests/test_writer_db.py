@@ -267,3 +267,42 @@ async def test_expect_audited_finds_the_entry_and_explains_a_miss(outbox: Outbox
         await expect_audited(conn, "project.updated", record_id=record)
         with pytest.raises(AssertionError, match=r"project\.created"):
             await expect_audited(conn, "project.created", record_id=record)
+
+
+async def test_append_refuses_the_security_stream() -> None:
+    with pytest.raises(ValueError, match="record_security_event"):
+        await AuditApi().append(TENANT_A_ID, [], stream="security")
+
+
+def test_record_security_event_refuses_identity_types_and_bad_ips() -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        SecurityEventInput(event_type="auth.login.succeeded")
+    with pytest.raises(ValidationError):
+        SecurityEventInput(event_type="access.sensitive_read", source_ip="nope")
+
+
+async def test_a_late_retry_never_reopens_an_earlier_segment(outbox: Outbox) -> None:
+    from datetime import UTC, datetime
+
+    from aip.modules.audit.repository import append_audit_entries
+    from aip.modules.audit.schemas import AuditEntryIn
+    from aip.platform.db.session import audit_writer_tenant
+
+    def entry(month: int) -> AuditEntryIn:
+        return AuditEntryIn(
+            event_type="widget.created", occurred_at=datetime(2026, month, 15, tzinfo=UTC)
+        )
+
+    async with audit_writer_tenant(TENANT_A_ID) as conn:
+        await append_audit_entries(conn, TENANT_A_ID, "audit", [entry(10)])
+    async with audit_writer_tenant(TENANT_A_ID) as conn:  # an outbox retry of a September event
+        await append_audit_entries(conn, TENANT_A_ID, "audit", [entry(9)])
+    rows = await su(
+        outbox,
+        "SELECT segment, last_seq FROM audit_chain_checkpoints"
+        " WHERE tenant_id = $1 ORDER BY segment",
+        TENANT_A_ID,
+    )
+    assert rows == [("2026-10", 2)]

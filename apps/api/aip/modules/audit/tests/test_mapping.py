@@ -152,5 +152,15 @@ def test_redact_replaces_secret_keys_at_any_depth() -> None:
 
 def test_redact_matches_every_listed_key_ignoring_case() -> None:
     keys = ["Password", "client_SECRET", "refreshToken", "otp", "recovery_codes", "PRIVATE_KEY"]
+    keys += ["apiKey", "x_api_key", "Authorization", "credentials", "sessionCookie"]
     assert redact({k: "v" for k in keys}) == {k: REDACTED for k in keys}
+    kept = {"footprint": 1, "hotpath": 2, "keyring": 3, "tokenizer_version": 4}
+    assert redact(kept) == {**kept, "tokenizer_version": 4}
     assert redact({"note": "my password is x"}) == {"note": "my password is x"}  # keys, not values
+
+
+def test_redact_covers_name_value_pairs() -> None:
+    pairs = [{"name": "password", "value": "x"}, {"key": "colour", "value": "red"}]
+    assert redact({"fields": pairs}) == {
+        "fields": [{"name": "password", "value": REDACTED}, {"key": "colour", "value": "red"}]
+    }

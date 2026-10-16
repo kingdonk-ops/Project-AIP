@@ -40,6 +40,8 @@ async def expect_audited(
     count: int = 1,
 ) -> None:
     """Fail unless ``stream`` holds exactly ``count`` ``event_name`` entries (for ``record_id``)."""
+    if stream == "security" and record_id is not None:
+        raise TypeError("security entries have a target_ref, not a record_id")
     if stream == "audit":
         params = {"name": event_name, "record": str(record_id) if record_id else None}
         found = (await conn.execute(_AUDIT, params)).scalar_one()

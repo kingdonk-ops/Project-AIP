@@ -13,11 +13,12 @@ on the caller's ``with_tenant`` connection, so it commits with the caller's work
 
 from __future__ import annotations
 
+import ipaddress
 from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.audit.repository import append_audit_entries
@@ -43,6 +44,18 @@ class SecurityEventInput(BaseModel):
     device: str | None = Field(default=None, max_length=500)
     detail: dict[str, Any] | None = None
 
+    @field_validator("event_type")
+    @classmethod
+    def _not_identity_owned(cls, value: str) -> str:
+        if value.startswith(("auth.", "session.")):
+            raise ValueError("auth.* and session.* events come only from identity (AUDIT-06)")
+        return value
+
+    @field_validator("source_ip")
+    @classmethod
+    def _an_ip_address(cls, value: str | None) -> str | None:
+        return None if value is None else str(ipaddress.ip_address(value))
+
 
 class AuditApi:
     """The operations the audit module offers to other modules."""
@@ -59,6 +72,8 @@ class AuditApi:
         Opens a dedicated ``aip_audit_writer`` transaction bound to ``tenant_id``; redelivery of an
         entry with an already-seen ``source_event_id`` is a no-op that returns the stored ``seq``.
         """
+        if stream != DEFAULT_STREAM:
+            raise ValueError("security events go through record_security_event, not append")
         async with audit_writer_tenant(tenant_id) as conn:
             return await append_audit_entries(conn, tenant_id, stream, entries)
 

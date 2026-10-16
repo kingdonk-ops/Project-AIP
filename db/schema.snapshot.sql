@@ -318,6 +318,11 @@ GRANT SELECT ON TABLE public.role_assignment TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.role_permission TO aip_app;
 GRANT SELECT ON TABLE public.role_permission TO aip_readonly;
 
+-- Name: TABLE security_audit_events; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.security_audit_events TO aip_audit_writer;
+GRANT SELECT ON TABLE public.security_audit_events TO aip_app;
+GRANT SELECT ON TABLE public.security_audit_events TO aip_readonly;
+
 -- Name: TABLE sites; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.sites TO aip_app;
 GRANT SELECT ON TABLE public.sites TO aip_readonly;
@@ -561,6 +566,14 @@ ALTER TABLE ONLY public.role_assignment
 -- Name: role_permission pk_role_permission; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.role_permission
     ADD CONSTRAINT pk_role_permission PRIMARY KEY (id);
+
+-- Name: security_audit_events pk_security_audit_events; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.security_audit_events
+    ADD CONSTRAINT pk_security_audit_events PRIMARY KEY (id);
+
+-- Name: security_audit_events uq_security_audit_events_tenant_id_seq; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.security_audit_events
+    ADD CONSTRAINT uq_security_audit_events_tenant_id_seq UNIQUE (tenant_id, seq);
 
 -- Name: sites pk_sites; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.sites
@@ -1632,6 +1645,18 @@ $$;
 
 ALTER FUNCTION public.procrastinate_update_heartbeat_v1(worker_id bigint) OWNER TO aip_owner;
 
+-- Name: security_audit_events_forbid_mutation(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.security_audit_events_forbid_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'pg_catalog'
+    AS $$
+    BEGIN
+      RAISE EXCEPTION 'security_audit_events is append-only' USING ERRCODE = 'restrict_violation';
+    END
+    $$;
+
+ALTER FUNCTION public.security_audit_events_forbid_mutation() OWNER TO aip_owner;
+
 -- Name: tenancy_has_real_customer(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.tenancy_has_real_customer() RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
@@ -1816,6 +1841,12 @@ CREATE INDEX ix_role_permission_tenant_id ON public.role_permission USING btree 
 -- Name: ix_role_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_role_tenant_id ON public.role USING btree (tenant_id);
 
+-- Name: ix_security_audit_events_tenant_id_actor_id_occurred_at; Type: INDEX; Schema: public
+CREATE INDEX ix_security_audit_events_tenant_id_actor_id_occurred_at ON public.security_audit_events USING btree (tenant_id, actor_id, occurred_at);
+
+-- Name: ix_security_audit_events_tenant_id_event_type_occurred_at; Type: INDEX; Schema: public
+CREATE INDEX ix_security_audit_events_tenant_id_event_type_occurred_at ON public.security_audit_events USING btree (tenant_id, event_type, occurred_at);
+
 -- Name: ix_sites_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_sites_tenant_id ON public.sites USING btree (tenant_id);
 
@@ -1959,6 +1990,9 @@ CREATE UNIQUE INDEX uq_role_permission_role_id_permission_code ON public.role_pe
 
 -- Name: uq_role_tenant_id_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_role_tenant_id_code ON public.role USING btree (tenant_id, code) WHERE (deleted_at IS NULL);
+
+-- Name: uq_security_audit_events_tenant_id_source_event_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_security_audit_events_tenant_id_source_event_id ON public.security_audit_events USING btree (tenant_id, source_event_id) WHERE (source_event_id IS NOT NULL);
 
 -- Name: uq_sites_tenant_id_upper_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_sites_tenant_id_upper_code ON public.sites USING btree (tenant_id, upper(code)) WHERE (deleted_at IS NULL);
@@ -2107,6 +2141,9 @@ CREATE POLICY tenant_isolation ON public.role_assignment USING ((tenant_id = (NU
 -- Name: role_permission tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.role_permission USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: security_audit_events tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.security_audit_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: sites tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.sites USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -2244,6 +2281,9 @@ ALTER TABLE public.role_assignment ENABLE ROW LEVEL SECURITY;
 
 -- Name: role_permission; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.role_permission ENABLE ROW LEVEL SECURITY;
+
+-- Name: security_audit_events; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.security_audit_events ENABLE ROW LEVEL SECURITY;
 
 -- Name: sites; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.sites ENABLE ROW LEVEL SECURITY;
@@ -3084,6 +3124,33 @@ ALTER TABLE ONLY public.role_permission FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.role_permission OWNER TO aip_owner;
 
+-- Name: security_audit_events; Type: TABLE; Schema: public
+CREATE TABLE public.security_audit_events (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    seq bigint NOT NULL,
+    actor_id uuid,
+    event_type text NOT NULL,
+    target_ref text,
+    auth_strength text,
+    source_ip inet,
+    device text,
+    detail jsonb,
+    source_event_id uuid,
+    prev_hash bytea NOT NULL,
+    hash bytea NOT NULL,
+    occurred_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_security_audit_events_event_type CHECK ((event_type <> ''::text)),
+    CONSTRAINT ck_security_audit_events_hash CHECK ((octet_length(hash) = 32)),
+    CONSTRAINT ck_security_audit_events_prev_hash CHECK ((octet_length(prev_hash) = 32)),
+    CONSTRAINT ck_security_audit_events_seq CHECK ((seq > 0))
+);
+
+ALTER TABLE ONLY public.security_audit_events FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.security_audit_events OWNER TO aip_owner;
+
 -- Name: sites; Type: TABLE; Schema: public
 CREATE TABLE public.sites (
     id uuid NOT NULL,
@@ -3482,6 +3549,9 @@ CREATE TRIGGER procrastinate_trigger_status_events_insert_v1 AFTER INSERT ON pub
 
 -- Name: procrastinate_jobs procrastinate_trigger_status_events_update_v1; Type: TRIGGER; Schema: public
 CREATE TRIGGER procrastinate_trigger_status_events_update_v1 AFTER UPDATE OF status ON public.procrastinate_jobs FOR EACH ROW EXECUTE FUNCTION public.procrastinate_trigger_function_status_events_update_v1();
+
+-- Name: security_audit_events security_audit_events_append_only; Type: TRIGGER; Schema: public
+CREATE TRIGGER security_audit_events_append_only BEFORE DELETE OR UPDATE ON public.security_audit_events FOR EACH ROW EXECUTE FUNCTION public.security_audit_events_forbid_mutation();
 
 -- Name: procrastinate_job_event_type; Type: TYPE; Schema: public
 CREATE TYPE public.procrastinate_job_event_type AS ENUM (
