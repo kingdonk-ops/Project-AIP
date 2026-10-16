@@ -2518,7 +2518,7 @@ CREATE TABLE public.audit_log (
     CONSTRAINT ck_audit_log_hash CHECK ((octet_length(hash) = 32)),
     CONSTRAINT ck_audit_log_prev_hash CHECK ((octet_length(prev_hash) = 32)),
     CONSTRAINT ck_audit_log_seq CHECK ((seq > 0)),
-    CONSTRAINT ck_audit_log_stream CHECK ((stream = ANY (ARRAY['audit'::text, 'security'::text])))
+    CONSTRAINT ck_audit_log_stream CHECK ((stream = 'audit'::text))
 );
 
 ALTER TABLE ONLY public.audit_log FORCE ROW LEVEL SECURITY;
