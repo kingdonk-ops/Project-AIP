@@ -15,6 +15,8 @@ login directory and real OIDC client, so the code exchange and ID-token checks a
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import os
 import re
 import secrets
@@ -431,13 +433,15 @@ def test_mock_idp_users_cannot_edit_their_profile(keycloak: Keycloak) -> None:
         assert edit[name] == ["admin"], name
 
 
-def test_mock_idp_refuses_an_application_initiated_profile_update(keycloak: Keycloak) -> None:
-    # The way round the nginx account-console block: kc_action on the sign-in endpoint.
-    broker = f"{keycloak.url}/realms/aip/broker/kaefer-oidc/endpoint"
+def _mock_idp_pages_with_kc_action(keycloak_url: str, action: str) -> list[Page]:
+    """Sign alice in to the mock IdP with ``kc_action=action``; every page Keycloak showed."""
+    broker = f"{keycloak_url}/realms/aip/broker/kaefer-oidc/endpoint"
+    verifier = secrets.token_urlsafe(48)
+    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=")
     browser = Browser(stop_prefix=broker)
     try:
         start = browser.get(
-            f"{keycloak.url}/realms/mock-idp/protocol/openid-connect/auth?"
+            f"{keycloak_url}/realms/mock-idp/protocol/openid-connect/auth?"
             + urlencode(
                 {
                     "client_id": "aip-broker-kaefer",
@@ -445,12 +449,24 @@ def test_mock_idp_refuses_an_application_initiated_profile_update(keycloak: Keyc
                     "response_type": "code",
                     "scope": "openid",
                     "state": secrets.token_urlsafe(8),
-                    "kc_action": "UPDATE_PROFILE",
+                    "code_challenge": challenge.decode(),
+                    "code_challenge_method": "S256",
+                    "kc_action": action,
                 }
             )
         )
         drive(browser, start, _credentials("alice@kaefer.test", "alice_dev_only_password"))
     finally:
         browser.close()
-    assert any(p.form_with("password") for p in browser.pages), "never reached the sign-in form"
-    assert not any(p.form_with("email") for p in browser.pages), [p.url for p in browser.pages]
+    return browser.pages
+
+
+@pytest.mark.parametrize("action", ["UPDATE_PROFILE", "UPDATE_EMAIL"])
+def test_mock_idp_refuses_an_application_initiated_profile_update(
+    keycloak: Keycloak, action: str
+) -> None:
+    # The way round the nginx account-console block: kc_action on the sign-in endpoint, which
+    # nginx must keep proxied. On a realm with Keycloak's defaults this shows an email field.
+    pages = _mock_idp_pages_with_kc_action(keycloak.url, action)
+    assert any(p.form_with("password") for p in pages), [p.url for p in pages]
+    assert not any(p.form_with("email") for p in pages), [p.url for p in pages]
