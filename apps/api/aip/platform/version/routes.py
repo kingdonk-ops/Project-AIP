@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from sqlalchemy.engine import make_url
 
 from aip.platform.access import public
+from aip.platform.db.tls import DbTls
 
 __all__ = ["Dependencies", "VersionResponse", "router"]
 
@@ -77,6 +78,7 @@ async def _server_version(database_url: str) -> str:
             url,
             timeout=DB_TIMEOUT_S,  # pyright: ignore[reportArgumentType] - asyncpg takes float
             statement_cache_size=0,
+            ssl=DbTls.from_env().asyncpg_ssl(),  # STACK-07
         ),
     )
     try:

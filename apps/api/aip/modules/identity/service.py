@@ -48,6 +48,7 @@ from aip.modules.identity.repository import LoginDirectory
 from aip.modules.identity.schemas import LoginStartResponse, VerifiedExternalIdentity
 from aip.modules.identity.settings import IdentitySettings
 from aip.platform.db.errors import NotFoundError
+from aip.platform.db.tls import redis_tls_kwargs
 
 LOGIN_START_LIMIT = "10/minute"
 REQUIRED_LOCAL_ACR = "aal2"
@@ -177,7 +178,9 @@ class LoginRateLimiter:
         scheme, sep, rest = url.partition("://")
         if not sep or scheme not in ("redis", "rediss"):
             raise ValueError("REDIS_URL must be redis:// or rediss://")
-        return cls(RedisStorage(f"async+{scheme}://{rest}", implementation="redispy"))
+        # STACK-07: rediss:// carries TLS (and the AUTH token in the URL); pass the CA bundle on.
+        options = redis_tls_kwargs(url)
+        return cls(RedisStorage(f"async+{scheme}://{rest}", implementation="redispy", **options))
 
     async def hit(self, client_key: str) -> bool:
         return await self._limiter.hit(self._item, "identity-login-start", client_key)
