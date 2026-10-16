@@ -28,6 +28,7 @@ class CapabilitySettings(BaseSettings):
     # Adapter selection. Unknown values are rejected by the factory (UnknownAdapterError).
     object_store: str = "minio"
     pdf_renderer: str = "gotenberg"
+    mailer: str = "smtp"
 
     # ObjectStore (both adapters).
     object_store_bucket: str = "aip"
@@ -43,7 +44,19 @@ class CapabilitySettings(BaseSettings):
     gotenberg_timeout_s: float = Field(default=DEFAULT_RENDER_TIMEOUT_S, gt=0)
     gotenberg_max_bytes: int = Field(default=DEFAULT_RENDER_MAX_BYTES, gt=0)
 
-    @field_validator("object_store", "pdf_renderer")
+    # Mailer (STACK-06). SMTP: Mailpit in compose (no TLS, no auth); SES: AWS, default credentials.
+    smtp_host: str = "localhost"
+    smtp_port: int = Field(default=1025, gt=0, lt=65536)
+    smtp_starttls: bool = False
+    smtp_username: str | None = None
+    smtp_password: SecretStr | None = None
+    smtp_timeout_s: float = Field(default=30.0, gt=0)
+    mail_from: str = "AIP <no-reply@aip.local>"
+    ses_region: str = "ap-southeast-2"
+    ses_endpoint_url: str | None = None
+    ses_configuration_set: str | None = None
+
+    @field_validator("object_store", "pdf_renderer", "mailer")
     @classmethod
     def _normalise_adapter_key(cls, value: str) -> str:
         return value.strip().lower()
