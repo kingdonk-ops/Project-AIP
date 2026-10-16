@@ -456,6 +456,12 @@ async def test_dispatch_outbox_runs_on_the_outbox_queue_and_drains(
 
     task = procrastinate_app.tasks["platform.dispatch_outbox"]
     assert task.queue == "outbox"
+    periodic = procrastinate_app.periodic_registry.periodic_tasks
+    assert periodic[(task.name, "dispatch_outbox")].cron == outbox_jobs.poll_cron(2)
+    # Run the worker without its periodic deferrer: at start it catches up any periodic task due
+    # in the last 10 minutes, so between 02:17 and 02:27 UTC it queues the daily
+    # db.ensure_partitions on the default queue, which this outbox worker leaves todo.
+    monkeypatch.setattr(procrastinate_app.periodic_registry, "periodic_tasks", {})
     connector = testing.InMemoryConnector()
     try:
         with procrastinate_app.replace_connector(connector):
