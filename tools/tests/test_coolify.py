@@ -183,13 +183,14 @@ def test_the_mock_idp_account_console_is_not_public() -> None:
         "/auth/realms/mock-idp/account",
         "/auth/realms/mock-idp/account/",
         "/auth/realms/mock-idp/account/credentials",
+        "/auth/realms/mock-idp/account;x=1",
     ):
         assert _first_regex_location(text, private) == "404", private
     # Sign-in through the mock IdP still works.
     for public in (
         "/auth/realms/mock-idp/protocol/openid-connect/auth",
         "/auth/realms/mock-idp/login-actions/authenticate",
-        "/auth/realms/mock-idp/accounts-not-the-console",
+        "/auth/realms/mock-idp/broker/x/endpoint",
     ):
         assert _first_regex_location(text, public) == "proxy", public
 
