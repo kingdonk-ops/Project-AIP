@@ -60,6 +60,10 @@ values = { slug = "'iso-{tag}'" }
 reason = "code is lowercase words joined by hyphens (ck_term_pack_code)."
 values = { code = "'iso-pack'" }
 
+[tables.workflow_definitions]
+reason = "states and transitions are JSON arrays (ck_workflow_definitions_states, ck_workflow_definitions_transitions)."
+values = { states = "'[]'::jsonb", transitions = "'[]'::jsonb" }
+
 [tables.access_settings]
 reason = "a trigger refuses to move or delete any row (one per tenant, ACCESS-01), which is stricter than the RLS WITH CHECK the move probe looks for."
 move_refused = "access_settings rows are never deleted or moved"
