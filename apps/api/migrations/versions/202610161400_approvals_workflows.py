@@ -33,6 +33,7 @@ down_revision: str | None = "202610161300"
 branch_labels = None
 depends_on = None
 
+
 def upgrade() -> None:
     op.execute(
         render_template(
@@ -57,7 +58,8 @@ def upgrade() -> None:
       ADD CONSTRAINT ck_workflow_definitions_status
         CHECK (status IN ('draft', 'active', 'retired')),
       ADD CONSTRAINT ck_workflow_definitions_key CHECK (key ~ '^[a-z][a-z0-9_]{0,62}$'),
-      ADD CONSTRAINT ck_workflow_definitions_record_type CHECK (record_type ~ '^[a-z][a-z0-9_]{0,62}$'),
+      ADD CONSTRAINT ck_workflow_definitions_record_type
+        CHECK (record_type ~ '^[a-z][a-z0-9_]{0,62}$'),
       ADD CONSTRAINT ck_workflow_definitions_version CHECK (version >= 1),
       ADD CONSTRAINT ck_workflow_definitions_states CHECK (jsonb_typeof(states) = 'array'),
       ADD CONSTRAINT ck_workflow_definitions_transitions
@@ -94,8 +96,10 @@ def upgrade() -> None:
       ADD CONSTRAINT fk_workflow_instances_definition
         FOREIGN KEY (definition_id, tenant_id)
         REFERENCES workflow_definitions (id, tenant_id),
-      ADD CONSTRAINT ck_workflow_instances_record_type CHECK (record_type ~ '^[a-z][a-z0-9_]{0,62}$'),
-      ADD CONSTRAINT ck_workflow_instances_current_state CHECK (current_state ~ '^[a-z][a-z0-9_]{0,62}$');
+      ADD CONSTRAINT ck_workflow_instances_record_type
+        CHECK (record_type ~ '^[a-z][a-z0-9_]{0,62}$'),
+      ADD CONSTRAINT ck_workflow_instances_current_state
+        CHECK (current_state ~ '^[a-z][a-z0-9_]{0,62}$');
 
     CREATE UNIQUE INDEX ux_workflow_instances_record
       ON workflow_instances (tenant_id, record_type, record_id) WHERE deleted_at IS NULL;
