@@ -153,13 +153,45 @@ def test_the_keycloak_console_is_not_public() -> None:
     # Everything under /auth/ is 404 unless the allowlist regex (the demo realms, static resources)
     # matches; the master realm is never public.
     assert "location /auth/ {\n        return 404;" in text
-    allow = re.search(r"location ~ (\S+) \{", text)
-    assert allow is not None
-    pattern = re.compile(allow.group(1))
-    for public in ("/auth/realms/aip/protocol/openid-connect/auth", "/auth/resources/x/login.css"):
-        assert pattern.match(public), public
+    for public in (
+        "/auth/realms/aip/protocol/openid-connect/auth",
+        "/auth/realms/mock-idp/protocol/openid-connect/auth",
+        "/auth/resources/x/login.css",
+    ):
+        assert _first_regex_location(text, public) == "proxy", public
     for private in ("/auth/realms/master/protocol/openid-connect/token", "/auth/admin/master/"):
-        assert not pattern.match(private), private
+        assert _first_regex_location(text, private) is None, private
+
+
+def _first_regex_location(text: str, path: str) -> str | None:
+    """How the first regex location matching ``path`` answers, as nginx picks it (config order).
+
+    ``"404"`` for ``return 404``, ``"proxy"`` for ``proxy_pass``, ``None`` when no regex location
+    matches (the ``/auth/`` prefix location then answers 404).
+    """
+    for pattern, body in re.findall(r"location ~ (\S+) \{(.*?)\n    \}", text, flags=re.S):
+        if re.match(pattern, path):
+            return "404" if "return 404;" in body else "proxy" if "proxy_pass" in body else body
+    return None
+
+
+def test_the_mock_idp_account_console_is_not_public() -> None:
+    # Review 11 H1: the demo users' passwords are in the public repo and both brokers trust the
+    # mock IdP's emails, so its account console (change email) must not be reachable.
+    text = (ROOT / "infra" / "coolify" / "nginx.conf").read_text()
+    for private in (
+        "/auth/realms/mock-idp/account",
+        "/auth/realms/mock-idp/account/",
+        "/auth/realms/mock-idp/account/credentials",
+    ):
+        assert _first_regex_location(text, private) == "404", private
+    # Sign-in through the mock IdP still works.
+    for public in (
+        "/auth/realms/mock-idp/protocol/openid-connect/auth",
+        "/auth/realms/mock-idp/login-actions/authenticate",
+        "/auth/realms/mock-idp/accounts-not-the-console",
+    ):
+        assert _first_regex_location(text, public) == "proxy", public
 
 
 def test_upstreams_get_one_client_address_not_the_client_list() -> None:
