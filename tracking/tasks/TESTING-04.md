@@ -47,3 +47,11 @@ Generate allow/deny tests from the permissions catalogue and OpenAPI route list.
     - GET /inspections/{tenantA_id} with a B token returns 404.
   - **unit**:
     - matrix_gen yields 4 cases for 1 role x 1 permission x 2 scopes x 2 states, with exactly 1 allow.
+
+## Moved here from DATABASE-07 (2026-10-16)
+
+- The route half of DATABASE-07: read the route list from the OpenAPI schema and, for every
+  ID-addressed route (GET, PATCH, DELETE `/{id}`), call it as tenant A with tenant B's id.
+  Expected: 404 and B's row unchanged. A route skipped without an exception entry (with a reason)
+  fails the build. DATABASE-07's table generator (`apps/api/tests/isolation/generator.py`) seeds
+  cross-tenant rows and can supply the ids.

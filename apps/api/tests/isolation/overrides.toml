@@ -1,0 +1,74 @@
+# DATABASE-07: per-table seed values and exceptions for the generated isolation tests
+# (tests/isolation/test_rls_generated.py). Owned via .github/CODEOWNERS like the schema guard
+# allowlist: every entry needs a non-empty `reason`.
+#
+#   [tables.<name>]
+#   reason = "why the generic seed is not enough"
+#   values = { column = "SQL literal" }   # for both rows; {tag} becomes a or b
+#   skip = true                           # only with a reason; reported as "exempt"
+#   no_app_select = true                  # aip_app may not read it (and so may not write it)
+#   move_refused = "error text"          # a trigger that refuses every move to another tenant
+#   update_set = "col = col + 1"         # extra SET a trigger needs on every UPDATE probe
+#
+# Columns are otherwise filled from their type, or from a single-column CHECK IN-list.
+
+[tables.access_reviews]
+reason = "quarter must look like 2026-Q4 (ck_access_reviews_quarter)."
+values = { quarter = "'2026-Q4'" }
+
+[tables.app_user]
+reason = "email must look like an address (ck_app_user_email); unique per row."
+values = { email = "'iso-{tag}@kaefer.test'" }
+
+[tables.audit_chain_checkpoints]
+reason = "segment is a YYYY-MM month (ck_audit_chain_checkpoints_segment)."
+values = { segment = "'2026-10'" }
+
+[tables.auth_event]
+reason = "event_type is a dotted lowercase name (ck_auth_event_event_type)."
+values = { event_type = "'iso.event'" }
+
+[tables.tenant_entitlement_override]
+reason = "key is feature.* or limit.* (ck_tenant_entitlement_override_key)."
+values = { key = "'feature.iso'" }
+
+[tables.tenant_subscription]
+reason = "an annual term needs a contract_ref (ck_tenant_subscription_contract_ref); a sandbox term needs none."
+values = { term = "'sandbox'" }
+
+[tables.tenant_usage]
+reason = "period is the first day of a month (ck_tenant_usage_period)."
+values = { period = "date_trunc('month', current_date)::date" }
+
+[tables.term_key]
+reason = "key is a dotted term key (ck_term_key_key)."
+values = { key = "'iso.key_{tag}'" }
+
+[tables.term_override]
+reason = "a tenant-level override has no client org or project (ck_term_override_level)."
+values = { level = "'tenant'" }
+
+[tables.term_pack_version]
+reason = "contents_sha256 is 64 lowercase hex digits (ck_term_pack_version_sha256)."
+values = { contents_sha256 = "repeat('a', 64)" }
+
+[tables.tenants]
+reason = "slug is lowercase letters, digits and hyphens (ck_tenants_slug); unique per row."
+values = { slug = "'iso-{tag}'" }
+
+[tables.term_pack]
+reason = "code is lowercase words joined by hyphens (ck_term_pack_code)."
+values = { code = "'iso-pack'" }
+
+[tables.access_settings]
+reason = "a trigger refuses to move or delete any row (one per tenant, ACCESS-01), which is stricter than the RLS WITH CHECK the move probe looks for."
+move_refused = "access_settings rows are never deleted or moved"
+update_set = "access_version = access_version + 1"  # its other trigger: the version must rise
+
+[tables.audit_chain_heads]
+reason = "writer bookkeeping (AUDIT-01): only aip_audit_writer reads and writes it; aip_app holds no privilege."
+no_app_select = true
+
+[tables.login_directory]
+reason = "pre-login tenant resolution (ADR 0005): no runtime role holds any privilege; read only through the SECURITY DEFINER function identity_resolve_login."
+no_app_select = true
