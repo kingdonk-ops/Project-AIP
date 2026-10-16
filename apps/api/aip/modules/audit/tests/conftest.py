@@ -17,6 +17,7 @@ from tests.fixtures.postgres import (  # noqa: F401 - re-exported pytest fixture
     db_connection,
     empty_db,  # pyright: ignore[reportUnusedImport]
     migrated_db,  # pyright: ignore[reportUnusedImport]
+    outbox,  # pyright: ignore[reportUnusedImport]
     owner_conn_with_tenant,
     pg_superuser_url,  # pyright: ignore[reportUnusedImport]
     tenant_db,  # pyright: ignore[reportUnusedImport]

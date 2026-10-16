@@ -99,6 +99,7 @@ services:
       AIP_OWNER_PASSWORD: ${AIP_OWNER_PASSWORD:?}
       AIP_APP_PASSWORD: ${AIP_APP_PASSWORD:?}
       AIP_JOBS_PASSWORD: ${AIP_JOBS_PASSWORD:?}
+      AIP_AUDIT_WRITER_PASSWORD: ${AIP_AUDIT_WRITER_PASSWORD:?}
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?}
     depends_on:
       postgres:
@@ -406,6 +407,8 @@ services:
     stop_grace_period: 70s
     environment:
       <<: *app-env
+      # Only the worker writes the audit chains (AUDIT-02).
+      DATABASE_AUDIT_WRITER_URL: postgresql://aip_audit_writer:${AIP_AUDIT_WRITER_PASSWORD:?}@postgres:5432/aip
       WORKER_MEMORY_LIMIT_MB: "1024"
     depends_on:
       migrator:

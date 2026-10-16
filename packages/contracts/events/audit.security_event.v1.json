@@ -1,0 +1,81 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "authStrength": {
+      "anyOf": [
+        {
+          "maxLength": 50,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Authstrength"
+    },
+    "detail": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Detail"
+    },
+    "device": {
+      "anyOf": [
+        {
+          "maxLength": 500,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Device"
+    },
+    "eventType": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Eventtype",
+      "type": "string"
+    },
+    "sourceIp": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sourceip"
+    },
+    "targetRef": {
+      "anyOf": [
+        {
+          "maxLength": 500,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Targetref"
+    }
+  },
+  "required": [
+    "eventType"
+  ],
+  "title": "SecurityEventRecorded",
+  "type": "object"
+}
