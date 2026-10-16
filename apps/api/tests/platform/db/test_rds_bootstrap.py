@@ -160,7 +160,8 @@ async def _run_as_master(cluster: str, database: str, *, self_grant: bool) -> li
             try:
                 await conn.execute(statement)
             except asyncpg.PostgresError as exc:
-                failures.append((statement.split("\n", 1)[0][:60], str(exc)))
+                # The first line only: the HINT that follows varies by server version.
+                failures.append((statement.split("\n", 1)[0][:60], str(exc).split("\n", 1)[0]))
     finally:
         await conn.close()
     return failures
