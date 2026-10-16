@@ -1,6 +1,10 @@
 {
   "shell.skipToContent": "Skip to main content",
   "shell.header.label": "Application header",
+  "shell.brand.product": "AIP",
+  "shell.brand.home": "{company} {product}, home",
+  "shell.brand.title": "{company} {product}",
+  "shell.documentTitle": "{page} · {company} {product}",
   "shell.header.tenantLogo": "Organisation logo",
   "shell.header.projectSwitcher": "Project switcher",
   "shell.header.search": "Search",

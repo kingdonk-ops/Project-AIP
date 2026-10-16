@@ -7,10 +7,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Icon,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from "@aip/ui";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { JobsButton } from "../jobs/MyJobsDrawer";
+import { BRAND_TOOLTIP_AT, brandText, productWord } from "./brand";
 import type { Session } from "./session";
 import { t } from "./t";
 
@@ -44,9 +48,7 @@ export function Header({ session, navOpen, onToggleNav, onSignOut }: HeaderProps
       >
         <Icon name="menu" size={20} />
       </Button>
-      {/* Logo slot: empty until tenant branding exists. */}
-      <span className="shell-header__logo" data-slot="tenant-logo" />
-      <span className="shell-header__tenant">{session.tenant.name}</span>
+      <BrandLockup company={session.tenant.name} />
       <div className="shell-header__slot" data-slot="project-switcher" />
       <div className="shell-header__slot shell-header__slot--grow" data-slot="search" />
       <JobsButton />
@@ -82,5 +84,28 @@ export function Header({ session, navOpen, onToggleNav, onSignOut }: HeaderProps
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
+  );
+}
+
+/** DESIGN-14: "<Company> AIP" as one link to Home; long names truncate and show a tooltip. */
+function BrandLockup({ company }: { company: string }) {
+  const product = productWord();
+  const long = company.length > BRAND_TOOLTIP_AT;
+  const link = (
+    <Link to="/" className="shell-brand" aria-label={t("shell.brand.home", { company, product })}>
+      {/* Logo slot: empty until tenant branding has a logo. */}
+      <span className="shell-header__logo" data-slot="tenant-logo" />
+      <span className={long ? "shell-brand__company shell-brand__company--long" : "shell-brand__company"}>
+        {company}
+      </span>
+      <span className="shell-brand__product">{product}</span>
+    </Link>
+  );
+  if (!long) return link;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{link}</TooltipTrigger>
+      <TooltipContent>{brandText(company)}</TooltipContent>
+    </Tooltip>
   );
 }

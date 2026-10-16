@@ -105,14 +105,14 @@ tasks still `todo` below remain before M0 is closed.
 | [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | done | ClaudeK: PR #96; converted per ADR 0001; identity auth emits and the Keycloak e2e moved to AUDIT-06; security review fixed in PR |
 | [APPROVALS-01](tasks/APPROVALS-01.md) | Versioned workflow definitions/instances + pure state-machine evaluator | approvals | M | ARCH-02, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | done | PR #79 (stream B); SSE-KMS wiring → UPLOADS-07  |
-| [DATABASE-07](tasks/DATABASE-07.md) | Isolation test generator across all tables and routes | database | M | ACCESS-01, STACK-03, TESTING-02 | todo | convert to Python backend per ADR 0001 before starting |
+| [DATABASE-07](tasks/DATABASE-07.md) | Isolation test generator across all tables and routes | database | M | ACCESS-01, STACK-03, TESTING-02 | done | ClaudeK: PR #99; converted and narrowed (route IDOR → TESTING-04, key checks → TESTING-03) |
 | [TESTING-04](tasks/TESTING-04.md) | Generated permission-matrix and IDOR tests | testing | M | ACCESS-01, STACK-03 | todo | convert to Python backend per ADR 0001 before starting |
 | [TERMS-05](tasks/TERMS-05.md) | Terms admin API and permissions | terms | M | TERMS-04 | todo | convert to Python backend per ADR 0001 before starting |
 | [DESIGN-04](tasks/DESIGN-04.md) | Record detail pattern, dialogs, toasts, empty/loading/error states | design | M | DESIGN-02 | done | ClaudeK: PR #92; spec checked against ADR 0001 (frontend only) |
 | [DESIGN-06](tasks/DESIGN-06.md) | Nav rail sections follow the ADR 0018 job-area menu | design | S | DESIGN-02 | done | PR #72; design review 2026-10-14 |
 | [DESIGN-07](tasks/DESIGN-07.md) | Keycloak login theme uses the design tokens and IBM Plex | design | S | DESIGN-01, IDENTITY-01 | done | PR #73; design review 2026-10-14 |
 | [DESIGN-08](tasks/DESIGN-08.md) | Shell and register polish: mobile drawer backdrop, table overflow, login width, link buttons | design | S | DESIGN-03, PROJECTS-06 | todo | design review 2026-10-14 |
-| [DESIGN-14](tasks/DESIGN-14.md) | Header brand lockup: company name followed by "AIP" | design | XS | DESIGN-02 | todo | owner request 2026-10-14 |
+| [DESIGN-14](tasks/DESIGN-14.md) | Header brand lockup: company name followed by "AIP" | design | XS | DESIGN-02 | done | ClaudeK: PR #98; owner request 2026-10-14 |
 | [OPS-03](tasks/OPS-03.md) | Jobs API: my jobs, admin queue, cancel with permission | ops | M | OPS-02 | done | ClaudeK: PR #100; converted per ADR 0001; aip_jobs INSERT on domain_events (ADR 0030 amendment); e2e export journey waits for a real job type |
 | [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | todo | AWS readiness |
 | [STACK-07](tasks/STACK-07.md) | TLS to Postgres and Redis (RDS and ElastiCache ready) | stack | S | OPS-02, STACK-05 | todo | AWS readiness |
