@@ -1,6 +1,7 @@
 # TESTING-04 — Generated permission-matrix and IDOR tests
 
 <!-- hand-edited: depends-on synced from BOARD.md -->
+<!-- hand-edited: converted to the Python backend per ADR 0001 (2026-10-16), see "Python mapping" -->
 
 | Field | Value |
 |---|---|
@@ -16,6 +17,18 @@
 2. [`docs/blueprint/modules/testing/README.md`](../../docs/blueprint/modules/testing/README.md)
 3. Any ADR in [`docs/adr/`](../../docs/adr/) that names this task or module
 4. Only if the step needs it: `architecture.md` / `data-model.md` in the module folder
+
+## Python mapping (ADR 0001)
+
+| Spec says | Build |
+|---|---|
+| `backend/tests/access/matrix_gen.py` | `apps/api/tests/access/matrix_gen.py`: role × catalogue permission × assigned or not × tenant/project assignment × resource in P1 or P2 |
+| `test_permission_matrix.py` | `apps/api/tests/access/test_permission_matrix.py`: every case parametrized from the manifests and `default_permissions`, checked against the real `PolicyService`; one database test through real role assignments |
+| `test_idor.py` | `apps/api/tests/access/test_idor.py` + `idor_routes.toml`: every route with a path parameter (any method) maps to its table or is skipped with a reason; tenant A's admin with B's id gets 403/404 and B's row is unchanged; a user with no grants gets 403 from every `requires()` route |
+| tenant B's ids | seeded with `tests/isolation/generator.py` `seed_pair` (DATABASE-07) |
+| JUnit XML artefact | `pytest --junitxml` in the CI Python job, uploaded as `pytest-junit-<python>` |
+| asset-subtree scope (`/plant1/unitA`) | not generated: the policy has no asset scope yet (ACCESS-03); add it to `matrix_gen` with ACCESS-03 |
+| inspections examples, Playwright client reviewer | no inspections module yet; the project-scope rule is proven with a real default role on `project.update`. The e2e lands with the first inspections page |
 
 ## Spec
 
