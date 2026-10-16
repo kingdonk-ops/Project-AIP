@@ -57,9 +57,13 @@ def statements(sql: str) -> list[str]:
         if kind != "code":
             current += text
             continue
-        *done, current_tail = (current + text).split(";")
-        out.extend(done)
-        current = current_tail
+        first, *rest = text.split(";")  # only this code segment: never inside a quoted body
+        if not rest:
+            current += first
+            continue
+        out.append(current + first)
+        out.extend(rest[:-1])
+        current = rest[-1]
     out.append(current)
     return [s.strip() for s in out if s.strip()]
 
