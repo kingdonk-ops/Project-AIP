@@ -378,6 +378,18 @@ GRANT SELECT ON TABLE public.upload_sessions TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.user_session TO aip_app;
 GRANT SELECT ON TABLE public.user_session TO aip_readonly;
 
+-- Name: TABLE workflow_definition_audit; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.workflow_definition_audit TO aip_app;
+GRANT SELECT ON TABLE public.workflow_definition_audit TO aip_readonly;
+
+-- Name: TABLE workflow_definitions; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.workflow_definitions TO aip_app;
+GRANT SELECT ON TABLE public.workflow_definitions TO aip_readonly;
+
+-- Name: TABLE workflow_instances; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.workflow_instances TO aip_app;
+GRANT SELECT ON TABLE public.workflow_instances TO aip_readonly;
+
 -- Name: access_reviews pk_access_reviews; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.access_reviews
     ADD CONSTRAINT pk_access_reviews PRIMARY KEY (id);
@@ -650,6 +662,30 @@ ALTER TABLE ONLY public.user_session
 ALTER TABLE ONLY public.user_session
     ADD CONSTRAINT uq_user_session_sid_hash UNIQUE (sid_hash);
 
+-- Name: workflow_definition_audit pk_workflow_definition_audit; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_definition_audit
+    ADD CONSTRAINT pk_workflow_definition_audit PRIMARY KEY (id, created_at);
+
+-- Name: workflow_definition_audit_default workflow_definition_audit_default_pkey; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_definition_audit_default
+    ADD CONSTRAINT workflow_definition_audit_default_pkey PRIMARY KEY (id, created_at);
+
+-- Name: workflow_definitions pk_workflow_definitions; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_definitions
+    ADD CONSTRAINT pk_workflow_definitions PRIMARY KEY (id);
+
+-- Name: workflow_definitions uq_workflow_definitions_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_definitions
+    ADD CONSTRAINT uq_workflow_definitions_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: workflow_definitions uq_workflow_definitions_key_version; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_definitions
+    ADD CONSTRAINT uq_workflow_definitions_key_version UNIQUE (tenant_id, key, version);
+
+-- Name: workflow_instances pk_workflow_instances; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_instances
+    ADD CONSTRAINT pk_workflow_instances PRIMARY KEY (id);
+
 -- Name: procrastinate_events id; Type: DEFAULT; Schema: public
 ALTER TABLE ONLY public.procrastinate_events ALTER COLUMN id SET DEFAULT nextval('public.procrastinate_events_id_seq'::regclass);
 
@@ -790,6 +826,22 @@ ALTER TABLE ONLY public.term_pack_version
 -- Name: user_session fk_user_session_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.user_session
     ADD CONSTRAINT fk_user_session_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
+-- Name: workflow_definition_audit fk_workflow_definition_audit_definition; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE public.workflow_definition_audit
+    ADD CONSTRAINT fk_workflow_definition_audit_definition FOREIGN KEY (definition_id, tenant_id) REFERENCES public.workflow_definitions(id, tenant_id);
+
+-- Name: workflow_definitions fk_workflow_definitions_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_definitions
+    ADD CONSTRAINT fk_workflow_definitions_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: workflow_instances fk_workflow_instances_definition; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_instances
+    ADD CONSTRAINT fk_workflow_instances_definition FOREIGN KEY (definition_id, tenant_id) REFERENCES public.workflow_definitions(id, tenant_id);
+
+-- Name: workflow_instances fk_workflow_instances_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_instances
+    ADD CONSTRAINT fk_workflow_instances_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 -- Name: access_settings_version_guard(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.access_settings_version_guard() RETURNS trigger
@@ -1888,6 +1940,24 @@ CREATE INDEX ix_user_session_tenant_id ON public.user_session USING btree (tenan
 -- Name: ix_user_session_tenant_id_user_id; Type: INDEX; Schema: public
 CREATE INDEX ix_user_session_tenant_id_user_id ON public.user_session USING btree (tenant_id, user_id) WHERE (revoked_at IS NULL);
 
+-- Name: ix_workflow_definition_audit_definition_id; Type: INDEX; Schema: public
+CREATE INDEX ix_workflow_definition_audit_definition_id ON ONLY public.workflow_definition_audit USING btree (tenant_id, definition_id, created_at);
+
+-- Name: ix_workflow_definition_audit_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_workflow_definition_audit_tenant_id ON ONLY public.workflow_definition_audit USING btree (tenant_id);
+
+-- Name: ix_workflow_definitions_resolve; Type: INDEX; Schema: public
+CREATE INDEX ix_workflow_definitions_resolve ON public.workflow_definitions USING btree (tenant_id, record_type, project_id, status) WHERE (deleted_at IS NULL);
+
+-- Name: ix_workflow_definitions_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_workflow_definitions_tenant_id ON public.workflow_definitions USING btree (tenant_id);
+
+-- Name: ix_workflow_instances_definition_id; Type: INDEX; Schema: public
+CREATE INDEX ix_workflow_instances_definition_id ON public.workflow_instances USING btree (tenant_id, definition_id);
+
+-- Name: ix_workflow_instances_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_workflow_instances_tenant_id ON public.workflow_instances USING btree (tenant_id);
+
 -- Name: procrastinate_events_job_id_fkey_v1; Type: INDEX; Schema: public
 CREATE INDEX procrastinate_events_job_id_fkey_v1 ON public.procrastinate_events USING btree (job_id);
 
@@ -1990,6 +2060,21 @@ CREATE UNIQUE INDEX ux_record_links_live ON public.record_links USING btree (ten
 -- Name: ux_tenant_feature_flags_live; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_tenant_feature_flags_live ON public.tenant_feature_flags USING btree (tenant_id, flag) WHERE (deleted_at IS NULL);
 
+-- Name: ux_workflow_definitions_active; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_workflow_definitions_active ON public.workflow_definitions USING btree (tenant_id, key, COALESCE(project_id, '00000000-0000-0000-0000-000000000000'::uuid)) WHERE (status = 'active'::text);
+
+-- Name: ux_workflow_instances_client_generated_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_workflow_instances_client_generated_id ON public.workflow_instances USING btree (tenant_id, client_generated_id);
+
+-- Name: ux_workflow_instances_record; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_workflow_instances_record ON public.workflow_instances USING btree (tenant_id, record_type, record_id) WHERE (deleted_at IS NULL);
+
+-- Name: workflow_definition_audit_def_tenant_id_definition_id_creat_idx; Type: INDEX; Schema: public
+CREATE INDEX workflow_definition_audit_def_tenant_id_definition_id_creat_idx ON public.workflow_definition_audit_default USING btree (tenant_id, definition_id, created_at);
+
+-- Name: workflow_definition_audit_default_tenant_id_idx; Type: INDEX; Schema: public
+CREATE INDEX workflow_definition_audit_default_tenant_id_idx ON public.workflow_definition_audit_default USING btree (tenant_id);
+
 -- Name: evidence_items_default_pkey; Type: INDEX ATTACH; Schema: public
 ALTER INDEX public.pk_evidence_items ATTACH PARTITION public.evidence_items_default_pkey;
 
@@ -2016,6 +2101,15 @@ ALTER INDEX public.ix_restore_test_records_tenant_id_created_at ATTACH PARTITION
 
 -- Name: restore_test_records_default_tenant_id_idx; Type: INDEX ATTACH; Schema: public
 ALTER INDEX public.ix_restore_test_records_tenant_id ATTACH PARTITION public.restore_test_records_default_tenant_id_idx;
+
+-- Name: workflow_definition_audit_def_tenant_id_definition_id_creat_idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_workflow_definition_audit_definition_id ATTACH PARTITION public.workflow_definition_audit_def_tenant_id_definition_id_creat_idx;
+
+-- Name: workflow_definition_audit_default_pkey; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.pk_workflow_definition_audit ATTACH PARTITION public.workflow_definition_audit_default_pkey;
+
+-- Name: workflow_definition_audit_default_tenant_id_idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_workflow_definition_audit_tenant_id ATTACH PARTITION public.workflow_definition_audit_default_tenant_id_idx;
 
 -- Name: access_reviews tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.access_reviews USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -2173,6 +2267,15 @@ CREATE POLICY session_lookup ON public.user_session FOR SELECT TO aip_owner USIN
 -- Name: user_session tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.user_session USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: workflow_definition_audit tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.workflow_definition_audit USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: workflow_definitions tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.workflow_definitions USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: workflow_instances tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.workflow_instances USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: access_reviews; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.access_reviews ENABLE ROW LEVEL SECURITY;
 
@@ -2289,6 +2392,15 @@ ALTER TABLE public.upload_sessions ENABLE ROW LEVEL SECURITY;
 
 -- Name: user_session; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.user_session ENABLE ROW LEVEL SECURITY;
+
+-- Name: workflow_definition_audit; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.workflow_definition_audit ENABLE ROW LEVEL SECURITY;
+
+-- Name: workflow_definitions; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.workflow_definitions ENABLE ROW LEVEL SECURITY;
+
+-- Name: workflow_instances; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.workflow_instances ENABLE ROW LEVEL SECURITY;
 
 -- Name: procrastinate_events_id_seq; Type: SEQUENCE; Schema: public
 CREATE SEQUENCE public.procrastinate_events_id_seq
@@ -3444,6 +3556,91 @@ ALTER TABLE ONLY public.user_session FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.user_session OWNER TO aip_owner;
 
+-- Name: workflow_definition_audit; Type: TABLE; Schema: public
+CREATE TABLE public.workflow_definition_audit (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    definition_id uuid NOT NULL,
+    actor_id uuid,
+    change jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_workflow_definition_audit_change CHECK ((jsonb_typeof(change) = 'object'::text))
+)
+PARTITION BY RANGE (created_at);
+
+ALTER TABLE ONLY public.workflow_definition_audit FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.workflow_definition_audit OWNER TO aip_owner;
+
+-- Name: workflow_definition_audit_default; Type: TABLE; Schema: public
+CREATE TABLE public.workflow_definition_audit_default (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    definition_id uuid NOT NULL,
+    actor_id uuid,
+    change jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_workflow_definition_audit_change CHECK ((jsonb_typeof(change) = 'object'::text))
+);
+
+ALTER TABLE public.workflow_definition_audit_default OWNER TO aip_owner;
+
+-- Name: workflow_definitions; Type: TABLE; Schema: public
+CREATE TABLE public.workflow_definitions (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    record_type text NOT NULL,
+    project_id uuid,
+    key text NOT NULL,
+    version integer NOT NULL,
+    status text DEFAULT 'draft'::text NOT NULL,
+    states jsonb NOT NULL,
+    transitions jsonb NOT NULL,
+    initial_state text NOT NULL,
+    is_preset boolean DEFAULT false NOT NULL,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_workflow_definitions_key CHECK ((key ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
+    CONSTRAINT ck_workflow_definitions_record_type CHECK ((record_type ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
+    CONSTRAINT ck_workflow_definitions_states CHECK ((jsonb_typeof(states) = 'array'::text)),
+    CONSTRAINT ck_workflow_definitions_status CHECK ((status = ANY (ARRAY['draft'::text, 'active'::text, 'retired'::text]))),
+    CONSTRAINT ck_workflow_definitions_transitions CHECK ((jsonb_typeof(transitions) = 'array'::text)),
+    CONSTRAINT ck_workflow_definitions_version CHECK ((version >= 1))
+);
+
+ALTER TABLE ONLY public.workflow_definitions FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.workflow_definitions OWNER TO aip_owner;
+
+-- Name: workflow_instances; Type: TABLE; Schema: public
+CREATE TABLE public.workflow_instances (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    project_id uuid,
+    definition_id uuid NOT NULL,
+    record_type text NOT NULL,
+    record_id uuid NOT NULL,
+    asset_id uuid,
+    current_state text NOT NULL,
+    record_value numeric(18,2),
+    currency character(3),
+    visibility_scope text,
+    created_by uuid,
+    client_generated_id uuid,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_workflow_instances_current_state CHECK ((current_state ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
+    CONSTRAINT ck_workflow_instances_record_type CHECK ((record_type ~ '^[a-z][a-z0-9_]{0,62}$'::text))
+);
+
+ALTER TABLE ONLY public.workflow_instances FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.workflow_instances OWNER TO aip_owner;
+
 -- Name: evidence_items_default; Type: TABLE ATTACH; Schema: public
 ALTER TABLE ONLY public.evidence_items ATTACH PARTITION public.evidence_items_default DEFAULT;
 
@@ -3452,6 +3649,9 @@ ALTER TABLE ONLY public.provenance_entries ATTACH PARTITION public.provenance_en
 
 -- Name: restore_test_records_default; Type: TABLE ATTACH; Schema: public
 ALTER TABLE ONLY public.restore_test_records ATTACH PARTITION public.restore_test_records_default DEFAULT;
+
+-- Name: workflow_definition_audit_default; Type: TABLE ATTACH; Schema: public
+ALTER TABLE ONLY public.workflow_definition_audit ATTACH PARTITION public.workflow_definition_audit_default DEFAULT;
 
 -- Name: access_settings trg_access_settings_version_guard; Type: TRIGGER; Schema: public
 CREATE TRIGGER trg_access_settings_version_guard BEFORE UPDATE ON public.access_settings FOR EACH ROW EXECUTE FUNCTION public.access_settings_version_guard();
