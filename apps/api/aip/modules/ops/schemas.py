@@ -8,6 +8,7 @@ from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
 class JobStatus(StrEnum):
@@ -63,3 +64,44 @@ class JobEventView(BaseModel):
     to_status: JobStatus
     detail: dict[str, Any]
     occurred_at: datetime
+
+
+# --- OPS-03: the jobs API ---------------------------------------------------------------------
+
+
+class _Out(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+        serialize_by_alias=True,
+        from_attributes=True,
+    )
+
+
+class JobOut(_Out):
+    """A job as the jobs API shows it. The payload stays server-side (it may hold record data)."""
+
+    id: UUID
+    job_type: str
+    status: JobStatus
+    attempts: int
+    correlation_id: UUID
+    result_ref: str | None
+    error: str | None
+    requested_by: UUID | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class JobPage(_Out):
+    """Newest first. ``next_cursor`` is the last item's id (job ids are UUIDv7, time-ordered)."""
+
+    items: list[JobOut]
+    next_cursor: UUID | None
+
+
+class JobErrorBody(_Out):
+    """A refused job action: ``JOB_FINISHED`` (cancel), ``JOB_NOT_FAILED`` (retry)."""
+
+    code: str
+    status: JobStatus | None = None

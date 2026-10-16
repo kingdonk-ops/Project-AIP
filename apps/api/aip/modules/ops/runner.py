@@ -10,9 +10,13 @@ One call to ``run_job`` is one try of one job, for the tenant named in the paylo
 3. The handler runs in a second tenant transaction on the ``aip_jobs`` engine, under
    ``asyncio.timeout(spec.timeout_s)``. If it returns, ``succeeded`` and ``result_ref`` are written
    in the same transaction, so the handler's writes and the status commit together.
+   ``job.completed`` (OPS-03) is emitted in that transaction too.
 4. If it raises, the transaction rolls back and a third records the outcome: ``failed`` with the
    error after the last allowed try, otherwise the job stays ``running`` with the error noted. The
    exception is re-raised so Procrastinate retries with backoff, or marks its own job failed.
+   Every ``failed`` outcome emits ``job.failed`` with the status change.
+5. A job cancelled while it runs (``POST /jobs/{id}/cancel``, OPS-03) is already ``cancelled``, so
+   the final transition is refused: the handler's work rolls back and nothing is retried.
 
 Memory (``WORKER_MEMORY_LIMIT_MB``): after each job the peak RSS is compared with the limit. Above
 80% a warning is logged; above 95% ``on_memory_exceeded`` is called (the worker entrypoint sets it
@@ -30,12 +34,16 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from sqlalchemy.ext.asyncio import AsyncConnection
+
 from aip.platform.db.engine import get_jobs_engine
 from aip.platform.db.session import with_tenant
+from aip.platform.events import Aggregate, emit
 from aip.platform.jobs import tenant_job
 
 from . import service
-from .schemas import JobStatus
+from .events import JOB_COMPLETED, JOB_FAILED
+from .schemas import JobStatus, JobView
 
 if TYPE_CHECKING:
     from .registry import JobSpec
@@ -120,6 +128,30 @@ class _CancelledWhileRunning(Exception):  # noqa: N818 - internal control flow
     """The job was cancelled while its handler ran, so it cannot become ``succeeded``."""
 
 
+async def _finish(
+    conn: AsyncConnection,
+    job_id: UUID,
+    status: JobStatus,
+    *,
+    result_ref: str | None = None,
+    error: str | None = None,
+) -> JobView:
+    """The final transition plus its ``job.completed``/``job.failed`` event, in one transaction."""
+    job = await service.transition(conn, job_id, status, result_ref=result_ref, error=error)
+    payload = {
+        "jobId": job.id,
+        "jobType": job.job_type,
+        "status": job.status.value,
+        "requestedBy": job.requested_by,
+        "correlationId": job.correlation_id,
+        "resultRef": job.result_ref,
+        "error": job.error,
+    }
+    name = JOB_COMPLETED if status is JobStatus.SUCCEEDED else JOB_FAILED
+    await emit(conn, name, 1, Aggregate("job", job.id), payload)
+    return job
+
+
 def _error_text(exc: BaseException) -> str:
     if isinstance(exc, TimeoutError):
         return "timeout"
@@ -154,12 +186,12 @@ async def run_job(
                 spec.job_type,
             )
             async with with_tenant(tenant_id, engine=engine) as conn:
-                await service.transition(conn, jid, JobStatus.FAILED, error=JOB_TYPE_MISMATCH)
+                await _finish(conn, jid, JobStatus.FAILED, error=JOB_TYPE_MISMATCH)
             return
         if job.attempts > spec.max_attempts:
             # Recovered after a worker died more often than the job may try.
             async with with_tenant(tenant_id, engine=engine) as conn:
-                await service.transition(conn, jid, JobStatus.FAILED, error="max attempts exceeded")
+                await _finish(conn, jid, JobStatus.FAILED, error="max attempts exceeded")
             return
 
         try:
@@ -167,7 +199,7 @@ async def run_job(
                 async with asyncio.timeout(spec.timeout_s):
                     result_ref = await spec.handler(conn, job)
                 try:
-                    await service.transition(conn, jid, JobStatus.SUCCEEDED, result_ref=result_ref)
+                    await _finish(conn, jid, JobStatus.SUCCEEDED, result_ref=result_ref)
                 except service.InvalidTransition as exc:
                     raise _CancelledWhileRunning from exc
         except _CancelledWhileRunning:
@@ -186,7 +218,7 @@ async def run_job(
             try:
                 async with with_tenant(tenant_id, engine=engine) as conn:
                     if job.attempts >= spec.max_attempts:
-                        await service.transition(conn, jid, JobStatus.FAILED, error=error)
+                        await _finish(conn, jid, JobStatus.FAILED, error=error)
                     else:
                         await service.note_retry(conn, jid, error=error)
             except service.InvalidTransition:
