@@ -599,3 +599,74 @@ async def test_a_queue_row_for_the_wrong_task_never_runs_that_handler(
     assert ran == []
     row = await job_row(tx, TENANT_A_ID, job_b.id)
     assert (row.status, row.error) == ("failed", "job_type_mismatch")
+
+
+# --- OPS-03: job.completed / job.failed --------------------------------------------------------
+
+
+async def job_events_emitted(tx: Tx, tenant_id: UUID, job_id: UUID) -> list[tuple[str, Any]]:
+    async with tx(tenant_id) as conn:
+        rows = (
+            await conn.execute(
+                text(
+                    "SELECT event_name, payload FROM domain_events"
+                    " WHERE aggregate_type = 'job' AND aggregate_id = :id ORDER BY created_at"
+                ),
+                {"id": job_id},
+            )
+        ).all()
+    return [(r.event_name, r.payload) for r in rows]
+
+
+async def test_a_succeeded_job_emits_job_completed_with_its_result(
+    queue_db: FreshDb, tx: Tx, register_job: Callable[..., ops.JobSpec]
+) -> None:
+    async def handler(conn: AsyncConnection, job: ops.JobView) -> str | None:
+        return "s3://exports/1.csv"
+
+    spec = register_job(handler)
+    job = await enqueue(tx, TENANT_A_ID, spec)
+    await drain(queue_db)
+    [(name, payload)] = await job_events_emitted(tx, TENANT_A_ID, job.id)
+    assert name == "job.completed"
+    assert payload == {
+        "jobId": str(job.id),
+        "jobType": spec.job_type,
+        "status": "succeeded",
+        "requestedBy": str(ALICE_ID),
+        "correlationId": str(job.correlation_id),
+        "resultRef": "s3://exports/1.csv",
+        "error": None,
+    }
+
+
+async def test_a_job_failed_after_its_last_try_emits_job_failed_once(
+    queue_db: FreshDb, tx: Tx, register_job: Callable[..., ops.JobSpec]
+) -> None:
+    async def boom(conn: AsyncConnection, job: ops.JobView) -> str | None:
+        raise RuntimeError("kaboom")
+
+    spec = register_job(boom, max_attempts=2, retry_backoff_s=0)
+    job = await enqueue(tx, TENANT_A_ID, spec)
+    await drain(queue_db)
+    [(name, payload)] = await job_events_emitted(tx, TENANT_A_ID, job.id)
+    assert name == "job.failed"
+    assert (payload["status"], payload["error"]) == ("failed", "RuntimeError: kaboom")
+
+
+async def test_a_job_cancelled_while_it_runs_rolls_back_and_emits_nothing(
+    queue_db: FreshDb, tx: Tx, register_job: Callable[..., ops.JobSpec]
+) -> None:
+    async def cancels_itself(conn: AsyncConnection, job: ops.JobView) -> str | None:
+        # The cancel endpoint, from another transaction, while the handler is still running.
+        async with tx(TENANT_A_ID) as other:
+            await ops.transition(other, job.id, ops.JobStatus.CANCELLED)
+        await conn.execute(text("SELECT 1"))
+        return "never"
+
+    spec = register_job(cancels_itself, max_attempts=3, retry_backoff_s=0)
+    job = await enqueue(tx, TENANT_A_ID, spec)
+    await drain(queue_db)
+    row = await job_row(tx, TENANT_A_ID, job.id)
+    assert (row.status, row.result_ref, row.attempts) == ("cancelled", None, 1)
+    assert await job_events_emitted(tx, TENANT_A_ID, job.id) == []

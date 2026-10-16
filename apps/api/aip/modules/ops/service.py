@@ -18,17 +18,22 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from aip.platform.context import ContextMissingError, get_context, new_request_id
 
 from . import repository
+from .jobs_access import can_act_on
 from .schemas import JobStatus, JobView
 
 __all__ = [
     "ALLOWED_TRANSITIONS",
     "InvalidTransition",
+    "JobForbidden",
     "JobNotFound",
+    "JobStateConflict",
     "attach_procrastinate_job",
     "begin_attempt",
+    "cancel_job",
     "create_job",
     "note_retry",
     "resolve_correlation_id",
+    "retry_job",
     "transition",
     "validate_transition",
 ]
@@ -248,4 +253,73 @@ async def _append_running_event(
             "to_status": JobStatus.RUNNING.value,
             "detail": dict(detail),
         },
+    )
+
+
+# --- OPS-03: cancel and retry -----------------------------------------------------------------
+
+
+class JobForbidden(PermissionError):  # noqa: N818 - reads as a domain outcome
+    """The caller is neither the job's requester nor a jobs admin."""
+
+
+class JobStateConflict(Exception):  # noqa: N818 - reads as a domain outcome
+    """The job's status does not allow the action (``code`` is the stable API error code)."""
+
+    def __init__(self, code: str, status: JobStatus) -> None:
+        super().__init__(f"{code}: job is {status.value}")
+        self.code = code
+        self.status = status
+
+
+async def _job_for_action(
+    conn: AsyncConnection, job_id: UUID, *, actor_id: UUID | None, is_admin: bool
+) -> JobView:
+    row = await repository.lock_job(conn, job_id)
+    if row is None:
+        raise JobNotFound(f"job {job_id} not found")
+    job = JobView.model_validate(row)
+    if not can_act_on(actor_id=actor_id, requested_by=job.requested_by, is_admin=is_admin):
+        raise JobForbidden(f"job {job_id} belongs to another user")
+    return job
+
+
+async def cancel_job(
+    conn: AsyncConnection, job_id: UUID, *, actor_id: UUID | None, is_admin: bool
+) -> JobView:
+    """Cancel a queued or running job; a finished one raises ``JobStateConflict(JOB_FINISHED)``.
+
+    A queued job is skipped when the worker picks it up. A running one is marked ``cancelled`` at
+    once: that is the flag the runner checks, so the handler's transaction rolls back and the job
+    is neither marked succeeded nor retried.
+    """
+    job = await _job_for_action(conn, job_id, actor_id=actor_id, is_admin=is_admin)
+    if job.status.is_terminal:
+        raise JobStateConflict("JOB_FINISHED", job.status)
+    return await transition(
+        conn,
+        job_id,
+        JobStatus.CANCELLED,
+        detail={"cancelledBy": None if actor_id is None else str(actor_id)},
+    )
+
+
+async def retry_job(
+    conn: AsyncConnection, job_id: UUID, *, actor_id: UUID | None, is_admin: bool
+) -> JobView:
+    """Queue a new job with the failed job's type and payload; the same retry twice returns one job.
+
+    Only ``failed`` jobs can be retried (``JobStateConflict(JOB_NOT_FAILED)`` otherwise). The new
+    job's payload records ``retryOf``; its requester is the caller.
+    """
+    job = await _job_for_action(conn, job_id, actor_id=actor_id, is_admin=is_admin)
+    if job.status is not JobStatus.FAILED:
+        raise JobStateConflict("JOB_NOT_FAILED", job.status)
+    from .enqueue import enqueue  # enqueue imports this module
+
+    return await enqueue(
+        conn,
+        job.job_type,
+        {**job.payload, "retryOf": str(job.id)},
+        idempotency_key=f"retry:{job.id}",
     )
