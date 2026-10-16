@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 import boto3  # pyright: ignore[reportMissingTypeStubs]
 import pytest
@@ -101,14 +102,14 @@ async def test_ses_sends_through_localstack(
 ) -> None:
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", localstack.access_key_id)
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", localstack.secret_access_key)
-    ses = boto3.client(  # pyright: ignore[reportUnknownMemberType]
-        "sesv2",
+    ses: Any = boto3.client(  # pyright: ignore[reportUnknownMemberType]
+        "ses",
         endpoint_url=localstack.endpoint_url,
         region_name=REGION,
         aws_access_key_id=localstack.access_key_id,
         aws_secret_access_key=localstack.secret_access_key,
     )
-    ses.create_email_identity(EmailIdentity="no-reply@kaefer.test")
+    ses.verify_email_identity(EmailAddress="no-reply@kaefer.test")
     mailer = SesMailer(region=REGION, endpoint_url=localstack.endpoint_url)
     message_id = await mailer.send(message(sender="no-reply@kaefer.test"))
     assert message_id

@@ -1,7 +1,8 @@
 """Amazon SES ``Mailer`` (STACK-06): AWS, ``ap-southeast-2``.
 
-``sesv2.send_email`` with simple content. Credentials come from the default chain (the ECS task
-role in AWS; ``AWS_*`` variables against LocalStack). ``configuration_set`` routes delivery events;
+The SES ``SendEmail`` API (v1: fully supported by AWS and the one LocalStack's community edition
+emulates). Credentials come from the default chain (the ECS task role in AWS; ``AWS_*`` variables
+against LocalStack). ``configuration_set`` routes delivery events;
 the tenant goes on the message as the ``tenant`` tag. ``endpoint_url`` is for LocalStack only.
 """
 
@@ -40,12 +41,10 @@ class SesMailer:
         if message.html is not None:
             body["Html"] = {"Data": message.html, "Charset": "UTF-8"}
         request: dict[str, Any] = {
-            "FromEmailAddress": message.sender,
+            "Source": message.sender,
             "Destination": {"ToAddresses": list(message.to)},
-            "Content": {
-                "Simple": {"Subject": {"Data": message.subject, "Charset": "UTF-8"}, "Body": body}
-            },
-            "EmailTags": [{"Name": "tenant", "Value": _TAG_UNSAFE.sub("_", message.tenant_id)}],
+            "Message": {"Subject": {"Data": message.subject, "Charset": "UTF-8"}, "Body": body},
+            "Tags": [{"Name": "tenant", "Value": _TAG_UNSAFE.sub("_", message.tenant_id)}],
         }
         if self._configuration_set:
             request["ConfigurationSetName"] = self._configuration_set
@@ -58,7 +57,8 @@ class SesMailer:
         if self._endpoint_url:
             client_args["endpoint_url"] = self._endpoint_url
         try:
-            async with self._session.client("sesv2", **client_args) as ses:  # pyright: ignore[reportUnknownMemberType]
+            client: Any = self._session.client("ses", **client_args)  # pyright: ignore[reportUnknownMemberType]
+            async with client as ses:
                 response: dict[str, Any] = await ses.send_email(**self._request(message))
         except ClientError as exc:
             code = exc.response.get("Error", {}).get("Code", "unknown")
