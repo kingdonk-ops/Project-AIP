@@ -173,3 +173,32 @@ __all__ = [
     "SealResult",
     "Sealer",
 ]
+
+
+@dataclass(frozen=True)
+class EmailMessage:
+    """One transactional email (STACK-06). No attachments yet.
+
+    ``tenant_id`` tags the message for delivery reporting (an SES message tag); ``idempotency_key``
+    makes a repeated request queue one send. Neither the addresses nor the body are ever logged.
+    """
+
+    sender: str
+    to: Sequence[str]
+    subject: str
+    text: str
+    tenant_id: str
+    idempotency_key: str
+    html: str | None = None
+
+
+@runtime_checkable
+class Mailer(Protocol):
+    """Sends transactional email: SMTP on Coolify and in dev (Mailpit), Amazon SES on AWS.
+
+    Call it only from a worker job (``ops`` ``send_email``), never inside a request.
+    """
+
+    async def send(self, message: EmailMessage) -> str:
+        """Send ``message``; return the provider's message id. Raises ``MailError``."""
+        ...
