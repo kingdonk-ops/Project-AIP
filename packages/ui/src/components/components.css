@@ -430,3 +430,277 @@ kbd {
   justify-content: flex-end;
   align-items: center;
 }
+
+/* Record detail (DESIGN-04) */
+.aip-record {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.aip-record__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.aip-record__breadcrumb {
+  flex-basis: 100%;
+  font-size: var(--text-sm);
+  color: var(--foreground-muted);
+}
+.aip-record__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+.aip-record__id {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--foreground-muted);
+}
+.aip-record__title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+.aip-record__superseded-link {
+  font-size: var(--text-sm);
+  color: var(--accent);
+}
+.aip-record__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+/* The rail sits beside the tabs when the page has room for both, and wraps below otherwise. */
+.aip-record__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+.aip-record__main {
+  flex: 1 1 480px;
+  min-width: 0;
+}
+.aip-record__rail {
+  flex: 0 1 320px;
+}
+.aip-record__tabs {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+.aip-record__tab {
+  min-height: var(--touch-target);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--foreground-muted);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.aip-record__tab[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--foreground);
+  font-weight: var(--weight-medium);
+}
+.aip-record__tab:focus-visible,
+.aip-record__panel:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.aip-record__panel {
+  padding-top: var(--space-4);
+}
+.aip-record__rail:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-muted);
+}
+.aip-record__rail-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+/* Workflow bar */
+.aip-workflow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.aip-workflow__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+.aip-workflow__step {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--foreground-muted);
+}
+.aip-workflow__step--done::before {
+  content: "✓ ";
+}
+.aip-workflow__step--current {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: var(--weight-medium);
+}
+.aip-workflow__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Confirm dialog */
+.aip-confirm__require {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+.aip-confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* Toasts */
+.aip-toaster {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(400px, calc(100vw - var(--space-8)));
+  pointer-events: none;
+}
+.aip-toaster__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.aip-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+  pointer-events: auto;
+  animation: aip-toast-in 160ms ease-out;
+}
+.aip-toast--success { border-left-color: var(--status-success); }
+.aip-toast--info { border-left-color: var(--status-info); }
+.aip-toast--error { border-left-color: var(--status-danger); }
+.aip-toast__message {
+  flex: 1;
+  margin: 0;
+  font-size: var(--text-sm);
+}
+@keyframes aip-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aip-toast {
+    animation: none;
+  }
+}
+
+/* Empty, loading, error, offline and sync-conflict states */
+.aip-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+.aip-state__icon {
+  color: var(--foreground-muted);
+}
+.aip-state__title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+.aip-state__body {
+  margin: 0;
+  max-width: 48ch;
+  color: var(--foreground-muted);
+}
+.aip-state__reference {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+.aip-state__request-id {
+  font-family: var(--font-mono);
+}
+.aip-state--skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.aip-state__skeleton-row {
+  height: var(--row-h);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+.aip-state__versions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+}
+.aip-state__version {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.aip-state__version-title {
+  margin: 0 0 var(--space-2);
+  font-weight: var(--weight-medium);
+}
+.aip-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}

@@ -1,6 +1,7 @@
 # DESIGN-04 — Record detail pattern, dialogs, toasts, empty/loading/error states
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
+<!-- hand-edited: checked against ADR 0001 (2026-10-16): frontend-only (packages/ui + apps/web), no backend code. Components take the app's `translate` (the RegisterTable pattern) because packages may not import apps; ui term keys live in config/terms/en-AU/ui.json; the e2e fixture API is mocked with Playwright `page.route`. -->
 
 | Field | Value |
 |---|---|
@@ -30,6 +31,8 @@ Provide the shared record-detail layout and the feedback primitives every P1 det
   - packages/ui/src/feedback/*.test.tsx
   - packages/ui/src/index.ts
   - packages/ui/eslint.config.mjs
+  - config/terms/en-AU/ui.json
+  - apps/web/eslint.config.js, apps/web/src/lint.test.ts, apps/web/src/routes/__root.tsx (mounts ConfirmProvider and Toaster), apps/web/src/routes/__fixtures/record.tsx, e2e/web/record-detail.spec.ts
 - **steps**:
   - 1. Build RecordDetail with props `{id, title, breadcrumb, status, workflow?, tabs, rightRail?, actions?}`. The header shows the ID in mono, the title, the breadcrumb slot (for the asset path later) and a StatusChip. The optional WorkflowBar shows the current step and the next allowed actions, passed in, never computed. Tabs are URL-addressable (`?tab=history`). The default tab ids are `details|linked|documents|history`; callers may omit tabs. The right rail is collapsible, with slots for comments, approvals and attachments. Superseded entries render with a "superseded" StatusChip and a link to the replacement; they are never hidden.
   - 2. In confirm.tsx, add a `<ConfirmProvider>` and `confirm({titleKey, bodyKey, confirmKey, tone:'default'|'danger', requireText?}) → Promise<boolean>`, built on the ui Dialog. Focus starts on Cancel for danger, Escape cancels, and `requireText` (type the code to confirm) disables Confirm until the text matches.
