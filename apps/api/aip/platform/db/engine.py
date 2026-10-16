@@ -37,6 +37,7 @@ from sqlalchemy.exc import ArgumentError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from aip.platform.db.errors import DatabaseConfigError
+from aip.platform.db.tls import DbTls
 
 __all__ = [
     "AUDIT_WRITER_DATABASE_URL_ENV",
@@ -200,7 +201,11 @@ def create_app_engine(settings: EngineSettings) -> AsyncEngine:
         max_overflow=settings.max_overflow,
         pool_timeout=settings.pool_timeout,
         pool_recycle=1800,
-        connect_args=connect_args(settings.pool_mode),
+        # STACK-07: DB_SSLMODE / DB_SSLROOTCERT, the same for every engine.
+        connect_args={
+            **connect_args(settings.pool_mode),
+            **DbTls.from_env().asyncpg_connect_args(),
+        },
     )
     event.listen(engine.sync_engine, "connect", _refuse_privileged_login)
     return engine
