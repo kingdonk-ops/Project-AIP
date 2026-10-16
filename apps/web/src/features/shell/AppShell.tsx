@@ -1,14 +1,15 @@
 import { TooltipProvider } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState, type ReactNode } from "react";
+import { activeNavItem, documentTitle } from "./brand";
 import { Header } from "./Header";
 import { NavRail } from "./NavRail";
 import { ScopeBar } from "./ScopeBar";
 import type { Session } from "./session";
 import { useSessionPort } from "./session-context";
 import { t } from "./t";
-import type { NavItem } from "./nav-registry";
+import { registeredNavItems, type NavItem } from "./nav-registry";
 
 export interface AppShellProps {
   session: Session;
@@ -23,6 +24,14 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [navOpen, setNavOpen] = useState(false);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const page = activeNavItem(navItems ?? registeredNavItems(), pathname);
+  const pageTitle = page ? t(page.termKey) : undefined;
+
+  // DESIGN-14: `<page> · <Company> AIP`.
+  useEffect(() => {
+    document.title = documentTitle(session.tenant.name, pageTitle);
+  }, [session.tenant.name, pageTitle]);
 
   async function signOut(): Promise<boolean> {
     if (!(await port.logout())) return false;

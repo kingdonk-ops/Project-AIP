@@ -48,9 +48,34 @@ body {
 .shell-header__logo:empty {
   display: none;
 }
-.shell-header__tenant {
-  font-weight: var(--weight-semibold);
+/* DESIGN-14: the brand lockup, "<Company> AIP", one link to Home. */
+.shell-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 0 1 auto;
+  color: var(--foreground);
   font-size: var(--text-md);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.shell-brand:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.shell-brand__company {
+  min-width: 0;
+  max-width: 32ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: var(--weight-semibold);
+}
+.shell-brand__product {
+  flex-shrink: 0;
+  font-weight: var(--weight-regular);
+  color: var(--foreground-muted);
 }
 .shell-header__slot--grow {
   flex: 1;
@@ -177,6 +202,10 @@ body {
   .shell-header__user-name {
     display: none;
   }
+  /* Under 768px the company name takes only the room left beside the menu and account buttons. */
+  .shell-brand__company {
+    max-width: calc(100vw - 200px);
+  }
   .shell-rail {
     display: none;
     grid-area: auto;
@@ -199,5 +228,12 @@ body {
   .shell-rail__label {
     max-width: none;
     font-size: var(--text-base);
+  }
+}
+
+/* Too narrow for the company name beside the menu button: show only the product word. */
+@media (max-width: 359px) {
+  .shell-brand__company {
+    display: none;
   }
 }
