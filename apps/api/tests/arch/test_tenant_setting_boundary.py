@@ -3,8 +3,10 @@
 ``aip.platform.db.session`` sets ``app.tenant_id`` transaction-locally for every request and job.
 Code holding such a connection could otherwise call ``set_config('app.tenant_id', other, true)``,
 ``SET [LOCAL] app.tenant_id`` or ``RESET app.tenant_id`` mid-transaction and read another tenant's
-rows. This scans every non-test source under ``aip/`` for those statements. Reading the setting
-(``current_setting('app.tenant_id')`` in RLS policies and functions) is fine.
+rows. This scans the whole text of every non-test source under ``aip/`` (so a statement split over
+lines is still found) for those statements, for ``set_config`` with a bind parameter as the setting
+name, and for the setting name assembled from pieces (``"app." + "tenant_id"``). Reading the
+setting (``current_setting('app.tenant_id')`` in RLS policies and functions) is fine.
 """
 
 from __future__ import annotations
@@ -16,8 +18,11 @@ AIP_DIR = Path(__file__).resolve().parents[2] / "aip"
 
 CHANGES_TENANT = re.compile(
     r"set_config\(\s*['\"]app\.tenant_id['\"]"
-    r"|\bSET\s+(?:LOCAL\s+|SESSION\s+)?app\.tenant_id\b"
-    r"|\bRESET\s+app\.tenant_id\b",
+    r"|set_config\(\s*[:$%]"  # the setting name as a bind parameter
+    # Identifiers may be quoted, and the quotes escaped inside a Python string (\"app\").
+    r"|\bSET\s+(?:LOCAL\s+|SESSION\s+)?\\?\"?app\\?\"?\s*\.\s*\\?\"?tenant_id\b"
+    r"|\bRESET\s+\\?\"?app\\?\"?\s*\.\s*\\?\"?tenant_id\b"
+    r"|['\"]app\.['\"]\s*\+\s*['\"]tenant_id['\"]",  # assembled from pieces
     re.IGNORECASE,
 )
 
@@ -37,9 +42,10 @@ def offenders(root: Path = AIP_DIR) -> list[str]:
         rel = path.relative_to(root).as_posix()
         if "/tests/" in f"/{rel}" or "__pycache__" in path.parts or rel in ALLOWED:
             continue
-        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-            if CHANGES_TENANT.search(line):
-                found.append(f"{rel}:{number}: {line.strip()}")
+        source = path.read_text(encoding="utf-8")
+        for match in CHANGES_TENANT.finditer(source):
+            line = source.count("\n", 0, match.start()) + 1
+            found.append(f"{rel}:{line}: {' '.join(match.group(0).split())}")
     return found
 
 
@@ -60,7 +66,12 @@ def test_the_scan_catches_each_form(tmp_path: Path) -> None:
         "a = text(\"SELECT set_config('app.tenant_id', :t, true)\")\n"
         "b = \"SET LOCAL app.tenant_id = 'x'\"\n"
         'c = "reset app.tenant_id"\n'
-        "d = \"SELECT current_setting('app.tenant_id', true)\"\n",
+        "d = \"SELECT current_setting('app.tenant_id', true)\"\n"
+        'e = text("""SELECT set_config(\n'
+        '    \'app.tenant_id\', :t, true)""")\n'
+        'f = text("SELECT set_config(:name, :value, true)")\n'
+        'g = "SET \\"app\\".\\"tenant_id\\" = 1"\n'
+        "h = 'app.' + 'tenant_id'\n",
         encoding="utf-8",
     )
     test_file = tmp_path / "modules" / "x" / "tests" / "test_x.py"
@@ -72,4 +83,8 @@ def test_the_scan_catches_each_form(tmp_path: Path) -> None:
         "modules/x/repository.py:1",
         "modules/x/repository.py:2",
         "modules/x/repository.py:3",
+        "modules/x/repository.py:5",
+        "modules/x/repository.py:7",
+        "modules/x/repository.py:8",
+        "modules/x/repository.py:9",
     ]

@@ -71,30 +71,58 @@ def _aliases(tree: ast.AST) -> dict[str, str]:
                     out[alias.asname] = alias.name
         elif isinstance(node, ast.ImportFrom) and node.module:
             for alias in node.names:
-                if alias.asname and alias.name not in FACTORIES:
+                if alias.asname and alias.name not in FACTORIES:  # getters resolve through it
                     out[alias.asname] = f"{node.module}.{alias.name}"
     return out
 
 
-def _engine_opener(node: ast.Call) -> str | None:
-    """``get_engine().connect`` for a call like ``get_engine().connect()``, else ``None``."""
+def _getter(call: ast.expr, aliases: dict[str, str]) -> str | None:
+    """The platform engine getter ``call`` invokes (aliased or module-qualified), or ``None``."""
+    if not isinstance(call, ast.Call):
+        return None
+    func = call.func
+    if isinstance(func, ast.Name):
+        name = aliases.get(func.id, func.id).rpartition(".")[2]
+    elif isinstance(func, ast.Attribute):
+        name = func.attr
+    else:
+        return None
+    return name if name in ENGINE_GETTERS else None
+
+
+def _engine_names(tree: ast.AST, aliases: dict[str, str]) -> dict[str, str]:
+    """Names bound to a platform engine (``e = get_engine()``), mapped to the getter."""
+    out: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            targets, value = node.targets, node.value
+        elif isinstance(node, ast.AnnAssign) and node.value is not None:
+            targets, value = [node.target], node.value
+        else:
+            continue
+        getter = _getter(value, aliases)
+        if getter is not None:
+            out.update({t.id: getter for t in targets if isinstance(t, ast.Name)})
+    return out
+
+
+def _engine_opener(node: ast.Call, aliases: dict[str, str], engines: dict[str, str]) -> str | None:
+    """``get_engine().connect`` for ``get_engine().connect()`` (also through an alias, a module
+    or a variable holding the engine), else ``None``."""
     func = node.func
     if not (isinstance(func, ast.Attribute) and func.attr in ENGINE_OPENERS):
         return None
-    inner = func.value
-    if (
-        isinstance(inner, ast.Call)
-        and isinstance(inner.func, ast.Name)
-        and inner.func.id in ENGINE_GETTERS
-    ):
-        return f"{inner.func.id}().{func.attr}"
-    return None
+    getter = _getter(func.value, aliases)
+    if getter is None and isinstance(func.value, ast.Name):
+        getter = engines.get(func.value.id)
+    return None if getter is None else f"{getter}().{func.attr}"
 
 
 def violations(path: Path, root: Path = AIP_DIR) -> list[str]:
     rel = path.relative_to(root).as_posix()
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     aliases = _aliases(tree)
+    engines = _engine_names(tree, aliases)
     found: list[str] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module:
@@ -103,7 +131,7 @@ def violations(path: Path, root: Path = AIP_DIR) -> list[str]:
                 if top in RAW_DRIVERS and alias.name in FACTORIES:
                     found.append(f"{rel}:{node.lineno}: imports {node.module}.{alias.name}")
         elif isinstance(node, ast.Call):
-            opener = _engine_opener(node)
+            opener = _engine_opener(node, aliases, engines)
             if opener is not None:
                 if (rel, opener) not in ALLOWED:
                     found.append(f"{rel}:{node.lineno}: calls {opener}")
@@ -175,4 +203,27 @@ def test_the_scan_resolves_aliases_and_engine_openers(tmp_path: Path) -> None:
         "modules/y.py:5: calls sqlalchemy.create_engine",
         "modules/y.py:7: calls get_engine().connect",
         "modules/y.py:9: calls get_engine().begin",
+    ]
+
+
+def test_the_scan_follows_aliased_qualified_and_stored_engines(tmp_path: Path) -> None:
+    fixture = tmp_path / "modules" / "z.py"
+    fixture.parent.mkdir(parents=True)
+    fixture.write_text(
+        "from aip.platform.db import engine\n"
+        "from aip.platform.db.engine import get_engine as ge\n"
+        "async def f():\n"
+        "    async with ge().connect() as c:\n"
+        "        pass\n"
+        "    async with engine.get_jobs_engine().begin() as c:\n"
+        "        pass\n"
+        "    e = ge()\n"
+        "    async with e.connect() as c:\n"
+        "        pass\n",
+        encoding="utf-8",
+    )
+    assert violations(fixture, root=tmp_path) == [
+        "modules/z.py:4: calls get_engine().connect",
+        "modules/z.py:6: calls get_jobs_engine().begin",
+        "modules/z.py:9: calls get_engine().connect",
     ]

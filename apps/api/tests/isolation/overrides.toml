@@ -6,6 +6,9 @@
 #   reason = "why the generic seed is not enough"
 #   values = { column = "SQL literal" }   # for both rows; {tag} becomes a or b
 #   skip = true                           # only with a reason; reported as "exempt"
+#   no_app_select = true                  # aip_app may not read it (and so may not write it)
+#   move_refused = "error text"          # a trigger that refuses every move to another tenant
+#   update_set = "col = col + 1"         # extra SET a trigger needs on every UPDATE probe
 #
 # Columns are otherwise filled from their type, or from a single-column CHECK IN-list.
 
@@ -56,3 +59,16 @@ values = { slug = "'iso-{tag}'" }
 [tables.term_pack]
 reason = "code is lowercase words joined by hyphens (ck_term_pack_code)."
 values = { code = "'iso-pack'" }
+
+[tables.access_settings]
+reason = "a trigger refuses to move or delete any row (one per tenant, ACCESS-01), which is stricter than the RLS WITH CHECK the move probe looks for."
+move_refused = "access_settings rows are never deleted or moved"
+update_set = "access_version = access_version + 1"  # its other trigger: the version must rise
+
+[tables.audit_chain_heads]
+reason = "writer bookkeeping (AUDIT-01): only aip_audit_writer reads and writes it; aip_app holds no privilege."
+no_app_select = true
+
+[tables.login_directory]
+reason = "pre-login tenant resolution (ADR 0005): no runtime role holds any privilege; read only through the SECURITY DEFINER function identity_resolve_login."
+no_app_select = true

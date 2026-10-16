@@ -65,7 +65,7 @@ jobs:
         with:
           name: isolation-results-${{ matrix.python }}
           path: isolation-results-${{ matrix.python }}.json
-          if-no-files-found: warn
+          if-no-files-found: error
 
   db:
     name: Database (bootstrap, migrate, snapshot, check-schema, lint, migrator image)

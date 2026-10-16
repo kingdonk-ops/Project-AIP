@@ -4,9 +4,14 @@
   ``tenants`` itself, whose ``id`` is the tenant id), so pytest can parametrize at collection time.
 - :func:`check_table` seeds one row for tenant A and one for tenant B as the superuser (FKs and
   triggers off through ``session_replication_role = replica``; RLS does not bind a superuser), then
-  connects as ``aip_app``, sets tenant A in each transaction exactly as ``with_tenant`` does, and
-  checks that A's row is visible, B's row is invisible by key and in a full scan, and that an
-  UPDATE or DELETE of B's row by key changes nothing. A missing grant counts as isolation.
+  connects as ``aip_app`` (refused if it is a superuser, BYPASSRLS or the table's owner) and,
+  with tenant A set in each rolled-back transaction exactly as ``with_tenant`` does, checks that:
+  A's row is visible; B's row is invisible by key, in a full scan and in every child partition;
+  UPDATE or DELETE of B's row by key changes nothing; an unqualified UPDATE or DELETE touches
+  at most A's one row; and A's row can be neither moved nor copied into tenant B (WITH CHECK).
+  A missing grant counts as isolation for that command, but a table aip_app cannot SELECT
+  fails unless ``overrides.toml`` says why (``no_app_select``) and aip_app may not write it.
+  The artefact records each privilege and each check's outcome.
 - Seed values come from the column types; a single-column ``CHECK (col = ANY (ARRAY[...]))`` or
   ``CHECK (col = '...')`` supplies its first literal. Anything else a table needs goes in
   ``overrides.toml`` with a ``reason``; a table can be skipped only there, also with a reason.
@@ -64,6 +69,9 @@ class Override:
     reason: str
     values: Mapping[str, str] = field(default_factory=dict[str, str])
     skip: bool = False
+    no_app_select: bool = False
+    move_refused: str = ""
+    update_set: str = ""
 
 
 class OverrideError(ValueError):
@@ -98,7 +106,9 @@ def cases(meta: MetaData) -> list[Case]:
     return sorted(out, key=lambda c: c.table)
 
 
-_OVERRIDE_KEYS = frozenset({"reason", "values", "skip"})
+_OVERRIDE_KEYS = frozenset(
+    {"reason", "values", "skip", "no_app_select", "move_refused", "update_set"}
+)
 
 
 def parse_overrides(raw: Mapping[str, Any]) -> dict[str, Override]:
@@ -113,7 +123,15 @@ def parse_overrides(raw: Mapping[str, Any]) -> dict[str, Override]:
         values = entry.get("values", {})
         if not isinstance(values, dict) or not all(isinstance(v, str) for v in values.values()):
             raise OverrideError(f"{table}: values must map columns to SQL literals")
-        out[table] = Override(table, reason, dict(values), bool(entry.get("skip", False)))
+        out[table] = Override(
+            table,
+            reason,
+            dict(values),
+            bool(entry.get("skip", False)),
+            bool(entry.get("no_app_select", False)),
+            str(entry.get("move_refused", "")),
+            str(entry.get("update_set", "")),
+        )
     return out
 
 
@@ -249,19 +267,171 @@ def _where(key: dict[str, str]) -> str:
 
 # --- the check --------------------------------------------------------------------------------
 
+_POSTURE = """
+    SELECT r.rolsuper OR r.rolbypassrls OR pg_get_userbyid(c.relowner) = current_user
+    FROM pg_roles r, pg_class c WHERE r.rolname = current_user AND c.oid = $1::regclass
+"""
+_PRIVILEGES = """
+    SELECT has_table_privilege(current_user, $1, 'SELECT'),
+           has_table_privilege(current_user, $1, 'INSERT'),
+           has_table_privilege(current_user, $1, 'UPDATE'),
+           has_table_privilege(current_user, $1, 'DELETE')
+"""
+_CHILDREN = "SELECT inhrelid::regclass::text FROM pg_inherits WHERE inhparent = $1::regclass"
+_RLS_VIOLATION = "row-level security"
 
-async def _as_tenant(app: Any, tenant: UUID, sql: str) -> tuple[str, Any]:
-    """Run ``sql`` as aip_app in a transaction with ``tenant`` set: ``("ok", value)`` or
-    ``("denied", None)`` for a missing grant."""
+Outcome = tuple[str, Any]
+"""``("ok", value)``, ``("denied", None)`` (no grant), ``("rls", None)`` (a policy's WITH CHECK
+refused the row) or ``("error", "<SQLSTATE>: <message>")``."""
+
+
+async def _probe(app: Any, tenant: UUID, statements: list[str]) -> Outcome:
+    """Run ``statements`` as aip_app with ``tenant`` set (as ``with_tenant`` does), always rolled
+    back; the outcome is the last statement's count (or value, for a SELECT)."""
+    tx = app.transaction()
+    await tx.start()
     try:
-        async with app.transaction():
-            await app.execute("SELECT set_config('app.tenant_id', $1, true)", str(tenant))
+        await app.execute("SELECT set_config('app.tenant_id', $1, true)", str(tenant))
+        result: Any = None
+        for sql in statements:
             if sql.lstrip().upper().startswith("SELECT"):
-                return "ok", await app.fetchval(sql)
-            status: str = await app.execute(sql)
-            return "ok", int(status.rsplit(" ", 1)[-1])
-    except asyncpg.InsufficientPrivilegeError:
-        return "denied", None
+                result = await app.fetchval(sql)
+            else:
+                status: str = await app.execute(sql)
+                last = status.rsplit(" ", 1)[-1]
+                result = int(last) if last.isdigit() else status
+        return "ok", result
+    except asyncpg.InsufficientPrivilegeError as exc:
+        return ("rls", None) if _RLS_VIOLATION in str(exc) else ("denied", None)
+    except asyncpg.PostgresError as exc:
+        return "error", f"{getattr(exc, 'sqlstate', '?')}: {exc}"
+    finally:
+        await tx.rollback()
+
+
+def _render(outcome: Outcome) -> str:
+    kind, value = outcome
+    return str(value) if kind == "ok" else (kind if kind != "error" else f"error {value}")
+
+
+async def _uuid_keys(app: Any, case: Case) -> list[str]:
+    rows = await app.fetch(
+        "SELECT attname FROM pg_attribute WHERE attrelid = $1::regclass"
+        " AND atttypid = 'uuid'::regtype AND attname = ANY($2::text[])",
+        case.table,
+        list(case.primary_key),
+    )
+    return [r[0] for r in rows if r[0] != case.tenant_column]
+
+
+async def _checks(
+    app: Any,
+    case: Case,
+    override: Override | None,
+    key_a: dict[str, str],
+    key_b: dict[str, str],
+    tenant_a: UUID,
+    tenant_b: UUID,
+) -> dict[str, Outcome]:
+    table, tenant_col = _ident(case.table), _ident(case.tenant_column)
+    first = _ident(case.primary_key[0])
+    # Extra SET assignments a table trigger needs on every UPDATE (e.g. a version that must rise).
+    extra = f", {override.update_set}" if override and override.update_set else ""
+    fresh_ids = ", ".join(f"{_ident(c)} = gen_random_uuid()" for c in await _uuid_keys(app, case))
+    move_b = f"{tenant_col} = '{tenant_b}'::uuid" + (f", {fresh_ids}" if fresh_ids else "")
+    out: dict[str, Outcome] = {
+        "own_read": await _probe(
+            app, tenant_a, [f"SELECT count(*) FROM {table} WHERE {_where(key_a)}"]
+        ),
+        "cross_read": await _probe(
+            app, tenant_a, [f"SELECT count(*) FROM {table} WHERE {_where(key_b)}"]
+        ),
+        "cross_scan": await _probe(
+            app,
+            tenant_a,
+            [f"SELECT count(*) FROM {table} WHERE {tenant_col} <> '{tenant_a}'::uuid"],
+        ),
+        "cross_update": await _probe(
+            app, tenant_a, [f"UPDATE {table} SET {first} = {first}{extra} WHERE {_where(key_b)}"]
+        ),
+        "cross_delete": await _probe(app, tenant_a, [f"DELETE FROM {table} WHERE {_where(key_b)}"]),
+        # No WHERE: a correct policy limits these to tenant A's one row (rolled back).
+        "update_all": await _probe(app, tenant_a, [f"UPDATE {table} SET {first} = {first}{extra}"]),
+        "delete_all": await _probe(app, tenant_a, [f"DELETE FROM {table}"]),
+        # WITH CHECK: A's row may not be moved, or copied, into tenant B.
+        "move_to_b": await _probe(
+            app, tenant_a, [f"UPDATE {table} SET {move_b}{extra} WHERE {_where(key_a)}"]
+        ),
+        "insert_for_b": await _probe(
+            app,
+            tenant_a,
+            [
+                f"CREATE TEMP TABLE iso_copy ON COMMIT DROP AS SELECT * FROM {table}"
+                f" WHERE {_where(key_a)}",
+                f"UPDATE iso_copy SET {move_b}",
+                f"INSERT INTO {table} SELECT * FROM iso_copy",
+            ],
+        ),
+    }
+    for child in [r[0] for r in await app.fetch(_CHILDREN, case.table)]:
+        part = _ident(child.strip('"'))
+        out[f"partition {child} cross_scan"] = await _probe(
+            app, tenant_a, [f"SELECT count(*) FROM {part} WHERE {tenant_col} <> '{tenant_a}'::uuid"]
+        )
+    return out
+
+
+def _verdict(
+    case: Case, override: Override | None, privileges: dict[str, bool], checks: dict[str, Outcome]
+) -> tuple[str, str]:
+    """``(status, message)`` from the outcomes (see the module docstring for each rule)."""
+
+    def count(name: str) -> int | None:
+        kind, value = checks[name]
+        return value if kind == "ok" and isinstance(value, int) else None
+
+    if not privileges["select"]:
+        if override is None or not override.no_app_select:
+            return "failed", (
+                "aip_app has no SELECT, so isolation cannot be observed: add `no_app_select = true`"
+                " with a reason in tests/isolation/overrides.toml"
+            )
+        writes = [p for p in ("insert", "update", "delete") if privileges[p]]
+        if writes:
+            return "failed", f"aip_app may {'/'.join(writes)} but not SELECT this table"
+        return "passed", f"aip_app holds no privilege on it ({override.reason})"
+
+    leaks = {
+        n: count(n)
+        for n in checks
+        if n in {"cross_read", "cross_scan"} or n.startswith("partition")
+    }
+    if any(leaks.values()):
+        return "failed", f"{LEAK} ({', '.join(f'{n}: {v}' for n, v in leaks.items() if v)})"
+    for name in ("cross_update", "cross_delete"):
+        if count(name):
+            return "failed", f"cross-tenant write changed rows ({name})"
+    for name in ("update_all", "delete_all"):
+        if (count(name) or 0) > 1:
+            return (
+                "failed",
+                f"an unqualified {name.split('_')[0].upper()} reached other tenants' rows",
+            )
+    for name in ("move_to_b", "insert_for_b"):
+        kind, value = checks[name]
+        refusal = override.move_refused if override and name == "move_to_b" else ""
+        if kind == "error" and refusal and refusal in str(value):
+            continue  # a table trigger refuses every move (named in overrides.toml)
+        if kind == "ok" and value:
+            return "failed", f"a row could be written into tenant B ({name})"
+        if kind == "error":
+            return "failed", f"{name} could not run ({value}); fix the probe or add an override"
+    for name, outcome in checks.items():
+        if outcome[0] == "error" and name not in ("move_to_b", "insert_for_b"):
+            return "failed", f"{name} failed to run ({outcome[1]})"
+    if count("own_read") != 1:
+        return "failed", "tenant A's own row is not visible to tenant A"
+    return "passed", ""
 
 
 async def check_table(
@@ -294,41 +464,25 @@ async def check_table(
     finally:
         await su.close()
 
-    table, tenant_col = _ident(case.table), _ident(case.tenant_column)
-    first_key = _ident(case.primary_key[0])
     app: Any = await asyncpg.connect(app_url)  # pyright: ignore[reportUnknownMemberType]
-    checks: dict[str, str] = {}
     try:
-        own = await _as_tenant(app, tenant_a, f"SELECT count(*) FROM {table} WHERE {_where(key_a)}")
-        cross = await _as_tenant(
-            app, tenant_a, f"SELECT count(*) FROM {table} WHERE {_where(key_b)}"
-        )
-        scan = await _as_tenant(
-            app, tenant_a, f"SELECT count(*) FROM {table} WHERE {tenant_col} <> '{tenant_a}'::uuid"
-        )
-        update = await _as_tenant(
-            app, tenant_a, f"UPDATE {table} SET {first_key} = {first_key} WHERE {_where(key_b)}"
-        )
-        delete = await _as_tenant(app, tenant_a, f"DELETE FROM {table} WHERE {_where(key_b)}")
+        if await app.fetchval(_POSTURE, case.table):
+            return Result(
+                case.table, "failed", "aip_app is a superuser, BYPASSRLS or owns this table"
+            )
+        row = await app.fetchrow(_PRIVILEGES, case.table)
+        privileges: dict[str, bool] = {
+            name: bool(value)
+            for name, value in zip(("select", "insert", "update", "delete"), row, strict=True)
+        }
+        outcomes = await _checks(app, case, override, key_a, key_b, tenant_a, tenant_b)
     finally:
         await app.close()
 
-    for name, (outcome, value) in {
-        "own_read": own,
-        "cross_read": cross,
-        "cross_scan": scan,
-        "cross_update": update,
-        "cross_delete": delete,
-    }.items():
-        checks[name] = "denied" if outcome == "denied" else str(value)
-
-    if cross[1] or scan[1]:
-        return Result(case.table, "failed", f"{LEAK} (by key: {cross[1]}, scan: {scan[1]})", checks)
-    if update[1] or delete[1]:
-        return Result(case.table, "failed", "cross-tenant write changed rows", checks)
-    if own[0] == "ok" and own[1] != 1:
-        return Result(case.table, "failed", "tenant A's own row is not visible to tenant A", checks)
-    return Result(case.table, "passed", "", checks)
+    checks = {f"privilege {k}": str(v).lower() for k, v in privileges.items()}
+    checks.update({name: _render(outcome) for name, outcome in outcomes.items()})
+    status, message = _verdict(case, override, privileges, outcomes)
+    return Result(case.table, status, message, checks)  # type: ignore[arg-type]
 
 
 def write_results(path: Path, results: list[Result]) -> None:

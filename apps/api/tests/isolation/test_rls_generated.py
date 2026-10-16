@@ -62,23 +62,28 @@ def isolation_db(pg_superuser_url: str) -> Iterator[FreshDb]:  # noqa: F811
 
 @pytest.fixture(scope="module")
 def results(isolation_db: FreshDb) -> dict[str, Result]:
-    async def run() -> dict[str, Result]:
-        out: dict[str, Result] = {}
-        for case in CASES:
-            out[case.table] = await check_table(
-                isolation_db.superuser_url,
-                isolation_db.role_url(APP),
-                case,
-                OVERRIDES.get(case.table),
-                TENANT_A_ID,
-                TENANT_B_ID,
-            )
-        return out
+    found: dict[str, Result] = {}
 
-    found = asyncio.run(run())
-    target = os.environ.get("AIP_ISOLATION_RESULTS")
-    if target:
-        write_results(Path(target), list(found.values()))
+    async def run() -> None:
+        for case in CASES:
+            try:
+                found[case.table] = await check_table(
+                    isolation_db.superuser_url,
+                    isolation_db.role_url(APP),
+                    case,
+                    OVERRIDES.get(case.table),
+                    TENANT_A_ID,
+                    TENANT_B_ID,
+                )
+            except Exception as exc:  # one table's crash must not hide the others' results
+                found[case.table] = Result(case.table, "failed", f"check crashed: {exc!r}")
+
+    try:
+        asyncio.run(run())
+    finally:
+        target = os.environ.get("AIP_ISOLATION_RESULTS")
+        if target:
+            write_results(Path(target), list(found.values()))
     return found
 
 
