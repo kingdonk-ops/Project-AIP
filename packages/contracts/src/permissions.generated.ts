@@ -15,6 +15,7 @@ export type PermissionCode =
   | "audit.log.read"
   | "identity.user.manage"
   | "identity.user.read"
+  | "ops.jobs.admin"
   | "platform.events.manage"
   | "platform.tenants.manage"
   | "project.archive"
@@ -45,6 +46,7 @@ export const PERMISSIONS = {
   "audit.log.read": { module: "audit", privileged: false },
   "identity.user.manage": { module: "identity", privileged: true },
   "identity.user.read": { module: "identity", privileged: false },
+  "ops.jobs.admin": { module: "ops", privileged: false },
   "platform.events.manage": { module: "ops", privileged: true },
   "platform.tenants.manage": { module: "ops", privileged: true },
   "project.archive": { module: "projects", privileged: false },

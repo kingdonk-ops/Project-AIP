@@ -15,7 +15,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.platform.context import ContextMissingError, get_context
-from aip.platform.jobs.app import defer_in_transaction
+from aip.platform.jobs.tenant_guard import TenantJobPayload, defer_for_tenant
 from aip.platform.tenant_keys import job_lock
 
 from . import repository, service
@@ -52,11 +52,11 @@ async def enqueue(
         args["actor_id"] = str(job.requested_by)
     with contextlib.suppress(ContextMissingError):
         args["request_id"] = get_context().request_id
-    queue_id = await defer_in_transaction(
+    queue_id = await defer_for_tenant(
         conn,
         task_name=job_type,
         queue=spec.queue,
-        args=args,
+        payload=TenantJobPayload.model_validate(args),
         lock=job_lock(job.tenant_id, job_type, str(slot)),
     )
     return await service.attach_procrastinate_job(conn, job.id, queue_id)

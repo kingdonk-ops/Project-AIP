@@ -16,6 +16,7 @@ export const RoleOutPermissionsItem = {
   auditlogread: 'audit.log.read',
   identityusermanage: 'identity.user.manage',
   identityuserread: 'identity.user.read',
+  opsjobsadmin: 'ops.jobs.admin',
   platformeventsmanage: 'platform.events.manage',
   platformtenantsmanage: 'platform.tenants.manage',
   projectarchive: 'project.archive',

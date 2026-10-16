@@ -10,7 +10,6 @@ depends_on = ["tenancy"]
 # replay). The pages live under aip.platform.*, but permissions come only from manifests (ACCESS-01),
 # so they are declared here.
 permission_namespaces = ["ops", "platform"]
-events = []
 subscribes = []
 settings = []
 term_keys = []
@@ -24,3 +23,16 @@ privileged = true
 code = "platform.tenants.manage"
 description = "Set tenant subscriptions and entitlement overrides (operators only)."
 privileged = true
+
+# OPS-03: the jobs API. Every signed-in user sees and cancels their own jobs; this grants the rest.
+[[permissions]]
+code = "ops.jobs.admin"
+description = "See every job in the tenant, and cancel or retry anyone's job"
+
+[[events]]
+name = "job.completed"
+version = 1
+
+[[events]]
+name = "job.failed"
+version = 1

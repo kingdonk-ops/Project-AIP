@@ -238,7 +238,7 @@ GRANT SELECT ON TABLE public.deployment_regions TO aip_readonly;
 
 -- Name: TABLE domain_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.domain_events TO aip_app;
-GRANT SELECT ON TABLE public.domain_events TO aip_jobs;
+GRANT SELECT,INSERT ON TABLE public.domain_events TO aip_jobs;
 GRANT SELECT ON TABLE public.domain_events TO aip_readonly;
 
 -- Name: TABLE evidence_items; Type: ACL; Schema: public

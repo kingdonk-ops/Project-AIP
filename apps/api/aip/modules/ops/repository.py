@@ -7,6 +7,7 @@ its own. Tenant scoping is enforced by RLS; new rows take ``tenant_id`` from the
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
@@ -83,3 +84,31 @@ async def count_jobs_of_type(conn: AsyncConnection, job_type: str) -> int:
     """How many jobs of ``job_type`` the current tenant has (soft-deleted ones included)."""
     stmt = select(func.count()).select_from(jobs).where(jobs.c.job_type == job_type)
     return int((await conn.execute(stmt)).scalar_one())
+
+
+async def list_jobs(
+    conn: AsyncConnection,
+    *,
+    requested_by: UUID | None = None,
+    statuses: Sequence[str] = (),
+    job_type: str | None = None,
+    after: UUID | None = None,
+    limit: int,
+) -> list[Row[Any]]:
+    """Live jobs newest first (ids are UUIDv7), optionally one requester's, after a cursor id."""
+    stmt = select(*_JOB_COLUMNS).where(jobs.c.deleted_at.is_(None))
+    if requested_by is not None:
+        stmt = stmt.where(jobs.c.requested_by == requested_by)
+    if statuses:
+        stmt = stmt.where(jobs.c.status.in_(list(statuses)))
+    if job_type is not None:
+        stmt = stmt.where(jobs.c.job_type == job_type)
+    if after is not None:
+        stmt = stmt.where(jobs.c.id < after)
+    stmt = stmt.order_by(jobs.c.id.desc()).limit(limit)
+    return list((await conn.execute(stmt)).all())
+
+
+async def get_job(conn: AsyncConnection, job_id: UUID) -> Row[Any] | None:
+    stmt = select(*_JOB_COLUMNS).where(jobs.c.id == job_id, jobs.c.deleted_at.is_(None))
+    return (await conn.execute(stmt)).one_or_none()

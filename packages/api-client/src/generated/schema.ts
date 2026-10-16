@@ -127,6 +127,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tenant Jobs */
+        get: operations["jobs_admin_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/platform/events": {
         parameters: {
             query?: never;
@@ -345,6 +362,57 @@ export interface paths {
         get: operations["platform_ready"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List My Jobs */
+        get: operations["jobs_list_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Job */
+        post: operations["jobs_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Job */
+        post: operations["jobs_retry"];
         delete?: never;
         options?: never;
         head?: never;
@@ -742,7 +810,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -1041,6 +1109,68 @@ export interface components {
             /** Status */
             status: string;
         };
+        /**
+         * JobErrorBody
+         * @description A refused job action: ``JOB_FINISHED`` (cancel), ``JOB_NOT_FAILED`` (retry).
+         */
+        JobErrorBody: {
+            /** Code */
+            code: string;
+            status?: components["schemas"]["JobStatus"] | null;
+        };
+        /**
+         * JobOut
+         * @description A job as the jobs API shows it. The payload stays server-side (it may hold record data).
+         */
+        JobOut: {
+            /** Attempts */
+            attempts: number;
+            /**
+             * Correlationid
+             * Format: uuid
+             */
+            correlationId: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Error */
+            error: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Jobtype */
+            jobType: string;
+            /** Requestedby */
+            requestedBy: string | null;
+            /** Resultref */
+            resultRef: string | null;
+            status: components["schemas"]["JobStatus"];
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /**
+         * JobPage
+         * @description Newest first. ``next_cursor`` is the last item's id (job ids are UUIDv7, time-ordered).
+         */
+        JobPage: {
+            /** Items */
+            items: components["schemas"]["JobOut"][];
+            /** Nextcursor */
+            nextCursor: string | null;
+        };
+        /**
+         * JobStatus
+         * @description Stable internal job status codes (labels come from terminology keys, never these).
+         * @enum {string}
+         */
+        JobStatus: "queued" | "running" | "succeeded" | "failed" | "cancelled";
         /**
          * LimitOut
          * @description ``limit`` null is unlimited; ``used`` null means nothing measures it yet.
@@ -1443,7 +1573,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -1468,7 +1598,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -1480,7 +1610,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * Scope
@@ -2389,6 +2519,42 @@ export interface operations {
             };
         };
     };
+    jobs_admin_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description The last id of the previous page. */
+                after?: string | null;
+                status?: components["schemas"]["JobStatus"][];
+                jobType?: string | null;
+                requestedBy?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     platform_list_events: {
         parameters: {
             query?: {
@@ -2776,6 +2942,152 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    jobs_list_mine: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description The last id of the previous page. */
+                after?: string | null;
+                status?: components["schemas"]["JobStatus"][];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    jobs_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Not the requester and not a jobs admin. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such job in this tenant. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobErrorBody"];
+                };
+            };
+            /** @description The job's status does not allow this. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    jobs_retry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Not the requester and not a jobs admin. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such job in this tenant. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobErrorBody"];
+                };
+            };
+            /** @description The job's status does not allow this. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

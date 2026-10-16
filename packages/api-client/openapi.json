@@ -19,6 +19,7 @@
                 "audit.log.read",
                 "identity.user.manage",
                 "identity.user.read",
+                "ops.jobs.admin",
                 "platform.events.manage",
                 "platform.tenants.manage",
                 "project.archive",
@@ -790,6 +791,156 @@
         ],
         "title": "HealthResponse",
         "type": "object"
+      },
+      "JobErrorBody": {
+        "description": "A refused job action: ``JOB_FINISHED`` (cancel), ``JOB_NOT_FAILED`` (retry).",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "JobErrorBody",
+        "type": "object"
+      },
+      "JobOut": {
+        "description": "A job as the jobs API shows it. The payload stays server-side (it may hold record data).",
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "correlationId": {
+            "format": "uuid",
+            "title": "Correlationid",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "jobType": {
+            "title": "Jobtype",
+            "type": "string"
+          },
+          "requestedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requestedby"
+          },
+          "resultRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resultref"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "jobType",
+          "status",
+          "attempts",
+          "correlationId",
+          "resultRef",
+          "error",
+          "requestedBy",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "JobOut",
+        "type": "object"
+      },
+      "JobPage": {
+        "description": "Newest first. ``next_cursor`` is the last item's id (job ids are UUIDv7, time-ordered).",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JobOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "title": "JobPage",
+        "type": "object"
+      },
+      "JobStatus": {
+        "description": "Stable internal job status codes (labels come from terminology keys, never these).",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled"
+        ],
+        "title": "JobStatus",
+        "type": "string"
       },
       "LimitOut": {
         "additionalProperties": false,
@@ -2087,6 +2238,7 @@
                 "audit.log.read",
                 "identity.user.manage",
                 "identity.user.read",
+                "ops.jobs.admin",
                 "platform.events.manage",
                 "platform.tenants.manage",
                 "project.archive",
@@ -2202,6 +2354,7 @@
                 "audit.log.read",
                 "identity.user.manage",
                 "identity.user.read",
+                "ops.jobs.admin",
                 "platform.events.manage",
                 "platform.tenants.manage",
                 "project.archive",
@@ -2284,6 +2437,7 @@
                     "audit.log.read",
                     "identity.user.manage",
                     "identity.user.read",
+                    "ops.jobs.admin",
                     "platform.events.manage",
                     "platform.tenants.manage",
                     "project.archive",
@@ -3973,6 +4127,118 @@
         ]
       }
     },
+    "/api/v1/admin/jobs": {
+      "get": {
+        "operationId": "jobs_admin_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The last id of the previous page.",
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The last id of the previous page.",
+              "title": "After"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": [],
+              "items": {
+                "$ref": "#/components/schemas/JobStatus"
+              },
+              "title": "Status",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "jobType",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Jobtype"
+            }
+          },
+          {
+            "in": "query",
+            "name": "requestedBy",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Requestedby"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Tenant Jobs",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
     "/api/v1/admin/platform/events": {
       "get": {
         "operationId": "platform_list_events",
@@ -4510,6 +4776,215 @@
         "summary": "Ready",
         "tags": [
           "platform"
+        ]
+      }
+    },
+    "/api/v1/jobs/mine": {
+      "get": {
+        "operationId": "jobs_list_mine",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The last id of the previous page.",
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The last id of the previous page.",
+              "title": "After"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": [],
+              "items": {
+                "$ref": "#/components/schemas/JobStatus"
+              },
+              "title": "Status",
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List My Jobs",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/v1/jobs/{job_id}/cancel": {
+      "post": {
+        "operationId": "jobs_cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Not the requester and not a jobs admin."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobErrorBody"
+                }
+              }
+            },
+            "description": "No such job in this tenant."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobErrorBody"
+                }
+              }
+            },
+            "description": "The job's status does not allow this."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/v1/jobs/{job_id}/retry": {
+      "post": {
+        "operationId": "jobs_retry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Not the requester and not a jobs admin."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobErrorBody"
+                }
+              }
+            },
+            "description": "No such job in this tenant."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobErrorBody"
+                }
+              }
+            },
+            "description": "The job's status does not allow this."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Job",
+        "tags": [
+          "jobs"
         ]
       }
     },
