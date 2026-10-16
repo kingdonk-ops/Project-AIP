@@ -51,10 +51,11 @@ x-app-env: &app-env
   GOTENBERG_URL: ${GOTENBERG_URL:-http://gotenberg:3000}
   # STACK-06: transactional email goes through the `ops.send_email` job. Mailpit here (UI on
   # :8025); MAILER=ses in AWS (SES in ap-southeast-2, credentials from the ECS task role).
-  MAILER: ${MAILER:-smtp}
-  SMTP_HOST: ${SMTP_HOST:-mailpit}
-  SMTP_PORT: ${SMTP_PORT:-1025}
-  MAIL_FROM: ${MAIL_FROM:-AIP <no-reply@aip.local>}
+  # Fixed here (like KC_SMTP_* below): the dev stack always mails Mailpit.
+  MAILER: smtp
+  SMTP_HOST: mailpit
+  SMTP_PORT: "1025"
+  MAIL_FROM: "AIP <no-reply@aip.local>"
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
   # Staff sign-in (IDENTITY-01, ADR 0005). The API calls Keycloak inside the network; browsers and
   # token issuers use the published port.
