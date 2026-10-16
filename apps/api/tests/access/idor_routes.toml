@@ -90,3 +90,9 @@ reason = "Operator API (ADR 0029): the path names the target tenant on purpose; 
 ["PUT /api/v1/platform/tenants/{tenant_id}/subscription"]
 skip = true
 reason = "Operator API (ADR 0029): the path names the target tenant on purpose; platform.tenants.manage only."
+
+["POST /api/v1/jobs/{job_id}/cancel"]
+table = "jobs"
+
+["POST /api/v1/jobs/{job_id}/retry"]
+table = "jobs"
