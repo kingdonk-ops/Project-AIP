@@ -48,6 +48,7 @@ __all__ = [
     "literal_for",
     "load_overrides",
     "parse_overrides",
+    "seed_pair",
     "write_results",
 ]
 
@@ -434,6 +435,24 @@ def _verdict(
     return "passed", ""
 
 
+async def seed_pair(
+    superuser_url: str, case: Case, override: Override | None, tenant_a: UUID, tenant_b: UUID
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Seed one row for each tenant as the superuser; their primary keys as SQL literals.
+
+    TESTING-04 reuses this to get tenant B's ids for the route IDOR checks.
+    """
+    su: Any = await asyncpg.connect(superuser_url)  # pyright: ignore[reportUnknownMemberType]
+    try:
+        async with su.transaction():
+            await su.execute("SET LOCAL session_replication_role = replica")
+            key_a = await _seed(su, case, override, tenant_a, "a")
+            key_b = await _seed(su, case, override, tenant_b, "b")
+    finally:
+        await su.close()
+    return key_a, key_b
+
+
 async def check_table(
     superuser_url: str,
     app_url: str,
@@ -448,12 +467,8 @@ async def check_table(
     if not case.primary_key:
         return Result(case.table, "failed", "no primary key: add an overrides.toml entry")
 
-    su: Any = await asyncpg.connect(superuser_url)  # pyright: ignore[reportUnknownMemberType]
     try:
-        async with su.transaction():
-            await su.execute("SET LOCAL session_replication_role = replica")
-            key_a = await _seed(su, case, override, tenant_a, "a")
-            key_b = await _seed(su, case, override, tenant_b, "b")
+        key_a, key_b = await seed_pair(superuser_url, case, override, tenant_a, tenant_b)
     except (LookupError, asyncpg.PostgresError) as exc:
         return Result(
             case.table,
@@ -461,8 +476,6 @@ async def check_table(
             f"cannot seed ({type(exc).__name__}: {exc}); add values for it in"
             " tests/isolation/overrides.toml",
         )
-    finally:
-        await su.close()
 
     app: Any = await asyncpg.connect(app_url)  # pyright: ignore[reportUnknownMemberType]
     try:
