@@ -574,6 +574,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/settings/organisations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Organisations */
+        get: operations["organisations_list"];
+        put?: never;
+        /** Create Organisation */
+        post: operations["organisations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/organisations/{organisation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Organisation */
+        get: operations["organisations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Organisation */
+        patch: operations["organisations_update"];
+        trace?: never;
+    };
     "/api/v1/settings/plan-and-usage": {
         parameters: {
             query?: never;
@@ -706,7 +742,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -1148,6 +1184,84 @@ export interface components {
             /** Id */
             id: string;
         };
+        /** OrganisationCreate */
+        OrganisationCreate: {
+            /** Name */
+            name: string;
+            /** Registrationnumber */
+            registrationNumber?: string | null;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "owner" | "client" | "subcontractor";
+        };
+        /**
+         * OrganisationErrorBody
+         * @description A domain error: a stable ``code`` (``ORGANISATION_NAME_TAKEN``, ``NOT_FOUND``, ...).
+         */
+        OrganisationErrorBody: {
+            /** Code */
+            code: string;
+        };
+        /**
+         * OrganisationList
+         * @description Every live organisation that matches, by name (a tenant has tens, not thousands).
+         */
+        OrganisationList: {
+            /** Items */
+            items: components["schemas"]["OrganisationOut"][];
+        };
+        /** OrganisationOut */
+        OrganisationOut: {
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Registrationnumber */
+            registrationNumber: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "inactive";
+            /** Syncversion */
+            syncVersion: number;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "owner" | "client" | "subcontractor";
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /**
+         * OrganisationUpdate
+         * @description Only the fields sent are changed; ``syncVersion`` is the version the client last read.
+         */
+        OrganisationUpdate: {
+            /** Name */
+            name?: string | null;
+            /** Registrationnumber */
+            registrationNumber?: string | null;
+            /** Status */
+            status?: ("active" | "inactive") | null;
+            /** Syncversion */
+            syncVersion: number;
+            /** Type */
+            type?: ("owner" | "client" | "subcontractor") | null;
+        };
         /**
          * OverrideCreate
          * @description A boolean for ``feature.*``; a count, or null for unlimited, for ``limit.*``.
@@ -1329,7 +1443,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -1354,7 +1468,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -1366,7 +1480,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * Scope
@@ -3203,6 +3317,167 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    organisations_list: {
+        parameters: {
+            query?: {
+                type?: ("owner" | "client" | "subcontractor")[];
+                status?: ("active" | "inactive")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationList"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    organisations_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganisationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationErrorBody"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    organisations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    organisations_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganisationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationErrorBody"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

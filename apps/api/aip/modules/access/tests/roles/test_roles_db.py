@@ -13,14 +13,16 @@ from uuid import UUID
 import httpx
 import pytest
 from fastapi import FastAPI
-from tests.conftest import ALICE_ID, BOB_ID, TENANT_A_ID
+from tests.conftest import ALICE_ID, BOB_ID, TENANT_A_ID, TENANT_B_ID
 from tests.fixtures.postgres import TenantDb
 
+from aip.modules.access.api import has_role
 from aip.modules.access.roles.cli import _seed as seed_cli  # pyright: ignore[reportPrivateUsage]
 from aip.modules.access.roles.default_roles import ROLE_CODES
 from aip.modules.access.roles.service import AssignmentService
 from aip.platform.access import AccessPrincipal, PolicyService, Resource
 from aip.platform.context import RequestContext, new_request_id, use_context
+from aip.platform.db.session import with_tenant
 from aip.platform.http import DomainError
 
 from .conftest import (
@@ -594,3 +596,82 @@ async def test_no_tenant_role_can_hold_an_operator_permission(
         headers=ALICE,
     )
     assert (patched.status_code, patched.json()["code"]) == (422, "OPERATOR_ONLY_PERMISSION")
+
+
+# --- TENANCY-03: has_role and the organisation permissions ------------------------------------
+
+
+async def test_has_role_is_true_only_in_the_assigned_project(client: httpx.AsyncClient) -> None:
+    p1, p2 = await new_project(client, "P1"), await new_project(client, "P2")
+    scope = {"type": "project", "projectId": p1}
+    assert (await assign(client, CAROL_ID, "inspector", scope=scope)).status_code == 201
+
+    async with with_tenant(TENANT_A_ID) as conn:
+        assert await has_role(conn, CAROL_ID, "inspector", UUID(p1))
+        assert not await has_role(conn, CAROL_ID, "inspector", UUID(p2))
+        assert not await has_role(conn, CAROL_ID, "inspector")  # not tenant-wide
+        assert not await has_role(conn, CAROL_ID, "project_manager", UUID(p1))
+
+
+async def test_has_role_with_a_tenant_assignment_holds_in_every_project(
+    client: httpx.AsyncClient,
+) -> None:
+    p1 = await new_project(client, "P1")
+    assert (await assign(client, CAROL_ID, "project_manager")).status_code == 201
+
+    async with with_tenant(TENANT_A_ID) as conn:
+        assert await has_role(conn, CAROL_ID, "project_manager", UUID(p1))
+        assert await has_role(conn, CAROL_ID, "project_manager")
+    async with with_tenant(TENANT_B_ID) as conn:  # another tenant sees no assignment
+        assert not await has_role(conn, CAROL_ID, "project_manager")
+
+
+async def test_default_roles_get_the_organisation_permissions(client: httpx.AsyncClient) -> None:
+    roles = {r["code"]: r for r in (await client.get(ROLES, headers=ALICE)).json()["items"]}
+    admin = set(roles["tenant_admin"]["permissions"])
+    manager = set(roles["project_manager"]["permissions"])
+    assert {"tenancy.organisation.read", "tenancy.organisation.manage"} <= admin
+    assert "tenancy.organisation.read" in manager
+    assert "tenancy.organisation.manage" not in manager
+    assert "tenancy.organisation.read" not in roles["inspector"]["permissions"]
+
+
+async def test_has_role_ignores_expired_deleted_and_inactive(
+    client: httpx.AsyncClient, db: TenantDb
+) -> None:
+    async def holds(user: UUID, code: str) -> bool:
+        async with with_tenant(TENANT_A_ID) as conn:
+            return await has_role(conn, user, code)
+
+    await su_assign(db, TENANT_A_ID, DAVE_ID, "supervisor")  # Dave is deactivated
+    assert not await holds(DAVE_ID, "supervisor")
+
+    await su_assign(db, TENANT_A_ID, CAROL_ID, "supervisor")
+    assert await holds(CAROL_ID, "supervisor")
+    await su_execute(
+        db,
+        "UPDATE role_assignment SET valid_from = now() - interval '2 days',"
+        f" valid_to = now() - interval '1 day' WHERE user_id = '{CAROL_ID}'",
+    )
+    assert not await holds(CAROL_ID, "supervisor")  # expired
+
+    await su_assign(db, TENANT_A_ID, CAROL_ID, "hse_officer")
+    await su_execute(
+        db, f"UPDATE role_assignment SET deleted_at = now() WHERE user_id = '{CAROL_ID}'"
+    )
+    assert not await holds(CAROL_ID, "hse_officer")  # assignment soft-deleted
+
+    await su_assign(db, TENANT_A_ID, CAROL_ID, "field_worker")
+    assert await holds(CAROL_ID, "field_worker")
+    await su_execute(
+        db,
+        "UPDATE role SET deleted_at = now()"
+        f" WHERE tenant_id = '{TENANT_A_ID}' AND code = 'field_worker'",
+    )
+    assert not await holds(CAROL_ID, "field_worker")  # role soft-deleted
+
+
+async def test_the_auditor_reads_organisations(client: httpx.AsyncClient) -> None:
+    roles = {r["code"]: r for r in (await client.get(ROLES, headers=ALICE)).json()["items"]}
+    assert "tenancy.organisation.read" in roles["auditor"]["permissions"]
+    assert "tenancy.organisation.manage" not in roles["auditor"]["permissions"]

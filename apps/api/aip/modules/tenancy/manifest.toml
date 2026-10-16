@@ -7,6 +7,8 @@
 # ARCH-08: tenancy also owns the `tenant` permission namespace for tenant-wide settings whose
 #   pages live under aip.platform.* (permissions come only from manifests, ACCESS-01):
 #   tenant.flags.manage gates PUT /api/v1/settings/flags/{flag} (aip.platform.flags).
+# TENANCY-03: organisations (owner, client, subcontractor) under /api/v1/settings/organisations;
+#   the default roles get read at the access matrix's tenancy `view` level, manage at `admin`.
 id = "tenancy"
 context = "tenancy"
 depends_on = []
@@ -27,6 +29,22 @@ description = "Read the tenant plan, features, limits and usage (read-only)"
 code = "tenant.flags.manage"
 description = "Switch the tenant's release flags for deferred modules (BIM, AI)"
 
+[[permissions]]
+code = "tenancy.organisation.read"
+description = "List and view the tenant's owner, client and subcontractor organisations"
+
+[[permissions]]
+code = "tenancy.organisation.manage"
+description = "Create, edit and deactivate organisations"
+
 [[events]]
 name = "tenant.entitlements_changed"
+version = 1
+
+[[events]]
+name = "tenancy.organisation_created"
+version = 1
+
+[[events]]
+name = "tenancy.organisation_updated"
 version = 1

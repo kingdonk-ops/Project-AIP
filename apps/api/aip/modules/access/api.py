@@ -9,6 +9,8 @@ Other modules may import only this file. Keep it small and stable.
 - ``seed_default_roles`` (ACCESS-02): the 11 system roles for the connection's tenant, idempotent
   (TENANCY-05 provisioning calls it). ``RoleGrantProvider``: role assignments as policy grants
   (registered by ``aip.main``).
+- ``has_role(conn, user_id, role_code, project_id=None)`` (TENANCY-03): whether the user holds
+  the role tenant-wide or on that project; takes the connection from ``with_tenant``.
 
 The authorisation runtime itself (``PolicyService``, ``requires``) is ``aip.platform.access``.
 """
@@ -24,6 +26,7 @@ from aip.modules.access.repository import (
     list_permissions,
 )
 from aip.modules.access.roles.grant_provider import RoleGrantProvider
+from aip.modules.access.roles.repository import has_role
 from aip.modules.access.roles.seed import SeedReport, seed_default_roles
 from aip.modules.access.service import sync_catalogue
 
@@ -35,6 +38,7 @@ __all__ = [
     "bump_access_version",
     "get_access_version",
     "get_api",
+    "has_role",
     "list_permissions",
     "seed_default_roles",
     "sync_catalogue",

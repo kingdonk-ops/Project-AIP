@@ -263,6 +263,10 @@ GRANT SELECT ON TABLE public.jobs TO aip_jobs;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.locale_settings TO aip_app;
 GRANT SELECT ON TABLE public.locale_settings TO aip_readonly;
 
+-- Name: TABLE organisations; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.organisations TO aip_app;
+GRANT SELECT ON TABLE public.organisations TO aip_readonly;
+
 -- Name: TABLE partition_settings; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.partition_settings TO aip_jobs;
 
@@ -473,6 +477,14 @@ ALTER TABLE ONLY public.login_directory
 -- Name: login_directory uq_login_directory_kind_key; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.login_directory
     ADD CONSTRAINT uq_login_directory_kind_key UNIQUE (kind, key);
+
+-- Name: organisations pk_organisations; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.organisations
+    ADD CONSTRAINT pk_organisations PRIMARY KEY (id);
+
+-- Name: organisations uq_organisations_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.organisations
+    ADD CONSTRAINT uq_organisations_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: partition_settings pk_partition_settings; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.partition_settings
@@ -1750,6 +1762,12 @@ CREATE INDEX ix_locale_settings_tenant_id ON public.locale_settings USING btree 
 -- Name: ix_login_directory_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_login_directory_tenant_id ON public.login_directory USING btree (tenant_id);
 
+-- Name: ix_organisations_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_organisations_tenant_id ON public.organisations USING btree (tenant_id);
+
+-- Name: ix_organisations_tenant_id_org_type; Type: INDEX; Schema: public
+CREATE INDEX ix_organisations_tenant_id_org_type ON public.organisations USING btree (tenant_id, org_type);
+
 -- Name: ix_permission_module_id; Type: INDEX; Schema: public
 CREATE INDEX ix_permission_module_id ON public.permission USING btree (module_id);
 
@@ -1927,6 +1945,9 @@ CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs US
 -- Name: uq_locale_settings_tenant_id_project_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_locale_settings_tenant_id_project_id ON public.locale_settings USING btree (tenant_id, COALESCE(project_id, '00000000-0000-0000-0000-000000000000'::uuid)) WHERE (deleted_at IS NULL);
 
+-- Name: uq_organisations_tenant_id_lower_name; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_organisations_tenant_id_lower_name ON public.organisations USING btree (tenant_id, lower(name)) WHERE (deleted_at IS NULL);
+
 -- Name: uq_projects_tenant_id_upper_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_projects_tenant_id_upper_code ON public.projects USING btree (tenant_id, upper(code)) WHERE (deleted_at IS NULL);
 
@@ -2062,6 +2083,9 @@ CREATE POLICY platform_read ON public.locale_settings FOR SELECT USING ((tenant_
 -- Name: locale_settings tenant_write; Type: POLICY; Schema: public
 CREATE POLICY tenant_write ON public.locale_settings USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
 
+-- Name: organisations tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.organisations USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: projects tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.projects USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -2196,6 +2220,9 @@ ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
 
 -- Name: locale_settings; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.locale_settings ENABLE ROW LEVEL SECURITY;
+
+-- Name: organisations; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.organisations ENABLE ROW LEVEL SECURITY;
 
 -- Name: projects; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
@@ -2737,6 +2764,28 @@ CREATE TABLE public.login_directory (
 );
 
 ALTER TABLE public.login_directory OWNER TO aip_owner;
+
+-- Name: organisations; Type: TABLE; Schema: public
+CREATE TABLE public.organisations (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    name text NOT NULL,
+    org_type text NOT NULL,
+    registration_number text,
+    status text DEFAULT 'active'::text NOT NULL,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_organisations_name CHECK ((btrim(name) <> ''::text)),
+    CONSTRAINT ck_organisations_org_type CHECK ((org_type = ANY (ARRAY['owner'::text, 'client'::text, 'subcontractor'::text]))),
+    CONSTRAINT ck_organisations_status CHECK ((status = ANY (ARRAY['active'::text, 'inactive'::text]))),
+    CONSTRAINT ck_organisations_sync_version CHECK ((sync_version >= 1))
+);
+
+ALTER TABLE ONLY public.organisations FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.organisations OWNER TO aip_owner;
 
 -- Name: partition_settings; Type: TABLE; Schema: public
 CREATE TABLE public.partition_settings (
