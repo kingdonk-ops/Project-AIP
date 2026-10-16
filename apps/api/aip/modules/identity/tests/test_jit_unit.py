@@ -195,6 +195,9 @@ def test_principal_rejects_bad_values(overrides: dict[str, object]) -> None:
 def test_create_app_refuses_the_stub_in_production(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AIP_ENV", "production")
     monkeypatch.setenv("AUTH_TEST_STUB", "1")
+    # A production-grade transport (STACK-07), so the stub check is what refuses to start.
+    monkeypatch.setenv("DB_SSLMODE", "verify-full")
+    monkeypatch.delenv("REDIS_URL", raising=False)
     with pytest.raises(RuntimeError, match="test auth stub forbidden in production"):
         create_app(tracing=False)
 
