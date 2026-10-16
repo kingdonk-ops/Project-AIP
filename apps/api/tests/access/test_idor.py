@@ -92,14 +92,17 @@ async def test_tenant_a_cannot_reach_tenant_bs_rows_through_any_id_route(
     overrides = load_overrides()
     by_table = {c.table: c for c in cases(_declared())}
     results: list[str] = []
+    seeded: dict[str, dict[str, str]] = {}
     for key, entry in sorted(load_routes().items()):
         if entry.get("skip"):
             continue
         method, path = key.split(" ", 1)
         case = by_table[entry["table"]]
-        _, key_b = await seed_pair(
-            db.db.superuser_url, case, overrides.get(case.table), TENANT_A_ID, TENANT_B_ID
-        )
+        if case.table not in seeded:  # one pair per table: several routes share a table
+            _, seeded[case.table] = await seed_pair(
+                db.db.superuser_url, case, overrides.get(case.table), TENANT_A_ID, TENANT_B_ID
+            )
+        key_b = seeded[case.table]
         [id_column] = [c for c in case.primary_key if c != "created_at"]
         match = _UUID_LITERAL.match(key_b[id_column])
         assert match, f"{key}: {case.table} is not keyed by a uuid"
