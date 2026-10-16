@@ -34,7 +34,12 @@ function VersionSection({
         <h2 id={headingId}>{t("arch.events.detail.version", { version: detail.version })}</h2>
         <EventStatusChip status={detail.status} />
         {detail.status === "active" ? (
-          <Button variant="secondary" onClick={onDeprecate} disabled={busy}>
+          <Button
+            variant="secondary"
+            aria-label={t("arch.events.detail.deprecate_version", { version: detail.version })}
+            onClick={onDeprecate}
+            disabled={busy}
+          >
             {t("arch.events.detail.deprecate")}
           </Button>
         ) : null}
@@ -60,7 +65,9 @@ function VersionSection({
 }
 
 export function EventDetailPage({ eventName }: { eventName: string }) {
-  const query = usePlatformGetEvent(eventName);
+  // The router decodes `$eventName`; encode it again so it stays one path segment in the API URL.
+  const segment = encodeURIComponent(eventName);
+  const query = usePlatformGetEvent(segment);
   const queryClient = useQueryClient();
   const deprecate = usePlatformDeprecateEventVersion();
   const response = query.data;
@@ -75,11 +82,11 @@ export function EventDetailPage({ eventName }: { eventName: string }) {
       tone: "danger",
     });
     if (!ok) return;
-    const result = await deprecate.mutateAsync({ eventName, version }).catch(() => undefined);
+    const result = await deprecate.mutateAsync({ eventName: segment, version }).catch(() => undefined);
     if (result?.status === 200) toast.success("arch.events.detail.deprecated_toast", params);
-    else toast.error("arch.events.dead_letter.action_failed");
+    else toast.error("arch.events.detail.deprecate_failed");
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: getPlatformGetEventQueryKey(eventName) }),
+      queryClient.invalidateQueries({ queryKey: getPlatformGetEventQueryKey(segment) }),
       queryClient.invalidateQueries({ queryKey: getPlatformListEventsQueryKey().slice(0, 1) }),
     ]);
   };

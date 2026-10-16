@@ -23,7 +23,7 @@ import {
   type RegisterQueryResult,
 } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { t } from "../shell/t";
 import { EVENTS_MANAGE } from "./access";
 import { DiscardDialog } from "./DiscardDialog";
@@ -57,8 +57,15 @@ function EventId({ id }: { id: string }) {
         variant="ghost"
         aria-label={t("arch.events.dead_letter.copy_id", { id })}
         onClick={() => {
-          void navigator.clipboard?.writeText(id).then(() => toast.info("arch.events.dead_letter.copied"));
-        }}
+        if (!navigator.clipboard) {
+          toast.error("arch.events.dead_letter.copy_failed");
+          return;
+        }
+        navigator.clipboard.writeText(id).then(
+          () => toast.info("arch.events.dead_letter.copied"),
+          () => toast.error("arch.events.dead_letter.copy_failed"),
+        );
+      }}
       >
         {t("arch.events.dead_letter.copy")}
       </Button>
@@ -77,8 +84,16 @@ export function DeadLetterPage({ query, onQueryChange, permissions }: DeadLetter
   const retry = usePlatformRetryDeadLetter();
   const discard = usePlatformDiscardDeadLetter();
   const [discarding, setDiscarding] = useState<DeadLetter | null>(null);
+  // Bulk retry runs one request per row; a second press while it runs is ignored.
+  const bulkRunning = useRef(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  // The acted-on row (and its focused button) disappears: focus returns to the page heading.
+  const heading = useRef<HTMLHeadingElement>(null);
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: getPlatformListDeadLettersQueryKey().slice(0, 1) });
+  const refresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: getPlatformListDeadLettersQueryKey().slice(0, 1) });
+    heading.current?.focus();
+  };
 
   const retryOne = async (id: string): Promise<Outcome> =>
     outcomeOf((await retry.mutateAsync({ eventId: id }).catch(() => undefined))?.status);
@@ -95,10 +110,18 @@ export function DeadLetterPage({ query, onQueryChange, permissions }: DeadLetter
   };
 
   const onRetryMany = async (rows: readonly DeadLetter[]) => {
-    let done = 0;
-    for (const row of rows) if ((await retryOne(row.id)) === "done") done += 1;
-    toast.info("arch.events.dead_letter.retried_some", { done, total: rows.length });
-    await refresh();
+    if (bulkRunning.current) return;
+    bulkRunning.current = true;
+    setBulkBusy(true);
+    try {
+      let done = 0;
+      for (const row of rows) if ((await retryOne(row.id)) === "done") done += 1;
+      toast.info("arch.events.dead_letter.retried_some", { done, total: rows.length });
+      await refresh();
+    } finally {
+      bulkRunning.current = false;
+      setBulkBusy(false);
+    }
   };
 
   const onDiscard = async (reason: string) => {
@@ -134,7 +157,7 @@ export function DeadLetterPage({ query, onQueryChange, permissions }: DeadLetter
             <Button
               variant="secondary"
               aria-label={t("arch.events.dead_letter.retry_row", { id: row.id })}
-              disabled={retry.isPending}
+              disabled={retry.isPending || bulkBusy}
               onClick={() => void onRetry(row)}
             >
               {t("arch.events.dead_letter.retry")}
@@ -142,6 +165,7 @@ export function DeadLetterPage({ query, onQueryChange, permissions }: DeadLetter
             <Button
               variant="secondary"
               aria-label={t("arch.events.dead_letter.discard_row", { id: row.id })}
+              disabled={bulkBusy}
               onClick={() => setDiscarding(row)}
             >
               {t("arch.events.dead_letter.discard")}
@@ -162,7 +186,9 @@ export function DeadLetterPage({ query, onQueryChange, permissions }: DeadLetter
 
   return (
     <section className="aip-page" aria-labelledby="platform-dead-letter-title">
-      <h1 id="platform-dead-letter-title">{t("arch.events.dead_letter.title")}</h1>
+      <h1 id="platform-dead-letter-title" ref={heading} tabIndex={-1}>
+        {t("arch.events.dead_letter.title")}
+      </h1>
       <p>{t("arch.events.dead_letter.intro")}</p>
       <RegisterTable
         id="platform-dead-letter"

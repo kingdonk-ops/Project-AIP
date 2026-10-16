@@ -82,6 +82,28 @@ describe("access", () => {
   );
 });
 
+describe("loading and error states", () => {
+  const pages: [string, string][] = [
+    ["/admin/platform/events", BASE],
+    ["/admin/platform/events/project.created", `${BASE}/project.created`],
+    ["/admin/platform/events/dead-letter", `${BASE}/dead-letter`],
+  ];
+
+  it.each(pages)("%s has no serious axe violations while loading", async (path, endpoint) => {
+    server.use(http.get(api(endpoint), () => new Promise<never>(() => undefined)));
+    const { container } = renderAt(path, OPERATOR);
+    await screen.findByRole("heading", { level: 1 });
+    expect(await blocking(container)).toEqual([]);
+  });
+
+  it.each(pages)("%s shows an error state with no serious axe violations when the API fails", async (path, endpoint) => {
+    server.use(http.get(api(endpoint), () => HttpResponse.json({ detail: "boom" }, { status: 500 })));
+    const { container } = renderAt(path, OPERATOR);
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(await blocking(container)).toEqual([]);
+  });
+});
+
 describe("event catalogue", () => {
   it("lists events with their module, status and 24h counts, and filters by module in the URL", async () => {
     const seen: URLSearchParams[] = [];
@@ -138,13 +160,13 @@ describe("event detail", () => {
     expect(within(version).getByText("audit")).toBeTruthy();
     expect(await blocking(container)).toEqual([]);
 
-    fireEvent.click(within(version).getByRole("button", { name: t("arch.events.detail.deprecate") }));
+    fireEvent.click(within(version).getByRole("button", { name: t("arch.events.detail.deprecate_version", { version: 1 }) }));
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: t("arch.events.detail.deprecate_confirm") }));
     await waitFor(() => expect(deprecations).toBe(1));
     expect(await screen.findByText(t("arch.events.detail.deprecated_toast", { name: "project.created", version: 1 }))).toBeTruthy();
     await waitFor(() =>
-      expect(within(version).queryByRole("button", { name: t("arch.events.detail.deprecate") })).toBeNull(),
+      expect(within(version).queryByRole("button", { name: t("arch.events.detail.deprecate_version", { version: 1 }) })).toBeNull(),
     );
     expect(within(version).getByText(t("arch.events.status.deprecated"))).toBeTruthy();
   });
@@ -261,6 +283,47 @@ describe("dead-letter queue", () => {
     });
     fireEvent.click(await screen.findByRole("button", { name: t("arch.events.dead_letter.retry_selected") }));
     expect(await screen.findByText(t("arch.events.dead_letter.retried_some", { done: 1, total: 2 }))).toBeTruthy();
+  });
+
+  it("ignores a second press of Retry selected while the first run is going", async () => {
+    let retries = 0;
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    server.use(
+      listing(() => [deadLetter("e1")], { list: 0 }),
+      http.post(api(`${BASE}/dead-letter/e1/retry`), async () => {
+        retries += 1;
+        await gate;
+        return HttpResponse.json({ id: "e1", eventName: "project.created", eventVersion: 1, action: "retried" });
+      }),
+    );
+    renderAt("/admin/platform/events/dead-letter", OPERATOR);
+    await screen.findByRole("row", { name: /e1/ });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("checkbox", { name: t("register.selectPage") }));
+    });
+    const bulk = await screen.findByRole("button", { name: t("arch.events.dead_letter.retry_selected") });
+    fireEvent.click(bulk);
+    fireEvent.click(bulk);
+    release();
+    expect(await screen.findByText(t("arch.events.dead_letter.retried_some", { done: 1, total: 1 }))).toBeTruthy();
+    expect(retries).toBe(1);
+  });
+
+  it("puts focus on the page heading after the acted-on row disappears", async () => {
+    let rows = [deadLetter("e1")];
+    server.use(
+      listing(() => rows, { list: 0 }),
+      http.post(api(`${BASE}/dead-letter/e1/retry`), () => {
+        rows = [];
+        return HttpResponse.json({ id: "e1", eventName: "project.created", eventVersion: 1, action: "retried" });
+      }),
+    );
+    renderAt("/admin/platform/events/dead-letter", OPERATOR);
+    const row = await screen.findByRole("row", { name: /e1/ });
+    fireEvent.click(within(row).getByRole("button", { name: t("arch.events.dead_letter.retry_row", { id: "e1" }) }));
+    const heading = screen.getByRole("heading", { name: t("arch.events.dead_letter.title"), level: 1 });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
   });
 
   it("pages forward with the API's nextAfter as the after parameter", async () => {

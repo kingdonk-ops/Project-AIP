@@ -99,7 +99,7 @@ test("an operator filters the catalogue, reads a schema and deprecates a version
   await expect(table.getByRole("row", { name: /tenant\.entitlements_changed/ })).toBeVisible();
   await expectNoBlockingAxe(page);
 
-  await page.getByLabel("Module").selectOption("projects");
+  await page.getByLabel("Module", { exact: true }).selectOption("projects");
   await expect(page).toHaveURL(/module=projects/);
   await expect(table.getByRole("row", { name: /tenant\.entitlements_changed/ })).toHaveCount(0);
 
