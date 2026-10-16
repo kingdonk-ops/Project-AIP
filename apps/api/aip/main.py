@@ -45,7 +45,11 @@ from aip.modules.identity.api import (
 )
 from aip.modules.ops.health import ReadinessChecker
 from aip.modules.ops.health import router as health_router
-from aip.modules.tenancy.api import DEMO_ENV, assert_demo_has_no_real_customers
+from aip.modules.tenancy.api import (
+    DEMO_ENV,
+    active_tenant_guard,
+    assert_demo_has_no_real_customers,
+)
 from aip.modules.terms.api import install as install_term_resolver
 from aip.platform.access import (
     AccessPrincipal,
@@ -240,6 +244,9 @@ def create_app(
         catalogue=catalogue,
         policy=policy,
         principal_source=identity_access_principal if identity_drives_context else None,
+        # TENANCY-01: every authenticated() and requires() route refuses an inactive tenant,
+        # whether or not it also depends on require_active_tenant (review 11, H2).
+        tenant_guard=active_tenant_guard if any(m.id == "tenancy" for m in modules) else None,
     )
 
     app.add_middleware(

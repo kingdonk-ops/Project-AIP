@@ -29,7 +29,6 @@ from tests.platform.db.conftest import (  # noqa: F401 - re-exported pytest fixt
 
 from aip.main import create_app
 from aip.modules.tenancy.api import TenantView, get_tenant, require_active_tenant
-from aip.modules.tenancy.dependencies import get_tenant_service
 from aip.modules.tenancy.seed import KAEFER_DEMO_ID, TENANT_B_ID, seed
 from aip.modules.tenancy.service import TenantConnect, TenantService
 from aip.platform.access import authenticated
@@ -67,8 +66,7 @@ def app(app_tx: TenantConnect) -> FastAPI:
         }
     )
     application = create_app(env="test", principal_resolver=resolver, tracing=False)
-    service = TenantService(app_tx)
-    application.dependency_overrides[get_tenant_service] = lambda: service
+    application.state.tenancy_service = TenantService(app_tx)
 
     async def guarded(
         tenant: Annotated[TenantView, Depends(require_active_tenant)],
@@ -299,6 +297,28 @@ async def test_suspended_tenant_gets_403_and_other_tenant_is_unaffected(
     resp = await client.get("/api/v1/_test/guarded", headers=bearer("token-alice"))
     assert resp.status_code == 200
     assert resp.json() == {"slug": "kaefer-demo"}
+
+
+async def test_suspended_tenant_cannot_change_a_flag_without_require_active_tenant(
+    tenancy_db: FreshDb, client: httpx.AsyncClient
+) -> None:
+    # Review 11 H2: the flags router has no require_active_tenant; the access tenant guard
+    # refuses the suspended tenant before the permission check or the write.
+    await asyncio.to_thread(
+        tenancy_db.execute, "UPDATE tenants SET status = 'suspended' WHERE slug = 'tenant-b'"
+    )
+    for method, path in (("PUT", "/api/v1/settings/flags/bim"), ("GET", "/api/v1/settings/flags")):
+        resp = await client.request(
+            method, path, headers=bearer("token-bob"), json={"enabled": True}
+        )
+        assert resp.status_code == 403, resp.text
+        assert resp.json()["detail"]["code"] == "TENANT_SUSPENDED"
+    # The active tenant is not refused for its status (alice holds no flags grant here).
+    resp = await client.put(
+        "/api/v1/settings/flags/bim", headers=bearer("token-alice"), json={"enabled": True}
+    )
+    assert resp.status_code == 403, resp.text
+    assert resp.json() == {"code": "FORBIDDEN", "permission": "tenant.flags.manage"}
 
 
 async def test_soft_deleted_or_unknown_tenant_is_401(

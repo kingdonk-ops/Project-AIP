@@ -21,7 +21,7 @@ from fastapi import Depends
 from sqlalchemy import event, text
 from sqlalchemy.exc import DBAPIError, InvalidRequestError
 from sqlalchemy.ext.asyncio import AsyncEngine
-from tests.conftest import TENANT_A_ID, TENANT_B_ID
+from tests.conftest import TENANT_A_ID, TENANT_B_ID, serve_fixture_tenants
 from tests.platform.db.conftest import APP, JOBS, OWNER, READONLY, ROLE_PASSWORDS, execute
 
 from aip.main import create_app
@@ -504,11 +504,13 @@ async def test_route_without_a_tenant_principal_gets_401_and_never_checks_out(
     checkouts: list[object] = []
     event.listen(app_engine.sync_engine, "checkout", lambda *args: checkouts.append(args))
 
-    app = create_app(
-        principal_resolver=principal_resolver,
-        membership_resolver=membership_resolver,
-        env="test",
-        tracing=False,
+    app = serve_fixture_tenants(
+        create_app(
+            principal_resolver=principal_resolver,
+            membership_resolver=membership_resolver,
+            env="test",
+            tracing=False,
+        )
     )
 
     @app.get("/api/v1/_fixture/rls-probe", dependencies=[Depends(authenticated())])

@@ -36,6 +36,7 @@ def test_api_exports_only_the_published_interface() -> None:
         "UsageFigures",
         "UsageSource",
         "access_for_status",
+        "active_tenant_guard",
         "assert_demo_has_no_real_customers",
         "ensure_within_limit",
         "get_entitlement_service",

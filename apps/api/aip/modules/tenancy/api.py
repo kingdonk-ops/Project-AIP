@@ -2,8 +2,11 @@
 
 Other modules may import only this file, and only these names:
 
-- ``require_active_tenant``: FastAPI dependency for every tenant-scoped route; 401 without a
-  principal or a known tenant, 403 for a tenant that is not ``active``;
+- ``require_active_tenant``: FastAPI dependency for tenant-scoped routes that need the
+  ``TenantView`` or the tenant slug and region in the context; 401 without a principal or a
+  known tenant, 403 for a tenant that is not ``active``;
+- ``active_tenant_guard``: the same check as an access tenant guard, which ``aip.main`` installs
+  so every ``authenticated()`` and ``requires()`` route refuses an inactive tenant;
 - ``get_tenant(tenant_id)``: the tenant, read inside ``with_tenant(tenant_id)``, or ``None``;
 - ``load_tenant(conn, tenant_id)``: the same read on a connection the caller already holds from
   ``with_tenant`` (IDENTITY-02's sign-in provisioning checks the tenant in its own transaction);
@@ -33,7 +36,7 @@ from aip.modules.tenancy.demo_guard import (
     RealDataInDemoError,
     assert_demo_has_no_real_customers,
 )
-from aip.modules.tenancy.dependencies import require_active_tenant
+from aip.modules.tenancy.dependencies import active_tenant_guard, require_active_tenant
 from aip.modules.tenancy.entitlements.dependencies import (
     ensure_within_limit,
     get_entitlement_service,
@@ -80,6 +83,7 @@ __all__ = [
     "UsageFigures",
     "UsageSource",
     "access_for_status",
+    "active_tenant_guard",
     "assert_demo_has_no_real_customers",
     "ensure_within_limit",
     "get_entitlement_service",

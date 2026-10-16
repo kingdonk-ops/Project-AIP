@@ -12,6 +12,7 @@ from uuid import UUID
 import httpx
 import pytest
 from fastapi import Depends, FastAPI
+from tests.conftest import serve_fixture_tenants
 
 from aip.main import create_app
 from aip.platform.access import authenticated
@@ -24,8 +25,10 @@ DEBUG = "/api/v1/_debug/context"
 def make_app(
     principal_resolver: PrincipalResolver, membership_resolver: Any, *, env: str = "test"
 ) -> FastAPI:
-    return create_app(
-        principal_resolver=principal_resolver, membership_resolver=membership_resolver, env=env
+    return serve_fixture_tenants(
+        create_app(
+            principal_resolver=principal_resolver, membership_resolver=membership_resolver, env=env
+        )
     )
 
 
@@ -150,7 +153,9 @@ async def test_env_defaults_to_aip_env(
     monkeypatch: pytest.MonkeyPatch, principal_resolver: Any, membership_resolver: Any
 ) -> None:
     monkeypatch.setenv("AIP_ENV", "test")
-    app = create_app(principal_resolver=principal_resolver, membership_resolver=membership_resolver)
+    app = serve_fixture_tenants(
+        create_app(principal_resolver=principal_resolver, membership_resolver=membership_resolver)
+    )
     async with client(app) as c:
         r = await c.get(DEBUG, headers={"Authorization": "Bearer token-alice"})
     assert r.status_code == 200

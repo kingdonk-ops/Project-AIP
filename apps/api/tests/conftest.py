@@ -11,7 +11,9 @@ from dataclasses import dataclass, field
 from uuid import UUID
 
 import pytest
+from fastapi import FastAPI
 
+from aip.modules.tenancy.api import TenantView
 from aip.platform.context import Principal
 from tests.fixtures.postgres import (  # noqa: F401 - shared real-Postgres fixtures (TESTING-01)
     bootstrapped_db,  # pyright: ignore[reportUnusedImport]
@@ -67,6 +69,32 @@ class FixtureMembershipResolver:
         if actor_id is None:
             return False
         return project_id in self.members.get((tenant_id, actor_id), set())
+
+
+class ActiveFixtureTenants:
+    """Tenant loader for apps tested without a ``tenants`` table: every tenant id is active.
+
+    The access tenant guard (TENANCY-01) loads the caller's tenant on every non-public route; a
+    test that is not about tenants serves its fixture principals through this instead.
+    """
+
+    async def get(self, tenant_id: UUID) -> TenantView | None:
+        return TenantView.model_validate(
+            {
+                "id": tenant_id,
+                "name": "Fixture tenant",
+                "slug": f"fixture-{tenant_id.hex[-6:]}",
+                "region_code": "ap-southeast-2",
+                "deployment_shape": "pooled",
+                "status": "active",
+            }
+        )
+
+
+def serve_fixture_tenants(app: FastAPI) -> FastAPI:
+    """``app`` with every fixture tenant active for the access tenant guard (returns ``app``)."""
+    app.state.tenancy_service = ActiveFixtureTenants()
+    return app
 
 
 @pytest.fixture
