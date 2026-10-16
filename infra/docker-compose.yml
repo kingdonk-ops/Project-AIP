@@ -37,9 +37,11 @@ x-api-build: &api-build
 x-app-env: &app-env
   AIP_ENV: ${AIP_ENV:-development}
   # The request path connects as aip_app (DATABASE-02: the engine refuses owner logins); the
-  # worker connects as aip_jobs (OPS-02, ADR 0003).
+  # worker connects as aip_jobs (OPS-02, ADR 0003) and writes the audit chains as aip_audit_writer
+  # (AUDIT-02).
   DATABASE_URL: ${DATABASE_URL:-postgresql://aip_app:aip_app_dev_only@postgres:5432/aip}
   DATABASE_JOBS_URL: ${DATABASE_JOBS_URL:-postgresql://aip_jobs:aip_jobs_dev_only@postgres:5432/aip}
+  DATABASE_AUDIT_WRITER_URL: ${DATABASE_AUDIT_WRITER_URL:-postgresql://aip_audit_writer:aip_audit_writer_dev_only@postgres:5432/aip}
   REDIS_URL: ${REDIS_URL:-redis://valkey:6379/0}
   OBJECT_STORE: ${OBJECT_STORE:-minio}
   OBJECT_STORE_BUCKET: ${OBJECT_STORE_BUCKET:-aip}
@@ -77,6 +79,7 @@ services:
       AIP_OWNER_PASSWORD: ${AIP_OWNER_PASSWORD:-aip_owner_dev_only}
       AIP_APP_PASSWORD: ${AIP_APP_PASSWORD:-aip_app_dev_only}
       AIP_JOBS_PASSWORD: ${AIP_JOBS_PASSWORD:-aip_jobs_dev_only}
+      AIP_AUDIT_WRITER_PASSWORD: ${AIP_AUDIT_WRITER_PASSWORD:-aip_audit_writer_dev_only}
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak_dev_only}
     volumes:
       - postgres-data:/var/lib/postgresql/data

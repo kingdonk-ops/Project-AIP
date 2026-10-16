@@ -6,6 +6,9 @@ tenant/stream head ``FOR UPDATE`` so appends serialise, assigns a gap-free ``seq
 hash with ``chain_hash.compute_hash`` (never in SQL), inserts the rows, and advances the head and
 the monthly checkpoints (ADR 0021). Re-inserting an already-seen ``source_event_id`` is a no-op
 that returns the existing ``seq``, so redelivery from the outbox (AUDIT-02) is safe.
+
+``append_security_events`` (AUDIT-02) does the same for ``security_audit_events``: the same
+head lock and checkpoints under ``stream = 'security'``, hashed through ``security_chain``.
 """
 
 from __future__ import annotations
@@ -20,11 +23,17 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.audit.chain_hash import GENESIS_PREV_HASH, ChainEntry, compute_hash
-from aip.modules.audit.schemas import AuditEntryIn
-from aip.modules.audit.tables import audit_chain_checkpoints, audit_chain_heads, audit_log
+from aip.modules.audit.schemas import AuditEntryIn, SecurityEventIn
+from aip.modules.audit.security_chain import SECURITY_STREAM, security_chain_entry
+from aip.modules.audit.tables import (
+    audit_chain_checkpoints,
+    audit_chain_heads,
+    audit_log,
+    security_audit_events,
+)
 from aip.platform.context import new_request_id
 
-__all__ = ["append_audit_entries"]
+__all__ = ["append_audit_entries", "append_security_events"]
 
 
 def _uuid7() -> UUID:
@@ -32,7 +41,7 @@ def _uuid7() -> UUID:
     return UUID(new_request_id())
 
 
-def _segment(entry: AuditEntryIn) -> str:
+def _segment(entry: AuditEntryIn | SecurityEventIn) -> str:
     """The monthly segment label (UTC ``YYYY-MM``) an entry belongs to (ADR 0021)."""
     return entry.occurred_at.astimezone(UTC).strftime("%Y-%m")
 
@@ -210,4 +219,64 @@ async def append_audit_entries(
         .values(last_seq=running_seq, last_hash=running_hash)
     )
     await _update_checkpoints(conn, tenant_id, stream, segments)
+    return result
+
+
+async def append_security_events(
+    conn: AsyncConnection, tenant_id: UUID, entries: Sequence[SecurityEventIn]
+) -> list[int]:
+    """Append ``entries`` to the tenant's security chain; return each entry's ``seq`` (AUDIT-02).
+
+    Same contract as :func:`append_audit_entries`: an ``aip_audit_writer`` connection bound to
+    ``tenant_id``, the ``(tenant, 'security')`` head locked, gap-free ``seq``, and an already-seen
+    ``source_event_id`` skipped and reported with its stored ``seq``.
+    """
+    if not entries:
+        return []
+    last_seq, last_hash = await _lock_head(conn, tenant_id, SECURITY_STREAM)
+    ids = {e.source_event_id for e in entries if e.source_event_id is not None}
+    existing: dict[UUID, int] = {}
+    if ids:
+        stmt = select(security_audit_events.c.source_event_id, security_audit_events.c.seq).where(
+            security_audit_events.c.tenant_id == tenant_id,
+            security_audit_events.c.source_event_id.in_(ids),
+        )
+        existing = {row[0]: int(row[1]) for row in (await conn.execute(stmt)).all()}
+
+    result: list[int] = []
+    rows: list[dict[str, Any]] = []
+    segments: dict[str, tuple[int, bytes]] = {}
+    running_seq, running_hash = last_seq, last_hash
+    for entry in entries:
+        sid = entry.source_event_id
+        if sid is not None and sid in existing:
+            result.append(existing[sid])
+            continue
+        running_seq += 1
+        row: dict[str, Any] = {
+            "id": _uuid7(),
+            "tenant_id": tenant_id,
+            "seq": running_seq,
+            **entry.model_dump(),
+            "prev_hash": running_hash,
+        }
+        row["hash"] = compute_hash(running_hash, security_chain_entry(row))
+        rows.append(row)
+        segments[_segment(entry)] = (running_seq, row["hash"])
+        if sid is not None:
+            existing[sid] = running_seq
+        running_hash = row["hash"]
+        result.append(running_seq)
+
+    if rows:
+        await conn.execute(insert(security_audit_events), rows)
+        await conn.execute(
+            audit_chain_heads.update()
+            .where(
+                audit_chain_heads.c.tenant_id == tenant_id,
+                audit_chain_heads.c.stream == SECURITY_STREAM,
+            )
+            .values(last_seq=running_seq, last_hash=running_hash, updated_at=func.now())
+        )
+        await _update_checkpoints(conn, tenant_id, SECURITY_STREAM, segments)
     return result

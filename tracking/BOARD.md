@@ -177,6 +177,7 @@ tasks still `todo` below remain before M0 is closed.
 | [UPLOADS-07](tasks/UPLOADS-07.md) | Enforce per-tenant SSE-KMS on the presigned upload (ADR 0006) | uploads | S | TENANCY-05, UPLOADS-01 | todo | found in UPLOADS-01: presign policy built, key source awaits TENANCY-05 exposing it via the tenancy interface  |
 | [IDENTITY-06](tasks/IDENTITY-06.md) | OAuth2 client-credentials API clients (ES256, scoped, expiring) | identity | S | ACCESS-01, IDENTITY-02 | todo |  |
 | [AUDIT-05](tasks/AUDIT-05.md) | Legal hold + recycle bin (replaces DATABASE-06) | audit | M | AUDIT-01, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
+| [AUDIT-06](tasks/AUDIT-06.md) | Identity emits auth and session events into the security stream | identity | S | AUDIT-02, IDENTITY-04 | todo | split from AUDIT-02 step 5 (2026-10-16); includes the Keycloak login/logout e2e |
 | [SECURITY-07](tasks/SECURITY-07.md) | Tenant IP allow-list and session policy | security | M | IDENTITY-03 | todo |  |
 | [OPS-08](tasks/OPS-08.md) | Backup and restore-test harness with recorded evidence | ops | M | OPS-07 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-08](tasks/TESTING-08.md) | CI gates, k6 load script and mobile smoke job | testing | M | TESTING-02, TESTING-04, TESTING-05, TESTING-06 | todo | convert to Python backend per ADR 0001 before starting |

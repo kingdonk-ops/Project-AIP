@@ -17,6 +17,10 @@ Each subscription must also be listed under ``subscribes`` in that module's mani
 :func:`verify_manifest_subscribers` fails boot otherwise, and :meth:`SubscriberRegistry.for_modules`
 returns only the subscribers of modules that are actually loaded, so a disabled module's handlers
 never run.
+
+A **catch-all** subscription (``@subscriber(ANY_EVENT, 1)``, listed in the manifest as
+``[[subscribes]] name = "*"``, AUDIT-02) receives every event, of any name and version, after
+the event's own subscribers and in the same transaction. The audit writer is the only one.
 """
 
 from __future__ import annotations
@@ -30,6 +34,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 __all__ = [
+    "ANY_EVENT",
     "DomainEvent",
     "Handler",
     "ManifestSubscriberMismatchError",
@@ -61,6 +66,9 @@ class DomainEvent:
 
 
 Handler = Callable[[AsyncConnection, DomainEvent], Awaitable[None]]
+
+ANY_EVENT = "*"
+"""The event name of a catch-all subscription: it receives every event (its version is nominal)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,7 +131,9 @@ class SubscriberRegistry:
         return list(self._subs)
 
     def for_event(self, event_name: str, version: int) -> list[Subscriber]:
-        return [s for s in self._subs if s.event_name == event_name and s.version == version]
+        """The event's own subscribers, then the catch-all ones."""
+        own = [s for s in self._subs if s.event_name == event_name and s.version == version]
+        return own + [s for s in self._subs if s.event_name == ANY_EVENT]
 
     def for_modules(self, module_ids: Iterable[str]) -> SubscriberRegistry:
         """A registry holding only the subscribers owned by ``module_ids`` (the loaded modules)."""

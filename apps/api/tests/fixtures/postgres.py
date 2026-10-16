@@ -541,3 +541,29 @@ async def owner_conn_with_tenant(db: FreshDb, tenant: UUID) -> AsyncIterator[Any
         yield conn
     finally:
         await conn.close()
+
+
+@dataclass
+class Outbox:
+    """The outbox as the worker runs it (AUDIT-02): ``aip_app`` and ``aip_jobs`` engines on the
+    migrated database, with ``DATABASE_AUDIT_WRITER_URL`` pointing the audit writer at it too."""
+
+    db: FreshDb
+    app: AsyncEngine
+    jobs: AsyncEngine
+
+
+@pytest.fixture
+async def outbox(migrated_db: FreshDb, monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[Outbox]:
+    from aip.platform.db.engine import dispose_audit_writer_engine
+
+    monkeypatch.setenv("DATABASE_AUDIT_WRITER_URL", migrated_db.role_url(AUDIT_WRITER))
+    await dispose_audit_writer_engine()
+    app = create_app_engine(EngineSettings(url=migrated_db.role_url(APP)))
+    jobs = create_app_engine(EngineSettings(url=migrated_db.role_url(JOBS)))
+    try:
+        yield Outbox(migrated_db, app, jobs)
+    finally:
+        await app.dispose()
+        await jobs.dispose()
+        await dispose_audit_writer_engine()

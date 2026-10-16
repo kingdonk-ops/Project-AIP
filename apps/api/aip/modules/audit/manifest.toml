@@ -2,9 +2,18 @@
 id = "audit"
 context = "audit"
 depends_on = []
-subscribes = []
 settings = []
 term_keys = []
+
+# AUDIT-02: the catch-all outbox subscriber that writes every event into the audit chains, and
+# the event AuditApi.record_security_event publishes.
+[[subscribes]]
+name = "*"
+version = 1
+
+[[events]]
+name = "audit.security_event"
+version = 1
 
 # Audit read permissions are separate from tenant admin (AUDIT-01); they are enforced in AUDIT-04.
 [[permissions]]
