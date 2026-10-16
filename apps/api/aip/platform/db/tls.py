@@ -21,7 +21,7 @@ import os
 import ssl
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from aip.platform.db.errors import DatabaseConfigError
 
@@ -56,7 +56,7 @@ class DbTls:
         raw = env.get(DB_SSLMODE_ENV, "").strip().lower() or "disable"
         if raw not in _MODES:
             raise DatabaseConfigError(f"{DB_SSLMODE_ENV} must be one of {', '.join(_MODES)}")
-        mode = cast(SslMode, raw)
+        mode: SslMode = raw
         root = env.get(DB_SSLROOTCERT_ENV, "").strip() or None
         if mode == "verify-full" and root is None:
             root = RDS_CA_BUNDLE
