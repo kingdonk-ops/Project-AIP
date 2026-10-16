@@ -36,11 +36,12 @@ role grants nothing outside its project.
   - apps/api/aip/modules/tenancy/organisations/ (repository, service, routes, schemas)
   - apps/api/aip/modules/tenancy/manifest.toml
   - apps/api/aip/modules/access/api.py (`has_role`)
-  - apps/api/aip/modules/access/roles/default_roles.py
+  - apps/api/aip/modules/access/roles/repository.py
+  - apps/api/aip/modules/tenancy/seed.py
   - apps/api/aip/modules/tenancy/tests/organisations/
 - **steps**:
-  - 1. Migration: `organisations` (id, tenant_id, name, org_type owner|client|subcontractor, registration_number, status active|inactive, sync_version, timestamps, soft delete), FORCE RLS on tenant_id, unique `(tenant_id, lower(name)) WHERE deleted_at IS NULL`, btree `(tenant_id, org_type)`. Seed one `owner` organisation per existing tenant, named after the tenant.
-  - 2. `GET/POST /api/v1/settings/organisations`, `GET/PATCH /api/v1/settings/organisations/{id}`, `POST .../{id}/deactivate`; `tenancy.organisations.read` and `tenancy.organisations.manage` in the manifest; default roles via the access matrix: tenant_admin gets both, project_manager gets read. Duplicate name → 409; unknown type → 422; another tenant's id → 404. Emit `tenancy.organisation_created` / `_updated` v1 through the outbox.
+  - 1. Migration `202610161200_tenancy_organisations`: `organisations` (id, tenant_id, name, org_type owner|client|subcontractor, registration_number, status active|inactive, sync_version, timestamps, soft delete), FORCE RLS on tenant_id, unique `(tenant_id, lower(name)) WHERE deleted_at IS NULL`, btree `(tenant_id, org_type)`, no DELETE for `aip_app`. FORCE RLS hides `tenants` from the migration role, so the owner organisation of each fixture tenant comes from the tenancy seed, and of a real tenant from provisioning (TENANCY-05).
+  - 2. `GET/POST /api/v1/settings/organisations` (filters `type`, `status`), `GET/PATCH /api/v1/settings/organisations/{id}`; deactivate is a PATCH of `status` with `syncVersion`. `tenancy.organisation.read` and `tenancy.organisation.manage` in the manifest; the access matrix gives tenant_admin both and project_manager and auditor read (ADR 0027). Duplicate name → 409 `ORGANISATION_NAME_TAKEN`; unknown type → 422; another tenant's id → 404; stale version → 409. Emit `tenancy.organisation_created` / `_updated` v1 through the outbox.
   - 3. `has_role(user_id, role_code, project_id)` on the access module API: true for a tenant-scoped assignment or a project assignment on that project, false otherwise.
 - **acceptance**:
   - A project-scoped role grants nothing in other projects.
@@ -49,7 +50,7 @@ role grants nothing outside its project.
 - **tests**:
   - **integration**:
     - Create Rio Tinto as type client in Kaefer's tenant. GET /settings/organisations. Expected: it is listed with type 'client'.
-    - Assign a project-scoped role on P1 and GET P2. Expected: 403.
+    - Assign a project-scoped role on P1 and GET P2. Expected: 403 (already covered by ACCESS-02: `test_a_project_role_grants_only_in_its_project`).
     - Tenant B lists organisations and fetches tenant A's organisation id. Expected: none listed, 404.
     - Creating a second "rio tinto" in the same tenant. Expected: 409.
   - **unit**:
