@@ -63,3 +63,11 @@ low findings (consumer ownership, write-once publish columns, bounded `last_erro
   sees the event's state, not an event of its own.
 - Payload inspection in the dead-letter drawer and replay ranges (module README) are not built yet;
   they need a later task with its own access rules.
+
+## Amendment (2026-10-16, OPS-03): jobs emit events
+
+`aip_jobs` gets `INSERT` on `domain_events` (revision `202610161600_jobs_emit_events`). A job
+handler runs on the `aip_jobs` engine, and its writes, its final status and the event announcing
+it (`job.completed`, `job.failed`, or a module event) must commit together, exactly as a request's
+do. The tenant policy and the write-once trigger apply to `aip_jobs` as to `aip_app`; it still
+cannot delete or rewrite an event.

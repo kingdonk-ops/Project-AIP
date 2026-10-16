@@ -610,7 +610,7 @@ async def job_events_emitted(tx: Tx, tenant_id: UUID, job_id: UUID) -> list[tupl
             await conn.execute(
                 text(
                     "SELECT event_name, payload FROM domain_events"
-                    " WHERE aggregate_type = 'job' AND aggregate_id = :id ORDER BY created_at"
+                    " WHERE aggregate_type = 'job' AND aggregate_id = :id ORDER BY occurred_at"
                 ),
                 {"id": job_id},
             )
