@@ -71,7 +71,7 @@ class WorkflowDefinitionSpec(_Spec):
 
 def _issue(loc: tuple[int | str, ...], message: str, value: object) -> InitErrorDetails:
     return {
-        "type": PydanticCustomError("workflow_spec", message),
+        "type": PydanticCustomError("workflow_spec", "{message}", {"message": message}),
         "loc": loc,
         "input": value,
     }
