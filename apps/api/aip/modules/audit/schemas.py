@@ -14,7 +14,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-__all__ = ["AuditEntryIn"]
+__all__ = ["AuditEntryIn", "SecurityEventIn"]
 
 
 class AuditEntryIn(BaseModel):
@@ -41,3 +41,23 @@ class AuditEntryIn(BaseModel):
     device: str | None = None
     source_event_id: UUID | None = None
     supersedes_id: UUID | None = None
+
+
+class SecurityEventIn(BaseModel):
+    """One security event to append to the tenant's ``security_audit_events`` chain (AUDIT-02).
+
+    ``seq``, ``prev_hash`` and ``hash`` are assigned by the writer. ``source_ip`` and ``device`` are
+    stored but not hashed (``security_chain``).
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    event_type: str = Field(min_length=1)
+    occurred_at: datetime
+    actor_id: UUID | None = None
+    target_ref: str | None = None
+    auth_strength: str | None = None
+    source_ip: str | None = None
+    device: str | None = None
+    detail: dict[str, Any] | None = None
+    source_event_id: UUID | None = None

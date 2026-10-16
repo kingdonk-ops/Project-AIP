@@ -12,6 +12,10 @@ include the partition key, which these do not. The monthly "segments" of ADR 002
 logical: they are recorded in ``audit_chain_checkpoints`` and a retention job (AUDIT-05) removes an
 old segment's rows, rather than dropping a partition. See ADR 0031.
 
+``security_audit_events`` (AUDIT-02, revision ``202610161300_security_audit_events``) is the
+security stream: append-only and hash-chained like ``audit_log``, with its chain head and
+checkpoints under ``stream = 'security'`` (ADR 0021: 3-year retention, never in timelines).
+
 ``audit_chain_heads`` and ``audit_chain_checkpoints`` are writer-maintained bookkeeping, keyed on
 natural columns rather than a surrogate uuid (an intentional, task-specified deviation from the
 uuid-PK convention); both still carry ``tenant_id`` and FORCE RLS.
@@ -97,4 +101,25 @@ audit_chain_checkpoints = Table(
     Column("last_hash", LargeBinary, nullable=False),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+)
+
+
+security_audit_events = Table(
+    "security_audit_events",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("tenant_id", Uuid, nullable=False),
+    Column("seq", BigInteger, nullable=False),
+    Column("actor_id", Uuid, nullable=True),
+    Column("event_type", Text, nullable=False),
+    Column("target_ref", Text, nullable=True),
+    Column("auth_strength", Text, nullable=True),
+    Column("source_ip", INET, nullable=True),
+    Column("device", Text, nullable=True),
+    Column("detail", JSONB, nullable=True),
+    Column("source_event_id", Uuid, nullable=True),
+    Column("prev_hash", LargeBinary, nullable=False),
+    Column("hash", LargeBinary, nullable=False),
+    Column("occurred_at", DateTime(timezone=True), nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
 )

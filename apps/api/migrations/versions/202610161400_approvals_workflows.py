@@ -20,7 +20,7 @@ append-only definition audit (``docs/blueprint/modules/approvals/data-model.md``
 other modules. Deletes are soft on the two mutable tables, so ``aip_app`` loses DELETE.
 
 Revision ID: 202610161400
-Revises: 202610161200
+Revises: 202610161300
 Create Date: 2026-10-16 14:00:00+00:00
 """
 
@@ -29,7 +29,7 @@ from alembic import op
 from aip.platform.db.templates import render_template
 
 revision: str = "202610161400"
-down_revision: str | None = "202610161200"
+down_revision: str | None = "202610161300"
 branch_labels = None
 depends_on = None
 

@@ -102,7 +102,7 @@ tasks still `todo` below remain before M0 is closed.
 | [ACCESS-02](tasks/ACCESS-02.md) | Roles, default role seed, tenant/project role assignment API | access | M | ACCESS-01, PROJECTS-01 | done | PR #61; project overrides and operator gate split to ACCESS-06 |
 | [IDENTITY-03](tasks/IDENTITY-03.md) | Server-side sessions (__Host- cookie, user_session), rotation, revocation | identity | M | DESIGN-02, IDENTITY-02 | done | PR #62; live Keycloak + Playwright journeys carried to TESTING-09 |
 | [TENANCY-03](tasks/TENANCY-03.md) | Organisations and project-scoped role assignment | tenancy | M | PROJECTS-01 | done | ClaudeK: PR #93; converted per ADR 0001 and narrowed to the API (page and invite e2e → TENANCY-08, org-isolation golden tests → TENANCY-09) |
-| [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | done | ClaudeK: PR #96; converted per ADR 0001; identity auth emits and the Keycloak e2e moved to AUDIT-06; security review fixed in PR |
 | [APPROVALS-01](tasks/APPROVALS-01.md) | Versioned workflow definitions/instances + pure state-machine evaluator | approvals | M | ARCH-02, DATABASE-04 | done | ClaudeK: PR #97; spec converted per ADR 0001 |
 | [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | done | PR #79 (stream B); SSE-KMS wiring → UPLOADS-07  |
 | [DATABASE-07](tasks/DATABASE-07.md) | Isolation test generator across all tables and routes | database | M | ACCESS-01, STACK-03, TESTING-02 | todo | convert to Python backend per ADR 0001 before starting |
@@ -177,6 +177,7 @@ tasks still `todo` below remain before M0 is closed.
 | [UPLOADS-07](tasks/UPLOADS-07.md) | Enforce per-tenant SSE-KMS on the presigned upload (ADR 0006) | uploads | S | TENANCY-05, UPLOADS-01 | todo | found in UPLOADS-01: presign policy built, key source awaits TENANCY-05 exposing it via the tenancy interface  |
 | [IDENTITY-06](tasks/IDENTITY-06.md) | OAuth2 client-credentials API clients (ES256, scoped, expiring) | identity | S | ACCESS-01, IDENTITY-02 | todo |  |
 | [AUDIT-05](tasks/AUDIT-05.md) | Legal hold + recycle bin (replaces DATABASE-06) | audit | M | AUDIT-01, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
+| [AUDIT-06](tasks/AUDIT-06.md) | Identity emits auth and session events into the security stream | identity | S | AUDIT-02, IDENTITY-04 | todo | split from AUDIT-02 step 5 (2026-10-16); includes the Keycloak login/logout e2e |
 | [SECURITY-07](tasks/SECURITY-07.md) | Tenant IP allow-list and session policy | security | M | IDENTITY-03 | todo |  |
 | [OPS-08](tasks/OPS-08.md) | Backup and restore-test harness with recorded evidence | ops | M | OPS-07 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-08](tasks/TESTING-08.md) | CI gates, k6 load script and mobile smoke job | testing | M | TESTING-02, TESTING-04, TESTING-05, TESTING-06 | todo | convert to Python backend per ADR 0001 before starting |
