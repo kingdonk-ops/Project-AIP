@@ -46,3 +46,12 @@ Prove that caches, queues, object storage and search never cross tenants.
   - **unit**:
     - cache_key('abc','x') returns 't:abc:x'.
     - cache_key with an empty tenant raises ValueError.
+
+## Moved here from DATABASE-07 (2026-10-16; first carried from TENANCY-02)
+
+- `tools/ci/check_raw_keys.py` and its CI wiring: the AST arch test
+  (`tests/arch/test_tenant_key_boundary.py`) catches hand-built `tenant:` keys, but not bare Redis or
+  boto3 calls with literal first arguments (`redis.get("user:1")`) or literal `Key=` / `lock=`
+  arguments. Add a check for those.
+- Testcontainers integration tests for the key builders: Redis, LocalStack S3, and a worker run that
+  carries no `tenant_id`.

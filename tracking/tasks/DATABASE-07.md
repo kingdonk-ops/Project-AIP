@@ -1,6 +1,6 @@
-# DATABASE-07 — Isolation test generator across all tables and routes
+# DATABASE-07 — Isolation test generator across all tables
 
-<!-- hand-edited: depends-on synced from BOARD.md -->
+<!-- hand-edited: converted to the Python backend per ADR 0001 and narrowed with the owner (2026-10-16): route IDOR moved to TESTING-04, raw-key checks and key-builder Testcontainers tests to TESTING-03, up-down-up is TESTING-05 -->
 
 | Field | Value |
 |---|---|
@@ -14,46 +14,37 @@
 
 1. [`docs/blueprint/07-task-conventions.md`](../../docs/blueprint/07-task-conventions.md)
 2. [`docs/blueprint/modules/database/README.md`](../../docs/blueprint/modules/database/README.md)
-3. Any ADR in [`docs/adr/`](../../docs/adr/) that names this task or module
-4. Only if the step needs it: `architecture.md` / `data-model.md` in the module folder
+3. ADRs: [0002](../../docs/adr/0002-data-access-and-migrations.md) (FORCE RLS, roles)
+
+## Why this was narrowed
+
+TESTING-02 already fails CI when a table lacks `tenant_id` or RLS (a static guard). This task adds
+the behavioural proof that each table's policy really isolates tenants, generated from the
+catalogue so new tables inherit it. The route half (GET `/{id}` as tenant A with B's id gives 404)
+is TESTING-04's generated IDOR suite; the Redis/S3 key checks are TESTING-03's; the up-down-up
+migration test is TESTING-05. The compose runtime-role passwords (a DATABASE-02 carry-forward) are
+already in place: the stack connects as `aip_app` and `aip_jobs`.
 
 ## Spec
 
-Generate cross-tenant and IDOR tests so new tables inherit coverage.
+Generate a cross-tenant isolation test for every tenant-scoped table, so new tables inherit
+coverage and a table without a working policy fails CI.
 
-- **depends on**:
-  - DATABASE-03
 - **files**:
-  - tests/db/rls-isolation.generated.spec.ts
-  - tools/ci/gen-isolation-tests.ts
-  - tests/db/migrations-updownup.spec.ts
+  - apps/api/tests/isolation/test_rls_generated.py (the generated cases)
+  - apps/api/tests/isolation/generator.py (catalogue reader, row seeder, results)
+  - apps/api/tests/isolation/overrides.toml (per-table seed values and exceptions, each with a reason)
+  - apps/api/tests/arch/test_tenant_setting_boundary.py, apps/api/tests/arch/test_db_engine_boundary.py
+  - .github/workflows/ci.yml (upload the results artefact)
 - **steps**:
-  - 1. Read the table catalogue from pg_catalog and the route list from the OpenAPI schema.
-  - 2. For each table, seed one row per tenant A and B, then assert A's session sees only its row and cannot UPDATE or DELETE B's row by id.
-  - 3. For each GET /:id route, call it as tenant A with B's id. Expected: 404.
-  - 4. Fail the build if any table or route is skipped without an exception entry.
-  - 5. Publish the results as a CI evidence artefact.
+  - 1. Read every table with a `tenant_id` column in `public` from `pg_catalog` on the migrated database.
+  - 2. Per table: seed one row for tenant A and one for B as the superuser (FKs and triggers off via `session_replication_role = replica`), with values generated from column types and overridden per table where a CHECK needs a specific value. Then, as `aip_app` with tenant A set: A's row is visible; B's row is invisible by id and in a full scan; UPDATE and DELETE of B's row by id affect 0 rows (or are refused by a missing grant).
+  - 3. A table that cannot be seeded, or is skipped, without an `overrides.toml` entry that has a `reason` fails the run.
+  - 4. Write per-table results to `isolation-results.json` (`AIP_ISOLATION_RESULTS` path) and upload it from CI as evidence.
+  - 5. Carried forward from DATABASE-02: a static test that no `app.tenant_id` string appears in `aip/` outside `aip/platform/db/session.py`; the engine-boundary arch test resolves aliased imports (`import asyncpg as pg`, `from sqlalchemy.ext.asyncio import create_async_engine as mk`).
 - **acceptance**:
-  - Adding a table with no policy fails CI.
-  - Every ID-addressed route is exercised for IDOR.
+  - Adding a table with no policy fails CI with "cross-tenant read returned rows".
   - The artefact lists per-table results.
 - **tests**:
-  - **e2e**:
-    - Run the isolation job in CI on a PR adding a new table via the template. Expected: green. Hand-write one without a policy. Expected: red.
-  - **integration**:
-    - With a fixture table lacking a policy, the generated test fails with 'cross-tenant read returned rows'.
-    - With the real schema, all generated table tests pass.
-    - Cross-tenant PATCH /assets/:id with B's id as tenant A. Expected: 404 and B's row is unchanged.
-  - **unit**:
-    - The generator emits one test per catalogue table (fixture of 3 tables gives 3 tests).
-
-## Carried forward from the DATABASE-02 security review (PR #19, non-blocking)
-
-- Code holding a `with_tenant` connection can still call `set_config('app.tenant_id', other, true)`, `SET LOCAL` or `RESET` mid-transaction. Add a static test that no string `app.tenant_id` appears in `aip/` outside `aip/platform/db/session.py`.
-- `tests/arch/test_db_engine_boundary.py` is name-based: it misses aliased imports (`import asyncpg as pg`) and `get_engine().connect()` from outside the db package. Resolve aliases, and stop exporting `get_engine` or guard it with an import-linter contract.
-- Compose passes only `aip.owner_password`, so `aip_app`/`aip_jobs`/`aip_readonly` have no password there and compose still connects as `aip_owner`. Give the runtime roles passwords in the compose bootstrap and switch `DATABASE_URL`/`DATABASE_JOBS_URL` to them.
-
-## Carried forward from TENANCY-02 (not built there)
-
-- `tools/ci/check_raw_keys.py` and its CI wiring: the AST arch test (`tests/arch/test_tenant_key_boundary.py`) catches hand-built `tenant:` keys, but not bare Redis or boto3 calls with literal first arguments (`redis.get("user:1")`) or literal `Key=` / `lock=` arguments. Add a check for those.
-- Testcontainers integration tests for the key builders: Redis, LocalStack S3, and a worker run that carries no `tenant_id`.
+  - **unit**: the generator emits one case per catalogue table (a fixture of 3 tables gives 3 cases); a table without an exception reason is reported.
+  - **integration**: a fixture table with RLS but a permissive policy fails with "cross-tenant read returned rows"; with the real schema, every generated case passes.
