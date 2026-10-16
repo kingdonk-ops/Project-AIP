@@ -70,7 +70,7 @@ tasks still `todo` below remain before M0 is closed.
 | [ENT-01](tasks/ENT-01.md) | EntitlementService, tenant_subscription, tenant_usage; flags vs entitlements (ADR 0008) | tenancy | M | DATABASE-02, TENANCY-01 | done | ClaudeK: PR #82; security review fixed in PR (ADR 0029 amendment); estimate cadence ADR 0008 amendment |
 | [ARCH-06](tasks/ARCH-06.md) | Versioned event registry and catalogue API | arch | M | ARCH-02, ARCH-05 | done | PR #78 |
 | [ARCH-08](tasks/ARCH-08.md) | Record-link service and per-tenant feature flags | arch | M | ARCH-02, ARCH-05, ENT-01 | done | ClaudeK: PR #91; ECC code + security review fixed in PR (traverse is breadth-first, see PR) |
-| [ARCH-09](tasks/ARCH-09.md) | Event catalogue and dead-letter admin pages | arch | M | ARCH-07, DESIGN-03, DESIGN-04 | in-progress | ClaudeK: branch claudeK/arch-09; web stream; APIs from ARCH-06/ARCH-07; replay, CSV export and payload drawer out of scope |
+| [ARCH-09](tasks/ARCH-09.md) | Event catalogue and dead-letter admin pages | arch | M | ARCH-07, DESIGN-03, DESIGN-04 | done | ClaudeK: PR #94; web stream; APIs from ARCH-06/ARCH-07; replay, CSV export and payload drawer out of scope |
 | [TERMS-02](tasks/TERMS-02.md) | Resolver with fallback chain and cache invalidation | terms | M | TERMS-01 | done | ClaudeK; PR #87 |
 | [OPS-02](tasks/OPS-02.md) | Procrastinate worker and handler registry | ops | M | OPS-01 | done | PR #31 |
 | [TESTING-10](tasks/TESTING-10.md) | Worker shutdown test waits for registration instead of a fixed sleep | testing | XS | OPS-02 | done | PR #48 |
