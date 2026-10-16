@@ -10,6 +10,7 @@ from pathlib import Path
 
 from sqlalchemy import MetaData
 
+from aip.platform.db.errors import DatabaseConfigError
 from aip.platform.db.migrator import (
     alembic_ini,
     api_dir,
@@ -21,6 +22,7 @@ from aip.platform.db.migrator import (
     snapshot_path,
     versions_dir,
 )
+from aip.platform.db.tls import check_transport_security
 
 # Platform services that own tables (modules are found by scanning ``aip/modules``).
 PLATFORM_TABLES = (
@@ -75,6 +77,11 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    try:
+        check_transport_security()  # STACK-07: production migrates over verified TLS only
+    except DatabaseConfigError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
     try:
         if args.command == "migrate":
             return _migrate(args.config or alembic_ini())

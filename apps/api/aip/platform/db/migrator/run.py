@@ -18,6 +18,8 @@ from sqlalchemy.engine import Connection, make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.util import await_only
 
+from aip.platform.db.tls import DbTls
+
 OWNER_ROLE = "aip_owner"
 OWNER_ERROR = "migrator must run as aip_owner"
 URL_ENV = "DATABASE_MIGRATOR_URL"
@@ -47,7 +49,9 @@ def to_libpq_url(url: str) -> str:
 
 
 def create_migrator_engine(url: str) -> AsyncEngine:
-    return create_async_engine(to_async_url(url), poolclass=NullPool)
+    return create_async_engine(
+        to_async_url(url), poolclass=NullPool, connect_args=DbTls.from_env().asyncpg_connect_args()
+    )
 
 
 def prepare_connection(connection: Connection) -> None:

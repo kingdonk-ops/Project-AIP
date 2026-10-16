@@ -17,6 +17,7 @@ from sqlalchemy.exc import CompileError
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from aip.platform.db.migrator.run import to_async_url
+from aip.platform.db.tls import DbTls
 
 IGNORED_SCHEMAS = ("aip_meta", "procrastinate", "information_schema")
 
@@ -96,7 +97,9 @@ def declared_tables(metadata: MetaData) -> dict[str, Columns]:
 
 
 async def migrated_tables(url: str) -> dict[str, Columns]:
-    engine = create_async_engine(to_async_url(url), poolclass=NullPool)
+    engine = create_async_engine(
+        to_async_url(url), poolclass=NullPool, connect_args=DbTls.from_env().asyncpg_connect_args()
+    )
     try:
         async with engine.connect() as conn:
             rows = (await conn.execute(text(_COLUMNS_SQL))).all()

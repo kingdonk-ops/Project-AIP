@@ -31,8 +31,11 @@ import procrastinate
 from procrastinate import RetryStrategy
 from procrastinate.jobs import Job
 from procrastinate.retry import RetryDecision
+from psycopg.conninfo import make_conninfo
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
+
+from aip.platform.db.tls import DbTls
 
 __all__ = [
     "DEFAULT_QUEUE",
@@ -64,7 +67,8 @@ def jobs_conninfo() -> str:
     url = os.environ.get(JOBS_URL_ENV, "")
     if not url:
         raise RuntimeError(f"{JOBS_URL_ENV} is not set")
-    return url
+    # STACK-07: the same DB_SSLMODE / DB_SSLROOTCERT as the asyncpg engines, as libpq parameters.
+    return make_conninfo(url, **DbTls.from_env().libpq_params())
 
 
 class JobRetryStrategy(RetryStrategy):
