@@ -1,0 +1,60 @@
+/* ARCH-09: platform event pages. Tokens only (DESIGN-01). */
+.platform-events__mono,
+.platform-events__id code {
+  font-family: var(--font-mono);
+}
+
+.platform-events__version {
+  border-top: 1px solid var(--border);
+  padding-block: var(--space-4);
+}
+
+.platform-events__version-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.platform-events__schema {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  /* Wraps instead of scrolling, so no keyboard-only scroll region is needed. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.platform-events__id,
+.platform-events__actions,
+.platform-events__dialog-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.platform-events__dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+
+.platform-events__discard {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.platform-events__reason {
+  width: 100%;
+  font: inherit;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.platform-events__hint {
+  margin: 0;
+  font-size: var(--text-base);
+}
