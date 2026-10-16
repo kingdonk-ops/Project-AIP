@@ -6,6 +6,7 @@ are active, C is suspended.
 
 from __future__ import annotations
 
+import asyncio
 import datetime
 import uuid
 from collections.abc import AsyncIterator, Iterator
@@ -153,8 +154,10 @@ async def test_enqueueing_twice_in_one_period_leaves_one_job(db: TenantDb, job_t
 async def test_all_tenants_enqueues_one_job_per_active_tenant(
     db: TenantDb, job_type: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    assert main(["enqueue", job_type, "--all-tenants", "--period", "2026-10"]) == 0
-    assert main(["enqueue", job_type, "--all-tenants", "--period", "2026-10"]) == 0
+    # The CLI runs its own event loop (as `python -m` does), so it gets a thread of its own.
+    argv = ["enqueue", job_type, "--all-tenants", "--period", "2026-10"]
+    assert await asyncio.to_thread(main, argv) == 0
+    assert await asyncio.to_thread(main, argv) == 0
     rows, queued = await counts(db, job_type)
     assert [r[0] for r in rows] == [TENANT_A_ID, TENANT_B_ID]  # C is suspended
     assert queued == 2
