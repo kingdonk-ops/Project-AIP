@@ -33,9 +33,6 @@ down_revision: str | None = "202610161200"
 branch_labels = None
 depends_on = None
 
-_CODE = "'^[a-z][a-z0-9_]{0,62}$'"
-
-
 def upgrade() -> None:
     op.execute(
         render_template(
@@ -49,7 +46,7 @@ def upgrade() -> None:
             ),
         )
     )
-    op.execute(f"""
+    op.execute("""
     ALTER TABLE workflow_definitions
       ALTER COLUMN status SET DEFAULT 'draft';
     ALTER TABLE workflow_definitions
@@ -59,8 +56,8 @@ def upgrade() -> None:
       ADD CONSTRAINT uq_workflow_definitions_key_version UNIQUE (tenant_id, key, version),
       ADD CONSTRAINT ck_workflow_definitions_status
         CHECK (status IN ('draft', 'active', 'retired')),
-      ADD CONSTRAINT ck_workflow_definitions_key CHECK (key ~ {_CODE}),
-      ADD CONSTRAINT ck_workflow_definitions_record_type CHECK (record_type ~ {_CODE}),
+      ADD CONSTRAINT ck_workflow_definitions_key CHECK (key ~ '^[a-z][a-z0-9_]{0,62}$'),
+      ADD CONSTRAINT ck_workflow_definitions_record_type CHECK (record_type ~ '^[a-z][a-z0-9_]{0,62}$'),
       ADD CONSTRAINT ck_workflow_definitions_version CHECK (version >= 1),
       ADD CONSTRAINT ck_workflow_definitions_states CHECK (jsonb_typeof(states) = 'array'),
       ADD CONSTRAINT ck_workflow_definitions_transitions
@@ -90,15 +87,15 @@ def upgrade() -> None:
             sync=True,
         )
     )
-    op.execute(f"""
+    op.execute("""
     ALTER TABLE workflow_instances
       ADD CONSTRAINT fk_workflow_instances_tenant_id_tenants
         FOREIGN KEY (tenant_id) REFERENCES tenants (id),
       ADD CONSTRAINT fk_workflow_instances_definition
         FOREIGN KEY (definition_id, tenant_id)
         REFERENCES workflow_definitions (id, tenant_id),
-      ADD CONSTRAINT ck_workflow_instances_record_type CHECK (record_type ~ {_CODE}),
-      ADD CONSTRAINT ck_workflow_instances_current_state CHECK (current_state ~ {_CODE});
+      ADD CONSTRAINT ck_workflow_instances_record_type CHECK (record_type ~ '^[a-z][a-z0-9_]{0,62}$'),
+      ADD CONSTRAINT ck_workflow_instances_current_state CHECK (current_state ~ '^[a-z][a-z0-9_]{0,62}$');
 
     CREATE UNIQUE INDEX ux_workflow_instances_record
       ON workflow_instances (tenant_id, record_type, record_id) WHERE deleted_at IS NULL;
