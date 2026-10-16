@@ -20,6 +20,11 @@ const devRoutes = import.meta.env.PROD
         path: "/__fixtures/ui",
         component: lazyRouteComponent(() => import("./routes/__fixtures/ui"), "UiFixture"),
       }),
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: "/__fixtures/record",
+        component: lazyRouteComponent(() => import("./routes/__fixtures/record"), "RecordFixture"),
+      }),
     ];
 
 export const routeTree = rootRoute.addChildren([

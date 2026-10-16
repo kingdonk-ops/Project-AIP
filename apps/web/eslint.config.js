@@ -1,7 +1,9 @@
 // ESLint flat config for apps/web (DESIGN-02): the shared ARCH-03 boundaries config (which already
 // carries the TypeScript and JS recommended rules), plus jsx-a11y (recommended, as errors), the
 // React hooks rules and a no-literal-text rule for the shell UI. Mirrors packages/ui/eslint.config.mjs.
+// DESIGN-04: extends the ui ban on window.confirm/alert/prompt (use confirm() and toast()).
 import aip from "@aip/config-eslint";
+import { noBlockingDialogs } from "@aip/ui/eslint";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
@@ -31,4 +33,5 @@ export default tseslint.config(
       "react/jsx-no-literals": ["error", { noStrings: false, allowedStrings: [] }],
     },
   },
+  noBlockingDialogs,
 );
