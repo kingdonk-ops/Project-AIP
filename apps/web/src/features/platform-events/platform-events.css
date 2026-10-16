@@ -17,13 +17,13 @@
 }
 
 .platform-events__schema {
-  max-height: 24rem;
-  overflow: auto;
   padding: var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   font-family: var(--font-mono);
-  white-space: pre;
+  /* Wraps instead of scrolling, so no keyboard-only scroll region is needed. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .platform-events__id,

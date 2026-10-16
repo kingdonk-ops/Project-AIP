@@ -1,9 +1,10 @@
 /**
  * Discard a dead letter with a reason (ARCH-09 step 3). The reason is required: submit stays
  * disabled until the trimmed text is 1–1000 characters, matching the API's 422 rule (ADR 0030).
+ * The parent keys it by event id, so each event starts with an empty reason.
  */
 import { Button, Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, Label } from "@aip/ui";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { t } from "../shell/t";
 
 export const MAX_REASON = 1000;
@@ -21,9 +22,6 @@ export function DiscardDialog({ open, eventId, onOpenChange, onSubmit, busy = fa
   const [reason, setReason] = useState("");
   const reasonId = useId();
   const hintId = useId();
-  useEffect(() => {
-    if (open) setReason("");
-  }, [open, eventId]);
   const trimmed = reason.trim();
   const valid = trimmed.length >= 1 && trimmed.length <= MAX_REASON;
 

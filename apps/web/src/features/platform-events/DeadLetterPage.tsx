@@ -178,6 +178,7 @@ export function DeadLetterPage({ query, onQueryChange, permissions }: DeadLetter
         translate={t}
       />
       <DiscardDialog
+        key={discarding?.id ?? "none"}
         open={discarding !== null}
         eventId={discarding?.id ?? ""}
         busy={discard.isPending}

@@ -22,6 +22,12 @@ const fixtureSessions: Record<string, Session> = {
     tenant: { slug: "kaefer-demo", name: "Kaefer Demo" },
     permissions: ["project.view", "audit.view"],
   },
+  // ARCH-09: a platform operator (ADR 0029). Operator pages move to their own origin with OPS-12.
+  "operator@kaefer.test": {
+    user: { id: "00000000-0000-4000-8000-0000000000c1", name: "Olive Operator", email: "operator@kaefer.test" },
+    tenant: { slug: "kaefer-demo", name: "Kaefer Demo" },
+    permissions: ["platform.events.manage"],
+  },
   "bob@acme.test": {
     user: { id: "00000000-0000-4000-8000-0000000000b1", name: "Bob Brown", email: "bob@acme.test" },
     tenant: { slug: "tenant-b", name: "Tenant B" },

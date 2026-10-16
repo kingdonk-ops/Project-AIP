@@ -52,8 +52,7 @@ function VersionSection({
         <p>{t("arch.events.subscribers.none")}</p>
       )}
       <h3 id={schemaId}>{t("arch.events.detail.schema")}</h3>
-      {/* Focusable so keyboard users can scroll a long schema (axe: scrollable-region-focusable). */}
-      <pre className="platform-events__schema" tabIndex={0} aria-labelledby={schemaId}>
+      <pre className="platform-events__schema" aria-labelledby={schemaId}>
         <code>{JSON.stringify(detail.schema, null, 2)}</code>
       </pre>
     </section>
@@ -98,7 +97,7 @@ export function EventDetailPage({ eventName }: { eventName: string }) {
         <LoadingState variant="spinner" translate={t} />
       ) : response?.status !== 200 ? (
         <ErrorState
-          error={{ status: response?.status, requestId: response?.headers.get("x-request-id") ?? null }}
+          error={response ? { status: response.status, requestId: response.headers.get("x-request-id") } : {}}
           onRetry={() => void query.refetch()}
           translate={t}
         />
