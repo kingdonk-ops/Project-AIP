@@ -16,7 +16,7 @@ import pytest
 from fastapi import FastAPI
 
 from aip.modules.access.roles.default_roles import ROLE_CODES, default_permissions
-from aip.modules.access.tests.roles.conftest import CAROL_ID, su_assign
+from aip.modules.access.tests.roles.conftest import CAROL_ID, su_assign, su_execute
 from aip.platform.access import (
     AccessPrincipal,
     Grant,
@@ -97,6 +97,12 @@ async def test_a_project_scoped_role_allows_in_its_project_and_denies_in_another
     app: FastAPI, db: TenantDb
 ) -> None:
     role = next(r for r in sorted(ROLES) if "project.update" in ROLES[r] and r != "tenant_admin")
+    await su_execute(
+        db,
+        "INSERT INTO projects (id, tenant_id, code, name) VALUES"
+        f" ('{P1}', '{TENANT_A_ID}', 'MX-1', 'Matrix P1'),"
+        f" ('{P2}', '{TENANT_A_ID}', 'MX-2', 'Matrix P2')",
+    )
     await su_assign(db, TENANT_A_ID, CAROL_ID, role, project=P1)
     policy: PolicyService = app.state.access_policy
     carol = AccessPrincipal(tenant_id=TENANT_A_ID, actor_id=CAROL_ID)
