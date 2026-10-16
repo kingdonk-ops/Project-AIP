@@ -1,4 +1,4 @@
-"""STACK-06: the ``ops.send_email`` job (queued in the caller's transaction, retried, delivered once).
+"""STACK-06: the ``ops.send_email`` job: queued in the caller's transaction, retried, sent once.
 
 The worker runs in-process as ``aip_jobs`` (OPS-02 fixtures). The job's handler is registered again
 under a fresh type with no retry backoff, so a failing send retries at once.
@@ -73,7 +73,10 @@ PAYLOAD: dict[str, Any] = {
 }
 
 
-async def test_send_email_queues_one_job_per_idempotency_key(queue_db: FreshDb, tx: Tx) -> None:
+async def test_send_email_queues_one_job_per_idempotency_key(
+    queue_db: FreshDb,  # noqa: F811
+    tx: Tx,  # noqa: F811
+) -> None:
     async with tx(TENANT_A_ID) as conn:
         first = await ops.send_email(
             conn, to=["alice@kaefer.test"], subject="Hi", text="Body", idempotency_key="invite:1"
@@ -87,17 +90,19 @@ async def test_send_email_queues_one_job_per_idempotency_key(queue_db: FreshDb, 
     assert first.payload["from"]
 
 
-async def test_send_email_refuses_a_message_without_recipient_or_key(tx: Tx) -> None:
+async def test_send_email_refuses_a_message_without_recipient_or_key(tx: Tx) -> None:  # noqa: F811
     async with tx(TENANT_A_ID) as conn:
         with pytest.raises(ValueError, match="recipient"):
             await ops.send_email(conn, to=[], subject="s", text="t", idempotency_key="k")
         with pytest.raises(ValueError, match="idempotency"):
-            await ops.send_email(conn, to=["a@kaefer.test"], subject="s", text="t", idempotency_key="")
+            await ops.send_email(
+                conn, to=["a@kaefer.test"], subject="s", text="t", idempotency_key=""
+            )
 
 
 async def test_a_send_that_fails_twice_then_succeeds_is_delivered_once(
-    queue_db: FreshDb,
-    tx: Tx,
+    queue_db: FreshDb,  # noqa: F811
+    tx: Tx,  # noqa: F811
     mail_type: str,
     mailer: Callable[[int], FlakyMailer],
     caplog: pytest.LogCaptureFixture,
@@ -120,7 +125,10 @@ async def test_a_send_that_fails_twice_then_succeeds_is_delivered_once(
 
 
 async def test_a_send_that_never_succeeds_ends_failed_not_lost(
-    queue_db: FreshDb, tx: Tx, mail_type: str, mailer: Callable[[int], FlakyMailer]
+    queue_db: FreshDb,  # noqa: F811
+    tx: Tx,  # noqa: F811
+    mail_type: str,
+    mailer: Callable[[int], FlakyMailer],
 ) -> None:
     fake = mailer(99)
     async with tx(TENANT_A_ID) as conn:
