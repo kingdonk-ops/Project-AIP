@@ -7,11 +7,14 @@ class ResizeObserverStub {
   unobserve(): void {}
   disconnect(): void {}
 }
-globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
-Element.prototype.scrollIntoView ??= function scrollIntoView() {};
-Element.prototype.hasPointerCapture ??= () => false;
-Element.prototype.releasePointerCapture ??= () => {};
+// Node-environment tests (lint.test.ts) share this setup file but have no DOM.
+if (typeof Element !== "undefined") {
+  globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
+  Element.prototype.scrollIntoView ??= function scrollIntoView() {};
+  Element.prototype.hasPointerCapture ??= () => false;
+  Element.prototype.releasePointerCapture ??= () => {};
 
-afterEach(() => {
-  cleanup();
-});
+  afterEach(() => {
+    cleanup();
+  });
+}

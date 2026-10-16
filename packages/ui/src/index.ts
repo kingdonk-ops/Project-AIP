@@ -79,3 +79,40 @@ export {
   type SortDir,
   type Translate,
 } from "./register/types";
+
+// DESIGN-04: record detail pattern and feedback primitives.
+export {
+  RecordDetail,
+  DEFAULT_RECORD_TABS,
+  type RecordDetailProps,
+  type RecordRail,
+  type RecordStatus,
+  type RecordTab,
+} from "./patterns/RecordDetail";
+export { WorkflowBar, type WorkflowAction, type WorkflowBarProps, type WorkflowStep } from "./patterns/WorkflowBar";
+export { ConfirmProvider, confirm, useConfirm, type ConfirmOptions, type ConfirmProviderProps } from "./feedback/confirm";
+export {
+  Toaster,
+  toast,
+  TOAST_TIMEOUT_MS,
+  MAX_VISIBLE_TOASTS,
+  type ToastAction,
+  type ToastOptions,
+  type ToasterProps,
+} from "./feedback/toast";
+export {
+  EmptyState,
+  LoadingState,
+  ErrorState,
+  OfflineState,
+  SyncConflictState,
+  errorTermKey,
+  requestErrorFrom,
+  type EmptyStateProps,
+  type ErrorStateProps,
+  type LoadingStateProps,
+  type OfflineStateProps,
+  type RequestError,
+  type StateAction,
+  type SyncConflictStateProps,
+} from "./feedback/states";

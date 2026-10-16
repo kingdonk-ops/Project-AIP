@@ -108,7 +108,7 @@ tasks still `todo` below remain before M0 is closed.
 | [DATABASE-07](tasks/DATABASE-07.md) | Isolation test generator across all tables and routes | database | M | ACCESS-01, STACK-03, TESTING-02 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-04](tasks/TESTING-04.md) | Generated permission-matrix and IDOR tests | testing | M | ACCESS-01, STACK-03 | todo | convert to Python backend per ADR 0001 before starting |
 | [TERMS-05](tasks/TERMS-05.md) | Terms admin API and permissions | terms | M | TERMS-04 | todo | convert to Python backend per ADR 0001 before starting |
-| [DESIGN-04](tasks/DESIGN-04.md) | Record detail pattern, dialogs, toasts, empty/loading/error states | design | M | DESIGN-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [DESIGN-04](tasks/DESIGN-04.md) | Record detail pattern, dialogs, toasts, empty/loading/error states | design | M | DESIGN-02 | done | ClaudeK: PR #92; spec checked against ADR 0001 (frontend only) |
 | [DESIGN-06](tasks/DESIGN-06.md) | Nav rail sections follow the ADR 0018 job-area menu | design | S | DESIGN-02 | done | PR #72; design review 2026-10-14 |
 | [DESIGN-07](tasks/DESIGN-07.md) | Keycloak login theme uses the design tokens and IBM Plex | design | S | DESIGN-01, IDENTITY-01 | done | PR #73; design review 2026-10-14 |
 | [DESIGN-08](tasks/DESIGN-08.md) | Shell and register polish: mobile drawer backdrop, table overflow, login width, link buttons | design | S | DESIGN-03, PROJECTS-06 | todo | design review 2026-10-14 |

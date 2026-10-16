@@ -31,6 +31,36 @@ describe("ui lint gate", { timeout: 30_000 }, () => {
     expect(rules).toContain("boundaries/dependencies");
   });
 
+  it("rejects literal text in feedback and pattern components", async () => {
+    for (const filePath of ["src/feedback/__probe__.tsx", "src/patterns/__probe__.tsx"]) {
+      const rules = await lint(`export function Probe() {\n  return <span>Rejected</span>;\n}\n`, filePath);
+      expect(rules).toContain("react/jsx-no-literals");
+    }
+  });
+
+  // DESIGN-04: real dialogs and toasts only.
+  it("rejects the blocking browser dialogs with a pointer to confirm()/toast()", async () => {
+    const [result] = await eslint.lintText(`export function f() {\n  if (confirm("x")) return 1;\n  return 0;\n}\n`, {
+      filePath: "src/feedback/__probe__.ts",
+    });
+    const errors = (result?.messages ?? []).filter((m) => m.severity === 2);
+    expect(errors.map((m) => m.ruleId)).toEqual(["no-restricted-globals"]);
+    expect(errors[0]?.message).toMatch(/confirm\(\).*@aip\/ui/);
+
+    for (const code of ["window.alert('x');", "window.prompt('x');", "window.confirm('x');", "alert('x');", "prompt('x');"]) {
+      const rules = await lint(`export function f() {\n  ${code}\n}\n`, "src/feedback/__probe__.ts");
+      expect(rules, code).toEqual([expect.stringMatching(/^no-restricted-(globals|properties)$/)]);
+    }
+  });
+
+  it("accepts an imported confirm()", async () => {
+    const rules = await lint(
+      `import { confirm } from "./confirm";\nexport async function f() {\n  return confirm({ titleKey: "a", bodyKey: "b", confirmKey: "c" });\n}\n`,
+      "src/feedback/__probe__.ts",
+    );
+    expect(rules).toEqual([]);
+  });
+
   it("accepts a labelled component taking text through props", async () => {
     const rules = await lint(
       `export function Probe({ label }: { label: string }) {\n  return <button type="button" aria-label={label} />;\n}\n`,

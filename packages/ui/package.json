@@ -13,6 +13,7 @@
     },
     "./tokens.css": "./dist/tokens.css",
     "./styles.css": "./dist/styles.css",
+    "./eslint": "./eslint.config.mjs",
     "./tailwind-preset": {
       "types": "./tailwind-preset.ts",
       "import": "./dist/tailwind-preset.js"
@@ -21,7 +22,8 @@
   "files": [
     "dist",
     "src",
-    "tailwind-preset.ts"
+    "tailwind-preset.ts",
+    "eslint.config.mjs"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/copy-css.mjs",
