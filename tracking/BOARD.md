@@ -103,7 +103,7 @@ tasks still `todo` below remain before M0 is closed.
 | [IDENTITY-03](tasks/IDENTITY-03.md) | Server-side sessions (__Host- cookie, user_session), rotation, revocation | identity | M | DESIGN-02, IDENTITY-02 | done | PR #62; live Keycloak + Playwright journeys carried to TESTING-09 |
 | [TENANCY-03](tasks/TENANCY-03.md) | Organisations and project-scoped role assignment | tenancy | M | PROJECTS-01 | done | ClaudeK: PR #93; converted per ADR 0001 and narrowed to the API (page and invite e2e → TENANCY-08, org-isolation golden tests → TENANCY-09) |
 | [AUDIT-02](tasks/AUDIT-02.md) | Audit writer from outbox + security stream (auth events) | audit | M | ARCH-07, AUDIT-01, IDENTITY-02 | done | ClaudeK: PR #96; converted per ADR 0001; identity auth emits and the Keycloak e2e moved to AUDIT-06; security review fixed in PR |
-| [APPROVALS-01](tasks/APPROVALS-01.md) | Versioned workflow definitions/instances + pure state-machine evaluator | approvals | M | ARCH-02, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
+| [APPROVALS-01](tasks/APPROVALS-01.md) | Versioned workflow definitions/instances + pure state-machine evaluator | approvals | M | ARCH-02, DATABASE-04 | done | ClaudeK: PR #97; spec converted per ADR 0001 |
 | [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | done | PR #79 (stream B); SSE-KMS wiring → UPLOADS-07  |
 | [DATABASE-07](tasks/DATABASE-07.md) | Isolation test generator across all tables and routes | database | M | ACCESS-01, STACK-03, TESTING-02 | done | ClaudeK: PR #99; converted and narrowed (route IDOR → TESTING-04, key checks → TESTING-03) |
 | [TESTING-04](tasks/TESTING-04.md) | Generated permission-matrix and IDOR tests | testing | M | ACCESS-01, STACK-03 | done | ClaudeK: PR #102; converted per ADR 0001; asset-subtree cases wait for ACCESS-03 |
@@ -114,7 +114,7 @@ tasks still `todo` below remain before M0 is closed.
 | [DESIGN-08](tasks/DESIGN-08.md) | Shell and register polish: mobile drawer backdrop, table overflow, login width, link buttons | design | S | DESIGN-03, PROJECTS-06 | todo | design review 2026-10-14 |
 | [DESIGN-14](tasks/DESIGN-14.md) | Header brand lockup: company name followed by "AIP" | design | XS | DESIGN-02 | done | ClaudeK: PR #98; owner request 2026-10-14 |
 | [OPS-03](tasks/OPS-03.md) | Jobs API: my jobs, admin queue, cancel with permission | ops | M | OPS-02 | done | ClaudeK: PR #100; converted per ADR 0001; aip_jobs INSERT on domain_events (ADR 0030 amendment); e2e export journey waits for a real job type |
-| [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | todo | AWS readiness |
+| [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | done | ClaudeK: PR #103; AWS readiness; SES v1 API (LocalStack community lacks sesv2) |
 | [STACK-07](tasks/STACK-07.md) | TLS to Postgres and Redis (RDS and ElastiCache ready) | stack | S | OPS-02, STACK-05 | done | ClaudeK: PR #104; AWS readiness; RDS bundle checksum pin is a follow-up |
 | [OPS-13](tasks/OPS-13.md) | Scheduled job trigger: one command for Coolify cron and EventBridge Scheduler | ops | S | OPS-02 | todo | AWS readiness |
 | [OPS-16](tasks/OPS-16.md) | RDS bootstrap runbook | ops | S | DATABASE-02 | todo | AWS readiness |
