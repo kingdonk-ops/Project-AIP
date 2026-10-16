@@ -9,7 +9,7 @@ the tenant goes on the message as the ``tenant`` tag. ``endpoint_url`` is for Lo
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, cast
 
 import aioboto3  # pyright: ignore[reportMissingTypeStubs]
 from botocore.exceptions import BotoCoreError, ClientError
@@ -57,7 +57,7 @@ class SesMailer:
         if self._endpoint_url:
             client_args["endpoint_url"] = self._endpoint_url
         try:
-            client: Any = self._session.client("ses", **client_args)  # pyright: ignore[reportUnknownMemberType]
+            client = cast(Any, self._session.client("ses", **client_args))  # pyright: ignore[reportUnknownMemberType]
             async with client as ses:
                 response: dict[str, Any] = await ses.send_email(**self._request(message))
         except ClientError as exc:
