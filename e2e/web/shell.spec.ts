@@ -68,6 +68,24 @@ test("cross-tenant: the other tenant's user sees only their own tenant", async (
   await expect(page.getByText("Kaefer Demo")).toHaveCount(0);
 });
 
+// DESIGN-14: the header lockup "<Company> AIP" links Home and the document title ends with it.
+for (const [email, company] of [
+  ["alice@kaefer.test", "Kaefer Demo"],
+  ["bob@acme.test", "Tenant B"],
+] as const) {
+  test(`brand lockup: ${email} sees "${company} AIP" linking Home`, async ({ page }) => {
+    await signInAsStub(page, email);
+    await page.goto("/projects");
+    const lockup = page.getByRole("banner").getByRole("link", { name: `${company} AIP, home` });
+    await expect(lockup).toBeVisible();
+    await expect(page).toHaveTitle(new RegExp(`${company} AIP$`));
+    await lockup.click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveTitle(`Home · ${company} AIP`);
+    await expectNoBlockingAxe(page);
+  });
+}
+
 test("unknown email gets the same generic failure, with no enumeration", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Work email").fill("nobody@nowhere.test");
