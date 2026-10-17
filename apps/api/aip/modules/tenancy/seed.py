@@ -6,8 +6,8 @@ Upserts ``kaefer-demo`` and ``tenant-b`` as the table owner through ``DATABASE_M
 (``aip_app`` may only read ``tenants``). FORCE RLS binds the owner too, so each row is written
 with ``app.tenant_id`` set to that row's id, transaction-local. Idempotent: a re-run restores the
 fixture values (name, slug, region, ``active``, not deleted). Refuses to run, before connecting,
-unless ``AIP_ENV`` is ``development``, ``test`` or ``demo``. Run it before ``python -m aip.modules.identity.seeds``: the login
-directory references these tenants.
+unless ``AIP_ENV`` is ``development``, ``test`` or ``demo``. Run it before
+``python -m aip.modules.identity.seeds``: the login directory references these tenants.
 
 ENT-01: each fixture tenant also gets a sandbox subscription (``kaefer-demo`` on ``professional``,
 ``tenant-b`` on ``core``), upserted the same way; a re-run restores it and bumps the entitlement

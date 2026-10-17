@@ -164,7 +164,7 @@ async def set_flag(tenant: UUID, actor: UUID, flag: str, enabled: bool) -> None:
 
 
 async def subscribe(tenant: UUID, actor: UUID, add_ons: list[str]) -> None:
-    """Give the tenant a live ``core`` subscription with ``add_ons`` (``bim`` adds ``feature.bim``)."""
+    """Give the tenant a live ``core`` subscription with ``add_ons`` (``bim``: ``feature.bim``)."""
     body = SubscriptionPut.model_validate(
         {
             "planCode": "core",

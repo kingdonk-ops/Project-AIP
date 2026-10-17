@@ -95,7 +95,6 @@ from aip.platform.observability.logging import RequestIdMiddleware, configure_lo
 from aip.platform.observability.otel import init_tracing
 from aip.platform.version import router as version_router
 
-
 # The environments that serve /docs, /redoc and /openapi.json (SECURITY-09, review 11 L4).
 DOCS_ENVS = frozenset({"development", "test"})
 

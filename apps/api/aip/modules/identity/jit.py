@@ -382,7 +382,7 @@ OnSuccess = Callable[[VerifiedExternalIdentity, Provisioned], Awaitable[Response
 
 
 async def default_on_success(identity: VerifiedExternalIdentity, result: Provisioned) -> Response:
-    """Only where no session handler is passed (tests): ``AIP_ENV=test`` echoes the user id, else 501.
+    """Only where no session handler is passed (tests): user id under ``AIP_ENV=test``, else 501.
 
     The app passes IDENTITY-03's session handler as ``on_success``.
     """
