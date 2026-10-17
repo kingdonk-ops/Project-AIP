@@ -158,6 +158,10 @@ GRANT ALL ON FUNCTION public.identity_resolve_session(p_sid_hash bytea) TO aip_a
 REVOKE ALL ON FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) TO aip_app;
 
+-- Name: FUNCTION ops_active_tenant_ids(); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.ops_active_tenant_ids() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.ops_active_tenant_ids() TO aip_app;
+
 -- Name: FUNCTION outbox_dead_letters(lim integer, after uuid); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.outbox_dead_letters(lim integer, after uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.outbox_dead_letters(lim integer, after uuid) TO aip_app;
@@ -1162,6 +1166,21 @@ CREATE FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) RETURNS TABLE(
     $$;
 
 ALTER FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) OWNER TO aip_owner;
+
+-- Name: ops_active_tenant_ids(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.ops_active_tenant_ids() RETURNS SETOF uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+    BEGIN
+      -- The flag the owner-only policy needs; transaction-local, and switched off again below.
+      PERFORM set_config('aip.scheduler_list_active', 'on', true);
+      RETURN QUERY SELECT t.id FROM public.tenants AS t WHERE t.status = 'active' ORDER BY t.id;
+      PERFORM set_config('aip.scheduler_list_active', 'off', true);
+    END
+    $$;
+
+ALTER FUNCTION public.ops_active_tenant_ids() OWNER TO aip_owner;
 
 -- Name: outbox_dead_letters(integer, uuid); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.outbox_dead_letters(lim integer, after uuid) RETURNS TABLE(id uuid, tenant_id uuid, event_name text, event_version integer, attempts integer, last_error text, dead_lettered_at timestamp with time zone)
@@ -2261,6 +2280,9 @@ CREATE POLICY tenant_isolation ON public.tenant_usage USING ((tenant_id = (NULLI
 
 -- Name: tenants real_customer_check; Type: POLICY; Schema: public
 CREATE POLICY real_customer_check ON public.tenants FOR SELECT TO aip_owner USING (is_real_customer);
+
+-- Name: tenants scheduler_list_active; Type: POLICY; Schema: public
+CREATE POLICY scheduler_list_active ON public.tenants FOR SELECT TO aip_owner USING (((status = 'active'::text) AND (current_setting('aip.scheduler_list_active'::text, true) = 'on'::text)));
 
 -- Name: tenants tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenants USING ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));

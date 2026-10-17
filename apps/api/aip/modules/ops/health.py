@@ -15,6 +15,10 @@
   details (exceptions, both revision sets) go to the log, because the endpoint is
   unauthenticated.
 
+  The result is cached for ``cache_seconds`` (5 s) and concurrent requests share one run, so
+  anonymous callers cannot turn the probe into two database connections and a Redis connection
+  per request (review 11 M5). A probe every few seconds still sees an outage within one TTL.
+
 - ``GET /api/v1/health``: the original ARCH-01 probe, kept as an alias of ``live``.
 
 All routes are unauthenticated and not tenant-scoped. They are mounted directly by ``main.py``
@@ -25,6 +29,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 from collections.abc import Awaitable, Callable, Mapping
 from pathlib import Path
 from typing import Any
@@ -48,6 +53,7 @@ DATABASE_URL_ENV = "DATABASE_URL"
 REDIS_URL_ENV = "REDIS_URL"
 ALEMBIC_CONFIG_ENV = "AIP_ALEMBIC_CONFIG"
 DEFAULT_TIMEOUT = 2.0
+DEFAULT_CACHE_SECONDS = 5.0
 
 logger = structlog.stdlib.get_logger(__name__)
 
@@ -80,13 +86,19 @@ class ReadinessChecker:
         redis_url: str | None,
         alembic_config: Path = DEFAULT_ALEMBIC_CONFIG,
         timeout: float = DEFAULT_TIMEOUT,
+        cache_seconds: float = DEFAULT_CACHE_SECONDS,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self.database_url = database_url
         self.redis_url = redis_url
         self.alembic_config = alembic_config
         self.timeout = timeout
+        self.cache_seconds = cache_seconds
+        self._clock = clock
         self._heads: frozenset[str] | None = None
         self._version_table: str | None = None
+        self._cached: tuple[float, dict[str, str]] | None = None
+        self._lock = asyncio.Lock()
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> ReadinessChecker:
@@ -180,6 +192,15 @@ class ReadinessChecker:
         )
         return dict(zip(names, results, strict=True))
 
+    async def cached_run(self) -> dict[str, str]:
+        """``run()``, reused for ``cache_seconds``; concurrent callers wait for one run."""
+        async with self._lock:
+            if self._cached is not None and self._clock() - self._cached[0] < self.cache_seconds:
+                return dict(self._cached[1])
+            checks = await self.run()
+            self._cached = (self._clock(), checks)
+            return dict(checks)
+
 
 # Public (ACCESS-01): probes need no session and reveal no tenant data.
 router = APIRouter(prefix="/health", tags=["platform"], dependencies=[Depends(public())])
@@ -193,7 +214,7 @@ async def live() -> dict[str, str]:
 @router.get("/ready", responses={503: {"description": "A dependency check failed"}})
 async def ready(request: Request) -> JSONResponse:
     checker: ReadinessChecker = request.app.state.readiness
-    checks = await checker.run()
+    checks = await checker.cached_run()
     healthy = all(result == "ok" for result in checks.values())
     return JSONResponse(
         {"status": "ok" if healthy else "fail", "checks": checks},

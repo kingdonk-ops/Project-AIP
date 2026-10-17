@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import uuid
@@ -321,7 +322,10 @@ async def test_ready_fails_closed_when_unconfigured() -> None:
 async def test_ready_ok_then_503_when_redis_stops(
     migrated_db: FreshDb, redis_server: RedisServer
 ) -> None:
-    checker = ReadinessChecker(database_url=migrated_db.owner_url, redis_url=redis_server.url)
+    # No result cache: the second probe must see Redis go away.
+    checker = ReadinessChecker(
+        database_url=migrated_db.owner_url, redis_url=redis_server.url, cache_seconds=0
+    )
     app = make_app(checker)
     async with client(app) as c:
         ok = await c.get(READY)
@@ -405,6 +409,31 @@ async def test_ready_check_times_out(migrated_db: FreshDb) -> None:
             r = await c.get(READY)
     assert r.status_code == 503
     assert r.json()["checks"]["redis"] == "fail: timeout"
+
+
+async def test_ready_reuses_one_result_for_its_cache_window() -> None:
+    # Review 11 M5: anonymous callers must not cost a fresh set of connections per request.
+    now = [0.0]
+    runs = 0
+
+    class CountingChecker(ReadinessChecker):
+        async def run(self) -> dict[str, str]:
+            nonlocal runs
+            runs += 1
+            await asyncio.sleep(0.01)  # concurrent requests overlap this run
+            return {"db": "ok", "redis": "ok", "migrations": "ok"}
+
+    checker = CountingChecker(database_url=None, redis_url=None, clock=lambda: now[0])
+    async with client(make_app(checker)) as c:
+        burst = await asyncio.gather(*(c.get(READY) for _ in range(20)))
+        assert [r.status_code for r in burst] == [200] * 20
+        assert runs == 1
+        now[0] = checker.cache_seconds - 0.1
+        assert (await c.get(READY)).status_code == 200
+        assert runs == 1
+        now[0] = checker.cache_seconds + 0.1
+        assert (await c.get(READY)).status_code == 200
+        assert runs == 2
 
 
 # --- tracing ----------------------------------------------------------------------------------

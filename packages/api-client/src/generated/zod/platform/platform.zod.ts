@@ -263,8 +263,13 @@ export const PlatformPutTenantSubscriptionResponse = zod.object({
  */
 export const PlatformVersionResponse = zod.object({
   "build": zod.string(),
-  "commit": zod.string(),
-  "dependencies": zod.object({
+  "commit": zod.string()
+}).describe('Body of GET /api/v1/platform/version. Changing it changes the generated client.')
+
+/**
+ * @summary Version Dependencies
+ */
+export const PlatformVersionDependenciesResponse = zod.object({
   "alembic": zod.string(),
   "fastapi": zod.string(),
   "postgres": zod.string(),
@@ -273,7 +278,6 @@ export const PlatformVersionResponse = zod.object({
   "python": zod.string(),
   "sqlalchemy": zod.string()
 })
-}).describe('Body of GET /api/v1/platform/version. Changing it changes the generated client.')
 
 /**
  * @summary List Flags
