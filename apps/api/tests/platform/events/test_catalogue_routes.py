@@ -1,8 +1,10 @@
 """ARCH-06: the event-catalogue API (integration + e2e, real Postgres).
 
 The real app is built with ``AUTH_TEST_STUB`` and the real ``RoleGrantProvider``. A kaefer-demo
-user (``alice``) is granted ``platform.events.manage`` through a tenant role; ``carol`` (same
-tenant, no grant) and ``bob`` (tenant B, no grant) stand in for everyone else. Events, counts and
+user (``alice``) holds ``platform.events.manage`` through a test grant provider: ``platform.*``
+codes are operator-only, so no tenant role may hold one (ADR 0029 amendment, and the
+``role_permission`` CHECK of review 11 L1). ``carol`` (same tenant, no grant) and ``bob`` (tenant
+B, no grant) stand in for everyone else. Events, counts and
 the deprecation flag are seeded straight into Postgres as the superuser (which bypasses RLS), so
 the figures are exact and cross-tenant.
 """
@@ -10,7 +12,7 @@ the figures are exact and cross-tenant.
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterable
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -20,6 +22,7 @@ from fastapi import FastAPI
 
 from aip.main import create_app
 from aip.modules.access.api import sync_catalogue
+from aip.platform.access import AccessPrincipal, Grant
 from aip.platform.context import RequestContext, use_context
 from aip.platform.db.engine import dispose_engine
 from aip.platform.db.session import with_tenant
@@ -37,7 +40,6 @@ from tests.fixtures.postgres import (  # noqa: F401 - re-exported pytest fixture
 )
 
 CAROL_ID = UUID("00000000-0000-4000-8000-00000000ca01")  # kaefer-demo user with no grant
-OPS_ROLE_ID = UUID("00000000-0000-4000-8000-00000000705e")
 PROJECT_CREATED = "project.created"
 
 SEED_TENANTS_USERS = (
@@ -50,15 +52,13 @@ SEED_TENANTS_USERS = (
     f"('{BOB_ID}', '{TENANT_B_ID}', 'staff', 'bob@acme.test', 'Bob', 'active');"
 )
 
-# Run only after sync_catalogue: role_permission.permission_code has an FK to the permission table.
-GRANT_SQL = (
-    "INSERT INTO role (id, tenant_id, code, name, is_system) VALUES "
-    f"('{OPS_ROLE_ID}', '{TENANT_A_ID}', 'platform_ops', 'Platform Ops', false);"
-    "INSERT INTO role_permission (id, tenant_id, role_id, permission_code) VALUES "
-    f"(gen_random_uuid(), '{TENANT_A_ID}', '{OPS_ROLE_ID}', 'platform.events.manage');"
-    "INSERT INTO role_assignment (id, tenant_id, user_id, role_id, scope_type) VALUES "
-    f"(gen_random_uuid(), '{TENANT_A_ID}', '{ALICE_ID}', '{OPS_ROLE_ID}', 'tenant');"
-)
+class OperatorGrants:
+    """Stands in for the operator realm (OPS-12): alice in kaefer-demo is the platform operator."""
+
+    async def grants(self, principal: AccessPrincipal) -> Iterable[Grant]:
+        if (principal.tenant_id, principal.actor_id) == (TENANT_A_ID, ALICE_ID):
+            return [Grant("platform.events.manage")]
+        return []
 
 
 def headers(tenant: UUID, user: UUID) -> dict[str, str]:
@@ -116,7 +116,7 @@ async def app(tenant_db: TenantDb, monkeypatch: pytest.MonkeyPatch) -> AsyncIter
     await dispose_engine()
     application = create_app(env="test", tracing=False)
     await sync_catalogue(application.state.access_catalogue)
-    await su_execute(tenant_db, GRANT_SQL)  # after the permission exists in the catalogue
+    application.state.access_policy.register(OperatorGrants())
     yield application
     await dispose_engine()
 
