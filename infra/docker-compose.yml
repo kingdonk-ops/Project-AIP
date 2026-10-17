@@ -57,6 +57,10 @@ x-app-env: &app-env
   SMTP_PORT: "1025"
   MAIL_FROM: "AIP <no-reply@aip.local>"
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+  # Review 11 M1: uvicorn (--proxy-headers) takes the client address from X-Forwarded-For only
+  # when the peer is one of these hops (the web nginx, on a private Docker network). AWS sets the
+  # VPC CIDR instead; the image default trusts loopback only.
+  FORWARDED_ALLOW_IPS: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
   # Staff sign-in (IDENTITY-01, ADR 0005). The API calls Keycloak inside the network; browsers and
   # token issuers use the published port.
   KEYCLOAK_URL: http://keycloak:8080
@@ -355,7 +359,7 @@ services:
     <<: *app-hardening
     build: *api-build
     image: aip-api:${AIP_IMAGE_TAG:-dev}
-    command: ["uvicorn", "aip.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["uvicorn", "aip.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
     environment: *app-env
     ports:
       - "127.0.0.1:${AIP_API_PORT:-8000}:8000"

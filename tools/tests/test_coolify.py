@@ -195,8 +195,30 @@ def test_the_mock_idp_account_console_is_not_public() -> None:
         assert _first_regex_location(text, public) == "proxy", public
 
 
-def test_upstreams_get_one_client_address_not_the_client_list() -> None:
-    text = (ROOT / "infra" / "coolify" / "nginx.conf").read_text()
+@pytest.mark.parametrize(
+    ("conf", "upstreams"),
+    [(ROOT / "infra" / "coolify" / "nginx.conf", 2), (ROOT / "apps" / "web" / "nginx.conf", 1)],
+    ids=["coolify", "web"],
+)
+def test_upstreams_get_one_client_address_not_the_client_list(conf: Path, upstreams: int) -> None:
+    # Review 11 M1: both web servers resolve the client through realip (private hops only) and
+    # pass on that one address, so a client-supplied X-Forwarded-For never reaches the API.
+    text = conf.read_text()
     assert "$proxy_add_x_forwarded_for" not in text
-    assert "real_ip_recursive on;" in text
-    assert text.count("proxy_set_header X-Forwarded-For $remote_addr;") == 2
+    for line in (
+        "set_real_ip_from 10.0.0.0/8;",
+        "set_real_ip_from 172.16.0.0/12;",
+        "set_real_ip_from 192.168.0.0/16;",
+        "real_ip_header X-Forwarded-For;",
+        "real_ip_recursive on;",
+    ):
+        assert line in text, line
+    assert "set_real_ip_from 0.0.0.0/0;" not in text
+    assert text.count("proxy_set_header X-Forwarded-For $remote_addr;") == upstreams
+
+
+def test_the_api_trusts_forwarded_headers_from_private_hops_only() -> None:
+    api = yaml.safe_load(COMPOSE.read_text())["services"]["api"]
+    assert "--proxy-headers" in api["command"]
+    assert not any(str(arg).startswith("--forwarded-allow-ips") for arg in api["command"])
+    assert api["environment"]["FORWARDED_ALLOW_IPS"] == "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"

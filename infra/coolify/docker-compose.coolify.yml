@@ -371,8 +371,11 @@ services:
       - --port
       - "8000"
       - --proxy-headers
-      - --forwarded-allow-ips=*
-    environment: *app-env
+    # Review 11 M1: trust X-Forwarded-For only from the private Docker network (the web nginx,
+    # which sends one realip-resolved address), never from any peer.
+    environment:
+      <<: *app-env
+      FORWARDED_ALLOW_IPS: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
     depends_on:
       migrator:
         condition: service_completed_successfully

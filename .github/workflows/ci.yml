@@ -198,17 +198,23 @@ jobs:
           uid=$(docker run --rm --network none --read-only "aip-sandbox:$AIP_IMAGE_TAG" id -u)
           echo "sandbox uid=$uid"
           test "$uid" != "0"
-      - name: GET /api/v1/platform/version reports the built commit, Python 3.12 and Postgres 16
+      - name: GET /api/v1/platform/version reports the built commit; the image runs Python 3.12 and Postgres 16
         run: |
           curl -fsS --max-time 10 http://localhost:8000/api/v1/platform/version | tee version.json
           python3 - <<'EOF'
           import json, os
           body = json.load(open("version.json"))
-          deps = body["dependencies"]
           assert body["commit"] == os.environ["GIT_SHA"], body
           assert body["build"] == os.environ["BUILD_ID"], body
-          assert deps["python"].startswith("3.12"), deps
-          assert deps["postgres"].startswith("16"), deps
+          # Review 11 M5: dependency versions are not in the public body.
+          assert set(body) == {"build", "commit"}, body
+          EOF
+          # The signed-in /version/dependencies route reports these; read them through the same code.
+          $COMPOSE exec -T api python -c 'import asyncio, platform; from aip.platform.version.routes import postgres_version; print(platform.python_version()); print(asyncio.run(postgres_version()))' | tee deps.txt
+          python3 - <<'EOF'
+          python, postgres = open("deps.txt").read().split()
+          assert python.startswith("3.12"), python
+          assert postgres.startswith("16"), postgres
           EOF
       - name: Image label carries the commit
         run: |

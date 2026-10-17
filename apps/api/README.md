@@ -44,9 +44,19 @@ UUIDv7), and every request logs one `request` line with `request_id` (and `tenan
 
 ```bash
 GIT_SHA=$(git rev-parse HEAD) docker compose -f infra/docker-compose.yml up --build --wait
-curl localhost:8000/api/v1/platform/version   # build, commit and dependency versions
+curl localhost:8000/api/v1/platform/version   # build and commit
 ```
 
-`GET /api/v1/platform/version` reports `BUILD_ID` and `GIT_SHA` (baked into the image), library versions
-from `importlib.metadata`, the Python version and Postgres `SHOW server_version` (`"unavailable"` when the
-database is down; still 200).
+`GET /api/v1/platform/version` (public) reports `BUILD_ID` and `GIT_SHA` (baked into the image).
+`GET /api/v1/platform/version/dependencies` (signed in) reports library versions from
+`importlib.metadata`, the Python version and Postgres `SHOW server_version` (read once per process;
+`"unavailable"` when the database is down; still 200). Review 11 M5 took the versions off the public body.
+
+### Client IP behind proxies (review 11 M1)
+
+uvicorn runs with `--proxy-headers` and trusts `X-Forwarded-For` only from the peers in
+`FORWARDED_ALLOW_IPS` (comma-separated IPs or CIDRs). The image default is loopback only, so a
+direct client can never pick its own address. Every deployment sets it to its proxy hops: the
+compose stacks use the private Docker ranges, and AWS sets the VPC CIDR (the ALB's subnets). The
+login rate limit and the session and audit IPs all read `request.client.host`, which is then the
+rightmost address that did not come from a trusted hop.
