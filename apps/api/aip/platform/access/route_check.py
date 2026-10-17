@@ -13,8 +13,8 @@
    are converted here). Every router in the tree defaults to that class, and a router included
    later through ``app.include_router`` is converted on inclusion, so a route that declares
    nothing is denied at runtime with 403 even when the startup check never saw it;
-3. the policy, catalogue and principal source go on ``app.state`` and ``Forbidden`` renders as
-   403 ``{"code": "FORBIDDEN", "permission": code}``.
+3. the policy, catalogue, principal source and tenant guard go on ``app.state`` and
+   ``Forbidden`` renders as 403 ``{"code": "FORBIDDEN", "permission": code}``.
 
 ``aip.main`` runs ``check_routes`` and ``enforce_routes`` again in the lifespan startup, so routes
 added between ``create_app()`` and serving fail startup too.
@@ -35,6 +35,7 @@ from aip.platform.access.catalogue import Catalogue
 from aip.platform.access.dependencies import (
     AccessCheckedRoute,
     PrincipalSource,
+    TenantGuard,
     access_declarations,
 )
 from aip.platform.access.policy import Forbidden, PolicyService
@@ -137,6 +138,7 @@ def install_access(
     catalogue: Catalogue,
     policy: PolicyService,
     principal_source: PrincipalSource | None = None,
+    tenant_guard: TenantGuard | None = None,
 ) -> None:
     check_routes(app.router.routes, catalogue, app)
     enforce_routes(app)
@@ -144,6 +146,7 @@ def install_access(
     app.state.access_catalogue = catalogue
     app.state.access_policy = policy
     app.state.access_principal_source = principal_source
+    app.state.access_tenant_guard = tenant_guard
 
     @app.exception_handler(Forbidden)
     async def forbidden(request: Request, exc: Forbidden) -> JSONResponse:  # pyright: ignore[reportUnusedFunction]

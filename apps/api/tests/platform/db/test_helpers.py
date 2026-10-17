@@ -29,7 +29,7 @@ from sqlalchemy import (
 from sqlalchemy import Uuid as SqlUuid
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncEngine
-from tests.conftest import TENANT_A_ID, TENANT_B_ID
+from tests.conftest import TENANT_A_ID, TENANT_B_ID, serve_fixture_tenants
 from tests.platform.db.conftest import execute
 
 from aip.main import create_app
@@ -413,11 +413,13 @@ async def test_routes_return_409_with_the_current_record_and_404_for_deleted_row
     principal_resolver: FixturePrincipalResolver,
     membership_resolver: FixtureMembershipResolver,
 ) -> None:
-    app = create_app(
-        principal_resolver=principal_resolver,
-        membership_resolver=membership_resolver,
-        env="test",
-        tracing=False,
+    app = serve_fixture_tenants(
+        create_app(
+            principal_resolver=principal_resolver,
+            membership_resolver=membership_resolver,
+            env="test",
+            tracing=False,
+        )
     )
 
     @app.get("/api/v1/_fixture/probe/{row_id}", dependencies=[Depends(authenticated())])

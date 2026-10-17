@@ -20,6 +20,7 @@ from tests.conftest import (
     TENANT_A_ID,
     FixtureMembershipResolver,
     FixturePrincipalResolver,
+    serve_fixture_tenants,
 )
 
 from aip.main import create_app
@@ -42,11 +43,13 @@ def make_app(readiness: ReadinessChecker | None = None, **kwargs: Any) -> FastAP
     resolver = FixturePrincipalResolver(
         {"token-alice": Principal(tenant_id=TENANT_A_ID, actor_id=ALICE_ID)}
     )
-    return create_app(
-        principal_resolver=resolver,
-        membership_resolver=FixtureMembershipResolver(),
-        readiness=readiness,
-        **kwargs,
+    return serve_fixture_tenants(
+        create_app(
+            principal_resolver=resolver,
+            membership_resolver=FixtureMembershipResolver(),
+            readiness=readiness,
+            **kwargs,
+        )
     )
 
 
