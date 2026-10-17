@@ -125,16 +125,12 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [SECURITY-11](tasks/SECURITY-11.md) | Demo mock-IdP users from secrets, not committed passwords; block the mock-IdP account console | security | S | OPS-11 | todo | review 11 H1: the repo is public, and alice and bob are tenant_admin on the demo with committed passwords; rotate E2E_PASS_A/B. Stopgap done in PR #101 (required actions disabled, admin-only profile, nginx 404 on the account console); the live demo needs the owner's kcadm step from PR #101 |
-| [OPS-17](tasks/OPS-17.md) | Job handlers can write domain tables and emit events (handler role, ADR 0016 amendment) | ops | S | ARCH-05, OPS-02 | todo | review 11 H3: handlers run as aip_jobs, which has no tenant-table grants (INSERT on domain_events came with OPS-03); blocks UPLOADS-02 |
-| [TESTING-12](tasks/TESTING-12.md) | Live-Keycloak session journeys: logout ends SSO, back-channel revokes, Active sessions page (cross-tenant + axe), real-session shell | testing | M | IDENTITY-03, TESTING-09 | todo | review 11 H4: owns TESTING-09's carried-forward list verbatim; un-skip shell.spec.ts:97 and projects.spec.ts:36-42 |
-| [SECURITY-12](tasks/SECURITY-12.md) | API edge hardening: body size cap, security headers, HSTS in the web nginx | security | S | OPS-04 | todo | review 11 M2: ADR 0026 says nginx sends HSTS, but it does not |
+| [SECURITY-11](tasks/SECURITY-11.md) | Harden the public demo: mock-IdP secrets, API/web edge headers + HSTS, signed+scanned deploy | security | M | OPS-11, OPS-04, SECURITY-08 | todo | review 11 H1/M2/M6; **merges SECURITY-12 + SECURITY-15**; owner: rotate E2E_PASS_A/B, add COSIGN_PRIVATE_KEY/PASSWORD, run the PR #101 kcadm step |
 | [SECURITY-13](tasks/SECURITY-13.md) | Least-privilege aip_readonly: revoke session, auth and PII tables; reporting views; ADR 0012 amendment | security | M | DATABASE-07 | todo | review 11 M3: set_config makes RLS advisory for roles running arbitrary SQL |
 | [SECURITY-14](tasks/SECURITY-14.md) | Refuse dev secrets outside dev/test (API allowlist check + deployed realm overlay without defaults) | identity | S | IDENTITY-03 | todo | review 11 M4: aip-admin (manage-users) falls back to aip_admin_dev_only_secret |
-| [SECURITY-15](tasks/SECURITY-15.md) | Gate the Coolify deploy on the security scans; scan and sign all pushed demo images; SHA-pin deploy actions | ops | S | OPS-11, SECURITY-08 | todo | review 11 M6; owner adds COSIGN_PRIVATE_KEY and COSIGN_PASSWORD |
-| [OPS-18](tasks/OPS-18.md) | Tenant fan-out for periodic jobs (tenant id lister for aip_jobs); schedule upload expiry and entitlement snapshot | ops | S | OPS-13, OPS-17 | todo | review 11 M9: expire_stale_sessions and snapshot_cli never run |
+| [OPS-17](tasks/OPS-17.md) | Handler DB role + tenant fan-out for periodic jobs | ops | M | ARCH-05, OPS-02, OPS-13 | todo | review 11 H3/M9; **merges OPS-18**; handlers write tenant tables + emit events, then schedule upload-expiry and entitlement snapshot per active tenant; blocks UPLOADS-02 |
+| [TESTING-12](tasks/TESTING-12.md) | Live-Keycloak session journeys + viewer-seed 403 journey (cross-tenant + axe) | testing | M | IDENTITY-03, TESTING-09 | todo | review 11 H4/M12; **merges QA-3**; owns TESTING-09's carried-forward list; un-skip shell.spec.ts:97 and projects.spec.ts:36-42; adds E2E_USER_VIEWER |
 | [TESTING-13](tasks/TESTING-13.md) | Stack proves the worker: real healthcheck, outbox drained and audited after the skeleton e2e, outbox-lag smoke | testing | S | AUDIT-02, TESTING-09 | todo | review 11 M10: worker health is `import aip` |
-| [QA-3](tasks/QA-3.md) | Seed a kaefer-demo viewer; real-session server-403 journey for /projects/new | testing | XS | TESTING-09 | todo | review 11 M12; adds the E2E_USER_VIEWER secret |
 | [PROJECTS-07](tasks/PROJECTS-07.md) | Project detail page (RecordDetail, edit, lifecycle/archive) and sites register with create/edit/delete | projects | M | DESIGN-04, PROJECTS-06 | todo | review 11 M13; AUDIT-04 mounts its History tab here |
 | [DESIGN-15](tasks/DESIGN-15.md) | Nav items honour release flags (GET /settings/flags) and a Settings page to switch them (tenant.flags.manage) | design | S | ARCH-08, DESIGN-06 | todo | review 11 L26 |
 
@@ -144,48 +140,44 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 |---|---|---|---|---|---|---|
 | [ACCESS-03](tasks/ACCESS-03.md) | Scope tables and RLS project predicates; policy/RLS parity tests | access | M | ACCESS-02, PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [ACCESS-04](tasks/ACCESS-04.md) | Teams, membership, cache-invalidation event | access | M | ACCESS-02, ARCH-07 | todo | convert to Python backend per ADR 0001 before starting  |
+| [IDENTITY-04](tasks/IDENTITY-04.md) | Invitations, MFA/step-up and sign-off assurance (ADR 0010) | identity | L | ACCESS-01, IDENTITY-03, STACK-02 | todo | **merges IDENTITY-07**; invite/accept via Keycloak admin API, acr/amr + step-up, and the sign-off decision (allow/step-up/countersign) APPROVALS-02 calls; review 11 M16/L22 passkey journey here unless TESTING-12 took it |
 | [PROJECTS-03](tasks/PROJECTS-03.md) | Project membership, header switcher, X-Project-Id enforcement | projects | M | ACCESS-02, ARCH-04 | todo | convert to Python backend per ADR 0001 before starting  |
-| [IDENTITY-04](tasks/IDENTITY-04.md) | Invite/accept via Keycloak admin API; MFA enforcement and step-up | identity | M | ACCESS-01, IDENTITY-03, STACK-02 | todo |  |
-| [IDENTITY-07](tasks/IDENTITY-07.md) | Sign-off assurance: per-tenant minimum, method recording, step-up and countersign decision | identity | M | IDENTITY-04 | todo | ADR 0010; review 11 M16, L22: add a WebAuthn/`hwk` passkey journey (CDP virtual authenticator) unless TESTING-12 took it; key on `acr`, not `amr` |
 | [TENANCY-08](tasks/TENANCY-08.md) | Organisations settings page and invite journey | tenancy | M | IDENTITY-04, TENANCY-03 | todo | split from TENANCY-03 (2026-10-16) |
-| [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01, IDENTITY-07 | todo | convert to Python backend per ADR 0001 before starting; calls check_signoff_assurance (ADR 0010) |
+| [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01, IDENTITY-04 | todo | convert to Python backend per ADR 0001 before starting; calls check_signoff_assurance (ADR 0010, now in IDENTITY-04) |
 | [UPLOADS-02](tasks/UPLOADS-02.md) | Scan worker: ClamAV, magic bytes, caps, fail-closed release | uploads | M | ARCH-05, OPS-02, OPS-17, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-03](tasks/UPLOADS-03.md) | Resumable S3 multipart uploads | uploads | M | UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [TESTING-03](tasks/TESTING-03.md) | Isolation tests for Redis, queues, S3 prefixes and search | testing | M | OPS-02, TENANCY-02, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-05](tasks/TESTING-05.md) | Migration up-down-up test | testing | S | TESTING-01 | todo | convert to Python backend per ADR 0001 before starting |
+| [OPS-07](tasks/OPS-07.md) | Terraform baseline for staging and the build-promote pipeline | ops | M | STACK-05 | todo | use infra/terraform (ADR 0004), not infrastructure/; web behind the ALB (ADR 0026) |
+| [OPS-09](tasks/OPS-09.md) | Build once → deploy staging → signed prod promotion + digest rollback | ops | L | OPS-07, STACK-05 | todo | **merges OPS-10**; build/scan/push to ECR, migrate, deploy staging, cosign sign+verify, manual prod promotion, auto rollback on failed smoke |
+| [OPS-14](tasks/OPS-14.md) | AWS services beyond the baseline: Keycloak, Gotenberg, KMS and SES | ops | M | OPS-07, STACK-06 | todo | AWS readiness; Glacier IR lifecycle stays in OPS-06 |
 | [SECURITY-08](tasks/SECURITY-08.md) | Production strip test and security CI workflow | security | M | ARCH-03, STACK-04 | done | PR #20 |
 | [SECURITY-09](tasks/SECURITY-09.md) | No public API docs or OpenAPI schema in production | security | XS | ACCESS-01 | done | ClaudeK: PR #52 |
-| [OPS-07](tasks/OPS-07.md) | Terraform baseline for staging and the build-promote pipeline | ops | M | STACK-05 | todo | use infra/terraform (ADR 0004), not infrastructure/; web behind the ALB (ADR 0026) |
-| [OPS-09](tasks/OPS-09.md) | Build once, scan, push to ECR, deploy staging, smoke | ops | M | OPS-07, STACK-05 | todo |  |
-| [OPS-10](tasks/OPS-10.md) | Cosign signing, prod promotion approval, digest rollback | ops | M | OPS-09 | todo | convert to Python backend per ADR 0001 before starting  |
 | [SECURITY-10](tasks/SECURITY-10.md) | Secret rotation without downtime (90-day Secrets Manager rotation) | security | M | IDENTITY-03, STACK-07 | todo | AWS readiness; adds an ADR |
-| [OPS-14](tasks/OPS-14.md) | AWS services beyond the baseline: Keycloak, Gotenberg, KMS and SES | ops | M | OPS-07, STACK-06 | todo | AWS readiness; Glacier IR lifecycle stays in OPS-06 |
 | [PLAN-R1](tasks/PLAN-R1.md) | Generate R1 task files just in time (ADR 0007; process in docs/reviews/07-delivery.md) | arch | M | ACCESS-02, APPROVALS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 
 ### Wave 8
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
+| [ACCESS-05](tasks/ACCESS-05.md) | Users & Roles UI, permission matrix page and export | access | M | ACCESS-02, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting; step-up is now a full redirect to Keycloak (`stepUpUrl`); map `mfaEnrolled` to `app_user.mfa_enrolled_at` (ADR 0005 rev 2) |
+| [ACCESS-06](tasks/ACCESS-06.md) | Project permission overrides, operator support-access gate, lockout on user removal | access | M | ACCESS-02, PROJECTS-03, TENANCY-06 | todo | split from ACCESS-02 (2026-10-13) |
 | [APPROVALS-03](tasks/APPROVALS-03.md) | Server-side JSONLogic transition guards (minimal) | approvals | S | APPROVALS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [APPROVALS-04](tasks/APPROVALS-04.md) | Approval routes: sequential/parallel steps, user/role/team approvers | approvals | M | ACCESS-04, APPROVALS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [APPROVALS-05](tasks/APPROVALS-05.md) | Inspection lifecycle preset + golden tests (needs AIP lifecycle spec) | approvals | M | APPROVALS-02, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting  |
-| [UPLOADS-04](tasks/UPLOADS-04.md) | EXIF/GPS policy + thumbnails in sandboxed worker | uploads | M | UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting  |
-| [UPLOADS-05](tasks/UPLOADS-05.md) | Per-file-type policy table + storage quota counters | uploads | S | UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [UPLOADS-04](tasks/UPLOADS-04.md) | EXIF/GPS policy, thumbnails, per-file-type policy + quota counters | uploads | M | UPLOADS-02 | todo | **merges UPLOADS-05**; sandboxed derive (GPS strip + thumbnails) and the platform/tenant/project policy table with atomic quota reservation |
 | [IDENTITY-05](tasks/IDENTITY-05.md) | SCIM 2.0 server; deprovision revokes everything in one transaction | identity | M | ACCESS-01, ARCH-05, IDENTITY-03 | todo |  |
-| [ACCESS-05](tasks/ACCESS-05.md) | Users & Roles UI, permission matrix page and export | access | M | ACCESS-02, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting; step-up is now a full redirect to Keycloak (`stepUpUrl`); map `mfaEnrolled` to `app_user.mfa_enrolled_at` (ADR 0005 rev 2) |
-| [ACCESS-06](tasks/ACCESS-06.md) | Project permission overrides, operator support-access gate, lockout on user removal | access | M | ACCESS-02, PROJECTS-03, TENANCY-06 | todo | split from ACCESS-02 (2026-10-13) |
 | [PROJECTS-04](tasks/PROJECTS-04.md) | Work-type classification + project settings overrides | projects | M | PROJECTS-01, TERMS-02 | todo | convert to Python backend per ADR 0001 before starting  |
-| [OPS-15](tasks/OPS-15.md) | CloudWatch alarms, EventBridge schedules and secret-rotation Lambdas | ops | M | OPS-07, OPS-13, SECURITY-10 | todo | AWS readiness |
 | [PROJECTS-05](tasks/PROJECTS-05.md) | System sites are hidden and protected (owner decision) | projects | XS | PROJECTS-01 | done | ClaudeK: PR #58 |
 | [PROJECTS-06](tasks/PROJECTS-06.md) | Projects register on RegisterTable, sort direction and CSV export | projects | S | DESIGN-03, PROJECTS-02 | todo | split from DESIGN-03 (2026-10-13) |
+| [TENANCY-05](tasks/TENANCY-05.md) | Tenant settings, modules and provisioning | tenancy | M | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting; invite the first admin via IDENTITY-04 `create_invite` (ADR 0005 rev 2); the tenant admin can edit the company display name shown in the header (DESIGN-14) |
 | [AUDIT-03](tasks/AUDIT-03.md) | Chain verifier CLI + S3 Object Lock anchoring job | audit | M | AUDIT-01, OPS-02, OPS-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [AUDIT-04](tasks/AUDIT-04.md) | Activity/timeline API + project activity tab | audit | M | ACCESS-01, AUDIT-02, DESIGN-04, PROJECTS-07 | todo | convert to Python backend per ADR 0001 before starting  |
-| [TENANCY-05](tasks/TENANCY-05.md) | Tenant settings, modules and provisioning | tenancy | M | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting; invite the first admin via IDENTITY-04 `create_invite` (ADR 0005 rev 2); the tenant admin can edit the company display name shown in the header (DESIGN-14) |
-| [DESIGN-09](tasks/DESIGN-09.md) | Canvas and panels, tinted status chips, input icons, button hierarchy | design | S | DESIGN-08 | todo | UI modernization guide (docs/reviews/10) |
+| [OPS-15](tasks/OPS-15.md) | CloudWatch alarms, EventBridge schedules and secret-rotation Lambdas | ops | M | OPS-07, OPS-13, SECURITY-10 | todo | AWS readiness |
+| [DESIGN-09](tasks/DESIGN-09.md) | Modernized surfaces: canvas/panels/chips + blade, KPI strip, work-queue | design | M | DESIGN-04, DESIGN-08 | todo | **merges DESIGN-11**; UI modernization guide (docs/reviews/10) |
 | [DESIGN-05](tasks/DESIGN-05.md) | Tenant colours (company or preset), user colour choice switch + visual regression | design | S | DESIGN-03, DESIGN-09 | todo | convert to Python backend per ADR 0001 before starting; after DESIGN-09 so baselines are taken once on the new look |
 | [DESIGN-10](tasks/DESIGN-10.md) | Scope bar as a breadcrumb (tenant › organisation › project › asset) | design | S | DESIGN-09, PROJECTS-03 | todo | UI modernization guide (docs/reviews/10) |
-| [DESIGN-11](tasks/DESIGN-11.md) | Blade (slide-out detail), KPI strip and work-queue patterns | design | M | DESIGN-04, DESIGN-09 | todo | UI modernization guide (docs/reviews/10) |
-| [DESIGN-13](tasks/DESIGN-13.md) | My display preferences page, with a choice of side panel or full page for record details | design | M | DESIGN-04, DESIGN-05, DESIGN-11, ACCESS-01 | todo | owner request 2026-10-14; also each user's colour preset |
+| [DESIGN-13](tasks/DESIGN-13.md) | My display preferences page, with a choice of side panel or full page for record details | design | M | DESIGN-04, DESIGN-05, DESIGN-09, ACCESS-01 | todo | owner request 2026-10-14; also each user's colour preset |
 
 ### Wave 9: P0-core exit
 
@@ -218,7 +210,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [ENT-03](tasks/ENT-03.md) | Billing state (good standing, past due, restricted, suspended) and enforcement (ADR 0023) | tenancy | M | ENT-01, PLAN-R1, TENANCY-05 | todo | an operator moves the state, never a payment event |
 | [ENT-04](tasks/ENT-04.md) | Operator console pages: entitlement overrides and billing state (ADR 0023) | tenancy | M | ENT-03, OPS-12, PLAN-R1 | todo | on the operator origin |
 | [ENT-05](tasks/ENT-05.md) | Usage sources (identity seats, uploads storage) and project toggles for entitlements | tenancy | S | ENT-01, UPLOADS-02 | todo | found in ENT-01: the registries exist but nothing plugs in yet |
-| [DESIGN-12](tasks/DESIGN-12.md) | Home / My Work page (`/`) with work-item providers | design | M | APPROVALS-06, AUDIT-04, DESIGN-11, DESIGN-13, PLAN-R1 | todo | UI modernization guide (docs/reviews/10); P0 sources are approvals and activity, R1 modules add providers |
+| [DESIGN-12](tasks/DESIGN-12.md) | Home / My Work page (`/`) with work-item providers | design | M | APPROVALS-06, AUDIT-04, DESIGN-09, DESIGN-13, PLAN-R1 | todo | UI modernization guide (docs/reviews/10); P0 sources are approvals and activity, R1 modules add providers |
 
 ### Moved out of P0: re-scoped by PLAN-R1 (ADR 0007)
 
