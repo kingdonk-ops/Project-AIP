@@ -52,6 +52,7 @@ SEED_TENANTS_USERS = (
     f"('{BOB_ID}', '{TENANT_B_ID}', 'staff', 'bob@acme.test', 'Bob', 'active');"
 )
 
+
 class OperatorGrants:
     """Stands in for the operator realm (OPS-12): alice in kaefer-demo is the platform operator."""
 
