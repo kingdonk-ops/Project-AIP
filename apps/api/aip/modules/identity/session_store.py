@@ -39,6 +39,7 @@ from aip.modules.identity import repository as repo
 from aip.modules.identity.principal import Principal, PrincipalResolver
 from aip.modules.identity.sessions import SID_COOKIE, hash_sid
 from aip.platform.db.session import before_tenant, with_tenant
+from aip.platform.db.tls import redis_tls_kwargs
 
 __all__ = [
     "CACHE_TTL",
@@ -137,7 +138,7 @@ class RedisSessionCache:
 
     @classmethod
     def from_url(cls, url: str) -> RedisSessionCache:
-        return cls(Redis.from_url(url))  # pyright: ignore[reportUnknownMemberType]
+        return cls(Redis.from_url(url, **redis_tls_kwargs(url)))  # pyright: ignore[reportUnknownMemberType]
 
     @staticmethod
     def key(sid_hash: bytes) -> str:
