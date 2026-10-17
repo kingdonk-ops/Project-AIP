@@ -14,6 +14,10 @@ from collections.abc import AsyncIterator, Iterator
 import httpx
 import pytest
 from fastapi import FastAPI
+
+from aip.main import create_app
+from aip.platform.context import Principal
+from aip.platform.version import routes
 from tests.conftest import (
     ALICE_ID,
     TENANT_A_ID,
@@ -22,10 +26,6 @@ from tests.conftest import (
     serve_fixture_tenants,
 )
 from tests.platform.db.conftest import pg_superuser_url  # noqa: F401 - pytest fixture
-
-from aip.main import create_app
-from aip.platform.context import Principal
-from aip.platform.version import routes
 
 URL = "/api/v1/platform/version"
 DEPS_URL = "/api/v1/platform/version/dependencies"
@@ -174,9 +174,7 @@ async def test_defaults_without_build_env(
 async def test_routes_are_in_openapi(app: FastAPI) -> None:
     schema = app.openapi()
     assert schema["paths"][URL]["get"]["operationId"] == "platform_version"
-    assert (
-        schema["paths"][DEPS_URL]["get"]["operationId"] == "platform_version_dependencies"
-    )
+    assert schema["paths"][DEPS_URL]["get"]["operationId"] == "platform_version_dependencies"
 
 
 async def test_postgres_version_from_real_server(
