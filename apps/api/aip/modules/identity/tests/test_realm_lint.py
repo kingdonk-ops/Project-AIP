@@ -82,10 +82,8 @@ def test_api_client(realm: dict[str, Any]) -> None:
     assert attrs["default.acr.values"] == "aal2"
     assert attrs["backchannel.logout.session.required"] == "true"
     assert attrs["backchannel.logout.url"].endswith("/api/v1/auth/oidc/backchannel-logout")
-    assert sorted(u.rsplit("}", 1)[-1] for u in api["redirectUris"]) == [
-        "/api/v1/auth/oidc/callback",
-        "/login",
-    ]
+    # Only the API callback: a code sent to the SPA would land in its URL and history (review 11 L6).
+    assert [u.rsplit("}", 1)[-1] for u in api["redirectUris"]] == ["/api/v1/auth/oidc/callback"]
     mappers = {m["protocolMapper"]: m for m in api["protocolMappers"]}
     assert (
         mappers["oidc-usersessionmodel-note-mapper"]["config"]["claim.name"] == "identity_provider"

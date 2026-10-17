@@ -50,6 +50,7 @@ image-path   /src
 
 route        /api/v1/_debug
 route        /_debug
+route        /api/v1/_fixtures              # test-only fixture routes (bim-probe; review 11 L4)
 
 web-glob     **/*.map
 web-glob     **/*.test.*

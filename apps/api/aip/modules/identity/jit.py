@@ -382,7 +382,10 @@ OnSuccess = Callable[[VerifiedExternalIdentity, Provisioned], Awaitable[Response
 
 
 async def default_on_success(identity: VerifiedExternalIdentity, result: Provisioned) -> Response:
-    """Until IDENTITY-03 issues sessions: ``AIP_ENV=test`` returns the user id; elsewhere 501."""
+    """Only where no session handler is passed (tests): ``AIP_ENV=test`` echoes the user id, else 501.
+
+    The app passes IDENTITY-03's session handler as ``on_success``.
+    """
     if os.environ.get("AIP_ENV", "") == "test":
         return JSONResponse({"userId": str(result.user_id), "action": result.action})
     return JSONResponse(

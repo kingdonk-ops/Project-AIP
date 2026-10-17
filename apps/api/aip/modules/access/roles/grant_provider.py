@@ -5,7 +5,9 @@ has not expired (``valid_to`` null or in the future), its role is live and its u
 A tenant-scope assignment gives ``TenantScope`` grants of the role's permissions; a project-scope
 one gives ``ProjectScope(project_id)`` grants. Team and asset-subtree scopes give nothing until
 their tasks add them. The read runs in its own ``with_tenant`` transaction for the principal's
-tenant, so RLS limits it to that tenant. Without ``DATABASE_URL`` it grants nothing.
+tenant, so RLS limits it to that tenant. Without ``DATABASE_URL`` it grants nothing. An
+operator-only ``platform.*`` code is never granted, even if a row holds one (review 11 L1; the
+``role_permission`` CHECK and ``RoleService`` also refuse them).
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ import os
 from collections.abc import Iterable
 
 from aip.modules.access.roles import repository as repo
+from aip.modules.access.roles.default_roles import OPERATOR_ONLY_PREFIX
 from aip.platform.access import AccessPrincipal, Grant, ProjectScope, TenantScope
 from aip.platform.db.engine import DATABASE_URL_ENV
 from aip.platform.db.session import with_tenant
@@ -31,6 +34,8 @@ class RoleGrantProvider:
             rows = await repo.active_grants(conn, principal.actor_id)
         grants: list[Grant] = []
         for permission, scope_type, project_id in rows:
+            if permission.startswith(OPERATOR_ONLY_PREFIX):
+                continue
             if scope_type == "tenant":
                 grants.append(Grant(permission, TenantScope()))
             elif scope_type == "project" and project_id is not None:

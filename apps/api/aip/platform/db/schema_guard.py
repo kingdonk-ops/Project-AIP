@@ -41,7 +41,8 @@ __all__ = [
 ]
 
 CHECKS = ("tenant_id", "rls", "force_rls", "policy")
-RUNTIME_ROLES = ("aip_app", "aip_jobs", "aip_readonly")
+# Every role the app, worker or reporting logs in as (review 11 L9: aip_audit_writer too).
+RUNTIME_ROLES = ("aip_app", "aip_jobs", "aip_readonly", "aip_audit_writer")
 _ORDER = (*CHECKS, "privileges")
 _TABLE_PRIVILEGES = ("SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER")
 _IDENT_RE = re.compile(r"^[a-z_][a-z0-9_]*$")

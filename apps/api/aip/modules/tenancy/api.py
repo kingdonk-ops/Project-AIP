@@ -20,8 +20,9 @@ Other modules may import only this file, and only these names:
 - Entitlements (ENT-01, ADR 0008/0023): ``EntitlementService`` (``check``, ``check_limit``,
   ``check_seat``, ``list``) with ``Decision`` / ``LimitDecision`` and ``InvalidEntitlementKey``;
   the route dependency ``requires_entitlement`` and ``ensure_within_limit`` (403 ``NOT_ENTITLED``
-  / ``LIMIT_REACHED``); ``get_entitlement_service``; and the registries other modules plug into:
-  ``register_toggle_provider`` (``ScopeToggleProvider``, projects) and ``register_usage_source``
+  / ``LIMIT_REACHED``); ``get_entitlement_service``; ``FlagEntitlements``, the release-flag hook
+  ``aip.main`` installs so ``requires_flag(x)`` also needs ``feature.x``; and the registries
+  other modules plug into: ``register_toggle_provider`` (``ScopeToggleProvider``, projects) and ``register_usage_source``
   (``UsageSource`` / ``UsageFigures``, identity and uploads); and the operator request and
   response models (``SubscriptionPut``/``Out``, ``OverrideCreate``/``Out``,
   ``EntitlementErrorBody``) for the ops module's operator routes.
@@ -38,6 +39,7 @@ from aip.modules.tenancy.demo_guard import (
 )
 from aip.modules.tenancy.dependencies import active_tenant_guard, require_active_tenant
 from aip.modules.tenancy.entitlements.dependencies import (
+    FlagEntitlements,
     ensure_within_limit,
     get_entitlement_service,
     requires_entitlement,
@@ -71,6 +73,7 @@ __all__ = [
     "Denial",
     "EntitlementErrorBody",
     "EntitlementService",
+    "FlagEntitlements",
     "InvalidEntitlementKey",
     "LimitDecision",
     "OverrideCreate",

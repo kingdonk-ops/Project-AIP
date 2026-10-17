@@ -2,7 +2,8 @@
 
 ``tenant.entitlements_changed`` v1 (ENT-01): written in the same ``with_tenant`` transaction as
 every subscription or override change, including the nightly removal of expired overrides.
-ARCH-08 and other API instances subscribe to it to drop cached decisions. The payload is the audit
+Nothing subscribes to it yet: cached decisions are keyed by ``entitlement_version`` and expire by
+TTL, so other API instances pick the change up without it. The payload is the audit
 record until AUDIT-01: ``{tenantId, entitlementVersion, change, key, before, after, reason}``,
 where ``before``/``after`` hold the changed record in camelCase (``null`` when there was none).
 

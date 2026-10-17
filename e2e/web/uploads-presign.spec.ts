@@ -8,6 +8,9 @@
 // Like the walking skeleton, this runs only where the fixture credentials and a real stack exist
 // (E2E_USER_*/E2E_PASS_*, and usually E2E_BASE_URL). Without them — the default `vite preview`
 // lane — the whole suite skips, because the bytes go to a real object store, not the app.
+// It runs in the `web` skeleton project (CI e2e-skeleton, tagged @skeleton). It is not tagged
+// @staging: the presigned URL names the stack-internal store (http://rustfs:9000), which the demo
+// does not expose, so the demo cannot take a browser upload yet (review 11 M11).
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
@@ -67,7 +70,7 @@ async function postToStore(
 (users ? test.describe : test.describe.skip)("UPLOADS-01 presign journey", () => {
   test.describe.configure({ mode: "serial" });
 
-  test("tenant A uploads to quarantine and confirms; tenant B's key tamper is refused", async ({
+  test("@skeleton tenant A uploads to quarantine and confirms; tenant B's key tamper is refused", async ({
     browser,
   }) => {
     const u = users!;

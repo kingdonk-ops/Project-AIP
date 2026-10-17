@@ -15,6 +15,10 @@ entitlement allows it AND its release flag (ARCH-08) is on.
 so reads, exports and sign-off are never refused for a limit. The caller counts ``current``;
 to keep concurrent adds from overshooting a ``BLOCK`` limit, count it under a lock (for
 example in the same transaction as the insert, with the table's rows locked).
+
+``FlagEntitlements`` is the ``EntitlementCheck`` that ``aip.main`` installs as
+``app.state.flag_entitlements``: ``requires_flag("bim")`` then also needs ``feature.bim`` (review 11
+M7). A flag with no ``feature.<flag>`` in any plan or add-on is never entitled, so it fails closed.
 """
 
 from __future__ import annotations
@@ -22,7 +26,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from uuid import UUID
 
-from fastapi import HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request
 
 from aip.modules.tenancy.entitlements.resolve import (
     InvalidEntitlementKey,
@@ -33,16 +37,43 @@ from aip.modules.tenancy.entitlements.service import EntitlementService
 from aip.platform.context import ContextMissingError, get_context
 from aip.platform.http import DomainError
 
-__all__ = ["ensure_within_limit", "get_entitlement_service", "requires_entitlement"]
+__all__ = [
+    "FlagEntitlements",
+    "ensure_within_limit",
+    "get_entitlement_service",
+    "requires_entitlement",
+]
+
+
+def _service_of(app: FastAPI) -> EntitlementService:
+    service: EntitlementService | None = getattr(app.state, "entitlements", None)
+    if service is None:
+        service = EntitlementService()
+        app.state.entitlements = service
+    return service
 
 
 def get_entitlement_service(request: Request) -> EntitlementService:
     """The app's ``EntitlementService`` (tests set ``app.state.entitlements`` with a fake clock)."""
-    service: EntitlementService | None = getattr(request.app.state, "entitlements", None)
-    if service is None:
-        service = EntitlementService()
-        request.app.state.entitlements = service
-    return service
+    return _service_of(request.app)
+
+
+class FlagEntitlements:
+    """``requires_flag``'s entitlement hook: release flag ``x`` needs ``feature.x`` (ENT-01)."""
+
+    def __init__(self, app: FastAPI) -> None:
+        self._app = app
+
+    async def allows(self, tenant_id: UUID, flag: str) -> bool:
+        try:
+            ctx = get_context()
+        except ContextMissingError:
+            ctx = None
+        project_id = ctx.project_id if ctx is not None and ctx.tenant_id == tenant_id else None
+        decision = await _service_of(self._app).check(
+            tenant_id, f"feature.{flag}", project_id=project_id
+        )
+        return decision.allowed
 
 
 def requires_entitlement(feature_key: str) -> Callable[[Request], Awaitable[None]]:

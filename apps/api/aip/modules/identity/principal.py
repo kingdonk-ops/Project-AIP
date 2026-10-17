@@ -9,7 +9,8 @@
 - ``PlatformPrincipalAdapter``: hands the identity resolver to the platform's request-context
   middleware (``aip.platform.context``), which only needs the tenant and the actor.
 
-Until IDENTITY-03, ``StubHeaderPrincipalResolver`` reads the ``x-test-principal`` header (the
+As a test-only fallback behind the session cookie (IDENTITY-03), ``StubHeaderPrincipalResolver``
+reads the ``x-test-principal`` header (the
 ``Principal`` as JSON). It works only when ``AIP_ENV=test`` and ``AUTH_TEST_STUB=1``, both checked
 at app start (``stub_principal_resolver``) and again on every request. ``create_app`` refuses to
 start with ``AUTH_TEST_STUB`` set in production (``RuntimeError('test auth stub forbidden in
@@ -83,7 +84,7 @@ class PrincipalResolver(Protocol):
 
 
 class DenyAllResolver:
-    """No principal for anyone: the default until IDENTITY-03 wires sessions."""
+    """No principal for anyone: the fallback when neither a session nor the test stub applies."""
 
     async def resolve(self, headers: Mapping[str, str]) -> Principal | None:
         return None

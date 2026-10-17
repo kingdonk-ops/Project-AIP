@@ -6,7 +6,7 @@ Upserts ``kaefer-demo`` and ``tenant-b`` as the table owner through ``DATABASE_M
 (``aip_app`` may only read ``tenants``). FORCE RLS binds the owner too, so each row is written
 with ``app.tenant_id`` set to that row's id, transaction-local. Idempotent: a re-run restores the
 fixture values (name, slug, region, ``active``, not deleted). Refuses to run, before connecting,
-when ``AIP_ENV=production``. Run it before ``python -m aip.modules.identity.seeds``: the login
+unless ``AIP_ENV`` is ``development``, ``test`` or ``demo``. Run it before ``python -m aip.modules.identity.seeds``: the login
 directory references these tenants.
 
 ENT-01: each fixture tenant also gets a sandbox subscription (``kaefer-demo`` on ``professional``,
@@ -108,9 +108,16 @@ class SeedRefusedError(RuntimeError):
     pass
 
 
+# An allowlist (review 11 L4): an unset, misspelt or new AIP_ENV refuses, like production.
+SEED_ENVS = frozenset({"development", "test", "demo"})
+
+
 def _refuse_in_production(env: str | None) -> None:
-    if (env if env is not None else os.environ.get("AIP_ENV", "")) == "production":
-        raise SeedRefusedError("seeds refuse to run when AIP_ENV=production")
+    current = env if env is not None else os.environ.get("AIP_ENV", "")
+    if current not in SEED_ENVS:
+        raise SeedRefusedError(
+            f"seeds run only when AIP_ENV is development, test or demo (got {current!r})"
+        )
 
 
 async def seed(url: str, *, env: str | None = None) -> int:

@@ -630,8 +630,7 @@
       "rootUrl": "${APP_ORIGIN:http://localhost:8080}",
       "baseUrl": "/",
       "redirectUris": [
-        "${APP_ORIGIN:http://localhost:8080}/api/v1/auth/oidc/callback",
-        "${APP_ORIGIN:http://localhost:8080}/login"
+        "${APP_ORIGIN:http://localhost:8080}/api/v1/auth/oidc/callback"
       ],
       "webOrigins": [],
       "attributes": {

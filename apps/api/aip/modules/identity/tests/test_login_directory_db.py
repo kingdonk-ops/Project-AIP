@@ -89,8 +89,9 @@ def test_repository_as_aip_app_and_idempotent_seeds(directory_db: FreshDb) -> No
         finally:
             await engine.dispose()
         assert await seed(directory_db.owner_url, env="test") == 4
-        with pytest.raises(SeedRefusedError):
-            await seed(directory_db.owner_url, env="production")
+        for refused in ("production", "staging", ""):
+            with pytest.raises(SeedRefusedError):
+                await seed(directory_db.owner_url, env=refused)
 
     asyncio.run(run())
     assert directory_db.fetch("SELECT count(*) FROM login_directory") == [(4,)]

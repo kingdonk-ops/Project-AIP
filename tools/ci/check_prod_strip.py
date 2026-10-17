@@ -266,7 +266,8 @@ def api_env_errors(manifest: StripManifest, *, image_paths: bool) -> list[str]:
     image_env = os.environ.get("AIP_ENV", "")
     if image_env == "test":
         errors.append("AIP_ENV=test is the image default (mounts test-only routes)")
-    for env in dict.fromkeys((image_env, "production")):
+    # The image env, production and the public demo (review 11 L4) never mount test-only routes.
+    for env in dict.fromkeys((image_env, "production", "demo")):
         errors += check_routes(_app_paths(create_app, env), manifest.routes, f"AIP_ENV={env!r}")
     return errors
 
