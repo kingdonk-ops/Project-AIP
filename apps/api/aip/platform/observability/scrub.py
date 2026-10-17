@@ -5,13 +5,15 @@
 - email addresses replaced by ``[email]``;
 - ``Bearer <token>``, ``Basic <credentials>`` and ``Digest <params>`` auth values redacted;
 - ``Cookie:`` / ``Set-Cookie:`` header values redacted to the end of the line;
-- ``...token=``, ``...password=``, ``...secret=`` and ``pin=`` query/form pairs given a
-  ``[redacted]`` value;
+- ``...token=``, ``...password=``, ``...secret=``, ``pin=``, ``sid=``/``..._sid=`` and
+  ``...csrf=`` query/form pairs given a ``[redacted]`` value, and so are the OIDC ``code=``,
+  ``state=`` and ``session_state=`` query parameters (after ``?`` or ``&`` only);
 - JSON or repr pairs inside text (``"pin": "1234"``, ``'password': 'x'``, ``"pin": 1234``) for the
   sensitive keys below given a ``[redacted]`` value;
 - the value of any mapping key named ``password``, ``token``, ``pin``, ``secret``,
-  ``authorization``, ``cookie`` or ``set-cookie`` (case-insensitive, also ``*_token``,
-  ``*_password`` and ``*_secret``) replaced by ``[redacted]``.
+  ``authorization``, ``cookie``, ``set-cookie``, ``sid``, ``kc_sid`` or ``csrf`` (case-insensitive,
+  also ``*_token``, ``*_password``, ``*_secret``, ``*_sid`` and ``*_csrf``) replaced by
+  ``[redacted]`` (session ids and CSRF values: review 11 L5).
 
 Mappings, lists and tuples are walked recursively (tuples come back as lists, as JSON would render
 them). ``str``, ``int``, ``float``, ``bool`` and ``None`` keep their type; anything else is turned
@@ -32,13 +34,36 @@ REDACTED = "[redacted]"
 EMAIL_MASK = "[email]"
 
 _SENSITIVE_KEYS = frozenset(
-    {"password", "token", "pin", "secret", "authorization", "cookie", "set-cookie"}
+    {
+        "password",
+        "token",
+        "pin",
+        "secret",
+        "authorization",
+        "cookie",
+        "set-cookie",
+        "sid",
+        "kc_sid",
+        "csrf",
+    }
 )
-_SENSITIVE_SUFFIXES = ("_token", "_password", "_secret", "-token", "-password", "-secret")
+_SENSITIVE_SUFFIXES = (
+    "_token",
+    "_password",
+    "_secret",
+    "_sid",
+    "_csrf",
+    "-token",
+    "-password",
+    "-secret",
+    "-sid",
+    "-csrf",
+)
 
 _EMAIL = re.compile(r"[A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
 _SECRET_NAME = r"[A-Za-z0-9_.-]*(?:token|password|passwd|secret)"
-_TEXT_KEY = rf"(?:{_SECRET_NAME}|pin|authorization|cookie|set-cookie)"
+_SESSION_NAME = r"(?:sid|[A-Za-z0-9_.-]*[_-]sid|[A-Za-z0-9_.-]*csrf)"
+_TEXT_KEY = rf"(?:{_SECRET_NAME}|{_SESSION_NAME}|pin|authorization|cookie|set-cookie)"
 
 # "key": "value" / 'key': 'value' / "key": 1234 (JSON, Python repr), also with "=" (kwargs repr).
 _QUOTED_PAIR = re.compile(
@@ -51,7 +76,10 @@ _DIGEST = re.compile(r"(?i)\b(digest)\s+(?=[A-Za-z_]+=)[^\r\n]+")
 # "basic validation" is left alone.
 _BASIC = re.compile(r"(?i)\b(basic)\s+(?=\S*(?:[0-9+/=]|[a-z](?-i:[A-Z])))[A-Za-z0-9+/]{6,}={0,2}")
 _BEARER = re.compile(r"(?i)\b(bearer)\s+[^\s,;\"']+")
-_QUERY_PAIR = re.compile(rf"(?i)\b({_SECRET_NAME}|pin)=[^&\s\"'#]*")
+_QUERY_PAIR = re.compile(rf"(?i)\b({_SECRET_NAME}|{_SESSION_NAME}|pin)=[^&\s\"'#]*")
+# The OIDC callback's one-time code and state, only as URL query parameters, so a log line such as
+# "project code=E2E-1" is left alone.
+_OIDC_QUERY = re.compile(r"(?i)(?<=[?&])(code|state|session_state)=[^&\s\"'#]*")
 _RECURSION_LIMIT = 32
 
 
@@ -74,6 +102,7 @@ def _scrub_text(text: str) -> str:
     text = _BASIC.sub(rf"\1 {REDACTED}", text)
     text = _BEARER.sub(rf"\1 {REDACTED}", text)
     text = _QUERY_PAIR.sub(rf"\1={REDACTED}", text)
+    text = _OIDC_QUERY.sub(rf"\1={REDACTED}", text)
     return _EMAIL.sub(EMAIL_MASK, text)
 
 

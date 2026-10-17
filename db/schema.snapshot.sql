@@ -202,7 +202,7 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.access_settings TO aip_app;
 GRANT SELECT ON TABLE public.access_settings TO aip_readonly;
 
 -- Name: TABLE app_user; Type: ACL; Schema: public
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.app_user TO aip_app;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.app_user TO aip_app;
 GRANT SELECT ON TABLE public.app_user TO aip_readonly;
 
 -- Name: TABLE audit_chain_checkpoints; Type: ACL; Schema: public
@@ -259,7 +259,7 @@ GRANT SELECT,INSERT ON TABLE public.job_events TO aip_jobs;
 GRANT SELECT ON TABLE public.job_events TO aip_readonly;
 
 -- Name: TABLE jobs; Type: ACL; Schema: public
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.jobs TO aip_app;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.jobs TO aip_app;
 GRANT SELECT ON TABLE public.jobs TO aip_readonly;
 GRANT SELECT ON TABLE public.jobs TO aip_jobs;
 
@@ -344,7 +344,7 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_feature_flags TO aip_app;
 GRANT SELECT ON TABLE public.tenant_feature_flags TO aip_readonly;
 
 -- Name: TABLE tenant_membership; Type: ACL; Schema: public
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.tenant_membership TO aip_app;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_membership TO aip_app;
 GRANT SELECT ON TABLE public.tenant_membership TO aip_readonly;
 
 -- Name: TABLE tenant_subscription; Type: ACL; Schema: public
@@ -3251,7 +3251,8 @@ CREATE TABLE public.role_permission (
     permission_code text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    deleted_at timestamp with time zone
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_role_permission_not_operator_only CHECK ((permission_code !~~ 'platform.%'::text))
 );
 
 ALTER TABLE ONLY public.role_permission FORCE ROW LEVEL SECURITY;

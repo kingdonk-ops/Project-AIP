@@ -57,6 +57,17 @@ jobs:
         run: uv run ruff format --check
       - name: Pyright
         run: uv run pyright
+      - name: Event payload schemas are exported and committed (ARCH-06, review 11 M8)
+        run: |
+          uv run python tools/codegen/export_event_schemas.py
+          # Modified, deleted or new (untracked) files all count as drift.
+          drift=$(git status --porcelain --untracked-files=all -- packages/contracts/events)
+          if [ -n "$drift" ]; then
+            echo "Event schemas differ from packages/contracts/events. Run the exporter and commit:"
+            echo "$drift"
+            git diff -- packages/contracts/events
+            exit 1
+          fi
       - name: Pytest
         run: uv run pytest -q --junitxml=pytest-${{ matrix.python }}.xml
       - name: Upload the permission-matrix and IDOR results as JUnit XML (TESTING-04)
@@ -465,8 +476,12 @@ jobs:
           cid=$($COMPOSE ps --all --quiet admin-bootstrap)
           $COMPOSE logs admin-bootstrap
           test "$(docker inspect --format '{{.State.ExitCode}}' "$cid")" = "0"
-      - name: Walking skeleton (web project, @skeleton)
-        run: pnpm --filter e2e exec playwright test --project web --grep @skeleton
+      - name: The runner resolves the presigned upload host (rustfs is published on 127.0.0.1:9000)
+        run: echo "127.0.0.1 rustfs" | sudo tee -a /etc/hosts
+      # One worker: the specs sign the same fixture users in, and the mock IdP's brute-force
+      # protection treats two sign-ins of one user within a second as an attack (quick-login check).
+      - name: Walking skeleton and UPLOADS-01 presign journey (web project, @skeleton)
+        run: pnpm --filter e2e exec playwright test --project web --grep @skeleton --workers 1
       - name: Upload the trace, video and report
         if: failure()
         uses: actions/upload-artifact@v4

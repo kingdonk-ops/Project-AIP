@@ -100,6 +100,14 @@ def test_scrub_masks_sensitive_keys_recursively_and_case_insensitively() -> None
         ('{"Authorization": "Bearer-ish opaque"}', "opaque"),
         ('{"refresh_token":"r3fr3sh"}', "r3fr3sh"),
         ("{'secret': 'shh'}", "shh"),
+        # Review 11 L5: the OIDC callback's code and state, session ids and CSRF values.
+        ("GET /api/v1/auth/oidc/callback?state=st4te&code=c0de&iss=x", "c0de"),
+        ("GET /api/v1/auth/oidc/callback?state=st4te&code=c0de&iss=x", "st4te"),
+        ("callback?session_state=ss123&code=c0de", "ss123"),
+        ('{"kc_sid": "k3ycl0ak"}', "k3ycl0ak"),
+        ("{'sid': 'abc123'}", "abc123"),
+        ("logout?sid=abc123", "abc123"),
+        ('{"x-csrf": "csrfv4l"}', "csrfv4l"),
     ],
 )
 def test_scrub_strings(raw: str, secret: str) -> None:
@@ -111,6 +119,17 @@ def test_scrub_strings(raw: str, secret: str) -> None:
 def test_scrub_leaves_lookalike_words_alone() -> None:
     assert scrub("spin=3 basic ok") == "spin=3 basic ok"
     assert scrub('{"pinned": "yes"}') == '{"pinned": "yes"}'
+
+
+def test_scrub_leaves_a_non_query_code_alone() -> None:
+    assert scrub("project code=E2E-1 created") == "project code=E2E-1 created"
+    assert scrub({"code": "E2E-1", "state": "draft"}) == {"code": "E2E-1", "state": "draft"}
+
+
+def test_scrub_masks_session_and_csrf_keys() -> None:
+    out = scrub({"sid": "a", "kc_sid": "b", "CSRF": "c", "aip_csrf": "d", "session_sid": "e"})
+    assert out == dict.fromkeys(("sid", "kc_sid", "CSRF", "aip_csrf", "session_sid"), REDACTED)
+    assert scrub({"inside": "keep", "consider": "keep"}) == {"inside": "keep", "consider": "keep"}
 
 
 def test_scrub_masks_cookie_keys() -> None:

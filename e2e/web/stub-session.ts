@@ -1,6 +1,7 @@
 // DESIGN-02: signs a page in through the dev-only session stub (apps/web/src/features/shell/dev).
 // The stub exists only in the Vite dev server (VITE_AIP_DEV_SESSION=stub), never in a production
-// build, and goes away when IDENTITY-03 issues real sessions (then use a real Keycloak login).
+// build. Real sessions exist (IDENTITY-03): journeys that need the API use loginAs (fixtures/login.ts)
+// in the skeleton lane; the stub stays for what the browser alone decides.
 import type { Page } from "@playwright/test";
 
 export async function signInAsStub(page: Page, email: string): Promise<void> {

@@ -3,8 +3,8 @@
     python -m aip.modules.identity.seeds
 
 Connects as the table owner through ``DATABASE_MIGRATOR_URL`` (``aip_app`` cannot write the
-table). Idempotent. Refuses to run when ``AIP_ENV=production``. The tenant ids are the shared
-fixture ids from AGENTS.md / ``apps/api/tests/conftest.py``.
+table). Idempotent. Refuses to run unless ``AIP_ENV`` is ``development``, ``test`` or ``demo``.
+The tenant ids are the shared fixture ids from AGENTS.md / ``apps/api/tests/conftest.py``.
 """
 
 from __future__ import annotations
@@ -43,9 +43,16 @@ class SeedRefusedError(RuntimeError):
     pass
 
 
+# An allowlist (review 11 L4): an unset, misspelt or new AIP_ENV refuses, like production.
+SEED_ENVS = frozenset({"development", "test", "demo"})
+
+
 async def seed(url: str, *, env: str | None = None) -> int:
-    if (env if env is not None else os.environ.get("AIP_ENV", "")) == "production":
-        raise SeedRefusedError("seeds refuse to run when AIP_ENV=production")
+    current = env if env is not None else os.environ.get("AIP_ENV", "")
+    if current not in SEED_ENVS:
+        raise SeedRefusedError(
+            f"seeds run only when AIP_ENV is development, test or demo (got {current!r})"
+        )
     engine = create_migrator_engine(url)
     try:
         async with engine.begin() as conn:

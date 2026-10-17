@@ -24,6 +24,7 @@ def test_api_exports_only_the_published_interface() -> None:
         "Denial",
         "EntitlementErrorBody",
         "EntitlementService",
+        "FlagEntitlements",
         "InvalidEntitlementKey",
         "LimitDecision",
         "OverrideCreate",

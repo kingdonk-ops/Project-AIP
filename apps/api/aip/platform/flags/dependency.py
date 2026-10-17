@@ -10,9 +10,9 @@ context, has the flag on AND the ``EntitlementCheck`` allows it. It is not an ac
 the route still declares ``requires()`` or ``authenticated()``. An unknown flag fails at import.
 
 ``EntitlementCheck`` is the hook for what the tenant paid for (ADR 0008). The platform may not
-import ``aip.modules`` (import-linter), so ``aip.main`` or a test sets
-``app.state.flag_entitlements``; until something does, ``AllowAllEntitlements`` allows everything
-and paid features are gated by ENT-01's ``requires_entitlement`` on the route itself.
+import ``aip.modules`` (import-linter), so ``aip.main`` sets ``app.state.flag_entitlements`` to
+tenancy's ``FlagEntitlements`` (flag ``x`` needs ``feature.x``) whenever the tenancy module is
+enabled. Only an app built without tenancy (test fixtures) falls back to ``AllowAllEntitlements``.
 """
 
 from __future__ import annotations

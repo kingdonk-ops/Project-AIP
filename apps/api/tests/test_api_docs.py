@@ -1,4 +1,7 @@
-"""SECURITY-09: FastAPI's API docs and OpenAPI schema are not served in production."""
+"""SECURITY-09: FastAPI's API docs and OpenAPI schema are served only in development and test.
+
+An allowlist (review 11 L4): production, the demo, staging and an unset ``AIP_ENV`` serve none.
+"""
 
 from __future__ import annotations
 
@@ -17,12 +20,13 @@ async def status_codes(env: str) -> dict[str, int]:
         return {path: (await client.get(path)).status_code for path in DOC_PATHS}
 
 
-async def test_production_serves_no_docs_or_schema() -> None:
-    assert await status_codes("production") == dict.fromkeys(DOC_PATHS, 404)
+@pytest.mark.parametrize("env", ["production", "demo", "staging", ""])
+async def test_only_dev_and_test_serve_docs_or_schema(env: str) -> None:
+    assert await status_codes(env) == dict.fromkeys(DOC_PATHS, 404)
 
 
-@pytest.mark.parametrize("env", ["test", "development", ""])
-async def test_other_environments_keep_the_docs(env: str) -> None:
+@pytest.mark.parametrize("env", ["test", "development"])
+async def test_dev_and_test_keep_the_docs(env: str) -> None:
     assert await status_codes(env) == dict.fromkeys(DOC_PATHS, 200)
 
 

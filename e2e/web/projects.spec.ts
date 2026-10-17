@@ -1,7 +1,7 @@
 // PROJECTS-02: the projects register and create form. The stub session (Vite dev server) covers
 // what the browser alone decides: permissions gate the page. Creating a project needs a real API
-// session and a user holding project.create, so those journeys wait for IDENTITY-03 (sessions)
-// and ACCESS-02 (roles); the component tests in apps/web cover them until then.
+// session and a user holding project.create: the walking skeleton covers creation for real, and
+// the real-session server-403 journey is QA-3 / TESTING-12 (review 11 M12).
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { devBaseURL } from "../playwright.config";

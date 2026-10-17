@@ -21,7 +21,9 @@ def test_tenant_table_has_forced_fail_closed_rls_and_grants() -> None:
         "WITH CHECK (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)" in sql
     )
     assert "CREATE INDEX ix_x_tenant_id ON x (tenant_id)" in sql
-    assert "GRANT SELECT, INSERT, UPDATE, DELETE ON x TO aip_app" in sql
+    # Soft delete only: aip_app never gets DELETE on a tenant table (review 11 L2).
+    assert "GRANT SELECT, INSERT, UPDATE ON x TO aip_app;" in sql
+    assert "DELETE" not in sql
     assert "GRANT SELECT ON x TO aip_readonly" in sql
     assert "{{" not in sql
 
