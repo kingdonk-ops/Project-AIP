@@ -38,6 +38,9 @@ body {
   align-items: center;
   gap: var(--space-3);
   height: 56px;
+  /* A 1fr grid track never shrinks below its content, so without this a long company name widens
+     the header past the viewport instead of truncating (DESIGN-14, review 11 M14). */
+  min-width: 0;
   padding: 0 var(--space-4);
   border-bottom: 1px solid var(--border);
   background: var(--surface);

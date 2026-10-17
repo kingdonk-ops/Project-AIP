@@ -478,8 +478,10 @@ jobs:
           test "$(docker inspect --format '{{.State.ExitCode}}' "$cid")" = "0"
       - name: The runner resolves the presigned upload host (rustfs is published on 127.0.0.1:9000)
         run: echo "127.0.0.1 rustfs" | sudo tee -a /etc/hosts
+      # One worker: the specs sign the same fixture users in, and the mock IdP's brute-force
+      # protection treats two sign-ins of one user within a second as an attack (quick-login check).
       - name: Walking skeleton and UPLOADS-01 presign journey (web project, @skeleton)
-        run: pnpm --filter e2e exec playwright test --project web --grep @skeleton
+        run: pnpm --filter e2e exec playwright test --project web --grep @skeleton --workers 1
       - name: Upload the trace, video and report
         if: failure()
         uses: actions/upload-artifact@v4
