@@ -195,7 +195,9 @@ async def test_app_role_without_a_tenant_sees_zero_rows(rls_db: FreshDb) -> None
             await conn.execute("SELECT set_config('app.tenant_id', '', true)")
             assert await conn.fetchval("SELECT count(*) FROM rls_probe") == 0
         assert await conn.execute("UPDATE rls_probe SET note = 'x'") == "UPDATE 0"
-        assert await conn.execute("DELETE FROM rls_probe") == "DELETE 0"
+        # Soft delete only: the template grants aip_app no DELETE at all (review 11 L2).
+        with pytest.raises(asyncpg.exceptions.InsufficientPrivilegeError):
+            await conn.execute("DELETE FROM rls_probe")
     finally:
         await conn.close()
     # The rows are there: a superuser (which bypasses RLS) sees both.

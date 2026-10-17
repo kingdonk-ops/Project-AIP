@@ -21,10 +21,13 @@ def test_main_refuses_production_without_connecting(monkeypatch: pytest.MonkeyPa
     assert seed.main() != 0
 
 
-async def test_seed_refuses_production_without_connecting(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("env", ["production", "staging", "", "Production"])
+async def test_seed_refuses_outside_dev_test_and_demo_without_connecting(
+    monkeypatch: pytest.MonkeyPatch, env: str
+) -> None:
     monkeypatch.setattr(seed, "create_migrator_engine", _no_connect)
     with pytest.raises(seed.SeedRefusedError):
-        await seed.seed("postgresql://aip_owner:x@db.invalid:5432/aip", env="production")
+        await seed.seed("postgresql://aip_owner:x@db.invalid:5432/aip", env=env)
 
 
 def test_main_without_url_fails(monkeypatch: pytest.MonkeyPatch) -> None:

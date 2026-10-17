@@ -4,7 +4,7 @@ Postgres comes from the shared ``tenant_db`` stack; the object store is the STAC
 container (driven by the ``minio`` adapter), reused from the capability conformance fixtures so the
 presigned POST hits a real S3-compatible server. Seeding runs as the superuser; every assertion
 goes through the API (``aip_app``, RLS on). Permissions come from a project-scoped test grant
-provider until ACCESS-02 seeds real roles.
+provider, so these tests do not depend on role seeding (``RoleGrantProvider`` has its own tests).
 """
 
 from __future__ import annotations

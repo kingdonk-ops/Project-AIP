@@ -136,3 +136,39 @@ test("@skeleton @staging each tenant admin reads only their own plan and usage",
     await contextB.close();
   }
 });
+
+// DESIGN-07 (review 11 M14): the aip realm's own sign-in page wears the AIP theme. The app's /login
+// sends the browser to the aip realm with kc_idp_hint, which skips straight to the tenant's IdP (the
+// mock IdP's default theme), so replay that authorize request without the hint to see the realm's
+// themed form. The font must come from the Keycloak origin itself (self-hosted, no font CDN).
+test("@skeleton @staging the Keycloak sign-in page uses IBM Plex Sans and the teal accent", async ({ page }) => {
+  const authorize = page.waitForRequest((r) => /\/realms\/aip\/protocol\/openid-connect\/auth\b/.test(r.url()));
+  await page.goto("/login");
+  await page.getByLabel("Work email").fill(users.a.email);
+  await page.getByRole("button", { name: "Continue" }).click();
+  const url = new URL((await authorize).url());
+  url.searchParams.delete("kc_idp_hint");
+  url.searchParams.delete("login_hint");
+
+  const fonts: string[] = [];
+  page.on("request", (r) => {
+    if (r.resourceType() === "font") fonts.push(r.url());
+  });
+  await page.goto(url.toString());
+  const form = page.locator("#kc-form-login");
+  await expect(form, "DESIGN-07: the aip realm shows its own sign-in form").toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+
+  const fontFamily = await form.evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(fontFamily, "DESIGN-07: the sign-in page is set in IBM Plex Sans").toMatch(/^"?IBM Plex Sans"?(,|$)/);
+  const primary = page.locator(".pf-v5-c-button.pf-m-primary").first();
+  await expect(primary).toBeVisible();
+  const background = await primary.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(background, "DESIGN-07: the primary button is the accent #0f766e").toBe("rgb(15, 118, 110)");
+
+  expect(fonts.some((f) => /ibm-plex-sans/.test(f)), "DESIGN-07: IBM Plex Sans is loaded").toBe(true);
+  expect(
+    fonts.filter((f) => new URL(f).origin !== url.origin),
+    "DESIGN-07: no font is requested from another host",
+  ).toEqual([]);
+});

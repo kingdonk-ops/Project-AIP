@@ -22,8 +22,9 @@ from ``aip.modules.ops.health`` and are mounted here, outside the module registr
 Access (ACCESS-01): the permission catalogue is built from the enabled modules' manifests (an
 invalid or duplicate code stops startup), every route must declare ``public()``,
 ``authenticated()`` or ``requires()`` (``install_access`` refuses to start otherwise), and the
-lifespan startup hook syncs the catalogue into the ``permission`` table. No grant provider is
-registered until ACCESS-02, so every ``requires()`` route answers 403.
+lifespan startup hook syncs the catalogue into the ``permission`` table. When the access module is
+enabled, ``RoleGrantProvider`` (ACCESS-02) turns role assignments into grants; without it every
+``requires()`` route answers 403.
 """
 
 import os
@@ -48,6 +49,7 @@ from aip.modules.ops.health import ReadinessChecker
 from aip.modules.ops.health import router as health_router
 from aip.modules.tenancy.api import (
     DEMO_ENV,
+    FlagEntitlements,
     active_tenant_guard,
     assert_demo_has_no_real_customers,
 )
@@ -94,6 +96,9 @@ from aip.platform.observability.logging import RequestIdMiddleware, configure_lo
 from aip.platform.observability.otel import init_tracing
 from aip.platform.version import dependencies_router as version_dependencies_router
 from aip.platform.version import router as version_router
+
+# The environments that serve /docs, /redoc and /openapi.json (SECURITY-09, review 11 L4).
+DOCS_ENVS = frozenset({"development", "test"})
 
 
 class HealthResponse(BaseModel):
@@ -155,17 +160,19 @@ def create_app(
         await sync_catalogue(catalogue)
         yield
 
-    # SECURITY-09 (owner, 2026-10-12): no /docs, /redoc or /openapi.json in production. The
-    # schema is still built in process (app.openapi()) for codegen and the strip check.
-    production = env == "production"
+    # SECURITY-09 (owner, 2026-10-12): no /docs, /redoc or /openapi.json in production. An
+    # allowlist (review 11 L4): only development and test serve them, so demo, staging or an unset
+    # AIP_ENV never do. The schema is still built in process (app.openapi()) for codegen and the
+    # strip check.
+    docs = env in DOCS_ENVS
     app = FastAPI(
         title="AIP API",
         version="0.1.0",
         generate_unique_id_function=operation_id,
         lifespan=lifespan,
-        openapi_url=None if production else "/openapi.json",
-        docs_url=None if production else "/docs",
-        redoc_url=None if production else "/redoc",
+        openapi_url="/openapi.json" if docs else None,
+        docs_url="/docs" if docs else None,
+        redoc_url="/redoc" if docs else None,
     )
 
     app.state.readiness = readiness or ReadinessChecker.from_env()
@@ -220,6 +227,9 @@ def create_app(
 
     app.include_router(v1)
     app.state.modules = modules
+    if any(module.id == "tenancy" for module in modules):
+        # ENT-01: a requires_flag(x) route also needs the tenant's feature.x (review 11 M7).
+        app.state.flag_entitlements = FlagEntitlements(app)
     if any(module.id == "terms" for module in modules):
         install_term_resolver()  # TERMS-02: the aip.platform.terms port for emails and PDFs
 

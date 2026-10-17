@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from aip.main import create_app
 from aip.modules.access.api import sync_catalogue
 from aip.modules.access.roles.default_roles import default_permissions
+from aip.modules.tenancy.api import EntitlementService, FlagEntitlements, SubscriptionPut
 from aip.platform.context import RequestContext, use_context
 from aip.platform.db.engine import dispose_engine
 from aip.platform.db.session import with_tenant
@@ -162,6 +163,21 @@ async def set_flag(tenant: UUID, actor: UUID, flag: str, enabled: bool) -> None:
             await FlagService().set(conn, flag, enabled)
 
 
+async def subscribe(tenant: UUID, actor: UUID, add_ons: list[str]) -> None:
+    """Give the tenant a live ``core`` subscription with ``add_ons`` (``bim``: ``feature.bim``)."""
+    body = SubscriptionPut.model_validate(
+        {
+            "planCode": "core",
+            "term": "sandbox",
+            "startsOn": "2026-07-01",
+            "addOns": add_ons,
+            "reason": "test set-up",
+        }
+    )
+    with use_context(ctx(tenant, actor)):
+        await EntitlementService().put_subscription(tenant, body)
+
+
 async def flag_events(db: TenantDb, tenant: UUID) -> list[tuple[Any, ...]]:
     return await _fetch(
         db.db.superuser_url,
@@ -180,6 +196,8 @@ async def test_a_missing_row_is_the_registry_default(app: FastAPI) -> None:
 async def test_the_flagged_route_follows_the_tenant_flag(
     app: FastAPI, client: httpx.AsyncClient
 ) -> None:
+    await subscribe(TENANT_A_ID, ALICE_ID, ["bim"])
+    await subscribe(TENANT_B_ID, BOB_ID, ["bim"])
     await set_flag(TENANT_A_ID, ALICE_ID, "bim", False)
     assert (await client.get(PROBE, headers=ALICE)).status_code == 404
     before_b = (await client.get(PROBE, headers=BOB)).status_code
@@ -204,6 +222,29 @@ async def test_the_entitlement_hook_can_refuse_a_flag_that_is_on(
     await set_flag(TENANT_A_ID, ALICE_ID, "bim", True)
     app.state.flag_entitlements = DenyBim()
     assert (await client.get(PROBE, headers=ALICE)).status_code == 404
+
+
+def test_the_app_installs_the_entitlement_hook(app: FastAPI) -> None:
+    assert isinstance(app.state.flag_entitlements, FlagEntitlements)
+
+
+async def test_a_core_tenant_without_the_bim_add_on_never_reaches_the_flagged_route(
+    app: FastAPI, client: httpx.AsyncClient
+) -> None:
+    # Review 11 M7 / ENT-01: the flag is on, but core has no feature.bim, so the route stays absent.
+    await subscribe(TENANT_A_ID, ALICE_ID, [])
+    await set_flag(TENANT_A_ID, ALICE_ID, "bim", True)
+    assert (await client.get(PROBE, headers=ALICE)).status_code == 404
+
+    await subscribe(TENANT_A_ID, ALICE_ID, ["bim"])
+    assert (await client.get(PROBE, headers=ALICE)).status_code == 200
+
+
+async def test_a_flag_with_no_feature_key_is_never_entitled(app: FastAPI) -> None:
+    await subscribe(TENANT_A_ID, ALICE_ID, ["bim"])
+    hook = FlagEntitlements(app)
+    assert await hook.allows(TENANT_A_ID, "bim") is True
+    assert await hook.allows(TENANT_A_ID, "ai") is False  # no feature.ai anywhere: fails closed
 
 
 async def test_the_probe_needs_a_principal(client: httpx.AsyncClient) -> None:

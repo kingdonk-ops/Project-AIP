@@ -1,7 +1,8 @@
 """Fixtures for the projects tests: a migrated database, the two fixture tenants and the real app.
 
 Seeding runs as the superuser; every assertion goes through ``aip_app`` (RLS on) or the API.
-Permissions come from a test grant provider until ACCESS-02 seeds real roles.
+Permissions come from a test grant provider, so these tests do not depend on role seeding;
+ACCESS-02's ``RoleGrantProvider`` has its own tests.
 """
 
 from __future__ import annotations

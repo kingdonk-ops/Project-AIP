@@ -98,7 +98,8 @@ class ExternalLoginHandler(Protocol):
 class PlaceholderLoginHandler:
     """``AIP_ENV=test``: echo the identity as JSON. Elsewhere: 501 PROVISIONING_NOT_IMPLEMENTED.
 
-    IDENTITY-01's handler, kept for the sign-in flow tests that check the verified identity.
+    IDENTITY-01's handler, kept only for the sign-in flow tests that check the verified identity
+    (they install it with ``dependency_overrides``); the app uses ``session_login_handler``.
     """
 
     def __init__(self, env: str | None = None) -> None:

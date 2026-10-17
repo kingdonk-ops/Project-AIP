@@ -37,5 +37,5 @@ CREATE POLICY tenant_isolation ON {{table}}
   USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)
   WITH CHECK (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid);
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON {{table}} TO aip_app;
+GRANT SELECT, INSERT, UPDATE ON {{table}} TO aip_app;
 GRANT SELECT ON {{table}} TO aip_readonly;
