@@ -19,9 +19,11 @@ scheduler enqueues as `aip_app`, through `with_tenant`, exactly as a request doe
 
 ## Decision
 
-- Add the policy `scheduler_list_active ON tenants FOR SELECT TO aip_owner USING (status =
-  'active')` and the SECURITY DEFINER function `ops_active_tenant_ids() RETURNS SETOF uuid`, owned by
-  `aip_owner` with a fixed `search_path`, returning only the ids of active tenants. EXECUTE goes to
+- Add the policy `scheduler_list_active ON tenants FOR SELECT TO aip_owner USING (status = 'active'
+  AND current_setting('aip.scheduler_list_active', true) = 'on')` and the SECURITY DEFINER function
+  `ops_active_tenant_ids() RETURNS SETOF uuid`, owned by `aip_owner` with a fixed `search_path` and
+  its own `SET aip.scheduler_list_active = 'on'` (in force only for the call), returning only the ids
+  of active tenants. EXECUTE goes to
   `aip_app` only; PUBLIC, `aip_jobs` and `aip_readonly` get nothing.
 - The scheduler calls it on a `before_tenant()` connection, then enqueues each tenant's job in that
   tenant's own `with_tenant` transaction, so every job row is still written under RLS.
@@ -32,5 +34,6 @@ scheduler enqueues as `aip_app`, through `with_tenant`, exactly as a request doe
 - `aip_app` can learn which tenant ids are active (not names or any other column). Every
   authenticated request already knows its own tenant id, and ids are not secrets, so this is
   accepted. Nothing else about other tenants is exposed.
-- `aip_owner` (the migrator) can now read active tenant rows; it already owns the table and runs only
-  migrations.
+- Outside the function nothing changes: `aip_owner` with no tenant set still sees no tenant rows
+  (TENANCY-01's FORCE RLS invariant), and the policy is `TO aip_owner`, so another role setting the
+  flag gains nothing.

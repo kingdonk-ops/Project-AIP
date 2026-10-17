@@ -4,8 +4,10 @@ OPS-13 (ADR 0032): the scheduled-job trigger (``python -m aip.modules.ops.schedu
 --all-tenants``) must enqueue one job per active tenant, but the runtime role cannot list tenants
 (RLS on ``tenants``). This adds the narrowest read that allows it:
 
-- policy ``scheduler_list_active`` lets ``aip_owner`` SELECT active tenants (beside the existing
-  ``real_customer_check``; ``tenants`` keeps FORCE RLS, so the owner sees nothing else);
+- policy ``scheduler_list_active`` lets ``aip_owner`` SELECT active tenants only while
+  ``aip.scheduler_list_active`` is ``on``, which only the function below sets (its own ``SET``
+  clause, for the call alone). Outside it the owner still sees no tenants with no tenant set:
+  FORCE RLS keeps binding it, as TENANCY-01 requires;
 - the SECURITY DEFINER function ``ops_active_tenant_ids()``, owned by ``aip_owner``, returns only
   the ids of active tenants, in id order; EXECUTE goes to ``aip_app`` alone.
 
@@ -25,7 +27,8 @@ depends_on = None
 def upgrade() -> None:
     op.execute("""
     CREATE POLICY scheduler_list_active ON tenants FOR SELECT TO aip_owner
-      USING (status = 'active');
+      USING (status = 'active'
+             AND current_setting('aip.scheduler_list_active', true) = 'on');
     """)
     # contract: 202610161800 - SECURITY DEFINER on purpose (ADR 0032): the scheduler's only way to
     # list tenants; owned by aip_owner, fixed search_path, returns ids only, EXECUTE to aip_app.
@@ -36,6 +39,7 @@ def upgrade() -> None:
     STABLE
     SECURITY DEFINER
     SET search_path = pg_catalog, public
+    SET aip.scheduler_list_active = 'on'
     AS $fn$
       SELECT t.id FROM public.tenants AS t WHERE t.status = 'active' ORDER BY t.id
     $fn$;

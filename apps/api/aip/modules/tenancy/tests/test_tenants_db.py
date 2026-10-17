@@ -164,10 +164,15 @@ def test_rls_is_enabled_and_forced_with_the_fail_closed_policy(tenancy_db: Fresh
         "SELECT policyname, cmd, qual, with_check, roles FROM pg_policies "
         "WHERE tablename = 'tenants' ORDER BY policyname"
     )
-    assert len(policies) == 2
+    assert len(policies) == 3
     # OPS-11: the demo guard's owner-only policy sees real-customer rows and nothing else.
     assert policies[0] == ("real_customer_check", "SELECT", "is_real_customer", None, ["aip_owner"])
-    name, cmd, qual, with_check, _roles = policies[1]
+    # OPS-13 (ADR 0032): owner-only, and only while ops_active_tenant_ids() sets its flag.
+    name, cmd, qual, with_check, roles = policies[1]
+    assert (name, cmd, with_check) == ("scheduler_list_active", "SELECT", None)
+    assert roles == ["aip_owner"]
+    assert "aip.scheduler_list_active" in qual and "'active'" in qual
+    name, cmd, qual, with_check, _roles = policies[2]
     assert (name, cmd) == ("tenant_isolation", "ALL")
     for expr in (qual, with_check):
         assert "NULLIF(current_setting('app.tenant_id'::text, true), ''::text)" in expr

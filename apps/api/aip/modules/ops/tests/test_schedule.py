@@ -173,6 +173,7 @@ async def test_only_aip_app_may_list_tenant_ids(db: TenantDb) -> None:
     rows = await _fetch(
         db.db.superuser_url,
         "SELECT r.rolname FROM pg_roles r WHERE has_function_privilege("
-        "r.oid, 'ops_active_tenant_ids()', 'EXECUTE') AND r.rolname LIKE 'aip_%' ORDER BY 1",
+        r"r.oid, 'ops_active_tenant_ids()', 'EXECUTE') AND r.rolname LIKE 'aip\_%'"
+        " AND NOT r.rolsuper ORDER BY 1",  # a superuser (CI's aip_test) can execute anything
     )
     assert [r[0] for r in rows] == ["aip_app", "aip_owner"]
