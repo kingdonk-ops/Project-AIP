@@ -5,9 +5,9 @@ OPS-13 (ADR 0032): the scheduled-job trigger (``python -m aip.modules.ops.schedu
 (RLS on ``tenants``). This adds the narrowest read that allows it:
 
 - policy ``scheduler_list_active`` lets ``aip_owner`` SELECT active tenants only while
-  ``aip.scheduler_list_active`` is ``on``, which only the function below sets (its own ``SET``
-  clause, for the call alone). Outside it the owner still sees no tenants with no tenant set:
-  FORCE RLS keeps binding it, as TENANCY-01 requires;
+  ``aip.scheduler_list_active`` is ``on``, which only the function below sets (``set_config``
+  local to the transaction, switched off again before it returns). Outside it the owner still
+  sees no tenants with no tenant set: FORCE RLS keeps binding it, as TENANCY-01 requires;
 - the SECURITY DEFINER function ``ops_active_tenant_ids()``, owned by ``aip_owner``, returns only
   the ids of active tenants, in id order; EXECUTE goes to ``aip_app`` alone.
 
@@ -35,13 +35,17 @@ def upgrade() -> None:
     op.execute("""
     CREATE FUNCTION ops_active_tenant_ids()
     RETURNS SETOF uuid
-    LANGUAGE sql
-    STABLE
+    LANGUAGE plpgsql
+    VOLATILE
     SECURITY DEFINER
     SET search_path = pg_catalog, public
-    SET aip.scheduler_list_active = 'on'
     AS $fn$
-      SELECT t.id FROM public.tenants AS t WHERE t.status = 'active' ORDER BY t.id
+    BEGIN
+      -- The flag the owner-only policy needs; transaction-local, and switched off again below.
+      PERFORM set_config('aip.scheduler_list_active', 'on', true);
+      RETURN QUERY SELECT t.id FROM public.tenants AS t WHERE t.status = 'active' ORDER BY t.id;
+      PERFORM set_config('aip.scheduler_list_active', 'off', true);
+    END
     $fn$;
     REVOKE ALL ON FUNCTION ops_active_tenant_ids() FROM PUBLIC;
     GRANT EXECUTE ON FUNCTION ops_active_tenant_ids() TO aip_app;
