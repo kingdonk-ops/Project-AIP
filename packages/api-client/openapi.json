@@ -3414,15 +3414,11 @@
           "commit": {
             "title": "Commit",
             "type": "string"
-          },
-          "dependencies": {
-            "$ref": "#/components/schemas/Dependencies"
           }
         },
         "required": [
           "build",
-          "commit",
-          "dependencies"
+          "commit"
         ],
         "title": "VersionResponse",
         "type": "object"
@@ -5392,6 +5388,27 @@
           }
         },
         "summary": "Version",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/version/dependencies": {
+      "get": {
+        "operationId": "platform_version_dependencies",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dependencies"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Version Dependencies",
         "tags": [
           "platform"
         ]

@@ -21,6 +21,7 @@ import type {
 import type {
   DeadLetterAction,
   DeadLetterPage,
+  Dependencies,
   DeprecateResult,
   DiscardRequest,
   EntitlementErrorBody,
@@ -1617,6 +1618,118 @@ export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVer
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getPlatformVersionQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type platformVersionDependenciesResponse200 = {
+  data: Dependencies
+  status: 200
+}
+
+export type platformVersionDependenciesResponseSuccess = (platformVersionDependenciesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type platformVersionDependenciesResponse = (platformVersionDependenciesResponseSuccess)
+
+export const getPlatformVersionDependenciesUrl = () => {
+
+
+
+
+  return `/api/v1/platform/version/dependencies`
+}
+
+/**
+ * @summary Version Dependencies
+ */
+export const platformVersionDependencies = async ( options?: Parameters<typeof apiFetch>[1]): Promise<platformVersionDependenciesResponse> => {
+
+  return apiFetch<platformVersionDependenciesResponse>(getPlatformVersionDependenciesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPlatformVersionDependenciesQueryKey = () => {
+    return [
+    `/api/v1/platform/version/dependencies`
+    ] as const;
+    }
+
+
+export const getPlatformVersionDependenciesQueryOptions = <TData = Awaited<ReturnType<typeof platformVersionDependencies>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersionDependencies>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPlatformVersionDependenciesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformVersionDependencies>>> = ({ signal }) => platformVersionDependencies({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof platformVersionDependencies>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PlatformVersionDependenciesQueryResult = NonNullable<Awaited<ReturnType<typeof platformVersionDependencies>>>
+export type PlatformVersionDependenciesQueryError = unknown
+
+
+export function usePlatformVersionDependencies<TData = Awaited<ReturnType<typeof platformVersionDependencies>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersionDependencies>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformVersionDependencies>>,
+          TError,
+          Awaited<ReturnType<typeof platformVersionDependencies>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformVersionDependencies<TData = Awaited<ReturnType<typeof platformVersionDependencies>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersionDependencies>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformVersionDependencies>>,
+          TError,
+          Awaited<ReturnType<typeof platformVersionDependencies>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformVersionDependencies<TData = Awaited<ReturnType<typeof platformVersionDependencies>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersionDependencies>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Version Dependencies
+ */
+
+export function usePlatformVersionDependencies<TData = Awaited<ReturnType<typeof platformVersionDependencies>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersionDependencies>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPlatformVersionDependenciesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

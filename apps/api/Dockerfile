@@ -1,5 +1,5 @@
 # API and worker image (STACK-05): one image, two commands.
-#   api:    uvicorn aip.main:create_app --factory --host 0.0.0.0 --port 8000
+#   api:    uvicorn aip.main:create_app --factory --host 0.0.0.0 --port 8000 --proxy-headers
 #   worker: python -m aip.worker --queues default,outbox (OPS-02; see infra/docker-compose.yml)
 # Build from the repository root:
 #   docker build -f apps/api/Dockerfile --build-arg GIT_SHA=$(git rev-parse HEAD) \
@@ -87,7 +87,8 @@ ENV PATH="/opt/venv/bin:${PATH}" \
     AIP_ENV=production \
     AIP_ALEMBIC_CONFIG=/app/apps/api/alembic.ini \
     GIT_SHA="${GIT_SHA}" \
-    BUILD_ID="${BUILD_ID}"
+    BUILD_ID="${BUILD_ID}" \
+    FORWARDED_ALLOW_IPS="127.0.0.1,::1"
 
 WORKDIR /app
 
@@ -102,4 +103,8 @@ USER 10001:10001
 
 EXPOSE 8000
 
-CMD ["uvicorn", "aip.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+# Review 11 M1: --proxy-headers takes the client address (login rate limit, session and audit IPs)
+# from X-Forwarded-For, but only when the peer is in FORWARDED_ALLOW_IPS. The default above trusts
+# loopback only; each deployment sets its proxy hops (the VPC CIDR behind the ALB, the private
+# Docker ranges in the compose stacks).
+CMD ["uvicorn", "aip.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
