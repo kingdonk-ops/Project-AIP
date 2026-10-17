@@ -212,7 +212,7 @@ jobs:
           # The signed-in /version/dependencies route reports these; read them through the same code.
           $COMPOSE exec -T api python -c 'import asyncio, platform; from aip.platform.version.routes import postgres_version; print(platform.python_version()); print(asyncio.run(postgres_version()))' | tee deps.txt
           python3 - <<'EOF'
-          python, postgres = open("deps.txt").read().split()
+          python, postgres = open("deps.txt").read().splitlines()
           assert python.startswith("3.12"), python
           assert postgres.startswith("16"), postgres
           EOF
