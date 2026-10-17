@@ -10,14 +10,14 @@ Review 11 L1 and L2 (defence in depth).
   SELECT, INSERT and UPDATE.
 
 Revision ID: 202610171000
-Revises: 202610161600
+Revises: 202610161400
 Create Date: 2026-10-17 10:00:00+00:00
 """
 
 from alembic import op
 
 revision: str = "202610171000"
-down_revision: str | None = "202610161600"
+down_revision: str | None = "202610161400"
 branch_labels = None
 depends_on = None
 
