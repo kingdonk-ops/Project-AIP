@@ -86,7 +86,6 @@ tasks still `todo` below remain before M0 is closed.
 | [ARCH-07](tasks/ARCH-07.md) | Outbox dispatcher, retries and dead-letter | arch | M | ARCH-06 | done | ClaudeK: PR #83; PR #55 low findings closed (manifest-listed subscribers, write-once publish/discard, bounded last_error); ADR 0030 |
 | [TERMS-03](tasks/TERMS-03.md) | ICU formatting and unit conversion | terms | M | TERMS-02 | done | ClaudeK; PR #88 |
 | [TERMS-07](tasks/TERMS-07.md) | Hard-coded string linter and coverage report | terms | M | TERMS-01 | done | ClaudeK; PR #89 |
-| [TERMS-08](tasks/TERMS-08.md) | Frontend i18n provider and dictionary admin screen | terms | M | TERMS-05 | todo | review 11 L27: include a view of the coverage report (`GET /terms/coverage`) |
 | [AUDIT-01](tasks/AUDIT-01.md) | Append-only hash-chained audit_log, writer role, REVOKE | audit | M | ARCH-05, DATABASE-05 | done | ClaudeK: PR #85 |
 | [DESIGN-03](tasks/DESIGN-03.md) | Register table standard (filters, server pagination, CSV) | design | M | DESIGN-02 | done | PR #63; projects switch split to PROJECTS-06 |
 | [PROJECTS-01](tasks/PROJECTS-01.md) | Projects + sites tables and CRUD API | projects | M | ACCESS-01, ARCH-05, DATABASE-02, TENANCY-01 | done | ClaudeK: PR #56 |
@@ -107,7 +106,7 @@ tasks still `todo` below remain before M0 is closed.
 | [UPLOADS-01](tasks/UPLOADS-01.md) | Upload sessions + presign to quarantine (tenant prefix, policy) | uploads | M | ACCESS-01, STACK-02, TENANCY-02 | done | PR #79 (stream B); SSE-KMS wiring → UPLOADS-07  |
 | [DATABASE-07](tasks/DATABASE-07.md) | Isolation test generator across all tables and routes | database | M | ACCESS-01, STACK-03, TESTING-02 | done | ClaudeK: PR #99; converted and narrowed (route IDOR → TESTING-04, key checks → TESTING-03) |
 | [TESTING-04](tasks/TESTING-04.md) | Generated permission-matrix and IDOR tests | testing | M | ACCESS-01, STACK-03 | done | ClaudeK: PR #102; converted per ADR 0001; asset-subtree cases wait for ACCESS-03 |
-| [TERMS-05](tasks/TERMS-05.md) | Terms admin API and permissions | terms | M | TERMS-04 | todo | convert to Python backend per ADR 0001 before starting |
+| [TERMS-05](tasks/TERMS-05.md) | Terms admin: API, permissions, i18n provider and dictionary admin screen | terms | L | TERMS-04 | todo | convert to Python backend per ADR 0001 before starting; **merges TERMS-08** (frontend provider + admin screen, review 11 L27 coverage view) |
 | [DESIGN-04](tasks/DESIGN-04.md) | Record detail pattern, dialogs, toasts, empty/loading/error states | design | M | DESIGN-02 | done | ClaudeK: PR #92; spec checked against ADR 0001 (frontend only) |
 | [DESIGN-06](tasks/DESIGN-06.md) | Nav rail sections follow the ADR 0018 job-area menu | design | S | DESIGN-02 | done | PR #72; design review 2026-10-14 |
 | [DESIGN-07](tasks/DESIGN-07.md) | Keycloak login theme uses the design tokens and IBM Plex | design | S | DESIGN-01, IDENTITY-01 | done | PR #73; design review 2026-10-14 |
@@ -143,7 +142,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [IDENTITY-04](tasks/IDENTITY-04.md) | Invitations, MFA/step-up and sign-off assurance (ADR 0010) | identity | L | ACCESS-01, IDENTITY-03, STACK-02 | todo | **merges IDENTITY-07**; invite/accept via Keycloak admin API, acr/amr + step-up, and the sign-off decision (allow/step-up/countersign) APPROVALS-02 calls; review 11 M16/L22 passkey journey here unless TESTING-12 took it |
 | [PROJECTS-03](tasks/PROJECTS-03.md) | Project membership, header switcher, X-Project-Id enforcement | projects | M | ACCESS-02, ARCH-04 | todo | convert to Python backend per ADR 0001 before starting  |
 | [TENANCY-08](tasks/TENANCY-08.md) | Organisations settings page and invite journey | tenancy | M | IDENTITY-04, TENANCY-03 | todo | split from TENANCY-03 (2026-10-16) |
-| [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01, IDENTITY-04 | todo | convert to Python backend per ADR 0001 before starting; calls check_signoff_assurance (ADR 0010, now in IDENTITY-04) |
+| [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, JSONLogic guards, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01, IDENTITY-04 | todo | convert to Python backend per ADR 0001 before starting; calls check_signoff_assurance (ADR 0010, now in IDENTITY-04); **merges APPROVALS-03** (minimal server-side guards) |
 | [UPLOADS-02](tasks/UPLOADS-02.md) | Scan worker: ClamAV, magic bytes, caps, fail-closed release | uploads | M | ARCH-05, OPS-02, OPS-17, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-03](tasks/UPLOADS-03.md) | Resumable S3 multipart uploads | uploads | M | UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [TESTING-03](tasks/TESTING-03.md) | Isolation tests for Redis, queues, S3 prefixes and search | testing | M | OPS-02, TENANCY-02, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting |
@@ -162,7 +161,6 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 |---|---|---|---|---|---|---|
 | [ACCESS-05](tasks/ACCESS-05.md) | Users & Roles UI, permission matrix page and export | access | M | ACCESS-02, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting; step-up is now a full redirect to Keycloak (`stepUpUrl`); map `mfaEnrolled` to `app_user.mfa_enrolled_at` (ADR 0005 rev 2) |
 | [ACCESS-06](tasks/ACCESS-06.md) | Project permission overrides, operator support-access gate, lockout on user removal | access | M | ACCESS-02, PROJECTS-03, TENANCY-06 | todo | split from ACCESS-02 (2026-10-13) |
-| [APPROVALS-03](tasks/APPROVALS-03.md) | Server-side JSONLogic transition guards (minimal) | approvals | S | APPROVALS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [APPROVALS-04](tasks/APPROVALS-04.md) | Approval routes: sequential/parallel steps, user/role/team approvers | approvals | M | ACCESS-04, APPROVALS-02 | todo | convert to Python backend per ADR 0001 before starting  |
 | [APPROVALS-05](tasks/APPROVALS-05.md) | Inspection lifecycle preset + golden tests (needs AIP lifecycle spec) | approvals | M | APPROVALS-02, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-04](tasks/UPLOADS-04.md) | EXIF/GPS policy, thumbnails, per-file-type policy + quota counters | uploads | M | UPLOADS-02 | todo | **merges UPLOADS-05**; sandboxed derive (GPS strip + thumbnails) and the platform/tenant/project policy table with atomic quota reservation |
