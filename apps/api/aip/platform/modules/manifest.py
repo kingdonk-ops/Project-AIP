@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import tomllib
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -37,6 +37,21 @@ class PermissionEntry(BaseModel):
     privileged: bool = False
 
 
+class ScheduleEntry(BaseModel):
+    """A ``[[schedules]]`` table (OPS-13): a registered job the platform triggers on ``cron``.
+
+    The trigger (a Coolify scheduled task, EventBridge Scheduler in AWS) runs
+    ``python -m aip.modules.ops.schedule enqueue <job> --all-tenants``; ``period`` sets the
+    idempotency window, so a trigger that fires twice in one period enqueues once.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    job: Annotated[str, Field(min_length=1)]
+    cron: Annotated[str, Field(pattern=r"^\S+( \S+){4}$")]
+    period: Literal["hour", "day", "week", "month"] = "month"
+
+
 class ModuleManifest(BaseModel):
     """Declares a module's identity, dependencies and published surface."""
 
@@ -51,6 +66,7 @@ class ModuleManifest(BaseModel):
     subscribes: list[EventRef] = Field(default_factory=list[EventRef])
     settings: list[str] = Field(default_factory=list[str])
     term_keys: list[str] = Field(default_factory=list[str])
+    schedules: list[ScheduleEntry] = Field(default_factory=list[ScheduleEntry])
 
     @property
     def namespaces(self) -> tuple[str, ...]:

@@ -116,7 +116,7 @@ tasks still `todo` below remain before M0 is closed.
 | [OPS-03](tasks/OPS-03.md) | Jobs API: my jobs, admin queue, cancel with permission | ops | M | OPS-02 | done | ClaudeK: PR #100; converted per ADR 0001; aip_jobs INSERT on domain_events (ADR 0030 amendment); e2e export journey waits for a real job type (review 11 L20: it carries the OPS-02 export-job e2e) |
 | [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | done | ClaudeK: PR #103; AWS readiness; SES v1 API (LocalStack community lacks sesv2) |
 | [STACK-07](tasks/STACK-07.md) | TLS to Postgres and Redis (RDS and ElastiCache ready) | stack | S | OPS-02, STACK-05 | done | ClaudeK: PR #104; AWS readiness; RDS bundle checksum pin is a follow-up |
-| [OPS-13](tasks/OPS-13.md) | Scheduled job trigger: one command for Coolify cron and EventBridge Scheduler | ops | S | OPS-02 | todo | AWS readiness |
+| [OPS-13](tasks/OPS-13.md) | Scheduled job trigger: one command for Coolify cron and EventBridge Scheduler | ops | S | OPS-02 | done | ClaudeK: PR #105; AWS readiness; enqueues as aip_app (aip_jobs cannot create jobs); ADR 0032 |
 | [OPS-16](tasks/OPS-16.md) | RDS bootstrap runbook | ops | S | DATABASE-02 | done | ClaudeK: PR #107; AWS readiness; 3 RDS-only checks for the first staging bootstrap |
 
 ### Review 11 follow-ups (codebase gap review, 2026-10-16)
