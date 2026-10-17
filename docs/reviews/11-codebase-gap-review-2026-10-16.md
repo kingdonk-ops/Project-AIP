@@ -10,6 +10,7 @@
   - Findings only; the owner chooses what to act on.
   - **H1:** stopgap done in PR #101; the full fix is SECURITY-11 (see H1).
   - **H2:** done in PR #106.
+  - **Owner steps** (demo Keycloak, secrets, signing key): see [11-owner-actions.md](11-owner-actions.md).
   - Every proposed task in §5 is now a board row, and the row edits listed there are applied.
 
 **Effort column:** **quick** means a fix that fits a small PR; **task** means a new board row, drafted in §5; **note** means a note or row edit on an existing task; **owner** means a setting or secret only the owner can change.
