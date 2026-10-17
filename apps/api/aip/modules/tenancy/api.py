@@ -23,8 +23,8 @@ Other modules may import only this file, and only these names:
   / ``LIMIT_REACHED``); ``get_entitlement_service``; ``FlagEntitlements``, the release-flag hook
   ``aip.main`` installs so ``requires_flag(x)`` also needs ``feature.x``; and the registries
   other modules plug into: ``register_toggle_provider`` (``ScopeToggleProvider``, projects) and
-  ``register_usage_source`` (``UsageSource`` / ``UsageFigures``, identity and uploads); and the operator request and
-  response models (``SubscriptionPut``/``Out``, ``OverrideCreate``/``Out``,
+  ``register_usage_source`` (``UsageSource`` / ``UsageFigures``, identity and uploads); and the
+  operator request and response models (``SubscriptionPut``/``Out``, ``OverrideCreate``/``Out``,
   ``EntitlementErrorBody``) for the ops module's operator routes.
 """
 
