@@ -86,7 +86,7 @@ tasks still `todo` below remain before M0 is closed.
 | [ARCH-07](tasks/ARCH-07.md) | Outbox dispatcher, retries and dead-letter | arch | M | ARCH-06 | done | ClaudeK: PR #83; PR #55 low findings closed (manifest-listed subscribers, write-once publish/discard, bounded last_error); ADR 0030 |
 | [TERMS-03](tasks/TERMS-03.md) | ICU formatting and unit conversion | terms | M | TERMS-02 | done | ClaudeK; PR #88 |
 | [TERMS-07](tasks/TERMS-07.md) | Hard-coded string linter and coverage report | terms | M | TERMS-01 | done | ClaudeK; PR #89 |
-| [TERMS-08](tasks/TERMS-08.md) | Frontend i18n provider and dictionary admin screen | terms | M | TERMS-05 | todo | |
+| [TERMS-08](tasks/TERMS-08.md) | Frontend i18n provider and dictionary admin screen | terms | M | TERMS-05 | todo | review 11 L27: include a view of the coverage report (`GET /terms/coverage`) |
 | [AUDIT-01](tasks/AUDIT-01.md) | Append-only hash-chained audit_log, writer role, REVOKE | audit | M | ARCH-05, DATABASE-05 | done | ClaudeK: PR #85 |
 | [DESIGN-03](tasks/DESIGN-03.md) | Register table standard (filters, server pagination, CSV) | design | M | DESIGN-02 | done | PR #63; projects switch split to PROJECTS-06 |
 | [PROJECTS-01](tasks/PROJECTS-01.md) | Projects + sites tables and CRUD API | projects | M | ACCESS-01, ARCH-05, DATABASE-02, TENANCY-01 | done | ClaudeK: PR #56 |
@@ -113,11 +113,30 @@ tasks still `todo` below remain before M0 is closed.
 | [DESIGN-07](tasks/DESIGN-07.md) | Keycloak login theme uses the design tokens and IBM Plex | design | S | DESIGN-01, IDENTITY-01 | done | PR #73; design review 2026-10-14 |
 | [DESIGN-08](tasks/DESIGN-08.md) | Shell and register polish: mobile drawer backdrop, table overflow, login width, link buttons | design | S | DESIGN-03, PROJECTS-06 | todo | design review 2026-10-14 |
 | [DESIGN-14](tasks/DESIGN-14.md) | Header brand lockup: company name followed by "AIP" | design | XS | DESIGN-02 | done | ClaudeK: PR #98; owner request 2026-10-14 |
-| [OPS-03](tasks/OPS-03.md) | Jobs API: my jobs, admin queue, cancel with permission | ops | M | OPS-02 | done | ClaudeK: PR #100; converted per ADR 0001; aip_jobs INSERT on domain_events (ADR 0030 amendment); e2e export journey waits for a real job type |
+| [OPS-03](tasks/OPS-03.md) | Jobs API: my jobs, admin queue, cancel with permission | ops | M | OPS-02 | done | ClaudeK: PR #100; converted per ADR 0001; aip_jobs INSERT on domain_events (ADR 0030 amendment); e2e export journey waits for a real job type (review 11 L20: it carries the OPS-02 export-job e2e) |
 | [STACK-06](tasks/STACK-06.md) | Mailer capability: SMTP adapter (Coolify, dev) and SES adapter (AWS) | stack | M | OPS-02, STACK-02 | done | ClaudeK: PR #103; AWS readiness; SES v1 API (LocalStack community lacks sesv2) |
 | [STACK-07](tasks/STACK-07.md) | TLS to Postgres and Redis (RDS and ElastiCache ready) | stack | S | OPS-02, STACK-05 | done | ClaudeK: PR #104; AWS readiness; RDS bundle checksum pin is a follow-up |
 | [OPS-13](tasks/OPS-13.md) | Scheduled job trigger: one command for Coolify cron and EventBridge Scheduler | ops | S | OPS-02 | todo | AWS readiness |
 | [OPS-16](tasks/OPS-16.md) | RDS bootstrap runbook | ops | S | DATABASE-02 | done | ClaudeK: PR #107; AWS readiness; 3 RDS-only checks for the first staging bootstrap |
+
+### Review 11 follow-ups (codebase gap review, 2026-10-16)
+
+From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-codebase-gap-review-2026-10-16.md). H2 was fixed in PR #106 and the H1 stopgap in PR #101. SECURITY-11 and TESTING-12 go first.
+
+| ID | Title | Module | Size | Depends on | Status | Notes |
+|---|---|---|---|---|---|---|
+| [SECURITY-11](tasks/SECURITY-11.md) | Demo mock-IdP users from secrets, not committed passwords; block the mock-IdP account console | security | S | OPS-11 | todo | review 11 H1: the repo is public, and alice and bob are tenant_admin on the demo with committed passwords; rotate E2E_PASS_A/B. Stopgap done in PR #101 (required actions disabled, admin-only profile, nginx 404 on the account console); the live demo needs the owner's kcadm step from PR #101 |
+| [OPS-17](tasks/OPS-17.md) | Job handlers can write domain tables and emit events (handler role, ADR 0016 amendment) | ops | S | ARCH-05, OPS-02 | todo | review 11 H3: handlers run as aip_jobs, which has no tenant-table grants (INSERT on domain_events came with OPS-03); blocks UPLOADS-02 |
+| [TESTING-12](tasks/TESTING-12.md) | Live-Keycloak session journeys: logout ends SSO, back-channel revokes, Active sessions page (cross-tenant + axe), real-session shell | testing | M | IDENTITY-03, TESTING-09 | todo | review 11 H4: owns TESTING-09's carried-forward list verbatim; un-skip shell.spec.ts:97 and projects.spec.ts:36-42 |
+| [SECURITY-12](tasks/SECURITY-12.md) | API edge hardening: body size cap, security headers, HSTS in the web nginx | security | S | OPS-04 | todo | review 11 M2: ADR 0026 says nginx sends HSTS, but it does not |
+| [SECURITY-13](tasks/SECURITY-13.md) | Least-privilege aip_readonly: revoke session, auth and PII tables; reporting views; ADR 0012 amendment | security | M | DATABASE-07 | todo | review 11 M3: set_config makes RLS advisory for roles running arbitrary SQL |
+| [SECURITY-14](tasks/SECURITY-14.md) | Refuse dev secrets outside dev/test (API allowlist check + deployed realm overlay without defaults) | identity | S | IDENTITY-03 | todo | review 11 M4: aip-admin (manage-users) falls back to aip_admin_dev_only_secret |
+| [SECURITY-15](tasks/SECURITY-15.md) | Gate the Coolify deploy on the security scans; scan and sign all pushed demo images; SHA-pin deploy actions | ops | S | OPS-11, SECURITY-08 | todo | review 11 M6; owner adds COSIGN_PRIVATE_KEY and COSIGN_PASSWORD |
+| [OPS-18](tasks/OPS-18.md) | Tenant fan-out for periodic jobs (tenant id lister for aip_jobs); schedule upload expiry and entitlement snapshot | ops | S | OPS-13, OPS-17 | todo | review 11 M9: expire_stale_sessions and snapshot_cli never run |
+| [TESTING-13](tasks/TESTING-13.md) | Stack proves the worker: real healthcheck, outbox drained and audited after the skeleton e2e, outbox-lag smoke | testing | S | AUDIT-02, TESTING-09 | todo | review 11 M10: worker health is `import aip` |
+| [QA-3](tasks/QA-3.md) | Seed a kaefer-demo viewer; real-session server-403 journey for /projects/new | testing | XS | TESTING-09 | todo | review 11 M12; adds the E2E_USER_VIEWER secret |
+| [PROJECTS-07](tasks/PROJECTS-07.md) | Project detail page (RecordDetail, edit, lifecycle/archive) and sites register with create/edit/delete | projects | M | DESIGN-04, PROJECTS-06 | todo | review 11 M13; AUDIT-04 mounts its History tab here |
+| [DESIGN-15](tasks/DESIGN-15.md) | Nav items honour release flags (GET /settings/flags) and a Settings page to switch them (tenant.flags.manage) | design | S | ARCH-08, DESIGN-06 | todo | review 11 L26 |
 
 ### Wave 7
 
@@ -127,10 +146,10 @@ tasks still `todo` below remain before M0 is closed.
 | [ACCESS-04](tasks/ACCESS-04.md) | Teams, membership, cache-invalidation event | access | M | ACCESS-02, ARCH-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [PROJECTS-03](tasks/PROJECTS-03.md) | Project membership, header switcher, X-Project-Id enforcement | projects | M | ACCESS-02, ARCH-04 | todo | convert to Python backend per ADR 0001 before starting  |
 | [IDENTITY-04](tasks/IDENTITY-04.md) | Invite/accept via Keycloak admin API; MFA enforcement and step-up | identity | M | ACCESS-01, IDENTITY-03, STACK-02 | todo |  |
-| [IDENTITY-07](tasks/IDENTITY-07.md) | Sign-off assurance: per-tenant minimum, method recording, step-up and countersign decision | identity | M | IDENTITY-04 | todo | ADR 0010 |
+| [IDENTITY-07](tasks/IDENTITY-07.md) | Sign-off assurance: per-tenant minimum, method recording, step-up and countersign decision | identity | M | IDENTITY-04 | todo | ADR 0010; review 11 M16, L22: add a WebAuthn/`hwk` passkey journey (CDP virtual authenticator) unless TESTING-12 took it; key on `acr`, not `amr` |
 | [TENANCY-08](tasks/TENANCY-08.md) | Organisations settings page and invite journey | tenancy | M | IDENTITY-04, TENANCY-03 | todo | split from TENANCY-03 (2026-10-16) |
 | [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01, IDENTITY-07 | todo | convert to Python backend per ADR 0001 before starting; calls check_signoff_assurance (ADR 0010) |
-| [UPLOADS-02](tasks/UPLOADS-02.md) | Scan worker: ClamAV, magic bytes, caps, fail-closed release | uploads | M | ARCH-05, OPS-02, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
+| [UPLOADS-02](tasks/UPLOADS-02.md) | Scan worker: ClamAV, magic bytes, caps, fail-closed release | uploads | M | ARCH-05, OPS-02, OPS-17, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [UPLOADS-03](tasks/UPLOADS-03.md) | Resumable S3 multipart uploads | uploads | M | UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [TESTING-03](tasks/TESTING-03.md) | Isolation tests for Redis, queues, S3 prefixes and search | testing | M | OPS-02, TENANCY-02, UPLOADS-01 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-05](tasks/TESTING-05.md) | Migration up-down-up test | testing | S | TESTING-01 | todo | convert to Python backend per ADR 0001 before starting |
@@ -160,7 +179,7 @@ tasks still `todo` below remain before M0 is closed.
 | [PROJECTS-05](tasks/PROJECTS-05.md) | System sites are hidden and protected (owner decision) | projects | XS | PROJECTS-01 | done | ClaudeK: PR #58 |
 | [PROJECTS-06](tasks/PROJECTS-06.md) | Projects register on RegisterTable, sort direction and CSV export | projects | S | DESIGN-03, PROJECTS-02 | todo | split from DESIGN-03 (2026-10-13) |
 | [AUDIT-03](tasks/AUDIT-03.md) | Chain verifier CLI + S3 Object Lock anchoring job | audit | M | AUDIT-01, OPS-02, OPS-07 | todo | convert to Python backend per ADR 0001 before starting  |
-| [AUDIT-04](tasks/AUDIT-04.md) | Activity/timeline API + project activity tab | audit | M | ACCESS-01, AUDIT-02, DESIGN-04 | todo | convert to Python backend per ADR 0001 before starting  |
+| [AUDIT-04](tasks/AUDIT-04.md) | Activity/timeline API + project activity tab | audit | M | ACCESS-01, AUDIT-02, DESIGN-04, PROJECTS-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [TENANCY-05](tasks/TENANCY-05.md) | Tenant settings, modules and provisioning | tenancy | M | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting; invite the first admin via IDENTITY-04 `create_invite` (ADR 0005 rev 2); the tenant admin can edit the company display name shown in the header (DESIGN-14) |
 | [DESIGN-09](tasks/DESIGN-09.md) | Canvas and panels, tinted status chips, input icons, button hierarchy | design | S | DESIGN-08 | todo | UI modernization guide (docs/reviews/10) |
 | [DESIGN-05](tasks/DESIGN-05.md) | Tenant colours (company or preset), user colour choice switch + visual regression | design | S | DESIGN-03, DESIGN-09 | todo | convert to Python backend per ADR 0001 before starting; after DESIGN-09 so baselines are taken once on the new look |
@@ -173,7 +192,7 @@ tasks still `todo` below remain before M0 is closed.
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
 | [APPROVALS-06](tasks/APPROVALS-06.md) | Approvals inbox API + page | approvals | M | APPROVALS-04, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting  |
-| [UPLOADS-06](tasks/UPLOADS-06.md) | Upload tray + scan status chip | uploads | M | DESIGN-03, UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [UPLOADS-06](tasks/UPLOADS-06.md) | Upload tray + scan status chip | uploads | M | DESIGN-03, UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting; review 11 M17: check `uploads.view` on list and status, or remove the permission |
 | [UPLOADS-07](tasks/UPLOADS-07.md) | Enforce per-tenant SSE-KMS on the presigned upload (ADR 0006) | uploads | S | TENANCY-05, UPLOADS-01 | todo | found in UPLOADS-01: presign policy built, key source awaits TENANCY-05 exposing it via the tenancy interface  |
 | [IDENTITY-06](tasks/IDENTITY-06.md) | OAuth2 client-credentials API clients (ES256, scoped, expiring) | identity | S | ACCESS-01, IDENTITY-02 | todo |  |
 | [AUDIT-05](tasks/AUDIT-05.md) | Legal hold + recycle bin (replaces DATABASE-06) | audit | M | AUDIT-01, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
