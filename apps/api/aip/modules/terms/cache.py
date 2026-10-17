@@ -24,6 +24,8 @@ from uuid import UUID
 import structlog
 from redis.asyncio import Redis
 
+from aip.platform.db.tls import redis_tls_kwargs
+
 __all__ = [
     "CACHE_TTL_S",
     "NullTermsCache",
@@ -86,7 +88,10 @@ class RedisTermsCache:
     @classmethod
     def from_url(cls, url: str) -> RedisTermsCache:
         client = Redis.from_url(  # pyright: ignore[reportUnknownMemberType]
-            url, socket_connect_timeout=_TIMEOUT_S, socket_timeout=_TIMEOUT_S
+            url,
+            socket_connect_timeout=_TIMEOUT_S,
+            socket_timeout=_TIMEOUT_S,
+            **redis_tls_kwargs(url),  # STACK-07
         )
         return cls(client)
 

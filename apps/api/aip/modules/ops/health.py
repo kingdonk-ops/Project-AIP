@@ -39,6 +39,7 @@ from redis.asyncio import Redis
 from sqlalchemy.engine import make_url
 
 from aip.platform.access import public
+from aip.platform.db.tls import DbTls, redis_tls_kwargs
 
 __all__ = ["DEFAULT_ALEMBIC_CONFIG", "ReadinessChecker", "router"]
 
@@ -111,6 +112,7 @@ class ReadinessChecker:
             _libpq_url(self.database_url),
             timeout=self.timeout,  # pyright: ignore[reportArgumentType] - asyncpg takes float
             statement_cache_size=0,
+            ssl=DbTls.from_env().asyncpg_ssl(),  # STACK-07
         )
 
     async def check_db(self) -> None:
@@ -123,8 +125,11 @@ class ReadinessChecker:
     async def check_redis(self) -> None:
         if not self.redis_url:
             raise CheckFailedError(f"{REDIS_URL_ENV} not set")
-        client = Redis.from_url(
-            self.redis_url, socket_connect_timeout=self.timeout, socket_timeout=self.timeout
+        client = Redis.from_url(  # pyright: ignore[reportUnknownMemberType]
+            self.redis_url,
+            socket_connect_timeout=self.timeout,
+            socket_timeout=self.timeout,
+            **redis_tls_kwargs(self.redis_url),  # STACK-07
         )
         try:
             await client.ping()  # pyright: ignore[reportUnknownMemberType]

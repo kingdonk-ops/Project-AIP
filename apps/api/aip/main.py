@@ -71,6 +71,7 @@ from aip.platform.context import (
     RequestContextMiddleware,
     get_context,
 )
+from aip.platform.db.tls import check_transport_security
 from aip.platform.events.dead_letter_routes import (
     create_router as create_dead_letter_router,
 )
@@ -127,6 +128,7 @@ def create_app(
 ) -> FastAPI:
     configure_logging()
     validate_capability_settings()  # unknown OBJECT_STORE / PDF_RENDERER stops startup (STACK-02)
+    check_transport_security()  # production needs verified TLS to Postgres and Redis (STACK-07)
     modules = load_modules(modules_package, disabled_modules)
     # ARCH-06: load each module's events.py and the platform events, then fail fast if a manifest
     # and its registered models disagree or a released payload schema drifted from its contract.
