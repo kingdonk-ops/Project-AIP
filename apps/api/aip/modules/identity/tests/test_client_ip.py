@@ -64,7 +64,10 @@ async def _key_for(
     config = uvicorn.Config(app, proxy_headers=True, log_config=None)
     config.load()
     headers = {} if forwarded_for is None else {"X-Forwarded-For": forwarded_for}
-    transport = httpx.ASGITransport(app=config.loaded_app, client=(peer, 50000))
+    transport = httpx.ASGITransport(
+        app=config.loaded_app,  # pyright: ignore[reportArgumentType] - uvicorn's ASGI types differ
+        client=(peer, 50000),
+    )
     async with httpx.AsyncClient(transport=transport, base_url="https://app.example.test") as c:
         response = await c.post(LOGIN_START, json={"email": "x@kaefer.test"}, headers=headers)
     assert response.status_code == 429
