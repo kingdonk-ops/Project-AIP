@@ -1169,10 +1169,15 @@ ALTER FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) OWNER TO aip_ow
 
 -- Name: ops_active_tenant_ids(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.ops_active_tenant_ids() RETURNS SETOF uuid
-    LANGUAGE sql STABLE SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'pg_catalog', 'public'
     AS $$
-      SELECT t.id FROM public.tenants AS t WHERE t.status = 'active' ORDER BY t.id
+    BEGIN
+      -- The flag the owner-only policy needs; transaction-local, and switched off again below.
+      PERFORM set_config('aip.scheduler_list_active', 'on', true);
+      RETURN QUERY SELECT t.id FROM public.tenants AS t WHERE t.status = 'active' ORDER BY t.id;
+      PERFORM set_config('aip.scheduler_list_active', 'off', true);
+    END
     $$;
 
 ALTER FUNCTION public.ops_active_tenant_ids() OWNER TO aip_owner;
@@ -2277,7 +2282,7 @@ CREATE POLICY tenant_isolation ON public.tenant_usage USING ((tenant_id = (NULLI
 CREATE POLICY real_customer_check ON public.tenants FOR SELECT TO aip_owner USING (is_real_customer);
 
 -- Name: tenants scheduler_list_active; Type: POLICY; Schema: public
-CREATE POLICY scheduler_list_active ON public.tenants FOR SELECT TO aip_owner USING ((status = 'active'::text));
+CREATE POLICY scheduler_list_active ON public.tenants FOR SELECT TO aip_owner USING (((status = 'active'::text) AND (current_setting('aip.scheduler_list_active'::text, true) = 'on'::text)));
 
 -- Name: tenants tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenants USING ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
