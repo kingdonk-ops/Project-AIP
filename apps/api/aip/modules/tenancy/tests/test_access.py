@@ -5,6 +5,7 @@ The integration tests in ``test_tenants_db.py`` repeat the important paths on re
 
 from __future__ import annotations
 
+import re
 from collections.abc import AsyncIterator
 from typing import Annotated, Any
 from uuid import UUID
@@ -12,13 +13,14 @@ from uuid import UUID
 import httpx
 import pytest
 from fastapi import Depends, FastAPI
+from fastapi.routing import APIRoute, iter_route_contexts
 from tests.conftest import ALICE_ID, BOB_ID, TENANT_A_ID, TENANT_B_ID, FixturePrincipalResolver
 
 from aip.main import create_app
 from aip.modules.tenancy.api import TenantView, require_active_tenant
-from aip.modules.tenancy.dependencies import get_tenant_service, parse_tenant_id
+from aip.modules.tenancy.dependencies import parse_tenant_id
 from aip.modules.tenancy.service import TenantAccessError, access_for_status
-from aip.platform.access import authenticated
+from aip.platform.access import access_declarations, authenticated
 from aip.platform.context import Principal, get_context
 
 NOBODY_TENANT = UUID("00000000-0000-4000-8000-0000000000ff")
@@ -67,7 +69,7 @@ def app(tenants: FakeTenants) -> FastAPI:
         }
     )
     application = create_app(env="test", principal_resolver=resolver, tracing=False)
-    application.dependency_overrides[get_tenant_service] = lambda: tenants
+    application.state.tenancy_service = tenants
 
     async def guarded(
         tenant: Annotated[TenantView, Depends(require_active_tenant)],
@@ -218,3 +220,57 @@ async def test_inactive_tenant_is_403_on_every_guarded_route(
     # The other tenant is unaffected.
     resp = await client.get("/api/v1/me/tenant", headers=bearer("token-alice"))
     assert resp.status_code == 200
+
+
+def _non_public_routes(app: FastAPI) -> list[tuple[str, str]]:
+    """``(method, path)`` for every mounted route that is not ``public()``, path ids filled in."""
+    found: list[tuple[str, str]] = []
+    for context in iter_route_contexts(app.router.routes):
+        if not isinstance(context.original_route, APIRoute):
+            continue
+        kinds = {d.kind for d in access_declarations(context.dependant)}
+        if "public" in kinds:
+            continue
+        path = re.sub(r"\{[^}]+\}", str(NOBODY_TENANT), context.path or "")
+        found.extend((method, path) for method in sorted(context.methods or ()))
+    return found
+
+
+async def test_a_suspended_tenant_gets_403_on_every_non_public_route(
+    app: FastAPI, client: httpx.AsyncClient, tenants: FakeTenants
+) -> None:
+    # Review 11 H2 (TENANCY-01 acceptance): not only routes that depend on require_active_tenant.
+    # The access tenant guard runs before any handler, body validation or permission check.
+    tenants.views[TENANT_B_ID] = view(TENANT_B_ID, "tenant-b", "suspended")
+    routes = _non_public_routes(app)
+    for must_be_walked in (
+        ("PUT", "/api/v1/settings/flags/{id}"),
+        ("GET", "/api/v1/access/me/abilities"),
+        ("GET", "/api/v1/admin/platform/events"),
+        ("GET", "/api/v1/terms/coverage"),
+        ("GET", "/api/v1/me/sessions"),
+    ):
+        method, path = must_be_walked
+        assert (method, path.replace("{id}", str(NOBODY_TENANT))) in routes, must_be_walked
+    for method, path in routes:
+        resp = await client.request(method, path, headers=bearer("token-bob"), json={})
+        assert resp.status_code == 403, f"{method} {path}: {resp.status_code} {resp.text}"
+        assert resp.json()["detail"]["code"] == "TENANT_SUSPENDED", f"{method} {path}"
+
+
+async def test_public_routes_ignore_tenant_status(
+    client: httpx.AsyncClient, tenants: FakeTenants
+) -> None:
+    tenants.views[TENANT_B_ID] = view(TENANT_B_ID, "tenant-b", "suspended")
+    resp = await client.get("/api/v1/health", headers=bearer("token-bob"))
+    assert resp.status_code == 200
+    assert tenants.calls == []
+
+
+async def test_the_tenant_is_loaded_once_per_request(
+    client: httpx.AsyncClient, tenants: FakeTenants
+) -> None:
+    # /me/tenant has both the access tenant guard (authenticated()) and require_active_tenant.
+    resp = await client.get("/api/v1/me/tenant", headers=bearer("token-alice"))
+    assert resp.status_code == 200, resp.text
+    assert tenants.calls == [TENANT_A_ID]

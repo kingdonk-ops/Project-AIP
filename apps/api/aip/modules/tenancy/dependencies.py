@@ -1,4 +1,4 @@
-"""FastAPI dependency ``require_active_tenant`` (TENANCY-01 step 3, ADR 0005).
+"""FastAPI dependency ``require_active_tenant`` and the access tenant guard (TENANCY-01, ADR 0005).
 
 The tenant comes only from the verified principal that identity's resolver hands to the request
 context middleware (ARCH-04): the session row for staff, field and portal users, the ES256 JWT
@@ -12,6 +12,12 @@ Order, failing closed at each step:
 3. load the tenant inside ``with_tenant(tenant_id)``: missing or soft-deleted -> 401
    ``TENANT_UNKNOWN``; not ``active`` -> 403 with the status code from ``service``;
 4. for the rest of the request, the context also carries ``tenant_slug`` and ``region_code``.
+
+``active_tenant_guard`` runs steps 2-3 for every ``authenticated()`` and ``requires()`` route
+(``aip.main`` installs it as the access tenant guard), so a route that forgets
+``require_active_tenant`` still refuses a suspended tenant. ``require_active_tenant`` is for
+routes that need the ``TenantView`` or step 4. Both share one load per request
+(``request.state.active_tenant``). The loader is ``app.state.tenancy_service`` (tests set it).
 
 Errors are ``HTTPException`` with ``detail = {"code", "message"}``; they never name the tenant.
 """
@@ -32,9 +38,15 @@ from aip.modules.tenancy.service import (
     TenantService,
     resolve_active,
 )
+from aip.platform.access import AccessPrincipal
 from aip.platform.context import ContextMissingError, get_context, use_context
 
-__all__ = ["get_tenant_service", "parse_tenant_id", "require_active_tenant"]
+__all__ = [
+    "active_tenant_guard",
+    "get_tenant_service",
+    "parse_tenant_id",
+    "require_active_tenant",
+]
 
 
 def parse_tenant_id(raw: object) -> UUID:
@@ -53,7 +65,7 @@ def parse_tenant_id(raw: object) -> UUID:
 
 
 def get_tenant_service(request: Request) -> TenantLoader:
-    """The app's ``TenantService`` (tests override this dependency)."""
+    """The app's tenant loader: ``app.state.tenancy_service``, a ``TenantService`` by default."""
     service: TenantLoader | None = getattr(request.app.state, "tenancy_service", None)
     if service is None:
         service = TenantService()
@@ -67,7 +79,29 @@ def _http(exc: TenantAccessError) -> HTTPException:
     )
 
 
+async def _active_tenant(
+    request: Request, tenants: TenantLoader, raw_tenant_id: object
+) -> TenantView:
+    """The active tenant ``raw_tenant_id``, loaded at most once per request; 401/403 otherwise."""
+    try:
+        tenant_id = parse_tenant_id(raw_tenant_id)
+        cached: TenantView | None = getattr(request.state, "active_tenant", None)
+        if cached is not None and cached.id == tenant_id:
+            return cached
+        tenant = await resolve_active(tenants, tenant_id)
+    except TenantAccessError as exc:
+        raise _http(exc) from None
+    request.state.active_tenant = tenant
+    return tenant
+
+
+async def active_tenant_guard(request: Request, principal: AccessPrincipal) -> None:
+    """The access tenant guard: 401/403 unless the principal's tenant is known and active."""
+    await _active_tenant(request, get_tenant_service(request), principal.tenant_id)
+
+
 async def require_active_tenant(
+    request: Request,
     tenants: Annotated[TenantLoader, Depends(get_tenant_service)],
 ) -> AsyncIterator[TenantView]:
     """Yield the caller's active tenant; 401/403 otherwise (see the module docstring)."""
@@ -77,11 +111,7 @@ async def require_active_tenant(
         raise HTTPException(
             status_code=401, detail={"code": "NOT_AUTHENTICATED", "message": "not authenticated"}
         ) from None
-    try:
-        tenant_id = parse_tenant_id(ctx.tenant_id)
-        tenant = await resolve_active(tenants, tenant_id)
-    except TenantAccessError as exc:
-        raise _http(exc) from None
+    tenant = await _active_tenant(request, tenants, ctx.tenant_id)
     enriched = dataclasses.replace(ctx, tenant_slug=tenant.slug, region_code=tenant.region_code)
     with use_context(enriched):
         yield tenant

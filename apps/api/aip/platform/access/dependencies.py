@@ -19,6 +19,11 @@ route that, as mounted, carries none, and ``route_check.check_routes`` refuses t
 The principal comes from ``app.state.access_principal_source`` when the app sets one (the identity
 module's ``get_principal``, wired in ``aip.main``), otherwise from the ARCH-04 request context.
 No principal -> 401 ``NOT_AUTHENTICATED``.
+
+Every non-``public()`` route also checks the caller's tenant: when the app sets
+``app.state.access_tenant_guard`` (tenancy's active-tenant check, wired in ``aip.main``), it runs
+once per request right after the principal resolves and raises 401/403 for a tenant that may not
+be served (TENANCY-01: a suspended tenant gets 403 on every tenant-scoped route).
 """
 
 from __future__ import annotations
@@ -44,6 +49,7 @@ __all__ = [
     "AccessDeclaration",
     "PrincipalSource",
     "ResourceResolver",
+    "TenantGuard",
     "access_declarations",
     "authenticated",
     "current_principal",
@@ -56,6 +62,8 @@ ACCESS_MARKER = "__aip_access__"
 AccessKind = Literal["public", "authenticated", "requires"]
 PrincipalSource = Callable[[Request], Awaitable[AccessPrincipal | None]]
 ResourceResolver = Callable[[Request], Resource | Awaitable[Resource | None] | None]
+# Raises (HTTPException 401/403) when the principal's tenant may not be served; returns otherwise.
+TenantGuard = Callable[[Request, AccessPrincipal], Awaitable[None]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,6 +101,9 @@ async def current_principal(request: Request) -> AccessPrincipal:
             )
     if principal is None:
         raise _not_authenticated()
+    guard: TenantGuard | None = getattr(request.app.state, "access_tenant_guard", None)
+    if guard is not None:
+        await guard(request, principal)  # before caching: a refused caller is never cached
     request.state.access_principal = principal
     return principal
 

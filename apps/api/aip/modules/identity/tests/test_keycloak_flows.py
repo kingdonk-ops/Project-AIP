@@ -15,6 +15,8 @@ login directory and real OIDC client, so the code exchange and ID-token checks a
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import os
 import re
 import secrets
@@ -24,7 +26,7 @@ from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, urljoin, urlsplit
+from urllib.parse import parse_qs, urlencode, urljoin, urlsplit
 
 import httpx
 import pytest
@@ -410,3 +412,69 @@ def test_password_policy_min_length(keycloak: Keycloak) -> None:
     with pytest.raises(KeycloakError) as exc:
         admin.set_user_password(user_id, "short", temporary=False)  # pyright: ignore[reportUnknownMemberType]
     assert "invalidPasswordMinLengthMessage" in str(exc.value)
+
+
+def test_mock_idp_users_cannot_edit_their_profile(keycloak: Keycloak) -> None:
+    # Review 11 H1: the mock IdP's demo passwords are public and the aip realm trusts its emails,
+    # so its users must not be able to change their email (or names) themselves.
+    admin = KeycloakAdmin(
+        server_url=keycloak.url,
+        username=keycloak.admin_user,
+        password=keycloak.admin_password,
+        realm_name="mock-idp",
+        user_realm_name="master",
+    )
+    actions = {a["alias"]: a for a in admin.get_required_actions()}  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+    self_service = (
+        "UPDATE_PROFILE",
+        "UPDATE_EMAIL",
+        "VERIFY_PROFILE",
+        "UPDATE_PASSWORD",
+        "CONFIGURE_TOTP",
+    )
+    for alias in self_service:
+        assert alias not in actions or actions[alias]["enabled"] is False, alias
+    assert actions["UPDATE_PROFILE"]["enabled"] is False  # listed in the realm, so imported
+    profile = admin.connection.raw_get("admin/realms/mock-idp/users/profile").json()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+    edit = {a["name"]: a["permissions"]["edit"] for a in profile["attributes"]}  # pyright: ignore[reportUnknownVariableType]
+    for name in ("email", "firstName", "lastName", "username"):
+        assert edit[name] == ["admin"], name
+
+
+def _mock_idp_pages_with_kc_action(keycloak_url: str, action: str) -> list[Page]:
+    """Sign alice in to the mock IdP with ``kc_action=action``; every page Keycloak showed."""
+    broker = f"{keycloak_url}/realms/aip/broker/kaefer-oidc/endpoint"
+    verifier = secrets.token_urlsafe(48)
+    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=")
+    browser = Browser(stop_prefix=broker)
+    try:
+        start = browser.get(
+            f"{keycloak_url}/realms/mock-idp/protocol/openid-connect/auth?"
+            + urlencode(
+                {
+                    "client_id": "aip-broker-kaefer",
+                    "redirect_uri": broker,
+                    "response_type": "code",
+                    "scope": "openid",
+                    "state": secrets.token_urlsafe(8),
+                    "code_challenge": challenge.decode(),
+                    "code_challenge_method": "S256",
+                    "kc_action": action,
+                }
+            )
+        )
+        drive(browser, start, _credentials("alice@kaefer.test", "alice_dev_only_password"))
+    finally:
+        browser.close()
+    return browser.pages
+
+
+@pytest.mark.parametrize("action", ["UPDATE_PROFILE", "UPDATE_EMAIL", "VERIFY_PROFILE"])
+def test_mock_idp_refuses_an_application_initiated_profile_update(
+    keycloak: Keycloak, action: str
+) -> None:
+    # The way round the nginx account-console block: kc_action on the sign-in endpoint, which
+    # nginx must keep proxied. On a realm with Keycloak's defaults this shows an email field.
+    pages = _mock_idp_pages_with_kc_action(keycloak.url, action)
+    assert any(p.form_with("password") for p in pages), [p.url for p in pages]
+    assert not any(p.form_with("email") for p in pages), [p.url for p in pages]
