@@ -243,6 +243,15 @@ body {
     background: rgb(0 0 0 / 0.4);
     animation: shell-backdrop-in 150ms ease-out;
   }
+  .shell-backdrop {
+    display: block;
+    position: fixed;
+    inset: 56px 0 0 0;
+    z-index: 40;
+    /* The same dim as the dialog overlay in @aip/ui. */
+    background: rgb(0 0 0 / 0.4);
+    animation: shell-backdrop-in 150ms ease-out;
+  }
   .shell-rail__link {
     flex-direction: row;
     justify-content: flex-start;
