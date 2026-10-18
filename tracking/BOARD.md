@@ -125,12 +125,11 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [SECURITY-11](tasks/SECURITY-11.md) | Harden the public demo: mock-IdP secrets, API/web edge headers + HSTS, signed+scanned deploy | security | M | OPS-11, OPS-04, SECURITY-08 | todo | review 11 H1/M2/M6; **merges SECURITY-12 + SECURITY-15**; owner: rotate E2E_PASS_A/B, add COSIGN_PRIVATE_KEY/PASSWORD, run the PR #101 kcadm step |
+| [SECURITY-11](tasks/SECURITY-11.md) | Harden the public demo and deployed environments: mock-IdP secrets, refuse dev secrets, API/web edge headers + HSTS, signed+scanned deploy | security | L | IDENTITY-03, OPS-11, OPS-04, SECURITY-08 | todo | review 11 H1/M2/M6/M4; **merges SECURITY-12 + SECURITY-15 + SECURITY-14**; owner: rotate E2E_PASS_A/B, add COSIGN_PRIVATE_KEY/PASSWORD, run the PR #101 kcadm step |
 | [SECURITY-13](tasks/SECURITY-13.md) | Least-privilege aip_readonly: revoke session, auth and PII tables; reporting views; ADR 0012 amendment | security | M | DATABASE-07 | todo | review 11 M3: set_config makes RLS advisory for roles running arbitrary SQL |
-| [SECURITY-14](tasks/SECURITY-14.md) | Refuse dev secrets outside dev/test (API allowlist check + deployed realm overlay without defaults) | identity | S | IDENTITY-03 | todo | review 11 M4: aip-admin (manage-users) falls back to aip_admin_dev_only_secret |
 | [OPS-17](tasks/OPS-17.md) | Handler DB role + tenant fan-out for periodic jobs | ops | M | ARCH-05, OPS-02, OPS-13 | todo | review 11 H3/M9; **merges OPS-18**; handlers write tenant tables + emit events, then schedule upload-expiry and entitlement snapshot per active tenant; blocks UPLOADS-02; IDENTITY-04 granted `aip_jobs` narrow UPDATE on `user_invite`/`app_user` columns and INSERT on `auth_event` (ADR 0034): keep or revoke them |
 | [TESTING-12](tasks/TESTING-12.md) | Live-Keycloak session journeys + viewer-seed 403 journey (cross-tenant + axe) | testing | M | IDENTITY-03, TESTING-09 | todo | review 11 H4/M12; **merges QA-3**; owns TESTING-09's carried-forward list; un-skip shell.spec.ts:97 and projects.spec.ts:36-42; adds E2E_USER_VIEWER |
-| [TESTING-13](tasks/TESTING-13.md) | Stack proves the worker: real healthcheck, outbox drained and audited after the skeleton e2e, outbox-lag smoke | testing | S | AUDIT-02, TESTING-09 | todo | review 11 M10: worker health is `import aip` |
+| [TESTING-13](tasks/TESTING-13.md) | Stack proves the worker and the workflow transition journeys: real healthcheck, outbox drained and audited, outbox-lag smoke, approvals journeys | testing | M | APPROVALS-02, AUDIT-02, TESTING-09 | todo | review 11 M10: worker health is `import aip`; **merges APPROVALS-07** (ADR 0035 §9: seed a demo workflow + guard facts, run both transition journeys in `e2e-skeleton`) |
 | [PROJECTS-07](tasks/PROJECTS-07.md) | Project detail page (RecordDetail, edit, lifecycle/archive) and sites register with create/edit/delete | projects | M | DESIGN-04, PROJECTS-06 | todo | review 11 M13; AUDIT-04 mounts its History tab here |
 | [DESIGN-15](tasks/DESIGN-15.md) | Nav items honour release flags (GET /settings/flags) and a Settings page to switch them (tenant.flags.manage) | design | S | ARCH-08, DESIGN-06 | todo | review 11 L26 |
 | [DESIGN-16](tasks/DESIGN-16.md) | Mobile nav drawer behaves as a modal: focus trap, inert page, scroll lock | design | XS | DESIGN-08 | done | ClaudeK: PR #116; DESIGN-08 review |
@@ -142,7 +141,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [ACCESS-03](tasks/ACCESS-03.md) | Scope tables and RLS project predicates; policy/RLS parity tests | access | M | ACCESS-02, PROJECTS-01 | todo | convert to Python backend per ADR 0001 before starting  |
 | [ACCESS-04](tasks/ACCESS-04.md) | Teams, membership, cache-invalidation event | access | M | ACCESS-02, ARCH-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [IDENTITY-04](tasks/IDENTITY-04.md) | Invitations, MFA/step-up and sign-off assurance (ADR 0010) | identity | L | ACCESS-01, IDENTITY-03, STACK-02 | done | ClaudeK: PR #117; merges IDENTITY-07; invites (Keycloak admin API + email theme), acr/upstream amr + step-up, sign-off assurance (ADR 0034); browser journeys, live step-up and IDENTITY-02 carry-forwards → IDENTITY-08 |
-| [IDENTITY-08](tasks/IDENTITY-08.md) | Invite and step-up journeys in the browser, live step-up, email unregister | identity | M | IDENTITY-04, TESTING-12 | todo | carried forward from IDENTITY-04 (2026-10-18); also the IDENTITY-02 unregister and NFKC items |
+| [IDENTITY-08](tasks/IDENTITY-08.md) | Identity auth/session events, invite and step-up browser journeys, IDENTITY-02 carry-forwards | identity | L | AUDIT-02, IDENTITY-04, TESTING-12 | todo | carried forward from IDENTITY-04 (2026-10-18); also the IDENTITY-02 unregister and NFKC items; **merges AUDIT-06** (identity emits auth/session events + the Keycloak login/logout e2e) |
 | [PROJECTS-03](tasks/PROJECTS-03.md) | Project membership, header switcher, X-Project-Id enforcement | projects | M | ACCESS-02, ARCH-04 | todo | convert to Python backend per ADR 0001 before starting  |
 | [TENANCY-08](tasks/TENANCY-08.md) | Organisations settings page and invite journey | tenancy | M | IDENTITY-04, TENANCY-03 | todo | split from TENANCY-03 (2026-10-16) |
 | [APPROVALS-02](tasks/APPROVALS-02.md) | Transition service: policy check, version pinning, hash-chained decisions, JSONLogic guards, events | approvals | M | ACCESS-01, APPROVALS-01, AUDIT-01, IDENTITY-04 | done | ClaudeK: PR #118; merges APPROVALS-03; converted per ADR 0001, deviations in ADR 0035 (guard before sign-off, 401 step-up / 202 pending countersign, record resolvers, 422 validation); e2e carried to APPROVALS-07 |
@@ -176,21 +175,18 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [AUDIT-04](tasks/AUDIT-04.md) | Activity/timeline API + project activity tab | audit | M | ACCESS-01, AUDIT-02, DESIGN-04, PROJECTS-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [OPS-15](tasks/OPS-15.md) | CloudWatch alarms, EventBridge schedules and secret-rotation Lambdas | ops | M | OPS-07, OPS-13, SECURITY-10 | todo | AWS readiness |
 | [DESIGN-09](tasks/DESIGN-09.md) | Modernized surfaces: canvas/panels/chips + blade, KPI strip, work-queue | design | M | DESIGN-04, DESIGN-08 | todo | **merges DESIGN-11**; UI modernization guide (docs/reviews/10) |
-| [DESIGN-05](tasks/DESIGN-05.md) | Tenant colours (company or preset), user colour choice switch + visual regression | design | S | DESIGN-03, DESIGN-09 | todo | convert to Python backend per ADR 0001 before starting; after DESIGN-09 so baselines are taken once on the new look |
+| [DESIGN-05](tasks/DESIGN-05.md) | Tenant colours and user display preferences (colours, density, side panel or full page) + visual regression | design | L | DESIGN-03, DESIGN-04, DESIGN-09, ACCESS-01 | todo | convert to Python backend per ADR 0001 before starting; after DESIGN-09 so baselines are taken once on the new look; **merges DESIGN-13** (My display preferences: side panel or full page, user colour preset; owner request 2026-10-14) |
 | [DESIGN-10](tasks/DESIGN-10.md) | Scope bar as a breadcrumb (tenant › organisation › project › asset) | design | S | DESIGN-09, PROJECTS-03 | todo | UI modernization guide (docs/reviews/10) |
-| [DESIGN-13](tasks/DESIGN-13.md) | My display preferences page, with a choice of side panel or full page for record details | design | M | DESIGN-04, DESIGN-05, DESIGN-09, ACCESS-01 | todo | owner request 2026-10-14; also each user's colour preset |
 
 ### Wave 9: P0-core exit
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
 | [APPROVALS-06](tasks/APPROVALS-06.md) | Approvals inbox API + page | approvals | M | APPROVALS-04, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting  |
-| [APPROVALS-07](tasks/APPROVALS-07.md) | Workflow transition API journeys on the compose stack | approvals | S | APPROVALS-02, TESTING-09 | todo | carried forward from APPROVALS-02 (ADR 0035 §9): seed a demo workflow + guard facts on the stack, run both e2e journeys in `e2e-skeleton` |
 | [UPLOADS-06](tasks/UPLOADS-06.md) | Upload tray + scan status chip | uploads | M | DESIGN-03, UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting; review 11 M17: check `uploads.view` on list and status, or remove the permission |
 | [UPLOADS-07](tasks/UPLOADS-07.md) | Enforce per-tenant SSE-KMS on the presigned upload (ADR 0006) | uploads | S | TENANCY-05, UPLOADS-01 | todo | found in UPLOADS-01: presign policy built, key source awaits TENANCY-05 exposing it via the tenancy interface  |
 | [IDENTITY-06](tasks/IDENTITY-06.md) | OAuth2 client-credentials API clients (ES256, scoped, expiring) | identity | S | ACCESS-01, IDENTITY-02 | todo |  |
 | [AUDIT-05](tasks/AUDIT-05.md) | Legal hold + recycle bin (replaces DATABASE-06) | audit | M | AUDIT-01, DATABASE-04 | todo | convert to Python backend per ADR 0001 before starting  |
-| [AUDIT-06](tasks/AUDIT-06.md) | Identity emits auth and session events into the security stream | identity | S | AUDIT-02, IDENTITY-04 | todo | split from AUDIT-02 step 5 (2026-10-16); includes the Keycloak login/logout e2e |
 | [SECURITY-07](tasks/SECURITY-07.md) | Tenant IP allow-list and session policy | security | M | IDENTITY-03 | todo |  |
 | [OPS-08](tasks/OPS-08.md) | Backup and restore-test harness with recorded evidence | ops | M | OPS-07 | todo | convert to Python backend per ADR 0001 before starting |
 | [TESTING-08](tasks/TESTING-08.md) | CI gates, k6 load script and mobile smoke job | testing | M | TESTING-02, TESTING-04, TESTING-05, TESTING-06 | todo | convert to Python backend per ADR 0001 before starting |
@@ -212,7 +208,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [ENT-03](tasks/ENT-03.md) | Billing state (good standing, past due, restricted, suspended) and enforcement (ADR 0023) | tenancy | M | ENT-01, PLAN-R1, TENANCY-05 | todo | an operator moves the state, never a payment event |
 | [ENT-04](tasks/ENT-04.md) | Operator console pages: entitlement overrides and billing state (ADR 0023) | tenancy | M | ENT-03, OPS-12, PLAN-R1 | todo | on the operator origin |
 | [ENT-05](tasks/ENT-05.md) | Usage sources (identity seats, uploads storage) and project toggles for entitlements | tenancy | S | ENT-01, UPLOADS-02 | todo | found in ENT-01: the registries exist but nothing plugs in yet |
-| [DESIGN-12](tasks/DESIGN-12.md) | Home / My Work page (`/`) with work-item providers | design | M | APPROVALS-06, AUDIT-04, DESIGN-09, DESIGN-13, PLAN-R1 | todo | UI modernization guide (docs/reviews/10); P0 sources are approvals and activity, R1 modules add providers |
+| [DESIGN-12](tasks/DESIGN-12.md) | Home / My Work page (`/`) with work-item providers | design | M | APPROVALS-06, AUDIT-04, DESIGN-05, DESIGN-09, PLAN-R1 | todo | UI modernization guide (docs/reviews/10); P0 sources are approvals and activity, R1 modules add providers |
 
 ### Moved out of P0: re-homed by PLAN-R1 (ADR 0007)
 
@@ -368,8 +364,7 @@ Re-homed from P0 by PLAN-R1 (ADR 0007 §3). PLAN-P2 writes their specs; none of 
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [TENANCY-04](tasks/TENANCY-04.md) | Asset sharing with party-scoped visibility profiles | tenancy | M | PLAN-P2, PLAN-R1, TENANCY-03 | todo | moved to P2 (ADR 0007); convert per ADR 0001 when PLAN-P2 rewrites it |
-| [TENANCY-09](tasks/TENANCY-09.md) | Organisation-level isolation golden tests | tenancy | S | TENANCY-03, TENANCY-04 | todo | split from TENANCY-03 (2026-10-16): needs assets and asset sharing; follows TENANCY-04 into P2 |
+| [TENANCY-04](tasks/TENANCY-04.md) | Asset sharing with party-scoped visibility profiles + organisation-level isolation golden tests | tenancy | M | PLAN-P2, PLAN-R1, TENANCY-03 | todo | moved to P2 (ADR 0007); convert per ADR 0001 when PLAN-P2 rewrites it; **merges TENANCY-09** (org-isolation golden tests, split from TENANCY-03) |
 | [TESTING-07](tasks/TESTING-07.md) | Offline sync convergence property tests | testing | M | PLAN-P2, PLAN-R1, TESTING-01 | todo | moved to P2 with the offline module (ADR 0007); convert per ADR 0001 when PLAN-P2 rewrites it |
 | [TERMS-04](tasks/TERMS-04.md) | Pack import, diff, dry-run, apply and rollback | terms | M | PLAN-R1, TERMS-02 | blocked | deferred to P4 (ADR 0007) |
 

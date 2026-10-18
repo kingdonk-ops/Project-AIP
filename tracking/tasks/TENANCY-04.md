@@ -1,5 +1,6 @@
-# TENANCY-04 — Asset sharing with party-scoped visibility profiles
+# TENANCY-04 — Asset sharing with party-scoped visibility profiles, plus organisation-level isolation golden tests
 
+<!-- hand-edited: merged TENANCY-09 (Part B) per board slim 2026-10-18 -->
 <!-- hand-edited: re-scope note from PLAN-R1 (2026-10-18) -->
 
 <!-- hand-edited: depends-on synced from BOARD.md -->
@@ -21,7 +22,11 @@
 3. Any ADR in [`docs/adr/`](../../docs/adr/) that names this task or module
 4. Only if the step needs it: `architecture.md` / `data-model.md` in the module folder
 
-## Spec
+> Part B (was TENANCY-09) is the organisation-isolation golden tests for Part A's asset sharing and depended only on it, so the tests ship with the feature. PLAN-P2 rewrites both parts together.
+
+## Part A — Asset sharing with party-scoped visibility profiles (was TENANCY-04)
+
+### Spec
 
 Let a client see status and evidence on a shared asset without seeing commercial fields.
 
@@ -52,3 +57,19 @@ Let a client see status and evidence on a shared asset without seeing commercial
   - **unit**:
     - projectFields({status:'ok', rate:120}, {allowed:['status']}) returns {status:'ok'}.
     - isShareActive with expires_at in the past returns false.
+
+## Part B — Organisation-level isolation golden tests (merged from TENANCY-09)
+
+### Spec
+
+Split from TENANCY-03 (2026-10-16): the original "AIP Phase 24 golden cases" (a user in organisation X
+must not see organisation Y's assets) could not run because no assets module existed. Once assets
+and asset sharing (TENANCY-04) exist, prove organisation-level visibility inside one tenant.
+
+- **steps**:
+  - 1. Golden tests: users of two client organisations in one tenant each see only assets shared with their organisation, and only the field groups of their visibility profile.
+- **acceptance**:
+  - A user in organisation X cannot list, fetch or search organisation Y's unshared assets.
+- **tests**:
+  - **integration**:
+    - User in client org X lists and fetches assets shared only with org Y. Expected: not listed, 404.

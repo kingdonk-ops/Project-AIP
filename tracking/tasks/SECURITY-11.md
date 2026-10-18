@@ -1,5 +1,6 @@
-# SECURITY-11 — Harden the public demo: mock-IdP secrets, API/web edge headers + HSTS, signed+scanned deploy
+# SECURITY-11 — Harden the public demo and deployed environments: mock-IdP secrets, refuse dev secrets, API/web edge headers + HSTS, signed+scanned deploy
 
+<!-- hand-edited: merged SECURITY-14 (Part D) per board slim 2026-10-18 -->
 <!-- hand-edited: merged SECURITY-12 (Part B) and SECURITY-15 (Part C) per board re-draw 2026-10-17 -->
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
@@ -7,8 +8,8 @@
 |---|---|
 | Module | [`security`](../../docs/blueprint/modules/security/README.md) |
 | Phase | P0 |
-| Size | M |
-| Depends on | OPS-11, OPS-04, SECURITY-08 (board is authoritative) |
+| Size | L |
+| Depends on | IDENTITY-03, OPS-11, OPS-04, SECURITY-08 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
@@ -16,11 +17,13 @@
 1. [`docs/blueprint/07-task-conventions.md`](../../docs/blueprint/07-task-conventions.md)
 2. [`docs/blueprint/modules/security/README.md`](../../docs/blueprint/modules/security/README.md)
 3. ADRs: 0011 (image scanning), 0026 (web delivery behind the ALB); see OPS-11 for the Coolify demo
-4. [review 11](../../docs/reviews/11-codebase-gap-review-2026-10-16.md), findings **H1** (Part A), **M2** (Part B), **M6** (Part C)
+4. [`docs/blueprint/modules/identity/README.md`](../../docs/blueprint/modules/identity/README.md) and ADR 0005 (Part D)
+5. [review 11](../../docs/reviews/11-codebase-gap-review-2026-10-16.md), findings **H1** (Part A), **M2** (Part B), **M6** (Part C), **M4** (Part D)
 
-> This task merges three Review-11 hardening items for the public demo surface: Part A (was SECURITY-11)
-> mock-IdP secrets, Part B (was SECURITY-12) API/web edge hardening, Part C (was SECURITY-15) a gated,
-> signed, scanned deploy. They share the Coolify demo pipeline and are small individually.
+> This task merges four Review-11 hardening items for the public demo and every deployed environment: Part A
+> (was SECURITY-11) mock-IdP secrets, Part B (was SECURITY-12) API/web edge hardening, Part C (was SECURITY-15)
+> a gated, signed, scanned deploy, and Part D (was SECURITY-14) refusing publicly known dev secrets in the API and
+> the deployed Keycloak realm, the general form of Part A's fix. They share the demo pipeline and are small individually.
 
 ## Part A — mock-IdP users from secrets, not committed passwords (review 11 H1)
 
@@ -126,3 +129,32 @@ Nothing reaches the internet-facing demo unscanned or unsigned.
   - **integration**:
     - workflow lint (actionlint) → every `uses:` is SHA-pinned
     - a dry run with a seeded critical vuln → the deploy job does not run
+
+## Part D — refuse dev secrets outside dev and test (merged from SECURITY-14, review 11 M4)
+
+### Background
+
+[review 11](../../docs/reviews/11-codebase-gap-review-2026-10-16.md) finding **M4**. `infra/keycloak/realm-aip.json:622,691` falls back to
+`${AIP_API_CLIENT_SECRET:aip_api_dev_only_secret}` and `${AIP_ADMIN_CLIENT_SECRET:aip_admin_dev_only_secret}`; `aip-admin`
+holds `manage-users`. `IdentitySettings` refuses the dev cookie key only when `AIP_ENV == "production"` (a denylist).
+Coolify is safe today because it uses `${VAR:?}`. The review lists the API allowlist check as a quick fix that may
+land first; if it has, this task is the realm overlay only.
+
+### Spec
+
+Neither the API nor a deployed Keycloak realm can run with a publicly known dev secret.
+
+- **files**:
+  - apps/api/aip/modules/identity/settings.py
+  - infra/keycloak/ (deployed-realm overlay)
+  - tools/tests/ or identity tests
+- **steps**:
+  - 1. The API refuses to start with any known dev secret unless `AIP_ENV` is `development` or `test` (an allowlist).
+  - 2. Add a deployed-realm overlay with no secret defaults, or a post-import check that fails on a dev secret.
+- **acceptance**:
+  - `AIP_ENV=demo` (or `staging`, `production`) with a dev secret → start-up fails with a clear message.
+  - A Keycloak import for a deployed environment without the env vars fails instead of using the public secret.
+- **tests**:
+  - **unit**:
+    - each non-dev `AIP_ENV` × each known dev secret → settings validation error
+    - deployed overlay → no `${VAR:default}` with a default for a client secret

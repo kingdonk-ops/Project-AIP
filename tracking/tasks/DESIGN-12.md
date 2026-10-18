@@ -7,7 +7,7 @@
 | Module | [`design`](../../docs/blueprint/modules/design/README.md) |
 | Phase | P0 (lands with R1) |
 | Size | M |
-| Depends on | APPROVALS-06, AUDIT-04, DESIGN-11, DESIGN-13, PLAN-R1 |
+| Depends on | APPROVALS-06, AUDIT-04, DESIGN-05, DESIGN-09, PLAN-R1 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
@@ -44,7 +44,7 @@ PLAN-R1 must add one "register a My Work provider" step to each R1 module task t
   - 4. Layout: 8/4 split at 1280px and up, single column below. Main column: KPI strip, filter tabs, WorkQueue.
     Side column: "Expiring calibrations" (empty state until the equipment provider exists) and "Recent activity"
     from AUDIT-04.
-  - 5. Row click goes through `useOpenRecord` (DESIGN-13), so it opens the Blade or the full page per the user's preference, with the item's summary from its provider and its quick actions (Approve/Reject in
+  - 5. Row click goes through `useOpenRecord` (DESIGN-05 Part B), so it opens the Blade or the full page per the user's preference, with the item's summary from its provider and its quick actions (Approve/Reject in
     P0). Reassign/escalate and type-specific create dialogs belong to R1 module tasks.
   - 6. Home is the first nav item (DESIGN-06).
 - **acceptance**:
