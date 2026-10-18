@@ -1,9 +1,8 @@
 # Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
 id = "approvals"
 context = "approvals"
-depends_on = []
+depends_on = ["access", "identity", "tenancy"]
 permission_namespaces = ["approvals"]
-events = []
 subscribes = []
 settings = []
 term_keys = []
@@ -15,3 +14,15 @@ description = "View workflow definitions and record workflows"
 [[permissions]]
 code = "approvals.design"
 description = "Create, edit and publish workflow definitions"
+
+[[permissions]]
+code = "approvals.start"
+description = "Start the workflow of a record"
+
+[[events]]
+name = "workflow.transitioned"
+version = 1
+
+[[events]]
+name = "workflow.definition_published"
+version = 1

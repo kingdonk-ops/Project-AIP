@@ -1,0 +1,56 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "definitionId": {
+      "format": "uuid",
+      "title": "Definitionid",
+      "type": "string"
+    },
+    "key": {
+      "title": "Key",
+      "type": "string"
+    },
+    "previousDefinitionId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Previousdefinitionid"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Projectid"
+    },
+    "recordType": {
+      "title": "Recordtype",
+      "type": "string"
+    },
+    "version": {
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "definitionId",
+    "key",
+    "version",
+    "recordType",
+    "projectId",
+    "previousDefinitionId"
+  ],
+  "title": "DefinitionPublished",
+  "type": "object"
+}

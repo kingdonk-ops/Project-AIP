@@ -14,6 +14,7 @@
                 "access.role_assignment.read",
                 "access.team.manage",
                 "approvals.design",
+                "approvals.start",
                 "approvals.view",
                 "audit.activity.view",
                 "audit.log.read",
@@ -64,6 +65,31 @@
           "code"
         ],
         "title": "AccessErrorBody",
+        "type": "object"
+      },
+      "ApprovalsErrorBody": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "messageKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Messagekey"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "ApprovalsErrorBody",
         "type": "object"
       },
       "AssignmentCreate": {
@@ -226,6 +252,65 @@
         "title": "AssignmentOut",
         "type": "object"
       },
+      "AssuranceOut": {
+        "additionalProperties": false,
+        "properties": {
+          "authenticatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authenticatedat"
+          },
+          "deviceId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deviceid"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          }
+        },
+        "required": [
+          "level",
+          "method",
+          "authenticatedAt",
+          "deviceId"
+        ],
+        "title": "AssuranceOut",
+        "type": "object"
+      },
       "AuthErrorBody": {
         "properties": {
           "code": {
@@ -255,6 +340,51 @@
           "detail"
         ],
         "title": "AuthErrorResponse",
+        "type": "object"
+      },
+      "AvailableTransition": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "allowed": {
+            "title": "Allowed",
+            "type": "boolean"
+          },
+          "critical": {
+            "title": "Critical",
+            "type": "boolean"
+          },
+          "labelKey": {
+            "title": "Labelkey",
+            "type": "string"
+          },
+          "reasonKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasonkey"
+          },
+          "toState": {
+            "title": "Tostate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "toState",
+          "labelKey",
+          "critical",
+          "allowed"
+        ],
+        "title": "AvailableTransition",
         "type": "object"
       },
       "DbEstimate": {
@@ -394,6 +524,146 @@
           "nextAfter"
         ],
         "title": "DeadLetterPage",
+        "type": "object"
+      },
+      "DecisionOut": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "actorId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actorid"
+          },
+          "assurance": {
+            "$ref": "#/components/schemas/AssuranceOut"
+          },
+          "authStrength": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authstrength"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "countersignsId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Countersignsid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "entryHash": {
+            "title": "Entryhash",
+            "type": "string"
+          },
+          "fromState": {
+            "title": "Fromstate",
+            "type": "string"
+          },
+          "guardResult": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardresult"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "onBehalfOf": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Onbehalfof"
+          },
+          "prevHash": {
+            "title": "Prevhash",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "applied",
+              "pending_countersign"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "toState": {
+            "title": "Tostate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "seq",
+          "fromState",
+          "toState",
+          "action",
+          "actorId",
+          "onBehalfOf",
+          "comment",
+          "authStrength",
+          "status",
+          "countersignsId",
+          "assurance",
+          "guardResult",
+          "prevHash",
+          "entryHash",
+          "createdAt"
+        ],
+        "title": "DecisionOut",
         "type": "object"
       },
       "Dependencies": {
@@ -792,6 +1062,157 @@
           "status"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "HistoryOut": {
+        "additionalProperties": false,
+        "properties": {
+          "brokenAtSeq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brokenatseq"
+          },
+          "chainValid": {
+            "title": "Chainvalid",
+            "type": "boolean"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionOut"
+            },
+            "title": "Entries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries",
+          "chainValid"
+        ],
+        "title": "HistoryOut",
+        "type": "object"
+      },
+      "InstanceOut": {
+        "additionalProperties": false,
+        "properties": {
+          "availableTransitions": {
+            "items": {
+              "$ref": "#/components/schemas/AvailableTransition"
+            },
+            "title": "Availabletransitions",
+            "type": "array"
+          },
+          "currentState": {
+            "title": "Currentstate",
+            "type": "string"
+          },
+          "definitionId": {
+            "format": "uuid",
+            "title": "Definitionid",
+            "type": "string"
+          },
+          "definitionKey": {
+            "title": "Definitionkey",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "pendingCountersign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pendingcountersign"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          },
+          "recordId": {
+            "format": "uuid",
+            "title": "Recordid",
+            "type": "string"
+          },
+          "recordType": {
+            "title": "Recordtype",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "recordType",
+          "recordId",
+          "projectId",
+          "definitionId",
+          "definitionKey",
+          "version",
+          "currentState",
+          "syncVersion",
+          "availableTransitions"
+        ],
+        "title": "InstanceOut",
+        "type": "object"
+      },
+      "InstanceStart": {
+        "additionalProperties": false,
+        "properties": {
+          "projectId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          },
+          "recordId": {
+            "format": "uuid",
+            "title": "Recordid",
+            "type": "string"
+          },
+          "recordType": {
+            "maxLength": 63,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Recordtype",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recordType",
+          "recordId"
+        ],
+        "title": "InstanceStart",
         "type": "object"
       },
       "InviteCreate": {
@@ -2448,6 +2869,7 @@
                 "access.role_assignment.read",
                 "access.team.manage",
                 "approvals.design",
+                "approvals.start",
                 "approvals.view",
                 "audit.activity.view",
                 "audit.log.read",
@@ -2566,6 +2988,7 @@
                 "access.role_assignment.read",
                 "access.team.manage",
                 "approvals.design",
+                "approvals.start",
                 "approvals.view",
                 "audit.activity.view",
                 "audit.log.read",
@@ -2651,6 +3074,7 @@
                     "access.role_assignment.read",
                     "access.team.manage",
                     "approvals.design",
+                    "approvals.start",
                     "approvals.view",
                     "audit.activity.view",
                     "audit.log.read",
@@ -3701,6 +4125,63 @@
           "findings"
         ],
         "title": "TermsCoverage",
+        "type": "object"
+      },
+      "TransitionOut": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/DecisionOut"
+          },
+          "instance": {
+            "$ref": "#/components/schemas/InstanceOut"
+          }
+        },
+        "required": [
+          "instance",
+          "decision"
+        ],
+        "title": "TransitionOut",
+        "type": "object"
+      },
+      "TransitionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "maxLength": 63,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Action",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "expectedSyncVersion": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedsyncversion"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "TransitionRequest",
         "type": "object"
       },
       "UploadErrorBody": {
@@ -4923,6 +5404,326 @@
         "summary": "Deprecate Event Version",
         "tags": [
           "platform"
+        ]
+      }
+    },
+    "/api/v1/approvals/instances": {
+      "post": {
+        "operationId": "approvals_start_instance",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstanceStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstanceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "NO_ACTIVE_DEFINITION"
+          }
+        },
+        "summary": "Start Instance",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/instances/{instance_id}": {
+      "get": {
+        "operationId": "approvals_get_instance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instance Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstanceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Instance",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/instances/{instance_id}/history": {
+      "get": {
+        "operationId": "approvals_get_history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instance Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get History",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/instances/{instance_id}/transition": {
+      "post": {
+        "operationId": "approvals_transition",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instance Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransitionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransitionOut"
+                }
+              }
+            },
+            "description": "Recorded; waits for a countersign"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "INVALID_TRANSITION, VERSION_CONFLICT, countersign"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, GUARD_FAILED or GUARD_ERROR"
+          }
+        },
+        "summary": "Transition",
+        "tags": [
+          "approvals"
         ]
       }
     },

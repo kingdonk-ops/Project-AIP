@@ -3,17 +3,24 @@
 Created only by the Alembic revision ``202610161400_approvals_workflows``; ``aip-db check-schema``
 compares these declarations with the migrated database. ``workflow_definitions`` and
 ``workflow_instances`` are tenant-scoped with soft delete; ``workflow_definition_audit`` is
-append-only (monthly partitions, PK ``(id, created_at)``). All three have FORCE ROW LEVEL SECURITY.
+append-only (monthly partitions, PK ``(id, created_at)``). ``workflow_decision_history``
+(APPROVALS-02, revision ``202610181200``) is append-only and hash-chained, not partitioned. All
+four have FORCE ROW LEVEL SECURITY.
 """
 
 from __future__ import annotations
 
-from sqlalchemy import CHAR, Boolean, Column, Integer, Numeric, Table, Text, text
+from sqlalchemy import CHAR, Boolean, Column, Integer, Numeric, SmallInteger, Table, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 
 from aip.platform.db.metadata import metadata
 
-__all__ = ["workflow_definition_audit", "workflow_definitions", "workflow_instances"]
+__all__ = [
+    "workflow_decision_history",
+    "workflow_definition_audit",
+    "workflow_definitions",
+    "workflow_instances",
+]
 
 workflow_definitions = Table(
     "workflow_definitions",
@@ -72,4 +79,34 @@ workflow_definition_audit = Table(
         primary_key=True,
         server_default=text("now()"),
     ),
+)
+
+
+workflow_decision_history = Table(
+    "workflow_decision_history",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("tenant_id", UUID(as_uuid=True), nullable=False),
+    Column("instance_id", UUID(as_uuid=True), nullable=False),
+    Column("step_id", UUID(as_uuid=True), nullable=True),
+    Column("seq", Integer, nullable=False),
+    Column("from_state", Text, nullable=False),
+    Column("to_state", Text, nullable=False),
+    Column("action", Text, nullable=False),
+    Column("actor_id", UUID(as_uuid=True), nullable=True),
+    Column("on_behalf_of", UUID(as_uuid=True), nullable=True),
+    Column("comment", Text, nullable=True),
+    Column("auth_strength", Text, nullable=True),
+    Column("ip_address", Text, nullable=True),
+    Column("guard_result", JSONB, nullable=True),
+    Column("supersedes_id", UUID(as_uuid=True), nullable=True),
+    Column("status", Text, nullable=False),
+    Column("countersigns_id", UUID(as_uuid=True), nullable=True),
+    Column("assurance_level", SmallInteger, nullable=True),
+    Column("assurance_method", Text, nullable=True),
+    Column("authenticated_at", TIMESTAMP(timezone=True), nullable=True),
+    Column("device_id", UUID(as_uuid=True), nullable=True),
+    Column("prev_hash", Text, nullable=False),
+    Column("entry_hash", Text, nullable=False),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
 )

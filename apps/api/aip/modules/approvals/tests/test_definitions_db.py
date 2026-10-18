@@ -79,10 +79,10 @@ async def test_publishing_v2_never_moves_instances_started_under_v1(db: TenantDb
     v1 = await publish_new(db, demo_spec())
     r1, r2 = uuid4(), uuid4()
     async with db.with_tenant(TENANT_A_ID) as conn:
-        i1 = await approvals.start_instance(conn, "inspection", r1, None)
+        i1 = await approvals.get_or_start_instance(conn, "inspection", r1, None)
     v2 = await publish_new(db, v2_spec())
     async with db.with_tenant(TENANT_A_ID) as conn:
-        i2 = await approvals.start_instance(conn, "inspection", r2, None)
+        i2 = await approvals.get_or_start_instance(conn, "inspection", r2, None)
         rows = dict(
             (await conn.execute(text("SELECT id, status FROM workflow_definitions"))).tuples().all()
         )
@@ -170,9 +170,9 @@ async def test_start_instance_is_idempotent(db: TenantDb) -> None:
     await publish_new(db, demo_spec())
     record = uuid4()
     async with db.with_tenant(TENANT_A_ID) as conn:
-        first = await approvals.start_instance(conn, "inspection", record, None)
+        first = await approvals.get_or_start_instance(conn, "inspection", record, None)
     async with db.with_tenant(TENANT_A_ID) as conn:
-        second = await approvals.start_instance(conn, "inspection", record, None)
+        second = await approvals.get_or_start_instance(conn, "inspection", record, None)
         count = (
             await conn.execute(
                 text("SELECT count(*) FROM workflow_instances WHERE record_id = :r"), {"r": record}
@@ -214,7 +214,7 @@ async def test_at_most_one_active_version_per_key_and_scope(db: TenantDb) -> Non
 async def test_other_tenants_and_unset_context_see_nothing(db: TenantDb) -> None:
     await publish_new(db, demo_spec())
     async with db.with_tenant(TENANT_A_ID) as conn:
-        await approvals.start_instance(conn, "inspection", uuid4(), None)
+        await approvals.get_or_start_instance(conn, "inspection", uuid4(), None)
     tables = ("workflow_definitions", "workflow_instances", "workflow_definition_audit")
     async with db.with_tenant(TENANT_B_ID) as conn:
         for table in tables:

@@ -9,7 +9,16 @@ offending field (``("transitions", 0, "to")``), so an editor can highlight it:
 - ``(from, action)`` is unique; terminal states have no outgoing transitions;
 - every state is reachable from ``initial``.
 
-``guard`` (JsonLogic) is stored as given; APPROVALS-03 evaluates it.
+``guard`` (JSONLogic) must pass ``validate_guard`` (allow-listed operators, size limits),
+reported at ``("transitions", i, "guard")``; the transition service evaluates it (APPROVALS-02
+Part B).
+``guardMessageKey`` is the term key shown when the guard is false; ``signoffAction`` names the
+ADR 0010 sign-off policy a ``critical`` transition is checked against (``workflow.<action>`` when
+absent).
+
+The HTTP models (``InstanceStart``, ``TransitionRequest``, ``InstanceOut``, ``TransitionOut``,
+``HistoryOut``) use camelCase JSON and forbid unknown keys, so a client can never send a guard
+outcome or any other server-decided field.
 """
 
 from __future__ import annotations
@@ -20,11 +29,24 @@ from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic.alias_generators import to_camel
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
+from aip.modules.approvals.guards.jsonlogic import GuardError, validate_guard
+
 __all__ = [
+    "ApprovalsErrorBody",
+    "AssuranceOut",
+    "AvailableTransition",
+    "DecisionOut",
+    "DecisionStatus",
     "DefinitionStatus",
+    "HistoryOut",
+    "InstanceOut",
+    "InstanceStart",
     "StateSpec",
+    "TransitionOut",
+    "TransitionRequest",
     "TransitionSpec",
     "WorkflowDefinition",
     "WorkflowDefinitionSpec",
@@ -35,7 +57,11 @@ __all__ = [
 Code = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]*$", max_length=63)]
 TermKey = Annotated[str, Field(pattern=r"^[a-z0-9_.]+$", max_length=200)]
 PermissionCode = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$")]
+SignoffAction = Annotated[
+    str, Field(pattern=r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$", max_length=100)
+]
 DefinitionStatus = Literal["draft", "active", "retired"]
+DecisionStatus = Literal["applied", "pending_countersign"]
 
 
 class _Spec(BaseModel):
@@ -57,6 +83,8 @@ class TransitionSpec(_Spec):
     side_effects: tuple[dict[str, Any], ...] = Field(default=(), alias="sideEffects")
     critical: bool = False
     label_key: TermKey = Field(alias="labelKey")
+    guard_message_key: TermKey | None = Field(default=None, alias="guardMessageKey")
+    signoff_action: SignoffAction | None = Field(default=None, alias="signoffAction")
 
 
 class WorkflowDefinitionSpec(_Spec):
@@ -112,6 +140,11 @@ def _graph_issues(spec: WorkflowDefinitionSpec) -> list[InitErrorDetails]:
                 )
             )
         seen.add((t.from_state, t.action))
+        if t.guard is not None:
+            try:
+                validate_guard(t.guard)
+            except GuardError as exc:
+                found.append(_issue(("transitions", i, "guard"), str(exc), t.guard))
 
     if spec.initial in declared:
         reached = {spec.initial}
@@ -169,3 +202,90 @@ class WorkflowInstance(BaseModel):
     project_id: UUID | None
     current_state: str
     sync_version: int
+
+
+class _Http(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+        serialize_by_alias=True,
+        extra="forbid",
+        frozen=True,
+    )
+
+
+class ApprovalsErrorBody(_Http):
+    code: str
+    message_key: str | None = None
+
+
+class InstanceStart(_Http):
+    record_type: Code
+    record_id: UUID
+    project_id: UUID | None = None
+
+
+class TransitionRequest(_Http):
+    action: Code
+    comment: str | None = Field(default=None, max_length=2000)
+    expected_sync_version: int | None = Field(default=None, ge=1)
+
+
+class AvailableTransition(_Http):
+    action: str
+    to_state: str
+    label_key: str
+    critical: bool
+    allowed: bool
+    reason_key: str | None = None
+
+
+class InstanceOut(_Http):
+    id: UUID
+    record_type: str
+    record_id: UUID
+    project_id: UUID | None
+    definition_id: UUID
+    definition_key: str
+    version: int
+    current_state: str
+    sync_version: int
+    pending_countersign: str | None = None
+    available_transitions: list[AvailableTransition]
+
+
+class AssuranceOut(_Http):
+    level: int | None
+    method: str | None
+    authenticated_at: datetime | None
+    device_id: UUID | None
+
+
+class DecisionOut(_Http):
+    id: UUID
+    seq: int
+    from_state: str
+    to_state: str
+    action: str
+    actor_id: UUID | None
+    on_behalf_of: UUID | None
+    comment: str | None
+    auth_strength: str | None
+    status: DecisionStatus
+    countersigns_id: UUID | None
+    assurance: AssuranceOut
+    guard_result: dict[str, Any] | None
+    prev_hash: str
+    entry_hash: str
+    created_at: datetime
+
+
+class TransitionOut(_Http):
+    instance: InstanceOut
+    decision: DecisionOut
+
+
+class HistoryOut(_Http):
+    entries: list[DecisionOut]
+    chain_valid: bool
+    broken_at_seq: int | None = None

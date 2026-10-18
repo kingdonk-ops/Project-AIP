@@ -8,8 +8,9 @@ request context (``None`` outside a request, e.g. in a seed job), never from the
   scopes), serialised per tenant and key by a transaction advisory lock.
 - ``update_draft`` and ``publish`` work only on a ``draft``; ``DefinitionImmutableError`` otherwise.
 - ``publish`` retires the active version of the same key and scope (tenant-wide or one project),
-  activates the draft and writes the ``{before, after}`` audit row, all in the caller's
-  transaction.
+  activates the draft, writes the ``{before, after}`` audit row and emits
+  ``workflow.definition_published`` v1 (APPROVALS-02), all in the caller's transaction. Emitting
+  needs a request context.
 - ``get_active_definition`` prefers the project's definition, then the tenant-wide one.
 - ``start_instance`` pins the instance to the version active now; a second call for the same record
   returns the existing instance, so later publishes never move it.
@@ -29,6 +30,7 @@ from aip.modules.approvals.errors import (
     DefinitionNotFoundError,
     NoActiveDefinitionError,
 )
+from aip.modules.approvals.events import WORKFLOW_DEFINITION_PUBLISHED, DefinitionPublished
 from aip.modules.approvals.schemas import (
     WorkflowDefinition,
     WorkflowDefinitionSpec,
@@ -36,8 +38,9 @@ from aip.modules.approvals.schemas import (
     validate_spec,
 )
 from aip.platform.context import ContextMissingError, get_context, new_request_id
+from aip.platform.events import Aggregate, emit
 
-__all__ = ["DefinitionsService", "InstancesService"]
+__all__ = ["DefinitionsService", "InstancesService", "definition_from_row", "new_id"]
 
 
 def new_id() -> UUID:
@@ -51,7 +54,7 @@ def _actor() -> UUID | None:
         return None
 
 
-def _definition(row: RowMapping) -> WorkflowDefinition:
+def definition_from_row(row: RowMapping) -> WorkflowDefinition:
     spec = WorkflowDefinitionSpec.model_validate(
         {
             "states": row["states"],
@@ -88,7 +91,7 @@ async def _draft_for_update(conn: AsyncConnection, definition_id: UUID) -> Workf
     row = await repo.get_definition_for_update(conn, definition_id)
     if row is None:
         raise DefinitionNotFoundError(f"workflow definition {definition_id} not found")
-    definition = _definition(row)
+    definition = definition_from_row(row)
     if definition.status != "draft":
         raise DefinitionImmutableError(
             f"workflow definition {definition_id} is {definition.status}; only drafts change"
@@ -121,7 +124,7 @@ class DefinitionsService:
             spec=checked.to_json(),
             created_by=_actor(),
         )
-        return _definition(row)
+        return definition_from_row(row)
 
     async def update_draft(
         self, conn: AsyncConnection, definition_id: UUID, spec: object
@@ -129,7 +132,7 @@ class DefinitionsService:
         """Replace a draft's spec; an active or retired one raises ``DefinitionImmutableError``."""
         checked = validate_spec(spec)
         await _draft_for_update(conn, definition_id)
-        return _definition(await repo.update_spec(conn, definition_id, checked.to_json()))
+        return definition_from_row(await repo.update_spec(conn, definition_id, checked.to_json()))
 
     async def publish(self, conn: AsyncConnection, definition_id: UUID) -> WorkflowDefinition:
         """Activate a draft, retiring the active version of its key and scope, with an audit row."""
@@ -137,17 +140,34 @@ class DefinitionsService:
         await repo.lock_key(conn, draft.key)
         previous_row = await repo.active_in_scope_for_update(conn, draft.key, draft.project_id)
         before = None
+        previous_id: UUID | None = None
         if previous_row is not None:
-            previous = _definition(previous_row)
+            previous = definition_from_row(previous_row)
             before = _snapshot(previous)
+            previous_id = previous.id
             await repo.set_status(conn, previous.id, "retired")
-        published = _definition(await repo.set_status(conn, definition_id, "active"))
+        published = definition_from_row(await repo.set_status(conn, definition_id, "active"))
         await repo.insert_audit(
             conn,
             id=new_id(),
             definition_id=definition_id,
             actor_id=_actor(),
             change={"before": before, "after": _snapshot(published)},
+        )
+        payload = DefinitionPublished(
+            definition_id=published.id,
+            key=published.key,
+            version=published.version,
+            record_type=published.record_type,
+            project_id=published.project_id,
+            previous_definition_id=previous_id,
+        ).model_dump(mode="json")
+        await emit(
+            conn,
+            WORKFLOW_DEFINITION_PUBLISHED,
+            1,
+            Aggregate("workflow_definition", published.id),
+            payload,
         )
         return published
 
@@ -158,7 +178,7 @@ class DefinitionsService:
         row = await repo.resolve_active(conn, record_type, project_id)
         if row is None:
             raise NoActiveDefinitionError(f"no active workflow definition for {record_type}")
-        return _definition(row)
+        return definition_from_row(row)
 
 
 class InstancesService:

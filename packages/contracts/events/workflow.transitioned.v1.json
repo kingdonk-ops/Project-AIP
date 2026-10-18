@@ -1,0 +1,77 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "title": "Action",
+      "type": "string"
+    },
+    "actorId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Actorid"
+    },
+    "definitionKey": {
+      "title": "Definitionkey",
+      "type": "string"
+    },
+    "definitionVersion": {
+      "title": "Definitionversion",
+      "type": "integer"
+    },
+    "from": {
+      "title": "From",
+      "type": "string"
+    },
+    "instanceId": {
+      "format": "uuid",
+      "title": "Instanceid",
+      "type": "string"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Projectid"
+    },
+    "recordId": {
+      "format": "uuid",
+      "title": "Recordid",
+      "type": "string"
+    },
+    "recordType": {
+      "title": "Recordtype",
+      "type": "string"
+    },
+    "to": {
+      "title": "To",
+      "type": "string"
+    }
+  },
+  "required": [
+    "instanceId",
+    "recordType",
+    "recordId",
+    "projectId",
+    "from",
+    "to",
+    "action",
+    "actorId",
+    "definitionKey",
+    "definitionVersion"
+  ],
+  "title": "WorkflowTransitioned",
+  "type": "object"
+}

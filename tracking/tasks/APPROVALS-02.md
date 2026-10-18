@@ -2,6 +2,7 @@
 
 <!-- hand-edited: merged APPROVALS-03 (Part B) per board slim 2026-10-17 -->
 <!-- hand-edited: sign-off assurance per ADR 0010 -->
+<!-- hand-edited: built on the Python backend; ADR 0035 records where the code differs from this NestJS-era text -->
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
 | Field | Value |

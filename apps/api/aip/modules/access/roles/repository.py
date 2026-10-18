@@ -31,6 +31,7 @@ __all__ = [
     "live_catalogue",
     "lock_tenant_roles",
     "privileged_codes",
+    "role_codes",
     "role_in_use",
     "role_permissions",
     "set_role_permissions",
@@ -268,6 +269,27 @@ async def has_role(
         {"user": user_id, "code": role_code, "project": project_id},
     )
     return bool(row.scalar_one())
+
+
+async def role_codes(
+    conn: AsyncConnection, user_id: UUID, project_id: UUID | None = None
+) -> list[str]:
+    """The codes of the roles the user actively holds at tenant scope, or (with ``project_id``)
+    on that project, sorted. Same scope rules as ``has_role``."""
+    rows = await conn.execute(
+        text(
+            "SELECT DISTINCT r.code FROM role_assignment ra"
+            " JOIN role r ON r.id = ra.role_id AND r.deleted_at IS NULL"
+            " WHERE ra.user_id = :user AND"
+            " ra.tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid AND"
+            " (ra.scope_type = 'tenant' OR"
+            "  (ra.scope_type = 'project' AND ra.project_id = CAST(:project AS uuid))) AND"
+            f" {ACTIVE_ASSIGNMENT}"
+            " ORDER BY r.code"
+        ),
+        {"user": user_id, "project": project_id},
+    )
+    return [str(r[0]) for r in rows]
 
 
 async def count_holders(

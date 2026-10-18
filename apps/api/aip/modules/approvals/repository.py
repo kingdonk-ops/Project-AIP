@@ -1,4 +1,4 @@
-"""Data access for approvals (APPROVALS-01).
+"""Data access for approvals (APPROVALS-01, APPROVALS-02).
 
 Repositories receive the tenant-bound connection from ``with_tenant`` and never create their own
 (ADR 0002). ``tenant_id`` on new rows is the connection's ``app.tenant_id``, never a parameter.
@@ -86,6 +86,53 @@ _INSTANCE_COLUMNS = (
     "i.id, i.definition_id, d.version, i.record_type, i.record_id, i.project_id, "
     "i.current_state, i.sync_version"
 )
+
+_GET_DEFINITION = text(f"""
+SELECT {_DEFINITION_COLUMNS} FROM workflow_definitions WHERE id = :id
+""")
+
+# Locks the instance row only (FOR UPDATE OF i): concurrent transitions on one instance queue here,
+# and the definition row stays free for a concurrent publish.
+_INSTANCE_BY_ID = f"""
+SELECT {_INSTANCE_COLUMNS}, d.key AS definition_key
+FROM workflow_instances i JOIN workflow_definitions d ON d.id = i.definition_id
+WHERE i.id = :id AND i.deleted_at IS NULL
+"""
+_GET_INSTANCE_BY_ID = text(_INSTANCE_BY_ID)
+_GET_INSTANCE_FOR_UPDATE = text(_INSTANCE_BY_ID + "FOR UPDATE OF i")
+
+_DECISION_COLUMNS = (
+    "id, tenant_id, instance_id, step_id, seq, from_state, to_state, action, actor_id, "
+    "on_behalf_of, comment, auth_strength, ip_address, guard_result, supersedes_id, status, "
+    "countersigns_id, assurance_level, assurance_method, authenticated_at, device_id, prev_hash, "
+    "entry_hash, created_at"
+)
+
+_LAST_DECISION = text(f"""
+SELECT {_DECISION_COLUMNS} FROM workflow_decision_history
+WHERE instance_id = :instance_id
+ORDER BY seq DESC
+LIMIT 1
+""")
+
+_LIST_DECISIONS = text(f"""
+SELECT {_DECISION_COLUMNS} FROM workflow_decision_history
+WHERE instance_id = :instance_id
+ORDER BY seq
+""")
+
+_INSERT_DECISION = text("""
+INSERT INTO workflow_decision_history
+  (id, tenant_id, instance_id, step_id, seq, from_state, to_state, action, actor_id,
+   on_behalf_of, comment, auth_strength, ip_address, guard_result, status, countersigns_id,
+   assurance_level, assurance_method, authenticated_at, device_id, prev_hash, entry_hash,
+   created_at)
+VALUES
+  (:id, :tenant_id, :instance_id, :step_id, :seq, :from_state, :to_state, :action, :actor_id,
+   :on_behalf_of, :comment, :auth_strength, :ip_address, CAST(:guard_result AS jsonb), :status,
+   :countersigns_id, :assurance_level, :assurance_method, :authenticated_at, :device_id,
+   :prev_hash, :entry_hash, :created_at)
+""")
 
 _GET_INSTANCE = text(f"""
 SELECT {_INSTANCE_COLUMNS}
@@ -177,3 +224,32 @@ async def get_instance(
 
 async def insert_instance(conn: AsyncConnection, **values: Any) -> RowMapping:
     return (await conn.execute(_INSERT_INSTANCE, values)).mappings().one()
+
+
+async def get_definition(conn: AsyncConnection, definition_id: UUID) -> RowMapping:
+    """A definition by id, whatever its status (an instance's pinned version may be retired)."""
+    return (await conn.execute(_GET_DEFINITION, {"id": definition_id})).mappings().one()
+
+
+async def get_instance_by_id(
+    conn: AsyncConnection, instance_id: UUID, *, for_update: bool = False
+) -> RowMapping | None:
+    stmt = _GET_INSTANCE_FOR_UPDATE if for_update else _GET_INSTANCE_BY_ID
+    return (await conn.execute(stmt, {"id": instance_id})).mappings().one_or_none()
+
+
+async def last_decision(conn: AsyncConnection, instance_id: UUID) -> RowMapping | None:
+    params = {"instance_id": instance_id}
+    return (await conn.execute(_LAST_DECISION, params)).mappings().one_or_none()
+
+
+async def list_decisions(conn: AsyncConnection, instance_id: UUID) -> list[RowMapping]:
+    params = {"instance_id": instance_id}
+    return list((await conn.execute(_LIST_DECISIONS, params)).mappings().all())
+
+
+async def insert_decision(conn: AsyncConnection, entry: dict[str, Any]) -> None:
+    """Insert a fully built entry (its hash is computed over exactly these values)."""
+    guard = entry["guard_result"]
+    params = {**entry, "guard_result": None if guard is None else json.dumps(guard)}
+    await conn.execute(_INSERT_DECISION, params)
