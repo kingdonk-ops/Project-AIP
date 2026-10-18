@@ -146,6 +146,20 @@ def test_nginx_repeats_every_security_header(conf: Path) -> None:
             assert f'add_header {name} "{value}" always;' in body, f"{path.strip()}: {name}"
 
 
+HSTS = 'add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;'
+
+
+@pytest.mark.parametrize("conf", NGINX_CONFS, ids=lambda p: str(p.relative_to(ROOT)))
+def test_nginx_sends_hsts_on_every_response(conf: Path) -> None:
+    # SECURITY-11 Part B (review 11 M2, ADR 0026): TLS ends in front of both servers, so nginx
+    # sends HSTS at server level and in every location that drops the inherited headers.
+    text = conf.read_text()
+    assert HSTS in text.split("\n    location", 1)[0]
+    for path, body in re.findall(r"location ([^{]+)\{(.*?)\n    \}", text, flags=re.S):
+        if "add_header" in body:
+            assert HSTS in body, path.strip()
+
+
 def test_the_keycloak_console_is_not_public() -> None:
     text = (ROOT / "infra" / "coolify" / "nginx.conf").read_text()
     assert "location /auth/admin/ {\n        return 404;" in text

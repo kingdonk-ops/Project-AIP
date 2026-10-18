@@ -75,6 +75,7 @@ from aip.platform.context import (
     get_context,
 )
 from aip.platform.db.tls import check_transport_security
+from aip.platform.dev_secrets import check_no_dev_secrets
 from aip.platform.events.dead_letter_routes import (
     create_router as create_dead_letter_router,
 )
@@ -90,6 +91,7 @@ from aip.platform.flags import requires_flag
 from aip.platform.flags.routes import FLAGS_MANAGE_PERMISSION
 from aip.platform.flags.routes import create_router as create_flags_router
 from aip.platform.http import install_error_handlers
+from aip.platform.http.edge import BodySizeLimitMiddleware, SecurityHeadersMiddleware
 from aip.platform.modules.registry import load_modules
 from aip.platform.modules.routes import create_router as create_modules_router
 from aip.platform.observability.logging import RequestIdMiddleware, configure_logging
@@ -136,6 +138,7 @@ def create_app(
     configure_logging()
     validate_capability_settings()  # unknown OBJECT_STORE / PDF_RENDERER stops startup (STACK-02)
     check_transport_security()  # production needs verified TLS to Postgres and Redis (STACK-07)
+    check_no_dev_secrets()  # public dev secrets only in development and test (SECURITY-11)
     modules = load_modules(modules_package, disabled_modules)
     # ARCH-06: load each module's events.py and the platform events, then fail fast if a manifest
     # and its registered models disagree or a released payload schema drifted from its contract.
@@ -272,8 +275,12 @@ def create_app(
     # Outside the context middleware: resolve the session cookie and check CSRF first. CSRF is
     # always on; an injected resolver (tests) only skips the session cookie resolution.
     add_session_middleware(app, resolve_sessions=identity_drives_context)
-    # Added last, so it runs first: the request id exists before the context is resolved.
+    # SECURITY-11 Part B: refuse an oversized body before any other middleware reads it.
+    app.add_middleware(BodySizeLimitMiddleware)
+    # The request id exists before the context is resolved, and the 413 above is logged.
     app.add_middleware(RequestIdMiddleware)
+    # Outermost: every response carries the security headers, even the request-id 500.
+    app.add_middleware(SecurityHeadersMiddleware)
     if tracing:
         app.state.tracing = init_tracing(app)
     return app

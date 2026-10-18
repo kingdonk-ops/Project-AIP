@@ -8,7 +8,9 @@ compose (``localhost:8180`` from the host, ``keycloak:8080`` inside the network)
 - ``KEYCLOAK_URL``: what the API calls server to server (token endpoint, JWKS).
 
 ``OIDC_CLIENT_SECRET`` and ``PREAUTH_COOKIE_KEY`` are secrets: dev values are obviously fake and
-deployed environments take them from their secret store.
+deployed environments take them from their secret store. The dev values are refused unless
+``AIP_ENV`` is development or test (an allowlist, SECURITY-11 Part D; ``aip.platform.dev_secrets``
+also stops startup).
 """
 
 from __future__ import annotations
@@ -20,12 +22,9 @@ from functools import cached_property
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-PREAUTH_KEY_BYTES = 32  # A256GCM
+from aip.platform.dev_secrets import DEV_SECRET_ENVS, DEV_SECRETS
 
-# The compose dev default (base64url of an obviously fake 32-byte string). Refused in production.
-DEV_PREAUTH_COOKIE_KEY = (
-    "ZGV2LW9ubHktcHJlYXV0aC1jb29raWUta2V5LWZha2U"  # dev-only-preauth-cookie-key-fake
-)
+PREAUTH_KEY_BYTES = 32  # A256GCM
 
 
 class IdentitySettingsError(ValueError):
@@ -60,11 +59,16 @@ class IdentitySettings(BaseSettings):
     @model_validator(mode="after")
     def _check(self) -> IdentitySettings:
         decode_preauth_key(self.preauth_cookie_key.get_secret_value())
-        if (
-            self.aip_env == "production"
-            and self.preauth_cookie_key.get_secret_value() == DEV_PREAUTH_COOKIE_KEY
+        if self.aip_env in DEV_SECRET_ENVS:
+            return self
+        for name, secret in (
+            ("OIDC_CLIENT_SECRET", self.oidc_client_secret),
+            ("PREAUTH_COOKIE_KEY", self.preauth_cookie_key),
         ):
-            raise IdentitySettingsError("the dev PREAUTH_COOKIE_KEY must not be used in production")
+            if secret.get_secret_value() in DEV_SECRETS[name]:
+                raise IdentitySettingsError(
+                    f"the dev {name} must not be used with AIP_ENV={self.aip_env}"
+                )
         return self
 
     @cached_property

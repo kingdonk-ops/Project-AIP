@@ -34,9 +34,8 @@ tenant is marked `is_real_customer`. AWS staging (OPS-07/09/10) comes before any
 4. **Domain**: on the `web` service only, set `https://<demo-host>:8080` (Coolify's
    `docker_compose_domains`, port 8080 is the container port). Coolify issues the certificate.
    Leave every other service without a domain.
-5. **HSTS**: in the resource's proxy settings make sure HTTPS redirect is on and add the Traefik
-   label `traefik.http.middlewares.aip-hsts.headers.stsSeconds=31536000` (plus
-   `stsIncludeSubdomains=true`) to the `web` router's middlewares. Confirm with
+5. **HTTPS redirect**: in the resource's proxy settings make sure HTTPS redirect is on. The `web`
+   nginx sends HSTS itself (SECURITY-11); confirm with
    `curl -sI https://<demo-host>/ | grep -i strict-transport-security`.
 6. **Environment variables**: set every variable in `env.example` (resource > Environment
    Variables). Generate secrets as the file says; `APP_ORIGIN` is `https://<demo-host>` and

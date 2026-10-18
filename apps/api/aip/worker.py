@@ -31,6 +31,7 @@ from aip.modules.ops.runner import memory_guard
 from aip.modules.terms.api import install as install_term_resolver
 from aip.platform.db.engine import dispose_engine, dispose_jobs_engine, get_jobs_engine
 from aip.platform.db.tls import check_transport_security
+from aip.platform.dev_secrets import check_no_dev_secrets
 from aip.platform.events.jobs import active_subscribers
 from aip.platform.jobs.app import DEFAULT_QUEUE, QUEUES, run_worker
 from aip.platform.modules.registry import (
@@ -123,6 +124,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     configure_logging()
     check_transport_security()  # STACK-07: production needs verified TLS to Postgres and Redis
+    check_no_dev_secrets()  # SECURITY-11: public dev secrets only in development and test
     for name in PLATFORM_JOB_MODULES:
         importlib.import_module(name)
     imported = import_job_modules()
