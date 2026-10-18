@@ -20,6 +20,7 @@ from aip.platform.db.soft_delete import soft_delete
 
 __all__ = [
     "Page",
+    "count_live",
     "delete_site",
     "get_project",
     "get_site",
@@ -74,6 +75,11 @@ async def list_page(
     order = (key.desc(), table.c.id.desc()) if page.descending else (key.asc(), table.c.id.asc())
     stmt = stmt.order_by(*order).limit(page.limit + 1)
     return [dict(r) for r in (await conn.execute(stmt)).mappings()]
+
+
+async def count_live(conn: AsyncConnection, table: Table, *filters: ColumnElement[bool]) -> int:
+    stmt = select(func.count()).select_from(table).where(_live(table), *filters)
+    return int((await conn.execute(stmt)).scalar_one())
 
 
 def search(table: Table, q: str) -> ColumnElement[bool]:

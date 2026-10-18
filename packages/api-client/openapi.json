@@ -5455,8 +5455,11 @@
               "default": "code",
               "enum": [
                 "code",
+                "-code",
                 "name",
-                "updated_at"
+                "-name",
+                "updated_at",
+                "-updated_at"
               ],
               "title": "Sort",
               "type": "string"
@@ -5575,6 +5578,108 @@
           }
         },
         "summary": "Create Project",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/export.csv": {
+      "get": {
+        "description": "The same filters and sort as the list, as one CSV file (PROJECTS-06, DESIGN-03).",
+        "operationId": "projects_export",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "code",
+              "enum": [
+                "code",
+                "-code",
+                "name",
+                "-name",
+                "updated_at",
+                "-updated_at"
+              ],
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": [],
+              "items": {
+                "enum": [
+                  "draft",
+                  "active",
+                  "closing",
+                  "archived"
+                ],
+                "type": "string"
+              },
+              "title": "Status",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "siteId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Siteid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/csv": {}
+            },
+            "description": "The filtered projects as CSV"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, or EXPORT_TOO_LARGE"
+          }
+        },
+        "summary": "Export Projects",
         "tags": [
           "projects"
         ]

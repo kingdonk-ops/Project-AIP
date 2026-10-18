@@ -34,7 +34,7 @@ import {
   type RowSelectionState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Button } from "../components/button";
 import { Checkbox } from "../components/checkbox";
 import { Spinner } from "../components/spinner";
@@ -76,6 +76,8 @@ export interface RegisterTableProps<T> {
   pageSizes?: readonly number[];
   /** Show the free-text search (default true). */
   search?: boolean;
+  /** Shown instead of `register.empty` when the page has no rows (e.g. a first-run call to action). */
+  empty?: ReactNode;
 }
 
 function directions(column: RegisterColumn<unknown>): readonly SortDir[] {
@@ -113,6 +115,7 @@ export function RegisterTable<T>({
   prefs = localStorageColumnPrefs,
   pageSizes = PAGE_SIZES,
   search = true,
+  empty,
 }: RegisterTableProps<T>) {
   const result = useQuery(query);
   const pageSizeId = useId();
@@ -291,7 +294,12 @@ export function RegisterTable<T>({
             ) : result.isError ? (
               <tr className="aip-table__row">
                 <td className="aip-table__cell" colSpan={colSpan}>
-                  <span role="alert">{tr("register.error")}</span>{" "}
+                  <span role="alert">
+                    {tr("register.error")}
+                    {result.requestId ? (
+                      <span className="aip-register__ref"> {tr("register.reference", { id: result.requestId })}</span>
+                    ) : null}
+                  </span>{" "}
                   <Button variant="secondary" onClick={() => void result.refetch()}>
                     {tr("register.retry")}
                   </Button>
@@ -300,7 +308,7 @@ export function RegisterTable<T>({
             ) : rows.length === 0 ? (
               <tr className="aip-table__row">
                 <td className="aip-table__cell" colSpan={colSpan}>
-                  {tr("register.empty")}
+                  {empty ?? tr("register.empty")}
                 </td>
               </tr>
             ) : (

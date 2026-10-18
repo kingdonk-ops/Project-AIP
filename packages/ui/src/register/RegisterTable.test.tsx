@@ -136,6 +136,17 @@ describe("RegisterTable", () => {
     expect(refetch).toHaveBeenCalled();
   });
 
+  it("shows the failed request's reference with the error", () => {
+    render(<Harness pages={() => result(undefined, { isError: true, requestId: "req-1234" })} />);
+    expect(within(screen.getByRole("alert")).getByText(/Reference: req-1234/)).toBeTruthy();
+  });
+
+  it("renders the caller's empty state in place of the default text", () => {
+    render(<Harness pages={() => result({ items: [], nextCursor: null })} empty={<p>Nothing here yet</p>} />);
+    expect(screen.getByText("Nothing here yet")).toBeTruthy();
+    expect(screen.queryByText("Nothing matches these filters.")).toBeNull();
+  });
+
   it("renders a populated register without axe violations", async () => {
     const { container } = render(<Harness pages={pagesOf({ first: { items: rows(3), next: "c1" } })} />);
     expect(screen.getByRole("table", { name: "Projects" })).toBeTruthy();

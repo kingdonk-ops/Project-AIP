@@ -1,4 +1,5 @@
-/* Projects register and create form (PROJECTS-02). Tokens from @aip/ui. */
+/* Projects register and create form (PROJECTS-02). Tokens from @aip/ui; the table, filters and
+   pager are RegisterTable's own (PROJECTS-06). */
 
 .projects-register,
 .projects-form {
@@ -15,19 +16,7 @@
   gap: var(--space-3);
 }
 
-.projects-register__filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-3);
-}
-
-.projects-register__filter {
-  display: grid;
-  gap: var(--space-2);
-  min-width: 12rem;
-}
-
+/* The create form's site picker. */
 .projects-register__select {
   min-height: 2.5rem;
   padding: 0 var(--space-3);
@@ -42,28 +31,14 @@
   outline-offset: 2px;
 }
 
-/* Wide registers scroll inside their own box, never the page. */
-.projects-register__table {
-  overflow-x: auto;
-}
-
 .projects-register__mono {
   font-family: var(--font-mono);
 }
 
-.projects-register__state {
+.projects-register__empty {
   display: grid;
   justify-items: start;
   gap: var(--space-2);
-  padding: var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-muted);
-}
-
-.projects-register__ref {
-  color: var(--foreground-muted);
-  font-family: var(--font-mono);
 }
 
 .projects-register__notice {
@@ -72,7 +47,6 @@
   background: var(--surface-muted);
 }
 
-.projects-register__pages,
 .projects-form__actions {
   display: flex;
   gap: var(--space-2);

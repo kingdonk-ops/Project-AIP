@@ -607,6 +607,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Projects
+         * @description The same filters and sort as the list, as one CSV file (PROJECTS-06, DESIGN-03).
+         */
+        get: operations["projects_export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}": {
         parameters: {
             query?: never;
@@ -3453,7 +3473,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 cursor?: string | null;
-                sort?: "code" | "name" | "updated_at";
+                sort?: "code" | "-code" | "name" | "-name" | "updated_at" | "-updated_at";
                 status?: ("draft" | "active" | "closing" | "archived")[];
                 siteId?: string | null;
                 q?: string | null;
@@ -3519,6 +3539,40 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    projects_export: {
+        parameters: {
+            query?: {
+                sort?: "code" | "-code" | "name" | "-name" | "updated_at" | "-updated_at";
+                status?: ("draft" | "active" | "closing" | "archived")[];
+                siteId?: string | null;
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The filtered projects as CSV */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation error, or EXPORT_TOO_LARGE */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
             };
         };
     };

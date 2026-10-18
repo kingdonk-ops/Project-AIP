@@ -25,6 +25,7 @@ import type {
   ProjectOut,
   ProjectPage,
   ProjectUpdate,
+  ProjectsExportParams,
   ProjectsListParams
 } from '../../model';
 
@@ -295,7 +296,135 @@ export const useProjectsCreate = <TError = ErrorBody | void,
       > => {
       return useMutation(getProjectsCreateMutationOptions(options), queryClient);
     }
-    export type projectsGetResponse200 = {
+    export type projectsExportResponse422 = {
+  data: ErrorBody
+  status: 422
+}
+
+;
+export type projectsExportResponseError = (projectsExportResponse422) & {
+  headers: Headers;
+};
+
+export type projectsExportResponse = (projectsExportResponseError)
+
+export const getProjectsExportUrl = (params?: ProjectsExportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["status"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? 'null' : String(v));
+      });
+      return;
+    }
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/projects/export.csv?${stringifiedParams}` : `/api/v1/projects/export.csv`
+}
+
+/**
+ * The same filters and sort as the list, as one CSV file (PROJECTS-06, DESIGN-03).
+ * @summary Export Projects
+ */
+export const projectsExport = async (params?: ProjectsExportParams, options?: Parameters<typeof apiFetch>[1]): Promise<projectsExportResponse> => {
+
+  return apiFetch<projectsExportResponse>(getProjectsExportUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getProjectsExportQueryKey = (params?: ProjectsExportParams,) => {
+    return [
+    `/api/v1/projects/export.csv`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getProjectsExportQueryOptions = <TData = Awaited<ReturnType<typeof projectsExport>>, TError = ErrorBody>(params?: ProjectsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsExport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getProjectsExportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof projectsExport>>> = ({ signal }) => projectsExport(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof projectsExport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ProjectsExportQueryResult = NonNullable<Awaited<ReturnType<typeof projectsExport>>>
+export type ProjectsExportQueryError = ErrorBody
+
+
+export function useProjectsExport<TData = Awaited<ReturnType<typeof projectsExport>>, TError = ErrorBody>(
+ params: undefined |  ProjectsExportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsExport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof projectsExport>>,
+          TError,
+          Awaited<ReturnType<typeof projectsExport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useProjectsExport<TData = Awaited<ReturnType<typeof projectsExport>>, TError = ErrorBody>(
+ params?: ProjectsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsExport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof projectsExport>>,
+          TError,
+          Awaited<ReturnType<typeof projectsExport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useProjectsExport<TData = Awaited<ReturnType<typeof projectsExport>>, TError = ErrorBody>(
+ params?: ProjectsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsExport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export Projects
+ */
+
+export function useProjectsExport<TData = Awaited<ReturnType<typeof projectsExport>>, TError = ErrorBody>(
+ params?: ProjectsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsExport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getProjectsExportQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type projectsGetResponse200 = {
   data: ProjectOut
   status: 200
 }

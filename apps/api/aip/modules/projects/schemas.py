@@ -32,7 +32,8 @@ __all__ = [
 ]
 
 ProjectStatus = Literal["draft", "active", "closing", "archived"]
-ProjectSort = Literal["code", "name", "updated_at"]
+# A leading "-" sorts descending (PROJECTS-06), the same form as the register URLs.
+ProjectSort = Literal["code", "-code", "name", "-name", "updated_at", "-updated_at"]
 
 _CODE = re.compile(r"^[A-Z0-9][A-Z0-9-]{1,31}$")
 

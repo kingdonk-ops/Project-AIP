@@ -28,6 +28,7 @@ const LABELS: Record<string, string> = {
   "register.loading": "Loading…",
   "register.error": "The list could not be loaded.",
   "register.retry": "Try again",
+  "register.reference": "Reference: {id}",
   "register.any": "Any",
   "register.dateFrom": "From",
   "register.dateTo": "To",

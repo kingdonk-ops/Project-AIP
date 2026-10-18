@@ -62,6 +62,8 @@ export interface RegisterQueryResult<T> {
   refetch: () => unknown;
   /** The total row count when the server knows it (sets `aria-rowcount`). */
   total?: number;
+  /** The failed response's `X-Request-Id`, shown with the error so support can find the request. */
+  requestId?: string | null;
 }
 
 export interface BulkAction<T> {

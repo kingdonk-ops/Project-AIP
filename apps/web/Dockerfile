@@ -23,10 +23,11 @@ RUN pnpm install --frozen-lockfile --filter "@aip/web..." \
 
 FROM nginxinc/nginx-unprivileged:1.30.5-alpine AS runtime
 
-# CVE-2026-4775 (HIGH): the base image's libtiff 4.7.1-r0, fixed in 4.7.2-r0, and the newest nginx tag
-# still ships the old one. Upgrade just that package. Remove this block once the base image has it.
+# CVE-2026-4775 (HIGH): the base image's libtiff 4.7.1-r0, fixed in 4.7.2-r0, and CVE-2026-77214 (HIGH):
+# its libexpat 2.8.5-r0, fixed in 2.9.0-r0. The newest nginx tag still ships the old ones, so upgrade
+# just those packages. Remove each once the base image has the fix.
 USER root
-RUN apk upgrade --no-cache tiff
+RUN apk upgrade --no-cache tiff libexpat
 
 # OPS-11: the Coolify demo build passes `--build-arg NGINX_CONF=infra/coolify/nginx.conf` (adds /auth
 # to Keycloak); Coolify cannot bind-mount it from the repository.

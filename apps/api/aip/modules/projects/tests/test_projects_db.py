@@ -142,6 +142,101 @@ async def test_cursor_pages_have_no_gaps_or_duplicates(
     assert seen == [f"P{n:03d}" for n in range(1, 121)]
 
 
+async def seed_projects(
+    db: TenantDb, count: int, *, status: str = "draft", prefix: str = "P"
+) -> None:
+    await su_execute(
+        db,
+        "INSERT INTO projects (id, tenant_id, code, name, status)"
+        f" SELECT gen_random_uuid(), '{TENANT_A_ID}', '{prefix}' || lpad(n::text, 3, '0'),"
+        f" 'Project ' || n, '{status}' FROM generate_series(1, {count}) AS n",
+    )
+
+
+async def test_descending_sort_pages_without_gaps_and_keeps_its_direction(
+    client: httpx.AsyncClient, db: TenantDb
+) -> None:
+    await seed_projects(db, 120)
+    seen: list[str] = []
+    sizes: list[int] = []
+    params: dict[str, Any] = {"limit": 50, "sort": "-code"}
+    while True:
+        response = await client.get(PROJECTS, params=params, headers=ALICE)
+        assert response.status_code == 200, response.text
+        page = response.json()
+        sizes.append(len(page["items"]))
+        seen += [p["code"] for p in page["items"]]
+        if page["nextCursor"] is None:
+            break
+        params["cursor"] = page["nextCursor"]
+        # A cursor is bound to its direction: the same cursor with the opposite one is refused.
+        flipped = await client.get(PROJECTS, params={**params, "sort": "code"}, headers=ALICE)
+        assert flipped.status_code == 422
+        assert flipped.json() == {"code": "INVALID_CURSOR", "field": "cursor"}
+    assert sizes == [50, 50, 20]
+    assert seen == [f"P{n:03d}" for n in range(120, 0, -1)]
+    assert (await client.get(PROJECTS, params={"sort": "-site"}, headers=ALICE)).status_code == 422
+
+
+# --- CSV export -------------------------------------------------------------------------------
+
+EXPORT = f"{PROJECTS}/export.csv"
+HEADER = "﻿code,name,status,siteId,region,updatedAt"
+
+
+def csv_lines(response: httpx.Response) -> list[str]:
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"] == "text/csv; charset=utf-8"
+    assert response.headers["content-disposition"] == 'attachment; filename="projects.csv"'
+    assert response.text.endswith("\r\n")
+    return response.text.split("\r\n")[:-1]
+
+
+async def test_export_has_the_filtered_rows_the_caller_sees(
+    client: httpx.AsyncClient, db: TenantDb, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(service_module, "_EXPORT_BATCH", 3)  # 7 rows over three batches
+    await seed_projects(db, 7, status="active", prefix="A")
+    await seed_projects(db, 3, status="draft", prefix="D")
+    await create(client, BOB, code="A999", status="active")  # tenant B's: never exported to A
+
+    lines = csv_lines(await client.get(EXPORT, params={"status": "active"}, headers=ALICE))
+    assert len(lines) == 1 + 7
+    assert lines[0] == HEADER
+    assert [line.split(",")[0] for line in lines[1:]] == [f"A{n:03d}" for n in range(1, 8)]
+    assert lines[1].split(",")[1:4] == ["Project 1", "active", ""]
+
+    descending = csv_lines(
+        await client.get(EXPORT, params={"status": "active", "sort": "-code"}, headers=ALICE)
+    )
+    assert [line.split(",")[0] for line in descending[1:]] == [f"A{n:03d}" for n in range(7, 0, -1)]
+    searched = csv_lines(await client.get(EXPORT, params={"q": "d00"}, headers=ALICE))
+    assert len(searched) == 1 + 3
+    assert csv_lines(await client.get(EXPORT, params={"q": "A999"}, headers=ALICE)) == [HEADER]
+
+
+async def test_export_neutralises_formulas(client: httpx.AsyncClient) -> None:
+    await create(client, ALICE, code="F1", name='=HYPERLINK("x")')
+    lines = csv_lines(await client.get(EXPORT, headers=ALICE))
+    assert lines[1].startswith('F1,"\'=HYPERLINK(""x"")",draft,')
+
+
+async def test_export_needs_project_view(client: httpx.AsyncClient, grants: GrantTable) -> None:
+    grants.by_user[ALICE_ID] = {"project.create"}
+    assert (await client.get(EXPORT, headers=ALICE)).status_code == 403
+
+
+async def test_export_refuses_more_rows_than_the_cap(
+    client: httpx.AsyncClient, db: TenantDb, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(service_module, "EXPORT_MAX_ROWS", 5)
+    await seed_projects(db, 6)
+    refused = await client.get(EXPORT, headers=ALICE)
+    assert refused.status_code == 422
+    assert refused.json() == {"code": "EXPORT_TOO_LARGE", "limit": 5}
+    assert len(csv_lines(await client.get(EXPORT, params={"q": "P001"}, headers=ALICE))) == 1 + 1
+
+
 async def test_list_filters_sorts_and_rejects_bad_cursors(client: httpx.AsyncClient) -> None:
     site = (
         await client.post(SITES, json={"code": "KIPS", "name": "Ichthys"}, headers=ALICE)
@@ -157,7 +252,9 @@ async def test_list_filters_sorts_and_rejects_bad_cursors(client: httpx.AsyncCli
 
     assert await codes() == ["A1", "B2", "C3"]
     assert await codes(sort="name") == ["B2", "C3", "A1"]
-    assert await codes(sort="updated_at") == ["C3", "B2", "A1"]
+    assert await codes(sort="-name") == ["A1", "C3", "B2"]
+    assert await codes(sort="updated_at") == ["A1", "B2", "C3"]
+    assert await codes(sort="-updated_at") == ["C3", "B2", "A1"]
     assert await codes(status="active") == ["B2"]
     assert await codes(status=["active", "draft"]) == ["A1", "B2", "C3"]
     assert await codes(siteId=site["id"]) == ["A1"]
