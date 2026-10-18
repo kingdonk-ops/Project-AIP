@@ -64,6 +64,10 @@ values = { code = "'iso-pack'" }
 reason = "states and transitions are JSON arrays (ck_workflow_definitions_states, ck_workflow_definitions_transitions)."
 values = { states = "'[]'::jsonb", transitions = "'[]'::jsonb" }
 
+[tables.workflow_decision_history]
+reason = "seq is positive, the hashes are 64 hex characters and status is applied or pending_countersign (APPROVALS-02 check constraints)."
+values = { seq = "1", prev_hash = "repeat('a', 64)", entry_hash = "repeat('b', 64)", status = "'applied'" }
+
 [tables.access_settings]
 reason = "a trigger refuses to move or delete any row (one per tenant, ACCESS-01), which is stricter than the RLS WITH CHECK the move probe looks for."
 move_refused = "access_settings rows are never deleted or moved"

@@ -11,6 +11,8 @@ Other modules may import only this file. Keep it small and stable.
   (registered by ``aip.main``).
 - ``has_role(conn, user_id, role_code, project_id=None)`` (TENANCY-03): whether the user holds
   the role tenant-wide or on that project; takes the connection from ``with_tenant``.
+- ``role_codes(conn, user_id, project_id=None)`` (APPROVALS-02): the codes of the roles the user
+  actively holds tenant-wide or on that project, sorted (a transition guard's ``actor.roles``).
 
 The authorisation runtime itself (``PolicyService``, ``requires``) is ``aip.platform.access``.
 """
@@ -26,7 +28,7 @@ from aip.modules.access.repository import (
     list_permissions,
 )
 from aip.modules.access.roles.grant_provider import RoleGrantProvider
-from aip.modules.access.roles.repository import has_role
+from aip.modules.access.roles.repository import has_role, role_codes
 from aip.modules.access.roles.seed import SeedReport, seed_default_roles
 from aip.modules.access.service import sync_catalogue
 
@@ -40,6 +42,7 @@ __all__ = [
     "get_api",
     "has_role",
     "list_permissions",
+    "role_codes",
     "seed_default_roles",
     "sync_catalogue",
 ]

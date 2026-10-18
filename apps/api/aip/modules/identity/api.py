@@ -23,6 +23,8 @@ IDENTITY-04: ``create_invite`` (no step-up; TENANCY-05's first-admin invite) and
 ``step_up`` (the FastAPI dependency critical routes add) and ``require_step_up``; sign-off
 assurance (Part D, ADR 0010): ``check_signoff_assurance``, ``derive_assurance``, ``Assurance``,
 ``SignoffDecision``, ``SignoffContext`` and ``SessionFacts`` (APPROVALS-02 calls it).
+APPROVALS-02 also raises ``StepUpRequiredError`` (the 401 ``STEP_UP_REQUIRED`` body, ADR 0034) and
+reads ``mfa_enrolled_at`` to know whether a signer could step up.
 """
 
 from __future__ import annotations
@@ -58,6 +60,7 @@ from aip.modules.identity.repository import (
     find_by_email,
     get_user,
     list_users,
+    mfa_enrolled_at,
     record_auth_event,
     set_user_status,
 )
@@ -68,7 +71,7 @@ from aip.modules.identity.sessions import (
     revoke_session,
     rotate_session,
 )
-from aip.modules.identity.step_up import require_step_up, step_up
+from aip.modules.identity.step_up import StepUpRequiredError, require_step_up, step_up
 from aip.modules.identity.wiring import (
     add_session_middleware,
     install_session_errors,
@@ -89,6 +92,7 @@ __all__ = [
     "SessionFacts",
     "SignoffContext",
     "SignoffDecision",
+    "StepUpRequiredError",
     "UserPage",
     "UserRow",
     "VerifiedExternalIdentity",
@@ -105,6 +109,7 @@ __all__ = [
     "install_session_errors",
     "issue_session",
     "list_users",
+    "mfa_enrolled_at",
     "record_auth_event",
     "require_step_up",
     "revoke_all_for_user",

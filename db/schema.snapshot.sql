@@ -407,6 +407,10 @@ GRANT SELECT,UPDATE ON TABLE public.user_invite TO aip_jobs;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.user_session TO aip_app;
 GRANT SELECT ON TABLE public.user_session TO aip_readonly;
 
+-- Name: TABLE workflow_decision_history; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.workflow_decision_history TO aip_app;
+GRANT SELECT ON TABLE public.workflow_decision_history TO aip_readonly;
+
 -- Name: TABLE workflow_definition_audit; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.workflow_definition_audit TO aip_app;
 GRANT SELECT ON TABLE public.workflow_definition_audit TO aip_readonly;
@@ -707,6 +711,14 @@ ALTER TABLE ONLY public.user_session
 ALTER TABLE ONLY public.user_session
     ADD CONSTRAINT uq_user_session_sid_hash UNIQUE (sid_hash);
 
+-- Name: workflow_decision_history pk_workflow_decision_history; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_decision_history
+    ADD CONSTRAINT pk_workflow_decision_history PRIMARY KEY (id);
+
+-- Name: workflow_decision_history uq_workflow_decision_history_instance_id_seq; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_decision_history
+    ADD CONSTRAINT uq_workflow_decision_history_instance_id_seq UNIQUE (instance_id, seq);
+
 -- Name: workflow_definition_audit pk_workflow_definition_audit; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.workflow_definition_audit
     ADD CONSTRAINT pk_workflow_definition_audit PRIMARY KEY (id, created_at);
@@ -730,6 +742,10 @@ ALTER TABLE ONLY public.workflow_definitions
 -- Name: workflow_instances pk_workflow_instances; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.workflow_instances
     ADD CONSTRAINT pk_workflow_instances PRIMARY KEY (id);
+
+-- Name: workflow_instances uq_workflow_instances_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_instances
+    ADD CONSTRAINT uq_workflow_instances_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: procrastinate_events id; Type: DEFAULT; Schema: public
 ALTER TABLE ONLY public.procrastinate_events ALTER COLUMN id SET DEFAULT nextval('public.procrastinate_events_id_seq'::regclass);
@@ -879,6 +895,14 @@ ALTER TABLE ONLY public.user_invite
 -- Name: user_session fk_user_session_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.user_session
     ADD CONSTRAINT fk_user_session_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
+-- Name: workflow_decision_history fk_workflow_decision_history_instance; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_decision_history
+    ADD CONSTRAINT fk_workflow_decision_history_instance FOREIGN KEY (instance_id, tenant_id) REFERENCES public.workflow_instances(id, tenant_id);
+
+-- Name: workflow_decision_history fk_workflow_decision_history_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_decision_history
+    ADD CONSTRAINT fk_workflow_decision_history_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 -- Name: workflow_definition_audit fk_workflow_definition_audit_definition; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE public.workflow_definition_audit
@@ -2043,6 +2067,12 @@ CREATE INDEX ix_user_session_tenant_id ON public.user_session USING btree (tenan
 -- Name: ix_user_session_tenant_id_user_id; Type: INDEX; Schema: public
 CREATE INDEX ix_user_session_tenant_id_user_id ON public.user_session USING btree (tenant_id, user_id) WHERE (revoked_at IS NULL);
 
+-- Name: ix_workflow_decision_history_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_workflow_decision_history_tenant_id ON public.workflow_decision_history USING btree (tenant_id);
+
+-- Name: ix_workflow_decision_history_tenant_id_actor_id_created_at; Type: INDEX; Schema: public
+CREATE INDEX ix_workflow_decision_history_tenant_id_actor_id_created_at ON public.workflow_decision_history USING btree (tenant_id, actor_id, created_at);
+
 -- Name: ix_workflow_definition_audit_definition_id; Type: INDEX; Schema: public
 CREATE INDEX ix_workflow_definition_audit_definition_id ON ONLY public.workflow_definition_audit USING btree (tenant_id, definition_id, created_at);
 
@@ -2391,6 +2421,9 @@ CREATE POLICY session_lookup ON public.user_session FOR SELECT TO aip_owner USIN
 -- Name: user_session tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.user_session USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: workflow_decision_history tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.workflow_decision_history USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: workflow_definition_audit tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.workflow_definition_audit USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -2525,6 +2558,9 @@ ALTER TABLE public.user_invite ENABLE ROW LEVEL SECURITY;
 
 -- Name: user_session; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.user_session ENABLE ROW LEVEL SECURITY;
+
+-- Name: workflow_decision_history; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.workflow_decision_history ENABLE ROW LEVEL SECURITY;
 
 -- Name: workflow_definition_audit; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.workflow_definition_audit ENABLE ROW LEVEL SECURITY;
@@ -3767,6 +3803,45 @@ CREATE TABLE public.user_session (
 ALTER TABLE ONLY public.user_session FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.user_session OWNER TO aip_owner;
+
+-- Name: workflow_decision_history; Type: TABLE; Schema: public
+CREATE TABLE public.workflow_decision_history (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    instance_id uuid NOT NULL,
+    step_id uuid,
+    seq integer NOT NULL,
+    from_state text NOT NULL,
+    to_state text NOT NULL,
+    action text NOT NULL,
+    actor_id uuid,
+    on_behalf_of uuid,
+    comment text,
+    auth_strength text,
+    ip_address text,
+    guard_result jsonb,
+    supersedes_id uuid,
+    status text NOT NULL,
+    countersigns_id uuid,
+    assurance_level smallint,
+    assurance_method text,
+    authenticated_at timestamp with time zone,
+    device_id uuid,
+    prev_hash text NOT NULL,
+    entry_hash text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_workflow_decision_history_assurance_level CHECK (((assurance_level IS NULL) OR (assurance_level = ANY (ARRAY[1, 2])))),
+    CONSTRAINT ck_workflow_decision_history_auth_strength CHECK (((auth_strength IS NULL) OR (auth_strength = ANY (ARRAY['password'::text, 'mfa'::text, 'pin'::text, 'stepup'::text])))),
+    CONSTRAINT ck_workflow_decision_history_comment CHECK (((comment IS NULL) OR (char_length(comment) <= 2000))),
+    CONSTRAINT ck_workflow_decision_history_entry_hash CHECK ((entry_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_workflow_decision_history_prev_hash CHECK ((prev_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_workflow_decision_history_seq CHECK ((seq >= 1)),
+    CONSTRAINT ck_workflow_decision_history_status CHECK ((status = ANY (ARRAY['applied'::text, 'pending_countersign'::text])))
+);
+
+ALTER TABLE ONLY public.workflow_decision_history FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.workflow_decision_history OWNER TO aip_owner;
 
 -- Name: workflow_definition_audit; Type: TABLE; Schema: public
 CREATE TABLE public.workflow_definition_audit (

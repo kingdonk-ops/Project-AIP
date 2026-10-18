@@ -11,6 +11,7 @@ export const AbilitiesResponsePermissionsItem = {
   accessrole_assignmentread: 'access.role_assignment.read',
   accessteammanage: 'access.team.manage',
   approvalsdesign: 'approvals.design',
+  approvalsstart: 'approvals.start',
   approvalsview: 'approvals.view',
   auditactivityview: 'audit.activity.view',
   auditlogread: 'audit.log.read',

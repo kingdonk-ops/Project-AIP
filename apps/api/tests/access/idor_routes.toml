@@ -26,6 +26,16 @@ body = '{"code": "iso_clone", "name": "Isolation clone"}'
 ["POST /api/v1/access/roles/{role_id}/reset"]
 table = "role"
 
+["GET /api/v1/approvals/instances/{instance_id}"]
+table = "workflow_instances"
+
+["GET /api/v1/approvals/instances/{instance_id}/history"]
+table = "workflow_instances"
+
+["POST /api/v1/approvals/instances/{instance_id}/transition"]
+table = "workflow_instances"
+body = '{"action": "submit"}'
+
 ["DELETE /api/v1/me/sessions/{session_id}"]
 table = "user_session"
 
