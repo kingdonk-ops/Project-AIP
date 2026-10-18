@@ -17,7 +17,8 @@ export function NavRail({ permissions, items = registeredNavItems(), open, onNav
   const listRef = useRef<HTMLDivElement>(null);
   const groups = visibleNavGroups(items, permissions);
 
-  // Arrow keys, Home and End move focus between rail links; Tab still leaves the rail.
+  // Arrow keys, Home and End move focus between rail links; Tab still leaves the rail, except from the
+  // open mobile drawer, where AppShell traps it (DESIGN-16).
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const keys = ["ArrowDown", "ArrowUp", "Home", "End"];
     if (!keys.includes(event.key)) return;

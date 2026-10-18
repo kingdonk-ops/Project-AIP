@@ -227,6 +227,12 @@ body {
   }
   .shell-rail[data-open="true"] {
     display: block;
+    /* DESIGN-16: the page behind is scroll-locked, so a tall rail scrolls on its own. */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .shell-scroll-locked {
+    overflow: hidden;
   }
   .shell-backdrop {
     display: block;

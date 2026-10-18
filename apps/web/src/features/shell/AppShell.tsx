@@ -26,6 +26,13 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
   const [navOpen, setNavOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  // DESIGN-16: any navigation (header brand link, browser Back) closes the drawer, so the new page is
+  // not left inert and scroll-locked. Rail links close it themselves via `onNavigate`.
+  const [navPath, setNavPath] = useState(pathname);
+  if (navPath !== pathname) {
+    setNavPath(pathname);
+    setNavOpen(false);
+  }
   const page = activeNavItem(navItems ?? registeredNavItems(), pathname);
   const pageTitle = page ? t(page.termKey) : undefined;
 
@@ -43,12 +50,27 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
   useEffect(() => {
     if (!navOpen) return;
     function onKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      // Escape inside another layer (account menu, a dialog or drawer) closes only that layer. Not
+      if (event.key !== "Escape" && event.key !== "Tab") return;
+      // Keys inside another layer (account menu, a dialog or drawer) belong to that layer. Not
       // `defaultPrevented`: Radix prevents Escape when it closes a nav link's tooltip, too.
       if (event.target instanceof Element && event.target.closest('[role="menu"], [role="dialog"]')) return;
+      if (event.key === "Tab") {
+        trapTab(event);
+        return;
+      }
       setNavOpen(false);
       menuButtonRef.current?.focus();
+    }
+    // DESIGN-16: the open drawer is modal. Tab cycles through the menu button and the rail links only.
+    function trapTab(event: globalThis.KeyboardEvent) {
+      const links = document.getElementById("shell-nav")?.querySelectorAll<HTMLElement>("a[href]") ?? [];
+      const stops = [menuButtonRef.current, ...links].filter((stop): stop is HTMLElement => stop !== null);
+      if (stops.length === 0) return;
+      const current = stops.indexOf(document.activeElement as HTMLElement);
+      const step = event.shiftKey ? -1 : 1;
+      const next = current === -1 ? 0 : (current + step + stops.length) % stops.length;
+      event.preventDefault();
+      stops[next]?.focus();
     }
     // Widening past the breakpoint turns the drawer back into the rail, so drop the open state.
     const wide = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 768px)") : null;
@@ -57,9 +79,12 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
     }
     document.addEventListener("keydown", onKeyDown);
     wide?.addEventListener("change", onWide);
+    // DESIGN-16: the dimmed page does not scroll behind the drawer.
+    document.documentElement.classList.add("shell-scroll-locked");
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       wide?.removeEventListener("change", onWide);
+      document.documentElement.classList.remove("shell-scroll-locked");
     };
   }, [navOpen]);
 
@@ -72,7 +97,9 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
 
   return (
     <TooltipProvider delayDuration={300}>
-      <a className="shell-skip" href="#main">
+      {/* DESIGN-16: while the drawer is open the page behind it is inert (no focus, hidden from the
+          accessibility tree); the header stays live because the menu button closes the drawer. */}
+      <a className="shell-skip" href="#main" inert={navOpen}>
         {t("shell.skipToContent")}
       </a>
       <div className="shell">
@@ -91,7 +118,7 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
         />
         {/* Pointer-only dim layer under the open drawer (shown under 768px); Escape is the keyboard path. */}
         {navOpen ? <div className="shell-backdrop" data-testid="shell-backdrop" aria-hidden="true" onClick={dismissNav} /> : null}
-        <div className="shell__body">
+        <div className="shell__body" inert={navOpen}>
           <ScopeBar tenantName={session.tenant.name} projectName={projectName} />
           <main id="main" className="shell__main" tabIndex={-1}>
             {children}

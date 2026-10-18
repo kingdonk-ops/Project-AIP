@@ -18,6 +18,7 @@ task on the board generates the next phase's task files from its module docs.
 ## Log
 
 <!-- newest first: YYYY-MM-DD · TASK-ID · PR · one-sentence outcome -->
+- 2026-10-18 · DESIGN-16 · PR #116 · The mobile nav drawer is modal: Tab cycles through the menu button and rail links only, the dimmed page (`.shell__body`, skip link) is `inert`, and the document is scroll-locked while it is open.
 - 2026-10-18 · DESIGN-08 · PR #115 · Shell and register polish: the mobile nav drawer has a backdrop and closes on Escape or a backdrop click with focus back on Menu; registers scroll sideways in their own focusable region and never widen the page (`.aip-register` min-width 0); inputs and buttons use border-box, so login widths match; button-styled links have no underline.
 - 2026-10-18 · PROJECTS-06 · PR #114 · The projects register runs on `RegisterTable` (Status quick filter, server sort both ways on Code/Name/Updated, Region hidden by default, Enter opens the row, old URLs still open); `GET /projects` takes `sort=-code` with direction-bound cursors, and `GET /projects/export.csv` streams the filtered rows with field-name headers and a 10,000-row cap (ADR 0033).
 - 2026-10-17 · BOARD (slim) · — · Two more conservative todo-only merges: TERMS-05 absorbs TERMS-08 (admin API + i18n provider/dictionary screen) and APPROVALS-02 absorbs APPROVALS-03 (minimal JSONLogic guards fold into the transition service's guard slot); absorbed IDs left as redirect stubs, no dependents re-pointed (none existed), `next_task.py --check` clean; todo backlog 73 → 71.

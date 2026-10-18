@@ -111,6 +111,53 @@ describe("app shell", () => {
     expect(document.activeElement).toBe(menu);
   });
 
+  // DESIGN-16: the open drawer is modal.
+  it("traps Tab in the open drawer, makes the page inert and locks scroll until it closes", async () => {
+    const user = userEvent.setup();
+    const { container } = setup(fakePort(alice), "/");
+    const menu = await screen.findByRole("button", { name: "Menu" });
+    const body = container.querySelector(".shell__body");
+    const html = document.documentElement;
+    expect(body?.hasAttribute("inert")).toBe(false);
+    expect(html.classList.contains("shell-scroll-locked")).toBe(false);
+
+    await user.click(menu);
+    expect(body?.hasAttribute("inert")).toBe(true);
+    expect(container.querySelector(".shell-skip")?.hasAttribute("inert")).toBe(true);
+    expect(html.classList.contains("shell-scroll-locked")).toBe(true);
+
+    const links = screen.getByRole("navigation", { name: "Main navigation" }).querySelectorAll("a");
+    const first = links[0] as HTMLElement;
+    const last = links[links.length - 1] as HTMLElement;
+    expect(links.length).toBeGreaterThan(1);
+    await user.tab();
+    expect(document.activeElement).toBe(first);
+    last.focus();
+    await user.tab();
+    expect(document.activeElement).toBe(menu);
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(last);
+
+    await user.keyboard("{Escape}");
+    expect(body?.hasAttribute("inert")).toBe(false);
+    expect(html.classList.contains("shell-scroll-locked")).toBe(false);
+    expect(document.activeElement).toBe(menu);
+    await user.tab();
+    expect(document.activeElement).toBe(screen.getByRole("link", { name: "Kaefer Demo AIP, home" }));
+  });
+
+  it("closes the drawer and lifts inert and the scroll lock when a header link navigates", async () => {
+    const user = userEvent.setup();
+    const { container, router } = setup(fakePort(alice), "/projects");
+    await user.click(await screen.findByRole("button", { name: "Menu" }));
+    expect(container.querySelector(".shell__body")?.hasAttribute("inert")).toBe(true);
+    await user.click(screen.getByRole("link", { name: "Kaefer Demo AIP, home" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+    expect(screen.getByRole("navigation", { name: "Main navigation" }).getAttribute("data-open")).toBe("false");
+    expect(container.querySelector(".shell__body")?.hasAttribute("inert")).toBe(false);
+    expect(document.documentElement.classList.contains("shell-scroll-locked")).toBe(false);
+  });
+
   it("Escape in the account menu closes only the menu, not the nav drawer", async () => {
     const user = userEvent.setup();
     setup(fakePort(alice), "/");
