@@ -6,3 +6,12 @@
 
 # why: braces <=3.0.3 stack exhaustion on deeply nested patterns (GHSA-vfj7-8cjw-p6xm). Only via eslint-plugin-boundaries in packages/config-eslint (lint time, never shipped); the patterns are our own config. No fixed release yet. Accepted in SECURITY-08, 2026-10-07.
 CVE-2026-93687 exp:2027-01-05
+
+# why: pcre2 out-of-bounds write / JIT memory corruption in the Keycloak 26.7.5 base (UBI 9 micro, pcre2 10.40-6.el9; fixed in 10.40-7.el9_8). The image has no package manager, so the fix needs a newer quay.io/keycloak/keycloak release; Keycloak itself (Java) does not call pcre2, only base OS tools do. Proposed in SECURITY-11 (ClaudeK, 2026-10-18) so the newly gated demo deploy is not blocked; pending owner acceptance in the PR review. Short expiry: bump Keycloak instead of renewing.
+CVE-2026-103111 exp:2026-12-01
+# why: same pcre2 base-image issue as above (Keycloak 26.7.5 UBI 9 micro). Proposed in SECURITY-11 (ClaudeK, 2026-10-18), pending owner acceptance.
+CVE-2026-86145 exp:2026-12-01
+# why: same pcre2 base-image issue as above (Keycloak 26.7.5 UBI 9 micro). Proposed in SECURITY-11 (ClaudeK, 2026-10-18), pending owner acceptance.
+CVE-2026-89161 exp:2026-12-01
+# why: mssql-jdbc 13.2.1 bundled in Keycloak 26.7.5 (CVE-2025-59250). The demo Keycloak uses KC_DB=postgres, so the SQL Server driver is never loaded. Proposed in SECURITY-11 (ClaudeK, 2026-10-18), pending owner acceptance; fixed by the next Keycloak bump.
+CVE-2025-59250 exp:2026-12-01

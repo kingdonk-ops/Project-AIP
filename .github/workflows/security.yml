@@ -170,8 +170,12 @@ jobs:
             printf '%s\n' "$COSIGN_PRIVATE_KEY" > "$keys/cosign.key"
             export COSIGN_PASSWORD="$COSIGN_KEY_PASSWORD"
             cosign public-key --key /keys/cosign.key > evidence/cosign.pub
+          elif [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            # SECURITY-11 Part C (review 11 O2): main must sign with the real key.
+            echo "::error::COSIGN_PRIVATE_KEY is not set: main cannot sign with an ephemeral key"
+            exit 1
           else
-            # Proves the signing pipeline only; set COSIGN_PRIVATE_KEY/COSIGN_PASSWORD for trust.
+            # Pull requests prove the signing pipeline only; main uses COSIGN_PRIVATE_KEY.
             echo "::warning::COSIGN_PRIVATE_KEY is not set: signing with an ephemeral key"
             export COSIGN_PASSWORD="ephemeral-$GITHUB_RUN_ID"
             docker run --rm -u "$(id -u):$(id -g)" -e COSIGN_PASSWORD \
