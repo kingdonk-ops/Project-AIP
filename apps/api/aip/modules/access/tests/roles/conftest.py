@@ -8,7 +8,8 @@ through ``aip_app`` (RLS on) or the API.
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator, Mapping
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -51,17 +52,43 @@ SEED_SQL = (
 )
 
 
-def headers(tenant: UUID, user: UUID, *, aal: int = 2) -> dict[str, str]:
-    principal = {
-        "kind": "user",
-        "tenantId": str(tenant),
-        "userId": str(user),
-        "userClass": "staff",
-        "sessionId": None,
-        "aal": aal,
-        "amr": ["fed"],
-    }
-    return {"x-test-principal": json.dumps(principal)}
+class _PrincipalHeaders(Mapping[str, str]):
+    """The test principal header, rebuilt on every read so a stepped-up (aal 2) caller always
+    authenticated just now and passes IDENTITY-04's ``step_up()`` however long the run takes."""
+
+    def __init__(self, principal: dict[str, Any]) -> None:
+        self._principal = principal
+
+    def _value(self) -> str:
+        principal = dict(self._principal)
+        if principal["aal"] == 2:
+            principal["authenticatedAt"] = datetime.now(UTC).isoformat()
+        return json.dumps(principal)
+
+    def __getitem__(self, key: str) -> str:
+        if key != "x-test-principal":
+            raise KeyError(key)
+        return self._value()
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(("x-test-principal",))
+
+    def __len__(self) -> int:
+        return 1
+
+
+def headers(tenant: UUID, user: UUID, *, aal: int = 2) -> Mapping[str, str]:
+    return _PrincipalHeaders(
+        {
+            "kind": "user",
+            "tenantId": str(tenant),
+            "userId": str(user),
+            "userClass": "staff",
+            "sessionId": None,
+            "aal": aal,
+            "amr": ["fed"],
+        }
+    )
 
 
 ALICE = headers(TENANT_A_ID, ALICE_ID)  # kaefer-demo tenant_admin, stepped up

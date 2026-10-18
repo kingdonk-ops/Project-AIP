@@ -610,10 +610,24 @@
       ]
     }
   ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"aip_user_id\",\"displayName\":\"AIP user id\",\"validations\":{\"length\":{\"max\":36}},\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]},\"multivalued\":false},{\"name\":\"upstream_amr\",\"displayName\":\"Upstream sign-in methods\",\"validations\":{\"length\":{\"max\":32}},\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]},\"multivalued\":true}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}]}"
+          ]
+        }
+      }
+    ]
+  },
   "clients": [
     {
       "clientId": "aip-api",
       "name": "AIP API (OIDC code flow + PKCE; the backend issues its own session)",
+      "baseUrl": "${APP_ORIGIN:http://localhost:8080}/login?invited=1",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
@@ -628,7 +642,6 @@
       "consentRequired": false,
       "fullScopeAllowed": false,
       "rootUrl": "${APP_ORIGIN:http://localhost:8080}",
-      "baseUrl": "/",
       "redirectUris": [
         "${APP_ORIGIN:http://localhost:8080}/api/v1/auth/oidc/callback"
       ],
@@ -676,6 +689,23 @@
             "access.token.claim": "false",
             "introspection.token.claim": "false"
           }
+        },
+        {
+          "name": "upstream_amr",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "upstream_amr",
+            "claim.name": "upstream_amr",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "aggregate.attrs": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "false"
+          }
         }
       ]
     },
@@ -695,9 +725,25 @@
       "fullScopeAllowed": false,
       "redirectUris": [],
       "webOrigins": [],
-      "attributes": {}
+      "attributes": {},
+      "defaultClientScopes": [
+        "basic",
+        "roles"
+      ]
     }
   ],
+  "clientScopeMappings": {
+    "realm-management": [
+      {
+        "client": "aip-admin",
+        "roles": [
+          "manage-users",
+          "query-users",
+          "view-users"
+        ]
+      }
+    ]
+  },
   "users": [
     {
       "username": "service-account-aip-admin",
@@ -779,7 +825,8 @@
         "pkceMethod": "S256",
         "defaultScope": "openid email profile",
         "loginHint": "true",
-        "syncMode": "IMPORT"
+        "syncMode": "IMPORT",
+        "forwardParameters": "prompt,max_age"
       }
     },
     {
@@ -810,7 +857,31 @@
         "pkceMethod": "S256",
         "defaultScope": "openid email profile",
         "loginHint": "true",
-        "syncMode": "IMPORT"
+        "syncMode": "IMPORT",
+        "forwardParameters": "prompt,max_age"
+      }
+    }
+  ],
+  "emailTheme": "aip",
+  "identityProviderMappers": [
+    {
+      "name": "upstream amr",
+      "identityProviderAlias": "kaefer-oidc",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "FORCE",
+        "claim": "amr",
+        "user.attribute": "upstream_amr"
+      }
+    },
+    {
+      "name": "upstream amr",
+      "identityProviderAlias": "acme-oidc",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "FORCE",
+        "claim": "amr",
+        "user.attribute": "upstream_amr"
       }
     }
   ]

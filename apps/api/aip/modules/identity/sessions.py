@@ -65,7 +65,9 @@ logger = logging.getLogger(__name__)
 SID_COOKIE: Final = "__Host-aip_sid"
 CSRF_COOKIE: Final = "__Host-aip_csrf"
 REVOKE_KEYCLOAK_JOB: Final = "identity.revoke_keycloak_sessions"
-_MFA_METHODS: Final = frozenset({"otp", "hwk", "mfa"})
+# ``amr`` values that prove a second factor: Keycloak's own (otp, hwk) and what an upstream IdP
+# reports (RFC 8176 mfa, otp, hwk, swk; fido from some IdPs).
+_MFA_METHODS: Final = frozenset({"otp", "hwk", "mfa", "swk", "fido"})
 _USER_AGENT_MAX: Final = 512
 
 Audience = Literal["app", "portal", "device"]
@@ -99,9 +101,13 @@ class IssuedSession:
     expiry: Expiry
 
 
-def derive_aal(acr: str | None, amr: Sequence[str]) -> Literal[1, 2]:
-    """2 when the sign-in used a second factor (``acr`` aal2, or otp/hwk/mfa in ``amr``)."""
-    return 2 if acr == "aal2" or _MFA_METHODS & set(amr) else 1
+def derive_aal(
+    acr: str | None, amr: Sequence[str], upstream_amr: Sequence[str] = ()
+) -> Literal[1, 2]:
+    """2 when the sign-in used a second factor: ``acr`` aal2, a second factor in Keycloak's
+    ``amr``, or (brokered sign-in, IDENTITY-04) one in the upstream IdP's ``amr``. Keycloak gives
+    a brokered sign-in ``acr`` aal1 and an empty ``amr``, so only the upstream IdP can lift it."""
+    return 2 if acr == "aal2" or _MFA_METHODS & (set(amr) | set(upstream_amr)) else 1
 
 
 def compute_expiry(now: datetime, policy: SessionPolicy) -> Expiry:

@@ -14,5 +14,10 @@
   "identity.sessions.loading": "Loading sessions…",
   "identity.sessions.error": "Sessions could not be loaded. Try again.",
   "identity.sessions.revokeFailed": "That session could not be signed out. Try again.",
-  "identity.sessions.empty": "No other sessions."
+  "identity.sessions.empty": "No other sessions.",
+  "identity.stepUp.required": "Confirm it is you with your second factor to continue.",
+  "identity.stepUp.confirm": "Confirm it is you",
+  "identity.stepUp.retryPrompt": "You have confirmed it is you. Try the action again?",
+  "identity.stepUp.retry": "Try again",
+  "identity.stepUp.dismiss": "Not now"
 }

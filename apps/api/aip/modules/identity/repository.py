@@ -10,6 +10,9 @@ tenant set) instead of ``with_tenant``. Local-account emails are written only th
 connection from ``with_tenant`` and never opens its own. RLS is the isolation; every query also
 filters on the bound tenant (``app.tenant_id``) as a second line, so a query can never widen to
 another tenant even if a policy were dropped.
+
+**Invites, MFA enrolment, sign-off policy** (IDENTITY-04): same rules. Invites are revoked, never
+deleted; ``signoff_policy`` rows are upserted per ``(tenant, action_code)``.
 """
 
 from __future__ import annotations
@@ -27,7 +30,13 @@ from sqlalchemy import ColumnElement, Select, Uuid, cast, func, insert, or_, sel
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from aip.modules.identity.tables import app_user, auth_event, tenant_membership
+from aip.modules.identity.tables import (
+    app_user,
+    auth_event,
+    signoff_policy,
+    tenant_membership,
+    user_invite,
+)
 from aip.platform.context import new_request_id
 from aip.platform.db.errors import NotFoundError
 from aip.platform.db.session import before_tenant
@@ -460,20 +469,27 @@ class EmailInOtherTenantError(Exception):
     """The email is already registered to another tenant's local account."""
 
 
+class EmailDomainSsoError(Exception):
+    """The email's domain belongs to an SSO IdP, so it cannot be a local account (IDENTITY-04)."""
+
+
 _REGISTER = text("SELECT identity_register_email(CAST(:email AS citext), :tenant_id)")
 
 
 async def register_email(conn: AsyncConnection, email: str, tenant_id: UUID) -> None:
     """Map a local account's email to the bound tenant in ``login_directory``.
 
-    ``EmailInOtherTenantError`` when another tenant already holds the email. Any error aborts the
-    surrounding transaction, so the user change that needed the registration rolls back with it.
+    ``EmailInOtherTenantError`` when another tenant already holds the email,
+    ``EmailDomainSsoError`` when an SSO IdP claims its domain. Any error aborts the surrounding
+    transaction, so the user change that needed the registration rolls back with it.
     """
     try:
         await conn.execute(_REGISTER, {"email": email.strip(), "tenant_id": tenant_id})
     except DBAPIError as exc:
         if "EMAIL_IN_OTHER_TENANT" in str(exc.orig):
             raise EmailInOtherTenantError("email is registered to another tenant") from None
+        if "EMAIL_DOMAIN_SSO" in str(exc.orig):
+            raise EmailDomainSsoError("the email domain signs in with company SSO") from None
         raise
 
 
@@ -483,3 +499,260 @@ _LOCK = text("SELECT pg_advisory_xact_lock(:key)")
 async def advisory_xact_lock(conn: AsyncConnection, key: int) -> None:
     """``pg_advisory_xact_lock(key)``: held until the transaction ends."""
     await conn.execute(_LOCK, {"key": key})
+
+
+# --- MFA enrolment (IDENTITY-04) ---------------------------------------------------------------
+
+_MFA_ENROLLED = text(
+    "UPDATE app_user SET mfa_enrolled_at = now(), updated_at = now(),"
+    " sync_version = sync_version + 1"
+    " WHERE id = :id AND mfa_enrolled_at IS NULL"
+    " AND tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid"
+)
+_MFA_CLEARED = text(
+    "UPDATE app_user SET mfa_enrolled_at = NULL, updated_at = now(),"
+    " sync_version = sync_version + 1"
+    " WHERE id = :id AND tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid"
+)
+_MFA_READ = text(
+    "SELECT mfa_enrolled_at FROM app_user WHERE id = :id"
+    " AND tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid"
+)
+
+
+async def mark_mfa_enrolled(conn: AsyncConnection, user_id: UUID) -> None:
+    """Stamp ``mfa_enrolled_at`` the first time an ``aal=2`` session is issued for the user."""
+    await conn.execute(_MFA_ENROLLED, {"id": user_id})
+
+
+async def clear_mfa_enrolled(conn: AsyncConnection, user_id: UUID) -> None:
+    await conn.execute(_MFA_CLEARED, {"id": user_id})
+
+
+async def mfa_enrolled_at(conn: AsyncConnection, user_id: UUID) -> datetime | None:
+    return (await conn.execute(_MFA_READ, {"id": user_id})).scalar_one_or_none()
+
+
+# --- invites (IDENTITY-04) ---------------------------------------------------------------------
+
+InviteStatus = Literal["pending", "sent", "accepted", "revoked", "failed"]
+InviteMethod = Literal["local", "sso"]
+LIVE_INVITE_STATUSES: tuple[InviteStatus, ...] = ("pending", "sent")
+
+
+@dataclass(frozen=True)
+class InviteRow:
+    id: UUID
+    tenant_id: UUID
+    user_id: UUID
+    email: str
+    user_class: UserClass
+    organisation_id: UUID | None
+    invited_by: UUID | None
+    method: InviteMethod
+    keycloak_user_id: UUID | None
+    status: InviteStatus
+    last_error: str | None
+    expires_at: datetime
+    sent_at: datetime | None
+    accepted_at: datetime | None
+    revoked_at: datetime | None
+    created_at: datetime
+
+
+_INVITE_COLUMNS = tuple(user_invite.c[name] for name in InviteRow.__dataclass_fields__)
+
+
+def _invites_in_bound_tenant() -> Select[Any]:
+    return select(*_INVITE_COLUMNS).where(
+        user_invite.c.tenant_id == _bound_tenant(), user_invite.c.deleted_at.is_(None)
+    )
+
+
+def _invite(row: Mapping[Any, Any]) -> InviteRow:
+    return InviteRow(**{c.name: row[c.name] for c in _INVITE_COLUMNS})
+
+
+async def insert_invite(
+    conn: AsyncConnection,
+    *,
+    tenant_id: UUID,
+    user_id: UUID,
+    email: str,
+    user_class: UserClass,
+    method: InviteMethod,
+    expires_at: Any,
+    organisation_id: UUID | None = None,
+    invited_by: UUID | None = None,
+) -> UUID:
+    invite_id = new_id()
+    await conn.execute(
+        insert(user_invite).values(
+            id=invite_id,
+            tenant_id=tenant_id,
+            user_id=user_id,
+            email=email.strip(),
+            user_class=user_class,
+            organisation_id=organisation_id,
+            invited_by=invited_by,
+            method=method,
+            status="pending",
+            expires_at=expires_at,
+        )
+    )
+    return invite_id
+
+
+async def get_invite(
+    conn: AsyncConnection, invite_id: UUID, *, for_update: bool = False
+) -> InviteRow | None:
+    stmt = _invites_in_bound_tenant().where(user_invite.c.id == invite_id)
+    if for_update:
+        stmt = stmt.with_for_update()
+    row = (await conn.execute(stmt)).mappings().first()
+    return None if row is None else _invite(row)
+
+
+async def latest_invite_for_user(conn: AsyncConnection, user_id: UUID) -> InviteRow | None:
+    """The user's most recent invite in the bound tenant, or ``None`` (never invited)."""
+    stmt = (
+        _invites_in_bound_tenant()
+        .where(user_invite.c.user_id == user_id)
+        .order_by(user_invite.c.created_at.desc(), user_invite.c.id.desc())
+        .limit(1)
+    )
+    row = (await conn.execute(stmt)).mappings().first()
+    return None if row is None else _invite(row)
+
+
+async def list_invites(
+    conn: AsyncConnection, *, status: InviteStatus | None = None, limit: int = MAX_PAGE
+) -> list[InviteRow]:
+    """Invites of the bound tenant, newest first (at most ``limit``)."""
+    if not 1 <= limit <= MAX_PAGE:
+        raise ValueError(f"limit must be between 1 and {MAX_PAGE}")
+    stmt = _invites_in_bound_tenant()
+    if status is not None:
+        stmt = stmt.where(user_invite.c.status == status)
+    stmt = stmt.order_by(user_invite.c.created_at.desc(), user_invite.c.id.desc()).limit(limit)
+    return [_invite(r) for r in (await conn.execute(stmt)).mappings().all()]
+
+
+async def update_invite(conn: AsyncConnection, invite_id: UUID, **values: Any) -> None:
+    stmt = (
+        update(user_invite)
+        .where(
+            user_invite.c.id == invite_id,
+            user_invite.c.tenant_id == _bound_tenant(),
+            user_invite.c.deleted_at.is_(None),
+        )
+        .values(updated_at=func.now(), **values)
+        .returning(user_invite.c.id)
+    )
+    if (await conn.execute(stmt)).first() is None:
+        raise NotFoundError(f"user_invite {invite_id} not found")
+
+
+async def revoke_live_invites(conn: AsyncConnection, email: str) -> list[UUID]:
+    """Revoke every ``pending``/``sent`` invite for ``email`` in the bound tenant."""
+    stmt = (
+        update(user_invite)
+        .where(
+            user_invite.c.email == email.strip(),
+            user_invite.c.tenant_id == _bound_tenant(),
+            user_invite.c.deleted_at.is_(None),
+            user_invite.c.status.in_(LIVE_INVITE_STATUSES),
+        )
+        .values(status="revoked", revoked_at=func.now(), updated_at=func.now())
+        .returning(user_invite.c.id)
+    )
+    return [r[0] for r in (await conn.execute(stmt)).all()]
+
+
+async def set_keycloak_link(conn: AsyncConnection, user_id: UUID, keycloak_user_id: UUID) -> None:
+    """Link an invited user to the Keycloak account the invite job created (a column update, so
+    the job role needs no wider grant on ``app_user``)."""
+    await conn.execute(
+        update(app_user)
+        .where(
+            app_user.c.id == user_id,
+            app_user.c.tenant_id == _bound_tenant(),
+            app_user.c.deleted_at.is_(None),
+        )
+        .values(
+            keycloak_user_id=keycloak_user_id,
+            updated_at=func.now(),
+            sync_version=app_user.c.sync_version + 1,
+        )
+    )
+
+
+# --- sign-off policy (IDENTITY-04 Part D) ------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SignoffPolicyRow:
+    action_code: str
+    min_aal: int
+    step_up_max_age_min: int
+    updated_by: UUID | None = None
+    updated_at: datetime | None = None
+
+
+_POLICY_COLUMNS = (
+    signoff_policy.c.action_code,
+    signoff_policy.c.min_aal,
+    signoff_policy.c.step_up_max_age_min,
+    signoff_policy.c.updated_by,
+    signoff_policy.c.updated_at,
+)
+
+
+def _policies_in_bound_tenant() -> Select[Any]:
+    return select(*_POLICY_COLUMNS).where(
+        signoff_policy.c.tenant_id == _bound_tenant(), signoff_policy.c.deleted_at.is_(None)
+    )
+
+
+async def get_signoff_policy(conn: AsyncConnection, action_code: str) -> SignoffPolicyRow | None:
+    stmt = _policies_in_bound_tenant().where(signoff_policy.c.action_code == action_code)
+    row = (await conn.execute(stmt)).mappings().first()
+    return None if row is None else SignoffPolicyRow(**dict(row))
+
+
+async def list_signoff_policies(conn: AsyncConnection) -> list[SignoffPolicyRow]:
+    stmt = _policies_in_bound_tenant().order_by(signoff_policy.c.action_code)
+    return [SignoffPolicyRow(**dict(r)) for r in (await conn.execute(stmt)).mappings().all()]
+
+
+_UPSERT_POLICY = text(
+    """
+    INSERT INTO signoff_policy (id, tenant_id, action_code, min_aal, step_up_max_age_min,
+      updated_by)
+    VALUES (:id, NULLIF(current_setting('app.tenant_id', true), '')::uuid, :action_code, :min_aal,
+      :max_age, :updated_by)
+    ON CONFLICT (tenant_id, action_code) WHERE deleted_at IS NULL DO UPDATE
+      SET min_aal = EXCLUDED.min_aal, step_up_max_age_min = EXCLUDED.step_up_max_age_min,
+          updated_by = EXCLUDED.updated_by, updated_at = now()
+    """
+)
+
+
+async def upsert_signoff_policy(
+    conn: AsyncConnection,
+    *,
+    action_code: str,
+    min_aal: int,
+    step_up_max_age_min: int,
+    updated_by: UUID | None,
+) -> None:
+    await conn.execute(
+        _UPSERT_POLICY,
+        {
+            "id": new_id(),
+            "action_code": action_code,
+            "min_aal": min_aal,
+            "max_age": step_up_max_age_min,
+            "updated_by": updated_by,
+        },
+    )

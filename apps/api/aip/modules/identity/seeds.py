@@ -1,10 +1,14 @@
-"""Dev and test seed rows for the login directory (IDENTITY-01).
+"""Dev and test seed rows for the login directory (IDENTITY-01) and sign-off policy (IDENTITY-04).
 
     python -m aip.modules.identity.seeds
 
 Connects as the table owner through ``DATABASE_MIGRATOR_URL`` (``aip_app`` cannot write the
 table). Idempotent. Refuses to run unless ``AIP_ENV`` is ``development``, ``test`` or ``demo``.
 The tenant ids are the shared fixture ids from AGENTS.md / ``apps/api/tests/conftest.py``.
+
+IDENTITY-04 Part D: ``kaefer-demo`` gets the ADR 0010 defaults as explicit ``signoff_policy`` rows
+(min aal 2, 10 minutes) for its four critical actions, inside that tenant's context (FORCE RLS).
+An existing row is left as the tenant admin set it.
 """
 
 from __future__ import annotations
@@ -17,6 +21,7 @@ from uuid import UUID
 from sqlalchemy import text
 
 from aip.platform.db.migrator.run import create_migrator_engine
+from aip.platform.db.session import with_tenant
 
 TENANT_A_ID = UUID("00000000-0000-4000-8000-00000000000a")  # kaefer-demo
 TENANT_B_ID = UUID("00000000-0000-4000-8000-00000000000b")  # tenant-b
@@ -27,6 +32,20 @@ DEV_ROWS: tuple[tuple[str, str, UUID, str | None], ...] = (
     ("email_domain", "acme.test", TENANT_B_ID, "acme-oidc"),
     ("tenant_slug", "kaefer-demo", TENANT_A_ID, "kaefer-oidc"),
     ("tenant_slug", "tenant-b", TENANT_B_ID, "acme-oidc"),
+)
+
+# (tenant_id, action_code, min_aal, step_up_max_age_min)
+SIGNOFF_ROWS: tuple[tuple[UUID, str, int, int], ...] = tuple(
+    (TENANT_A_ID, code, 2, 10)
+    for code in ("hold_point.release", "witness.countersign", "itp.signoff", "record.seal")
+)
+
+_SIGNOFF = text(
+    """
+    INSERT INTO signoff_policy (id, tenant_id, action_code, min_aal, step_up_max_age_min)
+    VALUES (gen_random_uuid(), :tenant_id, :action_code, :min_aal, :max_age)
+    ON CONFLICT (tenant_id, action_code) WHERE deleted_at IS NULL DO NOTHING
+    """
 )
 
 _UPSERT = text(
@@ -59,6 +78,17 @@ async def seed(url: str, *, env: str | None = None) -> int:
             for kind, key, tenant_id, alias in DEV_ROWS:
                 await conn.execute(
                     _UPSERT, {"kind": kind, "key": key, "tenant_id": tenant_id, "idp_alias": alias}
+                )
+        for tenant_id, action_code, min_aal, max_age in SIGNOFF_ROWS:
+            async with with_tenant(tenant_id, engine=engine) as conn:
+                await conn.execute(
+                    _SIGNOFF,
+                    {
+                        "tenant_id": tenant_id,
+                        "action_code": action_code,
+                        "min_aal": min_aal,
+                        "max_age": max_age,
+                    },
                 )
     finally:
         await engine.dispose()

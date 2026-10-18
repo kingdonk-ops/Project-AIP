@@ -62,6 +62,15 @@ CREATE TABLE aip_meta.alembic_version (
 
 ALTER TABLE aip_meta.alembic_version OWNER TO aip_owner;
 
+-- Name: COLUMN app_user.keycloak_user_id; Type: ACL; Schema: public
+GRANT UPDATE(keycloak_user_id) ON TABLE public.app_user TO aip_jobs;
+
+-- Name: COLUMN app_user.sync_version; Type: ACL; Schema: public
+GRANT UPDATE(sync_version) ON TABLE public.app_user TO aip_jobs;
+
+-- Name: COLUMN app_user.updated_at; Type: ACL; Schema: public
+GRANT UPDATE(updated_at) ON TABLE public.app_user TO aip_jobs;
+
 -- Name: COLUMN domain_events.attempts; Type: ACL; Schema: public
 GRANT UPDATE(attempts) ON TABLE public.domain_events TO aip_jobs;
 
@@ -204,6 +213,7 @@ GRANT SELECT ON TABLE public.access_settings TO aip_readonly;
 -- Name: TABLE app_user; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.app_user TO aip_app;
 GRANT SELECT ON TABLE public.app_user TO aip_readonly;
+GRANT SELECT ON TABLE public.app_user TO aip_jobs;
 
 -- Name: TABLE audit_chain_checkpoints; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.audit_chain_checkpoints TO aip_audit_writer;
@@ -222,6 +232,7 @@ GRANT SELECT ON TABLE public.audit_log TO aip_readonly;
 -- Name: TABLE auth_event; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.auth_event TO aip_app;
 GRANT SELECT ON TABLE public.auth_event TO aip_readonly;
+GRANT INSERT ON TABLE public.auth_event TO aip_jobs;
 
 -- Name: TABLE breach_incidents; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.breach_incidents TO aip_app;
@@ -327,6 +338,10 @@ GRANT SELECT,INSERT ON TABLE public.security_audit_events TO aip_audit_writer;
 GRANT SELECT ON TABLE public.security_audit_events TO aip_app;
 GRANT SELECT ON TABLE public.security_audit_events TO aip_readonly;
 
+-- Name: TABLE signoff_policy; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.signoff_policy TO aip_app;
+GRANT SELECT ON TABLE public.signoff_policy TO aip_readonly;
+
 -- Name: TABLE sites; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.sites TO aip_app;
 GRANT SELECT ON TABLE public.sites TO aip_readonly;
@@ -382,6 +397,11 @@ GRANT SELECT ON TABLE public.term_pack_version TO aip_readonly;
 -- Name: TABLE upload_sessions; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.upload_sessions TO aip_app;
 GRANT SELECT ON TABLE public.upload_sessions TO aip_readonly;
+
+-- Name: TABLE user_invite; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.user_invite TO aip_app;
+GRANT SELECT ON TABLE public.user_invite TO aip_readonly;
+GRANT SELECT,UPDATE ON TABLE public.user_invite TO aip_jobs;
 
 -- Name: TABLE user_session; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.user_session TO aip_app;
@@ -591,6 +611,10 @@ ALTER TABLE ONLY public.security_audit_events
 ALTER TABLE ONLY public.security_audit_events
     ADD CONSTRAINT uq_security_audit_events_tenant_id_seq UNIQUE (tenant_id, seq);
 
+-- Name: signoff_policy pk_signoff_policy; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.signoff_policy
+    ADD CONSTRAINT pk_signoff_policy PRIMARY KEY (id);
+
 -- Name: sites pk_sites; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.sites
     ADD CONSTRAINT pk_sites PRIMARY KEY (id);
@@ -670,6 +694,10 @@ ALTER TABLE ONLY public.term_pack_version
 -- Name: upload_sessions pk_upload_sessions; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.upload_sessions
     ADD CONSTRAINT pk_upload_sessions PRIMARY KEY (id);
+
+-- Name: user_invite pk_user_invite; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.user_invite
+    ADD CONSTRAINT pk_user_invite PRIMARY KEY (id);
 
 -- Name: user_session pk_user_session; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.user_session
@@ -839,6 +867,14 @@ ALTER TABLE ONLY public.term_pack
 -- Name: term_pack_version fk_term_pack_version_pack_id_tenant_id_term_pack; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.term_pack_version
     ADD CONSTRAINT fk_term_pack_version_pack_id_tenant_id_term_pack FOREIGN KEY (pack_id, tenant_id) REFERENCES public.term_pack(id, tenant_id);
+
+-- Name: user_invite fk_user_invite_invited_by_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.user_invite
+    ADD CONSTRAINT fk_user_invite_invited_by_tenant_id_app_user FOREIGN KEY (invited_by, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
+-- Name: user_invite fk_user_invite_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.user_invite
+    ADD CONSTRAINT fk_user_invite_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
 
 -- Name: user_session fk_user_session_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.user_session
@@ -1114,6 +1150,14 @@ CREATE FUNCTION public.identity_register_email(p_email public.citext, p_tenant u
           AND u.deleted_at IS NULL AND NOT u.sso_managed
       ) THEN
         RAISE EXCEPTION 'EMAIL_NOT_A_LOCAL_USER' USING ERRCODE = '42501';
+      END IF;
+      IF EXISTS (
+        SELECT 1 FROM public.login_directory AS d
+        WHERE d.kind = 'email_domain'
+          AND d.key = lower(split_part(p_email::text, '@', 2))::citext
+          AND d.idp_alias IS NOT NULL
+      ) THEN
+        RAISE EXCEPTION 'EMAIL_DOMAIN_SSO' USING ERRCODE = 'P0001';
       END IF;
       INSERT INTO public.login_directory (kind, key, tenant_id, idp_alias)
       VALUES ('email', p_email, p_tenant, NULL)
@@ -1918,6 +1962,9 @@ CREATE INDEX ix_security_audit_events_tenant_id_actor_id_occurred_at ON public.s
 -- Name: ix_security_audit_events_tenant_id_event_type_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_security_audit_events_tenant_id_event_type_occurred_at ON public.security_audit_events USING btree (tenant_id, event_type, occurred_at);
 
+-- Name: ix_signoff_policy_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_signoff_policy_tenant_id ON public.signoff_policy USING btree (tenant_id);
+
 -- Name: ix_sites_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_sites_tenant_id ON public.sites USING btree (tenant_id);
 
@@ -1980,6 +2027,12 @@ CREATE INDEX ix_upload_sessions_tenant_requested_by_created ON public.upload_ses
 
 -- Name: ix_upload_sessions_tenant_status_expires; Type: INDEX; Schema: public
 CREATE INDEX ix_upload_sessions_tenant_status_expires ON public.upload_sessions USING btree (tenant_id, status, expires_at);
+
+-- Name: ix_user_invite_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_user_invite_tenant_id ON public.user_invite USING btree (tenant_id);
+
+-- Name: ix_user_invite_tenant_id_user_id; Type: INDEX; Schema: public
+CREATE INDEX ix_user_invite_tenant_id_user_id ON public.user_invite USING btree (tenant_id, user_id);
 
 -- Name: ix_user_session_kc_sid; Type: INDEX; Schema: public
 CREATE INDEX ix_user_session_kc_sid ON public.user_session USING btree (kc_sid) WHERE (revoked_at IS NULL);
@@ -2110,8 +2163,14 @@ CREATE UNIQUE INDEX uq_upload_sessions_client_request_id ON public.upload_sessio
 -- Name: ux_record_links_live; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_record_links_live ON public.record_links USING btree (tenant_id, from_type, from_id, to_type, to_id, link_kind) WHERE (deleted_at IS NULL);
 
+-- Name: ux_signoff_policy_tenant_id_action_code; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_signoff_policy_tenant_id_action_code ON public.signoff_policy USING btree (tenant_id, action_code) WHERE (deleted_at IS NULL);
+
 -- Name: ux_tenant_feature_flags_live; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_tenant_feature_flags_live ON public.tenant_feature_flags USING btree (tenant_id, flag) WHERE (deleted_at IS NULL);
+
+-- Name: ux_user_invite_live_email; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_user_invite_live_email ON public.user_invite USING btree (tenant_id, email) WHERE ((status = ANY (ARRAY['pending'::text, 'sent'::text])) AND (deleted_at IS NULL));
 
 -- Name: ux_workflow_definitions_active; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_workflow_definitions_active ON public.workflow_definitions USING btree (tenant_id, key, COALESCE(project_id, '00000000-0000-0000-0000-000000000000'::uuid)) WHERE (status = 'active'::text);
@@ -2257,6 +2316,9 @@ CREATE POLICY tenant_isolation ON public.role_permission USING ((tenant_id = (NU
 -- Name: security_audit_events tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.security_audit_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: signoff_policy tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.signoff_policy USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: sites tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.sites USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -2319,6 +2381,9 @@ CREATE POLICY tenant_write ON public.term_pack_version USING (((tenant_id = (NUL
 
 -- Name: upload_sessions tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.upload_sessions USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: user_invite tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.user_invite USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: user_session session_lookup; Type: POLICY; Schema: public
 CREATE POLICY session_lookup ON public.user_session FOR SELECT TO aip_owner USING (true);
@@ -2410,6 +2475,9 @@ ALTER TABLE public.role_permission ENABLE ROW LEVEL SECURITY;
 -- Name: security_audit_events; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.security_audit_events ENABLE ROW LEVEL SECURITY;
 
+-- Name: signoff_policy; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.signoff_policy ENABLE ROW LEVEL SECURITY;
+
 -- Name: sites; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.sites ENABLE ROW LEVEL SECURITY;
 
@@ -2451,6 +2519,9 @@ ALTER TABLE public.term_pack_version ENABLE ROW LEVEL SECURITY;
 
 -- Name: upload_sessions; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.upload_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Name: user_invite; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.user_invite ENABLE ROW LEVEL SECURITY;
 
 -- Name: user_session; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.user_session ENABLE ROW LEVEL SECURITY;
@@ -2571,6 +2642,7 @@ CREATE TABLE public.app_user (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    mfa_enrolled_at timestamp with time zone,
     CONSTRAINT ck_app_user_deactivated_at CHECK (((status = 'deactivated'::text) = (deactivated_at IS NOT NULL))),
     CONSTRAINT ck_app_user_display_name CHECK (((btrim(display_name) <> ''::text) AND (length(display_name) <= 200))),
     CONSTRAINT ck_app_user_email CHECK ((email OPERATOR(public.~) '^[^@[:space:]]+@[^@[:space:]]+$'::public.citext)),
@@ -3286,6 +3358,26 @@ ALTER TABLE ONLY public.security_audit_events FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.security_audit_events OWNER TO aip_owner;
 
+-- Name: signoff_policy; Type: TABLE; Schema: public
+CREATE TABLE public.signoff_policy (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    action_code text NOT NULL,
+    min_aal smallint NOT NULL,
+    step_up_max_age_min smallint DEFAULT 10 NOT NULL,
+    updated_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_signoff_policy_action_code CHECK ((action_code ~ '^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$'::text)),
+    CONSTRAINT ck_signoff_policy_min_aal CHECK ((min_aal = ANY (ARRAY[1, 2]))),
+    CONSTRAINT ck_signoff_policy_step_up_max_age_min CHECK (((step_up_max_age_min >= 1) AND (step_up_max_age_min <= 60)))
+);
+
+ALTER TABLE ONLY public.signoff_policy FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.signoff_policy OWNER TO aip_owner;
+
 -- Name: sites; Type: TABLE; Schema: public
 CREATE TABLE public.sites (
     id uuid NOT NULL,
@@ -3609,6 +3701,36 @@ CREATE TABLE public.upload_sessions (
 ALTER TABLE ONLY public.upload_sessions FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.upload_sessions OWNER TO aip_owner;
+
+-- Name: user_invite; Type: TABLE; Schema: public
+CREATE TABLE public.user_invite (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    email public.citext NOT NULL,
+    user_class text NOT NULL,
+    organisation_id uuid,
+    invited_by uuid,
+    method text NOT NULL,
+    keycloak_user_id uuid,
+    status text NOT NULL,
+    last_error text,
+    expires_at timestamp with time zone NOT NULL,
+    sent_at timestamp with time zone,
+    accepted_at timestamp with time zone,
+    revoked_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_user_invite_last_error CHECK ((char_length(last_error) <= 500)),
+    CONSTRAINT ck_user_invite_method CHECK ((method = ANY (ARRAY['local'::text, 'sso'::text]))),
+    CONSTRAINT ck_user_invite_status CHECK ((status = ANY (ARRAY['pending'::text, 'sent'::text, 'accepted'::text, 'revoked'::text, 'failed'::text]))),
+    CONSTRAINT ck_user_invite_user_class CHECK ((user_class = ANY (ARRAY['staff'::text, 'field'::text, 'portal'::text])))
+);
+
+ALTER TABLE ONLY public.user_invite FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.user_invite OWNER TO aip_owner;
 
 -- Name: user_session; Type: TABLE; Schema: public
 CREATE TABLE public.user_session (

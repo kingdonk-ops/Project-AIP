@@ -29,6 +29,10 @@ hands the result to ``on_success`` (IDENTITY-03 issues the session there).
    ``EMAIL_NOT_VERIFIED``, ``DOMAIN_NOT_CLAIMED``, ``SSO_REQUIRED``, ``MEMBERSHIP_INACTIVE``;
 5. ``auth_event`` ``login.succeeded`` or ``login.denied`` (with the reason) in the same tenant.
 
+IDENTITY-04: an ``invited`` user who has a ``user_invite`` row signs in only while that invite is
+usable (``invites.accept_on_login``: ``sent`` for a local invite, not expired, not revoked);
+otherwise ``INVITE_INVALID``. The invite is then ``accepted`` with the user.
+
 Error bodies are ``{code, detail}`` and never name a tenant, an email or a token.
 """
 
@@ -49,6 +53,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from starlette.responses import JSONResponse, Response
 
 from aip.modules.identity import repository as repo
+from aip.modules.identity.invites import accept_on_login
 from aip.modules.identity.oidc import domain_of
 from aip.modules.identity.repository import UserRow
 from aip.modules.identity.schemas import VerifiedExternalIdentity
@@ -146,6 +151,7 @@ _MESSAGES: dict[str, str] = {
     "TENANT_UNRESOLVED": "sign-in is not available for this account",
     "INVALID_SUBJECT": "the identity provider returned an unusable account id",
     "INVALID_EMAIL": "the identity provider returned an unusable email address",
+    "INVITE_INVALID": "this invitation is no longer valid; ask for a new one",
 }
 
 
@@ -341,6 +347,10 @@ class JitProvisioner:
             user_id = existing.id
             if not await repo.has_current_membership(conn, user_id):
                 return await denied("MEMBERSHIP_INACTIVE", user_id)
+            if existing.status == "invited":
+                refusal = await accept_on_login(conn, existing)
+                if refusal is not None:
+                    return await denied(refusal, user_id)
             values: dict[str, object] = {"last_login_at": func.now()}
             if existing.status == "invited":
                 values["status"] = "active"

@@ -9,6 +9,11 @@ No staff password, TOTP or WebAuthn code lives here: Keycloak does all of it.
 
 IDENTITY-02 adds ``create_local_user`` and ``change_email``, which keep a local account's email
 registered to its one tenant (``identity_register_email``).
+
+IDENTITY-04 adds ``start_step_up``: the same authorize request with ``prompt=login``,
+``max_age=0`` and ``acr_values=aal2`` (``step_up.build_step_up_url``), sealed with
+``purpose='step_up'``. ``complete`` then returns the identity with its ``step_up`` state, and the
+callback elevates the session instead of provisioning a login (``step_up.complete_step_up``).
 """
 
 from __future__ import annotations
@@ -45,7 +50,11 @@ from aip.modules.identity.preauth_cookie import (
     seal,
 )
 from aip.modules.identity.repository import LoginDirectory
-from aip.modules.identity.schemas import LoginStartResponse, VerifiedExternalIdentity
+from aip.modules.identity.schemas import (
+    LoginStartResponse,
+    StepUpState,
+    VerifiedExternalIdentity,
+)
 from aip.modules.identity.settings import IdentitySettings
 from aip.platform.db.errors import NotFoundError
 from aip.platform.db.tls import redis_tls_kwargs
@@ -102,6 +111,44 @@ class LoginService:
         )
         return LoginStart(response=response, sealed_cookie=seal(state, self._settings.preauth_key))
 
+    def start_step_up(
+        self,
+        *,
+        email: str,
+        tenant_id: UUID,
+        idp_alias: str | None,
+        session_id: UUID,
+        started_at: int,
+        return_to: str | None,
+    ) -> tuple[str, str]:
+        """The Keycloak URL that re-authenticates this user with a second factor, and the sealed
+        pre-auth cookie that binds the answer to ``session_id`` (IDENTITY-04 step 6)."""
+        from aip.modules.identity.step_up import build_step_up_url
+
+        state = PreAuthState(
+            state=new_state(),
+            nonce=new_nonce(),
+            code_verifier=new_code_verifier(),
+            tenant_id=tenant_id,
+            idp_alias=idp_alias,
+            return_to=safe_return_to(return_to),
+            exp=new_expiry(),
+            purpose="step_up",
+            session_id=session_id,
+            started_at=started_at,
+        )
+        url = build_step_up_url(
+            email=email,
+            idp_alias=idp_alias,
+            authorize_endpoint=self._settings.authorize_endpoint,
+            client_id=self._settings.oidc_client_id,
+            redirect_uri=self._settings.redirect_uri,
+            state=state.state,
+            nonce=state.nonce,
+            code_verifier=state.code_verifier,
+        )
+        return url, seal(state, self._settings.preauth_key)
+
     async def complete(
         self, params: Mapping[str, str], cookie: str | None
     ) -> VerifiedExternalIdentity:
@@ -146,8 +193,14 @@ def _identity(
         raise OidcError("INVALID_ID_TOKEN", 400, "the ID token has no email")
     if not isinstance(auth_time, int | float):
         raise OidcError("INVALID_ID_TOKEN", 400, "the ID token has no auth_time")
-    raw_amr: object = claims.get("amr")
-    amr = [str(v) for v in raw_amr] if isinstance(raw_amr, list) else []  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
+    amr = _str_list(claims.get("amr"))
+    step_up: StepUpState | None = None
+    if pre.purpose == "step_up":
+        if pre.session_id is None or pre.started_at is None:
+            raise OidcError("INVALID_STATE", 400, "sign-in state is missing or invalid")
+        step_up = StepUpState(
+            session_id=pre.session_id, started_at=datetime.fromtimestamp(pre.started_at, tz=UTC)
+        )
     return VerifiedExternalIdentity(
         tenant_id=pre.tenant_id,
         idp_alias=alias,
@@ -159,7 +212,18 @@ def _identity(
         auth_time=datetime.fromtimestamp(auth_time, tz=UTC),
         kc_sid=_opt_str(claims.get("sid")),
         return_to=pre.return_to,
+        upstream_amr=_str_list(claims.get("upstream_amr"))[:16] if alias is not None else [],
+        step_up=step_up,
     )
+
+
+def _str_list(value: object) -> list[str]:
+    """A claim that is a list of strings (or one string, as Keycloak emits a single value)."""
+    if isinstance(value, str):
+        return [value] if value else []
+    if isinstance(value, list):
+        return [str(v) for v in value if isinstance(v, str | int)]  # pyright: ignore[reportUnknownVariableType]
+    return []
 
 
 class LoginRateLimiter:

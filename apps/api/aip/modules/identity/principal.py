@@ -22,6 +22,7 @@ from __future__ import annotations
 import logging
 import os
 from collections.abc import Mapping
+from datetime import datetime
 from typing import Literal, Protocol, runtime_checkable
 from uuid import UUID
 
@@ -67,6 +68,8 @@ class Principal(BaseModel):
     session_id: UUID | None = None
     aal: Literal[1, 2]
     amr: list[str] = Field(default_factory=list[str], max_length=16)
+    # When the person last authenticated (IDENTITY-04 step-up freshness); a session always has it.
+    authenticated_at: datetime | None = None
 
     @field_validator("tenant_id", "user_id")
     @classmethod

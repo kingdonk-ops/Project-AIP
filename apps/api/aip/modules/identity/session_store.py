@@ -326,6 +326,7 @@ class SessionPrincipalResolver:
                 session_id=session.session_id,
                 aal=2 if session.aal >= 2 else 1,
                 amr=list(session.amr),
+                authenticated_at=session.authenticated_at,
             )
         if session_expired() or self._fallback is None:
             return None

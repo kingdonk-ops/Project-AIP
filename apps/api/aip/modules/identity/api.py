@@ -18,6 +18,11 @@ Sessions (IDENTITY-03): ``issue_session``, ``rotate_session`` (IDENTITY-04 step-
 ``revoke_session`` and ``revoke_all_for_user`` (IDENTITY-05 deprovisioning) take the caller's
 ``with_tenant`` connection. ``add_session_middleware``, ``install_session_errors`` and
 ``session_resolver`` are the app wiring ``aip.main`` uses.
+
+IDENTITY-04: ``create_invite`` (no step-up; TENANCY-05's first-admin invite) and ``InviteError``;
+``step_up`` (the FastAPI dependency critical routes add) and ``require_step_up``; sign-off
+assurance (Part D, ADR 0010): ``check_signoff_assurance``, ``derive_assurance``, ``Assurance``,
+``SignoffDecision``, ``SignoffContext`` and ``SessionFacts`` (APPROVALS-02 calls it).
 """
 
 from __future__ import annotations
@@ -28,6 +33,15 @@ from typing import Protocol
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
+from aip.modules.identity.assurance import (
+    Assurance,
+    SessionFacts,
+    SignoffContext,
+    SignoffDecision,
+    check_signoff_assurance,
+    derive_assurance,
+)
+from aip.modules.identity.invites import CreatedInvite, InviteError, create_invite
 from aip.modules.identity.jit import JitLoginHandler
 from aip.modules.identity.login_session import session_login_handler
 from aip.modules.identity.principal import (
@@ -54,6 +68,7 @@ from aip.modules.identity.sessions import (
     revoke_session,
     rotate_session,
 )
+from aip.modules.identity.step_up import require_step_up, step_up
 from aip.modules.identity.wiring import (
     add_session_middleware,
     install_session_errors,
@@ -61,17 +76,26 @@ from aip.modules.identity.wiring import (
 )
 
 __all__ = [
+    "Assurance",
+    "CreatedInvite",
     "ExternalLoginHandler",
+    "InviteError",
     "JitLoginHandler",
     "ModuleApi",
     "PlaceholderLoginHandler",
     "PlatformPrincipalAdapter",
     "Principal",
     "PrincipalResolver",
+    "SessionFacts",
+    "SignoffContext",
+    "SignoffDecision",
     "UserPage",
     "UserRow",
     "VerifiedExternalIdentity",
     "add_session_middleware",
+    "check_signoff_assurance",
+    "create_invite",
+    "derive_assurance",
     "ensure_invited_sso_user",
     "find_by_email",
     "get_api",
@@ -82,11 +106,13 @@ __all__ = [
     "issue_session",
     "list_users",
     "record_auth_event",
+    "require_step_up",
     "revoke_all_for_user",
     "revoke_session",
     "rotate_session",
     "session_resolver",
     "set_user_status",
+    "step_up",
     "stub_principal_resolver",
 ]
 

@@ -4,12 +4,17 @@ Between ``POST /auth/login/start`` and the OIDC callback the backend keeps state
 code verifier, the resolved tenant and IdP alias and a same-origin ``returnTo``. They travel in one
 cookie encrypted with JWE (``alg=dir``, ``enc=A256GCM``, key ``PREAUTH_COOKIE_KEY``), so the browser
 can neither read nor change them. It lives 10 minutes and is cleared on every callback outcome.
+
+IDENTITY-04: a step-up (``GET /auth/step-up/start``) seals the same cookie with
+``purpose='step_up'``, the session being elevated and when the step-up started (epoch seconds);
+the callback then checks the new sign-in against them instead of provisioning a login.
 """
 
 from __future__ import annotations
 
 import json
 import time
+from typing import Literal
 from uuid import UUID
 
 from joserfc import jwe
@@ -49,6 +54,9 @@ class PreAuthState(BaseModel):
     idp_alias: str | None
     return_to: str
     exp: int
+    purpose: Literal["login", "step_up"] = "login"
+    session_id: UUID | None = None
+    started_at: int | None = None
 
 
 def new_expiry(now: float | None = None) -> int:

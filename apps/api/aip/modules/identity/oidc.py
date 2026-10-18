@@ -95,14 +95,22 @@ def build_authorize_url(
     nonce: str,
     code_verifier: str,
     scope: str = SCOPE,
+    extra_params: Mapping[str, str] | None = None,
 ) -> str:
-    """Keycloak's authorize URL: code flow, S256 PKCE, ``login_hint``; ``kc_idp_hint`` for SSO."""
-    extra: dict[str, str] = {
-        "nonce": nonce,
-        "code_challenge": create_s256_code_challenge(code_verifier),
-        "code_challenge_method": "S256",
-        "login_hint": email,
-    }
+    """Keycloak's authorize URL: code flow, S256 PKCE, ``login_hint``; ``kc_idp_hint`` for SSO.
+
+    ``extra_params`` adds request parameters (IDENTITY-04 step-up: ``prompt``, ``max_age``,
+    ``acr_values``); it cannot replace the ones above.
+    """
+    extra: dict[str, str] = dict(extra_params or {})
+    extra.update(
+        {
+            "nonce": nonce,
+            "code_challenge": create_s256_code_challenge(code_verifier),
+            "code_challenge_method": "S256",
+            "login_hint": email,
+        }
+    )
     if idp_alias is not None:
         extra["kc_idp_hint"] = idp_alias
     return prepare_grant_uri(

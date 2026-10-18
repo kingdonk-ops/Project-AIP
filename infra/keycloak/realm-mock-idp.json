@@ -46,6 +46,23 @@
       "serviceAccountsEnabled": false,
       "redirectUris": ["${KEYCLOAK_PUBLIC_URL:http://localhost:8180}/realms/aip/broker/kaefer-oidc/endpoint"],
       "webOrigins": [],
+      "protocolMappers": [
+        {
+          "name": "amr (IDENTITY-04: a customer IdP that enforces MFA)",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "amr",
+            "claim.value": "[\"pwd\",\"mfa\"]",
+            "jsonType.label": "JSON",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "false"
+          }
+        }
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
       }
@@ -64,6 +81,23 @@
       "serviceAccountsEnabled": false,
       "redirectUris": ["${KEYCLOAK_PUBLIC_URL:http://localhost:8180}/realms/aip/broker/acme-oidc/endpoint"],
       "webOrigins": [],
+      "protocolMappers": [
+        {
+          "name": "amr (IDENTITY-04: a customer IdP that does not report MFA)",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "amr",
+            "claim.value": "[\"pwd\"]",
+            "jsonType.label": "JSON",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "false"
+          }
+        }
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
       }

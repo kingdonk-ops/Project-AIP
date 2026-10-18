@@ -96,3 +96,12 @@ table = "jobs"
 
 ["POST /api/v1/jobs/{job_id}/retry"]
 table = "jobs"
+
+["DELETE /api/v1/identity/invites/{invite_id}"]
+table = "user_invite"
+
+["POST /api/v1/identity/invites/{invite_id}/resend"]
+table = "user_invite"
+
+["POST /api/v1/identity/users/{user_id}/reset-mfa"]
+table = "app_user"
