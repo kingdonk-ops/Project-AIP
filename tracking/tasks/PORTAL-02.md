@@ -68,7 +68,7 @@ the `portal` session policy).
 - **steps**:
   - 1. Realm config as code (`infra/keycloak/realm-aip.json`), a new client `aip-portal` copied from `aip-api`:
     confidential, `clientAuthenticatorType: client-secret` with secret `${PORTAL_OIDC_CLIENT_SECRET:...dev-only...}`
-    (the dev value obviously fake, refused outside dev/test by SECURITY-14's check), standard flow only (no implicit,
+    (the dev value obviously fake, refused outside dev/test by SECURITY-11 Part D's check), standard flow only (no implicit,
     no direct access grants, no service account), `rootUrl` / `baseUrl` `${PORTAL_ORIGIN:http://portal.localhost:8081}`,
     `redirectUris` exactly `["${PORTAL_ORIGIN:http://portal.localhost:8081}/api/v1/auth/portal/oidc/callback"]`,
     `webOrigins: []`, attributes `pkce.code.challenge.method: S256`, `default.acr.values: aal2`,
