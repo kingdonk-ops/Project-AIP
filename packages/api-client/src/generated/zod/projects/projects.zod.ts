@@ -19,7 +19,7 @@ export const projectsListQueryQOneMax = 100;
 export const ProjectsListQueryParams = zod.object({
   "limit": zod.int().min(1).max(projectsListQueryLimitMax).default(projectsListQueryLimitDefault),
   "cursor": zod.union([zod.string().max(projectsListQueryCursorOneMax),zod.null()]).optional(),
-  "sort": zod.enum(['code', 'name', 'updated_at']).default(projectsListQuerySortDefault),
+  "sort": zod.enum(['code', '-code', 'name', '-name', 'updated_at', '-updated_at']).default(projectsListQuerySortDefault),
   "status": zod.array(zod.enum(['draft', 'active', 'closing', 'archived'])).default(projectsListQueryStatusDefault),
   "siteId": zod.union([zod.uuid(),zod.null()]).optional(),
   "q": zod.union([zod.string().min(1).max(projectsListQueryQOneMax),zod.null()]).optional()
@@ -87,6 +87,25 @@ export const ProjectsCreateResponse = zod.object({
   "timezone": zod.union([zod.string(),zod.null()]),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
+
+/**
+ * The same filters and sort as the list, as one CSV file (PROJECTS-06, DESIGN-03).
+ * @summary Export Projects
+ */
+export const projectsExportQuerySortDefault = `code`;
+export const projectsExportQueryStatusDefault = [];
+export const projectsExportQueryQOneMax = 100;
+
+
+
+export const ProjectsExportQueryParams = zod.object({
+  "sort": zod.enum(['code', '-code', 'name', '-name', 'updated_at', '-updated_at']).default(projectsExportQuerySortDefault),
+  "status": zod.array(zod.enum(['draft', 'active', 'closing', 'archived'])).default(projectsExportQueryStatusDefault),
+  "siteId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "q": zod.union([zod.string().min(1).max(projectsExportQueryQOneMax),zod.null()]).optional()
+})
+
+export const ProjectsExportResponse = zod.unknown()
 
 /**
  * @summary Get Project

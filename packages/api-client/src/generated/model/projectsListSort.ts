@@ -5,6 +5,9 @@ export type ProjectsListSort = typeof ProjectsListSort[keyof typeof ProjectsList
 
 export const ProjectsListSort = {
   code: 'code',
+  '-code': '-code',
   name: 'name',
+  '-name': '-name',
   updated_at: 'updated_at',
+  '-updated_at': '-updated_at',
 } as const;
