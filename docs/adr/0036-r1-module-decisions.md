@@ -87,8 +87,7 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
     arithmetic extension to the shared evaluator (the approvals guard allow-list stays unchanged), and FORMS-08 adds
     repeating sections and grid fields; FORMS-05's seed templates use both.
 12. **Ignoring expiry reminders silences the rest of that access period,** including the expiry-day notice; renewing
-    later starts a new period with reminders again. (The owner asked for "a way to ignore notifications"; this is
-    PLAN-R1's reading of it.)
+    later starts a new period with reminders again (confirmed by the owner, 2026-10-18).
 13. **Everything left out of R1 is listed** in [`tracking/BACKLOG.md`](../../tracking/BACKLOG.md), with its source and
     the reason.
 
