@@ -86,6 +86,31 @@ describe("app shell", () => {
     expect(logout).toHaveBeenCalledOnce();
   });
 
+  // DESIGN-08: the mobile drawer (jsdom applies no media queries, so the menu button is always present).
+  it("closes the nav drawer on Escape and on a backdrop click, returning focus to the menu button", async () => {
+    const user = userEvent.setup();
+    setup(fakePort(alice), "/");
+    const menu = await screen.findByRole("button", { name: "Menu" });
+    const nav = screen.getByRole("navigation", { name: "Main navigation" });
+    expect(screen.queryByTestId("shell-backdrop")).toBeNull();
+
+    await user.click(menu);
+    expect(nav.getAttribute("data-open")).toBe("true");
+    expect(menu.getAttribute("aria-expanded")).toBe("true");
+    screen.getByRole("link", { name: "Home" }).focus();
+    await user.keyboard("{Escape}");
+    expect(nav.getAttribute("data-open")).toBe("false");
+    expect(document.activeElement).toBe(menu);
+    expect(screen.queryByTestId("shell-backdrop")).toBeNull();
+
+    await user.click(menu);
+    screen.getByRole("link", { name: "Home" }).focus();
+    await user.click(screen.getByTestId("shell-backdrop"));
+    expect(nav.getAttribute("data-open")).toBe("false");
+    expect(menu.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(menu);
+  });
+
   it("stays signed in and says so when sign out fails", async () => {
     const user = userEvent.setup();
     const { router } = setup(fakePort(alice, { logout: () => Promise.resolve(false) }), "/");

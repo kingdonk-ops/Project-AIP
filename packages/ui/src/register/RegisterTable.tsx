@@ -233,7 +233,8 @@ export function RegisterTable<T>({
         </div>
       )}
 
-      <div className="aip-table__wrap aip-register__scroll">
+      {/* DESIGN-08: its own scroll region, reachable by keyboard and named after the table. */}
+      <div className="aip-table__wrap aip-register__scroll" role="region" aria-label={tr(captionKey)} tabIndex={0}>
         <table
           className="aip-table aip-register__table"
           aria-busy={result.isPending}

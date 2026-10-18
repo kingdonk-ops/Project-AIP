@@ -66,6 +66,15 @@ describe("RegisterTable", () => {
     expect(within(screen.getByRole("region", { name: "Bulk actions" })).getByText("3 selected")).toBeTruthy();
   });
 
+  // DESIGN-08: the table scrolls sideways inside its own region, not the page.
+  it("wraps the table in a keyboard-focusable scroll region named after the caption", () => {
+    render(<Harness pages={pagesOf({ first: { items: rows(1), next: null } })} />);
+    const scroll = screen.getByRole("region", { name: "Projects" });
+    expect(scroll.getAttribute("tabindex")).toBe("0");
+    expect(scroll.className).toContain("aip-register__scroll");
+    expect(within(scroll).getByRole("table")).toBeTruthy();
+  });
+
   it("sorts through the header and marks aria-sort", async () => {
     const seen: RegisterQuery[] = [];
     render(<Harness pages={pagesOf({ first: { items: rows(2), next: null } })} seen={seen} />);

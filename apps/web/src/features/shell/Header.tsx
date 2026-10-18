@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from "@aip/ui";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type Ref } from "react";
 import { JobsButton } from "../jobs/MyJobsDrawer";
 import { BRAND_TOOLTIP_AT, brandText, productWord } from "./brand";
 import type { Session } from "./session";
@@ -24,9 +24,11 @@ export interface HeaderProps {
   onToggleNav: () => void;
   /** Ends the session. Resolves false when it failed (the menu then shows an error). */
   onSignOut: () => Promise<boolean>;
+  /** The shell returns focus here when the mobile drawer is dismissed (DESIGN-08). */
+  menuButtonRef?: Ref<HTMLButtonElement> | undefined;
 }
 
-export function Header({ session, navOpen, onToggleNav, onSignOut }: HeaderProps) {
+export function Header({ session, navOpen, onToggleNav, onSignOut, menuButtonRef }: HeaderProps) {
   const [signOutFailed, setSignOutFailed] = useState(false);
 
   async function submitSignOut(event: React.SyntheticEvent<HTMLFormElement>) {
@@ -38,6 +40,7 @@ export function Header({ session, navOpen, onToggleNav, onSignOut }: HeaderProps
   return (
     <header className="shell-header" aria-label={t("shell.header.label")}>
       <Button
+        ref={menuButtonRef}
         variant="ghost"
         size="icon"
         className="shell-header__menu"

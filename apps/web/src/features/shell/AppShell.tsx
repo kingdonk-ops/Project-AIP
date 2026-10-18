@@ -1,7 +1,7 @@
 import { TooltipProvider } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { activeNavItem, documentTitle } from "./brand";
 import { Header } from "./Header";
 import { NavRail } from "./NavRail";
@@ -24,6 +24,7 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [navOpen, setNavOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const page = activeNavItem(navItems ?? registeredNavItems(), pathname);
   const pageTitle = page ? t(page.termKey) : undefined;
@@ -32,6 +33,23 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
   useEffect(() => {
     document.title = documentTitle(session.tenant.name, pageTitle);
   }, [session.tenant.name, pageTitle]);
+
+  // DESIGN-08: the mobile drawer closes on Escape or a backdrop click, and focus goes back to the menu button.
+  function dismissNav() {
+    setNavOpen(false);
+    menuButtonRef.current?.focus();
+  }
+
+  useEffect(() => {
+    if (!navOpen) return;
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setNavOpen(false);
+      menuButtonRef.current?.focus();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [navOpen]);
 
   async function signOut(): Promise<boolean> {
     if (!(await port.logout())) return false;
@@ -46,13 +64,21 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
         {t("shell.skipToContent")}
       </a>
       <div className="shell">
-        <Header session={session} navOpen={navOpen} onToggleNav={() => setNavOpen((open) => !open)} onSignOut={signOut} />
+        <Header
+          session={session}
+          navOpen={navOpen}
+          onToggleNav={() => setNavOpen((open) => !open)}
+          onSignOut={signOut}
+          menuButtonRef={menuButtonRef}
+        />
         <NavRail
           permissions={session.permissions}
           items={navItems}
           open={navOpen}
           onNavigate={() => setNavOpen(false)}
         />
+        {/* Pointer-only dim layer under the open drawer (shown under 768px); Escape is the keyboard path. */}
+        {navOpen ? <div className="shell-backdrop" data-testid="shell-backdrop" aria-hidden="true" onClick={dismissNav} /> : null}
         <div className="shell__body">
           <ScopeBar tenantName={session.tenant.name} projectName={projectName} />
           <main id="main" className="shell__main" tabIndex={-1}>
