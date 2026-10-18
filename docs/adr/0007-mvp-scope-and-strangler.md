@@ -57,3 +57,9 @@ P1+ tasks are generated just in time by the `PLAN-*` tasks on the board (process
      R1 grows by roughly 6 to 8 weeks, which moves the proposed date from 2027-03-31 to about late May 2027. Offline sync
      in 6 to 8 weeks is optimistic. Decide in OPEN-QUESTIONS 25.
   2. **Embedded BI** is not in general availability; the customer-owned reporting feed replaces it (ADR 0008 C).
+
+## Owner answer: client portal in R1 (2026-10-18)
+
+The owner moved the client portal into R1 ("Put client portal in r1", OPEN-QUESTIONS #42), so §4's "portal ... come
+later" no longer applies to the portal's client sign-off slice. The slice and the identity approach are recorded in
+[ADR 0036](0036-r1-module-decisions.md); whether the 2027-03-31 target still holds is OPEN-QUESTIONS #56.

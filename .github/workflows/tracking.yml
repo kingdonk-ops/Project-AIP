@@ -16,3 +16,5 @@ jobs:
           python-version: "3.12"
       - name: Board integrity (ids, deps, task files, modules)
         run: python3 tools/next_task.py --check
+      - name: Task specs follow the ADRs (PLAN-R1 linter)
+        run: python3 tools/lint_tasks.py --quiet

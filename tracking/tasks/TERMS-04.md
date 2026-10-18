@@ -1,6 +1,10 @@
 # TERMS-04 — Pack import, diff, dry-run, apply and rollback
 
+<!-- hand-edited: re-scope note from PLAN-R1 (2026-10-18) -->
+
 <!-- hand-edited: depends-on synced from BOARD.md -->
+
+> **Re-homed by PLAN-R1 (2026-10-18):** deferred to P4 (ADR 0007 §3); `blocked` under "Later (P2+)" on the board.
 
 | Field | Value |
 |---|---|

@@ -1,13 +1,17 @@
 # TESTING-07 — Offline sync convergence property tests
 
+<!-- hand-edited: re-scope note from PLAN-R1 (2026-10-18) -->
+
 <!-- hand-edited: depends-on synced from BOARD.md -->
+
+> **Re-homed by PLAN-R1 (2026-10-18):** moved to P2 with the offline module (ADR 0007 §3; offline is out of R1) under "Later (P2+)", gated on PLAN-P2, which rewrites this spec per ADR 0001.
 
 | Field | Value |
 |---|---|
 | Module | [`testing`](../../docs/blueprint/modules/testing/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | PLAN-R1, TESTING-01 (board is authoritative) |
+| Depends on | PLAN-P2, PLAN-R1, TESTING-01 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
