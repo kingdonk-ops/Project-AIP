@@ -43,8 +43,9 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
   useEffect(() => {
     if (!navOpen) return;
     function onKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Escape" || event.defaultPrevented) return;
-      // Escape inside another layer (account menu, a dialog or drawer) closes only that layer.
+      if (event.key !== "Escape") return;
+      // Escape inside another layer (account menu, a dialog or drawer) closes only that layer. Not
+      // `defaultPrevented`: Radix prevents Escape when it closes a nav link's tooltip, too.
       if (event.target instanceof Element && event.target.closest('[role="menu"], [role="dialog"]')) return;
       setNavOpen(false);
       menuButtonRef.current?.focus();
