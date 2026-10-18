@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+
 import pytest
 
 from aip.modules.identity.settings import IdentitySettings, IdentitySettingsError
@@ -17,7 +19,8 @@ from aip.platform.dev_secrets import (
 DEPLOYED_ENVS = ["demo", "staging", "production", "prod", "Development"]
 DEV_ENVS = ["", "development", "test"]
 KNOWN = [(name, value) for name, values in DEV_SECRETS.items() for value in sorted(values)]
-REAL_KEY = "bm90LWEtZGV2LWtleS1idXQtYS10ZXN0LWtleS0zMmI"  # 32 bytes, not a dev value
+# A valid 32-byte key that is not a dev value, built here so no key-shaped literal is committed.
+REAL_KEY = base64.urlsafe_b64encode(b"not-a-dev-key-but-a-test-key-32b").decode().rstrip("=")
 
 
 @pytest.mark.parametrize("aip_env", DEPLOYED_ENVS)

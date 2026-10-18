@@ -16,3 +16,8 @@
 d7a52f33e6c04c99fb7e909b66482276f66544c5:apps/api/aip/modules/projects/settings.py:generic-api-key:26
 # The same PROJECTS-01 line under the squash-merge commit on main (now line 30).
 6d037e3d5f15d3ec026d94d4d2d4cf3e7ccb85db:apps/api/aip/modules/projects/settings.py:generic-api-key:30
+
+# Reviewed false positive (2026-10-18, SECURITY-11): a test-only PREAUTH_COOKIE_KEY, base64url of
+# "not-a-dev-key-but-a-test-key-32b", in the first commit of the PR branch. Later commits build it at
+# run time, so the squash commit on main carries no literal.
+10134686385d8ae7fceecdd533ac6f73ebdb4b52:apps/api/tests/platform/test_dev_secrets.py:generic-api-key:20
