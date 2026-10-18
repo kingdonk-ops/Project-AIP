@@ -1,6 +1,10 @@
 # DATABASE-03 — tenant_id backfill and RLS on all existing tables
 
+<!-- hand-edited: re-scope note from PLAN-R1 (2026-10-18) -->
+
 <!-- hand-edited: depends-on synced from BOARD.md -->
+
+> **Dropped by PLAN-R1 (2026-10-18):** replaced by DATAIO-04 (AIP migration and reconciliation, R1). There is no AIP schema in this greenfield repo to backfill (ADR 0001, ADR 0007 §3); every new table is born with `tenant_id` and FORCE RLS.
 
 | Field | Value |
 |---|---|

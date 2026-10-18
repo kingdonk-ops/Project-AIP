@@ -1,6 +1,10 @@
 # TESTING-06 — Hold-point and completion-gate scenarios on CUI data, plus golden report
 
+<!-- hand-edited: re-scope note from PLAN-R1 (2026-10-18) -->
+
 <!-- hand-edited: depends-on synced from BOARD.md -->
+
+> **Dropped by PLAN-R1 (2026-10-18):** split into INSPECTIONS-06 (hold-point scenarios), SCOPEWORK-05 (completion-gate scenarios) and REPORTS-05 (golden report), so each runs in the module that owns the behaviour (ADR 0007 §3).
 
 | Field | Value |
 |---|---|

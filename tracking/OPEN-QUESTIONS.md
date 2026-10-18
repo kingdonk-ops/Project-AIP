@@ -50,6 +50,32 @@ Nothing blocks M0 now.
 36. **Company name at sign-up:** today tenants are provisioned by the operator (ADR 0017) and the first admin is invited (TENANCY-05); there is no self-service sign-up. The company name typed at provisioning becomes the header name, and the tenant admin can edit it later. Is that what "when the tenant admin registers" means, or do you want self-service sign-up (a larger change: payment, verification and abuse controls)?
 37. **How many colours:** the specs use two company colours (the accent for buttons, links and focus, and an optional header colour). Is that enough, or do you need a logo upload too (planned with tenant branding) or a second accent?
 
+### R1 gate (PLAN-R1, 2026-10-18)
+
+Copied from the R1 modules' README "Open questions". Questions already settled by an ADR or P0 work are listed at
+the end and recorded in [ADR 0036](../docs/adr/0036-r1-module-decisions.md); the numbered ones need you. A task
+marked `blocked` on the board waits for its question; the others only shape later stubs.
+
+38. **item_types, inheritance:** can a child item type remove or override inherited attributes, or only add? Advisors suggest add-only, with overrides of required, unit and tolerance. (No R1 task; inheritance is after R1.)
+39. **item_types, schema changes:** how are existing assets and completed inspections handled when a type's schema changes? R1 pins each asset to an item-type version (ITEMTYPES-02, ASSETS-02); advisors propose a migration preview with impact counts for later.
+40. **item_types, neutral states:** which fixed set of neutral lifecycle states do custom status sets map to (advisors suggest a fixed enum in code)? Blocks ITEMTYPES-05.
+41. **item_types, starter packs:** ship starter packs with the product, keep them as owner-curated per-tenant imports, or both (advisors suggest both)? Blocks ITEMTYPES-06.
+42. **Client sign-off route in R1:** ADR 0007 keeps the client portal out of R1, but your 2026-10-10 answer says clients sign hold points, witness points and reports in the portal with username, password and a second step. Is the portal (or a client sign-in to the web app) part of "Kaefer live"? Until answered, R1 has no client-review step. Blocks INSPECTIONS-05.
+43. **inspections, witness notification:** which competitors natively notify customers of witness points is unconfirmed (market research, no task waits on it).
+44. **eligibility, grace periods and verification:** per-type grace periods, and checking licences against issuing registers, were seen in the market but not decided. (No R1 task; R1 is the hard block.)
+45. ~~**scope_work, access methods:** reconcile the access-method list before it is seeded.~~ Already answered in `docs/blueprint/01-decisions.md`: split MEWP and Ladder, tenant-editable list (ADR 0036). SCOPEWORK-06 is not blocked.
+46. **issues, root cause:** is the default root-cause method 5-why or fishbone? Blocks ISSUES-06.
+47. **report_engine, sealing:** PAdES with AWS KMS-held keys, or hash and manifest only? R1 reports record a sha256 only.
+48. **report_engine, external signing:** DocuSign or Adobe Sign, or in-app attestations only?
+49. **report_engine, immutable storage:** S3 Object Lock for sealed outputs (MinIO with object lock on Coolify), or hash and manifest only?
+50. **data_io, restore:** is a restore or import-from-export path built at all (with a conflict report), given the hostile-data and cross-tenant risks?
+51. **data_io, full exports:** dual approval for every full export, or a single approval?
+52. **data_io, scheduled exports:** are scheduled exports to storage in scope?
+53. **data_io, project scope:** is project-scoped export in scope alongside tenant scope?
+54. **AIP sample export:** please provide a sample export of Kaefer's current records (format, tables or sheets, typical volumes) on synthetic or approved data, as ADR 0007 plans. Blocks DATAIO-04 (and DATAIO-06 behind it).
+
+Settled (ADR 0036): assets ltree vs closure table (ltree, ADR 0002); assets phasing of risk-based scheduling and P&ID linkage (after R1, ADR 0007); item_types expression language (JSONLogic); forms builder foundation (no designer in R1); forms CEL vs JSONLogic (JSONLogic); inspections state machine (approvals engine, APPROVALS-01/02/05); eligibility reminder mechanism (Procrastinate, OPS-13, OPS-17); issues cost impact (not in R1).
+
 ## Also waiting on the owner
 
 - Coolify API key: owner decided (2026-10-08) to keep the key that was pasted in chat for now. Rotate it before any

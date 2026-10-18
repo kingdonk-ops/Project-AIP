@@ -1,13 +1,17 @@
 # TENANCY-04 — Asset sharing with party-scoped visibility profiles
 
+<!-- hand-edited: re-scope note from PLAN-R1 (2026-10-18) -->
+
 <!-- hand-edited: depends-on synced from BOARD.md -->
+
+> **Re-homed by PLAN-R1 (2026-10-18):** moved to P2 (ADR 0007 §3) under "Later (P2+)" on the board, gated on PLAN-P2, which rewrites this spec per ADR 0001. Do not start it from this text.
 
 | Field | Value |
 |---|---|
 | Module | [`tenancy`](../../docs/blueprint/modules/tenancy/README.md) |
 | Phase | P0 |
 | Size | M |
-| Depends on | PLAN-R1, TENANCY-03 (board is authoritative) |
+| Depends on | PLAN-P2, PLAN-R1, TENANCY-03 (board is authoritative) |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

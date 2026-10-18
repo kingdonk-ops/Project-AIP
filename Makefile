@@ -1,5 +1,5 @@
 # `make check` runs every backend and frontend gate (ARCH-01). CI runs the same commands.
-.PHONY: check check-py check-ts check-docs check-boundaries check-client generate-client e2e install sbom strip-check
+.PHONY: check check-py check-ts check-docs check-boundaries check-client generate-client e2e install sbom strip-check lint-tasks
 
 install:
 	uv sync --all-packages --frozen
@@ -41,6 +41,12 @@ check-docs:
 	python3 -m unittest tools/ci/tests/test_check_licences.py tools/ci/tests/test_sbom_fill_licences.py
 	python3 -m unittest tools/ci/tests/test_check_prod_strip.py tools/ci/tests/test_check_vuln_exceptions.py
 	python3 tools/ci/check_vuln_exceptions.py
+	$(MAKE) lint-tasks
+
+# PLAN-R1: task specs follow the ADRs (errors for R1 rows, warnings for older P0 specs). Its tests run in check-py.
+lint-tasks:
+	python3 tools/next_task.py --check
+	python3 tools/lint_tasks.py --quiet
 
 # STACK-03: regenerate the typed API client from the FastAPI schema, and the CI drift check
 # (fails on uncommitted changes under packages/api-client).
