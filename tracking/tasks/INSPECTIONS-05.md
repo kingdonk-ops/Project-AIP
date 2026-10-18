@@ -7,7 +7,7 @@
 | Module | [`inspections`](../../docs/blueprint/modules/inspections/README.md) |
 | Phase | R1 |
 | Size | M |
-| Depends on | APPROVALS-04, INSPECTIONS-03 |
+| Depends on | APPROVALS-04, INSPECTIONS-03, PORTAL-01 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
@@ -18,8 +18,6 @@
 
 ## Spec
 
-Add the client review step and the row of signatory chips showing each signer's assurance level (tag: extend).
+Add the client review step (a client signatory role fed by PORTAL-01 grants) and the row of signatory chips showing each signer's assurance level; clients act on it in the portal (PORTAL-04). It registers its client-review transition permission with `aip.modules.portal.api.register_action_permissions("sign_off", ...)` and adds `InspectionsApi.list_awaiting_party(conn, *, party, scopes, limit, after)` (each item with `assetPath`) for the portal inbox (PORTAL-03) (tag: extend).
 
 Stub: full spec is written when its dependencies are merged (PLAN-R1 pass A).
-
-Blocked: waits on [OPEN-QUESTIONS](../OPEN-QUESTIONS.md) #42. Do not guess the answer; the spec is written once the owner answers.

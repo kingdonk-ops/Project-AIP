@@ -62,8 +62,8 @@ Out of scope: item type, version and attributes columns (ASSETS-02); the `/asset
     `asset.moved` v1, `asset.deleted` v1. Regenerate `packages/contracts/src/permissions.generated.ts` with
     `tools/gen_permissions.py` and the module map with `tools/gen_module_map.py`.
     - ADR 0027 expands levels by verb: `view`, `create`, `update` and `delete` follow the access matrix's `assets`
-      row; `move` is not in `LEVEL_VERBS`, so default roles get `asset.move` at `admin` only (fail closed). Do not
-      change `aip.modules.access`; record the gap in "As built" for an access follow-up.
+      row; `move` is not in `LEVEL_VERBS` yet, so until ACCESS-07 adds it at the `edit` level, default roles get
+      `asset.move` at `admin` only (fail closed). Do not change `aip.modules.access` here.
   - 2. Migration `<timestamp>_assets_tree.py` (raw SQL, forward-only, `render_template("tenant_table", table="assets", sync=True, columns=...)`
     so the table gets `client_generated_id` and `sync_version`). Create `assets` with:
     - `parent_id uuid NULL`, `path ltree NOT NULL`, `internal_tag text NOT NULL`, `tag_number text NULL`,

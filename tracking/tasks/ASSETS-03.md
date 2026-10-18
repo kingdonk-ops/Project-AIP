@@ -7,7 +7,7 @@
 | Module | [`assets`](../../docs/blueprint/modules/assets/README.md) |
 | Phase | R1 |
 | Size | M |
-| Depends on | ASSETS-02, DESIGN-03, ITEMTYPES-03 |
+| Depends on | ACCESS-07, ASSETS-02, DESIGN-03, ITEMTYPES-03 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)

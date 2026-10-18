@@ -2,7 +2,7 @@
 
 - **Status:** proposed (accepted at the PLAN-R1 phase-entry review)
 - **Date:** 2026-10-18
-- **Affects:** assets, item_types, forms, inspections, eligibility, scope_work, issues, report_engine, data_io, terms, uploads; PLAN-R1 and every R1 task
+- **Affects:** portal, assets, item_types, forms, inspections, eligibility, scope_work, issues, report_engine, data_io, terms, uploads; PLAN-R1 and every R1 task
 
 ## Context
 
@@ -12,10 +12,22 @@ PLAN-R1 generates the R1 "Kaefer live" tasks (ADR 0007 §4). The just-in-time pr
 and the rest go to [OPEN-QUESTIONS.md](../../tracking/OPEN-QUESTIONS.md) under "R1 gate", with any task that needs
 the answer set to `blocked`. PLAN-R1's spec named this ADR 0009, but 0009 is the OCR decision, so it is 0036.
 
-None of the R1 modules' open questions had an owner answer yet. The lines below are settled by ADRs or P0 work, or
+Apart from #42 (portal, answered on 2026-10-18) and #45 (already in 01-decisions), none of the R1 modules' open questions had an owner answer yet. The lines below are settled by ADRs or P0 work, or
 are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes them.
 
 ## Decision
+
+### Owner answers
+
+- portal: the client portal is in R1 (answered 2026-10-18, OPEN-QUESTIONS #42). This changes ADR 0007 §4, which put
+  the portal after R1. The R1 portal slice is what client sign-off needs: external users and grants, sign-in on the
+  portal's own origin, the portal app with a "needs my action" inbox, client review and hold-point release, witness
+  attendance, client reports and the internal admin page. Share packs, subcontractor NCR responses, the onboarding
+  gate, the condition dashboard, watermarking and per-client branding stay after R1 (ADR 0007 §5, defer by default).
+- portal: clients sign in with their own username and password plus the second step local accounts require, and sign
+  off in the portal; PIN on the inspector's tablet stays an optional route behind `holdpoint_client_pin_only`
+  (answered 2026-10-10, ADR 0010 addendum part 2). This replaces ADR 0005's "magic link" row for portal users.
+- scope_work: access methods are Ground, Rope access, Scaffold, MEWP and Ladder (MEWP and Ladder split), as a tenant-editable list (answered in [01-decisions](../blueprint/01-decisions.md), owner decisions; the en-AU labels shipped with TERMS-01). SCOPEWORK-06 seeds them.
 
 ### Settled by earlier ADRs or P0 work
 
@@ -27,7 +39,6 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
 - inspections: the lifecycle runs on the approvals engine (versioned definition, transition service, hash-chained decisions), not XState or a bespoke workflow table (settled by APPROVALS-01, APPROVALS-02 and APPROVALS-05).
 - eligibility: reminders run as Procrastinate jobs from the OPS-13 scheduler under the OPS-17 handler role (settled by ADR 0003, OPS-13 and OPS-17).
 - eligibility: expiry is evaluated in UTC with calendar-day boundaries (settled by ADR 0025, 2026-10-13); the README's AWST note is presentation only.
-- scope_work: access methods are Ground, Rope access, Scaffold, MEWP and Ladder (MEWP and Ladder split), as a tenant-editable list (answered in [01-decisions](../blueprint/01-decisions.md), owner decisions; the en-AU labels shipped with TERMS-01). SCOPEWORK-06 seeds them.
 - issues: cost impact does not flow to cost-of-poor-quality or variations in R1, because neither module is in R1 (settled by ADR 0007 §4).
 - data_io: R1 data_io is the import of Kaefer's records plus generic CSV/XLSX import; tenant export stays with TENANCY-07, and restore, scheduled and project-scoped exports are after R1 (settled by ADR 0007 §1 and §4, ADR 0022).
 
@@ -48,15 +59,32 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
    is pinned to its template version and data snapshot and records its sha256; no seal or external signature.
 6. **TERMS-06 is narrowed to import aliases** (`resolve_alias`, `map_headers` over the TERMS-01 `term_alias` table). Glossary tooltips and search
    expansion wait for a search module.
-7. **No portal or client-review step in R1** until OPEN-QUESTIONS #42 is answered: ADR 0007 keeps the portal out of
-   R1, while the owner's 2026-10-10 answer (PLAN-R1 "Carried forward, part 2") says clients sign hold points in the
-   portal. INSPECTIONS-05 is `blocked` on it.
+7. **Portal users are local Keycloak accounts on a separate portal client.** Following ADR 0005 (no in-app
+   passwords or MFA), a client is invited through identity's invite flow into the tenant realm and signs in through a
+   dedicated `aip-portal` OIDC client on the portal's own host (ADR 0026 §3). The API issues a separate portal
+   session cookie with its own idle timeout, and portal sessions reach only an allow-listed set of routes. A portal
+   user is an `app_user` with an external user class whose permissions come only from explicit `portal_grants`
+   (project, optional asset subtree, action), never from inherited roles.
 8. **INSPECTIONS-03 is the R1 midpoint** that gates PLAN-P2 (rolling horizon).
+9. **A host module owns later versions of its own record type's workflow preset.** Guards must live in the
+   definition, because a transition through `/api/v1/approvals` bypasses the host module's routes. APPROVALS-05 ships
+   a guard-free v1 of `inspection.standard` for its lifecycle golden tests; INSPECTIONS-02 and INSPECTIONS-03 each
+   publish the next version (adding the submit guards) through `ApprovalsApi.install_preset` (APPROVALS-08), as
+   ISSUES-03 does for `issue.standard`. Instances stay pinned to the version they started on, which is harmless
+   because no real inspections exist before INSPECTIONS-02.
+10. **`move` is an edit-level verb.** `asset.move` stays a separate code an admin can withhold, and ACCESS-07 adds
+    `move` to the `edit` level of the ADR 0027 expansion so default roles that edit assets can reorganise the tree.
+11. **Calculated fields and repeating sections are in R1** (owner, 2026-10-18): FORMS-07 adds a forms-only
+    arithmetic extension to the shared evaluator (the approvals guard allow-list stays unchanged), and FORMS-08 adds
+    repeating sections and grid fields; FORMS-05's seed templates use both.
+12. **Everything left out of R1 is listed** in [`tracking/BACKLOG.md`](../../tracking/BACKLOG.md), with its source and
+    the reason.
 
 ## Consequences
 
 - The R1 board section, its stubs and the first three full specs per module follow these lines; the task linter
   (`tools/lint_tasks.py`) enforces the Python layout on every R1 row.
-- Blocked R1 rows: ITEMTYPES-05 (#40), ITEMTYPES-06 (#41), INSPECTIONS-05 (#42), ISSUES-06 (#46),
-  DATAIO-04 (#54). Each becomes `todo` when the owner answers and this ADR gains the answer line.
+- Blocked R1 rows: ITEMTYPES-05 (#40), ITEMTYPES-06 (#41), ISSUES-06 (#46), DATAIO-04 (#54), PORTAL-06 (#55). Each becomes `todo` when the owner answers and this ADR gains the answer line.
+- Moving the portal into R1 adds about seven rows to R1; the owner confirms whether the 2027-03-31 target holds
+  (ADR 0007).
 - A change to any choice above re-runs the generator for that module only (07-delivery process step 6).

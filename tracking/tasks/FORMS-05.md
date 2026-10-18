@@ -7,7 +7,7 @@
 | Module | [`forms`](../../docs/blueprint/modules/forms/README.md) |
 | Phase | R1 |
 | Size | S |
-| Depends on | FORMS-02 |
+| Depends on | FORMS-07, FORMS-08 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
@@ -18,6 +18,6 @@
 
 ## Spec
 
-Seed the coating ITR, UTT thickness survey and CUI inspection templates as data that pass the FORMS-01 lint (tag: extend).
+Seed the coating ITR, UTT thickness survey and CUI inspection templates as data that pass the FORMS-01 lint, using calculated fields (FORMS-07) and repeating rows of readings (FORMS-08) (tag: extend).
 
 Stub: full spec is written when its dependencies are merged (PLAN-R1 pass A).
