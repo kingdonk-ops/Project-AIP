@@ -43,13 +43,21 @@ tenant is marked `is_real_customer`. AWS staging (OPS-07/09/10) comes before any
 7. **GitHub secrets** (repository > Settings > Secrets and variables > Actions):
    `COOLIFY_WEBHOOK` (the resource's deploy webhook URL, Webhooks tab) and `COOLIFY_TOKEN` (the new
    API token). Add the repository variable `DEMO_URL` = `https://<demo-host>` to run the smoke test
-   after each deploy.
+   after each deploy. SECURITY-11: also `COSIGN_PRIVATE_KEY` and `COSIGN_PASSWORD` (a key pair
+   from `cosign generate-key-pair`; keep `cosign.pub` to verify). Without them the deploy fails
+   at signing, and the `security` workflow fails on main.
 8. Deploy once from the UI, then check: `python3 tools/smoke.py https://<demo-host>`.
 
 ## Redeploy
 
-Push to `main`: the workflow builds, pushes and calls the webhook; the demo is updated within about
-10 minutes. Manual redeploy: Coolify UI > Deploy, or re-run the workflow from the Actions tab.
+Push to `main`: once the `security` workflow passes for that commit, `deploy-coolify` builds the five
+images, Trivy-scans them and makes SBOMs (a fixable HIGH/CRITICAL not in
+`config/vuln-exceptions.txt` stops it before anything is pushed), pushes them, signs the pushed
+digests with cosign and calls the webhook; the demo is updated within about 15 minutes. Scan
+reports, SBOMs, digests and the public key are the run's `demo-image-evidence-<sha>` artifact.
+Verify an image with
+`cosign verify --key cosign.pub --insecure-ignore-tlog=true ghcr.io/kingdonk-ops/aip-api@sha256:<digest>`.
+Manual redeploy: Coolify UI > Deploy, or run the workflow from the Actions tab (from `main`).
 
 ## Roll back
 
@@ -78,16 +86,23 @@ run the smoke test.
 
 ## Sign-in on the demo
 
-The demo uses the fixture tenants and users from `infra/keycloak` (`alice@kaefer.test` through the
-mock IdP, `bob@acme.test`, and the local accounts). Their passwords are in the public repository,
-so anyone with the URL can sign in as them: acceptable for synthetic data only, never for real data.
-The `admin-bootstrap` one-shot (TESTING-09) makes `alice@kaefer.test` the kaefer-demo
+The demo uses the fixture tenants and the mock-IdP users `alice@kaefer.test` (kaefer-demo) and
+`bob@acme.test` (tenant-b). SECURITY-11 (review 11 H1): the demo Keycloak imports realms with no
+users and no client-secret defaults (`infra/keycloak/deployed_realms.py`; the dev realms with their
+committed passwords are for local dev and CI only). On every deploy the `mock-idp-users` one-shot
+creates alice and bob if missing and sets their passwords from `MOCK_IDP_ALICE_PASSWORD` and
+`MOCK_IDP_BOB_PASSWORD`. A missing value fails the deploy, and the committed dev passwords are
+refused. The `admin-bootstrap` one-shot (TESTING-09) makes `alice@kaefer.test` the kaefer-demo
 `tenant_admin` and `bob@acme.test` the tenant-b `tenant_admin` before their first sign-in.
 
 After each deploy the workflow runs the walking-skeleton journey against `DEMO_URL` when the
 `coolify-demo` environment has the secrets `E2E_USER_A`, `E2E_PASS_A`, `E2E_USER_B` and
-`E2E_PASS_B` (the two users above); without them the step is skipped with a notice. Each run
-creates one project in kaefer-demo and archives it at the end.
+`E2E_PASS_B`; without them the step is skipped with a notice. `E2E_PASS_A`/`E2E_PASS_B` must equal
+`MOCK_IDP_ALICE_PASSWORD`/`MOCK_IDP_BOB_PASSWORD`. Each run creates one project in kaefer-demo and
+archives it at the end.
+
+Rotating a demo password: change the Coolify variable and the matching `E2E_PASS_*` secret, then
+redeploy (the one-shot sets the new password).
 
 ## Known limits
 
