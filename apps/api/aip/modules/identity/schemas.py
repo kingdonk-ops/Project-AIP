@@ -1,4 +1,4 @@
-"""Pydantic request/response models for identity (IDENTITY-01, IDENTITY-02)."""
+"""Pydantic request/response models for identity (IDENTITY-01 to IDENTITY-04)."""
 
 from __future__ import annotations
 
@@ -31,9 +31,23 @@ class ErrorResponse(BaseModel):
     detail: str
 
 
+class StepUpState(BaseModel):
+    """The session a step-up sign-in elevates and when it started (from the sealed cookie)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    session_id: UUID
+    started_at: datetime
+
+
 class VerifiedExternalIdentity(BaseModel):
     """What a completed Keycloak sign-in proves. Built from a verified ID token, then the tokens
-    are dropped. ``tenant_id`` is from the pre-auth login directory, never from a token claim."""
+    are dropped. ``tenant_id`` is from the pre-auth login directory, never from a token claim.
+
+    ``upstream_amr`` is the customer IdP's ``amr`` for a brokered sign-in (IDENTITY-04: imported by
+    the IdP mapper, emitted as the ``upstream_amr`` claim); ``step_up`` is set when this sign-in
+    was a step-up rather than a login.
+    """
 
     model_config = ConfigDict(frozen=True)
 
@@ -47,6 +61,22 @@ class VerifiedExternalIdentity(BaseModel):
     auth_time: datetime
     kc_sid: str | None
     return_to: str = "/"
+    upstream_amr: list[str] = Field(default_factory=list[str])
+    step_up: StepUpState | None = None
+
+    @property
+    def aal(self) -> Literal[1, 2]:
+        from aip.modules.identity.sessions import derive_aal
+
+        return derive_aal(self.acr, self.amr, self.upstream_amr)
+
+    @property
+    def session_amr(self) -> list[str]:
+        """The ``amr`` the app session records: Keycloak's, plus for a brokered sign-in ``fed``
+        and the upstream IdP's values (sign-off assurance reads the method from them)."""
+        if self.idp_alias is None:
+            return list(self.amr)
+        return sorted({*self.amr, "fed", *self.upstream_amr})[:16]
 
 
 # --- GET /api/v1/me (IDENTITY-02) ---------------------------------------------------------------
@@ -113,3 +143,71 @@ class SessionOut(_CamelModel):
 
 class SessionList(_CamelModel):
     items: list[SessionOut]
+
+
+# --- invites, MFA reset and sign-off policy (IDENTITY-04) ---------------------------------------
+
+
+class InviteCreate(_CamelModel):
+    email: str = Field(min_length=3, max_length=254)
+    user_class: Literal["staff"] = "staff"
+    organisation_id: UUID | None = None
+    first_name: str = Field(default="", max_length=100)
+    last_name: str = Field(default="", max_length=100)
+
+
+class InviteCreated(_CamelModel):
+    invite_id: UUID
+    user_id: UUID
+    method: Literal["local", "sso"]
+
+
+class InviteOut(_CamelModel):
+    id: UUID
+    user_id: UUID
+    email: str
+    user_class: Literal["staff", "field", "portal"]
+    method: Literal["local", "sso"]
+    status: Literal["pending", "sent", "accepted", "revoked", "failed"]
+    last_error: str | None
+    expires_at: datetime
+    sent_at: datetime | None
+    accepted_at: datetime | None
+    revoked_at: datetime | None
+    created_at: datetime
+
+
+class InviteList(_CamelModel):
+    items: list[InviteOut]
+
+
+class StepUpErrorBody(BaseModel):
+    code: Literal["STEP_UP_REQUIRED"]
+    message: str
+    stepUpUrl: str  # noqa: N815 - the wire name
+
+
+class StepUpErrorResponse(BaseModel):
+    """401 from a critical action: confirm with a second factor at ``stepUpUrl``, then retry."""
+
+    detail: StepUpErrorBody
+
+
+class SignoffPolicyOut(_CamelModel):
+    action_code: str
+    min_aal: Literal[1, 2]
+    step_up_max_age_min: int
+    is_default: bool
+    updated_at: datetime | None = None
+
+
+class SignoffPolicyList(_CamelModel):
+    items: list[SignoffPolicyOut]
+
+
+class SignoffPolicyUpdate(_CamelModel):
+    action_code: str = Field(
+        min_length=3, max_length=100, pattern=r"^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$"
+    )
+    min_aal: Literal[1, 2]
+    step_up_max_age_min: int = Field(default=10, ge=1, le=60)

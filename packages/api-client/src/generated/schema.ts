@@ -317,6 +317,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/step-up/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Step Up Start */
+        get: operations["identity_step_up_start"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -362,6 +379,93 @@ export interface paths {
         get: operations["platform_ready"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Invites Route */
+        get: operations["identity_list_invites_route"];
+        put?: never;
+        /** Create Invite Route */
+        post: operations["identity_create_invite_route"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/invites/{invite_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Invite Route */
+        delete: operations["identity_revoke_invite_route"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/invites/{invite_id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resend Invite Route */
+        post: operations["identity_resend_invite_route"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/signoff-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Signoff Policy Route */
+        get: operations["identity_get_signoff_policy_route"];
+        /** Put Signoff Policy Route */
+        put: operations["identity_put_signoff_policy_route"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/users/{user_id}/reset-mfa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset Mfa Route */
+        post: operations["identity_reset_mfa_route"];
         delete?: never;
         options?: never;
         head?: never;
@@ -847,7 +951,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -1145,6 +1249,100 @@ export interface components {
         HealthResponse: {
             /** Status */
             status: string;
+        };
+        /** InviteCreate */
+        InviteCreate: {
+            /** Email */
+            email: string;
+            /**
+             * Firstname
+             * @default
+             */
+            firstName: string;
+            /**
+             * Lastname
+             * @default
+             */
+            lastName: string;
+            /** Organisationid */
+            organisationId?: string | null;
+            /**
+             * Userclass
+             * @default staff
+             * @constant
+             */
+            userClass: "staff";
+        };
+        /** InviteCreated */
+        InviteCreated: {
+            /**
+             * Inviteid
+             * Format: uuid
+             */
+            inviteId: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "local" | "sso";
+            /**
+             * Userid
+             * Format: uuid
+             */
+            userId: string;
+        };
+        /** InviteList */
+        InviteList: {
+            /** Items */
+            items: components["schemas"]["InviteOut"][];
+        };
+        /** InviteOut */
+        InviteOut: {
+            /** Acceptedat */
+            acceptedAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Email */
+            email: string;
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lasterror */
+            lastError: string | null;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "local" | "sso";
+            /** Revokedat */
+            revokedAt: string | null;
+            /** Sentat */
+            sentAt: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "sent" | "accepted" | "revoked" | "failed";
+            /**
+             * Userclass
+             * @enum {string}
+             */
+            userClass: "staff" | "field" | "portal";
+            /**
+             * Userid
+             * Format: uuid
+             */
+            userId: string;
         };
         /**
          * JobErrorBody
@@ -1610,7 +1808,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -1635,7 +1833,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -1647,7 +1845,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.view" | "audit.activity.view" | "audit.log.read" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * Scope
@@ -1748,6 +1946,42 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** SignoffPolicyList */
+        SignoffPolicyList: {
+            /** Items */
+            items: components["schemas"]["SignoffPolicyOut"][];
+        };
+        /** SignoffPolicyOut */
+        SignoffPolicyOut: {
+            /** Actioncode */
+            actionCode: string;
+            /** Isdefault */
+            isDefault: boolean;
+            /**
+             * Minaal
+             * @enum {integer}
+             */
+            minAal: 1 | 2;
+            /** Stepupmaxagemin */
+            stepUpMaxAgeMin: number;
+            /** Updatedat */
+            updatedAt?: string | null;
+        };
+        /** SignoffPolicyUpdate */
+        SignoffPolicyUpdate: {
+            /** Actioncode */
+            actionCode: string;
+            /**
+             * Minaal
+             * @enum {integer}
+             */
+            minAal: 1 | 2;
+            /**
+             * Stepupmaxagemin
+             * @default 10
+             */
+            stepUpMaxAgeMin: number;
+        };
         /** SiteCreate */
         SiteCreate: {
             /** Code */
@@ -1813,6 +2047,25 @@ export interface components {
             name?: string | null;
             /** Timezone */
             timezone?: string | null;
+        };
+        /** StepUpErrorBody */
+        StepUpErrorBody: {
+            /**
+             * Code
+             * @constant
+             */
+            code: "STEP_UP_REQUIRED";
+            /** Message */
+            message: string;
+            /** Stepupurl */
+            stepUpUrl: string;
+        };
+        /**
+         * StepUpErrorResponse
+         * @description 401 from a critical action: confirm with a second factor at ``stepUpUrl``, then retry.
+         */
+        StepUpErrorResponse: {
+            detail: components["schemas"]["StepUpErrorBody"];
         };
         /** SubscriptionOut */
         SubscriptionOut: {
@@ -2912,6 +3165,44 @@ export interface operations {
             };
         };
     };
+    identity_step_up_start: {
+        parameters: {
+            query?: {
+                returnTo?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description To Keycloak, which re-authenticates with a second factor. */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     platform_health: {
         parameters: {
             query?: never;
@@ -2978,6 +3269,412 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    identity_list_invites_route: {
+        parameters: {
+            query?: {
+                status?: ("pending" | "sent" | "accepted" | "revoked" | "failed") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteList"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    identity_create_invite_route: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteCreated"];
+                };
+            };
+            /** @description Not signed in, or a step-up is needed. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StepUpErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+        };
+    };
+    identity_revoke_invite_route: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteOut"];
+                };
+            };
+            /** @description Not signed in, or a step-up is needed. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StepUpErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    identity_resend_invite_route: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteOut"];
+                };
+            };
+            /** @description Not signed in, or a step-up is needed. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StepUpErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    identity_get_signoff_policy_route: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignoffPolicyList"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+        };
+    };
+    identity_put_signoff_policy_route: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignoffPolicyUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignoffPolicyList"];
+                };
+            };
+            /** @description Lowering a minimum needs a step-up. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StepUpErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    identity_reset_mfa_route: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in, or a step-up is needed. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StepUpErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

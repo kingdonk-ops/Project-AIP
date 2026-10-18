@@ -17,6 +17,8 @@
                 "approvals.view",
                 "audit.activity.view",
                 "audit.log.read",
+                "identity.signoff_policy.manage",
+                "identity.signoff_policy.read",
                 "identity.user.manage",
                 "identity.user.read",
                 "ops.jobs.admin",
@@ -790,6 +792,219 @@
           "status"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "InviteCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          },
+          "firstName": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Firstname",
+            "type": "string"
+          },
+          "lastName": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Lastname",
+            "type": "string"
+          },
+          "organisationId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organisationid"
+          },
+          "userClass": {
+            "const": "staff",
+            "default": "staff",
+            "title": "Userclass",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "InviteCreate",
+        "type": "object"
+      },
+      "InviteCreated": {
+        "additionalProperties": false,
+        "properties": {
+          "inviteId": {
+            "format": "uuid",
+            "title": "Inviteid",
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "local",
+              "sso"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "userId": {
+            "format": "uuid",
+            "title": "Userid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "inviteId",
+          "userId",
+          "method"
+        ],
+        "title": "InviteCreated",
+        "type": "object"
+      },
+      "InviteList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InviteOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "InviteList",
+        "type": "object"
+      },
+      "InviteOut": {
+        "additionalProperties": false,
+        "properties": {
+          "acceptedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptedat"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "title": "Expiresat",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lasterror"
+          },
+          "method": {
+            "enum": [
+              "local",
+              "sso"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "revokedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revokedat"
+          },
+          "sentAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentat"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "sent",
+              "accepted",
+              "revoked",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "userClass": {
+            "enum": [
+              "staff",
+              "field",
+              "portal"
+            ],
+            "title": "Userclass",
+            "type": "string"
+          },
+          "userId": {
+            "format": "uuid",
+            "title": "Userid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "email",
+          "userClass",
+          "method",
+          "status",
+          "lastError",
+          "expiresAt",
+          "sentAt",
+          "acceptedAt",
+          "revokedAt",
+          "createdAt"
+        ],
+        "title": "InviteOut",
         "type": "object"
       },
       "JobErrorBody": {
@@ -2236,6 +2451,8 @@
                 "approvals.view",
                 "audit.activity.view",
                 "audit.log.read",
+                "identity.signoff_policy.manage",
+                "identity.signoff_policy.read",
                 "identity.user.manage",
                 "identity.user.read",
                 "ops.jobs.admin",
@@ -2352,6 +2569,8 @@
                 "approvals.view",
                 "audit.activity.view",
                 "audit.log.read",
+                "identity.signoff_policy.manage",
+                "identity.signoff_policy.read",
                 "identity.user.manage",
                 "identity.user.read",
                 "ops.jobs.admin",
@@ -2435,6 +2654,8 @@
                     "approvals.view",
                     "audit.activity.view",
                     "audit.log.read",
+                    "identity.signoff_policy.manage",
+                    "identity.signoff_policy.read",
                     "identity.user.manage",
                     "identity.user.read",
                     "ops.jobs.admin",
@@ -2714,6 +2935,101 @@
         "title": "SessionStatus",
         "type": "object"
       },
+      "SignoffPolicyList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SignoffPolicyOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SignoffPolicyList",
+        "type": "object"
+      },
+      "SignoffPolicyOut": {
+        "additionalProperties": false,
+        "properties": {
+          "actionCode": {
+            "title": "Actioncode",
+            "type": "string"
+          },
+          "isDefault": {
+            "title": "Isdefault",
+            "type": "boolean"
+          },
+          "minAal": {
+            "enum": [
+              1,
+              2
+            ],
+            "title": "Minaal",
+            "type": "integer"
+          },
+          "stepUpMaxAgeMin": {
+            "title": "Stepupmaxagemin",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "required": [
+          "actionCode",
+          "minAal",
+          "stepUpMaxAgeMin",
+          "isDefault"
+        ],
+        "title": "SignoffPolicyOut",
+        "type": "object"
+      },
+      "SignoffPolicyUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "actionCode": {
+            "maxLength": 100,
+            "minLength": 3,
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$",
+            "title": "Actioncode",
+            "type": "string"
+          },
+          "minAal": {
+            "enum": [
+              1,
+              2
+            ],
+            "title": "Minaal",
+            "type": "integer"
+          },
+          "stepUpMaxAgeMin": {
+            "default": 10,
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Stepupmaxagemin",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "actionCode",
+          "minAal"
+        ],
+        "title": "SignoffPolicyUpdate",
+        "type": "object"
+      },
       "SiteCreate": {
         "additionalProperties": false,
         "properties": {
@@ -2964,6 +3280,43 @@
           }
         },
         "title": "SiteUpdate",
+        "type": "object"
+      },
+      "StepUpErrorBody": {
+        "properties": {
+          "code": {
+            "const": "STEP_UP_REQUIRED",
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "stepUpUrl": {
+            "title": "Stepupurl",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "stepUpUrl"
+        ],
+        "title": "StepUpErrorBody",
+        "type": "object"
+      },
+      "StepUpErrorResponse": {
+        "description": "401 from a critical action: confirm with a second factor at ``stepUpUrl``, then retry.",
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/StepUpErrorBody"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "StepUpErrorResponse",
         "type": "object"
       },
       "SubscriptionOut": {
@@ -4707,6 +5060,59 @@
         ]
       }
     },
+    "/api/v1/auth/step-up/start": {
+      "get": {
+        "operationId": "identity_step_up_start",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "returnTo",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 2048,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Returnto"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "To Keycloak, which re-authenticates with a second factor."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Step Up Start",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "platform_health",
@@ -4772,6 +5178,503 @@
         "summary": "Ready",
         "tags": [
           "platform"
+        ]
+      }
+    },
+    "/api/v1/identity/invites": {
+      "get": {
+        "operationId": "identity_list_invites_route",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "sent",
+                    "accepted",
+                    "revoked",
+                    "failed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Invites Route",
+        "tags": [
+          "identity"
+        ]
+      },
+      "post": {
+        "operationId": "identity_create_invite_route",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCreated"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in, or a step-up is needed."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Create Invite Route",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/api/v1/identity/invites/{invite_id}": {
+      "delete": {
+        "operationId": "identity_revoke_invite_route",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invite_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invite Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in, or a step-up is needed."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Invite Route",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/api/v1/identity/invites/{invite_id}/resend": {
+      "post": {
+        "operationId": "identity_resend_invite_route",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invite_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invite Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in, or a step-up is needed."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resend Invite Route",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/api/v1/identity/signoff-policy": {
+      "get": {
+        "operationId": "identity_get_signoff_policy_route",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignoffPolicyList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          }
+        },
+        "summary": "Get Signoff Policy Route",
+        "tags": [
+          "identity"
+        ]
+      },
+      "put": {
+        "operationId": "identity_put_signoff_policy_route",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignoffPolicyUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignoffPolicyList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpErrorResponse"
+                }
+              }
+            },
+            "description": "Lowering a minimum needs a step-up."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Signoff Policy Route",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/api/v1/identity/users/{user_id}/reset-mfa": {
+      "post": {
+        "operationId": "identity_reset_mfa_route",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in, or a step-up is needed."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Mfa Route",
+        "tags": [
+          "identity"
         ]
       }
     },

@@ -199,3 +199,61 @@ def test_theme_files() -> None:
     assert (theme / "resources" / "css" / "aip.css").is_file()
     assert (theme / "messages" / "messages_en.properties").is_file()
     assert (KEYCLOAK / "password-blocklist.txt").read_text(encoding="utf-8").strip()
+
+
+def test_upstream_amr_reaches_the_id_token(realm: dict[str, Any]) -> None:
+    """IDENTITY-04: each IdP imports the customer IdP's ``amr`` (FORCE, so a stale value never
+    survives a sign-in) and the API client emits it as ``upstream_amr``."""
+    mappers = {m["identityProviderAlias"]: m for m in realm["identityProviderMappers"]}
+    for idp in realm["identityProviders"]:
+        mapper = mappers[idp["alias"]]
+        assert mapper["identityProviderMapper"] == "oidc-user-attribute-idp-mapper"
+        assert mapper["config"] == {
+            "syncMode": "FORCE",
+            "claim": "amr",
+            "user.attribute": "upstream_amr",
+        }
+        assert idp["config"]["forwardParameters"] == "prompt,max_age"
+    api = _client(realm, "aip-api")
+    claim = next(m for m in api["protocolMappers"] if m["name"] == "upstream_amr")
+    assert claim["config"]["user.attribute"] == "upstream_amr"
+    assert claim["config"]["multivalued"] == "true"
+    assert claim["config"]["id.token.claim"] == "true"
+    assert claim["config"]["access.token.claim"] == "false"
+    assert api["baseUrl"].endswith("/login?invited=1")  # the invite email's way back
+
+
+def test_user_profile_declares_the_admin_only_attributes(realm: dict[str, Any]) -> None:
+    provider = realm["components"]["org.keycloak.userprofile.UserProfileProvider"][0]
+    profile = json.loads(provider["config"]["kc.user.profile.config"][0])
+    attrs = {a["name"]: a for a in profile["attributes"]}
+    assert {"username", "email", "firstName", "lastName"} <= set(attrs)
+    for name in ("aip_user_id", "upstream_amr"):
+        assert attrs[name]["permissions"] == {"view": ["admin"], "edit": ["admin"]}, name
+    assert attrs["upstream_amr"]["multivalued"] is True
+
+
+def test_admin_client_token_carries_only_the_user_roles(realm: dict[str, Any]) -> None:
+    admin = _client(realm, "aip-admin")
+    assert admin["fullScopeAllowed"] is False
+    assert "roles" in admin["defaultClientScopes"]
+    [mapping] = realm["clientScopeMappings"]["realm-management"]
+    assert mapping["client"] == "aip-admin"
+    assert sorted(mapping["roles"]) == ["manage-users", "query-users", "view-users"]
+
+
+def test_mock_idps_hard_code_their_amr() -> None:
+    mock = json.loads((KEYCLOAK / "realm-mock-idp.json").read_text(encoding="utf-8"))
+    amr = {
+        c["clientId"]: json.loads(c["protocolMappers"][0]["config"]["claim.value"])
+        for c in mock["clients"]
+    }
+    assert amr == {"aip-broker-kaefer": ["pwd", "mfa"], "aip-broker-acme": ["pwd"]}
+
+
+def test_email_theme(realm: dict[str, Any]) -> None:
+    assert realm["emailTheme"] == "aip"
+    theme = KEYCLOAK / "themes" / "aip" / "email"
+    assert "parent=keycloak" in (theme / "theme.properties").read_text(encoding="utf-8")
+    messages = (theme / "messages" / "messages_en.properties").read_text(encoding="utf-8")
+    assert "executeActionsSubject=" in messages and "executeActionsBodyHtml=" in messages

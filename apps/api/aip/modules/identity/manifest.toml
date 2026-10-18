@@ -6,12 +6,14 @@
 #   ACCESS-01 should require step-up for it).
 # IDENTITY-03: user_session, tenant_auth_policy; the __Host- session and CSRF cookies; logout,
 #   back-channel logout, GET/DELETE /api/v1/me/sessions; the identity.revoke_keycloak_sessions job.
+# IDENTITY-04: user_invite, signoff_policy, app_user.mfa_enrolled_at; invites (Keycloak sends the
+#   email), MFA reset, step-up (GET /api/v1/auth/step-up/start) and sign-off assurance (ADR 0010);
+#   jobs identity.send_invite, identity.disable_keycloak_user, identity.reset_keycloak_mfa.
 # depends_on tenancy: login_directory and the user tables reference tenants (TENANCY-01).
 #   ops: revocation enqueues its Keycloak job through the ops job registry (ADR 0003).
 id = "identity"
 context = "identity"
 depends_on = ["tenancy", "ops"]
-events = []
 subscribes = []
 settings = [
   "KEYCLOAK_URL",
@@ -25,6 +27,7 @@ settings = [
   "KEYCLOAK_ADMIN_CLIENT_ID",
   "KEYCLOAK_ADMIN_CLIENT_SECRET",
   "REDIS_URL",
+  "AIP_TEST_CLOCK_OFFSET",
 ]
 term_keys = []
 
@@ -37,3 +40,16 @@ description = "View users of the tenant"
 code = "identity.user.manage"
 description = "Invite, activate and deactivate users"
 privileged = true
+
+[[permissions]]
+code = "identity.signoff_policy.read"
+description = "View the minimum sign-in assurance for critical actions"
+
+[[permissions]]
+code = "identity.signoff_policy.manage"
+description = "Change the minimum sign-in assurance for critical actions"
+privileged = true
+
+[[events]]
+name = "identity.signoff_policy.changed"
+version = 1

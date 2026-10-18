@@ -39,6 +39,166 @@ export const IdentityBackchannelLogoutResponse = zod.unknown()
 export const IdentityOidcCallbackResponse = zod.unknown()
 
 /**
+ * @summary Step Up Start
+ */
+export const identityStepUpStartQueryReturnToOneMax = 2048;
+
+
+
+export const IdentityStepUpStartQueryParams = zod.object({
+  "returnTo": zod.union([zod.string().max(identityStepUpStartQueryReturnToOneMax),zod.null()]).optional()
+})
+
+export const IdentityStepUpStartResponse = zod.void()
+
+/**
+ * @summary List Invites Route
+ */
+export const IdentityListInvitesRouteQueryParams = zod.object({
+  "status": zod.union([zod.enum(['pending', 'sent', 'accepted', 'revoked', 'failed']),zod.null()]).optional()
+})
+
+export const IdentityListInvitesRouteResponse = zod.object({
+  "items": zod.array(zod.object({
+  "acceptedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "email": zod.string(),
+  "expiresAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "lastError": zod.union([zod.string(),zod.null()]),
+  "method": zod.enum(['local', 'sso']),
+  "revokedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "sentAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "status": zod.enum(['pending', 'sent', 'accepted', 'revoked', 'failed']),
+  "userClass": zod.enum(['staff', 'field', 'portal']),
+  "userId": zod.uuid()
+}))
+})
+
+/**
+ * @summary Create Invite Route
+ */
+export const identityCreateInviteRouteBodyEmailMin = 3;
+export const identityCreateInviteRouteBodyEmailMax = 254;
+
+export const identityCreateInviteRouteBodyFirstNameDefault = ``;
+export const identityCreateInviteRouteBodyFirstNameMax = 100;
+
+export const identityCreateInviteRouteBodyLastNameDefault = ``;
+export const identityCreateInviteRouteBodyLastNameMax = 100;
+
+export const identityCreateInviteRouteBodyUserClassDefault = `staff`;
+
+export const IdentityCreateInviteRouteBody = zod.object({
+  "email": zod.string().min(identityCreateInviteRouteBodyEmailMin).max(identityCreateInviteRouteBodyEmailMax),
+  "firstName": zod.string().max(identityCreateInviteRouteBodyFirstNameMax).default(identityCreateInviteRouteBodyFirstNameDefault),
+  "lastName": zod.string().max(identityCreateInviteRouteBodyLastNameMax).default(identityCreateInviteRouteBodyLastNameDefault),
+  "organisationId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "userClass": zod.literal("staff").default(identityCreateInviteRouteBodyUserClassDefault).meta({ title: 'Userclass' })
+})
+
+export const IdentityCreateInviteRouteResponse = zod.object({
+  "inviteId": zod.uuid(),
+  "method": zod.enum(['local', 'sso']),
+  "userId": zod.uuid()
+})
+
+/**
+ * @summary Revoke Invite Route
+ */
+export const IdentityRevokeInviteRouteParams = zod.object({
+  "invite_id": zod.uuid()
+})
+
+export const IdentityRevokeInviteRouteResponse = zod.object({
+  "acceptedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "email": zod.string(),
+  "expiresAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "lastError": zod.union([zod.string(),zod.null()]),
+  "method": zod.enum(['local', 'sso']),
+  "revokedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "sentAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "status": zod.enum(['pending', 'sent', 'accepted', 'revoked', 'failed']),
+  "userClass": zod.enum(['staff', 'field', 'portal']),
+  "userId": zod.uuid()
+})
+
+/**
+ * @summary Resend Invite Route
+ */
+export const IdentityResendInviteRouteParams = zod.object({
+  "invite_id": zod.uuid()
+})
+
+export const IdentityResendInviteRouteResponse = zod.object({
+  "acceptedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "email": zod.string(),
+  "expiresAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "lastError": zod.union([zod.string(),zod.null()]),
+  "method": zod.enum(['local', 'sso']),
+  "revokedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "sentAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "status": zod.enum(['pending', 'sent', 'accepted', 'revoked', 'failed']),
+  "userClass": zod.enum(['staff', 'field', 'portal']),
+  "userId": zod.uuid()
+})
+
+/**
+ * @summary Get Signoff Policy Route
+ */
+export const IdentityGetSignoffPolicyRouteResponse = zod.object({
+  "items": zod.array(zod.object({
+  "actionCode": zod.string(),
+  "isDefault": zod.boolean(),
+  "minAal": zod.union([zod.literal(1),zod.literal(2)]),
+  "stepUpMaxAgeMin": zod.int(),
+  "updatedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional()
+}))
+})
+
+/**
+ * @summary Put Signoff Policy Route
+ */
+export const identityPutSignoffPolicyRouteBodyActionCodeMin = 3;
+export const identityPutSignoffPolicyRouteBodyActionCodeMax = 100;
+
+
+export const identityPutSignoffPolicyRouteBodyActionCodeRegExp = new RegExp('^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$');
+export const identityPutSignoffPolicyRouteBodyStepUpMaxAgeMinDefault = 10;
+export const identityPutSignoffPolicyRouteBodyStepUpMaxAgeMinMax = 60;
+
+
+
+export const IdentityPutSignoffPolicyRouteBody = zod.object({
+  "actionCode": zod.string().min(identityPutSignoffPolicyRouteBodyActionCodeMin).max(identityPutSignoffPolicyRouteBodyActionCodeMax).regex(identityPutSignoffPolicyRouteBodyActionCodeRegExp),
+  "minAal": zod.union([zod.literal(1),zod.literal(2)]),
+  "stepUpMaxAgeMin": zod.int().min(1).max(identityPutSignoffPolicyRouteBodyStepUpMaxAgeMinMax).default(identityPutSignoffPolicyRouteBodyStepUpMaxAgeMinDefault)
+})
+
+export const IdentityPutSignoffPolicyRouteResponse = zod.object({
+  "items": zod.array(zod.object({
+  "actionCode": zod.string(),
+  "isDefault": zod.boolean(),
+  "minAal": zod.union([zod.literal(1),zod.literal(2)]),
+  "stepUpMaxAgeMin": zod.int(),
+  "updatedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional()
+}))
+})
+
+/**
+ * @summary Reset Mfa Route
+ */
+export const IdentityResetMfaRouteParams = zod.object({
+  "user_id": zod.uuid()
+})
+
+export const IdentityResetMfaRouteResponse = zod.void()
+
+/**
  * @summary Get Me
  */
 export const IdentityGetMeResponse = zod.object({

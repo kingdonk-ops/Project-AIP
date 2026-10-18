@@ -70,3 +70,12 @@ def test_check_fails_when_the_file_differs(tmp_path: Path) -> None:
 def test_every_mapped_term_exists_in_the_dictionary() -> None:
     terms = km.load_terms()
     assert {term for _, term in km.MESSAGE_MAP} <= set(terms)
+
+
+def test_every_email_term_exists_and_keeps_its_placeholders() -> None:
+    """IDENTITY-04: the invite email texts, with Keycloak's {0} link and {4} lifespan."""
+    terms = km.load_terms()
+    assert {term for _, term in km.EMAIL_MESSAGE_MAP} <= set(terms)
+    text = km.render(terms=terms, message_map=km.EMAIL_MESSAGE_MAP)
+    body = next(line for line in text.splitlines() if line.startswith("executeActionsBodyHtml="))
+    assert 'href="{0}"' in body and "{4}" in body

@@ -271,13 +271,17 @@ jobs:
         run: >-
           uv run pytest -q -p no:cacheprovider
           "apps/api/tests/platform/capabilities/test_gotenberg.py::test_render_store_and_download_report"
-      - name: IDENTITY-01 sign-in flows against the compose Keycloak (SSO, OTP enrolment, lockout)
+      - name: IDENTITY-01/04 sign-in flows against the compose Keycloak (SSO, OTP, lockout, invites)
         env:
           AIP_TEST_KEYCLOAK_URL: http://localhost:8180
           AIP_TEST_KEYCLOAK_ADMIN: admin
           AIP_TEST_KEYCLOAK_ADMIN_PASSWORD: keycloak_admin_dev_only
           AIP_TEST_KEYCLOAK_APP_ORIGIN: http://localhost:8080
-        run: uv run pytest -q -p no:cacheprovider apps/api/aip/modules/identity/tests/test_keycloak_flows.py
+          AIP_TEST_MAILPIT_URL: http://localhost:8025
+        run: >-
+          uv run pytest -q -p no:cacheprovider
+          apps/api/aip/modules/identity/tests/test_keycloak_flows.py
+          apps/api/aip/modules/identity/tests/test_invite_keycloak.py
       - name: Stack state and logs
         if: failure()
         run: |

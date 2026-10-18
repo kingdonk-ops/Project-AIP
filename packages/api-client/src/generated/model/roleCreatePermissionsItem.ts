@@ -14,6 +14,8 @@ export const RoleCreatePermissionsItem = {
   approvalsview: 'approvals.view',
   auditactivityview: 'audit.activity.view',
   auditlogread: 'audit.log.read',
+  identitysignoff_policymanage: 'identity.signoff_policy.manage',
+  identitysignoff_policyread: 'identity.signoff_policy.read',
   identityusermanage: 'identity.user.manage',
   identityuserread: 'identity.user.read',
   opsjobsadmin: 'ops.jobs.admin',

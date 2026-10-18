@@ -1,4 +1,4 @@
-"""HTTP routes for identity (IDENTITY-01, IDENTITY-02).
+"""HTTP routes for identity (IDENTITY-01 to IDENTITY-04).
 
 - ``POST /api/v1/auth/login/start``: public, rate limited (10/min per IP).
 - ``GET /api/v1/auth/oidc/callback``: public; clears the pre-auth cookie on every outcome.
@@ -13,6 +13,12 @@ The two auth routes are ``public()`` and ``/me`` is ``authenticated()`` (ACCESS-
 routes' error bodies are ``{code, detail}``. ``/me`` errors follow ADR 0015
 (``{"detail": {"code", "message"}}``). No error body contains a token, email or tenant.
 
+IDENTITY-04: ``GET /api/v1/auth/step-up/start`` (authenticated; redirects to Keycloak for a
+fresh second factor, the callback then rotates the session), the invite routes under
+``/api/v1/identity/invites`` and ``POST /api/v1/identity/users/{id}/reset-mfa`` (all mutations need
+``identity.user.manage`` plus a step-up), and ``GET/PUT /api/v1/identity/signoff-policy``
+(Part D; lowering a minimum needs a step-up and emits ``identity.signoff_policy.changed``).
+
 ``/me`` checks, in order and failing closed: a principal (401), the tenant active (401/403, via
 tenancy's ``require_active_tenant``), then the user live and ``active`` in that tenant (401).
 """
@@ -24,12 +30,12 @@ import os
 from collections.abc import Awaitable, Callable
 from contextlib import AbstractAsyncContextManager
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Any, Literal
 from urllib.parse import parse_qs
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import ValidationError
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -38,12 +44,30 @@ from starlette.responses import Response
 from aip.modules.identity import preauth_cookie
 from aip.modules.identity import repository as repo
 from aip.modules.identity.api import ExternalLoginHandler, get_external_login_handler
+from aip.modules.identity.assurance import DEFAULT_MAX_AGE_MIN as DEFAULT_SIGNOFF_MAX_AGE_MIN
+from aip.modules.identity.assurance import DEFAULT_MIN_AAL, SIGNOFF_ACTIONS
+from aip.modules.identity.events import (
+    SIGNOFF_POLICY_CHANGED,
+    SignoffPolicyChangedEvent,
+    SignoffPolicyValues,
+)
+from aip.modules.identity.invites import (
+    InviteError,
+    create_invite,
+    resend_invite,
+    reset_mfa,
+    revoke_invite,
+)
 from aip.modules.identity.oidc import KeycloakOidcClient, OidcError, verify_logout_token
 from aip.modules.identity.principal import Principal, get_principal
-from aip.modules.identity.repository import SqlLoginDirectory
+from aip.modules.identity.repository import InviteRow, SqlLoginDirectory
 from aip.modules.identity.schemas import (
     AuthErrorResponse,
     ErrorResponse,
+    InviteCreate,
+    InviteCreated,
+    InviteList,
+    InviteOut,
     LoginStartRequest,
     LoginStartResponse,
     MeMembership,
@@ -52,6 +76,10 @@ from aip.modules.identity.schemas import (
     MeUser,
     SessionList,
     SessionOut,
+    SignoffPolicyList,
+    SignoffPolicyOut,
+    SignoffPolicyUpdate,
+    StepUpErrorResponse,
 )
 from aip.modules.identity.service import LoginRateLimiter, LoginService
 from aip.modules.identity.session_store import current_session
@@ -62,9 +90,12 @@ from aip.modules.identity.sessions import (
     revoke_session,
 )
 from aip.modules.identity.settings import IdentitySettings, IdentitySettingsError
+from aip.modules.identity.step_up import complete_step_up, require_step_up, step_up
+from aip.modules.identity.step_up import now as step_up_clock
 from aip.modules.tenancy.api import TenantView, require_active_tenant
-from aip.platform.access import authenticated, public
+from aip.platform.access import authenticated, public, requires
 from aip.platform.db.session import before_tenant, with_tenant
+from aip.platform.events import Aggregate, emit
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +190,10 @@ async def oidc_callback(
         logger.info("oidc callback refused: %s", exc.code)
         response: Response = _error(exc.code, exc.status_code, exc.message)
     else:
-        response = await handler(identity)
+        if identity.step_up is not None:
+            response = await complete_step_up(identity)
+        else:
+            response = await handler(identity)
     preauth_cookie.clear_cookie(response)
     response.headers["Cache-Control"] = "no-store"
     return response
@@ -340,6 +374,273 @@ async def revoke_my_session(
     return response
 
 
+# --- step-up (IDENTITY-04 step 6) -------------------------------------------------------------
+
+step_up_router = APIRouter(prefix="/auth", tags=["identity"])
+
+
+@step_up_router.get(
+    "/step-up/start",
+    dependencies=[Depends(authenticated())],
+    status_code=303,
+    response_class=Response,
+    responses={
+        303: {"description": "To Keycloak, which re-authenticates with a second factor."},
+        401: {"model": AuthErrorResponse},
+    },
+)
+async def step_up_start(
+    principal: Annotated[Principal, Depends(get_principal)],
+    service: Annotated[LoginService, Depends(get_login_service)],
+    return_to: Annotated[str | None, Query(alias="returnTo", max_length=2048)] = None,
+) -> Response:
+    if principal.session_id is None:
+        raise _not_authenticated()  # step-up elevates a browser session; nothing else has one
+    async with with_tenant(principal.tenant_id) as conn:
+        user = await repo.get_user(conn, principal.user_id)
+    if user is None or user.status != "active":
+        raise _not_authenticated()
+    url, sealed = service.start_step_up(
+        email=user.email,
+        tenant_id=principal.tenant_id,
+        idp_alias=user.idp_alias if user.sso_managed else None,
+        session_id=principal.session_id,
+        started_at=int(step_up_clock().timestamp()),
+        return_to=return_to,
+    )
+    response = RedirectResponse(url, status_code=303)
+    preauth_cookie.set_cookie(response, sealed)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+# --- invites and MFA reset (IDENTITY-04 steps 3, 4 and 7) ------------------------------------
+
+admin_router = APIRouter(prefix="/identity", tags=["identity"])
+
+_MANAGE = Depends(requires("identity.user.manage"))
+_STEP_UP = Depends(step_up())
+_ADMIN_ERRORS: dict[int | str, dict[str, Any]] = {
+    401: {"model": StepUpErrorResponse, "description": "Not signed in, or a step-up is needed."},
+    403: {"model": AuthErrorResponse},
+    404: {"model": AuthErrorResponse},
+    409: {"model": AuthErrorResponse},
+}
+
+
+def _refused(exc: InviteError) -> HTTPException:
+    return HTTPException(
+        status_code=exc.status_code, detail={"code": exc.code, "message": exc.message}
+    )
+
+
+def _invite_out(row: InviteRow) -> InviteOut:
+    return InviteOut(
+        id=row.id,
+        user_id=row.user_id,
+        email=row.email,
+        user_class=row.user_class,
+        method=row.method,
+        status=row.status,
+        last_error=row.last_error,
+        expires_at=row.expires_at,
+        sent_at=row.sent_at,
+        accepted_at=row.accepted_at,
+        revoked_at=row.revoked_at,
+        created_at=row.created_at,
+    )
+
+
+@admin_router.post(
+    "/invites",
+    dependencies=[_MANAGE, _STEP_UP],
+    status_code=201,
+    response_model=InviteCreated,
+    responses={**_ADMIN_ERRORS, 422: {"model": AuthErrorResponse}},
+)
+async def create_invite_route(
+    body: InviteCreate, principal: Annotated[Principal, Depends(get_principal)]
+) -> InviteCreated:
+    async with with_tenant(principal.tenant_id) as conn:
+        try:
+            created = await create_invite(
+                conn,
+                tenant_id=principal.tenant_id,
+                email=body.email,
+                user_class=body.user_class,
+                first_name=body.first_name,
+                last_name=body.last_name,
+                organisation_id=body.organisation_id,
+                invited_by=principal.user_id,
+            )
+        except InviteError as exc:
+            raise _refused(exc) from None
+    return InviteCreated(
+        invite_id=created.invite_id, user_id=created.user_id, method=created.method
+    )
+
+
+@admin_router.get(
+    "/invites",
+    dependencies=[Depends(requires("identity.user.read"))],
+    response_model=InviteList,
+    responses={401: {"model": AuthErrorResponse}, 403: {"model": AuthErrorResponse}},
+)
+async def list_invites_route(
+    principal: Annotated[Principal, Depends(get_principal)],
+    status: Annotated[
+        Literal["pending", "sent", "accepted", "revoked", "failed"] | None, Query()
+    ] = None,
+) -> InviteList:
+    async with with_tenant(principal.tenant_id) as conn:
+        rows = await repo.list_invites(conn, status=status)
+    return InviteList(items=[_invite_out(r) for r in rows])
+
+
+@admin_router.post(
+    "/invites/{invite_id}/resend",
+    dependencies=[_MANAGE, _STEP_UP],
+    response_model=InviteOut,
+    responses=_ADMIN_ERRORS,
+)
+async def resend_invite_route(
+    invite_id: UUID, principal: Annotated[Principal, Depends(get_principal)]
+) -> InviteOut:
+    async with with_tenant(principal.tenant_id) as conn:
+        try:
+            row = await resend_invite(conn, invite_id)
+        except InviteError as exc:
+            raise _refused(exc) from None
+    return _invite_out(row)
+
+
+@admin_router.delete(
+    "/invites/{invite_id}",
+    dependencies=[_MANAGE, _STEP_UP],
+    response_model=InviteOut,
+    responses=_ADMIN_ERRORS,
+)
+async def revoke_invite_route(
+    invite_id: UUID, principal: Annotated[Principal, Depends(get_principal)]
+) -> InviteOut:
+    async with with_tenant(principal.tenant_id) as conn:
+        try:
+            row = await revoke_invite(conn, invite_id)
+        except InviteError as exc:
+            raise _refused(exc) from None
+    return _invite_out(row)
+
+
+@admin_router.post(
+    "/users/{user_id}/reset-mfa",
+    dependencies=[_MANAGE, _STEP_UP],
+    status_code=204,
+    response_class=Response,
+    responses=_ADMIN_ERRORS,
+)
+async def reset_mfa_route(
+    user_id: UUID, principal: Annotated[Principal, Depends(get_principal)]
+) -> Response:
+    async with with_tenant(principal.tenant_id) as conn:
+        try:
+            await reset_mfa(conn, user_id)
+        except InviteError as exc:
+            raise _refused(exc) from None
+    return Response(status_code=204)
+
+
+# --- sign-off policy (IDENTITY-04 Part D) ----------------------------------------------------
+
+
+def _policy_items(rows: list[repo.SignoffPolicyRow]) -> list[SignoffPolicyOut]:
+    stored = {r.action_code: r for r in rows}
+    items = [
+        SignoffPolicyOut(
+            action_code=r.action_code,
+            min_aal=2 if r.min_aal >= 2 else 1,
+            step_up_max_age_min=r.step_up_max_age_min,
+            is_default=False,
+            updated_at=r.updated_at,
+        )
+        for r in rows
+    ]
+    items += [
+        SignoffPolicyOut(
+            action_code=code,
+            min_aal=DEFAULT_MIN_AAL,
+            step_up_max_age_min=DEFAULT_SIGNOFF_MAX_AGE_MIN,
+            is_default=True,
+        )
+        for code in SIGNOFF_ACTIONS
+        if code not in stored
+    ]
+    return sorted(items, key=lambda item: item.action_code)
+
+
+@admin_router.get(
+    "/signoff-policy",
+    dependencies=[Depends(requires("identity.signoff_policy.read"))],
+    response_model=SignoffPolicyList,
+    responses={401: {"model": AuthErrorResponse}, 403: {"model": AuthErrorResponse}},
+)
+async def get_signoff_policy_route(
+    principal: Annotated[Principal, Depends(get_principal)],
+) -> SignoffPolicyList:
+    async with with_tenant(principal.tenant_id) as conn:
+        rows = await repo.list_signoff_policies(conn)
+    return SignoffPolicyList(items=_policy_items(rows))
+
+
+@admin_router.put(
+    "/signoff-policy",
+    dependencies=[Depends(requires("identity.signoff_policy.manage"))],
+    response_model=SignoffPolicyList,
+    responses={
+        401: {"model": StepUpErrorResponse, "description": "Lowering a minimum needs a step-up."},
+        403: {"model": AuthErrorResponse},
+    },
+)
+async def put_signoff_policy_route(
+    body: SignoffPolicyUpdate,
+    request: Request,
+    principal: Annotated[Principal, Depends(get_principal)],
+) -> SignoffPolicyList:
+    async with with_tenant(principal.tenant_id) as conn:
+        before = await repo.get_signoff_policy(conn, body.action_code)
+        before_min = before.min_aal if before is not None else DEFAULT_MIN_AAL
+        if body.min_aal < before_min:  # ADR 0010: lowering a minimum is a privileged change
+            await require_step_up(request, principal, conn=conn)
+        await repo.upsert_signoff_policy(
+            conn,
+            action_code=body.action_code,
+            min_aal=body.min_aal,
+            step_up_max_age_min=body.step_up_max_age_min,
+            updated_by=principal.user_id,
+        )
+        payload = SignoffPolicyChangedEvent(
+            action_code=body.action_code,
+            before=None
+            if before is None
+            else SignoffPolicyValues(
+                min_aal=before.min_aal, step_up_max_age_min=before.step_up_max_age_min
+            ),
+            after=SignoffPolicyValues(
+                min_aal=body.min_aal, step_up_max_age_min=body.step_up_max_age_min
+            ),
+        )
+        await emit(
+            conn,
+            SIGNOFF_POLICY_CHANGED,
+            1,
+            Aggregate("signoff_policy", principal.tenant_id),
+            payload.model_dump(by_alias=True),
+        )
+        rows = await repo.list_signoff_policies(conn)
+    return SignoffPolicyList(items=_policy_items(rows))
+
+
 router = APIRouter()
 router.include_router(auth_router)
+router.include_router(step_up_router)
 router.include_router(me_router)
+router.include_router(admin_router)

@@ -1,0 +1,50 @@
+{
+  "$defs": {
+    "SignoffPolicyValues": {
+      "additionalProperties": false,
+      "properties": {
+        "minAal": {
+          "title": "Minaal",
+          "type": "integer"
+        },
+        "stepUpMaxAgeMin": {
+          "title": "Stepupmaxagemin",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minAal",
+        "stepUpMaxAgeMin"
+      ],
+      "title": "SignoffPolicyValues",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "actionCode": {
+      "title": "Actioncode",
+      "type": "string"
+    },
+    "after": {
+      "$ref": "#/$defs/SignoffPolicyValues"
+    },
+    "before": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SignoffPolicyValues"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "actionCode",
+    "after"
+  ],
+  "title": "SignoffPolicyChangedEvent",
+  "type": "object"
+}

@@ -13,6 +13,8 @@ export type PermissionCode =
   | "approvals.view"
   | "audit.activity.view"
   | "audit.log.read"
+  | "identity.signoff_policy.manage"
+  | "identity.signoff_policy.read"
   | "identity.user.manage"
   | "identity.user.read"
   | "ops.jobs.admin"
@@ -44,6 +46,8 @@ export const PERMISSIONS = {
   "approvals.view": { module: "approvals", privileged: false },
   "audit.activity.view": { module: "audit", privileged: false },
   "audit.log.read": { module: "audit", privileged: false },
+  "identity.signoff_policy.manage": { module: "identity", privileged: true },
+  "identity.signoff_policy.read": { module: "identity", privileged: false },
   "identity.user.manage": { module: "identity", privileged: true },
   "identity.user.read": { module: "identity", privileged: false },
   "ops.jobs.admin": { module: "ops", privileged: false },
