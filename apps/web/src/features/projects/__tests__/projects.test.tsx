@@ -34,7 +34,8 @@ describe("projects register", () => {
     server.use(listProjects([project({ code: "L592", status: "active" }), project({ code: "KIPS-01", status: "draft" })]), noSites);
     const { container } = renderAt("/projects", VIEW);
 
-    const table = await screen.findByRole("table");
+    await screen.findByText("L592");
+    const table = screen.getByRole("table");
     const rows = within(table).getAllByRole("row").slice(1);
     expect(rows).toHaveLength(2);
     expect(within(rows[0]!).getByText("L592")).toBeTruthy();
@@ -132,7 +133,7 @@ describe("projects register", () => {
     await screen.findByText("L592");
     expect(screen.queryByRole("columnheader", { name: "Region" })).toBeNull();
 
-    await userEvent.click(screen.getByText("Columns"));
+    await userEvent.click(screen.getByText("Columns", { selector: "summary" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "Region" }));
     await waitFor(() =>
       expect(router.state.location.search).toEqual({ cols: "code,name,site,region,status,updated" }),
@@ -144,7 +145,8 @@ describe("projects register", () => {
     const first = project({ code: "L592", status: "active" });
     server.use(listProjects([first, project({ code: "M100", status: "draft" })]), noSites);
     const { router } = renderAt("/projects", VIEW);
-    const rows = (await screen.findAllByRole("row")).filter((r) => r.hasAttribute("data-row"));
+    await screen.findByText("L592");
+    const rows = screen.getAllByRole("row").filter((r) => r.hasAttribute("data-row"));
     rows[0]!.focus();
     await userEvent.keyboard("{Enter}");
     await waitFor(() => expect(router.state.location.pathname).toBe(`/projects/${first.id}`));
