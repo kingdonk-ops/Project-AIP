@@ -1,4 +1,7 @@
 import { render, screen } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { axeBlocking } from "../test/axe";
 import { Button, buttonVariants } from "./button";
@@ -20,6 +23,26 @@ describe("Button", () => {
       </Button>,
     );
     expect(screen.getByRole("link", { name: "Open" }).className).toContain("aip-button");
+  });
+
+  // DESIGN-08: vitest runs with `css: false`, so load the real stylesheet for this computed-style check.
+  // (jsdom's own URL class is not accepted by fileURLToPath, hence dirname/join.)
+  it("renders an asChild anchor with no underline and keeps the button classes", () => {
+    const style = document.createElement("style");
+    style.textContent = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "components.css"), "utf8");
+    document.head.append(style);
+    try {
+      render(
+        <Button asChild>
+          <a href="/projects/new">{"Create project"}</a>
+        </Button>,
+      );
+      const link = screen.getByRole("link", { name: "Create project" });
+      expect(link.className).toContain("aip-button aip-button--primary aip-button--default");
+      expect(getComputedStyle(link).textDecoration).toBe("none");
+    } finally {
+      style.remove();
+    }
   });
 
   it("has no serious or critical axe violations", async () => {

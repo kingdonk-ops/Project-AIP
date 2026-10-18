@@ -47,6 +47,91 @@ test("shell landmarks, nav and axe on the signed-in page", async ({ page }) => {
   expect(await page.evaluate(() => document.cookie)).not.toContain("__Host-");
 });
 
+// DESIGN-08: under 768px the rail is a drawer with a backdrop; Escape or a backdrop click closes it.
+test("mobile drawer: backdrop, Escape and backdrop click close it and focus returns to the menu button", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? Number.POSITIVE_INFINITY) >= 768, "the rail is a drawer only under 768px");
+  await signInAsStub(page, "alice@kaefer.test");
+  await page.goto("/");
+  const menu = page.getByRole("button", { name: "Menu", exact: true });
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  const backdrop = page.getByTestId("shell-backdrop");
+
+  await menu.click();
+  await expect(nav).toBeVisible();
+  await expect(backdrop).toBeVisible();
+  await expectNoBlockingAxe(page);
+  await nav.getByRole("link", { name: "Home" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(nav).toBeHidden();
+  await expect(backdrop).toHaveCount(0);
+  await expect(menu).toBeFocused();
+
+  await menu.click();
+  // Click the dimmed page to the right of the 160px drawer.
+  await backdrop.click({ position: { x: 300, y: 200 } });
+  await expect(nav).toBeHidden();
+  await expect(menu).toBeFocused();
+});
+
+// DESIGN-16: the open drawer is modal: Tab stays in it, the page behind is inert and does not scroll.
+test("mobile drawer: Tab stays in the drawer and the page behind is inert and scroll-locked", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? Number.POSITIVE_INFINITY) >= 768, "the rail is a drawer only under 768px");
+  await signInAsStub(page, "alice@kaefer.test");
+  await page.goto("/");
+  // Make the page taller than the viewport so there is something to scroll.
+  await page.evaluate(() => {
+    const filler = document.createElement("div");
+    filler.style.height = "3000px";
+    document.getElementById("main")?.append(filler);
+  });
+  const menu = page.getByRole("button", { name: "Menu", exact: true });
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  await menu.click();
+  await expect(nav).toBeVisible();
+
+  const stops = (await nav.getByRole("link").count()) + 1;
+  for (let i = 0; i < stops * 2 + 1; i++) {
+    await page.keyboard.press(i % 3 === 2 ? "Shift+Tab" : "Tab");
+    const inDrawer = await page.evaluate(() => {
+      const active = document.activeElement;
+      return !!active && (!!active.closest("#shell-nav") || active.classList.contains("shell-header__menu"));
+    });
+    expect(inDrawer).toBe(true);
+  }
+
+  // Nothing in the content can take focus, even when asked directly.
+  await expect(page.locator(".shell__body")).toHaveAttribute("inert", "");
+  const mainTookFocus = await page.evaluate(() => {
+    const main = document.getElementById("main");
+    main?.focus();
+    return document.activeElement === main;
+  });
+  expect(mainTookFocus).toBe(false);
+
+  // A wheel over the backdrop does not scroll the page.
+  await page.mouse.move(300, 400);
+  await page.mouse.wheel(0, 1200);
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  await expectNoBlockingAxe(page);
+
+  await page.keyboard.press("Escape");
+  await expect(nav).toBeHidden();
+  await expect(page.locator(".shell__body")).not.toHaveAttribute("inert");
+  await page.mouse.wheel(0, 1200);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+});
+
+test("login: the email input, hint and Continue button share one width", async ({ page }) => {
+  await page.goto("/login");
+  const input = await page.getByLabel("Work email").boundingBox();
+  const button = await page.getByRole("button", { name: "Continue" }).boundingBox();
+  const hint = await page.locator(".aip-form-field__hint").boundingBox();
+  expect(input?.width).toBeGreaterThan(0);
+  expect(button?.width).toBeCloseTo(input?.width ?? 0, 0);
+  expect(hint?.width).toBeCloseTo(input?.width ?? 0, 0);
+});
+
 test("sign out lands on /login?signed_out=1 and the session is gone", async ({ page }) => {
   await signInAsStub(page, "alice@kaefer.test");
   await page.goto("/projects");
