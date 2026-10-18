@@ -234,6 +234,7 @@ export function RegisterTable<T>({
       )}
 
       {/* DESIGN-08: its own scroll region, reachable by keyboard and named after the table. */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must take focus so keyboard users can scroll it (axe scrollable-region-focusable) */}
       <div className="aip-table__wrap aip-register__scroll" role="region" aria-label={tr(captionKey)} tabIndex={0}>
         <table
           className="aip-table aip-register__table"
