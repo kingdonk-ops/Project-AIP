@@ -31,8 +31,8 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
   is active from their first sign-in (answered 2026-10-18; replaces the README's "named internal owner" approval).
 - portal: client access is per project and expires after the project's `portal_access_days` setting, 180 days by
   default and at most 400. The project admins are reminded 30, 20, 10 and 1 days before expiry; renewing grants another
-  period and stops the reminders; an ignore option stops them; with neither, the admins get a notice on the expiry day
-  saying the access expired and how to renew it (answered 2026-10-18; PORTAL-01, PORTAL-07, PORTAL-08).
+  period and stops the reminders; an ignore option stops the remaining reminders; without a renewal, the admins
+  always get a notice on the expiry day saying the access expired and how to renew it (answered 2026-10-18; PORTAL-01, PORTAL-07, PORTAL-08).
 - portal: the witness notice period and waiver rule are project settings (answered 2026-10-18, OPEN-QUESTIONS #55;
   PROJECTS-04, PORTAL-06).
 - R1 target date: 2027-03-31 still holds with the portal in R1 (answered 2026-10-18, OPEN-QUESTIONS #56).
@@ -86,8 +86,8 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
 11. **Calculated fields and repeating sections are in R1** (owner, 2026-10-18): FORMS-07 adds a forms-only
     arithmetic extension to the shared evaluator (the approvals guard allow-list stays unchanged), and FORMS-08 adds
     repeating sections and grid fields; FORMS-05's seed templates use both.
-12. **Ignoring expiry reminders silences the rest of that access period,** including the expiry-day notice; renewing
-    later starts a new period with reminders again (confirmed by the owner, 2026-10-18).
+12. **Ignoring expiry reminders stops only the remaining reminders** for that access period. The expiry-day notice is
+    always sent when the access is not renewed (owner, 2026-10-18).
 13. **Everything left out of R1 is listed** in [`tracking/BACKLOG.md`](../../tracking/BACKLOG.md), with its source and
     the reason.
 
