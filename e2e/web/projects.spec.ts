@@ -106,8 +106,10 @@ test("at 390px the register scrolls in its own region, with no horizontal page s
 test("a link styled as a button has no underline and the 2px accent focus ring", async ({ browser }) => {
   const page = await openRegister(browser, "/projects");
   const link = page.getByRole("link", { name: "Export CSV" });
-  await page.locator("summary", { hasText: "Columns" }).focus();
-  await page.keyboard.press("Tab");
+  // A key press first puts the page in keyboard mode, so programmatic focus shows :focus-visible.
+  // (Not Tab: WebKit can skip links on Tab, which would test the browser, not the ring.)
+  await page.keyboard.press("Shift");
+  await link.focus();
   await expect(link).toBeFocused();
   const style = await link.evaluate((el) => {
     const s = getComputedStyle(el);

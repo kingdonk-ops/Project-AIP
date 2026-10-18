@@ -43,12 +43,23 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
   useEffect(() => {
     if (!navOpen) return;
     function onKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      // Escape inside another layer (account menu, a dialog or drawer) closes only that layer.
+      if (event.target instanceof Element && event.target.closest('[role="menu"], [role="dialog"]')) return;
       setNavOpen(false);
       menuButtonRef.current?.focus();
     }
+    // Widening past the breakpoint turns the drawer back into the rail, so drop the open state.
+    const wide = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 768px)") : null;
+    function onWide(event: MediaQueryListEvent) {
+      if (event.matches) setNavOpen(false);
+    }
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    wide?.addEventListener("change", onWide);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      wide?.removeEventListener("change", onWide);
+    };
   }, [navOpen]);
 
   async function signOut(): Promise<boolean> {

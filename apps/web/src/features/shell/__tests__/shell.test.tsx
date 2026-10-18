@@ -111,6 +111,17 @@ describe("app shell", () => {
     expect(document.activeElement).toBe(menu);
   });
 
+  it("Escape in the account menu closes only the menu, not the nav drawer", async () => {
+    const user = userEvent.setup();
+    setup(fakePort(alice), "/");
+    await user.click(await screen.findByRole("button", { name: "Menu" }));
+    await user.click(screen.getByRole("button", { name: "Account menu" }));
+    await screen.findByRole("menuitem", { name: "Sign out" });
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    expect(screen.getByRole("navigation", { name: "Main navigation" }).getAttribute("data-open")).toBe("true");
+  });
+
   it("stays signed in and says so when sign out fails", async () => {
     const user = userEvent.setup();
     const { router } = setup(fakePort(alice, { logout: () => Promise.resolve(false) }), "/");
