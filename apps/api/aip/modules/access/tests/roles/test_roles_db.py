@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
@@ -44,7 +45,7 @@ ROLES = "/api/v1/access/roles"
 ASSIGNMENTS = "/api/v1/access/role-assignments"
 
 
-async def role_id(client: httpx.AsyncClient, code: str, h: dict[str, str] = ALICE) -> str:
+async def role_id(client: httpx.AsyncClient, code: str, h: Mapping[str, str] = ALICE) -> str:
     roles = (await client.get(ROLES, headers=h)).json()["items"]
     return next(r["id"] for r in roles if r["code"] == code)
 
@@ -58,7 +59,7 @@ async def new_project(client: httpx.AsyncClient, code: str) -> str:
 
 
 async def assign(
-    client: httpx.AsyncClient, user: UUID, code: str, h: dict[str, str] = ALICE, **extra: Any
+    client: httpx.AsyncClient, user: UUID, code: str, h: Mapping[str, str] = ALICE, **extra: Any
 ) -> httpx.Response:
     body: dict[str, Any] = {
         "userId": str(user),

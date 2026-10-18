@@ -456,7 +456,10 @@ def _invite_out(row: InviteRow) -> InviteOut:
     dependencies=[_MANAGE, _STEP_UP],
     status_code=201,
     response_model=InviteCreated,
-    responses={**_ADMIN_ERRORS, 422: {"model": AuthErrorResponse}},
+    responses={
+        **_ADMIN_ERRORS,
+        422: {"model": AuthErrorResponse, "description": "Unprocessable Entity"},
+    },
 )
 async def create_invite_route(
     body: InviteCreate, principal: Annotated[Principal, Depends(get_principal)]

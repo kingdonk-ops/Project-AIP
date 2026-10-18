@@ -8,7 +8,7 @@ Seeding runs as the superuser or owner; assertions go through ``aip_app`` (RLS o
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator, Iterable
+from collections.abc import AsyncIterator, Iterable, Iterator, Mapping
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
@@ -60,11 +60,32 @@ SEED_SQL = (
 )
 
 
+class PrincipalHeaders(Mapping[str, str]):
+    """The test principal header, rebuilt on every read: the session authenticated
+    ``minutes_ago`` before the request, however long the test run has been going."""
+
+    def __init__(self, principal: dict[str, Any], minutes_ago: float) -> None:
+        self._principal = principal
+        self._minutes_ago = minutes_ago
+
+    def __getitem__(self, key: str) -> str:
+        if key != "x-test-principal":
+            raise KeyError(key)
+        at = datetime.now(UTC) - timedelta(minutes=self._minutes_ago)
+        return json.dumps({**self._principal, "authenticatedAt": at.isoformat()})
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(("x-test-principal",))
+
+    def __len__(self) -> int:
+        return 1
+
+
 def principal_headers(
     tenant: UUID, user: UUID, *, aal: int = 2, minutes_ago: float = 1
-) -> dict[str, str]:
+) -> Mapping[str, str]:
     """The test principal header: a session that authenticated ``minutes_ago`` at ``aal``."""
-    principal = {
+    principal: dict[str, Any] = {
         "kind": "user",
         "tenantId": str(tenant),
         "userId": str(user),
@@ -72,9 +93,8 @@ def principal_headers(
         "sessionId": None,
         "aal": aal,
         "amr": ["fed", "mfa"] if aal == 2 else ["fed"],
-        "authenticatedAt": (datetime.now(UTC) - timedelta(minutes=minutes_ago)).isoformat(),
     }
-    return {"x-test-principal": json.dumps(principal)}
+    return PrincipalHeaders(principal, minutes_ago)
 
 
 ALICE = principal_headers(TENANT_A_ID, ALICE_ID)

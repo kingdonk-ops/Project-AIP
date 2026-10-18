@@ -21,6 +21,7 @@ from uuid import UUID
 from sqlalchemy import text
 
 from aip.platform.db.migrator.run import create_migrator_engine
+from aip.platform.db.session import with_tenant
 
 TENANT_A_ID = UUID("00000000-0000-4000-8000-00000000000a")  # kaefer-demo
 TENANT_B_ID = UUID("00000000-0000-4000-8000-00000000000b")  # tenant-b
@@ -39,7 +40,6 @@ SIGNOFF_ROWS: tuple[tuple[UUID, str, int, int], ...] = tuple(
     for code in ("hold_point.release", "witness.countersign", "itp.signoff", "record.seal")
 )
 
-_SET_TENANT = text("SELECT set_config('app.tenant_id', :tenant_id, true)")
 _SIGNOFF = text(
     """
     INSERT INTO signoff_policy (id, tenant_id, action_code, min_aal, step_up_max_age_min)
@@ -80,8 +80,7 @@ async def seed(url: str, *, env: str | None = None) -> int:
                     _UPSERT, {"kind": kind, "key": key, "tenant_id": tenant_id, "idp_alias": alias}
                 )
         for tenant_id, action_code, min_aal, max_age in SIGNOFF_ROWS:
-            async with engine.begin() as conn:
-                await conn.execute(_SET_TENANT, {"tenant_id": str(tenant_id)})
+            async with with_tenant(tenant_id, engine=engine) as conn:
                 await conn.execute(
                     _SIGNOFF,
                     {

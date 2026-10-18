@@ -3,6 +3,7 @@ a fake Keycloak), acceptance at sign-in, revocation, step-up on the admin routes
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -26,7 +27,9 @@ SEND = "identity.send_invite"
 CAROL = "carol@client.test"
 
 
-async def _invite(client: httpx.AsyncClient, email: str = CAROL, headers: dict[str, str] = ALICE):
+async def _invite(
+    client: httpx.AsyncClient, email: str = CAROL, headers: Mapping[str, str] = ALICE
+):
     return await client.post(
         INVITES, json={"email": email, "firstName": "Carol", "lastName": "Client"}, headers=headers
     )

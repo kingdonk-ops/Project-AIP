@@ -76,3 +76,7 @@ no_app_select = true
 [tables.login_directory]
 reason = "pre-login tenant resolution (ADR 0005): no runtime role holds any privilege; read only through the SECURITY DEFINER function identity_resolve_login."
 no_app_select = true
+
+[tables.signoff_policy]
+reason = "action_code is a dotted lowercase code (ck_signoff_policy_action_code)."
+values = { action_code = "'iso.action_{tag}'" }

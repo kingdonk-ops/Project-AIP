@@ -627,7 +627,7 @@
     {
       "clientId": "aip-api",
       "name": "AIP API (OIDC code flow + PKCE; the backend issues its own session)",
-      "baseUrl": "/",
+      "baseUrl": "${APP_ORIGIN:http://localhost:8080}/login?invited=1",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
