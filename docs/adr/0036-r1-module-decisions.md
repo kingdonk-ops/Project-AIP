@@ -32,7 +32,9 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
 - portal: client access is per project and expires after the project's `portal_access_days` setting, 180 days by
   default and at most 400. The project admins are reminded 30, 20, 10 and 1 days before expiry; renewing grants another
   period and stops the reminders; an ignore option stops the remaining reminders; without a renewal, the admins
-  always get a notice on the expiry day saying the access expired and how to renew it (answered 2026-10-18; PORTAL-01, PORTAL-07, PORTAL-08).
+  always get a notice on the expiry day saying the access expired and how to renew it. The same day the client is
+  told their access has expired, that the project admin renews it if needed and has been informed, and that the
+  client need do nothing (answered 2026-10-18; PORTAL-01, PORTAL-07, PORTAL-08).
 - portal: the witness notice period and waiver rule are project settings (answered 2026-10-18, OPEN-QUESTIONS #55;
   PROJECTS-04, PORTAL-06).
 - R1 target date: 2027-03-31 still holds with the portal in R1 (answered 2026-10-18, OPEN-QUESTIONS #56).
