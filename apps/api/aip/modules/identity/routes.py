@@ -608,7 +608,11 @@ async def put_signoff_policy_route(
     async with with_tenant(principal.tenant_id) as conn:
         before = await repo.get_signoff_policy(conn, body.action_code)
         before_min = before.min_aal if before is not None else DEFAULT_MIN_AAL
-        if body.min_aal < before_min:  # ADR 0010: lowering a minimum is a privileged change
+        before_age = (
+            before.step_up_max_age_min if before is not None else DEFAULT_SIGNOFF_MAX_AGE_MIN
+        )
+        # ADR 0010: lowering a minimum or widening the window weakens sign-off (privileged).
+        if body.min_aal < before_min or body.step_up_max_age_min > before_age:
             await require_step_up(request, principal, conn=conn)
         await repo.upsert_signoff_policy(
             conn,

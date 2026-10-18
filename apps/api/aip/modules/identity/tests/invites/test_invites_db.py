@@ -363,3 +363,44 @@ async def test_mfa_reset(
     assert alice.json()["detail"]["code"] == "MFA_MANAGED_BY_IDP"
     other = await client.post(f"/api/v1/identity/users/{BOB_ID}/reset-mfa", headers=ALICE)
     assert other.status_code == 404
+
+
+async def test_reinviting_after_a_revoke_enables_the_account_again(
+    client: httpx.AsyncClient, db: TenantDb, runner: JobRunner, kc: FakeKeycloak
+) -> None:
+    body, kc_id = await _sent_invite(client, db, runner)
+    assert (await client.delete(f"{INVITES}/{body['inviteId']}", headers=ALICE)).status_code == 200
+    assert await runner.run_all(TENANT_A_ID, "identity.disable_keycloak_user") == 1
+    assert kc.users[str(kc_id)]["enabled"] is False
+
+    again = (await _invite(client)).json()
+    assert again["userId"] == body["userId"]
+    await runner.run_all(TENANT_A_ID, SEND)
+    assert kc.users[str(kc_id)]["enabled"] is True
+    assert len(kc.users) == 1
+    assert (await _invite_row(db, TENANT_A_ID, again["inviteId"])).status == "sent"
+    result = await _jit(db).provision(_local_identity(kc_id))
+    assert isinstance(result, Provisioned), result
+
+
+async def test_a_disable_queued_before_a_reinvite_leaves_the_account_alone(
+    client: httpx.AsyncClient, db: TenantDb, runner: JobRunner, kc: FakeKeycloak
+) -> None:
+    body, kc_id = await _sent_invite(client, db, runner)
+    await client.delete(f"{INVITES}/{body['inviteId']}", headers=ALICE)
+    await _invite(client)  # re-invited before the disable job ran
+    assert await runner.run_all(TENANT_A_ID, "identity.disable_keycloak_user") == 1
+    assert kc.users[str(kc_id)]["enabled"] is True
+
+
+async def test_resending_a_superseded_invite_is_refused(
+    client: httpx.AsyncClient, runner: JobRunner, kc: FakeKeycloak
+) -> None:
+    first = (await _invite(client)).json()
+    kc.fail_with = 400
+    await runner.run_all(TENANT_A_ID, SEND)  # the first invite fails
+    kc.fail_with = None
+    await _invite(client)  # a newer invite for the same person
+    r = await client.post(f"{INVITES}/{first['inviteId']}/resend", headers=ALICE)
+    assert r.status_code == 409
+    assert r.json()["detail"]["code"] == "INVITE_SUPERSEDED"

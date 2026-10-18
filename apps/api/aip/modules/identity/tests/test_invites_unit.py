@@ -119,11 +119,19 @@ def test_step_up_callback_checks() -> None:
             expected_subject=sub, subject=str(uuid4()), auth_time=started, started_at=started, aal=2
         )
     assert (mismatch.value.code, mismatch.value.status_code) == ("STEP_UP_SUBJECT_MISMATCH", 403)
+    # A few seconds of clock skew between Keycloak and the API is tolerated, more is not.
+    check_step_up_callback(
+        expected_subject=sub,
+        subject=str(sub),
+        auth_time=started - timedelta(seconds=3),
+        started_at=started,
+        aal=2,
+    )
     with pytest.raises(OidcError) as stale:
         check_step_up_callback(
             expected_subject=sub,
             subject=str(sub),
-            auth_time=started - timedelta(seconds=1),
+            auth_time=started - timedelta(seconds=6),
             started_at=started,
             aal=2,
         )

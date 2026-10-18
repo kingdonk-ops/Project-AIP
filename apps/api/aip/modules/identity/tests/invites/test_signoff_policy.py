@@ -104,10 +104,17 @@ async def test_lowering_a_minimum_needs_a_step_up_and_is_audited(
     }
 
 
-async def test_raising_or_changing_the_window_needs_no_step_up(client: httpx.AsyncClient) -> None:
+async def test_tightening_needs_no_step_up_but_widening_the_window_does(
+    client: httpx.AsyncClient,
+) -> None:
     stale = principal_headers(TENANT_A_ID, ALICE_ID, minutes_ago=30)
-    body = {"actionCode": "record.seal", "minAal": 2, "stepUpMaxAgeMin": 5}
-    assert (await client.put(POLICY, json=body, headers=stale)).status_code == 200
+    narrower = {"actionCode": "record.seal", "minAal": 2, "stepUpMaxAgeMin": 5}
+    assert (await client.put(POLICY, json=narrower, headers=stale)).status_code == 200
+    wider = {"actionCode": "record.seal", "minAal": 2, "stepUpMaxAgeMin": 60}
+    r = await client.put(POLICY, json=wider, headers=stale)
+    assert r.status_code == 401
+    assert r.json()["detail"]["code"] == "STEP_UP_REQUIRED"
+    assert (await client.put(POLICY, json=wider, headers=ALICE)).status_code == 200
 
 
 async def test_values_outside_the_range_are_422(client: httpx.AsyncClient) -> None:

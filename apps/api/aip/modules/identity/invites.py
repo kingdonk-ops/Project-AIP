@@ -222,6 +222,9 @@ async def resend_invite(conn: AsyncConnection, invite_id: UUID) -> InviteRow:
         raise InviteError("INVITE_NOT_LOCAL", 409, "company SSO invites send no email")
     if invite.status not in ("pending", "sent", "failed"):
         raise InviteError("INVITE_NOT_LIVE", 409, "this invite was accepted or revoked")
+    latest = await repo.latest_invite_for_user(conn, invite.user_id)
+    if latest is not None and latest.id != invite_id:
+        raise InviteError("INVITE_SUPERSEDED", 409, "a newer invite exists for this person")
     await repo.update_invite(
         conn,
         invite_id,
@@ -253,7 +256,9 @@ async def revoke_invite(conn: AsyncConnection, invite_id: UUID) -> InviteRow:
         keycloak_id = invite.keycloak_user_id or (user.keycloak_user_id if user else None)
         if user is not None and user.status == "invited" and keycloak_id is not None:
             await ops.enqueue(
-                conn, DISABLE_KEYCLOAK_USER_JOB, {"keycloak_user_id": str(keycloak_id)}
+                conn,
+                DISABLE_KEYCLOAK_USER_JOB,
+                {"keycloak_user_id": str(keycloak_id), "user_id": str(user.id)},
             )
         await repo.record_auth_event(
             conn,

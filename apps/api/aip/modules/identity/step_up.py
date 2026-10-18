@@ -68,6 +68,8 @@ STEP_UP_START_PATH: Final = "/api/v1/auth/step-up/start"
 DEFAULT_MAX_AGE_MIN: Final = 10
 STEP_UP_PARAMS: Final = {"prompt": "login", "max_age": "0", "acr_values": "aal2"}
 _CLOCK_ENVS: Final = frozenset({"test", "development"})
+# Keycloak's and the API's clocks may differ by a little; a step-up is minutes, not seconds.
+STEP_UP_CLOCK_LEEWAY: Final = timedelta(seconds=5)
 
 
 def now() -> datetime:
@@ -148,7 +150,7 @@ def check_step_up_callback(
         raise OidcError(
             "STEP_UP_SUBJECT_MISMATCH", 403, "the confirmation was made by a different account"
         )
-    if auth_time < started_at:
+    if auth_time < started_at - STEP_UP_CLOCK_LEEWAY:
         raise OidcError("STEP_UP_STALE", 403, "the confirmation did not sign in again")
     if aal < 2:
         raise OidcError("MFA_NOT_SATISFIED", 403, "a second factor is required")

@@ -504,12 +504,14 @@ async def advisory_xact_lock(conn: AsyncConnection, key: int) -> None:
 # --- MFA enrolment (IDENTITY-04) ---------------------------------------------------------------
 
 _MFA_ENROLLED = text(
-    "UPDATE app_user SET mfa_enrolled_at = now()"
+    "UPDATE app_user SET mfa_enrolled_at = now(), updated_at = now(),"
+    " sync_version = sync_version + 1"
     " WHERE id = :id AND mfa_enrolled_at IS NULL"
     " AND tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid"
 )
 _MFA_CLEARED = text(
-    "UPDATE app_user SET mfa_enrolled_at = NULL, updated_at = now()"
+    "UPDATE app_user SET mfa_enrolled_at = NULL, updated_at = now(),"
+    " sync_version = sync_version + 1"
     " WHERE id = :id AND tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid"
 )
 _MFA_READ = text(

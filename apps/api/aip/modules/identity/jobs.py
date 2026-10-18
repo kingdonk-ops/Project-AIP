@@ -15,7 +15,9 @@ IDENTITY-04 (all idempotent; handlers run inside the job's tenant):
   to the application" link is the ``aip-api`` client's base URL, ``/login?invited=1``).
   ``KeycloakUnavailable`` re-raises so Procrastinate retries (5 attempts); ``KeycloakRejected``
   marks the invite ``failed`` with Keycloak's message.
-- ``identity.disable_keycloak_user`` ``{keycloak_user_id}``: a revoked invite's unused account.
+  The account is enabled again first, so a re-invite after a revoke works.
+- ``identity.disable_keycloak_user`` ``{keycloak_user_id, user_id}``: a revoked invite's unused
+  account; skipped when the user has a newer live invite (a re-invite queued after the revoke).
 - ``identity.reset_keycloak_mfa`` ``{keycloak_user_id}``: an admin MFA reset.
 """
 
@@ -119,6 +121,7 @@ async def send_invite(
                 required_actions=INVITE_REQUIRED_ACTIONS,
                 attributes={"aip_user_id": [str(user.id)]},
             )
+            await client.enable_user(keycloak_id)  # a revoked earlier invite disabled it
             await repo.update_invite(conn, invite.id, keycloak_user_id=keycloak_id)
             if user.keycloak_user_id is None:
                 await repo.set_keycloak_link(conn, user.id, keycloak_id)
@@ -144,6 +147,11 @@ async def send_invite(
 async def disable_keycloak_user(
     conn: AsyncConnection, job: ops.JobView, admin: KeycloakAdmin | None = None
 ) -> str | None:
+    user_id = job.payload.get("user_id")
+    if user_id is not None:
+        latest = await repo.latest_invite_for_user(conn, UUID(str(user_id)))
+        if latest is not None and latest.status in ("pending", "sent"):
+            return None  # re-invited since the revoke: the send job owns the account now
     async with _client(admin) as client:
         await client.disable_user(str(job.payload["keycloak_user_id"]))
     return None
