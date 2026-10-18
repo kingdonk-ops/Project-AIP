@@ -1,7 +1,7 @@
 import { createRoute } from "@tanstack/react-router";
 import "../../../features/projects/nav";
 import { ProjectsRegister } from "../../../features/projects/ProjectsRegister";
-import { validateProjectsSearch } from "../../../features/projects/search";
+import { projectsQuery, toSearch, validateProjectsSearch } from "../../../features/projects/search";
 import { appRoute } from "../../_app";
 
 export const projectsIndexRoute = createRoute({
@@ -17,9 +17,13 @@ function ProjectsIndexPage() {
   const { session } = appRoute.useRouteContext();
   return (
     <ProjectsRegister
-      search={search}
+      query={projectsQuery(search)}
+      created={search.created}
       permissions={session.permissions}
-      onSearchChange={(next) => void navigate({ search: next, replace: true })}
+      // Any change drops the "created" confirmation: it belongs to the arrival from the form.
+      onQueryChange={(next) => void navigate({ search: toSearch(next), replace: true })}
+      // PROJECTS-07 adds the detail route; until then the path shows the app's not-found page.
+      onOpenProject={(project) => void navigate({ href: `/projects/${project.id}` })}
     />
   );
 }

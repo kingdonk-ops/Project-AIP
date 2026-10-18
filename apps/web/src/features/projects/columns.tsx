@@ -1,21 +1,11 @@
 /**
- * Column definitions of the projects register (PROJECTS-02).
- *
- * Shaped like DESIGN-03's planned `RegisterColumn<T>` (`id`, `headerKey`, `cell`, `mono`), so the
- * register can switch to `RegisterTable` without touching these definitions.
+ * Column definitions of the projects register (PROJECTS-02, on `RegisterTable` since PROJECTS-06).
+ * Code, Name and Updated sort both ways on the server; Region is hidden until the user shows it.
  */
 import type { ProjectOut } from "@aip/api-client";
-import { StatusChip, type IconName, type StatusTone } from "@aip/ui";
-import type { ReactNode } from "react";
+import { StatusChip, type IconName, type RegisterColumn, type StatusTone } from "@aip/ui";
 import { t } from "../shell/t";
 import type { ProjectStatus } from "./search";
-
-export interface RegisterColumn<T> {
-  id: string;
-  headerKey: string;
-  cell: (row: T) => ReactNode;
-  mono?: boolean;
-}
 
 export interface ProjectRowContext {
   /** Site names by id, for the Site column. */
@@ -39,19 +29,20 @@ const updatedFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", 
 
 export function projectColumns(context: ProjectRowContext): RegisterColumn<ProjectOut>[] {
   return [
-    { id: "code", headerKey: "projects.field.code", cell: (p) => p.code, mono: true },
-    { id: "name", headerKey: "projects.field.name", cell: (p) => p.name },
+    { id: "code", headerKey: "projects.field.code", cell: (p) => p.code, mono: true, sortable: true },
+    { id: "name", headerKey: "projects.field.name", cell: (p) => p.name, sortable: true },
     {
       id: "site",
       headerKey: "projects.field.site",
       cell: (p) => (p.siteId ? (context.siteNames.get(p.siteId) ?? "") : ""),
     },
-    { id: "region", headerKey: "projects.field.region", cell: (p) => p.region ?? "" },
+    { id: "region", headerKey: "projects.field.region", cell: (p) => p.region ?? "", defaultVisible: false },
     { id: "status", headerKey: "projects.field.status", cell: (p) => <ProjectStatusChip status={p.status} /> },
     {
       id: "updated",
       headerKey: "projects.field.updated",
       cell: (p) => <time dateTime={p.updatedAt}>{updatedFormat.format(new Date(p.updatedAt))}</time>,
+      sortable: true,
     },
   ];
 }

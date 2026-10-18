@@ -66,7 +66,7 @@ describe("projects register", () => {
     const { router } = renderAt("/projects", VIEW);
     await screen.findByRole("table");
 
-    await userEvent.selectOptions(screen.getByLabelText("Status"), "active");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Status" }), "active");
     await waitFor(() => expect(router.state.location.search).toEqual({ status: "active" }));
     await waitFor(() => expect(seen.at(-1)?.searchParams.get("status")).toBe("active"));
 
@@ -96,11 +96,58 @@ describe("projects register", () => {
     const validate = projectsIndexRoute.options.validateSearch as (s: Record<string, unknown>) => unknown;
     expect(validate({ status: "active", limit: "9999" })).toEqual({ status: "active" });
     expect(validateProjectsSearch({ status: "nope", limit: "25", q: "  kips ", cursor: "", created: "L592" })).toEqual({
-      limit: 25,
+      limit: "25",
       q: "kips",
       created: "L592",
     });
     expect(validateProjectsSearch({ limit: 50 })).toEqual({});
+    expect(validateProjectsSearch({ sort: "-code", cols: "code,nope,region", other: "x" })).toEqual({
+      sort: "-code",
+      cols: "code,region",
+    });
+    expect(validateProjectsSearch({ sort: "-site" })).toEqual({});
+  });
+
+  it("sorts by Code both ways on the server and exports with the same filters and sort", async () => {
+    const seen: URL[] = [];
+    server.use(listProjects([project({ code: "L592", status: "active" })], null, seen), noSites);
+    const { router } = renderAt("/projects?status=active", VIEW);
+    await screen.findByText("L592");
+
+    const sortByCode = () => userEvent.click(screen.getByRole("button", { name: /^Project code/ }));
+    await sortByCode();
+    await waitFor(() => expect(router.state.location.search).toEqual({ status: "active", sort: "code" }));
+    await sortByCode();
+    await waitFor(() => expect(router.state.location.search).toEqual({ status: "active", sort: "-code" }));
+    await waitFor(() => expect(seen.at(-1)?.searchParams.get("sort")).toBe("-code"));
+    expect(screen.getByRole("columnheader", { name: /Project code/ }).getAttribute("aria-sort")).toBe("descending");
+
+    const exportLink = screen.getByRole("link", { name: "Export CSV" });
+    expect(exportLink.getAttribute("href")).toBe("/api/v1/projects/export.csv?sort=-code&status=active");
+  });
+
+  it("hides Region by default and keeps a shown column in the URL", async () => {
+    server.use(listProjects([project({ code: "L592", status: "active" })]), noSites);
+    const { router } = renderAt("/projects", VIEW);
+    await screen.findByText("L592");
+    expect(screen.queryByRole("columnheader", { name: "Region" })).toBeNull();
+
+    await userEvent.click(screen.getByText("Columns"));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Region" }));
+    await waitFor(() =>
+      expect(router.state.location.search).toEqual({ cols: "code,name,site,region,status,updated" }),
+    );
+    expect(screen.getByRole("columnheader", { name: "Region" })).toBeTruthy();
+  });
+
+  it("opens the project with Enter on its row", async () => {
+    const first = project({ code: "L592", status: "active" });
+    server.use(listProjects([first, project({ code: "M100", status: "draft" })]), noSites);
+    const { router } = renderAt("/projects", VIEW);
+    const rows = (await screen.findAllByRole("row")).filter((r) => r.hasAttribute("data-row"));
+    rows[0]!.focus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/projects/${first.id}`));
   });
 });
 
