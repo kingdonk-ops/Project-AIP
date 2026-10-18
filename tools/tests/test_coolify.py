@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 from pathlib import Path
@@ -15,6 +16,8 @@ COMPOSE = ROOT / "infra" / "coolify" / "docker-compose.coolify.yml"
 ENV_EXAMPLE = ROOT / "infra" / "coolify" / "env.example"
 HEADERS = json.loads((ROOT / "apps" / "web" / "security-headers.json").read_text())["headers"]
 NGINX_CONFS = [ROOT / "apps" / "web" / "nginx.conf", ROOT / "infra" / "coolify" / "nginx.conf"]
+KEYCLOAK = ROOT / "infra" / "keycloak"
+IMAGES = ROOT / "infra" / "coolify" / "images"
 
 SECRETS = {
     "POSTGRES_PASSWORD",
@@ -26,6 +29,8 @@ SECRETS = {
     "AIP_API_CLIENT_SECRET",
     "AIP_ADMIN_CLIENT_SECRET",
     "MOCK_IDP_CLIENT_SECRET",
+    "MOCK_IDP_ALICE_PASSWORD",
+    "MOCK_IDP_BOB_PASSWORD",
     "OBJECT_STORE_ACCESS_KEY_ID",
     "OBJECT_STORE_SECRET_ACCESS_KEY",
     "PREAUTH_COOKIE_KEY",
@@ -236,3 +241,113 @@ def test_the_api_trusts_forwarded_headers_from_private_hops_only() -> None:
     assert "--proxy-headers" in api["command"]
     assert not any(str(arg).startswith("--forwarded-allow-ips") for arg in api["command"])
     assert api["environment"]["FORWARDED_ALLOW_IPS"] == "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+
+
+def _deployed_realms_module() -> Any:
+    spec = importlib.util.spec_from_file_location(
+        "deployed_realms", KEYCLOAK / "deployed_realms.py"
+    )
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture(scope="module")
+def deployed() -> dict[str, dict[str, Any]]:
+    module = _deployed_realms_module()
+    return {
+        name: module.deployed_realm(json.loads((KEYCLOAK / name).read_text(encoding="utf-8")))
+        for name in module.REALMS
+    }
+
+
+def test_the_deployed_mock_idp_realm_has_no_users_or_credentials(
+    deployed: dict[str, dict[str, Any]],
+) -> None:
+    # SECURITY-11 Part A (review 11 H1): no demo user's password in the repo or the image.
+    mock = deployed["realm-mock-idp.json"]
+    assert "users" not in mock
+    for name, realm in deployed.items():
+        assert '"credentials": [' not in json.dumps(realm), name
+        assert "dev_only_password" not in json.dumps(realm), name
+    # The aip realm keeps its service-account user (aip-admin's manage-users roles).
+    users = deployed["realm-aip.json"]["users"]
+    assert [u["username"] for u in users] == ["service-account-aip-admin"]
+
+
+def test_a_realm_user_with_credentials_is_dropped() -> None:
+    module = _deployed_realms_module()
+    realm = {
+        "users": [
+            {"username": "x", "credentials": [{"type": "password", "value": "p"}]},
+            {"username": "service-account-y", "serviceAccountClientId": "y"},
+        ]
+    }
+    assert module.deployed_realm(realm)["users"] == [
+        {"username": "service-account-y", "serviceAccountClientId": "y"}
+    ]
+    assert "users" not in module.deployed_realm({"users": [realm["users"][0]]})
+
+
+def test_the_deployed_realms_have_no_client_secret_defaults(
+    deployed: dict[str, dict[str, Any]],
+) -> None:
+    # SECURITY-11 Part D (review 11 M4): an import without the env var must not get a public secret.
+    for name, realm in deployed.items():
+        text = json.dumps(realm)
+        assert not re.search(r"\$\{[A-Z0-9_]*SECRET:", text), name
+        assert "dev_only_secret" not in text, name
+    aip = {c["clientId"]: c for c in deployed["realm-aip.json"]["clients"]}
+    assert aip["aip-api"]["secret"] == "${AIP_API_CLIENT_SECRET}"
+    assert aip["aip-admin"]["secret"] == "${AIP_ADMIN_CLIENT_SECRET}"
+    # Non-secret defaults (URLs, SMTP host) stay.
+    assert "${APP_ORIGIN:http://localhost:8080}" in json.dumps(deployed["realm-aip.json"])
+
+
+def test_a_secret_default_added_to_a_realm_is_stripped() -> None:
+    module = _deployed_realms_module()
+    realm = {"clients": [{"secret": "${NEW_CLIENT_SECRET:public}"}], "x": "${OTHER:keep}"}
+    assert module.deployed_realm(realm) == {
+        "clients": [{"secret": "${NEW_CLIENT_SECRET}"}],
+        "x": "${OTHER:keep}",
+    }
+
+
+def test_the_demo_image_imports_the_deployed_realms_and_guards_its_secrets() -> None:
+    dockerfile = (IMAGES / "keycloak.Dockerfile").read_text()
+    assert "RUN python3 /src/deployed_realms.py /out" in dockerfile
+    assert (
+        "COPY --from=realms /out/realm-aip.json /out/realm-mock-idp.json /opt/keycloak/data/import/"
+        in dockerfile
+    )
+    # The dev realm files are only an input of the build stage, never copied into Keycloak.
+    keycloak_stage = dockerfile.split("FROM quay.io/keycloak/keycloak", 1)[1]
+    assert "infra/keycloak/realm-" not in keycloak_stage
+    assert 'ENTRYPOINT ["/opt/keycloak/aip/keycloak-entrypoint.sh"]' in dockerfile
+    # The entrypoint knows every dev client-secret default of the dev realms.
+    entrypoint = (IMAGES / "keycloak-entrypoint.sh").read_text()
+    dev_defaults = set()
+    for name in ("realm-aip.json", "realm-mock-idp.json"):
+        text = (KEYCLOAK / name).read_text(encoding="utf-8")
+        dev_defaults |= set(re.findall(r"\$\{([A-Z0-9_]*_CLIENT_SECRET):([^}]*)\}", text))
+    assert dev_defaults
+    for var, value in dev_defaults:
+        assert f"[{var}]={value}" in entrypoint, var
+
+
+def test_the_mock_idp_users_come_from_secrets_before_web_starts(
+    services: dict[str, dict[str, Any]],
+) -> None:
+    users = services["mock-idp-users"]
+    assert users["entrypoint"] == ["/opt/keycloak/aip/mock-idp-users.sh"]
+    assert users["depends_on"]["keycloak"]["condition"] == "service_healthy"
+    assert users["environment"]["MOCK_IDP_ALICE_PASSWORD"] == "${MOCK_IDP_ALICE_PASSWORD:?}"
+    assert users["environment"]["MOCK_IDP_BOB_PASSWORD"] == "${MOCK_IDP_BOB_PASSWORD:?}"
+    assert (
+        services["web"]["depends_on"]["mock-idp-users"]["condition"]
+        == "service_completed_successfully"
+    )
+    script = (IMAGES / "mock-idp-users.sh").read_text()
+    assert ': "${MOCK_IDP_ALICE_PASSWORD:?}"' in script
+    assert "alice_dev_only_password | bob_dev_only_password" in script
