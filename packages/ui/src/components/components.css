@@ -346,6 +346,9 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  /* DESIGN-08: inside a grid or flex parent (a page section), an item's minimum width is its content's,
+     so a wide table would stretch the page sideways. Let it shrink; the table scrolls in its region. */
+  min-width: 0;
 }
 .aip-register__toolbar,
 .aip-register__filter-row,
