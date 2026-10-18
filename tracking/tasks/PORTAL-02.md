@@ -1,5 +1,6 @@
 # PORTAL-02 — Portal sign-in and session on its own host: aip-portal client, separate cookie and idle timeout, route allow-list
 
+<!-- hand-edited: owner answers 2026-10-18 (no second approval: a client is active from first sign-in; access expires per project and is renewed by the project admin) -->
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
 | Field | Value |
@@ -93,7 +94,7 @@ the `portal` session policy).
       class were wrong; a portal-class user with an `app` audience session is refused by identity.
   - 3. Portal routes (`routes.py`, router prefix `/portal`, all `external=True`):
     - `GET /api/v1/portal/me` (`authenticated(external=True)`): calls `PortalApi.mark_signed_in` (PORTAL-01, so the
-      first sign-in moves `invited` → `pending_approval`), then returns `{userId, displayName, companyName,
+      first sign-in moves `invited` → `active`; there is no second approval), then returns `{userId, displayName, companyName,
       effectiveStatus, projects: [{id, code, name, actions}]}` from `live_grants` and `ProjectsApi.get_project`
       (projects only while the status is `active`; `[]` otherwise). A user whose `portal_users` row is missing →
       404. Writes `AuditApi.record_security_event(conn, SecurityEventInput(event_type="portal.signed_in", ...))` once
@@ -111,7 +112,7 @@ the `portal` session policy).
     and one `portal.rate_limited` security event per key and window. Limits come from the manifest settings
     `PORTAL_RATE_LIMIT_SESSION_PER_MIN` / `PORTAL_RATE_LIMIT_IP_PER_MIN`. Sign-in attempts are limited by identity's
     login limiter on the portal login route.
-  - 6. Term keys (en-AU) for `portal.signin.*`, `portal.status.pending_approval` ("Waiting for approval"),
+  - 6. Term keys (en-AU) for `portal.signin.*`, `portal.status.expired` ("Your access has expired"),
     `RATE_LIMITED` and `NOT_FOUND`; regenerate `packages/api-client/openapi.json`.
 - **acceptance**:
   - A client signs in only through `aip-portal` on the portal host, with password and second factor, and receives
@@ -134,10 +135,10 @@ the `portal` session policy).
   - **integration** (testcontainers Postgres and Valkey, TESTING-01 tenants; sessions created with identity's
     `issue_session(..., audience="portal")` for a PORTAL-01 portal user, the Keycloak redirect covered by identity's
     own flow tests):
-    - `GET /api/v1/portal/me` with the portal cookie of an `invited` user → 200 `effectiveStatus:
-      "pending_approval"`, `projects: []`; `SELECT status FROM portal_users WHERE user_id = :u` → `pending_approval`;
-      1 `audit.security_event` `domain_events` row with `portal.signed_in`; a second call adds none.
-    - After the named owner approves (PORTAL-01 route) → `projects` lists P1 with `actions ["view","sign_off"]`.
+    - `GET /api/v1/portal/me` with the portal cookie of an `invited` user → 200 `effectiveStatus: "active"`,
+      `projects` lists P1 with `actions ["view","sign_off"]`; `SELECT status FROM portal_users WHERE user_id = :u` →
+      `active`; 1 `audit.security_event` `domain_events` row with `portal.signed_in`; a second call adds none.
+    - After the P1 grant's `expires_at` is moved to now − 1 s → `effectiveStatus: "expired"`, `projects: []`.
     - The same portal session on `GET /api/v1/projects`, `GET /api/v1/admin/portal/users` and
       `GET /api/v1/approvals/instances/{id}` → 404 each; on `POST /api/v1/admin/portal/users` → 404 and
       `SELECT count(*) FROM portal_users` unchanged.
@@ -159,5 +160,5 @@ the `portal` session policy).
       `client_id=aip-portal`, `acr_values=aal2` and `redirect_uri` on `PORTAL_ORIGIN`; `GET /api/v1/portal/me`
       without a session → 401 `NOT_AUTHENTICATED`; a token request to the realm with `grant_type=password` and the
       `aip-portal` client → 400 `unauthorized_client`. The signed-in browser journey (invite email, password, TOTP enrolment, sign-in,
-      pending approval, approval, inbox), the cross-tenant check and axe are PORTAL-03's, because the sign-in pages
+      inbox, expired access), the cross-tenant check and axe are PORTAL-03's, because the sign-in pages
       live in the portal app.

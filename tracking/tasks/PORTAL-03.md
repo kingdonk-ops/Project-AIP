@@ -1,5 +1,6 @@
 # PORTAL-03 — Portal app: Vite build and container, sign-in, needs-my-action inbox
 
+<!-- hand-edited: owner answers 2026-10-18 (no second approval: a client is active from first sign-in; access expires per project and is renewed by the project admin) -->
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
 | Field | Value |
@@ -26,7 +27,7 @@
 ## Spec
 
 Turn the `apps/portal` placeholder into a Vite + React app served by its own unprivileged nginx container on the
-portal's own host, with sign-in through the `aip-portal` flow, a "waiting for approval" page, and a "needs my
+portal's own host, with sign-in through the `aip-portal` flow, an "access expired" page, and a "needs my
 action" inbox that lists the inspections awaiting the client within their grants, read through `InspectionsApi` by
 a portal API route (tag: extend).
 
@@ -51,7 +52,7 @@ reports (PORTAL-05), the internal admin page (PORTAL-07), branding, share packs 
   - apps/portal/src/session.ts
   - apps/portal/src/routes/__root.tsx
   - apps/portal/src/routes/signin.tsx
-  - apps/portal/src/routes/pending.tsx
+  - apps/portal/src/routes/expired.tsx
   - apps/portal/src/routes/index.tsx
   - apps/portal/src/inbox/InboxList.tsx
   - apps/portal/src/inbox/InboxList.test.tsx
@@ -97,10 +98,11 @@ reports (PORTAL-05), the internal admin page (PORTAL-07), branding, share packs 
       to the returned authorize URL; error codes (`INVALID_EMAIL`, `RATE_LIMITED`, `SESSION_EXPIRED` from a
       `?reason=` query) shown as term strings in an `aria-live` region. No password field in the app (Keycloak's
       themed page, DESIGN-07, takes the password and the code).
-    - `__root.tsx`: loads `GET /api/v1/portal/me`; 401 → `/signin`; `effectiveStatus` `pending_approval` → `/pending`;
-      `suspended` / `expired` → `/signin?reason=...`; a header with the company name, the signed-in name and Sign out
+    - `__root.tsx`: loads `GET /api/v1/portal/me`; 401 → `/signin`; `effectiveStatus` `expired` → `/expired`;
+      `suspended` → `/signin?reason=suspended`; a header with the company name, the signed-in name and Sign out
       (`POST /api/v1/portal/logout` with the CSRF header read from `__Host-aip_portal_csrf`, then `/signin`).
-    - `/pending`: "Waiting for approval" with the named-owner explanation term; no data calls besides `/me`.
+    - `/expired`: "Your access has expired" with the term explaining that the project admin who invited them can
+      renew it; no data calls besides `/me`.
     - `/` (inbox): `InboxList` renders the items as a list (title, project, asset tag, a `StatusChip` for the state,
       "waiting since" in the browser's time zone via `Intl.DateTimeFormat`, ADR 0025), a Load more button for
       `nextCursor`, an empty state ("Nothing needs your action"), a loading state and an error state with retry. Rows
@@ -124,7 +126,7 @@ reports (PORTAL-05), the internal admin page (PORTAL-07), branding, share packs 
     10001 with a read-only root, and both portal nginx configs carry every header in
     `apps/portal/security-headers.json` in every `location` and proxy no `/api/` path outside the allow-list.
   - 6. Term keys (en-AU) in `config/terms/en-AU/portal.json`: `portal.app.title` ("Client portal"),
-    `portal.signin.*`, `portal.pending.*`, `portal.inbox.title` ("Needs your action"), `portal.inbox.empty`,
+    `portal.signin.*`, `portal.expired.*`, `portal.inbox.title` ("Needs your action"), `portal.inbox.empty`,
     `portal.inbox.waitingSince`, `portal.inbox.loadMore`, `portal.signout`, error codes. Regenerate
     `packages/api-client/openapi.json`; the portal uses the generated client.
   - 7. e2e (skeleton lane, needs the compose stack and Keycloak): `e2e/playwright.config.ts` adds projects `portal`
@@ -132,14 +134,13 @@ reports (PORTAL-05), the internal admin page (PORTAL-07), branding, share packs 
     Desktop Chrome and Pixel 7), only when `E2E_SKELETON` is set. `e2e/fixtures/portal.ts`: `invitePortalUser`
     (signs in a `kaefer-demo` admin with `loginAs`, steps up, POSTs the PORTAL-01 invite with a run-id email),
     `acceptInvite` (reads the invite link from Mailpit's API, sets a password and enrols TOTP by reading the secret
-    from Keycloak's setup page and computing codes with the `otpauth` package), `approvePortalUser` (the named owner
-    approves through the PORTAL-01 route) and `portalSignIn`. Credentials come only from the environment, as in
+    from Keycloak's setup page and computing codes with the `otpauth` package), `expirePortalGrant` (moves a grant's expiry into the
+    past through a test-only fixture route on the compose API, as the session-clock fixture does) and `portalSignIn`. Credentials come only from the environment, as in
     `e2e/fixtures/tenants.ts`; generated passwords are never logged.
 - **acceptance**:
   - `docker compose up` serves the portal at `http://portal.localhost:8081` with every security header; `/api/v1/projects`
     through the portal host is 404 from nginx.
-  - A client signs in with password and code, sees "Waiting for approval" until the named owner approves, and then
-    sees exactly the inspections awaiting them on the projects and asset subtrees they were granted.
+  - A client signs in with password and code and, with no further approval, sees exactly the inspections awaiting them on the projects and asset subtrees they were granted.
   - Every inbox load writes one `portal.inbox_viewed` security event.
   - The portal build contains no staff routes or admin calls (only `/api/v1/portal/*` and the portal sign-in route).
 - **tests**:
@@ -149,7 +150,7 @@ reports (PORTAL-05), the internal admin page (PORTAL-07), branding, share packs 
       `portal.inbox.empty` text; with a rejected query → the error text and a Retry button that refetches.
     - `/signin`: submitting `not-an-email` shows the `INVALID_EMAIL` term; a 429 response shows the `RATE_LIMITED`
       term; a 200 calls `window.location.assign` with the returned URL.
-    - `app.test.ts`: the built route tree has exactly `/`, `/signin`, `/pending`; no source file under
+    - `app.test.ts`: the built route tree has exactly `/`, `/signin`, `/expired`; no source file under
       `apps/portal/src` references `/api/v1/` outside `/api/v1/portal/` and `/api/v1/auth/portal/` (static scan).
     - axe-core on the rendered `InboxList` and `/signin` → 0 violations.
   - **integration** (testcontainers Postgres, TESTING-01 tenants; inspections in the client-review step created
@@ -168,13 +169,14 @@ reports (PORTAL-05), the internal admin page (PORTAL-07), branding, share packs 
   - **e2e** (`e2e/portal/portal.spec.ts`, projects `portal` and `portal-mobile`):
     - Main journey: the fixture invites a client on project P1 with `["view","sign_off"]`; the client accepts the
       invite (password, TOTP), opens `/signin`, enters the email, completes Keycloak's password and code steps, lands
-      on `/pending` ("Waiting for approval"); the owner approves; after reload the inbox shows the seeded inspection
+      on the inbox, which shows the seeded inspection
       awaiting client review; Sign out returns to `/signin` and the `__Host-aip_portal_sid` cookie is gone; the
       staff cookie `__Host-aip_sid` was never set for the portal host.
+    - Expired: after `expirePortalGrant` on the client's only grant, a reload lands on `/expired`.
     - Cross-grant: a second client granted only on P2 sees an inbox without the P1 inspection, and a direct
       `fetch("/api/v1/portal/inbox")` from that page returns no P1 item.
     - Cross-tenant: a `tenant-b` client signed in on the same portal sees none of `kaefer-demo`'s items, and
       `fetch("/api/v1/projects")` from the portal page → 404.
     - Session: after the fixture moves the session's idle expiry (`AIP_TEST_CLOCK_OFFSET` on the compose API), the next
       inbox refresh lands on `/signin?reason=session_expired`.
-    - axe (`@axe-core/playwright`) on `/signin`, `/pending` and the inbox → 0 violations, on both projects.
+    - axe (`@axe-core/playwright`) on `/signin`, `/expired` and the inbox → 0 violations, on both projects.

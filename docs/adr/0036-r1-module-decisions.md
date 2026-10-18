@@ -27,6 +27,15 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
 - portal: clients sign in with their own username and password plus the second step local accounts require, and sign
   off in the portal; PIN on the inspector's tablet stays an optional route behind `holdpoint_client_pin_only`
   (answered 2026-10-10, ADR 0010 addendum part 2). This replaces ADR 0005's "magic link" row for portal users.
+- portal: sign-up needs no second approval: the project admin who invites a client is the approval, and the client
+  is active from their first sign-in (answered 2026-10-18; replaces the README's "named internal owner" approval).
+- portal: client access is per project and expires after the project's `portal_access_days` setting, 180 days by
+  default and at most 400. The project admins are reminded 30, 20, 10 and 1 days before expiry; renewing grants another
+  period and stops the reminders; an ignore option stops them; with neither, the admins get a notice on the expiry day
+  saying the access expired and how to renew it (answered 2026-10-18; PORTAL-01, PORTAL-07, PORTAL-08).
+- portal: the witness notice period and waiver rule are project settings (answered 2026-10-18, OPEN-QUESTIONS #55;
+  PROJECTS-04, PORTAL-06).
+- R1 target date: 2027-03-31 still holds with the portal in R1 (answered 2026-10-18, OPEN-QUESTIONS #56).
 - scope_work: access methods are Ground, Rope access, Scaffold, MEWP and Ladder (MEWP and Ladder split), as a tenant-editable list (answered in [01-decisions](../blueprint/01-decisions.md), owner decisions; the en-AU labels shipped with TERMS-01). SCOPEWORK-06 seeds them.
 
 ### Settled by earlier ADRs or P0 work
@@ -77,14 +86,15 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
 11. **Calculated fields and repeating sections are in R1** (owner, 2026-10-18): FORMS-07 adds a forms-only
     arithmetic extension to the shared evaluator (the approvals guard allow-list stays unchanged), and FORMS-08 adds
     repeating sections and grid fields; FORMS-05's seed templates use both.
-12. **Everything left out of R1 is listed** in [`tracking/BACKLOG.md`](../../tracking/BACKLOG.md), with its source and
+12. **Ignoring expiry reminders silences the rest of that access period,** including the expiry-day notice; renewing
+    later starts a new period with reminders again. (The owner asked for "a way to ignore notifications"; this is
+    PLAN-R1's reading of it.)
+13. **Everything left out of R1 is listed** in [`tracking/BACKLOG.md`](../../tracking/BACKLOG.md), with its source and
     the reason.
 
 ## Consequences
 
 - The R1 board section, its stubs and the first three full specs per module follow these lines; the task linter
   (`tools/lint_tasks.py`) enforces the Python layout on every R1 row.
-- Blocked R1 rows: ITEMTYPES-05 (#40), ITEMTYPES-06 (#41), ISSUES-06 (#46), DATAIO-04 (#54), PORTAL-06 (#55). Each becomes `todo` when the owner answers and this ADR gains the answer line.
-- Moving the portal into R1 adds about seven rows to R1; the owner confirms whether the 2027-03-31 target holds
-  (ADR 0007).
+- Blocked R1 rows: ITEMTYPES-05 (#40), ITEMTYPES-06 (#41), ISSUES-06 (#46), DATAIO-04 (#54), and none in the portal (#55 answered). Each becomes `todo` when the owner answers and this ADR gains the answer line.
 - A change to any choice above re-runs the generator for that module only (07-delivery process step 6).

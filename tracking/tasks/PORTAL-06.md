@@ -1,4 +1,4 @@
-# PORTAL-06 — Witness attendance: confirm or waive with a notice period
+# PORTAL-06 — Witness attendance: confirm or waive under the project's notice period and waiver rule
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
@@ -7,7 +7,7 @@
 | Module | [`portal`](../../docs/blueprint/modules/portal/README.md) |
 | Phase | R1 |
 | Size | S |
-| Depends on | PORTAL-04 |
+| Depends on | PORTAL-04, PROJECTS-04 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
@@ -18,8 +18,6 @@
 
 ## Spec
 
-Let a client confirm attendance at a witness point or waive it, with the notice period and waiver rule once the owner sets their defaults (tag: extend).
+Let a client confirm attendance at a witness point or waive it, applying the project's witness notice period and waiver rule, which are project settings (PROJECTS-04: `witness_notice_hours`, `witness_waiver_rule`; owner 2026-10-18); confirm the default values with the owner when this spec is written (tag: extend).
 
 Stub: full spec is written when its dependencies are merged (PLAN-R1 pass A).
-
-Blocked: waits on [OPEN-QUESTIONS](../OPEN-QUESTIONS.md) #55. Do not guess the answer; the spec is written once the owner answers.

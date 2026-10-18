@@ -166,6 +166,5 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | Download watermarking and view-only mode | README | Not in the R1 portal slice |
 | Per-client branding and terminology | README | Not in the R1 portal slice |
 | Enterprise SSO for client users (SAML or OIDC federation) | README | Clients use local accounts in R1 (ADR 0010 addendum part 2) |
-| Witness notice-period defaults and waiver rule | README, #55 | PORTAL-06 waits on the answer |
-| Periodic sweep that writes `expired` into portal users and grants (R1 enforces expiry when read) | PORTAL-01 author | Not needed for R1; an OPS-17 job later |
+| In-app notification centre for expiry reminders (R1 sends email and shows expiry on the admin page) | PORTAL-08 | No notifications module in R1 |
 | Magic-link sign-in and PIN credentials for portal users (`portal_credentials`) | README, ADR 0005 | Clients use local accounts in R1 (ADR 0010 addendum part 2) |

@@ -18,6 +18,6 @@
 
 ## Spec
 
-Add `move` to the `edit` level in the ADR 0027 verb expansion (amend ADR 0027), so default roles that edit assets can also move them while `asset.move` stays a separate code an admin can withhold; re-seed default roles with `aip-access seed-roles` (tag: extend).
+Add `move` to the `edit` level, and `invite` to the level project admins hold so they can invite portal clients (owner 2026-10-18), in the ADR 0027 verb expansion (amend ADR 0027), so default roles that edit assets can also move them while `asset.move` stays a separate code an admin can withhold; re-seed default roles with `aip-access seed-roles` (tag: extend).
 
 Stub: full spec is written when its dependencies are merged (PLAN-R1 pass A).

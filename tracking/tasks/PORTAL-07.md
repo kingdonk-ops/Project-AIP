@@ -1,4 +1,4 @@
-# PORTAL-07 — External users admin: register, invite with grant builder, pending approvals (/admin/portal/users)
+# PORTAL-07 — External users admin: register, invite with grant builder, access expiry and renewal (/admin/portal/users)
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
@@ -18,6 +18,6 @@
 
 ## Spec
 
-Build the internal admin page for external users: the register with a pending-approvals tab, the invite form with a grant builder (project, optional asset subtree, actions), and suspend or expire access (tag: extend).
+Build the internal admin page for external users: the register with each grant's expiry date and an "expiring soon" filter, the invite form with a grant builder (project, optional asset subtree, actions), renew (PORTAL-01), suspend and reinstate; the project admin who invites is the only approval (tag: extend).
 
 Stub: full spec is written when its dependencies are merged (PLAN-R1 pass A).

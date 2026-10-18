@@ -73,8 +73,8 @@ marked `blocked` on the board waits for its question; the others only shape late
 52. **data_io, scheduled exports:** are scheduled exports to storage in scope?
 53. **data_io, project scope:** is project-scoped export in scope alongside tenant scope?
 54. **AIP sample export:** please provide a sample export of Kaefer's current records (format, tables or sheets, typical volumes) on synthetic or approved data, as ADR 0007 plans. Blocks DATAIO-04 (and DATAIO-06 behind it).
-55. **portal, witness notice:** what are the default notice period and waiver rule for witness points (per client, per project or per ITP step), and when does a client's non-attendance count as a recorded waiver? Blocks PORTAL-06.
-56. **R1 date with the portal:** moving the portal into R1 adds about seven tasks. Does the 2027-03-31 target for "Kaefer live" still hold, or do you want to move it?
+55. ~~**portal, witness notice.**~~ Answered 2026-10-18: the notice period and waiver rule are project settings (PROJECTS-04, PORTAL-06; ADR 0036).
+56. ~~**R1 date with the portal.**~~ Answered 2026-10-18: 2027-03-31 still holds (ADR 0036).
 
 Also from the portal README: the identity approach for portal users is answered (username, password and second step via Keycloak, ADR 0010 addendum part 2, ADR 0036), and staging is answered by the R1 slice in ADR 0036.
 
