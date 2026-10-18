@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterable
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Any, Final
 from uuid import UUID
@@ -36,17 +37,24 @@ from aip.modules.projects.schemas import (
 from aip.modules.projects.settings import get_settings
 from aip.modules.projects.tables import projects, sites
 from aip.modules.tenancy.api import region_exists
-from aip.platform.context import get_context, new_request_id
+from aip.platform.context import RequestContext, get_context, new_request_id, use_context
 from aip.platform.db.errors import ConflictError, NotFoundError
 from aip.platform.db.session import with_tenant
 from aip.platform.events import Aggregate, emit
 from aip.platform.http import DomainError
+from aip.platform.http.csv import CsvColumn, csv_header, csv_row
 
-__all__ = ["ProjectService", "SiteService", "cursor_codec"]
+__all__ = ["EXPORT_COLUMNS", "EXPORT_MAX_ROWS", "ProjectService", "SiteService", "cursor_codec"]
 
 _UNIQUE_VIOLATION: Final = "23505"
-# Newest first for updated_at; alphabetical for code and name.
-_DESCENDING: Final[frozenset[str]] = frozenset({"updated_at"})
+
+# The CSV export (PROJECTS-06): at most this many rows, read this many per transaction. Headers are
+# the API's field names, so a file reads the same in every tenant and locale (ADR 0033).
+EXPORT_MAX_ROWS: Final = 10_000
+_EXPORT_BATCH: Final = 500
+EXPORT_COLUMNS: Final[tuple[CsvColumn, ...]] = tuple(
+    {"id": name} for name in ("code", "name", "status", "siteId", "region", "updatedAt")
+)
 
 
 def cursor_codec() -> CursorCodec:
@@ -78,30 +86,79 @@ async def _unique(code: str) -> AsyncIterator[None]:
         raise
 
 
+def _sort_token(page: repo.Page) -> str:
+    """The ``sort`` parameter that produced ``page`` (``-code`` is code descending)."""
+    return f"-{page.sort}" if page.descending else page.sort
+
+
 def _page(cursor: str | None, sort: str, limit: int) -> repo.Page:
-    after: tuple[Any, UUID] | None = None
-    if cursor is not None:
-        try:
-            data = cursor_codec().decode(cursor)
-            if data.get("sort") != sort:
-                raise InvalidCursorError("cursor was issued for another sort order")
-            value = data["value"]
-            if sort == "updated_at":
-                value = datetime.fromisoformat(value)
-            after = (value, UUID(data["id"]))
-        except (InvalidCursorError, KeyError, TypeError, ValueError):
-            raise _invalid("INVALID_CURSOR", "cursor") from None
-    return repo.Page(sort=sort, descending=sort in _DESCENDING, limit=limit, after=after)
+    """A page for ``sort`` (a column, ``-`` first for descending) after ``cursor``.
+
+    The cursor records the sort it was issued for, direction included, so a cursor from another
+    order is rejected rather than silently skipping or repeating rows.
+    """
+    page = repo.Page(sort=sort.removeprefix("-"), descending=sort.startswith("-"), limit=limit)
+    if cursor is None:
+        return page
+    try:
+        data = cursor_codec().decode(cursor)
+        if data.get("sort") != sort:
+            raise InvalidCursorError("cursor was issued for another sort order")
+        value = data["value"]
+        if page.sort == "updated_at":
+            value = datetime.fromisoformat(value)
+        after = (value, UUID(data["id"]))
+    except (InvalidCursorError, KeyError, TypeError, ValueError):
+        raise _invalid("INVALID_CURSOR", "cursor") from None
+    return replace(page, after=after)
+
+
+def _after(row: dict[str, Any], page: repo.Page) -> tuple[Any, UUID]:
+    return row[page.sort], row["id"]
 
 
 def _next_cursor(rows: list[dict[str, Any]], page: repo.Page) -> str | None:
     if len(rows) <= page.limit:
         return None
-    last = rows[page.limit - 1]
-    value = last[page.sort]
+    value, last_id = _after(rows[page.limit - 1], page)
     if isinstance(value, datetime):
         value = value.isoformat()
-    return cursor_codec().encode({"sort": page.sort, "value": value, "id": str(last["id"])})
+    token = _sort_token(page)
+    return cursor_codec().encode({"sort": token, "value": value, "id": str(last_id)})
+
+
+async def _csv_chunks(
+    ctx: RequestContext, page: repo.Page, filters: list[ColumnElement[bool]]
+) -> AsyncIterator[str]:
+    """The header, then one chunk per keyset batch. The response streams after the route has
+    returned, so each batch sets the request's context again for its tenant transaction."""
+    yield csv_header(EXPORT_COLUMNS)
+    sent = 0
+    while sent < EXPORT_MAX_ROWS:
+        with use_context(ctx):
+            async with _tx() as conn:
+                rows = await repo.list_page(conn, projects, page, *filters)
+        batch = rows[: min(page.limit, EXPORT_MAX_ROWS - sent)]
+        if not batch:
+            return
+        yield "".join(csv_row(EXPORT_COLUMNS, _out(row)) for row in batch)
+        sent += len(batch)
+        if len(rows) <= page.limit:
+            return
+        page = replace(page, after=_after(batch[-1], page))
+
+
+def _project_filters(
+    statuses: list[ProjectStatus], site_id: UUID | None, q: str | None
+) -> list[ColumnElement[bool]]:
+    filters: list[ColumnElement[bool]] = []
+    if statuses:
+        filters.append(projects.c.status.in_(statuses))
+    if site_id is not None:
+        filters.append(projects.c.site_id == site_id)
+    if q:
+        filters.append(repo.search(projects, q))
+    return filters
 
 
 async def _check_region(conn: AsyncConnection, region: str | None) -> None:
@@ -133,17 +190,32 @@ class ProjectService:
         q: str | None,
     ) -> ProjectPage:
         page = _page(cursor, sort, limit)
-        filters = []
-        if statuses:
-            filters.append(projects.c.status.in_(statuses))
-        if site_id is not None:
-            filters.append(projects.c.site_id == site_id)
-        if q:
-            filters.append(repo.search(projects, q))
+        filters = _project_filters(statuses, site_id, q)
         async with _tx() as conn:
             rows = await repo.list_page(conn, projects, page, *filters)
         items = [ProjectOut.model_validate(r) for r in rows[: page.limit]]
         return ProjectPage(items=items, next_cursor=_next_cursor(rows, page))
+
+    async def export_csv(
+        self,
+        *,
+        sort: ProjectSort,
+        statuses: list[ProjectStatus],
+        site_id: UUID | None,
+        q: str | None,
+    ) -> AsyncIterator[str]:
+        """The rows ``list`` would page through, as CSV chunks (PROJECTS-06).
+
+        Raises ``EXPORT_TOO_LARGE`` (422) up front when more than ``EXPORT_MAX_ROWS`` rows match,
+        so a client never receives a silently truncated file. The chunks are read in keyset
+        batches, each in its own tenant transaction, while the response streams.
+        """
+        filters = _project_filters(statuses, site_id, q)
+        async with _tx() as conn:
+            total = await repo.count_live(conn, projects, *filters)
+        if total > EXPORT_MAX_ROWS:
+            raise DomainError(422, "EXPORT_TOO_LARGE", limit=EXPORT_MAX_ROWS)
+        return _csv_chunks(get_context(), _page(None, sort, _EXPORT_BATCH), filters)
 
     async def get(self, project_id: UUID) -> ProjectOut:
         async with _tx() as conn:

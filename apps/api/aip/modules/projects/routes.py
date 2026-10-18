@@ -12,6 +12,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, FastAPI, Query, Request, Response, status
+from fastapi.responses import StreamingResponse
 
 from aip.modules.projects.schemas import (
     ErrorBody,
@@ -71,6 +72,32 @@ async def list_projects(
 ) -> ProjectPage:
     return await ProjectService().list(
         limit=limit, cursor=cursor, sort=sort, statuses=status_, site_id=site_id, q=q
+    )
+
+
+# Declared before "/{project_id}", which would otherwise claim the path (and 422 on the id).
+@projects_router.get(
+    "/export.csv",
+    operation_id="projects_export",
+    response_class=StreamingResponse,
+    responses={
+        200: {"content": {"text/csv": {}}, "description": "The filtered projects as CSV"},
+        422: {"model": ErrorBody, "description": "Validation error, or EXPORT_TOO_LARGE"},
+    },
+    dependencies=[Depends(requires("project.view"))],
+)
+async def export_projects(
+    sort: ProjectSort = "code",
+    status_: Annotated[list[ProjectStatus], Query(alias="status")] = [],  # noqa: B006 - FastAPI copies it
+    site_id: Annotated[UUID | None, Query(alias="siteId")] = None,
+    q: Search = None,
+) -> StreamingResponse:
+    """The same filters and sort as the list, as one CSV file (PROJECTS-06, DESIGN-03)."""
+    chunks = await ProjectService().export_csv(sort=sort, statuses=status_, site_id=site_id, q=q)
+    return StreamingResponse(
+        chunks,
+        media_type="text/csv; charset=utf-8",
+        headers={"content-disposition": 'attachment; filename="projects.csv"'},
     )
 
 
