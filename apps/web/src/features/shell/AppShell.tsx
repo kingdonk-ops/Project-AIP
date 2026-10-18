@@ -26,6 +26,13 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
   const [navOpen, setNavOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  // DESIGN-16: any navigation (header brand link, browser Back) closes the drawer, so the new page is
+  // not left inert and scroll-locked. Rail links close it themselves via `onNavigate`.
+  const [navPath, setNavPath] = useState(pathname);
+  if (navPath !== pathname) {
+    setNavPath(pathname);
+    setNavOpen(false);
+  }
   const page = activeNavItem(navItems ?? registeredNavItems(), pathname);
   const pageTitle = page ? t(page.termKey) : undefined;
 
