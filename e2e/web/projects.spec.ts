@@ -82,6 +82,42 @@ test("a user without project.create sees the register without a Create button", 
   await expectNoBlockingAxe(page);
 });
 
+// DESIGN-08: at 390px the table scrolls inside its own region and the page never scrolls sideways.
+test("at 390px the register scrolls in its own region, with no horizontal page scroll", async ({ browser }) => {
+  const page = await openRegister(browser, "/projects");
+  await page.setViewportSize({ width: 390, height: 780 });
+  await page.locator("summary", { hasText: "Columns" }).click();
+  await page.getByRole("checkbox", { name: "Region" }).check(); // more columns than fit
+  await page.locator("summary", { hasText: "Columns" }).click();
+  await expect(dataRows(page)).toHaveCount(5);
+  const scroll = page.getByRole("region", { name: "Projects in this tenant" });
+  await expect(scroll).toHaveAttribute("tabindex", "0");
+  const widths = await page.evaluate(() => ({
+    page: document.documentElement.scrollWidth,
+    viewport: document.documentElement.clientWidth,
+  }));
+  expect(widths.page).toBe(widths.viewport);
+  const region = await scroll.evaluate((el) => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(region.scroll).toBeGreaterThan(region.client);
+  await expectNoBlockingAxe(page);
+});
+
+// DESIGN-08: an anchor with button classes (here the CSV export link) has no underline and the button focus ring.
+test("a link styled as a button has no underline and the 2px accent focus ring", async ({ browser }) => {
+  const page = await openRegister(browser, "/projects");
+  const link = page.getByRole("link", { name: "Export CSV" });
+  // A key press first puts the page in keyboard mode, so programmatic focus shows :focus-visible.
+  // (Not Tab: WebKit can skip links on Tab, which would test the browser, not the ring.)
+  await page.keyboard.press("Shift");
+  await link.focus();
+  await expect(link).toBeFocused();
+  const style = await link.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { decoration: s.textDecorationLine, outline: s.outlineStyle, width: s.outlineWidth };
+  });
+  expect(style).toEqual({ decoration: "none", outline: "solid", width: "2px" });
+});
+
 test("filter, sort and columns live in the URL: a copied link reopens the same register", async ({ browser }) => {
   const page = await openRegister(browser, "/projects");
   await expect(dataRows(page)).toHaveCount(5);

@@ -42,11 +42,14 @@
   min-height: var(--touch-target);
   min-width: var(--touch-target);
   height: var(--control-h);
+  box-sizing: border-box;
   padding: 0 var(--space-3);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   font: inherit;
   font-weight: var(--weight-medium);
+  /* DESIGN-08: `asChild` anchors (router links, export links) look like buttons, not links. */
+  text-decoration: none;
   cursor: pointer;
 }
 .aip-button:disabled {
@@ -85,6 +88,8 @@
   min-height: var(--touch-target);
   height: var(--control-h);
   width: 100%;
+  /* DESIGN-08: padding and border sit inside the 100%, so a field lines up with the button below it. */
+  box-sizing: border-box;
   padding: 0 var(--space-2);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
@@ -341,6 +346,9 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  /* DESIGN-08: inside a grid or flex parent (a page section), an item's minimum width is its content's,
+     so a wide table would stretch the page sideways. Let it shrink; the table scrolls in its region. */
+  min-width: 0;
 }
 .aip-register__toolbar,
 .aip-register__filter-row,
@@ -396,8 +404,15 @@ kbd {
   padding: var(--space-1) var(--space-2);
   background: var(--surface-muted);
 }
+/* DESIGN-08: the table scrolls inside its own region (both axes, so the sticky header still works);
+   the page itself never scrolls sideways. */
 .aip-register__scroll {
   max-height: 70vh;
+  max-width: 100%;
+}
+.aip-register__scroll:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 .aip-register__head .aip-table__head {
   z-index: 1;

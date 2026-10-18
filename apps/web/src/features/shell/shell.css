@@ -147,6 +147,12 @@ body {
   white-space: nowrap;
 }
 
+/* DESIGN-08: the dim layer under the mobile drawer. Only rendered while the drawer is open, and only
+   shown under 768px, where the rail is a drawer. */
+.shell-backdrop {
+  display: none;
+}
+
 .shell__body {
   grid-area: body;
   min-width: 0;
@@ -222,6 +228,15 @@ body {
   .shell-rail[data-open="true"] {
     display: block;
   }
+  .shell-backdrop {
+    display: block;
+    position: fixed;
+    inset: 56px 0 0 0;
+    z-index: 40;
+    /* The same dim as the dialog overlay in @aip/ui. */
+    background: rgb(0 0 0 / 0.4);
+    animation: shell-backdrop-in 150ms ease-out;
+  }
   .shell-rail__link {
     flex-direction: row;
     justify-content: flex-start;
@@ -231,6 +246,17 @@ body {
   .shell-rail__label {
     max-width: none;
     font-size: var(--text-base);
+  }
+}
+
+@keyframes shell-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shell-backdrop {
+    animation: none;
   }
 }
 

@@ -47,6 +47,42 @@ test("shell landmarks, nav and axe on the signed-in page", async ({ page }) => {
   expect(await page.evaluate(() => document.cookie)).not.toContain("__Host-");
 });
 
+// DESIGN-08: under 768px the rail is a drawer with a backdrop; Escape or a backdrop click closes it.
+test("mobile drawer: backdrop, Escape and backdrop click close it and focus returns to the menu button", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? Number.POSITIVE_INFINITY) >= 768, "the rail is a drawer only under 768px");
+  await signInAsStub(page, "alice@kaefer.test");
+  await page.goto("/");
+  const menu = page.getByRole("button", { name: "Menu", exact: true });
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  const backdrop = page.getByTestId("shell-backdrop");
+
+  await menu.click();
+  await expect(nav).toBeVisible();
+  await expect(backdrop).toBeVisible();
+  await expectNoBlockingAxe(page);
+  await nav.getByRole("link", { name: "Home" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(nav).toBeHidden();
+  await expect(backdrop).toHaveCount(0);
+  await expect(menu).toBeFocused();
+
+  await menu.click();
+  // Click the dimmed page to the right of the 160px drawer.
+  await backdrop.click({ position: { x: 300, y: 200 } });
+  await expect(nav).toBeHidden();
+  await expect(menu).toBeFocused();
+});
+
+test("login: the email input, hint and Continue button share one width", async ({ page }) => {
+  await page.goto("/login");
+  const input = await page.getByLabel("Work email").boundingBox();
+  const button = await page.getByRole("button", { name: "Continue" }).boundingBox();
+  const hint = await page.locator(".aip-form-field__hint").boundingBox();
+  expect(input?.width).toBeGreaterThan(0);
+  expect(button?.width).toBeCloseTo(input?.width ?? 0, 0);
+  expect(hint?.width).toBeCloseTo(input?.width ?? 0, 0);
+});
+
 test("sign out lands on /login?signed_out=1 and the session is gone", async ({ page }) => {
   await signInAsStub(page, "alice@kaefer.test");
   await page.goto("/projects");
