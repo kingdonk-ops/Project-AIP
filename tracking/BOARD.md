@@ -132,7 +132,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [TESTING-13](tasks/TESTING-13.md) | Stack proves the worker: real healthcheck, outbox drained and audited after the skeleton e2e, outbox-lag smoke | testing | S | AUDIT-02, TESTING-09 | todo | review 11 M10: worker health is `import aip` |
 | [PROJECTS-07](tasks/PROJECTS-07.md) | Project detail page (RecordDetail, edit, lifecycle/archive) and sites register with create/edit/delete | projects | M | DESIGN-04, PROJECTS-06 | todo | review 11 M13; AUDIT-04 mounts its History tab here |
 | [DESIGN-15](tasks/DESIGN-15.md) | Nav items honour release flags (GET /settings/flags) and a Settings page to switch them (tenant.flags.manage) | design | S | ARCH-08, DESIGN-06 | todo | review 11 L26 |
-| [DESIGN-16](tasks/DESIGN-16.md) | Mobile nav drawer behaves as a modal: focus trap, inert page, scroll lock | design | XS | DESIGN-08 | review | ClaudeK: PR #116 (stacked on #115); DESIGN-08 review |
+| [DESIGN-16](tasks/DESIGN-16.md) | Mobile nav drawer behaves as a modal: focus trap, inert page, scroll lock | design | XS | DESIGN-08 | review | ClaudeK: PR #116; DESIGN-08 review |
 
 ### Wave 7
 
