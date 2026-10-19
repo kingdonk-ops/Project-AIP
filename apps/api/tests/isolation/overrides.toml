@@ -84,3 +84,7 @@ no_app_select = true
 [tables.signoff_policy]
 reason = "action_code is a dotted lowercase code (ck_signoff_policy_action_code)."
 values = { action_code = "'iso.action_{tag}'" }
+
+[tables.projects]
+reason = "ACCESS-03 adds a restrictive project-scope policy, so a principal is needed to see any project. A system principal is tenant-wide, so the own-row probe sees tenant A's row while the permissive tenant-isolation policy still hides tenant B's and refuses every move into B."
+principal_kind = "system"
