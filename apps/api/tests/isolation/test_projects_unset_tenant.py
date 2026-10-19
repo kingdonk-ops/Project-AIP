@@ -14,6 +14,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 
+from aip.platform.db.scope import run_as_system
 from tests.conftest import TENANT_A_ID, TENANT_B_ID
 from tests.fixtures.postgres import OwnerSeeder, TenantDb
 
@@ -63,7 +64,10 @@ async def test_an_insert_without_a_tenant_fails_the_rls_check(seeded: TenantDb) 
 async def test_each_tenant_sees_exactly_its_own_project(
     seeded: TenantDb, tenant: UUID, project: UUID
 ) -> None:
-    async with seeded.with_tenant(tenant) as conn:
+    # ACCESS-03: projects now also carry a restrictive project-scope policy, so a bare tenant
+    # connection (no principal) is fail-closed. A system principal is tenant-wide, so it still
+    # sees its tenant's rows — and tenant isolation still hides the other tenant's project.
+    async with run_as_system(tenant, engine=seeded.engine) as conn:
         assert (await conn.execute(COUNT)).scalar_one() == 1
         assert [row[0] for row in (await conn.execute(IDS)).all()] == [project], (
             "M0: a tenant sees only its own project"

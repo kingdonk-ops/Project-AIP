@@ -1,0 +1,38 @@
+# ACCESS-03: tables that carry a `project_id` column but are exempt from the project-scope policy
+# (tests/access/test_project_scope_coverage.py). Owned via .github/CODEOWNERS: every change needs a
+# security reviewer. Each entry needs a non-empty `reason`. `table` is an exact name or a
+# `prefix_*` pattern. A new project-scoped *record* table must NOT be added here; it copies
+# db/templates/project_scoped_policy.sql instead.
+tables:
+  - table: role_assignment
+    reason: >-
+      project_id is the scope *target* of the assignment, not a project-scoped record. Managing
+      assignments must not be gated on seeing the project; RLS here is tenant isolation.
+  - table: access_user_scope
+    reason: >-
+      The denormalised scope cache this task maintains; project_id is the scope target. It is read
+      by access_project_visible itself, so it cannot depend on the project-scope policy.
+  - table: domain_events
+    reason: >-
+      Append-only outbox (ARCH-05); project_id is event metadata, not a scoped record. The worker
+      and audit reads cross projects within a tenant by design.
+  - table: audit_log
+    reason: Append-only audit chain (AUDIT-01, ADR 0031); project_id is metadata, not a record.
+  - table: term_override
+    reason: >-
+      Terminology configuration keyed by level (tenant/client/project). A project-level override
+      must resolve for every member resolving terms, so it is not gated on project visibility.
+  - table: locale_settings
+    reason: Locale configuration optionally keyed by project (terms); configuration, not a record.
+  - table: upload_sessions
+    reason: >-
+      Predates ACCESS-03 (UPLOADS). project_id names where an upload belongs; project-scope
+      hardening of the upload pipeline is tracked in its own task, not widened here.
+  - table: workflow_definitions
+    reason: >-
+      Approvals configuration scoped optionally to a project (APPROVALS). Project-scope hardening
+      of approvals is tracked separately, not widened here.
+  - table: workflow_instances
+    reason: >-
+      Predates ACCESS-03 (APPROVALS); a running workflow's project_id. Project-scope hardening of
+      approvals is tracked separately, not widened here.
