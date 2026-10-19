@@ -210,6 +210,10 @@ GRANT SELECT ON TABLE public.access_reviews TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.access_settings TO aip_app;
 GRANT SELECT ON TABLE public.access_settings TO aip_readonly;
 
+-- Name: TABLE access_user_scope; Type: ACL; Schema: public
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.access_user_scope TO aip_app;
+GRANT SELECT ON TABLE public.access_user_scope TO aip_readonly;
+
 -- Name: TABLE app_user; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.app_user TO aip_app;
 GRANT SELECT ON TABLE public.app_user TO aip_readonly;
@@ -431,6 +435,14 @@ ALTER TABLE ONLY public.access_reviews
 ALTER TABLE ONLY public.access_settings
     ADD CONSTRAINT pk_access_settings PRIMARY KEY (id);
 
+-- Name: access_user_scope pk_access_user_scope; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.access_user_scope
+    ADD CONSTRAINT pk_access_user_scope PRIMARY KEY (id);
+
+-- Name: access_user_scope uq_access_user_scope_role_assignment_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.access_user_scope
+    ADD CONSTRAINT uq_access_user_scope_role_assignment_id UNIQUE (role_assignment_id);
+
 -- Name: app_user pk_app_user; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.app_user
     ADD CONSTRAINT pk_app_user PRIMARY KEY (id);
@@ -603,6 +615,10 @@ ALTER TABLE ONLY public.role
 ALTER TABLE ONLY public.role_assignment
     ADD CONSTRAINT pk_role_assignment PRIMARY KEY (id);
 
+-- Name: role_assignment uq_role_assignment_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_assignment
+    ADD CONSTRAINT uq_role_assignment_id_tenant_id UNIQUE (id, tenant_id);
+
 -- Name: role_permission pk_role_permission; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.role_permission
     ADD CONSTRAINT pk_role_permission PRIMARY KEY (id);
@@ -759,6 +775,14 @@ ALTER TABLE ONLY public.procrastinate_periodic_defers ALTER COLUMN id SET DEFAUL
 -- Name: access_settings fk_access_settings_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.access_settings
     ADD CONSTRAINT fk_access_settings_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: access_user_scope fk_access_user_scope_project; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.access_user_scope
+    ADD CONSTRAINT fk_access_user_scope_project FOREIGN KEY (project_id, tenant_id) REFERENCES public.projects(id, tenant_id);
+
+-- Name: access_user_scope fk_access_user_scope_role_assignment; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.access_user_scope
+    ADD CONSTRAINT fk_access_user_scope_role_assignment FOREIGN KEY (role_assignment_id, tenant_id) REFERENCES public.role_assignment(id, tenant_id) ON DELETE CASCADE;
 
 -- Name: app_user fk_app_user_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.app_user
@@ -920,6 +944,22 @@ ALTER TABLE ONLY public.workflow_instances
 ALTER TABLE ONLY public.workflow_instances
     ADD CONSTRAINT fk_workflow_instances_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
+-- Name: access_project_visible(uuid); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.access_project_visible(p_project uuid) RETURNS boolean
+    LANGUAGE sql STABLE
+    AS $$
+        SELECT app_principal_kind() IN ('system', 'api_client')
+          OR EXISTS (
+            SELECT 1 FROM access_user_scope s
+            WHERE s.user_id = app_user_id()
+              AND (s.scope_kind = 'tenant' OR s.project_id = p_project)
+              AND s.valid_from <= now()
+              AND (s.valid_to IS NULL OR s.valid_to > now())
+          )
+      $$;
+
+ALTER FUNCTION public.access_project_visible(p_project uuid) OWNER TO aip_owner;
+
 -- Name: access_settings_version_guard(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.access_settings_version_guard() RETURNS trigger
     LANGUAGE plpgsql
@@ -988,6 +1028,30 @@ CREATE FUNCTION public.access_sync_permissions(p_catalogue jsonb) RETURNS void
     $$;
 
 ALTER FUNCTION public.access_sync_permissions(p_catalogue jsonb) OWNER TO aip_owner;
+
+-- Name: access_user_scope_sync(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.access_user_scope_sync() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        IF TG_OP IN ('UPDATE', 'DELETE') THEN
+          DELETE FROM access_user_scope WHERE role_assignment_id = OLD.id;
+        END IF;
+        IF TG_OP IN ('INSERT', 'UPDATE')
+           AND NEW.deleted_at IS NULL
+           AND NEW.scope_type IN ('tenant', 'project') THEN
+          INSERT INTO access_user_scope
+            (id, tenant_id, user_id, scope_kind, project_id,
+             role_assignment_id, valid_from, valid_to)
+          VALUES
+            (gen_random_uuid(), NEW.tenant_id, NEW.user_id, NEW.scope_type, NEW.project_id,
+             NEW.id, NEW.valid_from, NEW.valid_to);
+        END IF;
+        RETURN NULL;
+      END
+      $$;
+
+ALTER FUNCTION public.access_user_scope_sync() OWNER TO aip_owner;
 
 -- Name: aip_convert_to_partitioned(text); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.aip_convert_to_partitioned(p_table text) RETURNS bigint
@@ -1121,6 +1185,20 @@ CREATE FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead intege
     $_$;
 
 ALTER FUNCTION public.aip_ensure_partitions(p_table text, p_months_ahead integer) OWNER TO aip_owner;
+
+-- Name: app_principal_kind(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.app_principal_kind() RETURNS text
+    LANGUAGE sql STABLE
+    AS $$ SELECT NULLIF(current_setting('app.principal_kind', true), '') $$;
+
+ALTER FUNCTION public.app_principal_kind() OWNER TO aip_owner;
+
+-- Name: app_user_id(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.app_user_id() RETURNS uuid
+    LANGUAGE sql STABLE
+    AS $$ SELECT NULLIF(current_setting('app.user_id', true), '')::uuid $$;
+
+ALTER FUNCTION public.app_user_id() OWNER TO aip_owner;
 
 -- Name: audit_log_forbid_mutation(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.audit_log_forbid_mutation() RETURNS trigger
@@ -1824,6 +1902,12 @@ CREATE INDEX ix_access_reviews_tenant_id ON public.access_reviews USING btree (t
 -- Name: ix_access_settings_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_access_settings_tenant_id ON public.access_settings USING btree (tenant_id);
 
+-- Name: ix_access_user_scope_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_access_user_scope_tenant_id ON public.access_user_scope USING btree (tenant_id);
+
+-- Name: ix_access_user_scope_tenant_id_user_id_project_id; Type: INDEX; Schema: public
+CREATE INDEX ix_access_user_scope_tenant_id_user_id_project_id ON public.access_user_scope USING btree (tenant_id, user_id, project_id);
+
 -- Name: ix_app_user_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_app_user_tenant_id ON public.app_user USING btree (tenant_id);
 
@@ -1937,6 +2021,9 @@ CREATE INDEX ix_permission_module_id ON public.permission USING btree (module_id
 
 -- Name: ix_projects_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_projects_tenant_id ON public.projects USING btree (tenant_id);
+
+-- Name: ix_projects_tenant_id_id; Type: INDEX; Schema: public
+CREATE INDEX ix_projects_tenant_id_id ON public.projects USING btree (tenant_id, id);
 
 -- Name: ix_projects_tenant_id_site_id; Type: INDEX; Schema: public
 CREATE INDEX ix_projects_tenant_id_site_id ON public.projects USING btree (tenant_id, site_id);
@@ -2259,6 +2346,9 @@ CREATE POLICY tenant_isolation ON public.access_reviews USING ((tenant_id = (NUL
 -- Name: access_settings tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.access_settings USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: access_user_scope tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.access_user_scope USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: app_user tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.app_user USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -2321,6 +2411,9 @@ CREATE POLICY tenant_write ON public.locale_settings USING (((tenant_id = (NULLI
 
 -- Name: organisations tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.organisations USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: projects project_scope; Type: POLICY; Schema: public
+CREATE POLICY project_scope ON public.projects AS RESTRICTIVE TO aip_app USING (public.access_project_visible(id)) WITH CHECK (public.access_project_visible(id));
 
 -- Name: projects tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.projects USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -2438,6 +2531,9 @@ ALTER TABLE public.access_reviews ENABLE ROW LEVEL SECURITY;
 
 -- Name: access_settings; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.access_settings ENABLE ROW LEVEL SECURITY;
+
+-- Name: access_user_scope; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.access_user_scope ENABLE ROW LEVEL SECURITY;
 
 -- Name: app_user; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.app_user ENABLE ROW LEVEL SECURITY;
@@ -2658,6 +2754,27 @@ CREATE TABLE public.access_settings (
 ALTER TABLE ONLY public.access_settings FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.access_settings OWNER TO aip_owner;
+
+-- Name: access_user_scope; Type: TABLE; Schema: public
+CREATE TABLE public.access_user_scope (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    scope_kind text NOT NULL,
+    project_id uuid,
+    role_assignment_id uuid NOT NULL,
+    valid_from timestamp with time zone NOT NULL,
+    valid_to timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_access_user_scope_kind CHECK ((scope_kind = ANY (ARRAY['tenant'::text, 'project'::text]))),
+    CONSTRAINT ck_access_user_scope_project CHECK ((((scope_kind = 'tenant'::text) AND (project_id IS NULL)) OR ((scope_kind = 'project'::text) AND (project_id IS NOT NULL))))
+);
+
+ALTER TABLE ONLY public.access_user_scope FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.access_user_scope OWNER TO aip_owner;
 
 -- Name: app_user; Type: TABLE; Schema: public
 CREATE TABLE public.app_user (
@@ -3969,6 +4086,9 @@ CREATE TRIGGER procrastinate_trigger_status_events_insert_v1 AFTER INSERT ON pub
 
 -- Name: procrastinate_jobs procrastinate_trigger_status_events_update_v1; Type: TRIGGER; Schema: public
 CREATE TRIGGER procrastinate_trigger_status_events_update_v1 AFTER UPDATE OF status ON public.procrastinate_jobs FOR EACH ROW EXECUTE FUNCTION public.procrastinate_trigger_function_status_events_update_v1();
+
+-- Name: role_assignment trg_access_user_scope_sync; Type: TRIGGER; Schema: public
+CREATE TRIGGER trg_access_user_scope_sync AFTER INSERT OR DELETE OR UPDATE ON public.role_assignment FOR EACH ROW EXECUTE FUNCTION public.access_user_scope_sync();
 
 -- Name: security_audit_events security_audit_events_append_only; Type: TRIGGER; Schema: public
 CREATE TRIGGER security_audit_events_append_only BEFORE DELETE OR UPDATE ON public.security_audit_events FOR EACH ROW EXECUTE FUNCTION public.security_audit_events_forbid_mutation();

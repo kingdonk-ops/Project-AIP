@@ -73,6 +73,7 @@ class Override:
     no_app_select: bool = False
     move_refused: str = ""
     update_set: str = ""
+    principal_kind: str = ""
 
 
 class OverrideError(ValueError):
@@ -108,8 +109,9 @@ def cases(meta: MetaData) -> list[Case]:
 
 
 _OVERRIDE_KEYS = frozenset(
-    {"reason", "values", "skip", "no_app_select", "move_refused", "update_set"}
+    {"reason", "values", "skip", "no_app_select", "move_refused", "update_set", "principal_kind"}
 )
+_PRINCIPAL_KINDS = frozenset({"user", "api_client", "system"})
 
 
 def parse_overrides(raw: Mapping[str, Any]) -> dict[str, Override]:
@@ -124,6 +126,11 @@ def parse_overrides(raw: Mapping[str, Any]) -> dict[str, Override]:
         values = entry.get("values", {})
         if not isinstance(values, dict) or not all(isinstance(v, str) for v in values.values()):
             raise OverrideError(f"{table}: values must map columns to SQL literals")
+        principal_kind = str(entry.get("principal_kind", ""))
+        if principal_kind and principal_kind not in _PRINCIPAL_KINDS:
+            raise OverrideError(
+                f"{table}: principal_kind must be one of {sorted(_PRINCIPAL_KINDS)}"
+            )
         out[table] = Override(
             table,
             reason,
@@ -132,6 +139,7 @@ def parse_overrides(raw: Mapping[str, Any]) -> dict[str, Override]:
             bool(entry.get("no_app_select", False)),
             str(entry.get("move_refused", "")),
             str(entry.get("update_set", "")),
+            principal_kind,
         )
     return out
 
@@ -286,13 +294,21 @@ Outcome = tuple[str, Any]
 refused the row) or ``("error", "<SQLSTATE>: <message>")``."""
 
 
-async def _probe(app: Any, tenant: UUID, statements: list[str]) -> Outcome:
+async def _probe(
+    app: Any, tenant: UUID, statements: list[str], principal_kind: str = ""
+) -> Outcome:
     """Run ``statements`` as aip_app with ``tenant`` set (as ``with_tenant`` does), always rolled
-    back; the outcome is the last statement's count (or value, for a SELECT)."""
+    back; the outcome is the last statement's count (or value, for a SELECT).
+
+    ``principal_kind`` (ACCESS-03) also sets ``app.principal_kind`` for a table behind the
+    project-scope RLS: ``system`` makes it tenant-wide, so the own-row probe sees its tenant's row
+    while the permissive tenant-isolation policy still hides the other tenant's."""
     tx = app.transaction()
     await tx.start()
     try:
         await app.execute("SELECT set_config('app.tenant_id', $1, true)", str(tenant))
+        if principal_kind:
+            await app.execute("SELECT set_config('app.principal_kind', $1, true)", principal_kind)
         result: Any = None
         for sql in statements:
             if sql.lstrip().upper().startswith("SELECT"):
@@ -340,32 +356,28 @@ async def _checks(
     extra = f", {override.update_set}" if override and override.update_set else ""
     fresh_ids = ", ".join(f"{_ident(c)} = gen_random_uuid()" for c in await _uuid_keys(app, case))
     move_b = f"{tenant_col} = '{tenant_b}'::uuid" + (f", {fresh_ids}" if fresh_ids else "")
+    # ACCESS-03: a project-scoped table also needs a principal (overrides.toml principal_kind).
+    pk = override.principal_kind if override else ""
+
+    async def probe(statements: list[str]) -> Outcome:
+        return await _probe(app, tenant_a, statements, principal_kind=pk)
+
     out: dict[str, Outcome] = {
-        "own_read": await _probe(
-            app, tenant_a, [f"SELECT count(*) FROM {table} WHERE {_where(key_a)}"]
+        "own_read": await probe([f"SELECT count(*) FROM {table} WHERE {_where(key_a)}"]),
+        "cross_read": await probe([f"SELECT count(*) FROM {table} WHERE {_where(key_b)}"]),
+        "cross_scan": await probe(
+            [f"SELECT count(*) FROM {table} WHERE {tenant_col} <> '{tenant_a}'::uuid"]
         ),
-        "cross_read": await _probe(
-            app, tenant_a, [f"SELECT count(*) FROM {table} WHERE {_where(key_b)}"]
+        "cross_update": await probe(
+            [f"UPDATE {table} SET {first} = {first}{extra} WHERE {_where(key_b)}"]
         ),
-        "cross_scan": await _probe(
-            app,
-            tenant_a,
-            [f"SELECT count(*) FROM {table} WHERE {tenant_col} <> '{tenant_a}'::uuid"],
-        ),
-        "cross_update": await _probe(
-            app, tenant_a, [f"UPDATE {table} SET {first} = {first}{extra} WHERE {_where(key_b)}"]
-        ),
-        "cross_delete": await _probe(app, tenant_a, [f"DELETE FROM {table} WHERE {_where(key_b)}"]),
+        "cross_delete": await probe([f"DELETE FROM {table} WHERE {_where(key_b)}"]),
         # No WHERE: a correct policy limits these to tenant A's one row (rolled back).
-        "update_all": await _probe(app, tenant_a, [f"UPDATE {table} SET {first} = {first}{extra}"]),
-        "delete_all": await _probe(app, tenant_a, [f"DELETE FROM {table}"]),
+        "update_all": await probe([f"UPDATE {table} SET {first} = {first}{extra}"]),
+        "delete_all": await probe([f"DELETE FROM {table}"]),
         # WITH CHECK: A's row may not be moved, or copied, into tenant B.
-        "move_to_b": await _probe(
-            app, tenant_a, [f"UPDATE {table} SET {move_b}{extra} WHERE {_where(key_a)}"]
-        ),
-        "insert_for_b": await _probe(
-            app,
-            tenant_a,
+        "move_to_b": await probe([f"UPDATE {table} SET {move_b}{extra} WHERE {_where(key_a)}"]),
+        "insert_for_b": await probe(
             [
                 f"CREATE TEMP TABLE iso_copy ON COMMIT DROP AS SELECT * FROM {table}"
                 f" WHERE {_where(key_a)}",
@@ -376,8 +388,8 @@ async def _checks(
     }
     for child in [r[0] for r in await app.fetch(_CHILDREN, case.table)]:
         part = _ident(child.strip('"'))
-        out[f"partition {child} cross_scan"] = await _probe(
-            app, tenant_a, [f"SELECT count(*) FROM {part} WHERE {tenant_col} <> '{tenant_a}'::uuid"]
+        out[f"partition {child} cross_scan"] = await probe(
+            [f"SELECT count(*) FROM {part} WHERE {tenant_col} <> '{tenant_a}'::uuid"]
         )
     return out
 

@@ -46,6 +46,24 @@ SEED_TENANTS_SQL = (
     f"('{TENANT_B_ID}', 'Tenant B', 'tenant-b', 'ap-southeast-2', 'active')"
 )
 
+ROLE_A_ID = UUID("00000000-0000-4000-8000-00000000d0a0")
+ROLE_B_ID = UUID("00000000-0000-4000-8000-00000000d0b0")
+
+# ACCESS-03: project RLS is now user-scoped, so alice and bob need a tenant-scope role assignment
+# (the scope trigger then gives them tenant-wide project visibility) on top of their test grants.
+# Permissions still come from the test grant provider; this only establishes RLS scope.
+SEED_SCOPE_SQL = (
+    "INSERT INTO app_user (id, tenant_id, user_class, email, display_name, status) VALUES "
+    f"('{ALICE_ID}', '{TENANT_A_ID}', 'staff', 'alice@kaefer.test', 'Alice', 'active'), "
+    f"('{BOB_ID}', '{TENANT_B_ID}', 'staff', 'bob@acme.test', 'Bob', 'active');"
+    "INSERT INTO role (id, tenant_id, code, name) VALUES "
+    f"('{ROLE_A_ID}', '{TENANT_A_ID}', 'member', 'Member'), "
+    f"('{ROLE_B_ID}', '{TENANT_B_ID}', 'member', 'Member');"
+    "INSERT INTO role_assignment (id, tenant_id, user_id, role_id, scope_type) VALUES "
+    f"(gen_random_uuid(), '{TENANT_A_ID}', '{ALICE_ID}', '{ROLE_A_ID}', 'tenant'), "
+    f"(gen_random_uuid(), '{TENANT_B_ID}', '{BOB_ID}', '{ROLE_B_ID}', 'tenant')"
+)
+
 
 def stub_headers(tenant: UUID, user: UUID) -> dict[str, str]:
     principal = {
@@ -91,6 +109,7 @@ async def su_fetch(db: TenantDb, sql: str, *args: object) -> list[tuple[Any, ...
 @pytest.fixture
 async def db(tenant_db: TenantDb) -> TenantDb:  # noqa: F811
     await su_execute(tenant_db, SEED_TENANTS_SQL)
+    await su_execute(tenant_db, SEED_SCOPE_SQL)
     return tenant_db
 
 
