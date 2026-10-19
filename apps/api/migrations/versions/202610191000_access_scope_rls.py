@@ -9,8 +9,9 @@ ACCESS-03: enforce project scope in Postgres as well as in ``PolicyService``.
   removes the row), so application code never writes it: the template's INSERT/UPDATE grants are
   kept for the trigger (which runs SECURITY INVOKER, as the role writing ``role_assignment``) and a
   DELETE grant is added for the same reason. The migration backfills it from existing assignments.
-- ``app_user_id()`` / ``app_principal_kind()`` read the transaction-local settings ``with_principal``
-  sets (ADR 0002 keeps ``app.tenant_id`` the same way). ``access_project_visible(p_project)`` is the
+- ``app_user_id()`` / ``app_principal_kind()`` read the transaction-local settings that
+  ``with_principal`` sets (ADR 0002 keeps ``app.tenant_id`` the same way).
+  ``access_project_visible(p_project)`` is the
   RLS predicate: true for a ``system`` or ``api_client`` principal (tenant-wide by design), or when
   the current user has a live ``access_user_scope`` row for the tenant or that project whose
   validity window covers ``now()``. Validity is checked here, at query time.
