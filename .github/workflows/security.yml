@@ -256,11 +256,25 @@ jobs:
         with:
           fetch-depth: 0 # the full history, not just the tip
           persist-credentials: false
-      - name: gitleaks over the full git history
+      - name: gitleaks (a PR scans its own commits; main and scheduled scan this ref's history)
+        env:
+          # Bound through env, not inlined into the script (GitHub-generated values, but this is the safe form).
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
+          # `gitleaks git` with no --log-opts runs `git log --full-history --all`, which scans
+          # every fetched ref. With fetch-depth: 0 that is every branch, so one key-shaped string
+          # on any unmerged branch fails the check on every PR (and on main). Scope it instead: a
+          # PR to the commits it introduces (base..HEAD), main/scheduled to this ref's own history
+          # (HEAD). Reviewed false positives are still suppressed by .gitleaksignore.
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            log_opts="$BASE_SHA..HEAD"
+          else
+            log_opts="HEAD"
+          fi
           docker run --rm -v "$PWD:/repo" -w /repo \
             -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' \
-            "$GITLEAKS_IMAGE" git --no-banner --redact -v /repo
+            "$GITLEAKS_IMAGE" git --no-banner --redact -v --log-opts="$log_opts" /repo
       - name: Negative control (a planted fake AWS key fails gitleaks)
         run: |
           planted="$RUNNER_TEMP/planted"; mkdir -p "$planted"
