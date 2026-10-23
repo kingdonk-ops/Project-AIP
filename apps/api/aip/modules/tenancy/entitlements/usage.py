@@ -107,7 +107,14 @@ async def tenant_tables(conn: AsyncConnection) -> list[str]:
 
 
 async def estimate_db_bytes(conn: AsyncConnection, tenant_id: UUID) -> int:
-    """The estimated bytes of ``tenant_id``'s rows (method ``DB_ESTIMATE_METHOD``)."""
+    """The estimated bytes of ``tenant_id``'s rows (method ``DB_ESTIMATE_METHOD``).
+
+    Runs as a ``system`` principal (ACCESS-03): the estimate must count every one of the tenant's
+    rows, including project-scoped tables whose RLS would otherwise hide them without a user. Tenant
+    isolation still applies (``app.tenant_id`` stays set), so this only widens from one user to the
+    whole tenant, never across tenants.
+    """
+    await conn.execute(text("SELECT set_config('app.principal_kind', 'system', true)"))
     total = 0
     for table in await tenant_tables(conn):
         size = await conn.execute(

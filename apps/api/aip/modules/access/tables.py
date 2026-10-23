@@ -8,6 +8,10 @@ Created only by the Alembic revision ``202610120445_access_permission_catalogue`
 
 ACCESS-02 (revision ``202610131400_access_roles``): ``role``, ``role_permission`` and
 ``role_assignment``, all tenant tables (FORCE RLS, soft delete; ``aip_app`` cannot DELETE).
+
+ACCESS-03 (revision ``202610191000_access_scope_rls``): ``access_user_scope``, the denormalised
+project/tenant scope maintained by a trigger on ``role_assignment`` and read by the RLS predicate
+``access_project_visible``. Declared here so ``aip-db check-schema`` sees it.
 """
 
 from typing import Any
@@ -93,6 +97,22 @@ role_assignment = Table(
     Column("valid_to", DateTime(timezone=True), nullable=True),
     Column("approved_by", Uuid, nullable=True),
     Column("created_by", Uuid, nullable=True),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", DateTime(timezone=True), nullable=True),
+)
+
+access_user_scope = Table(
+    "access_user_scope",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("tenant_id", Uuid, nullable=False),
+    Column("user_id", Uuid, nullable=False),
+    Column("scope_kind", Text, nullable=False),
+    Column("project_id", Uuid, nullable=True),
+    Column("role_assignment_id", Uuid, nullable=False),
+    Column("valid_from", DateTime(timezone=True), nullable=False),
+    Column("valid_to", DateTime(timezone=True), nullable=True),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", DateTime(timezone=True), nullable=True),

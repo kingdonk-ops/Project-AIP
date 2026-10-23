@@ -32,10 +32,17 @@ from aip.modules.access.roles.repository import has_role, role_codes
 from aip.modules.access.roles.seed import SeedReport, seed_default_roles
 from aip.modules.access.service import sync_catalogue
 
+# ACCESS-03: the project-scope helpers live in the DB-access layer (ADR 0002; aip.platform must not
+# import aip.modules, ARCH-03). Re-exported here so other modules reach them via the access public
+# interface. ``with_tenant(get_context())`` already binds a user principal for request handlers;
+# use ``run_as_system`` in a worker job that must see every project-scoped row in a tenant.
+from aip.platform.db.scope import ScopePrincipal, run_as_system, with_principal
+
 __all__ = [
     "ModuleApi",
     "PermissionRow",
     "RoleGrantProvider",
+    "ScopePrincipal",
     "SeedReport",
     "bump_access_version",
     "get_access_version",
@@ -43,8 +50,10 @@ __all__ = [
     "has_role",
     "list_permissions",
     "role_codes",
+    "run_as_system",
     "seed_default_roles",
     "sync_catalogue",
+    "with_principal",
 ]
 
 

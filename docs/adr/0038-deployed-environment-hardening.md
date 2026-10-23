@@ -1,4 +1,4 @@
-# ADR 0037: Hardening of deployed environments (dev secrets, deployed realms, API edge, gated deploy)
+# ADR 0038: Hardening of deployed environments (dev secrets, deployed realms, API edge, gated deploy)
 
 - **Status:** accepted
 - **Date:** 2026-10-18

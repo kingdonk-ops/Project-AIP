@@ -94,6 +94,12 @@ PLATFORM_TENANT_ID = UUID(int=0)
 _PLATFORM_WRITER = "aip_owner"
 
 _SET_TENANT = text("SELECT set_config('app.tenant_id', :tenant_id, true)")
+# ACCESS-03: a per-request connection also carries the principal, so the project-scope RLS
+# predicate (access_project_visible) can see who is asking. Set transaction-locally, like the
+# tenant. with_principal/run_as_system (aip.modules.access.scope) set these explicitly for
+# api_client and system principals; a RequestContext with an actor is a user.
+_SET_USER = text("SELECT set_config('app.user_id', :user_id, true)")
+_SET_PRINCIPAL_KIND = text("SELECT set_config('app.principal_kind', :kind, true)")
 _JOBS_ROLE = "aip_jobs"
 
 DbEngine = AsyncEngine
@@ -131,6 +137,11 @@ async def with_tenant(
     hooks: list[AfterCommitHook] = []
     async with bound.begin() as conn:
         await conn.execute(_SET_TENANT, {"tenant_id": str(tenant_id)})
+        if isinstance(tenant, RequestContext) and tenant.actor_id is not None:
+            # A request context names a user. Project-scoped tables fail closed without this
+            # (0 rows); worker/system code passes a bare tenant and uses run_as_system instead.
+            await conn.execute(_SET_PRINCIPAL_KIND, {"kind": "user"})
+            await conn.execute(_SET_USER, {"user_id": str(tenant.actor_id)})
         conn.info[_AFTER_COMMIT] = hooks  # conn.info outlives the checkout: always removed
         try:
             yield conn
