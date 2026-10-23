@@ -138,7 +138,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [ACCESS-03](tasks/ACCESS-03.md) | Scope tables and RLS project predicates; policy/RLS parity tests | access | M | ACCESS-02, PROJECTS-01 | review | PR #122; converted per ADR 0001; sites stay tenant-scoped (owner 2026-10-19, ADR 0037) |
+| [ACCESS-03](tasks/ACCESS-03.md) | Scope tables and RLS project predicates; policy/RLS parity tests | access | M | ACCESS-02, PROJECTS-01 | done | PR #122 (merged 2026-10-19); converted per ADR 0001; sites stay tenant-scoped (owner 2026-10-19, ADR 0037) |
 | [ACCESS-04](tasks/ACCESS-04.md) | Teams, membership, cache-invalidation event | access | M | ACCESS-02, ARCH-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [IDENTITY-04](tasks/IDENTITY-04.md) | Invitations, MFA/step-up and sign-off assurance (ADR 0010) | identity | L | ACCESS-01, IDENTITY-03, STACK-02 | done | ClaudeK: PR #117; merges IDENTITY-07; invites (Keycloak admin API + email theme), acr/upstream amr + step-up, sign-off assurance (ADR 0034); browser journeys, live step-up and IDENTITY-02 carry-forwards → IDENTITY-08 |
 | [IDENTITY-08](tasks/IDENTITY-08.md) | Identity auth/session events, invite and step-up browser journeys, IDENTITY-02 carry-forwards | identity | L | AUDIT-02, IDENTITY-04, TESTING-12 | todo | carried forward from IDENTITY-04 (2026-10-18); also the IDENTITY-02 unregister and NFKC items; **merges AUDIT-06** (identity emits auth/session events + the Keycloak login/logout e2e) |
@@ -155,7 +155,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [SECURITY-08](tasks/SECURITY-08.md) | Production strip test and security CI workflow | security | M | ARCH-03, STACK-04 | done | PR #20 |
 | [SECURITY-09](tasks/SECURITY-09.md) | No public API docs or OpenAPI schema in production | security | XS | ACCESS-01 | done | ClaudeK: PR #52 |
 | [SECURITY-10](tasks/SECURITY-10.md) | Secret rotation without downtime (90-day Secrets Manager rotation) | security | M | IDENTITY-03, STACK-07 | todo | AWS readiness; adds an ADR |
-| [PLAN-R1](tasks/PLAN-R1.md) | Generate R1 task files just in time (ADR 0007; process in docs/reviews/07-delivery.md) | arch | M | ACCESS-02, APPROVALS-02 | review | ClaudeK: PR #119; converted per ADR 0001 (linter in Python, ADR 0036 since 0009 is taken); awaits phase-entry review |
+| [PLAN-R1](tasks/PLAN-R1.md) | Generate R1 task files just in time (ADR 0007; process in docs/reviews/07-delivery.md) | arch | M | ACCESS-02, APPROVALS-02 | done | ClaudeK: PR #119 (merged 2026-10-18); converted per ADR 0001 (linter in Python, ADR 0036 since 0009 is taken); phase-entry wave table approved by owner on merge |
 
 ### Wave 8
 
