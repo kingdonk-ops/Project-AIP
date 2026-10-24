@@ -21,13 +21,13 @@ RUN pnpm install --frozen-lockfile --filter "@aip/web..." \
     && pnpm --filter "@aip/web..." build
 
 
-FROM nginxinc/nginx-unprivileged:1.30.5-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.30.6-alpine AS runtime
 
-# Apply all available Alpine security updates on top of the pinned base, the same way the Postgres
-# demo image applies Debian updates. The newest nginx tag lags the Alpine secdb, so the base ships
-# fixable HIGH findings (at various times libtiff/libexpat, and nginx/brotli-libs/libx11 for
-# CVE-2026-15176, CVE-2026-93479, CVE-2026-97205, CVE-2026-111497, CVE-2026-88806). A blanket
-# upgrade clears them without re-listing each package as new CVEs land.
+# The base tag carries the vendor's nginx (apk upgrade cannot move nginx within a tag), so bump the
+# tag itself for nginx CVEs: 1.30.6 fixes CVE-2026-15176, CVE-2026-93479, CVE-2026-97205. On top of
+# that, apply all available Alpine security updates (the same way the Postgres demo image applies
+# Debian updates) to clear base OS-package findings such as brotli-libs CVE-2026-111497 and libx11
+# CVE-2026-88806 without re-listing each package as new CVEs land.
 USER root
 RUN apk upgrade --no-cache
 
