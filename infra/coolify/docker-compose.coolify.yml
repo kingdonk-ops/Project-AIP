@@ -196,7 +196,9 @@ services:
   keycloak:
     # Imports realm `aip` and the stand-in customer IdP realm `mock-idp`. Served under /auth on the
     # demo origin through `web`, which blocks /auth/admin; the API uses keycloak:8080/auth inside.
-    # Stock Keycloak plus the realm imports, theme and blocklist (infra/coolify/images/).
+    # Stock Keycloak plus the deployed realms (no users with passwords, no client-secret defaults),
+    # theme and blocklist (infra/coolify/images/); its entrypoint refuses unset or dev client
+    # secrets (SECURITY-11).
     image: ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-keycloak-demo:${AIP_IMAGE_TAG:-main}
     user: "1000"
     restart: unless-stopped
@@ -243,6 +245,30 @@ services:
       timeout: 5s
       retries: 30
       start_period: 120s
+    security_opt: ["no-new-privileges:true"]
+
+  mock-idp-users:
+    # SECURITY-11 Part A (review 11 H1): one-shot, every deploy. Creates alice@kaefer.test and
+    # bob@acme.test in the mock IdP if missing and sets their passwords from these secrets, so no
+    # demo user's password is in the public repository or the image (mock-idp-users.sh). A missing
+    # secret fails the deploy; `web` waits for this.
+    image: ${IMAGE_REGISTRY:-ghcr.io/kingdonk-ops}/aip-keycloak-demo:${AIP_IMAGE_TAG:-main}
+    user: "1000"
+    restart: "no"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    entrypoint: ["/opt/keycloak/aip/mock-idp-users.sh"]
+    environment:
+      KEYCLOAK_SERVER: http://keycloak:8080/auth
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?}
+      MOCK_IDP_ALICE_PASSWORD: ${MOCK_IDP_ALICE_PASSWORD:?}
+      MOCK_IDP_BOB_PASSWORD: ${MOCK_IDP_BOB_PASSWORD:?}
+    depends_on:
+      keycloak:
+        condition: service_healthy
     security_opt: ["no-new-privileges:true"]
 
   migrator:
@@ -439,6 +465,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+      mock-idp-users:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
       interval: 10s
