@@ -6,8 +6,10 @@
 --   aip_owner     migrator; owns the database, schemas and every table. Used only by aip-db.
 --   aip_app       the API. LOGIN, not an owner of anything, no BYPASSRLS: RLS always applies.
 --   aip_jobs      the worker (Procrastinate tables and outbox publish columns, granted later).
---   aip_readonly  reporting. Granted SELECT only, which is what keeps it read-only; still
---                 subject to RLS.
+--   aip_readonly  reporting. Granted SELECT only, which is what keeps it read-only. RLS is
+--                 advisory for it: it can set app.tenant_id itself (set_config), so isolation of
+--                 session/auth/PII comes from NOT granting it those tables -- it reads the non-PII
+--                 reporting.* views instead (SECURITY-13, ADR 0012).
 --   aip_audit_writer  the only role that may INSERT into audit_log and maintain the chain heads
 --                 and checkpoints (AUDIT-01). LOGIN, no BYPASSRLS, owns nothing. The audit
 --                 revision 202610152000 refuses to run if it is missing or privileged.
@@ -63,7 +65,9 @@ BEGIN
   END LOOP;
 
   -- Reporting sessions start read-only. This is a convenience, not a guard: the role can turn it
-  -- off. Only SELECT grants keep aip_readonly from writing, and RLS limits what it reads.
+  -- off. Only SELECT grants keep aip_readonly from writing. RLS does NOT bound what it reads: it
+  -- can set app.tenant_id itself, so cross-tenant isolation of session/auth/PII comes from not
+  -- granting it those tables; it reads the non-PII reporting.* views instead (SECURITY-13).
   IF NOT EXISTS (
     SELECT 1 FROM pg_db_role_setting s JOIN pg_roles r ON r.oid = s.setrole
     WHERE r.rolname = 'aip_readonly' AND s.setdatabase = 0

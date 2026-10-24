@@ -7,6 +7,9 @@ GRANT USAGE ON SCHEMA public TO aip_jobs;
 GRANT USAGE ON SCHEMA public TO aip_readonly;
 GRANT USAGE ON SCHEMA public TO aip_audit_writer;
 
+-- Name: SCHEMA reporting; Type: ACL; Schema: -
+GRANT USAGE ON SCHEMA reporting TO aip_readonly;
+
 -- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -
 COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiST';
 
@@ -47,6 +50,11 @@ CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 CREATE SCHEMA aip_meta;
 
 ALTER SCHEMA aip_meta OWNER TO aip_owner;
+
+-- Name: reporting; Type: SCHEMA; Schema: -
+CREATE SCHEMA reporting;
+
+ALTER SCHEMA reporting OWNER TO aip_owner;
 
 -- Name: TABLE alembic_version; Type: ACL; Schema: aip_meta
 GRANT SELECT ON TABLE aip_meta.alembic_version TO aip_app;
@@ -216,7 +224,6 @@ GRANT SELECT ON TABLE public.access_user_scope TO aip_readonly;
 
 -- Name: TABLE app_user; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.app_user TO aip_app;
-GRANT SELECT ON TABLE public.app_user TO aip_readonly;
 GRANT SELECT ON TABLE public.app_user TO aip_jobs;
 
 -- Name: TABLE audit_chain_checkpoints; Type: ACL; Schema: public
@@ -231,16 +238,13 @@ GRANT SELECT ON TABLE public.audit_chain_heads TO aip_readonly;
 -- Name: TABLE audit_log; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.audit_log TO aip_audit_writer;
 GRANT SELECT ON TABLE public.audit_log TO aip_app;
-GRANT SELECT ON TABLE public.audit_log TO aip_readonly;
 
 -- Name: TABLE auth_event; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.auth_event TO aip_app;
-GRANT SELECT ON TABLE public.auth_event TO aip_readonly;
 GRANT INSERT ON TABLE public.auth_event TO aip_jobs;
 
 -- Name: TABLE breach_incidents; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.breach_incidents TO aip_app;
-GRANT SELECT ON TABLE public.breach_incidents TO aip_readonly;
 
 -- Name: TABLE control_records; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.control_records TO aip_app;
@@ -340,7 +344,6 @@ GRANT SELECT ON TABLE public.role_permission TO aip_readonly;
 -- Name: TABLE security_audit_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.security_audit_events TO aip_audit_writer;
 GRANT SELECT ON TABLE public.security_audit_events TO aip_app;
-GRANT SELECT ON TABLE public.security_audit_events TO aip_readonly;
 
 -- Name: TABLE signoff_policy; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.signoff_policy TO aip_app;
@@ -409,7 +412,6 @@ GRANT SELECT,UPDATE ON TABLE public.user_invite TO aip_jobs;
 
 -- Name: TABLE user_session; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.user_session TO aip_app;
-GRANT SELECT ON TABLE public.user_session TO aip_readonly;
 
 -- Name: TABLE workflow_decision_history; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.workflow_decision_history TO aip_app;
@@ -4134,3 +4136,132 @@ CREATE TYPE public.procrastinate_job_to_defer_v1 AS (
 );
 
 ALTER TYPE public.procrastinate_job_to_defer_v1 OWNER TO aip_owner;
+
+-- Name: TABLE app_user; Type: ACL; Schema: reporting
+GRANT SELECT ON TABLE reporting.app_user TO aip_readonly;
+
+-- Name: TABLE audit_log; Type: ACL; Schema: reporting
+GRANT SELECT ON TABLE reporting.audit_log TO aip_readonly;
+
+-- Name: TABLE auth_event; Type: ACL; Schema: reporting
+GRANT SELECT ON TABLE reporting.auth_event TO aip_readonly;
+
+-- Name: TABLE breach_incidents; Type: ACL; Schema: reporting
+GRANT SELECT ON TABLE reporting.breach_incidents TO aip_readonly;
+
+-- Name: TABLE security_audit_events; Type: ACL; Schema: reporting
+GRANT SELECT ON TABLE reporting.security_audit_events TO aip_readonly;
+
+-- Name: TABLE user_session; Type: ACL; Schema: reporting
+GRANT SELECT ON TABLE reporting.user_session TO aip_readonly;
+
+-- Name: app_user; Type: VIEW; Schema: reporting
+CREATE VIEW reporting.app_user WITH (security_barrier='true') AS
+ SELECT id,
+    tenant_id,
+    organisation_id,
+    user_class,
+    status,
+    sso_managed,
+    deactivated_at,
+    last_login_at,
+    mfa_enrolled_at,
+    sync_version,
+    created_at,
+    updated_at,
+    deleted_at
+   FROM public.app_user;
+
+ALTER VIEW reporting.app_user OWNER TO aip_owner;
+
+-- Name: audit_log; Type: VIEW; Schema: reporting
+CREATE VIEW reporting.audit_log WITH (security_barrier='true') AS
+ SELECT id,
+    tenant_id,
+    stream,
+    seq,
+    project_id,
+    asset_id,
+    actor_id,
+    on_behalf_of_id,
+    auth_strength,
+    source_module,
+    record_table,
+    record_id,
+    event_type,
+    summary_key,
+    flags,
+    source_event_id,
+    supersedes_id,
+    occurred_at,
+    created_at
+   FROM public.audit_log;
+
+ALTER VIEW reporting.audit_log OWNER TO aip_owner;
+
+-- Name: auth_event; Type: VIEW; Schema: reporting
+CREATE VIEW reporting.auth_event WITH (security_barrier='true') AS
+ SELECT id,
+    tenant_id,
+    user_id,
+    event_type,
+    occurred_at
+   FROM public.auth_event;
+
+ALTER VIEW reporting.auth_event OWNER TO aip_owner;
+
+-- Name: breach_incidents; Type: VIEW; Schema: reporting
+CREATE VIEW reporting.breach_incidents WITH (security_barrier='true') AS
+ SELECT id,
+    tenant_id,
+    detected_at,
+    data_categories,
+    individuals_affected,
+    serious_harm_likely,
+    assessment_due_at,
+    oaic_notified_at,
+    individuals_notified_at,
+    status,
+    created_at,
+    updated_at,
+    deleted_at
+   FROM public.breach_incidents;
+
+ALTER VIEW reporting.breach_incidents OWNER TO aip_owner;
+
+-- Name: security_audit_events; Type: VIEW; Schema: reporting
+CREATE VIEW reporting.security_audit_events WITH (security_barrier='true') AS
+ SELECT id,
+    tenant_id,
+    seq,
+    actor_id,
+    event_type,
+    auth_strength,
+    source_event_id,
+    occurred_at,
+    created_at
+   FROM public.security_audit_events;
+
+ALTER VIEW reporting.security_audit_events OWNER TO aip_owner;
+
+-- Name: user_session; Type: VIEW; Schema: reporting
+CREATE VIEW reporting.user_session WITH (security_barrier='true') AS
+ SELECT id,
+    tenant_id,
+    user_id,
+    audience,
+    aal,
+    amr,
+    authenticated_at,
+    last_seen_at,
+    idle_seconds,
+    idle_expires_at,
+    absolute_expires_at,
+    revoked_at,
+    revoke_reason,
+    created_at,
+    updated_at,
+    deleted_at
+   FROM public.user_session;
+
+ALTER VIEW reporting.user_session OWNER TO aip_owner;
