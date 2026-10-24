@@ -52,3 +52,28 @@ means. The task text still said arq; it is translated per ADR 0001 and 0003.
 Later job types only call `ops.register(...)` in their module's `jobs.py`. OPS-03 (jobs API) reads
 `jobs`/`job_events`, not the queue. Moving transport to SQS (the ADR 0003 tripwire) replaces
 `aip.platform.jobs.app` and `enqueue` but not handlers or the `jobs` record.
+
+## Amendment (OPS-17, 2026-10-24): handlers run on the `aip_app` engine, not `aip_jobs`
+
+The Decision above ran handlers "inside `with_tenant(job.tenant_id)` on the `aip_jobs` engine".
+`aip_jobs` has no grants on tenant tables (the table template grants it nothing), so a handler that
+writes a tenant table or emits most events failed with `permission denied` — review 11 **H3**. The
+only handlers to date (Keycloak session revocation, `ops.send_email`) touch no tenant table, so
+nothing broke yet, but UPLOADS-02, imports and PDF jobs need to.
+
+**Decision (OPS-17 chose option a: simpler, least privilege).** `run_job` runs its transactions on
+the **`aip_app`** engine (`get_engine()`), not `aip_jobs`. `aip_app` already holds
+`SELECT, INSERT, UPDATE` on tenant tables, `SELECT, INSERT, UPDATE` on `jobs` and
+`SELECT, INSERT` on `job_events`/`domain_events`, so:
+
+- a handler can write tenant tables and emit events, and the `succeeded` status + `result_ref` +
+  `job.completed` still commit in the **same transaction** as the handler's writes (unchanged step 3),
+  so the atomic-commit and cancel-while-running rollback semantics above are preserved;
+- `aip_jobs` **gains no new privilege**: it keeps only the Procrastinate queue tables (ADR 0016
+  Privileges) and the outbox claim (ADR 0030). RLS still binds every handler to the job's tenant
+  because `aip_app` is `NOSUPERUSER`/`NOBYPASSRLS` and the handler runs inside `with_tenant`.
+
+No infrastructure change: the worker already opens the `aip_app` engine via `get_engine()`
+(`DATABASE_URL`) to run outbox subscribers (ADR 0030), so both engines were already present in the
+worker process. Rejected option (b) — granting `aip_jobs` the `aip_app` tenant-table set — because
+it widens the queue role's reach for no benefit now that the app engine is already available.

@@ -7,7 +7,8 @@ One call to ``run_job`` is one try of one job, for the tenant named in the paylo
 2. In a first tenant transaction the ``jobs`` row is locked. A job that is already terminal
    (succeeded, failed or cancelled) is skipped, so a redelivery never runs a handler twice.
    Otherwise the attempt is counted and the job is ``running`` (committed, so it is visible).
-3. The handler runs in a second tenant transaction on the ``aip_jobs`` engine, under
+3. The handler runs in a second tenant transaction on the ``aip_app`` engine (OPS-17, ADR 0016
+   amended: handlers write tenant tables and emit events, and ``aip_jobs`` gains nothing), under
    ``asyncio.timeout(spec.timeout_s)``. If it returns, ``succeeded`` and ``result_ref`` are written
    in the same transaction, so the handler's writes and the status commit together.
    ``job.completed`` (OPS-03) is emitted in that transaction too.
@@ -36,7 +37,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from aip.platform.db.engine import get_jobs_engine
+from aip.platform.db.engine import get_engine
 from aip.platform.db.session import with_tenant
 from aip.platform.events import Aggregate, emit
 from aip.platform.jobs import tenant_job
@@ -170,7 +171,7 @@ async def run_job(
     """Run one try of job ``job_id`` for ``tenant_id`` (see the module docstring)."""
     del actor_id, request_id  # consumed by ``tenant_job`` (they build the request context)
     jid = UUID(job_id)
-    engine = get_jobs_engine()
+    engine = get_engine()
     try:
         async with with_tenant(tenant_id, engine=engine) as conn:
             job = await service.begin_attempt(conn, jid)
