@@ -21,3 +21,8 @@ d7a52f33e6c04c99fb7e909b66482276f66544c5:apps/api/aip/modules/projects/settings.
 # "not-a-dev-key-but-a-test-key-32b", in the first commit of the PR branch. Later commits build it at
 # run time, so the squash commit on main carries no literal.
 10134686385d8ae7fceecdd533ac6f73ebdb4b52:apps/api/tests/platform/test_dev_secrets.py:generic-api-key:20
+
+# Reviewed false positive (2026-10-24, ASSETS-01): the flagged line passes the named dev constant for the
+# assets cursor signing secret as a Field default. The constant is an obviously fake placeholder, refused
+# outside development and test by AssetsSettings (mirrors the PROJECTS-01 entry above).
+3349e5dc2d030ad3f0e3d649e0bacf907b004d96:apps/api/aip/modules/assets/settings.py:generic-api-key:31
