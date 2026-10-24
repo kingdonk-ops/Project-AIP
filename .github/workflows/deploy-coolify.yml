@@ -1,16 +1,29 @@
 name: deploy-coolify
 
-# OPS-11: on every push to main, build the demo images, push them to GHCR (tagged with the git SHA
-# and `main`), then ask Coolify (bytedock.io) to redeploy the demo and smoke-test it. Synthetic data
-# only (ADR 0007). One-time setup and rollback: infra/coolify/README.md.
+# OPS-11: after the security workflow passes on a push to main, build the demo images, scan them,
+# push them to GHCR (tagged with the git SHA and `main`), sign the pushed digests, then ask Coolify
+# (bytedock.io) to redeploy the demo and smoke-test it. Synthetic data only (ADR 0007). One-time
+# setup and rollback: infra/coolify/README.md.
 #
-# Secrets (repository > Settings > Secrets): COOLIFY_WEBHOOK (the resource's deploy webhook URL) and
-# COOLIFY_TOKEN (a Coolify API token with deploy permission). Variable: DEMO_URL (https://<demo-host>).
-# Without them the images are still pushed and the deploy step says it was skipped.
-# No third-party actions: plain docker and curl.
+# SECURITY-11 Part C (review 11 M6): nothing reaches the internet-facing demo unscanned or unsigned.
+#   - The workflow runs only when `security` (strip test, Trivy, dependency audit, gitleaks)
+#     succeeded for a push to main, and builds that run's commit (workflow_run).
+#   - All five demo images get a Trivy scan (fixable HIGH/CRITICAL fail unless excepted in
+#     config/vuln-exceptions.txt) and a syft SBOM before anything is pushed: a failing scan stops
+#     the push and the deploy.
+#   - cosign signs the pushed registry digests with COSIGN_PRIVATE_KEY (no ephemeral fallback: a
+#     missing key fails) and verifies them with the public key.
+#   - Every `uses:` is pinned by commit SHA (tools/tests/test_deploy_workflow.py).
+#
+# Secrets (repository > Settings > Secrets): COOLIFY_WEBHOOK (the resource's deploy webhook URL),
+# COOLIFY_TOKEN (a Coolify API token with deploy permission), COSIGN_PRIVATE_KEY and COSIGN_PASSWORD.
+# Variable: DEMO_URL (https://<demo-host>). Without the Coolify secrets the images are still pushed
+# and the deploy step says it was skipped.
 
 on:
-  push:
+  workflow_run:
+    workflows: [security]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -21,38 +34,45 @@ concurrency:
   group: deploy-coolify
   cancel-in-progress: false
 
+env:
+  # The commit `security` passed (workflow_run), or main's tip for a manual run.
+  SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+  TRIVY_IMAGE: aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+  COSIGN_IMAGE: ghcr.io/sigstore/cosign/cosign:v3.1.1@sha256:6bbe0d281d955c79f85b325f0f7e651c1bcab5a4fa4ad4903d74955178a3b2eb
+  SYFT_VERSION: v1.33.0
+
 jobs:
   images:
-    name: Build and push demo images
+    name: Build, scan, push and sign the demo images
+    # Only a green security run for a push to main, or a manual run from main.
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.event == 'push')
+      || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          ref: ${{ env.SHA }}
           persist-credentials: false
-      - name: Log in to GHCR
+      - name: Build the demo images (not pushed yet)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ACTOR: ${{ github.actor }}
-        run: echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
-      - name: Build and push the demo images
-        env:
-          SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           registry="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
+          echo "REGISTRY=${registry}" >> "$GITHUB_ENV"
           build() {
             local name="$1" dockerfile="$2"; shift 2
             docker build -f "$dockerfile" "$@" \
               --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
               --label "org.opencontainers.image.revision=${SHA}" \
               -t "${registry}/${name}:${SHA}" -t "${registry}/${name}:main" .
-            docker push "${registry}/${name}:${SHA}"
-            docker push "${registry}/${name}:main"
+            echo "${name}" >> "$RUNNER_TEMP/images.txt"
           }
           build aip-api apps/api/Dockerfile --build-arg "GIT_SHA=${SHA}" --build-arg "BUILD_ID=${RUN_ID}"
           build aip-migrator infra/docker/migrator.Dockerfile
@@ -60,6 +80,91 @@ jobs:
             --build-arg NGINX_CONF=infra/coolify/nginx.conf
           build aip-postgres-demo infra/coolify/images/postgres.Dockerfile
           build aip-keycloak-demo infra/coolify/images/keycloak.Dockerfile
+      - name: Trivy scan of every demo image (fixable HIGH/CRITICAL fail unless excepted)
+        run: |
+          set -u
+          mkdir -p evidence
+          cache="$RUNNER_TEMP/trivy-cache"; mkdir -p "$cache"
+          fail=0
+          while read -r name; do
+            for format in table json; do
+              docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                -v "$cache:/root/.cache" -v "$PWD/config:/cfg:ro" -v "$PWD/evidence:/out" \
+                "$TRIVY_IMAGE" image --quiet --scanners vuln --severity HIGH,CRITICAL \
+                --ignore-unfixed --ignorefile /cfg/vuln-exceptions.txt --exit-code 1 \
+                --format "$format" --output "/out/trivy-$name.$format" "$REGISTRY/$name:$SHA" \
+                || fail=1
+            done
+            cat "evidence/trivy-$name.table"
+          done < "$RUNNER_TEMP/images.txt"
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::a demo image failed the Trivy scan: nothing was pushed or deployed"
+          fi
+          exit $fail
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          syft-version: ${{ env.SYFT_VERSION }}
+      - name: SBOM of every demo image (syft, CycloneDX)
+        run: |
+          set -euo pipefail
+          while read -r name; do
+            syft scan "docker:$REGISTRY/$name:$SHA" -q -o "cyclonedx-json=evidence/sbom-$name.cdx.json"
+          done < "$RUNNER_TEMP/images.txt"
+          ls -l evidence
+      - name: Log in to GHCR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+      - name: Push the scanned images and record their registry digests
+        run: |
+          set -euo pipefail
+          : > evidence/image-digests.txt
+          while read -r name; do
+            docker push "$REGISTRY/$name:$SHA"
+            docker push "$REGISTRY/$name:main"
+            # The digest as the registry holds it (a local image id or RepoDigests entry can differ).
+            digest="$(docker buildx imagetools inspect --format '{{.Manifest.Digest}}' \
+              "$REGISTRY/$name:$SHA")"
+            echo "$REGISTRY/$name@$digest" >> evidence/image-digests.txt
+          done < "$RUNNER_TEMP/images.txt"
+          cat evidence/image-digests.txt
+      - name: Sign and verify the pushed digests (cosign, key-based, no public transparency log)
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_KEY_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "$COSIGN_PRIVATE_KEY" ]; then
+            echo "::error::COSIGN_PRIVATE_KEY is not set: the demo images cannot be signed (review 11 O2)"
+            exit 1
+          fi
+          keys="$RUNNER_TEMP/cosign-keys"; mkdir -p "$keys"
+          printf '%s\n' "$COSIGN_PRIVATE_KEY" > "$keys/cosign.key"
+          export COSIGN_PASSWORD="$COSIGN_KEY_PASSWORD"
+          cosign() {
+            docker run --rm -u "$(id -u):$(id -g)" -e COSIGN_PASSWORD -e HOME=/tmp \
+              -e DOCKER_CONFIG=/docker -v "$HOME/.docker/config.json:/docker/config.json:ro" \
+              -v "$keys:/keys" "$COSIGN_IMAGE" "$@"
+          }
+          cosign public-key --key /keys/cosign.key > "$keys/cosign.pub"
+          cp "$keys/cosign.pub" evidence/cosign.pub
+          while read -r ref; do
+            cosign sign --yes --key /keys/cosign.key --use-signing-config=false \
+              --tlog-upload=false "$ref"
+            cosign verify --key /keys/cosign.pub --insecure-ignore-tlog=true "$ref" > /dev/null
+            echo "signed and verified $ref"
+          done < evidence/image-digests.txt
+          rm -rf "$keys"
+      - name: Upload evidence (scan reports, SBOMs, digests, public key)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: demo-image-evidence-${{ env.SHA }}
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 90
 
   deploy:
     name: Deploy to the Coolify demo and smoke-test it
@@ -68,8 +173,9 @@ jobs:
     timeout-minutes: 25
     environment: coolify-demo
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          ref: ${{ env.SHA }}
           persist-credentials: false
       - name: Trigger the Coolify deploy webhook
         id: trigger
@@ -101,7 +207,6 @@ jobs:
         if: steps.trigger.outputs.deployed == 'true' && vars.DEMO_URL != ''
         env:
           DEMO_URL: ${{ vars.DEMO_URL }}
-          SHA: ${{ github.sha }}
         run: |
           # Up to 10 minutes for the rollout (OPS-11 acceptance), then the final smoke result.
           for attempt in $(seq 1 40); do
@@ -115,9 +220,9 @@ jobs:
           exit 1
       # TESTING-09: the walking skeleton against the demo once it serves this commit. Credentials
       # come from the coolify-demo environment secrets; a failure fails the deploy job.
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         if: steps.trigger.outputs.deployed == 'true' && vars.DEMO_URL != ''
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         if: steps.trigger.outputs.deployed == 'true' && vars.DEMO_URL != ''
         with:
           node-version: 22
@@ -142,7 +247,7 @@ jobs:
           pnpm --filter e2e exec playwright test --project staging --grep @staging
       - name: Upload the demo journey trace
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-demo
           path: e2e/test-results

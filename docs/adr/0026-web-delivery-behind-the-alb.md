@@ -25,7 +25,10 @@ the marketing site.
    set the app's cookies.
 4. **Security headers live in nginx.** `apps/web/security-headers.json` stays the single source; nginx sends
    the CSP, `frame-ancestors 'none'`, `Referrer-Policy`, `X-Content-Type-Options` and `Permissions-Policy`.
-   HSTS is sent by nginx in AWS (TLS ends at the ALB) and by Coolify's proxy there.
+   HSTS (`max-age=63072000; includeSubDomains`) is sent by both nginx configs, in AWS and on Coolify, since TLS
+   always ends in front of them; it is not in the JSON because vite serves plain HTTP. `/api/*` skips nginx, so
+   the API sends its own `nosniff`, `X-Frame-Options: DENY`, `frame-ancestors 'none'` and HSTS and caps request
+   bodies at 1 MiB (SECURITY-11, `aip.platform.http.edge`).
 5. **WAF attaches to the ALB.** CloudFront is not used now. It can be added later in front of the ALB, for
    edge caching or an edge WAF, with no change to the apps.
 
