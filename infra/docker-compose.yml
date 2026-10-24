@@ -176,7 +176,7 @@ services:
     # `aip` (clients, Organizations, flows, policy) and realm `mock-idp` (stands in for customer
     # IdPs; dev only) from infra/keycloak, with the `aip` login theme and the password blocklist.
     # Realm placeholders (${APP_ORIGIN}, client secrets, SMTP) are filled from this environment.
-    image: quay.io/keycloak/keycloak:26.7.5
+    image: quay.io/keycloak/keycloak:26.8.1
     user: "1000"
     command: ["start-dev", "--import-realm"]
     environment:
