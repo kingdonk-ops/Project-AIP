@@ -37,7 +37,9 @@ async def test_the_table_forces_rls(migrated_db: FreshDb) -> None:
         ("aip_app", "UPDATE", False),
         ("aip_app", "DELETE", False),
         ("aip_jobs", "INSERT", False),
-        ("aip_readonly", "SELECT", True),
+        # SECURITY-13 (review 11 M3): aip_readonly no longer reads the raw security table; it uses
+        # the non-PII reporting.security_audit_events view instead.
+        ("aip_readonly", "SELECT", False),
         ("aip_readonly", "TRUNCATE", False),
     ],
 )
