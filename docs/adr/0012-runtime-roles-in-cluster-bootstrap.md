@@ -43,3 +43,25 @@ Roles are cluster-wide objects, not database objects. To create them from a revi
 - The application engine also refuses, at connect time, any login that is a superuser, has
   `BYPASSRLS` or owns objects. A mis-set `DATABASE_URL` therefore fails closed instead of
   silently skipping RLS.
+
+## Amendment (SECURITY-13, 2026-10-24): RLS is advisory for roles that run arbitrary SQL
+
+The Decision above (and the original `00_cluster.sql` comment) said `aip_readonly` is "still
+subject to RLS", implying RLS bounds what the reporting login can read. That is not true for a role
+that runs arbitrary SQL. Tenant isolation keys on `current_setting('app.tenant_id', true)`, and any
+role can set that GUC with `set_config`. So RLS stops a role only from reading *another* tenant
+while it is bound to the first; it does not stop a reporting user from iterating every tenant id and
+reading each tenant's rows in turn. For such a role RLS is **advisory**: a correctness guard for
+honest, tenant-scoped sessions, not a confidentiality boundary against the role itself.
+
+Confidentiality against `aip_readonly` therefore comes from **what it is granted**, not from RLS:
+
+- `aip_readonly` holds no SELECT on the session, auth and PII tables (`user_session`, `app_user`,
+  `auth_event`, `audit_log`, `security_audit_events`, `breach_incidents`). Review 11 M3.
+- Reporting is served by the `reporting` schema: one security-barrier view per table exposing only
+  non-PII columns. The views are owned by `aip_owner` and are not `security_invoker`, so base-table
+  access runs with the owner's privileges while the owner's FORCE RLS still filters by
+  `app.tenant_id` — a reporting session sees only the tenant it set, and never a PII column.
+
+The same reasoning applies to any future role that can run arbitrary SQL: grant it the narrowest set
+of tables or views it needs and treat RLS as defence in depth, not as the isolation boundary.
