@@ -23,11 +23,12 @@ RUN pnpm install --frozen-lockfile --filter "@aip/web..." \
 
 FROM nginxinc/nginx-unprivileged:1.30.5-alpine AS runtime
 
-# CVE-2026-4775 (HIGH): the base image's libtiff 4.7.1-r0, fixed in 4.7.2-r0, and CVE-2026-77214 (HIGH):
-# its libexpat 2.8.5-r0, fixed in 2.9.0-r0. The newest nginx tag still ships the old ones, so upgrade
-# just those packages. Remove each once the base image has the fix.
+# The base image lags on patched OS packages even on its newest tag (previously libtiff and libexpat;
+# more recently nginx CVE-2026-15176/-93479/-97205, libx11 CVE-2026-88806, brotli CVE-2026-111497), and
+# Trivy fails the build on fixable HIGH/CRITICAL. Upgrade every installed apk package to the repo's
+# current patched versions rather than enumerating each; --no-cache refreshes the index first.
 USER root
-RUN apk upgrade --no-cache tiff libexpat
+RUN apk upgrade --no-cache
 
 # OPS-11: the Coolify demo build passes `--build-arg NGINX_CONF=infra/coolify/nginx.conf` (adds /auth
 # to Keycloak); Coolify cannot bind-mount it from the repository.
