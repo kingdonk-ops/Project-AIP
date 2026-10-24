@@ -15,3 +15,6 @@ CVE-2026-86145 exp:2026-12-01
 CVE-2026-89161 exp:2026-12-01
 # why: mssql-jdbc 13.2.1 bundled in Keycloak 26.7.5 (CVE-2025-59250). The demo Keycloak uses KC_DB=postgres, so the SQL Server driver is never loaded. Proposed in SECURITY-11 (ClaudeK, 2026-10-18), accepted by owner 2026-10-24 (PR #121); fixed by the next Keycloak bump.
 CVE-2025-59250 exp:2026-12-01
+
+# why: ca-certificates eMudhra intermediate CA distrust (CVE-2026-114406) in the Keycloak 26.7.5 base (UBI 9 micro, ca-certificates 2025.2.80_v9.0.305-91.el9; fixed in 2026.2.92_v9.0.319-90.3.el9_8). Same base-image class as the pcre2 entries above: the image has no package manager, so the fix needs a newer quay.io/keycloak/keycloak release. A trust-store distrust of a specific intermediate CA, not an RCE; the demo serves synthetic data only (ADR 0007). Newly published CVE that began failing the gated demo scan on 2026-10-24 (deploy-coolify runs 58-59), blocking every image push. Short expiry: bump Keycloak instead of renewing.
+CVE-2026-114406 exp:2026-12-01
