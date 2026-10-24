@@ -10,5 +10,12 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test"
+  },
+  "pnpm": {
+    "overrides": {
+      "undici@>=7.0.0 <7.30.1": "7.30.1",
+      "undici@>=8.0.0 <8.12.2": "8.12.3",
+      "handlebars@>=3.0.0 <=4.7.9": "4.7.10"
+    }
   }
 }
