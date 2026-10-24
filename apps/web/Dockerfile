@@ -21,12 +21,13 @@ RUN pnpm install --frozen-lockfile --filter "@aip/web..." \
     && pnpm --filter "@aip/web..." build
 
 
-FROM nginxinc/nginx-unprivileged:1.30.5-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.30.6-alpine AS runtime
 
-# The base image lags on patched OS packages even on its newest tag (previously libtiff and libexpat;
-# more recently nginx CVE-2026-15176/-93479/-97205, libx11 CVE-2026-88806, brotli CVE-2026-111497), and
-# Trivy fails the build on fixable HIGH/CRITICAL. Upgrade every installed apk package to the repo's
-# current patched versions rather than enumerating each; --no-cache refreshes the index first.
+# nginx's version is pinned to the base image tag (bumped 1.30.5 -> 1.30.6 for the HIGH
+# CVE-2026-15176/-93479/-97205; `apk upgrade` cannot move it). The base still ships old Alpine OS
+# packages even on its newest tag, and Trivy fails the build on fixable HIGH/CRITICAL, so also upgrade
+# every installed apk package to the repo's current patched versions (libx11 CVE-2026-88806, brotli
+# CVE-2026-111497, and previously libtiff and libexpat); --no-cache refreshes the index first.
 USER root
 RUN apk upgrade --no-cache
 
