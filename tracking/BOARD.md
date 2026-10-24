@@ -15,6 +15,87 @@ RLS isolation proven in CI, deployed to the Coolify demo (synthetic data only; A
 M0 status: the exit proof (TESTING-09) runs in CI (`e2e-skeleton`) and after each demo deploy; the wave 5
 tasks still `todo` below remain before M0 is closed.
 
+## Demo slice (operational demo build order)
+
+A **build-order view** of the shortest path to a usable operational demo, requested by the owner (2026-10-24).
+Full rationale, critical path and scope options in [DEMO-SLICE-PLAN.md](DEMO-SLICE-PLAN.md). These rows are not new
+tasks — each is tracked in its module/wave section below (status lives there); this only reorders the R1 critical
+path so the two build streams (ADR 0007) can pick straight from it. Streams: **[api]** = API/DB/worker, **[web]** = UI.
+
+Target slice: sign in → asset tree → publish a form → run an inspection (validated answers, ITP hold/witness points)
+→ approve → **PDF report** (Scope B). Drop the uploads/reports branch for Scope A (on-screen core, no PDF).
+Critical path floor: `ASSETS-01 → FORMS-01 → FORMS-02 → INSPECTIONS-01 → INSPECTIONS-02 → REPORTS-03`.
+**OPS-17 already merged** (PR #129, 2026-10-24), so the uploads→reports branch and import/reminder jobs
+are unblocked — UPLOADS-02 (round 2) can start immediately.
+
+### Demo round 1 — ready to start today
+
+| Order | ID | Stream | Role in the slice |
+|---|---|---|---|
+| 1 | [ASSETS-01](tasks/ASSETS-01.md) | api | Critical path; unblocks every R1 module |
+| 2 | [ITEMTYPES-01](tasks/ITEMTYPES-01.md) | api | Field types for FORMS-01 and asset attributes |
+| 3 | [APPROVALS-08](tasks/APPROVALS-08.md) | api | Precondition of FORMS-01 (guard evaluator + preset installer) |
+| 4 | [APPROVALS-05](tasks/APPROVALS-05.md) | api | Inspection lifecycle preset for INSPECTIONS-01 |
+| 5 | [REPORTS-01](tasks/REPORTS-01.md) | api | Report template + HTML render contract |
+| 6 | [IDENTITY-09](tasks/IDENTITY-09.md) | api | Display-name lookup for REPORTS-03 |
+| 7 | [ACCESS-07](tasks/ACCESS-07.md) | api | `move` verb; precondition of ASSETS-03 |
+| 8 | [UPLOADS-02](tasks/UPLOADS-02.md) | api | Now unblocked (OPS-17 merged); feeds UPLOADS-08 → REPORTS-02 |
+| — | [TESTING-12](tasks/TESTING-12.md) | web | Harden current demo: live-Keycloak journeys |
+| — | [TESTING-13](tasks/TESTING-13.md) | web | Seed demo workflow + approvals journeys into `e2e-skeleton` |
+| — | [PROJECTS-07](tasks/PROJECTS-07.md) | web | Project detail page |
+
+### Demo round 2 — forms + uploads
+
+| Order | ID | Stream | Deps cleared by |
+|---|---|---|---|
+| 1 | [FORMS-01](tasks/FORMS-01.md) | api | ITEMTYPES-01, APPROVALS-08 |
+| 2 | [FORMS-02](tasks/FORMS-02.md) | api | FORMS-01 |
+| 3 | [ITEMTYPES-02](tasks/ITEMTYPES-02.md) | api | ITEMTYPES-01 |
+| 4 | [UPLOADS-08](tasks/UPLOADS-08.md) | api | UPLOADS-02 (started round 1) |
+| 5 | [ASSETS-02](tasks/ASSETS-02.md) | api | ASSETS-01, ITEMTYPES-02 |
+| 6 | [FORMS-03](tasks/FORMS-03.md) | web | FORMS-02 |
+| 7 | [FORMS-04](tasks/FORMS-04.md) | web | FORMS-01 |
+| 8 | [ITEMTYPES-03](tasks/ITEMTYPES-03.md) | web | ITEMTYPES-02 |
+
+### Demo round 3 — inspections + report render
+
+| Order | ID | Stream | Deps cleared by |
+|---|---|---|---|
+| 1 | [INSPECTIONS-01](tasks/INSPECTIONS-01.md) | api | APPROVALS-05, ASSETS-01, FORMS-01 |
+| 2 | [INSPECTIONS-02](tasks/INSPECTIONS-02.md) | api | FORMS-02, INSPECTIONS-01 |
+| 3 | [INSPECTIONS-03](tasks/INSPECTIONS-03.md) | api | INSPECTIONS-02 (ITP/hold points; R1 midpoint) |
+| 4 | [REPORTS-02](tasks/REPORTS-02.md) | api | OPS-17, REPORTS-01, UPLOADS-08 |
+| 5 | [ASSETS-03](tasks/ASSETS-03.md) | web | ACCESS-07, ASSETS-02, ITEMTYPES-03 |
+
+### Demo round 4 — close the loop
+
+| Order | ID | Stream | Deps cleared by |
+|---|---|---|---|
+| 1 | [REPORTS-03](tasks/REPORTS-03.md) | api | IDENTITY-09, INSPECTIONS-02, REPORTS-02 (PDF on approval) |
+| 2 | [INSPECTIONS-04](tasks/INSPECTIONS-04.md) | web | FORMS-03, INSPECTIONS-03, UPLOADS-08 |
+| 3 | [REPORTS-04](tasks/REPORTS-04.md) | web | REPORTS-02 |
+
+### Demo add-on — client-portal sign-off (optional stream, pull in if there is time)
+
+Independent of Scope B. Start the two ready-now leaves (IDENTITY-10, ACCESS-04) early so the stream overlaps the core
+slice; the rest join once ASSETS-01, INSPECTIONS-03 and REPORTS-04 have merged. Loop: client invited → signs in to the
+portal → needs-my-action inbox → reviews inspection / releases hold point / signs off → views client report.
+
+| Round | ID | Stream | Deps cleared by |
+|---|---|---|---|
+| P1 | [IDENTITY-10](tasks/IDENTITY-10.md) | api | ready now — portal audience sign-in/cookies/invites |
+| P1 | [ACCESS-04](tasks/ACCESS-04.md) | api | ready now — teams for approver routing |
+| P2 | [PORTAL-01](tasks/PORTAL-01.md) | api | ASSETS-01 — external users + grants |
+| P2 | [APPROVALS-04](tasks/APPROVALS-04.md) | api | ACCESS-04, APPROVALS-02 — sequential/parallel approver steps |
+| P3 | [PORTAL-02](tasks/PORTAL-02.md) | api | IDENTITY-10, PORTAL-01 — portal sign-in/session on own host |
+| P3 | [INSPECTIONS-05](tasks/INSPECTIONS-05.md) | api/web | APPROVALS-04, INSPECTIONS-03, PORTAL-01 — client review step + sign-off chips |
+| P4 | [PORTAL-03](tasks/PORTAL-03.md) | web | INSPECTIONS-05, PORTAL-02 — portal app, sign-in, needs-my-action inbox |
+| P5 | [PORTAL-04](tasks/PORTAL-04.md) | web | INSPECTIONS-05, PORTAL-03 — client review + hold-point release with sign-off assurance |
+| P5 | [PORTAL-05](tasks/PORTAL-05.md) | web | PORTAL-03, REPORTS-04 — client reports in the portal |
+
+Optional portal polish (not required for the sign-off loop): PORTAL-07 (external-users admin), PORTAL-08 (access-expiry
+reminders), PORTAL-06 (witness attendance, needs PROJECTS-04).
+
 ## P0
 
 ### Wave 0: setup and skeleton start
