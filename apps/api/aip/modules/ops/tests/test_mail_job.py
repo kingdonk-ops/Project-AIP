@@ -21,7 +21,7 @@ from aip.modules.ops import jobs as mail_jobs
 from aip.modules.ops import registry
 from aip.modules.ops.tests.test_runner import (  # noqa: F401 - re-exported fixtures and helpers
     Tx,
-    _dispose_jobs_engine,  # pyright: ignore[reportPrivateUsage]
+    _dispose_engines,  # pyright: ignore[reportPrivateUsage]
     drain,
     job_row,
     queue_db,
