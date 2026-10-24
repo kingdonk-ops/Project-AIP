@@ -18,10 +18,12 @@ from typing import Any
 from uuid import UUID
 
 import pytest
+from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncConnection
 from tests.conftest import ALICE_ID, TENANT_A_ID, TENANT_B_ID
+from tests.fixtures.postgres import execute
 from tests.platform.db.conftest import APP, JOBS, FreshDb
 
 from aip.modules.ops import api as ops
@@ -29,12 +31,17 @@ from aip.modules.ops import registry
 from aip.modules.ops.runner import MemoryGuard, run_job
 from aip.platform.context import ContextMissingError, RequestContext, use_context
 from aip.platform.db.engine import (
+    DATABASE_URL_ENV,
     JOBS_DATABASE_URL_ENV,
     EngineSettings,
     create_app_engine,
+    dispose_engine,
     dispose_jobs_engine,
 )
 from aip.platform.db.session import with_tenant
+from aip.platform.db.templates import render_template
+from aip.platform.events import Aggregate, emit
+from aip.platform.events.lookup import DictEventSchemaLookup
 from aip.platform.jobs.app import (
     QUEUES,
     JobRetryStrategy,
@@ -51,15 +58,19 @@ Handler = Callable[[AsyncConnection, ops.JobView], Awaitable[str | None]]
 
 @pytest.fixture
 def queue_db(migrated_db: FreshDb, monkeypatch: pytest.MonkeyPatch) -> FreshDb:
-    """A migrated database; the worker's engine (``DATABASE_JOBS_URL``) points at it."""
+    """A migrated database. ``DATABASE_JOBS_URL`` points the queue/claim engine at it as
+    ``aip_jobs``; ``DATABASE_URL`` points the handler engine (``get_engine()``) at it as ``aip_app``
+    (OPS-17: the runner runs handlers on the app engine, exactly as the worker does)."""
     monkeypatch.setenv(JOBS_DATABASE_URL_ENV, migrated_db.role_url(JOBS))
+    monkeypatch.setenv(DATABASE_URL_ENV, migrated_db.role_url(APP))
     return migrated_db
 
 
 @pytest.fixture(autouse=True)
-async def _dispose_jobs_engine() -> AsyncIterator[None]:  # pyright: ignore[reportUnusedFunction]
+async def _dispose_engines() -> AsyncIterator[None]:  # pyright: ignore[reportUnusedFunction]
     yield
     await dispose_jobs_engine()
+    await dispose_engine()
 
 
 @pytest.fixture
@@ -318,6 +329,64 @@ async def test_the_same_succeeded_job_delivered_twice_runs_the_handler_once(
         "WHERE task_name LIKE 'test.job.%' GROUP BY 1",
     )
     assert queue == [("succeeded", 3)]
+
+
+async def test_a_handler_writes_a_tenant_table_and_emits_an_event(
+    queue_db: FreshDb, tx: Tx, register_job: Callable[..., ops.JobSpec]
+) -> None:
+    """OPS-17 Part A (review 11 H3): a handler runs on the aip_app engine, so it can write a tenant
+    table and emit an event; the event reaches the outbox and RLS still binds it to the tenant."""
+    await asyncio.to_thread(
+        execute,
+        queue_db.owner_url,
+        render_template("tenant_table", table="widgets", columns="name text NOT NULL"),
+    )
+    widget_id = uuid.uuid4()
+
+    class WidgetCreated(BaseModel):
+        pass
+
+    schemas = DictEventSchemaLookup({("widget.created", 1): WidgetCreated})
+
+    async def handler(conn: AsyncConnection, job: ops.JobView) -> str | None:
+        # tenant_id comes from the RLS GUC with_tenant set, so WITH CHECK is satisfied.
+        await conn.execute(
+            text(
+                "INSERT INTO widgets (id, tenant_id, name) "
+                "VALUES (:i, NULLIF(current_setting('app.tenant_id', true), '')::uuid, 'w')"
+            ),
+            {"i": widget_id},
+        )
+        await emit(conn, "widget.created", 1, Aggregate("widget", widget_id), {}, schemas=schemas)
+        return None
+
+    spec = register_job(handler)
+    job = await enqueue(tx, TENANT_A_ID, spec)
+    await drain(queue_db)
+
+    row = await job_row(tx, TENANT_A_ID, job.id)
+    assert row.status == "succeeded"
+
+    async with tx(TENANT_A_ID) as conn:
+        widgets = (
+            await conn.execute(text("SELECT count(*) FROM widgets WHERE id = :i"), {"i": widget_id})
+        ).scalar()
+        events = (
+            await conn.execute(
+                text(
+                    "SELECT count(*) FROM domain_events "
+                    "WHERE event_name = 'widget.created' AND aggregate_id = :i"
+                ),
+                {"i": widget_id},
+            )
+        ).scalar()
+    assert (widgets, events) == (1, 1)
+
+    # RLS still binds the handler to the job's tenant: tenant B sees none of it.
+    async with tx(TENANT_B_ID) as conn:
+        assert (
+            await conn.execute(text("SELECT count(*) FROM widgets WHERE id = :i"), {"i": widget_id})
+        ).scalar() == 0
 
 
 async def test_a_raising_handler_is_retried_until_max_attempts_then_failed(
