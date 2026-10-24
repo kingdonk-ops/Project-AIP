@@ -226,6 +226,10 @@ GRANT SELECT ON TABLE public.access_user_scope TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.app_user TO aip_app;
 GRANT SELECT ON TABLE public.app_user TO aip_jobs;
 
+-- Name: TABLE assets; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.assets TO aip_app;
+GRANT SELECT ON TABLE public.assets TO aip_readonly;
+
 -- Name: TABLE audit_chain_checkpoints; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.audit_chain_checkpoints TO aip_audit_writer;
 GRANT SELECT ON TABLE public.audit_chain_checkpoints TO aip_app;
@@ -452,6 +456,14 @@ ALTER TABLE ONLY public.app_user
 -- Name: app_user uq_app_user_id_tenant_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.app_user
     ADD CONSTRAINT uq_app_user_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: assets pk_assets; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT pk_assets PRIMARY KEY (id);
+
+-- Name: assets uq_assets_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT uq_assets_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: audit_chain_checkpoints pk_audit_chain_checkpoints; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.audit_chain_checkpoints
@@ -789,6 +801,10 @@ ALTER TABLE ONLY public.access_user_scope
 -- Name: app_user fk_app_user_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.app_user
     ADD CONSTRAINT fk_app_user_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: assets fk_assets_parent; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT fk_assets_parent FOREIGN KEY (parent_id, tenant_id) REFERENCES public.assets(id, tenant_id);
 
 -- Name: auth_event fk_auth_event_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.auth_event
@@ -1201,6 +1217,20 @@ CREATE FUNCTION public.app_user_id() RETURNS uuid
     AS $$ SELECT NULLIF(current_setting('app.user_id', true), '')::uuid $$;
 
 ALTER FUNCTION public.app_user_id() OWNER TO aip_owner;
+
+-- Name: assets_internal_tag_immutable(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.assets_internal_tag_immutable() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        IF NEW.internal_tag IS DISTINCT FROM OLD.internal_tag THEN
+          RAISE EXCEPTION 'internal_tag is immutable';
+        END IF;
+        RETURN NEW;
+      END;
+      $$;
+
+ALTER FUNCTION public.assets_internal_tag_immutable() OWNER TO aip_owner;
 
 -- Name: audit_log_forbid_mutation(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.audit_log_forbid_mutation() RETURNS trigger
@@ -1919,6 +1949,18 @@ CREATE INDEX ix_app_user_tenant_id_organisation_id ON public.app_user USING btre
 -- Name: ix_app_user_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_app_user_tenant_id_status ON public.app_user USING btree (tenant_id, status) WHERE (deleted_at IS NULL);
 
+-- Name: ix_assets_name_trgm; Type: INDEX; Schema: public
+CREATE INDEX ix_assets_name_trgm ON public.assets USING gin (name public.gin_trgm_ops);
+
+-- Name: ix_assets_path_gist; Type: INDEX; Schema: public
+CREATE INDEX ix_assets_path_gist ON public.assets USING gist (path);
+
+-- Name: ix_assets_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_assets_tenant_id ON public.assets USING btree (tenant_id);
+
+-- Name: ix_assets_tenant_id_parent_id_sort_order; Type: INDEX; Schema: public
+CREATE INDEX ix_assets_tenant_id_parent_id_sort_order ON public.assets USING btree (tenant_id, parent_id, sort_order);
+
 -- Name: ix_audit_log_asset_path; Type: INDEX; Schema: public
 CREATE INDEX ix_audit_log_asset_path ON public.audit_log USING gist (asset_path);
 
@@ -2225,6 +2267,15 @@ CREATE UNIQUE INDEX uq_app_user_tenant_id_email ON public.app_user USING btree (
 -- Name: uq_app_user_tenant_id_keycloak_user_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_app_user_tenant_id_keycloak_user_id ON public.app_user USING btree (tenant_id, keycloak_user_id) WHERE (keycloak_user_id IS NOT NULL);
 
+-- Name: uq_assets_tenant_id_internal_tag; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_assets_tenant_id_internal_tag ON public.assets USING btree (tenant_id, internal_tag);
+
+-- Name: uq_assets_tenant_id_path; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_assets_tenant_id_path ON public.assets USING btree (tenant_id, path);
+
+-- Name: uq_assets_tenant_id_upper_tag_number; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_assets_tenant_id_upper_tag_number ON public.assets USING btree (tenant_id, upper(tag_number)) WHERE ((deleted_at IS NULL) AND (tag_number IS NOT NULL));
+
 -- Name: uq_audit_log_tenant_id_source_event_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_audit_log_tenant_id_source_event_id ON public.audit_log USING btree (tenant_id, source_event_id) WHERE (source_event_id IS NOT NULL);
 
@@ -2278,6 +2329,9 @@ CREATE UNIQUE INDEX uq_term_pack_version_pack_id_version ON public.term_pack_ver
 
 -- Name: uq_upload_sessions_client_request_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_upload_sessions_client_request_id ON public.upload_sessions USING btree (tenant_id, requested_by, client_request_id) WHERE (client_request_id IS NOT NULL);
+
+-- Name: ux_assets_client_generated_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_assets_client_generated_id ON public.assets USING btree (tenant_id, client_generated_id);
 
 -- Name: ux_record_links_live; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_record_links_live ON public.record_links USING btree (tenant_id, from_type, from_id, to_type, to_id, link_kind) WHERE (deleted_at IS NULL);
@@ -2353,6 +2407,9 @@ CREATE POLICY tenant_isolation ON public.access_user_scope USING ((tenant_id = (
 
 -- Name: app_user tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.app_user USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: assets tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.assets USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: audit_chain_checkpoints tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.audit_chain_checkpoints USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -2539,6 +2596,9 @@ ALTER TABLE public.access_user_scope ENABLE ROW LEVEL SECURITY;
 
 -- Name: app_user; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.app_user ENABLE ROW LEVEL SECURITY;
+
+-- Name: assets; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.assets ENABLE ROW LEVEL SECURITY;
 
 -- Name: audit_chain_checkpoints; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.audit_chain_checkpoints ENABLE ROW LEVEL SECURITY;
@@ -2811,6 +2871,33 @@ CREATE TABLE public.app_user (
 ALTER TABLE ONLY public.app_user FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.app_user OWNER TO aip_owner;
+
+-- Name: assets; Type: TABLE; Schema: public
+CREATE TABLE public.assets (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    parent_id uuid,
+    path public.ltree NOT NULL,
+    internal_tag text NOT NULL,
+    tag_number text,
+    name text NOT NULL,
+    sort_order integer DEFAULT 0 NOT NULL,
+    created_by uuid,
+    client_generated_id uuid,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_assets_depth CHECK ((public.nlevel(path) <= 15)),
+    CONSTRAINT ck_assets_name CHECK (((btrim(name) <> ''::text) AND (length(name) <= 200))),
+    CONSTRAINT ck_assets_path_leaf CHECK ((public.ltree2text(public.subpath(path, (public.nlevel(path) - 1))) = replace((id)::text, '-'::text, ''::text))),
+    CONSTRAINT ck_assets_root CHECK (((parent_id IS NULL) = (public.nlevel(path) = 1))),
+    CONSTRAINT ck_assets_tag_number CHECK (((tag_number IS NULL) OR ((btrim(tag_number) = tag_number) AND (tag_number <> ''::text) AND (length(tag_number) <= 64))))
+);
+
+ALTER TABLE ONLY public.assets FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.assets OWNER TO aip_owner;
 
 -- Name: audit_chain_checkpoints; Type: TABLE; Schema: public
 CREATE TABLE public.audit_chain_checkpoints (
@@ -4061,6 +4148,9 @@ ALTER TABLE ONLY public.workflow_definition_audit ATTACH PARTITION public.workfl
 
 -- Name: access_settings trg_access_settings_version_guard; Type: TRIGGER; Schema: public
 CREATE TRIGGER trg_access_settings_version_guard BEFORE UPDATE ON public.access_settings FOR EACH ROW EXECUTE FUNCTION public.access_settings_version_guard();
+
+-- Name: assets assets_internal_tag_immutable; Type: TRIGGER; Schema: public
+CREATE TRIGGER assets_internal_tag_immutable BEFORE UPDATE ON public.assets FOR EACH ROW EXECUTE FUNCTION public.assets_internal_tag_immutable();
 
 -- Name: audit_log audit_log_append_only; Type: TRIGGER; Schema: public
 CREATE TRIGGER audit_log_append_only BEFORE DELETE OR UPDATE ON public.audit_log FOR EACH ROW EXECUTE FUNCTION public.audit_log_forbid_mutation();

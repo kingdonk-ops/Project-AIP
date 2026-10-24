@@ -1,0 +1,44 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+id = "assets"
+context = "assets"
+depends_on = ["tenancy"]
+permission_namespaces = ["asset"]
+subscribes = []
+settings = ["ASSETS_CURSOR_KEY"]
+term_keys = []
+
+[[permissions]]
+code = "asset.view"
+description = "View assets"
+
+[[permissions]]
+code = "asset.create"
+description = "Create assets"
+
+[[permissions]]
+code = "asset.update"
+description = "Edit assets"
+
+[[permissions]]
+code = "asset.move"
+description = "Re-parent assets in the tree"
+
+[[permissions]]
+code = "asset.delete"
+description = "Delete assets"
+
+[[events]]
+name = "asset.created"
+version = 1
+
+[[events]]
+name = "asset.updated"
+version = 1
+
+[[events]]
+name = "asset.moved"
+version = 1
+
+[[events]]
+name = "asset.deleted"
+version = 1
