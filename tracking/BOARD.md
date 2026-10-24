@@ -25,20 +25,21 @@ path so the two build streams (ADR 0007) can pick straight from it. Streams: **[
 Target slice: sign in → asset tree → publish a form → run an inspection (validated answers, ITP hold/witness points)
 → approve → **PDF report** (Scope B). Drop the uploads/reports branch for Scope A (on-screen core, no PDF).
 Critical path floor: `ASSETS-01 → FORMS-01 → FORMS-02 → INSPECTIONS-01 → INSPECTIONS-02 → REPORTS-03`.
-**OPS-17** is a ready-now chokepoint (unblocks uploads, reports and import/reminder jobs) — start it first.
+**OPS-17 already merged** (PR #129, 2026-10-24), so the uploads→reports branch and import/reminder jobs
+are unblocked — UPLOADS-02 (round 2) can start immediately.
 
 ### Demo round 1 — ready to start today
 
 | Order | ID | Stream | Role in the slice |
 |---|---|---|---|
 | 1 | [ASSETS-01](tasks/ASSETS-01.md) | api | Critical path; unblocks every R1 module |
-| 2 | [OPS-17](tasks/OPS-17.md) | api | Chokepoint: unblocks uploads, reports, import/reminder jobs |
-| 3 | [ITEMTYPES-01](tasks/ITEMTYPES-01.md) | api | Field types for FORMS-01 and asset attributes |
-| 4 | [APPROVALS-08](tasks/APPROVALS-08.md) | api | Precondition of FORMS-01 (guard evaluator + preset installer) |
-| 5 | [APPROVALS-05](tasks/APPROVALS-05.md) | api | Inspection lifecycle preset for INSPECTIONS-01 |
-| 6 | [REPORTS-01](tasks/REPORTS-01.md) | api | Report template + HTML render contract |
-| 7 | [IDENTITY-09](tasks/IDENTITY-09.md) | api | Display-name lookup for REPORTS-03 |
-| 8 | [ACCESS-07](tasks/ACCESS-07.md) | api | `move` verb; precondition of ASSETS-03 |
+| 2 | [ITEMTYPES-01](tasks/ITEMTYPES-01.md) | api | Field types for FORMS-01 and asset attributes |
+| 3 | [APPROVALS-08](tasks/APPROVALS-08.md) | api | Precondition of FORMS-01 (guard evaluator + preset installer) |
+| 4 | [APPROVALS-05](tasks/APPROVALS-05.md) | api | Inspection lifecycle preset for INSPECTIONS-01 |
+| 5 | [REPORTS-01](tasks/REPORTS-01.md) | api | Report template + HTML render contract |
+| 6 | [IDENTITY-09](tasks/IDENTITY-09.md) | api | Display-name lookup for REPORTS-03 |
+| 7 | [ACCESS-07](tasks/ACCESS-07.md) | api | `move` verb; precondition of ASSETS-03 |
+| 8 | [UPLOADS-02](tasks/UPLOADS-02.md) | api | Now unblocked (OPS-17 merged); feeds UPLOADS-08 → REPORTS-02 |
 | — | [TESTING-12](tasks/TESTING-12.md) | web | Harden current demo: live-Keycloak journeys |
 | — | [TESTING-13](tasks/TESTING-13.md) | web | Seed demo workflow + approvals journeys into `e2e-skeleton` |
 | — | [PROJECTS-07](tasks/PROJECTS-07.md) | web | Project detail page |
@@ -50,12 +51,11 @@ Critical path floor: `ASSETS-01 → FORMS-01 → FORMS-02 → INSPECTIONS-01 →
 | 1 | [FORMS-01](tasks/FORMS-01.md) | api | ITEMTYPES-01, APPROVALS-08 |
 | 2 | [FORMS-02](tasks/FORMS-02.md) | api | FORMS-01 |
 | 3 | [ITEMTYPES-02](tasks/ITEMTYPES-02.md) | api | ITEMTYPES-01 |
-| 4 | [UPLOADS-02](tasks/UPLOADS-02.md) | api | OPS-17 |
-| 5 | [UPLOADS-08](tasks/UPLOADS-08.md) | api | UPLOADS-02 |
-| 6 | [ASSETS-02](tasks/ASSETS-02.md) | api | ASSETS-01, ITEMTYPES-02 |
-| 7 | [FORMS-03](tasks/FORMS-03.md) | web | FORMS-02 |
-| 8 | [FORMS-04](tasks/FORMS-04.md) | web | FORMS-01 |
-| 9 | [ITEMTYPES-03](tasks/ITEMTYPES-03.md) | web | ITEMTYPES-02 |
+| 4 | [UPLOADS-08](tasks/UPLOADS-08.md) | api | UPLOADS-02 (started round 1) |
+| 5 | [ASSETS-02](tasks/ASSETS-02.md) | api | ASSETS-01, ITEMTYPES-02 |
+| 6 | [FORMS-03](tasks/FORMS-03.md) | web | FORMS-02 |
+| 7 | [FORMS-04](tasks/FORMS-04.md) | web | FORMS-01 |
+| 8 | [ITEMTYPES-03](tasks/ITEMTYPES-03.md) | web | ITEMTYPES-02 |
 
 ### Demo round 3 — inspections + report render
 
@@ -207,8 +207,8 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
 | [SECURITY-11](tasks/SECURITY-11.md) | Harden the public demo and deployed environments: mock-IdP secrets, refuse dev secrets, API/web edge headers + HSTS, signed+scanned deploy | security | L | IDENTITY-03, OPS-11, OPS-04, SECURITY-08 | done | ClaudeK: PR #121 (merged 2026-10-24); review 11 H1/M2/M6/M4; **merges SECURITY-12 + SECURITY-15 + SECURITY-14**; ADR 0038; owner actions complete (2026-10-24): E2E_PASS_A/B rotated, COSIGN_PRIVATE_KEY/PASSWORD added, MOCK_IDP_ALICE/BOB_PASSWORD set, PR #101 kcadm step run, four Keycloak CVE exceptions accepted |
-| [SECURITY-13](tasks/SECURITY-13.md) | Least-privilege aip_readonly: revoke session, auth and PII tables; reporting views; ADR 0012 amendment | security | M | DATABASE-07 | review | ClaudeK: PR #125; claudeK/security-13-readonly-least-privilege; review 11 M3: revoke readonly SELECT on session/auth/PII tables, non-PII reporting.* views, ADR 0012 amended |
-| [OPS-17](tasks/OPS-17.md) | Handler DB role + tenant fan-out for periodic jobs | ops | M | ARCH-05, OPS-02, OPS-13 | todo | review 11 H3/M9; **merges OPS-18**; handlers write tenant tables + emit events, then schedule upload-expiry and entitlement snapshot per active tenant; blocks UPLOADS-02; IDENTITY-04 granted `aip_jobs` narrow UPDATE on `user_invite`/`app_user` columns and INSERT on `auth_event` (ADR 0034): keep or revoke them |
+| [SECURITY-13](tasks/SECURITY-13.md) | Least-privilege aip_readonly: revoke session, auth and PII tables; reporting views; ADR 0012 amendment | security | M | DATABASE-07 | done | ClaudeK: PR #125 (merged 2026-10-24); review 11 M3: revoke readonly SELECT on session/auth/PII tables, non-PII reporting.* views, ADR 0012 amended |
+| [OPS-17](tasks/OPS-17.md) | Handler DB role + tenant fan-out for periodic jobs | ops | M | ARCH-05, OPS-02, OPS-13 | done | ClaudeK: PR #129; claudeK/ops-17-handler-role-fanout; review 11 H3/M9; **merges OPS-18**; handlers write tenant tables + emit events, then schedule upload-expiry and entitlement snapshot per active tenant; blocks UPLOADS-02; IDENTITY-04 granted `aip_jobs` narrow UPDATE on `user_invite`/`app_user` columns and INSERT on `auth_event` (ADR 0034): keep or revoke them |
 | [TESTING-12](tasks/TESTING-12.md) | Live-Keycloak session journeys + viewer-seed 403 journey (cross-tenant + axe) | testing | M | IDENTITY-03, TESTING-09 | todo | review 11 H4/M12; **merges QA-3**; owns TESTING-09's carried-forward list; un-skip shell.spec.ts:97 and projects.spec.ts:36-42; adds E2E_USER_VIEWER |
 | [TESTING-13](tasks/TESTING-13.md) | Stack proves the worker and the workflow transition journeys: real healthcheck, outbox drained and audited, outbox-lag smoke, approvals journeys | testing | M | APPROVALS-02, AUDIT-02, TESTING-09 | todo | review 11 M10: worker health is `import aip`; **merges APPROVALS-07** (ADR 0035 §9: seed a demo workflow + guard facts, run both transition journeys in `e2e-skeleton`) |
 | [PROJECTS-07](tasks/PROJECTS-07.md) | Project detail page (RecordDetail, edit, lifecycle/archive) and sites register with create/edit/delete | projects | M | DESIGN-04, PROJECTS-06 | todo | review 11 M13; AUDIT-04 mounts its History tab here |

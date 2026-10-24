@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 from datetime import date, timedelta
-from typing import Any
+from types import SimpleNamespace
+from typing import Any, cast
 from uuid import UUID
 
 import httpx
@@ -15,9 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from tests.conftest import TENANT_A_ID, TENANT_B_ID
 from tests.fixtures.postgres import TenantDb
 
+from aip.modules.ops import api as ops
 from aip.modules.tenancy.api import ensure_within_limit, requires_entitlement
 from aip.modules.tenancy.entitlements.service import EntitlementService
 from aip.modules.tenancy.entitlements.usage import UsageFigures
+from aip.modules.tenancy.jobs import snapshot_entitlements
 from aip.modules.tenancy.seed import seed
 from aip.platform.access import authenticated
 from aip.platform.http import DomainError
@@ -392,3 +395,18 @@ async def test_override_expiry_needs_a_time_zone(client: httpx.AsyncClient) -> N
         headers=CAROL,
     )
     assert response.status_code == 422
+
+
+async def test_scheduled_entitlement_snapshot_job_snapshots_this_tenant(
+    client: httpx.AsyncClient, db: TenantDb
+) -> None:
+    """OPS-17 Part B: the registered ``tenancy.entitlement_snapshot`` job (fanned out per active
+    tenant) sweeps expired overrides and upserts this tenant's usage snapshot, in its own
+    ``with_tenant`` work."""
+    job = cast("ops.JobView", SimpleNamespace(tenant_id=TENANT_A_ID))
+    async with db.with_tenant(TENANT_A_ID) as conn:
+        result = await snapshot_entitlements(conn, job)
+    assert result is not None and result.startswith("swept:")
+
+    rows = await su_fetch(db, "SELECT count(*) FROM tenant_usage WHERE tenant_id = $1", TENANT_A_ID)
+    assert rows[0][0] == 1

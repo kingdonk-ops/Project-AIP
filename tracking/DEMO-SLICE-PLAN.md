@@ -40,8 +40,8 @@ Feeder branches that must land before their consumer but do not lengthen the pat
 - **Inspection lifecycle:** APPROVALS-05 → INSPECTIONS-01
 - **Report render:** OPS-17 → UPLOADS-02 → UPLOADS-08 → REPORTS-02 (+ REPORTS-01, IDENTITY-09) → REPORTS-03
 
-**Watch item — OPS-17** is `todo`, ready now, and a hidden chokepoint: it blocks UPLOADS-02,
-REPORTS-02 and all import/reminder jobs. Start it in round 1 whatever the scope.
+**OPS-17 is done** (PR #129, merged 2026-10-24) — the former chokepoint is cleared, so UPLOADS-02,
+REPORTS-02 and all import/reminder jobs are unblocked. UPLOADS-02 can start in round 1.
 
 **Watch item — usable means screens.** The only specced inspection UI (INSPECTIONS-04) is gated on
 INSPECTIONS-03 (ITP/hold points, also the R1 midpoint that gates PLAN-P2), so a usable inspection
@@ -57,13 +57,13 @@ sprint; within a round, order by the critical path (ASSETS-01 and OPS-17 first).
 | Order | Task | Stream | Why it is here |
 |---|---|---|---|
 | 1 | ASSETS-01 | api | Critical path; unblocks every R1 module |
-| 2 | OPS-17 | api | Chokepoint: unblocks uploads, reports and import/reminder jobs |
-| 3 | ITEMTYPES-01 | api | Feeds FORMS-01 field types and asset attributes |
-| 4 | APPROVALS-08 | api | Precondition of FORMS-01 (guard evaluator + preset installer) |
-| 5 | APPROVALS-05 | api | Inspection lifecycle preset for INSPECTIONS-01 |
-| 6 | REPORTS-01 | api | Report template + HTML render contract |
-| 7 | IDENTITY-09 | api | Display-name lookup for REPORTS-03 |
-| 8 | ACCESS-07 | api | `move` verb; precondition of ASSETS-03 |
+| 2 | ITEMTYPES-01 | api | Feeds FORMS-01 field types and asset attributes |
+| 3 | APPROVALS-08 | api | Precondition of FORMS-01 (guard evaluator + preset installer) |
+| 4 | APPROVALS-05 | api | Inspection lifecycle preset for INSPECTIONS-01 |
+| 5 | REPORTS-01 | api | Report template + HTML render contract |
+| 6 | IDENTITY-09 | api | Display-name lookup for REPORTS-03 |
+| 7 | ACCESS-07 | api | `move` verb; precondition of ASSETS-03 |
+| 8 | UPLOADS-02 | api | Now unblocked (OPS-17 merged); feeds UPLOADS-08 → REPORTS-02 |
 | — | TESTING-12 | web | Harden the *current* demo: live-Keycloak journeys |
 | — | TESTING-13 | web | Seed a demo workflow + approvals journeys into `e2e-skeleton` |
 | — | PROJECTS-07 | web | Project detail page — presentable current demo |
@@ -75,12 +75,11 @@ sprint; within a round, order by the critical path (ASSETS-01 and OPS-17 first).
 | 1 | FORMS-01 | api | ITEMTYPES-01, APPROVALS-08 |
 | 2 | FORMS-02 | api | FORMS-01 (shared JSONLogic evaluator) |
 | 3 | ITEMTYPES-02 | api | ITEMTYPES-01 (schema versions) |
-| 4 | UPLOADS-02 | api | OPS-17 (scan worker) |
-| 5 | UPLOADS-08 | api | UPLOADS-02 (server-side file access) |
-| 6 | ASSETS-02 | api | ASSETS-01, ITEMTYPES-02 |
-| 7 | FORMS-03 | web | FORMS-02 (form renderer package) |
-| 8 | FORMS-04 | web | FORMS-01 (template register/detail) |
-| 9 | ITEMTYPES-03 | web | ITEMTYPES-02 (admin pages) |
+| 4 | UPLOADS-08 | api | UPLOADS-02 (started round 1) — server-side file access |
+| 5 | ASSETS-02 | api | ASSETS-01, ITEMTYPES-02 |
+| 6 | FORMS-03 | web | FORMS-02 (form renderer package) |
+| 7 | FORMS-04 | web | FORMS-01 (template register/detail) |
+| 8 | ITEMTYPES-03 | web | ITEMTYPES-02 (admin pages) |
 
 ### Round 3 — inspections + report render
 
@@ -128,6 +127,6 @@ admin), PORTAL-08 (access-expiry reminders), PORTAL-06 (witness attendance, need
 
 - Dependencies are taken from BOARD.md, which overrides the ones inside task files (AGENTS.md).
 - `done` deps as of 2026-10-24: PLAN-R1, APPROVALS-02, ACCESS-02, ACCESS-03, ARCH-07, TERMS-01,
-  DESIGN-01/03/04, UPLOADS-01, OPS-02, ARCH-05, IDENTITY-04.
+  DESIGN-01/03/04, UPLOADS-01, OPS-02, OPS-13, OPS-17 (PR #129), ARCH-05, IDENTITY-04.
 - Several R1 rows still carry "convert to Python backend per ADR 0001 before starting" — honour that
   on each before building.

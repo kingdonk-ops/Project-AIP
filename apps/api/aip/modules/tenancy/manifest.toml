@@ -48,3 +48,11 @@ version = 1
 [[events]]
 name = "tenancy.organisation_updated"
 version = 1
+
+# OPS-17 Part B (review 11 M9): the periodic entitlement run (sweep expired overrides + snapshot
+# usage), fanned out per active tenant by the OPS-13 trigger. Daily; the monthly tenant_usage upsert
+# is idempotent within the month.
+[[schedules]]
+job = "tenancy.entitlement_snapshot"
+cron = "20 2 * * *"
+period = "day"
