@@ -8,16 +8,19 @@ oversized object, a wrong content type or a different key.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from typing import Any
-from uuid import UUID
+from types import SimpleNamespace
+from typing import Any, cast
+from uuid import UUID, uuid4
 
 import httpx
-from tests.conftest import ALICE_ID, PROJECT_A1_ID, TENANT_A_ID
+from tests.conftest import ALICE_ID, PROJECT_A1_ID, TENANT_A_ID, TENANT_B_ID
 
+from aip.modules.ops import api as ops
+from aip.modules.uploads.jobs import expire_sessions
 from aip.modules.uploads.service import UploadSessionService
 from aip.platform.context import RequestContext, new_request_id, run_with_context
 
-from .conftest import ALICE, BOB, CAROL, PROJECT_A2_ID, StoreCtx, TenantDb, su_fetch
+from .conftest import ALICE, BOB, CAROL, PROJECT_A2_ID, StoreCtx, TenantDb, su_execute, su_fetch
 
 
 def _body(size: int = 1024, mime: str = "image/jpeg", **extra: Any) -> dict[str, Any]:
@@ -158,3 +161,35 @@ async def test_stale_session_expires_and_confirm_conflicts(
 
     confirmed = await client.post(f"/api/v1/uploads/sessions/{session_id}/confirm", headers=ALICE)
     assert confirmed.status_code == 409
+
+
+async def test_scheduled_expire_sessions_job_expires_only_this_tenants_stale_sessions(
+    db: TenantDb,
+) -> None:
+    """OPS-17 Part B: the registered ``uploads.expire_sessions`` job (fanned out per active tenant)
+    expires this tenant's stale sessions in its own ``with_tenant`` transaction, and RLS keeps it
+    from touching another tenant's."""
+    stale_a, stale_b = uuid4(), uuid4()
+    # Seed a stale `requested` session in each tenant (superuser, so RLS does not hide the writes).
+    await su_execute(
+        db,
+        "INSERT INTO upload_sessions (id, tenant_id, project_id, requested_by, declared_filename, "
+        "declared_mime, declared_size_bytes, mode, quarantine_key, status, expires_at) VALUES "
+        f"('{stale_a}', '{TENANT_A_ID}', '{PROJECT_A1_ID}', '{ALICE_ID}', 'a.jpg', 'image/jpeg', "
+        "1024, 'single', 'q/a', 'requested', now() - interval '1 hour'), "
+        f"('{stale_b}', '{TENANT_B_ID}', '{uuid4()}', '{uuid4()}', 'b.jpg', 'image/jpeg', "
+        "1024, 'single', 'q/b', 'requested', now() - interval '1 hour')",
+    )
+
+    job = cast("ops.JobView", SimpleNamespace(tenant_id=TENANT_A_ID))
+    async with db.with_tenant(TENANT_A_ID) as conn:
+        result = await expire_sessions(conn, job)
+    assert result == "expired:1"
+
+    rows = await su_fetch(
+        db,
+        "SELECT id::text, status FROM upload_sessions WHERE id = ANY($1::uuid[])",
+        [str(stale_a), str(stale_b)],
+    )
+    statuses = {str(r[0]): r[1] for r in rows}
+    assert statuses == {str(stale_a): "expired", str(stale_b): "requested"}

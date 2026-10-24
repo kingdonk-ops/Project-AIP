@@ -22,3 +22,10 @@ description = "Administer uploads: view any session's status and the quarantine 
 # there, together with their registered payload models and frozen schemas: ARCH-06's
 # verify_manifest_events (ADR 0029) fails boot if a manifest declares an event with no registered
 # model, and UPLOADS-01 emits nothing, so declaring them here would require speculative payloads.
+
+# OPS-17 Part B (UPLOADS-01 step 7): expire stale upload sessions, fanned out per active tenant by
+# the OPS-13 trigger. Hourly, because the presign TTL is short.
+[[schedules]]
+job = "uploads.expire_sessions"
+cron = "7 * * * *"
+period = "hour"
