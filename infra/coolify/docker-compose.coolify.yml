@@ -61,6 +61,7 @@ x-app-env: &app-env
   APP_ORIGIN: ${APP_ORIGIN:?}
   PREAUTH_COOKIE_KEY: ${PREAUTH_COOKIE_KEY:?}
   PROJECTS_CURSOR_KEY: ${PROJECTS_CURSOR_KEY:?}
+  ASSETS_CURSOR_KEY: ${ASSETS_CURSOR_KEY:?}
 
 x-migrator-url: &migrator-url postgresql://aip_owner:${AIP_OWNER_PASSWORD:?}@postgres:5432/aip
 

@@ -12,6 +12,10 @@
 #
 # Columns are otherwise filled from their type, or from a single-column CHECK IN-list.
 
+[tables.assets]
+reason = "ck_assets_path_leaf needs the ltree path's leaf label to be the row id's 32 hex digits, and ck_assets_root needs a one-label path for a parentless row; the generic seed (a random id and a fixed 'iso' path) cannot satisfy either. Seed a root row whose single-label path is its own id."
+values = { id = "'0192f3c4-0000-7000-8000-00000000000{tag}'::uuid", path = "'0192f3c400007000800000000000000{tag}'::ltree" }
+
 [tables.access_reviews]
 reason = "quarter must look like 2026-Q4 (ck_access_reviews_quarter)."
 values = { quarter = "'2026-Q4'" }
