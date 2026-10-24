@@ -13,7 +13,7 @@ COPY infra/keycloak/realm-aip.json infra/keycloak/realm-mock-idp.json \
      infra/keycloak/deployed_realms.py /src/
 RUN python3 /src/deployed_realms.py /out
 
-FROM quay.io/keycloak/keycloak:26.7.5
+FROM quay.io/keycloak/keycloak:26.8.1
 
 COPY --from=realms /out/realm-aip.json /out/realm-mock-idp.json /opt/keycloak/data/import/
 COPY infra/keycloak/themes/aip /opt/keycloak/themes/aip
