@@ -51,6 +51,36 @@ query = "syncVersion=1"
 table = "assets"
 body = '{"parentId": null, "syncVersion": 1}'
 
+["GET /api/v1/content-types/{content_type_id}"]
+table = "content_types"
+
+["PATCH /api/v1/content-types/{content_type_id}"]
+table = "content_types"
+body = '{"name": "Isolation probe", "syncVersion": 1}'
+
+["DELETE /api/v1/content-types/{content_type_id}"]
+table = "content_types"
+
+["GET /api/v1/item-categories/{category_id}"]
+table = "item_categories"
+
+["PATCH /api/v1/item-categories/{category_id}"]
+table = "item_categories"
+body = '{"name": "Isolation probe", "syncVersion": 1}'
+
+["DELETE /api/v1/item-categories/{category_id}"]
+table = "item_categories"
+
+["GET /api/v1/item-types/{item_type_id}"]
+table = "item_types"
+
+["PATCH /api/v1/item-types/{item_type_id}"]
+table = "item_types"
+body = '{"name": "Isolation probe", "syncVersion": 1}'
+
+["DELETE /api/v1/item-types/{item_type_id}"]
+table = "item_types"
+
 ["DELETE /api/v1/me/sessions/{session_id}"]
 table = "user_session"
 
