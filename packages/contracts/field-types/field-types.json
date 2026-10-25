@@ -1,0 +1,273 @@
+{
+  "fieldTypes": [
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "maxLength": {
+            "maximum": 10000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "key": "text",
+      "termKey": "item_types.field_type.text",
+      "usableIn": [
+        "attribute",
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "max": {
+            "type": "integer"
+          },
+          "min": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "key": "number",
+      "termKey": "item_types.field_type.number",
+      "usableIn": [
+        "attribute",
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "decimals": {
+            "maximum": 6,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "max": {
+            "type": "number"
+          },
+          "min": {
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "key": "decimal",
+      "termKey": "item_types.field_type.decimal",
+      "usableIn": [
+        "attribute",
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "key": "date",
+      "termKey": "item_types.field_type.date",
+      "usableIn": [
+        "attribute",
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "options": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "value": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "label"
+              ],
+              "type": "object"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "options"
+        ],
+        "type": "object"
+      },
+      "key": "dropdown",
+      "termKey": "item_types.field_type.dropdown",
+      "usableIn": [
+        "attribute",
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "options": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "value": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "label"
+              ],
+              "type": "object"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "options"
+        ],
+        "type": "object"
+      },
+      "key": "multi_select",
+      "termKey": "item_types.field_type.multi_select",
+      "usableIn": [
+        "attribute",
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "max": {
+            "type": "number"
+          },
+          "min": {
+            "type": "number"
+          },
+          "unit": {
+            "enum": [
+              "mm",
+              "bar",
+              "degC"
+            ]
+          }
+        },
+        "required": [
+          "unit"
+        ],
+        "type": "object"
+      },
+      "key": "measurement",
+      "termKey": "item_types.field_type.measurement",
+      "usableIn": [
+        "attribute",
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "key": "boolean",
+      "termKey": "item_types.field_type.boolean",
+      "usableIn": [
+        "attribute",
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "maxCount": {
+            "maximum": 20,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "key": "photo",
+      "termKey": "item_types.field_type.photo",
+      "usableIn": [
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "key": "signature",
+      "termKey": "item_types.field_type.signature",
+      "usableIn": [
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "key": "asset_ref",
+      "termKey": "item_types.field_type.asset_ref",
+      "usableIn": [
+        "attribute",
+        "form"
+      ]
+    },
+    {
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "key": "user_ref",
+      "termKey": "item_types.field_type.user_ref",
+      "usableIn": [
+        "attribute",
+        "form"
+      ]
+    }
+  ],
+  "version": 1
+}
