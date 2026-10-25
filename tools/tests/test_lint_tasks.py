@@ -211,9 +211,10 @@ def test_r1_waves_become_ready_in_order(tmp_path: Path) -> None:
         check=True,
     ).stdout
     ready = {line.split()[0] for line in out.splitlines() if line.strip()}
-    # ASSETS-01 has left `todo` (in review / merged), so it is no longer among the ready rows; the
-    # other first-wave R1 rows still prove the wave opens once its P0 dependencies are done.
-    assert {"APPROVALS-08", "ITEMTYPES-01", "REPORTS-01", "UPLOADS-08"} <= ready
+    # ASSETS-01 and ITEMTYPES-01 have left `todo` (in progress / review / merged), so they are no
+    # longer among the ready rows; the other first-wave R1 rows still prove the wave opens once its
+    # P0 dependencies are done.
+    assert {"APPROVALS-08", "REPORTS-01", "UPLOADS-08"} <= ready
     assert {"TENANCY-06", "OPS-06"} <= ready  # P0-hardening rows
     assert not ready & {
         "TENANCY-04",
