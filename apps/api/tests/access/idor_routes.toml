@@ -36,6 +36,21 @@ table = "workflow_instances"
 table = "workflow_instances"
 body = '{"action": "submit"}'
 
+["GET /api/v1/assets/{asset_id}"]
+table = "assets"
+
+["PATCH /api/v1/assets/{asset_id}"]
+table = "assets"
+body = '{"name": "Isolation probe", "syncVersion": 1}'
+
+["DELETE /api/v1/assets/{asset_id}"]
+table = "assets"
+query = "syncVersion=1"
+
+["POST /api/v1/assets/{asset_id}/move"]
+table = "assets"
+body = '{"parentId": null, "syncVersion": 1}'
+
 ["DELETE /api/v1/me/sessions/{session_id}"]
 table = "user_session"
 
