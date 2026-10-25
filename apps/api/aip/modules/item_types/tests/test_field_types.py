@@ -7,16 +7,18 @@ are checked with the same Draft 2020-12 validator the platform uses for stored s
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 from typing import Any
 
 import pytest
 from jsonschema import Draft202012Validator
 
-from aip.modules.item_types.field_types import field_types, get_field_type
+from aip.modules.item_types.field_types import SI_UNITS, field_types, get_field_type
 
 REPO_ROOT = Path(__file__).resolve().parents[6]
 CONTRACT = REPO_ROOT / "packages" / "contracts" / "field-types" / "field-types.json"
+UNITS_CONTRACT = REPO_ROOT / "packages" / "contracts" / "unit-vectors" / "units-v1.json"
 
 EXPECTED_ORDER = [
     "text",
@@ -63,6 +65,13 @@ def test_number_default_value_schema() -> None:
 
 def test_unknown_key_is_none() -> None:
     assert get_field_type("gps") is None
+
+
+def test_si_units_match_the_terms_contract() -> None:
+    """SI_UNITS is hardcoded (not read at runtime), so pin it to the TERMS-03 units contract."""
+    units = json.loads(UNITS_CONTRACT.read_text(encoding="utf-8"))["units"]
+    derived = tuple(key for key, spec in units.items() if spec["si"] == key)
+    assert derived == SI_UNITS
 
 
 def test_text_default_max_length() -> None:

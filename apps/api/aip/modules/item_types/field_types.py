@@ -13,30 +13,20 @@ satisfy. There is no English here: a type's label is the term key ``item_types.f
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache
-from pathlib import Path
 from typing import Any
 
 __all__ = ["SI_UNITS", "FieldType", "field_types", "get_field_type"]
 
-# field_types.py -> item_types -> modules -> aip -> api -> apps -> repo root.
-_CONTRACTS = Path(__file__).resolve().parents[5] / "packages" / "contracts"
 _DRAFT = "https://json-schema.org/draft/2020-12/schema"
 
-
-@cache
-def _si_units() -> tuple[str, ...]:
-    """The storage units from the units contract: those whose ``si`` is their own key."""
-    units = json.loads((_CONTRACTS / "unit-vectors" / "units-v1.json").read_text(encoding="utf-8"))[
-        "units"
-    ]
-    return tuple(key for key, spec in units.items() if spec["si"] == key)
-
-
-SI_UNITS: tuple[str, ...] = _si_units()
+# The SI storage units a ``measurement`` config may name: the TERMS-03 units contract's entries
+# whose ``si`` is their own key (``packages/contracts/unit-vectors/units-v1.json``). Hardcoded
+# like ``aip.modules.terms.units.UNITS`` rather than read at runtime, because the contract is a
+# repo file the installed package does not ship; ``test_field_types`` asserts this matches it.
+SI_UNITS: tuple[str, ...] = ("mm", "bar", "degC")
 
 
 @dataclass(frozen=True, slots=True)
