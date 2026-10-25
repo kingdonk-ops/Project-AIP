@@ -7,8 +7,10 @@ import { platformDeadLetterRoute } from "./routes/_app/admin/platform/events/dea
 import { platformEventDetailRoute } from "./routes/_app/admin/platform/events/$eventName";
 import { platformEventsRoute } from "./routes/_app/admin/platform/events/index";
 import { homeRoute } from "./routes/_app/index";
+import { projectDetailRoute } from "./routes/_app/projects/$projectId";
 import { projectsIndexRoute } from "./routes/_app/projects/index";
 import { projectsNewRoute } from "./routes/_app/projects/new";
+import { sitesIndexRoute } from "./routes/_app/sites/index";
 import { billingRoute } from "./routes/_app/settings/billing";
 import { sessionsRoute } from "./routes/_app/settings/profile/sessions";
 import { loginRoute } from "./routes/login";
@@ -32,7 +34,7 @@ const devRoutes = import.meta.env.PROD
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, sessionsRoute, billingRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute]),
+  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute]),
   ...devRoutes,
 ]);
 
