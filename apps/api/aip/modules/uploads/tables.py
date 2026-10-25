@@ -12,7 +12,7 @@ needs a schema change (data-model note). ``file_id`` is nullable with no FK yet 
 
 from __future__ import annotations
 
-from sqlalchemy import Column, Integer, Numeric, Table, Text, text
+from sqlalchemy import Boolean, Column, Integer, Numeric, Table, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 
 from aip.platform.db.metadata import metadata
@@ -43,4 +43,41 @@ upload_sessions = Table(
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", TIMESTAMP(timezone=True), nullable=True),
+)
+
+# UPLOADS-02: a released, scanned file. Created only by the scan pipeline's ``release`` step, never
+# by a request. Tenant-scoped with soft delete and FORCE RLS; ``aip_app`` has no DELETE.
+stored_files = Table(
+    "stored_files",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("tenant_id", UUID(as_uuid=True), nullable=False),
+    Column("project_id", UUID(as_uuid=True), nullable=False),
+    Column("uploaded_by", UUID(as_uuid=True), nullable=False),
+    Column("scan_status", Text, nullable=False),  # quarantined | clean | failed
+    Column("preview_status", Text, nullable=False),  # pending | ready | none | failed
+    Column("detected_mime", Text, nullable=False),
+    Column("size_bytes", Numeric, nullable=False),
+    Column("sha256", Text, nullable=False),
+    Column("storage_key", Text, nullable=False),
+    Column("legal_hold", Boolean, nullable=False, server_default=text("false")),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", TIMESTAMP(timezone=True), nullable=True),
+)
+
+# UPLOADS-02: one row per scan stage, append-only. ``aip_app`` may INSERT and SELECT but never
+# UPDATE/DELETE/TRUNCATE (evidence cannot be altered), enforced by the revision's REVOKE.
+scan_results = Table(
+    "scan_results",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("tenant_id", UUID(as_uuid=True), nullable=False),
+    Column("session_id", UUID(as_uuid=True), nullable=False),
+    Column("file_id", UUID(as_uuid=True), nullable=True),
+    Column("stage", Text, nullable=False),  # size_cap | magic_bytes | ratio_cap | clamav | rescan
+    Column("outcome", Text, nullable=False),  # pass | fail | error
+    Column("signature_db_version", Text, nullable=True),
+    Column("detail", JSONB, nullable=True),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
 )
