@@ -29,6 +29,14 @@ from aip.modules.approvals.guards.context_providers import (
     unregister_guard_context_provider,
     unregister_record_resolver,
 )
+from aip.modules.approvals.guards.jsonlogic import (
+    ALLOWED_OPERATORS,
+    GuardError,
+    evaluate_guard,
+    truthy,
+    validate_guard,
+)
+from aip.modules.approvals.presets import PresetError
 from aip.modules.approvals.schemas import (
     StateSpec,
     TransitionSpec,
@@ -48,13 +56,16 @@ from aip.modules.approvals.transition import (
 from aip.platform.access import PolicyService
 
 __all__ = [
+    "ALLOWED_OPERATORS",
     "Actor",
     "ApprovalsApi",
     "Availability",
     "GuardContextProvider",
+    "GuardError",
     "History",
     "InstanceView",
     "NoActiveDefinitionError",
+    "PresetError",
     "RecordRef",
     "RecordResolver",
     "StateSpec",
@@ -64,10 +75,13 @@ __all__ = [
     "WorkflowDefinitionSpec",
     "WorkflowInstance",
     "allowed_actions",
+    "evaluate_guard",
     "register_guard_context_provider",
     "register_record_resolver",
+    "truthy",
     "unregister_guard_context_provider",
     "unregister_record_resolver",
+    "validate_guard",
 ]
 
 _definitions = DefinitionsService()
@@ -91,6 +105,16 @@ class ApprovalsApi:
     ) -> WorkflowDefinition:
         """The project's active definition for ``record_type``, else the tenant-wide one."""
         return await _definitions.get_active_definition(conn, record_type, project_id)
+
+    async def install_preset(
+        self, conn: AsyncConnection, preset_key: str, *, project_id: UUID | None = None
+    ) -> WorkflowDefinition:
+        """Publish the ``config/workflows`` preset ``preset_key`` idempotently (APPROVALS-08).
+
+        Host modules (issues, inspections) ship their lifecycle as data and call this to install
+        it. Returns the active definition unchanged when it already matches the preset.
+        """
+        return await _definitions.install_preset(conn, preset_key, project_id=project_id)
 
     async def start_instance(
         self,
