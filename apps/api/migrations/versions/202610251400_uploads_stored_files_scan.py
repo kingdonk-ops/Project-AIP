@@ -46,13 +46,16 @@ def upgrade() -> None:
         CHECK (preview_status IN ('pending', 'ready', 'none', 'failed')),
       ADD CONSTRAINT uq_stored_files_id_tenant_id UNIQUE (id, tenant_id);
 
-    CREATE INDEX ix_stored_files_tenant_id_project_id ON stored_files (tenant_id, project_id);
-
     -- Tenant-safe: a session can only point at a released file in its own tenant.
     ALTER TABLE upload_sessions
       ADD CONSTRAINT fk_upload_sessions_file_id
       FOREIGN KEY (file_id, tenant_id) REFERENCES stored_files (id, tenant_id);
     """)
+
+    # A released file belongs to a project (ACCESS-03): a project-scoped user may see only the files
+    # on a project they hold. This RESTRICTIVE policy ANDs with tenant isolation and also creates
+    # ix_stored_files_tenant_id_project_id, so no separate index is declared above.
+    op.execute(render_template("project_scoped_policy", table="stored_files"))
 
     # scan_results is append-only and not partitioned: one short-lived row per stage per upload,
     # low volume, so it needs no monthly partitioning. RLS fails closed exactly as the templates do.

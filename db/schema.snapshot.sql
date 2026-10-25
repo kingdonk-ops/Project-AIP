@@ -2620,6 +2620,9 @@ CREATE POLICY tenant_isolation ON public.signoff_policy USING ((tenant_id = (NUL
 -- Name: sites tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.sites USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: stored_files project_scope; Type: POLICY; Schema: public
+CREATE POLICY project_scope ON public.stored_files AS RESTRICTIVE TO aip_app USING (public.access_project_visible(project_id)) WITH CHECK (public.access_project_visible(project_id));
+
 -- Name: stored_files tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.stored_files USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
