@@ -3,6 +3,7 @@ export * from './access/access.zod';
 export * from './approvals/approvals.zod';
 export * from './assets/assets.zod';
 export * from './identity/identity.zod';
+export * from './item-types/item-types.zod';
 export * from './jobs/jobs.zod';
 export * from './platform/platform.zod';
 export * from './projects/projects.zod';

@@ -23,6 +23,9 @@ export type PermissionCode =
   | "identity.signoff_policy.read"
   | "identity.user.manage"
   | "identity.user.read"
+  | "item_type.edit"
+  | "item_type.manage"
+  | "item_type.view"
   | "ops.jobs.admin"
   | "platform.events.manage"
   | "platform.tenants.manage"
@@ -62,6 +65,9 @@ export const PERMISSIONS = {
   "identity.signoff_policy.read": { module: "identity", privileged: false },
   "identity.user.manage": { module: "identity", privileged: true },
   "identity.user.read": { module: "identity", privileged: false },
+  "item_type.edit": { module: "item_types", privileged: false },
+  "item_type.manage": { module: "item_types", privileged: false },
+  "item_type.view": { module: "item_types", privileged: false },
   "ops.jobs.admin": { module: "ops", privileged: false },
   "platform.events.manage": { module: "ops", privileged: true },
   "platform.tenants.manage": { module: "ops", privileged: true },

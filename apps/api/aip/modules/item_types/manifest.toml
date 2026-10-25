@@ -1,0 +1,35 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+id = "item_types"
+context = "item_types"
+depends_on = ["tenancy"]
+permission_namespaces = ["item_type"]
+subscribes = []
+settings = []
+term_keys = [
+  "item_types.field_type.text",
+  "item_types.field_type.number",
+  "item_types.field_type.decimal",
+  "item_types.field_type.date",
+  "item_types.field_type.dropdown",
+  "item_types.field_type.multi_select",
+  "item_types.field_type.measurement",
+  "item_types.field_type.boolean",
+  "item_types.field_type.photo",
+  "item_types.field_type.signature",
+  "item_types.field_type.asset_ref",
+  "item_types.field_type.user_ref",
+]
+
+# ADR 0027 verbs: view -> view level, edit -> edit level, manage -> admin level, so the default
+# roles pick these up at the right access-matrix levels on the next `aip-access seed-roles` run.
+[[permissions]]
+code = "item_type.view"
+description = "Read content types, categories, item types and the field-type registry"
+
+[[permissions]]
+code = "item_type.edit"
+description = "Create, edit and delete item categories and item types"
+
+[[permissions]]
+code = "item_type.manage"
+description = "Create, edit, reorder and delete content types"

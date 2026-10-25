@@ -27,6 +27,9 @@
                 "identity.signoff_policy.read",
                 "identity.user.manage",
                 "identity.user.read",
+                "item_type.edit",
+                "item_type.manage",
+                "item_type.view",
                 "ops.jobs.admin",
                 "platform.events.manage",
                 "platform.tenants.manage",
@@ -786,6 +789,392 @@
         "title": "AvailableTransition",
         "type": "object"
       },
+      "CategoryCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "applicableFor": {
+            "default": "any",
+            "enum": [
+              "any",
+              "item",
+              "module"
+            ],
+            "title": "Applicablefor",
+            "type": "string"
+          },
+          "contentTypeId": {
+            "format": "uuid",
+            "title": "Contenttypeid",
+            "type": "string"
+          },
+          "key": {
+            "pattern": "^[a-z][a-z0-9_]{0,62}$",
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "sortOrder": {
+            "default": 0,
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Sortorder",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "contentTypeId",
+          "key",
+          "name"
+        ],
+        "title": "CategoryCreate",
+        "type": "object"
+      },
+      "CategoryOut": {
+        "properties": {
+          "applicableFor": {
+            "enum": [
+              "any",
+              "item",
+              "module"
+            ],
+            "title": "Applicablefor",
+            "type": "string"
+          },
+          "contentTypeId": {
+            "format": "uuid",
+            "title": "Contenttypeid",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sortOrder": {
+            "title": "Sortorder",
+            "type": "integer"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "contentTypeId",
+          "key",
+          "name",
+          "applicableFor",
+          "sortOrder",
+          "syncVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "CategoryOut",
+        "type": "object"
+      },
+      "CategoryPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CategoryPage",
+        "type": "object"
+      },
+      "CategoryUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "applicableFor": {
+            "anyOf": [
+              {
+                "enum": [
+                  "any",
+                  "item",
+                  "module"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applicablefor"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "sortOrder": {
+            "anyOf": [
+              {
+                "maximum": 1000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sortorder"
+          },
+          "syncVersion": {
+            "minimum": 1.0,
+            "title": "Syncversion",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "syncVersion"
+        ],
+        "title": "CategoryUpdate",
+        "type": "object"
+      },
+      "ContentTypeCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "icon": {
+            "default": "folder",
+            "pattern": "^[a-z][a-z0-9-]{0,39}$",
+            "title": "Icon",
+            "type": "string"
+          },
+          "key": {
+            "pattern": "^[a-z][a-z0-9_]{0,62}$",
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "showInNav": {
+            "default": true,
+            "title": "Showinnav",
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "default": 0,
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Sortorder",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "name"
+        ],
+        "title": "ContentTypeCreate",
+        "type": "object"
+      },
+      "ContentTypeOrder": {
+        "additionalProperties": false,
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "ContentTypeOrder",
+        "type": "object"
+      },
+      "ContentTypeOut": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "icon": {
+            "title": "Icon",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "isSystem": {
+            "title": "Issystem",
+            "type": "boolean"
+          },
+          "itemTypeCount": {
+            "title": "Itemtypecount",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "showInNav": {
+            "title": "Showinnav",
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "title": "Sortorder",
+            "type": "integer"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "name",
+          "icon",
+          "sortOrder",
+          "showInNav",
+          "isSystem",
+          "itemTypeCount",
+          "syncVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "ContentTypeOut",
+        "type": "object"
+      },
+      "ContentTypePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ContentTypeOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ContentTypePage",
+        "type": "object"
+      },
+      "ContentTypeUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "icon": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z][a-z0-9-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "showInNav": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Showinnav"
+          },
+          "sortOrder": {
+            "anyOf": [
+              {
+                "maximum": 1000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sortorder"
+          },
+          "syncVersion": {
+            "minimum": 1.0,
+            "title": "Syncversion",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "syncVersion"
+        ],
+        "title": "ContentTypeUpdate",
+        "type": "object"
+      },
       "DbEstimate": {
         "additionalProperties": false,
         "properties": {
@@ -1436,6 +1825,59 @@
         "title": "FeatureOut",
         "type": "object"
       },
+      "FieldTypeOut": {
+        "properties": {
+          "configSchema": {
+            "additionalProperties": true,
+            "title": "Configschema",
+            "type": "object"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "termKey": {
+            "title": "Termkey",
+            "type": "string"
+          },
+          "usableIn": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Usablein",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "termKey",
+          "usableIn",
+          "configSchema"
+        ],
+        "title": "FieldTypeOut",
+        "type": "object"
+      },
+      "FieldTypesOut": {
+        "properties": {
+          "fieldTypes": {
+            "items": {
+              "$ref": "#/components/schemas/FieldTypeOut"
+            },
+            "title": "Fieldtypes",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "fieldTypes"
+        ],
+        "title": "FieldTypesOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1825,6 +2267,224 @@
           "createdAt"
         ],
         "title": "InviteOut",
+        "type": "object"
+      },
+      "ItemTypeCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "allowsComponents": {
+            "default": false,
+            "title": "Allowscomponents",
+            "type": "boolean"
+          },
+          "categoryId": {
+            "format": "uuid",
+            "title": "Categoryid",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "isComponent": {
+            "default": false,
+            "title": "Iscomponent",
+            "type": "boolean"
+          },
+          "key": {
+            "pattern": "^[a-z][a-z0-9_]{0,62}$",
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "categoryId",
+          "key",
+          "name"
+        ],
+        "title": "ItemTypeCreate",
+        "type": "object"
+      },
+      "ItemTypeErrorBody": {
+        "additionalProperties": true,
+        "description": "A domain error: a stable ``code`` (``CONTENT_TYPE_IN_USE``, ``LIMIT_REACHED``, ...).",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "ItemTypeErrorBody",
+        "type": "object"
+      },
+      "ItemTypeOut": {
+        "properties": {
+          "allowsComponents": {
+            "title": "Allowscomponents",
+            "type": "boolean"
+          },
+          "categoryId": {
+            "format": "uuid",
+            "title": "Categoryid",
+            "type": "string"
+          },
+          "contentTypeId": {
+            "format": "uuid",
+            "title": "Contenttypeid",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "isComponent": {
+            "title": "Iscomponent",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "categoryId",
+          "contentTypeId",
+          "key",
+          "name",
+          "description",
+          "isComponent",
+          "allowsComponents",
+          "syncVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "ItemTypeOut",
+        "type": "object"
+      },
+      "ItemTypePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemTypeOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ItemTypePage",
+        "type": "object"
+      },
+      "ItemTypeUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "allowsComponents": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowscomponents"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "isComponent": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iscomponent"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "syncVersion": {
+            "minimum": 1.0,
+            "title": "Syncversion",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "syncVersion"
+        ],
+        "title": "ItemTypeUpdate",
         "type": "object"
       },
       "JobErrorBody": {
@@ -3281,6 +3941,9 @@
                 "identity.signoff_policy.read",
                 "identity.user.manage",
                 "identity.user.read",
+                "item_type.edit",
+                "item_type.manage",
+                "item_type.view",
                 "ops.jobs.admin",
                 "platform.events.manage",
                 "platform.tenants.manage",
@@ -3405,6 +4068,9 @@
                 "identity.signoff_policy.read",
                 "identity.user.manage",
                 "identity.user.read",
+                "item_type.edit",
+                "item_type.manage",
+                "item_type.view",
                 "ops.jobs.admin",
                 "platform.events.manage",
                 "platform.tenants.manage",
@@ -3496,6 +4162,9 @@
                     "identity.signoff_policy.read",
                     "identity.user.manage",
                     "identity.user.read",
+                    "item_type.edit",
+                    "item_type.manage",
+                    "item_type.view",
                     "ops.jobs.admin",
                     "platform.events.manage",
                     "platform.tenants.manage",
@@ -6778,6 +7447,344 @@
         ]
       }
     },
+    "/api/v1/content-types": {
+      "get": {
+        "operationId": "item_types_content_types_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "showInNav",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Showinnav"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentTypePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Content Types",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "post": {
+        "operationId": "item_types_content_types_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentTypeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentTypeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Create Content Type",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
+    "/api/v1/content-types/order": {
+      "put": {
+        "operationId": "item_types_content_types_order",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentTypeOrder"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentTypePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Order Content Types",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
+    "/api/v1/content-types/{content_type_id}": {
+      "delete": {
+        "operationId": "item_types_content_types_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "content_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Content Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Content Type",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "get": {
+        "operationId": "item_types_content_types_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "content_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Content Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentTypeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Content Type",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "patch": {
+        "operationId": "item_types_content_types_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "content_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Content Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentTypeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentTypeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Update Content Type",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
+    "/api/v1/field-types": {
+      "get": {
+        "operationId": "item_types_field_types",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldTypesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Field Types",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "platform_health",
@@ -7340,6 +8347,608 @@
         "summary": "Reset Mfa Route",
         "tags": [
           "identity"
+        ]
+      }
+    },
+    "/api/v1/item-categories": {
+      "get": {
+        "operationId": "item_types_categories_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "contentTypeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Contenttypeid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Categories",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "post": {
+        "operationId": "item_types_categories_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Create Category",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
+    "/api/v1/item-categories/{category_id}": {
+      "delete": {
+        "operationId": "item_types_categories_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "category_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Category Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Category",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "get": {
+        "operationId": "item_types_categories_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "category_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Category Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Category",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "patch": {
+        "operationId": "item_types_categories_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "category_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Category Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Update Category",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
+    "/api/v1/item-types": {
+      "get": {
+        "operationId": "item_types_item_types_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "contentTypeId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Contenttypeid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "categoryId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Categoryid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Item Types",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "post": {
+        "operationId": "item_types_item_types_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemTypeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Create Item Type",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
+    "/api/v1/item-types/{item_type_id}": {
+      "delete": {
+        "operationId": "item_types_item_types_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Item Type",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "get": {
+        "operationId": "item_types_item_types_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Item Type",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "patch": {
+        "operationId": "item_types_item_types_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemTypeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Update Item Type",
+        "tags": [
+          "item_types"
         ]
       }
     },

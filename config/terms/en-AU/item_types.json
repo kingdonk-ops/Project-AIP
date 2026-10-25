@@ -1,0 +1,14 @@
+{
+  "item_types.field_type.text": "Text",
+  "item_types.field_type.number": "Number",
+  "item_types.field_type.decimal": "Decimal",
+  "item_types.field_type.date": "Date",
+  "item_types.field_type.dropdown": "Dropdown",
+  "item_types.field_type.multi_select": "Multi-select",
+  "item_types.field_type.measurement": "Measurement",
+  "item_types.field_type.boolean": "Yes/No",
+  "item_types.field_type.photo": "Photo",
+  "item_types.field_type.signature": "Signature",
+  "item_types.field_type.asset_ref": "Asset reference",
+  "item_types.field_type.user_ref": "User reference"
+}

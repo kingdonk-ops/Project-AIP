@@ -250,6 +250,10 @@ GRANT INSERT ON TABLE public.auth_event TO aip_jobs;
 -- Name: TABLE breach_incidents; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.breach_incidents TO aip_app;
 
+-- Name: TABLE content_types; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.content_types TO aip_app;
+GRANT SELECT ON TABLE public.content_types TO aip_readonly;
+
 -- Name: TABLE control_records; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.control_records TO aip_app;
 GRANT SELECT ON TABLE public.control_records TO aip_readonly;
@@ -275,6 +279,14 @@ GRANT SELECT ON TABLE public.evidence_items TO aip_readonly;
 -- Name: TABLE glossary_entry; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.glossary_entry TO aip_app;
 GRANT SELECT ON TABLE public.glossary_entry TO aip_readonly;
+
+-- Name: TABLE item_categories; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.item_categories TO aip_app;
+GRANT SELECT ON TABLE public.item_categories TO aip_readonly;
+
+-- Name: TABLE item_types; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.item_types TO aip_app;
+GRANT SELECT ON TABLE public.item_types TO aip_readonly;
 
 -- Name: TABLE job_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.job_events TO aip_app;
@@ -489,6 +501,14 @@ ALTER TABLE ONLY public.auth_event
 ALTER TABLE ONLY public.breach_incidents
     ADD CONSTRAINT pk_breach_incidents PRIMARY KEY (id);
 
+-- Name: content_types pk_content_types; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.content_types
+    ADD CONSTRAINT pk_content_types PRIMARY KEY (id);
+
+-- Name: content_types uq_content_types_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.content_types
+    ADD CONSTRAINT uq_content_types_id_tenant_id UNIQUE (id, tenant_id);
+
 -- Name: control_records pk_control_records; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.control_records
     ADD CONSTRAINT pk_control_records PRIMARY KEY (id);
@@ -520,6 +540,22 @@ ALTER TABLE ONLY public.evidence_items_default
 -- Name: glossary_entry pk_glossary_entry; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.glossary_entry
     ADD CONSTRAINT pk_glossary_entry PRIMARY KEY (id);
+
+-- Name: item_categories pk_item_categories; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.item_categories
+    ADD CONSTRAINT pk_item_categories PRIMARY KEY (id);
+
+-- Name: item_categories uq_item_categories_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.item_categories
+    ADD CONSTRAINT uq_item_categories_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: item_types pk_item_types; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.item_types
+    ADD CONSTRAINT pk_item_types PRIMARY KEY (id);
+
+-- Name: item_types uq_item_types_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.item_types
+    ADD CONSTRAINT uq_item_types_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: job_events pk_job_events; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
@@ -817,6 +853,14 @@ ALTER TABLE ONLY public.auth_event
 -- Name: evidence_items fk_evidence_items_control_id_tenant_id_control_records; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE public.evidence_items
     ADD CONSTRAINT fk_evidence_items_control_id_tenant_id_control_records FOREIGN KEY (control_id, tenant_id) REFERENCES public.control_records(id, tenant_id);
+
+-- Name: item_categories fk_item_categories_content_type; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.item_categories
+    ADD CONSTRAINT fk_item_categories_content_type FOREIGN KEY (content_type_id, tenant_id) REFERENCES public.content_types(id, tenant_id);
+
+-- Name: item_types fk_item_types_category; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.item_types
+    ADD CONSTRAINT fk_item_types_category FOREIGN KEY (category_id, tenant_id) REFERENCES public.item_categories(id, tenant_id);
 
 -- Name: job_events fk_job_events_job_id_tenant_id_jobs; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
@@ -1991,6 +2035,9 @@ CREATE INDEX ix_breach_incidents_tenant_id_assessment_due_at ON public.breach_in
 -- Name: ix_breach_incidents_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_breach_incidents_tenant_id_status ON public.breach_incidents USING btree (tenant_id, status);
 
+-- Name: ix_content_types_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_content_types_tenant_id ON public.content_types USING btree (tenant_id);
+
 -- Name: ix_control_records_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_control_records_tenant_id ON public.control_records USING btree (tenant_id);
 
@@ -2032,6 +2079,18 @@ CREATE INDEX ix_glossary_entry_tenant_id_abbreviation ON public.glossary_entry U
 
 -- Name: ix_glossary_entry_tenant_id_neutral_concept_code; Type: INDEX; Schema: public
 CREATE INDEX ix_glossary_entry_tenant_id_neutral_concept_code ON public.glossary_entry USING btree (tenant_id, neutral_concept_code);
+
+-- Name: ix_item_categories_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_item_categories_tenant_id ON public.item_categories USING btree (tenant_id);
+
+-- Name: ix_item_categories_tenant_id_content_type_id_sort_order; Type: INDEX; Schema: public
+CREATE INDEX ix_item_categories_tenant_id_content_type_id_sort_order ON public.item_categories USING btree (tenant_id, content_type_id, sort_order);
+
+-- Name: ix_item_types_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_item_types_tenant_id ON public.item_types USING btree (tenant_id);
+
+-- Name: ix_item_types_tenant_id_category_id; Type: INDEX; Schema: public
+CREATE INDEX ix_item_types_tenant_id_category_id ON public.item_types USING btree (tenant_id, category_id);
 
 -- Name: ix_job_events_tenant_id_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_job_events_tenant_id_occurred_at ON public.job_events USING btree (tenant_id, occurred_at);
@@ -2279,8 +2338,17 @@ CREATE UNIQUE INDEX uq_assets_tenant_id_upper_tag_number ON public.assets USING 
 -- Name: uq_audit_log_tenant_id_source_event_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_audit_log_tenant_id_source_event_id ON public.audit_log USING btree (tenant_id, source_event_id) WHERE (source_event_id IS NOT NULL);
 
+-- Name: uq_content_types_tenant_id_key; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_content_types_tenant_id_key ON public.content_types USING btree (tenant_id, key) WHERE (deleted_at IS NULL);
+
 -- Name: uq_control_records_tenant_id_control_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_control_records_tenant_id_control_key ON public.control_records USING btree (tenant_id, control_key) WHERE (deleted_at IS NULL);
+
+-- Name: uq_item_categories_tenant_id_content_type_id_key; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_item_categories_tenant_id_content_type_id_key ON public.item_categories USING btree (tenant_id, content_type_id, key) WHERE (deleted_at IS NULL);
+
+-- Name: uq_item_types_tenant_id_key; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_item_types_tenant_id_key ON public.item_types USING btree (tenant_id, key) WHERE (deleted_at IS NULL);
 
 -- Name: uq_jobs_tenant_id_job_type_idempotency_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs USING btree (tenant_id, job_type, idempotency_key) WHERE (idempotency_key IS NOT NULL);
@@ -2426,6 +2494,9 @@ CREATE POLICY tenant_isolation ON public.auth_event USING ((tenant_id = (NULLIF(
 -- Name: breach_incidents tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.breach_incidents USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: content_types tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.content_types USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: control_records tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.control_records USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -2455,6 +2526,12 @@ CREATE POLICY platform_read ON public.glossary_entry FOR SELECT USING ((tenant_i
 
 -- Name: glossary_entry tenant_write; Type: POLICY; Schema: public
 CREATE POLICY tenant_write ON public.glossary_entry USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
+
+-- Name: item_categories tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.item_categories USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: item_types tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.item_types USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: job_events tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.job_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -2615,6 +2692,9 @@ ALTER TABLE public.auth_event ENABLE ROW LEVEL SECURITY;
 -- Name: breach_incidents; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.breach_incidents ENABLE ROW LEVEL SECURITY;
 
+-- Name: content_types; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.content_types ENABLE ROW LEVEL SECURITY;
+
 -- Name: control_records; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.control_records ENABLE ROW LEVEL SECURITY;
 
@@ -2629,6 +2709,12 @@ ALTER TABLE public.evidence_items ENABLE ROW LEVEL SECURITY;
 
 -- Name: glossary_entry; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.glossary_entry ENABLE ROW LEVEL SECURITY;
+
+-- Name: item_categories; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.item_categories ENABLE ROW LEVEL SECURITY;
+
+-- Name: item_types; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.item_types ENABLE ROW LEVEL SECURITY;
 
 -- Name: job_events; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.job_events ENABLE ROW LEVEL SECURITY;
@@ -3018,6 +3104,30 @@ ALTER TABLE ONLY public.breach_incidents FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.breach_incidents OWNER TO aip_owner;
 
+-- Name: content_types; Type: TABLE; Schema: public
+CREATE TABLE public.content_types (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    key text NOT NULL,
+    name text NOT NULL,
+    icon text DEFAULT 'folder'::text NOT NULL,
+    sort_order integer DEFAULT 0 NOT NULL,
+    show_in_nav boolean DEFAULT true NOT NULL,
+    is_system boolean DEFAULT false NOT NULL,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_content_types_icon CHECK ((icon ~ '^[a-z][a-z0-9-]{0,39}$'::text)),
+    CONSTRAINT ck_content_types_key CHECK ((key ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
+    CONSTRAINT ck_content_types_name CHECK ((name <> ''::text)),
+    CONSTRAINT ck_content_types_sync_version CHECK ((sync_version >= 1))
+);
+
+ALTER TABLE ONLY public.content_types FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.content_types OWNER TO aip_owner;
+
 -- Name: control_records; Type: TABLE; Schema: public
 CREATE TABLE public.control_records (
     id uuid NOT NULL,
@@ -3170,6 +3280,52 @@ CREATE TABLE public.glossary_entry (
 ALTER TABLE ONLY public.glossary_entry FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.glossary_entry OWNER TO aip_owner;
+
+-- Name: item_categories; Type: TABLE; Schema: public
+CREATE TABLE public.item_categories (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    content_type_id uuid NOT NULL,
+    key text NOT NULL,
+    name text NOT NULL,
+    applicable_for text DEFAULT 'any'::text NOT NULL,
+    sort_order integer DEFAULT 0 NOT NULL,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_item_categories_applicable_for CHECK ((applicable_for = ANY (ARRAY['any'::text, 'item'::text, 'module'::text]))),
+    CONSTRAINT ck_item_categories_key CHECK ((key ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
+    CONSTRAINT ck_item_categories_name CHECK ((name <> ''::text)),
+    CONSTRAINT ck_item_categories_sync_version CHECK ((sync_version >= 1))
+);
+
+ALTER TABLE ONLY public.item_categories FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.item_categories OWNER TO aip_owner;
+
+-- Name: item_types; Type: TABLE; Schema: public
+CREATE TABLE public.item_types (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    category_id uuid NOT NULL,
+    key text NOT NULL,
+    name text NOT NULL,
+    description text,
+    is_component boolean DEFAULT false NOT NULL,
+    allows_components boolean DEFAULT false NOT NULL,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_item_types_key CHECK ((key ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
+    CONSTRAINT ck_item_types_name CHECK ((name <> ''::text)),
+    CONSTRAINT ck_item_types_sync_version CHECK ((sync_version >= 1))
+);
+
+ALTER TABLE ONLY public.item_types FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.item_types OWNER TO aip_owner;
 
 -- Name: job_events; Type: TABLE; Schema: public
 CREATE TABLE public.job_events (
