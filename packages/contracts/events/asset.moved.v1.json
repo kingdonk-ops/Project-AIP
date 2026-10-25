@@ -1,0 +1,56 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assetId": {
+      "format": "uuid",
+      "title": "Assetid",
+      "type": "string"
+    },
+    "fromParentId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fromparentid"
+    },
+    "fromPath": {
+      "title": "Frompath",
+      "type": "string"
+    },
+    "movedCount": {
+      "title": "Movedcount",
+      "type": "integer"
+    },
+    "toParentId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Toparentid"
+    },
+    "toPath": {
+      "title": "Topath",
+      "type": "string"
+    }
+  },
+  "required": [
+    "assetId",
+    "fromPath",
+    "toPath",
+    "movedCount"
+  ],
+  "title": "AssetMovedEvent",
+  "type": "object"
+}

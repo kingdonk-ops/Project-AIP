@@ -1,0 +1,14 @@
+{
+  "assets.nav.title": "Assets",
+  "assets.field.name": "Name",
+  "assets.field.tag_number": "Tag Number",
+  "assets.field.internal_tag": "Internal tag",
+  "assets.field.parent": "Parent",
+  "assets.error.parent_not_found": "That parent asset no longer exists.",
+  "assets.error.tree_too_deep": "The asset tree cannot be more than 15 levels deep.",
+  "assets.error.tag_number_in_use": "That Tag Number is already used by another asset.",
+  "assets.error.version_conflict": "This asset changed since you opened it. Reload and try again.",
+  "assets.error.path_cycle": "An asset cannot be moved beneath itself.",
+  "assets.error.has_children": "Remove or move the child assets before deleting this one.",
+  "assets.error.invalid_cursor": "This page link is no longer valid. Start from the first page."
+}

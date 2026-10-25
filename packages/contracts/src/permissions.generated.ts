@@ -12,6 +12,11 @@ export type PermissionCode =
   | "approvals.design"
   | "approvals.start"
   | "approvals.view"
+  | "asset.create"
+  | "asset.delete"
+  | "asset.move"
+  | "asset.update"
+  | "asset.view"
   | "audit.activity.view"
   | "audit.log.read"
   | "identity.signoff_policy.manage"
@@ -46,6 +51,11 @@ export const PERMISSIONS = {
   "approvals.design": { module: "approvals", privileged: false },
   "approvals.start": { module: "approvals", privileged: false },
   "approvals.view": { module: "approvals", privileged: false },
+  "asset.create": { module: "assets", privileged: false },
+  "asset.delete": { module: "assets", privileged: false },
+  "asset.move": { module: "assets", privileged: false },
+  "asset.update": { module: "assets", privileged: false },
+  "asset.view": { module: "assets", privileged: false },
   "audit.activity.view": { module: "audit", privileged: false },
   "audit.log.read": { module: "audit", privileged: false },
   "identity.signoff_policy.manage": { module: "identity", privileged: true },

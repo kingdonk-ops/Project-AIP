@@ -1,0 +1,57 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assetId": {
+      "format": "uuid",
+      "title": "Assetid",
+      "type": "string"
+    },
+    "internalTag": {
+      "title": "Internaltag",
+      "type": "string"
+    },
+    "parentId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parentid"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason"
+    },
+    "tagNumber": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tagnumber"
+    }
+  },
+  "required": [
+    "assetId",
+    "internalTag"
+  ],
+  "title": "AssetDeletedEvent",
+  "type": "object"
+}

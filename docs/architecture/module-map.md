@@ -10,13 +10,14 @@ Regenerate with `uv run python tools/gen_module_map.py`.
 | 1 | `audit` | audit | none |
 | 2 | `security` | security | none |
 | 3 | `tenancy` | tenancy | none |
-| 4 | `ops` | platform | `tenancy` |
-| 5 | `identity` | identity | `ops`, `tenancy` |
-| 6 | `projects` | projects | `tenancy` |
-| 7 | `access` | identity | `identity`, `projects`, `tenancy` |
-| 8 | `approvals` | approvals | `access`, `identity`, `tenancy` |
-| 9 | `terms` | terms | none |
-| 10 | `uploads` | uploads | `projects`, `tenancy` |
+| 4 | `assets` | assets | `tenancy` |
+| 5 | `ops` | platform | `tenancy` |
+| 6 | `identity` | identity | `ops`, `tenancy` |
+| 7 | `projects` | projects | `tenancy` |
+| 8 | `access` | identity | `identity`, `projects`, `tenancy` |
+| 9 | `approvals` | approvals | `access`, `identity`, `tenancy` |
+| 10 | `terms` | terms | none |
+| 11 | `uploads` | uploads | `projects`, `tenancy` |
 
 ## Dependencies
 
@@ -30,6 +31,7 @@ graph TD
     approvals --> access
     approvals --> identity
     approvals --> tenancy
+    assets --> tenancy
     audit
     identity --> ops
     identity --> tenancy
