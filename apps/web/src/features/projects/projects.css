@@ -57,3 +57,53 @@
   gap: var(--space-4);
   max-width: 36rem;
 }
+
+/* PROJECTS-07: project detail page and the tenant sites register. */
+.projects-detail {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.projects-facts {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+}
+
+.projects-facts__row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
+.projects-facts__row dt {
+  color: var(--foreground-muted, var(--foreground));
+  font-weight: 600;
+}
+
+.projects-facts__row dd {
+  margin: 0;
+}
+
+.sites-register__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.sites-register__row-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.sites-register__locked {
+  color: var(--foreground-muted, var(--foreground));
+}
+
+.sites-form {
+  display: grid;
+  gap: var(--space-4);
+}
