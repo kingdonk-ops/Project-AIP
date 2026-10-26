@@ -357,6 +357,10 @@ GRANT SELECT ON TABLE public.role_assignment TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.role_permission TO aip_app;
 GRANT SELECT ON TABLE public.role_permission TO aip_readonly;
 
+-- Name: TABLE scan_results; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.scan_results TO aip_app;
+GRANT SELECT ON TABLE public.scan_results TO aip_readonly;
+
 -- Name: TABLE security_audit_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.security_audit_events TO aip_audit_writer;
 GRANT SELECT ON TABLE public.security_audit_events TO aip_app;
@@ -368,6 +372,10 @@ GRANT SELECT ON TABLE public.signoff_policy TO aip_readonly;
 -- Name: TABLE sites; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.sites TO aip_app;
 GRANT SELECT ON TABLE public.sites TO aip_readonly;
+
+-- Name: TABLE stored_files; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.stored_files TO aip_app;
+GRANT SELECT ON TABLE public.stored_files TO aip_readonly;
 
 -- Name: TABLE tenant_auth_policy; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_auth_policy TO aip_app;
@@ -673,6 +681,10 @@ ALTER TABLE ONLY public.role_assignment
 ALTER TABLE ONLY public.role_permission
     ADD CONSTRAINT pk_role_permission PRIMARY KEY (id);
 
+-- Name: scan_results pk_scan_results; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.scan_results
+    ADD CONSTRAINT pk_scan_results PRIMARY KEY (id);
+
 -- Name: security_audit_events pk_security_audit_events; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.security_audit_events
     ADD CONSTRAINT pk_security_audit_events PRIMARY KEY (id);
@@ -692,6 +704,14 @@ ALTER TABLE ONLY public.sites
 -- Name: sites uq_sites_id_tenant_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.sites
     ADD CONSTRAINT uq_sites_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: stored_files pk_stored_files; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.stored_files
+    ADD CONSTRAINT pk_stored_files PRIMARY KEY (id);
+
+-- Name: stored_files uq_stored_files_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.stored_files
+    ADD CONSTRAINT uq_stored_files_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: tenant_auth_policy pk_tenant_auth_policy; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_auth_policy
@@ -969,6 +989,10 @@ ALTER TABLE ONLY public.term_pack
 -- Name: term_pack_version fk_term_pack_version_pack_id_tenant_id_term_pack; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.term_pack_version
     ADD CONSTRAINT fk_term_pack_version_pack_id_tenant_id_term_pack FOREIGN KEY (pack_id, tenant_id) REFERENCES public.term_pack(id, tenant_id);
+
+-- Name: upload_sessions fk_upload_sessions_file_id; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.upload_sessions
+    ADD CONSTRAINT fk_upload_sessions_file_id FOREIGN KEY (file_id, tenant_id) REFERENCES public.stored_files(id, tenant_id);
 
 -- Name: user_invite fk_user_invite_invited_by_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.user_invite
@@ -2170,6 +2194,12 @@ CREATE INDEX ix_role_permission_tenant_id ON public.role_permission USING btree 
 -- Name: ix_role_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_role_tenant_id ON public.role USING btree (tenant_id);
 
+-- Name: ix_scan_results_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_scan_results_tenant_id ON public.scan_results USING btree (tenant_id);
+
+-- Name: ix_scan_results_tenant_id_session_id; Type: INDEX; Schema: public
+CREATE INDEX ix_scan_results_tenant_id_session_id ON public.scan_results USING btree (tenant_id, session_id);
+
 -- Name: ix_security_audit_events_tenant_id_actor_id_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_security_audit_events_tenant_id_actor_id_occurred_at ON public.security_audit_events USING btree (tenant_id, actor_id, occurred_at);
 
@@ -2181,6 +2211,12 @@ CREATE INDEX ix_signoff_policy_tenant_id ON public.signoff_policy USING btree (t
 
 -- Name: ix_sites_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_sites_tenant_id ON public.sites USING btree (tenant_id);
+
+-- Name: ix_stored_files_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_stored_files_tenant_id ON public.stored_files USING btree (tenant_id);
+
+-- Name: ix_stored_files_tenant_id_project_id; Type: INDEX; Schema: public
+CREATE INDEX ix_stored_files_tenant_id_project_id ON public.stored_files USING btree (tenant_id, project_id);
 
 -- Name: ix_tenant_entitlement_override_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_tenant_entitlement_override_tenant_id ON public.tenant_entitlement_override USING btree (tenant_id);
@@ -2572,6 +2608,9 @@ CREATE POLICY tenant_isolation ON public.role_assignment USING ((tenant_id = (NU
 -- Name: role_permission tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.role_permission USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: scan_results tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.scan_results USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: security_audit_events tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.security_audit_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -2580,6 +2619,12 @@ CREATE POLICY tenant_isolation ON public.signoff_policy USING ((tenant_id = (NUL
 
 -- Name: sites tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.sites USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: stored_files project_scope; Type: POLICY; Schema: public
+CREATE POLICY project_scope ON public.stored_files AS RESTRICTIVE TO aip_app USING (public.access_project_visible(project_id)) WITH CHECK (public.access_project_visible(project_id));
+
+-- Name: stored_files tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.stored_files USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: tenant_auth_policy tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenant_auth_policy USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -2749,6 +2794,9 @@ ALTER TABLE public.role_assignment ENABLE ROW LEVEL SECURITY;
 -- Name: role_permission; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.role_permission ENABLE ROW LEVEL SECURITY;
 
+-- Name: scan_results; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.scan_results ENABLE ROW LEVEL SECURITY;
+
 -- Name: security_audit_events; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.security_audit_events ENABLE ROW LEVEL SECURITY;
 
@@ -2757,6 +2805,9 @@ ALTER TABLE public.signoff_policy ENABLE ROW LEVEL SECURITY;
 
 -- Name: sites; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.sites ENABLE ROW LEVEL SECURITY;
+
+-- Name: stored_files; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.stored_files ENABLE ROW LEVEL SECURITY;
 
 -- Name: tenant_auth_policy; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenant_auth_policy ENABLE ROW LEVEL SECURITY;
@@ -3729,6 +3780,25 @@ ALTER TABLE ONLY public.role_permission FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.role_permission OWNER TO aip_owner;
 
+-- Name: scan_results; Type: TABLE; Schema: public
+CREATE TABLE public.scan_results (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    session_id uuid NOT NULL,
+    file_id uuid,
+    stage text NOT NULL,
+    outcome text NOT NULL,
+    signature_db_version text,
+    detail jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_scan_results_outcome CHECK ((outcome = ANY (ARRAY['pass'::text, 'fail'::text, 'error'::text]))),
+    CONSTRAINT ck_scan_results_stage CHECK ((stage = ANY (ARRAY['size_cap'::text, 'magic_bytes'::text, 'ratio_cap'::text, 'clamav'::text, 'rescan'::text])))
+);
+
+ALTER TABLE ONLY public.scan_results FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.scan_results OWNER TO aip_owner;
+
 -- Name: security_audit_events; Type: TABLE; Schema: public
 CREATE TABLE public.security_audit_events (
     id uuid NOT NULL,
@@ -3798,6 +3868,30 @@ CREATE TABLE public.sites (
 ALTER TABLE ONLY public.sites FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.sites OWNER TO aip_owner;
+
+-- Name: stored_files; Type: TABLE; Schema: public
+CREATE TABLE public.stored_files (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    project_id uuid NOT NULL,
+    uploaded_by uuid NOT NULL,
+    scan_status text NOT NULL,
+    preview_status text NOT NULL,
+    detected_mime text NOT NULL,
+    size_bytes numeric NOT NULL,
+    sha256 text NOT NULL,
+    storage_key text NOT NULL,
+    legal_hold boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_stored_files_preview_status CHECK ((preview_status = ANY (ARRAY['pending'::text, 'ready'::text, 'none'::text, 'failed'::text]))),
+    CONSTRAINT ck_stored_files_scan_status CHECK ((scan_status = ANY (ARRAY['quarantined'::text, 'clean'::text, 'failed'::text])))
+);
+
+ALTER TABLE ONLY public.stored_files FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.stored_files OWNER TO aip_owner;
 
 -- Name: tenant_auth_policy; Type: TABLE; Schema: public
 CREATE TABLE public.tenant_auth_policy (
