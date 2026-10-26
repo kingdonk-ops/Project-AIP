@@ -12,7 +12,8 @@ export interface ProjectRowContext {
   siteNames: ReadonlyMap<string, string>;
 }
 
-const STATUS_STYLE: Record<ProjectStatus, { tone: StatusTone; icon: IconName }> = {
+/** Status tone and icon, shared by the register chip and the detail-page header (PROJECTS-07). */
+export const PROJECT_STATUS_STYLE: Record<ProjectStatus, { tone: StatusTone; icon: IconName }> = {
   draft: { tone: "neutral", icon: "minus" },
   active: { tone: "success", icon: "check" },
   closing: { tone: "warning", icon: "clock" },
@@ -20,7 +21,7 @@ const STATUS_STYLE: Record<ProjectStatus, { tone: StatusTone; icon: IconName }> 
 };
 
 export function ProjectStatusChip({ status }: { status: ProjectStatus }) {
-  const style = STATUS_STYLE[status];
+  const style = PROJECT_STATUS_STYLE[status];
   return <StatusChip tone={style.tone} icon={style.icon} label={t(`projects.status.${status}`)} />;
 }
 

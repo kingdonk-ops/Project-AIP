@@ -20,7 +20,8 @@ const fixtureSessions: Record<string, Session> = {
   "alice@kaefer.test": {
     user: { id: "00000000-0000-4000-8000-0000000000a1", name: "Alice Anderson", email: "alice@kaefer.test" },
     tenant: { slug: "kaefer-demo", name: "Kaefer Demo" },
-    permissions: ["project.view", "audit.view"],
+    // PROJECTS-07: the demo admin can drive the project detail and sites register end to end.
+    permissions: ["project.view", "project.update", "project.archive", "site.view", "site.manage", "audit.view"],
   },
   // ARCH-09: a platform operator (ADR 0029). Operator pages move to their own origin with OPS-12.
   "operator@kaefer.test": {
