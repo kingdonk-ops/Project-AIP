@@ -18,6 +18,7 @@ request context (``None`` outside a request, e.g. in a seed job), never from the
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -31,6 +32,7 @@ from aip.modules.approvals.errors import (
     NoActiveDefinitionError,
 )
 from aip.modules.approvals.events import WORKFLOW_DEFINITION_PUBLISHED, DefinitionPublished
+from aip.modules.approvals.presets import Preset, load_preset
 from aip.modules.approvals.schemas import (
     WorkflowDefinition,
     WorkflowDefinitionSpec,
@@ -179,6 +181,38 @@ class DefinitionsService:
         if row is None:
             raise NoActiveDefinitionError(f"no active workflow definition for {record_type}")
         return definition_from_row(row)
+
+    async def install_preset(
+        self,
+        conn: AsyncConnection,
+        preset_key: str,
+        *,
+        project_id: UUID | None = None,
+        base_dir: Path | None = None,
+    ) -> WorkflowDefinition:
+        """Publish the ``config/workflows`` preset ``preset_key`` idempotently (APPROVALS-08).
+
+        A host module ships its lifecycle as data and calls this to install it. When the active
+        definition for the preset's key and scope already matches the preset spec, it is returned
+        unchanged; otherwise a new draft is created and published (retiring the previous version),
+        emitting ``workflow.definition_published`` like any other publish. ``PresetError`` for a bad
+        preset, ``ValidationError`` for a spec that fails the graph rules.
+        """
+        preset: Preset = load_preset(preset_key, base_dir)
+        spec = validate_spec(preset.spec)
+        current_row = await repo.active_in_scope_for_update(conn, preset.key, project_id)
+        if current_row is not None:
+            current = definition_from_row(current_row)
+            unchanged = (
+                current.record_type == preset.record_type
+                and current.spec.to_json() == spec.to_json()
+            )
+            if unchanged:
+                return current
+        draft = await self.create_draft(
+            conn, preset.key, preset.record_type, preset.spec, project_id
+        )
+        return await self.publish(conn, draft.id)
 
 
 class InstancesService:
