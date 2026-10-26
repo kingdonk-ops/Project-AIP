@@ -43,7 +43,11 @@ __all__ = ["router"]
 
 _NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"model": ItemTypeErrorBody}}
 _CONFLICT: dict[int | str, dict[str, Any]] = {409: {"model": ItemTypeErrorBody}}
-_INVALID: dict[int | str, dict[str, Any]] = {422: {"model": ItemTypeErrorBody}}
+# The 422 description is pinned so the schema is stable across Python versions: FastAPI
+# otherwise fills it from HTTPStatus(422).phrase, which 3.13 renamed to "Unprocessable Content".
+_INVALID: dict[int | str, dict[str, Any]] = {
+    422: {"model": ItemTypeErrorBody, "description": "Unprocessable Entity"}
+}
 
 Search = Annotated[str | None, Query(min_length=1, max_length=100)]
 
