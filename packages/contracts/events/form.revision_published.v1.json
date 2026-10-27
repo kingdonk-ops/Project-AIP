@@ -1,0 +1,41 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "revisionId": {
+      "format": "uuid",
+      "title": "Revisionid",
+      "type": "string"
+    },
+    "revisionNo": {
+      "title": "Revisionno",
+      "type": "integer"
+    },
+    "schemaHash": {
+      "title": "Schemahash",
+      "type": "string"
+    },
+    "templateId": {
+      "format": "uuid",
+      "title": "Templateid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "templateId",
+    "revisionId",
+    "revisionNo",
+    "code",
+    "kind",
+    "schemaHash"
+  ],
+  "title": "RevisionPublished",
+  "type": "object"
+}
