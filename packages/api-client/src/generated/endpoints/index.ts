@@ -2,6 +2,7 @@
 export * from './access/access';
 export * from './approvals/approvals';
 export * from './assets/assets';
+export * from './forms/forms';
 export * from './identity/identity';
 export * from './item-types/item-types';
 export * from './jobs/jobs';

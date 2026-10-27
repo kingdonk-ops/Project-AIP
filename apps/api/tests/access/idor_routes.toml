@@ -160,3 +160,23 @@ table = "user_invite"
 
 ["POST /api/v1/identity/users/{user_id}/reset-mfa"]
 table = "app_user"
+
+["GET /api/v1/forms/templates/{template_id}"]
+table = "form_templates"
+
+["POST /api/v1/forms/templates/{template_id}/revisions"]
+table = "form_templates"
+body = '{}'
+
+["GET /api/v1/forms/revisions/{revision_id}"]
+table = "form_revisions"
+
+["PUT /api/v1/forms/revisions/{revision_id}"]
+table = "form_revisions"
+body = '{"schema": {"schemaVersion": 1, "sections": [{"key": "s", "label": "S", "fields": [{"key": "a", "type": "boolean", "label": "A"}]}]}}'
+
+["DELETE /api/v1/forms/revisions/{revision_id}"]
+table = "form_revisions"
+
+["POST /api/v1/forms/revisions/{revision_id}/publish"]
+table = "form_revisions"
