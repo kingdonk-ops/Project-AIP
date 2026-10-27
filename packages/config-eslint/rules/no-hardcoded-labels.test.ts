@@ -30,11 +30,11 @@ tester.run("no-hardcoded-labels", rule, {
   invalid: [
     { code: "<span>NCR</span>", errors: [error("NCR", "record.type.ncr")] },
     { code: "<p>Raise a VARIATION</p>", errors: [error("Variation", "record.type.variation")] },
-    { code: '<button aria-label="ITP" />', errors: [error("ITP", "inspection.kind.itp")] },
+    { code: '<button aria-label="ITP" />', errors: [error("ITP", "forms.kind.itp")] },
     { code: "<input placeholder={'MEWP'} />", errors: [error("MEWP", "access.method.mewp")] },
     { code: "<Field label={`NCR`} />", errors: [error("NCR", "record.type.ncr")] },
     { code: '<abbr title="NCR">x</abbr>', errors: [error("NCR", "record.type.ncr")] },
     { code: "<span>{'NCR'}</span>", errors: [error("NCR", "record.type.ncr")] },
-    { code: "<>{`ITP`}</>", errors: [error("ITP", "inspection.kind.itp")] },
+    { code: "<>{`ITP`}</>", errors: [error("ITP", "forms.kind.itp")] },
   ],
 });
