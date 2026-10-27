@@ -6,3 +6,6 @@
 
 # why: braces <=3.0.3 stack exhaustion on deeply nested patterns (GHSA-vfj7-8cjw-p6xm). Only via eslint-plugin-boundaries in packages/config-eslint (lint time, never shipped); the patterns are our own config. No fixed release yet. Accepted in SECURITY-08, 2026-10-07.
 CVE-2026-93687 exp:2027-01-05
+
+# why: libssl3/openssl HIGH in the Debian 12 base image (DTLS handshake retransmission info disclosure). Entered Trivy's DB on 2026-10-26 and fails the image scan on every build; fixed upstream in 3.0.22-1~deb12u2, which lands when the Debian base image rebuilds. Time-boxed until then. Accepted by the owner, SECURITY-08, 2026-10-26.
+CVE-2026-84782 exp:2027-01-24
