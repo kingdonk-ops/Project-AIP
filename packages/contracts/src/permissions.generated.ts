@@ -19,6 +19,9 @@ export type PermissionCode =
   | "asset.view"
   | "audit.activity.view"
   | "audit.log.read"
+  | "form.manage"
+  | "form.publish"
+  | "form.view"
   | "identity.signoff_policy.manage"
   | "identity.signoff_policy.read"
   | "identity.user.manage"
@@ -61,6 +64,9 @@ export const PERMISSIONS = {
   "asset.view": { module: "assets", privileged: false },
   "audit.activity.view": { module: "audit", privileged: false },
   "audit.log.read": { module: "audit", privileged: false },
+  "form.manage": { module: "forms", privileged: false },
+  "form.publish": { module: "forms", privileged: false },
+  "form.view": { module: "forms", privileged: false },
   "identity.signoff_policy.manage": { module: "identity", privileged: true },
   "identity.signoff_policy.read": { module: "identity", privileged: false },
   "identity.user.manage": { module: "identity", privileged: true },

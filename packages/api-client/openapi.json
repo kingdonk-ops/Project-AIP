@@ -23,6 +23,9 @@
                 "asset.view",
                 "audit.activity.view",
                 "audit.log.read",
+                "form.manage",
+                "form.publish",
+                "form.view",
                 "identity.signoff_policy.manage",
                 "identity.signoff_policy.read",
                 "identity.user.manage",
@@ -1878,6 +1881,21 @@
         "title": "FieldTypesOut",
         "type": "object"
       },
+      "FormErrorBody": {
+        "additionalProperties": true,
+        "description": "A domain error: a stable ``code`` (``CODE_TAKEN``, ``TEMPLATE_INVALID``, ...) plus extras\nsuch as the lint ``issues`` or a ``VERSION_CONFLICT`` ``current`` row.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "FormErrorBody",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2698,6 +2716,21 @@
         "title": "LimitOut",
         "type": "object"
       },
+      "LintBody": {
+        "additionalProperties": false,
+        "properties": {
+          "schema": {
+            "additionalProperties": true,
+            "title": "Schema",
+            "type": "object"
+          }
+        },
+        "required": [
+          "schema"
+        ],
+        "title": "LintBody",
+        "type": "object"
+      },
       "LintFindingOut": {
         "description": "One raw label found by the TERMS-07 scanner (lines and columns 1-based).",
         "properties": {
@@ -2737,6 +2770,55 @@
           "suggestedKey"
         ],
         "title": "LintFindingOut",
+        "type": "object"
+      },
+      "LintIssueOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "path": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Path",
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "code",
+          "message"
+        ],
+        "title": "LintIssueOut",
+        "type": "object"
+      },
+      "LintResult": {
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/LintIssueOut"
+            },
+            "title": "Issues",
+            "type": "array"
+          }
+        },
+        "required": [
+          "issues"
+        ],
+        "title": "LintResult",
         "type": "object"
       },
       "LoginStartRequest": {
@@ -3882,6 +3964,264 @@
         "title": "ProjectUpdate",
         "type": "object"
       },
+      "PublishBody": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedSyncVersion": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedsyncversion"
+          }
+        },
+        "title": "PublishBody",
+        "type": "object"
+      },
+      "RevisionCreate": {
+        "additionalProperties": false,
+        "description": "A new draft revision. ``schema`` omitted copies the current published schema.",
+        "properties": {
+          "changeNote": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changenote"
+          },
+          "schema": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema"
+          }
+        },
+        "title": "RevisionCreate",
+        "type": "object"
+      },
+      "RevisionOut": {
+        "properties": {
+          "changeNote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changenote"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "evaluatorVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluatorversion"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "revisionNo": {
+            "title": "Revisionno",
+            "type": "integer"
+          },
+          "schema": {
+            "additionalProperties": true,
+            "title": "Schema",
+            "type": "object"
+          },
+          "schemaHash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schemahash"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "superseded"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "templateId": {
+            "format": "uuid",
+            "title": "Templateid",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "templateId",
+          "revisionNo",
+          "status",
+          "schema",
+          "schemaHash",
+          "evaluatorVersion",
+          "changeNote",
+          "publishedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "RevisionOut",
+        "type": "object"
+      },
+      "RevisionReplace": {
+        "additionalProperties": false,
+        "properties": {
+          "changeNote": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changenote"
+          },
+          "schema": {
+            "additionalProperties": true,
+            "title": "Schema",
+            "type": "object"
+          }
+        },
+        "required": [
+          "schema"
+        ],
+        "title": "RevisionReplace",
+        "type": "object"
+      },
+      "RevisionSummary": {
+        "properties": {
+          "changeNote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changenote"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "revisionNo": {
+            "title": "Revisionno",
+            "type": "integer"
+          },
+          "schemaHash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schemahash"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "superseded"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "revisionNo",
+          "status",
+          "schemaHash",
+          "changeNote",
+          "publishedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "RevisionSummary",
+        "type": "object"
+      },
       "RoleClone": {
         "additionalProperties": false,
         "properties": {
@@ -3937,6 +4277,9 @@
                 "asset.view",
                 "audit.activity.view",
                 "audit.log.read",
+                "form.manage",
+                "form.publish",
+                "form.view",
                 "identity.signoff_policy.manage",
                 "identity.signoff_policy.read",
                 "identity.user.manage",
@@ -4064,6 +4407,9 @@
                 "asset.view",
                 "audit.activity.view",
                 "audit.log.read",
+                "form.manage",
+                "form.publish",
+                "form.view",
                 "identity.signoff_policy.manage",
                 "identity.signoff_policy.read",
                 "identity.user.manage",
@@ -4158,6 +4504,9 @@
                     "asset.view",
                     "audit.activity.view",
                     "audit.log.read",
+                    "form.manage",
+                    "form.publish",
+                    "form.view",
                     "identity.signoff_policy.manage",
                     "identity.signoff_policy.read",
                     "identity.user.manage",
@@ -5100,6 +5449,322 @@
         "title": "SubscriptionPut",
         "type": "object"
       },
+      "TemplateCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "changeNote": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changenote"
+          },
+          "code": {
+            "pattern": "^[a-z][a-z0-9-]{1,62}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "inspection",
+              "itp",
+              "rfi",
+              "permit",
+              "test_report"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "schema": {
+            "additionalProperties": true,
+            "title": "Schema",
+            "type": "object"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "kind",
+          "schema"
+        ],
+        "title": "TemplateCreate",
+        "type": "object"
+      },
+      "TemplateDetail": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "currentRevisionId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentrevisionid"
+          },
+          "currentRevisionNo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentrevisionno"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "inspection",
+              "itp",
+              "rfi",
+              "permit",
+              "test_report"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "revisions": {
+            "items": {
+              "$ref": "#/components/schemas/RevisionSummary"
+            },
+            "title": "Revisions",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "active",
+              "retired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "kind",
+          "status",
+          "currentRevisionId",
+          "currentRevisionNo",
+          "syncVersion",
+          "createdAt",
+          "updatedAt",
+          "revisions"
+        ],
+        "title": "TemplateDetail",
+        "type": "object"
+      },
+      "TemplateListItem": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "currentRevisionNo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentrevisionno"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "inspection",
+              "itp",
+              "rfi",
+              "permit",
+              "test_report"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "active",
+              "retired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "kind",
+          "status",
+          "currentRevisionNo",
+          "updatedAt"
+        ],
+        "title": "TemplateListItem",
+        "type": "object"
+      },
+      "TemplatePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateListItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TemplatePage",
+        "type": "object"
+      },
+      "TemplateRecord": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "currentRevisionId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentrevisionid"
+          },
+          "currentRevisionNo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentrevisionno"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "inspection",
+              "itp",
+              "rfi",
+              "permit",
+              "test_report"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "active",
+              "retired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "kind",
+          "status",
+          "currentRevisionId",
+          "currentRevisionNo",
+          "syncVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "TemplateRecord",
+        "type": "object"
+      },
       "TenantErrorBody": {
         "properties": {
           "code": {
@@ -5279,6 +5944,22 @@
           "code"
         ],
         "title": "UploadErrorBody",
+        "type": "object"
+      },
+      "UploadResult": {
+        "properties": {
+          "revision": {
+            "$ref": "#/components/schemas/RevisionOut"
+          },
+          "template": {
+            "$ref": "#/components/schemas/TemplateRecord"
+          }
+        },
+        "required": [
+          "template",
+          "revision"
+        ],
+        "title": "UploadResult",
         "type": "object"
       },
       "ValidationError": {
@@ -7782,6 +8463,577 @@
         "summary": "Get Field Types",
         "tags": [
           "item_types"
+        ]
+      }
+    },
+    "/api/v1/forms/lint": {
+      "post": {
+        "operationId": "forms_lint",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LintBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LintResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Lint Template",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/api/v1/forms/revisions/{revision_id}": {
+      "delete": {
+        "operationId": "forms_revisions_discard",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discard Revision",
+        "tags": [
+          "forms"
+        ]
+      },
+      "get": {
+        "operationId": "forms_revisions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevisionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Revision",
+        "tags": [
+          "forms"
+        ]
+      },
+      "put": {
+        "operationId": "forms_revisions_replace",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionReplace"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevisionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Replace Revision",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/api/v1/forms/revisions/{revision_id}/publish": {
+      "post": {
+        "operationId": "forms_revisions_publish",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PublishBody"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Publish Revision",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/api/v1/forms/templates": {
+      "get": {
+        "operationId": "forms_templates_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(inspection|itp|rfi|permit|test_report)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(draft|active|retired)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplatePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Templates",
+        "tags": [
+          "forms"
+        ]
+      },
+      "post": {
+        "operationId": "forms_templates_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Create Template",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/api/v1/forms/templates/{template_id}": {
+      "get": {
+        "operationId": "forms_templates_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Template",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/api/v1/forms/templates/{template_id}/revisions": {
+      "post": {
+        "operationId": "forms_templates_add_revision",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevisionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Create Revision",
+        "tags": [
+          "forms"
         ]
       }
     },

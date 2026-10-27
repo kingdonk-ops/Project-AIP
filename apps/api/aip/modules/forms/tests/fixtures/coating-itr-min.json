@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "sections": [
+    {
+      "key": "preparation",
+      "label": "Surface preparation",
+      "fields": [
+        {
+          "key": "surface_prepared",
+          "type": "boolean",
+          "label": "Surface prepared to standard"
+        },
+        {
+          "key": "blast_standard",
+          "type": "dropdown",
+          "label": "Blast standard",
+          "options": [
+            {"value": "sa2_5", "label": "Sa 2.5"},
+            {"value": "sa3", "label": "Sa 3"}
+          ]
+        }
+      ]
+    },
+    {
+      "key": "coating",
+      "label": "Coating",
+      "fields": [
+        {
+          "key": "dft_avg",
+          "type": "measurement",
+          "label": "Average dry film thickness",
+          "unit": "mm",
+          "failWhen": {"<": [{"var": "answers.dft_avg.value"}, 0.25]}
+        },
+        {
+          "key": "photos",
+          "type": "photo",
+          "label": "Coating photos"
+        },
+        {
+          "key": "remarks",
+          "type": "text",
+          "label": "Remarks",
+          "visibleIf": {"==": [{"var": "answers.surface_prepared"}, false]}
+        },
+        {
+          "key": "signature",
+          "type": "signature",
+          "label": "Inspector signature"
+        }
+      ]
+    }
+  ]
+}
