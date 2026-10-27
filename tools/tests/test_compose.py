@@ -62,6 +62,9 @@ DEFAULT_SERVICES = {
     "api",
     "worker",
     "web",
+    # UPLOADS-02: ClamAV and its dedicated scan worker.
+    "clamav",
+    "worker-scan",
 }
 REQUIRED_ENV = {
     "DATABASE_URL",

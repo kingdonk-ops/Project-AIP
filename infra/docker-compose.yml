@@ -426,6 +426,8 @@ services:
     # current. Attached only to the internal `scan-net`, never the default network, so it has no
     # inbound path from anything but the scan worker and no published port.
     image: clamav/clamav:1.4
+    # The image creates the clamav user (uid 100) and owns its state dirs; run as it, not root.
+    user: clamav
     networks: [scan-net]
     healthcheck:
       # The image ships clamdcheck.sh; clamd answers only once freshclam has loaded the database,

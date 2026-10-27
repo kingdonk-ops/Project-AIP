@@ -40,7 +40,7 @@ async def _grant_alice_tenant_scope(db: TenantDb) -> None:
         f"('{ALICE_ID}', '{TENANT_A_ID}', 'staff', 'alice@kaefer.test', 'Alice', 'active') "
         "ON CONFLICT DO NOTHING;"
         "INSERT INTO role (id, tenant_id, code, name) VALUES "
-        f"('{_ROLE_ID}', '{TENANT_A_ID}', 'uploads-test', 'Uploads Test') ON CONFLICT DO NOTHING;"
+        f"('{_ROLE_ID}', '{TENANT_A_ID}', 'uploads_test', 'Uploads Test') ON CONFLICT DO NOTHING;"
         "INSERT INTO role_assignment (id, tenant_id, user_id, role_id, scope_type, project_id, "
         f"valid_to) VALUES (gen_random_uuid(), '{TENANT_A_ID}', '{ALICE_ID}', '{_ROLE_ID}', "
         "'tenant', NULL, NULL)",
