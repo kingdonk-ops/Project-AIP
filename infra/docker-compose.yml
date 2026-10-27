@@ -424,10 +424,13 @@ services:
   clamav:
     # UPLOADS-02: ClamAV daemon (GPL) for the scan pipeline, with freshclam keeping signatures
     # current. Attached only to the internal `scan-net`, never the default network, so it has no
-    # inbound path from anything but the scan worker and no published port.
+    # inbound path from anything but the scan worker and no published port. Behind the `scan`
+    # profile so the default stack stays lean; bring the scanner up with:
+    #   docker compose -f infra/docker-compose.yml --profile scan up --wait
+    # Its `/init` entrypoint needs root to create /run/clamav before dropping to the clamav user,
+    # so it is not one of the hardened non-root app images.
     image: clamav/clamav:1.4
-    # The image creates the clamav user (uid 100) and owns its state dirs; run as it, not root.
-    user: clamav
+    profiles: [scan]
     networks: [scan-net]
     healthcheck:
       # The image ships clamdcheck.sh; clamd answers only once freshclam has loaded the database,
@@ -441,8 +444,10 @@ services:
 
   worker-scan:
     # UPLOADS-02: a worker for the `scan` queue only, the one service that reaches clamd. Separate
-    # from the default worker so scan work (clamd I/O) does not block other queues.
+    # from the default worker so scan work (clamd I/O) does not block other queues. Behind the same
+    # `scan` profile as clamav (it depends on it), so both come up together with `--profile scan`.
     <<: *app-hardening
+    profiles: [scan]
     build: *api-build
     image: aip-api:${AIP_IMAGE_TAG:-dev}
     init: true
