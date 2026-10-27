@@ -1,0 +1,57 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+id = "forms"
+context = "forms"
+depends_on = ["tenancy", "item_types", "approvals", "terms"]
+permission_namespaces = ["form"]
+subscribes = []
+settings = []
+term_keys = [
+  "forms.permission.view",
+  "forms.permission.manage",
+  "forms.permission.publish",
+  "forms.kind.inspection",
+  "forms.kind.itp",
+  "forms.kind.rfi",
+  "forms.kind.permit",
+  "forms.kind.test_report",
+  "forms.template.status.draft",
+  "forms.template.status.active",
+  "forms.template.status.retired",
+  "forms.revision.status.draft",
+  "forms.revision.status.published",
+  "forms.revision.status.superseded",
+  "forms.lint.SCHEMA_INVALID",
+  "forms.lint.TEMPLATE_TOO_LARGE",
+  "forms.lint.DUPLICATE_KEY",
+  "forms.lint.UNKNOWN_FIELD_TYPE",
+  "forms.lint.OPTIONS_REQUIRED",
+  "forms.lint.OPTIONS_NOT_ALLOWED",
+  "forms.lint.DUPLICATE_OPTION",
+  "forms.lint.UNIT_REQUIRED",
+  "forms.lint.UNKNOWN_UNIT",
+  "forms.lint.VALIDATION_NOT_ALLOWED",
+  "forms.lint.VALIDATION_RANGE",
+  "forms.lint.EXPRESSION_INVALID",
+  "forms.lint.UNKNOWN_REFERENCE",
+  "forms.lint.CONDITION_CYCLE",
+]
+
+# ADR 0027 verbs: `view` is granted from the `view` level up; `manage` is an `admin` verb; and
+# `publish` is named by no level, so it is granted only at `admin` (fail closed). Template authoring
+# and publishing are tenant-admin actions in R1, so admin-only defaults are intended; a tenant can
+# still widen the roles (ADR 0020). No numeric code is pinned here — build_catalogue derives it.
+[[permissions]]
+code = "form.view"
+description = "View form templates and revisions"
+
+[[permissions]]
+code = "form.manage"
+description = "Upload and edit draft form templates and revisions"
+
+[[permissions]]
+code = "form.publish"
+description = "Publish a form revision, freezing it"
+
+[[events]]
+name = "form.revision_published"
+version = 1

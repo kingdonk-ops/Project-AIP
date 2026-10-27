@@ -96,3 +96,7 @@ principal_kind = "system"
 [tables.stored_files]
 reason = "UPLOADS-02 puts a released file behind the ACCESS-03 project-scope policy, so a principal is needed to see any row. A system principal is tenant-wide, so the own-row probe sees tenant A's row while the permissive tenant-isolation policy still hides tenant B's and refuses every move into B."
 principal_kind = "system"
+
+[tables.form_templates]
+reason = "code is a lowercase slug of letters, digits and hyphens (ck_form_templates_code); the generic 'iso_code_{tag}' has an underscore. Unique per row."
+values = { code = "'iso-code-{tag}'" }

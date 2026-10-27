@@ -18,7 +18,8 @@ Regenerate with `uv run python tools/gen_module_map.py`.
 | 9 | `access` | identity | `identity`, `projects`, `tenancy` |
 | 10 | `approvals` | approvals | `access`, `identity`, `tenancy` |
 | 11 | `terms` | terms | none |
-| 12 | `uploads` | uploads | `projects`, `tenancy` |
+| 12 | `forms` | forms | `approvals`, `item_types`, `tenancy`, `terms` |
+| 13 | `uploads` | uploads | `projects`, `tenancy` |
 
 ## Dependencies
 
@@ -34,6 +35,10 @@ graph TD
     approvals --> tenancy
     assets --> tenancy
     audit
+    forms --> approvals
+    forms --> item_types
+    forms --> tenancy
+    forms --> terms
     identity --> ops
     identity --> tenancy
     item_types --> tenancy

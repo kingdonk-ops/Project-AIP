@@ -276,6 +276,14 @@ GRANT SELECT ON TABLE public.domain_events TO aip_readonly;
 GRANT SELECT,INSERT ON TABLE public.evidence_items TO aip_app;
 GRANT SELECT ON TABLE public.evidence_items TO aip_readonly;
 
+-- Name: TABLE form_revisions; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.form_revisions TO aip_app;
+GRANT SELECT ON TABLE public.form_revisions TO aip_readonly;
+
+-- Name: TABLE form_templates; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.form_templates TO aip_app;
+GRANT SELECT ON TABLE public.form_templates TO aip_readonly;
+
 -- Name: TABLE glossary_entry; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.glossary_entry TO aip_app;
 GRANT SELECT ON TABLE public.glossary_entry TO aip_readonly;
@@ -544,6 +552,26 @@ ALTER TABLE ONLY public.evidence_items
 -- Name: evidence_items_default evidence_items_default_pkey; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.evidence_items_default
     ADD CONSTRAINT evidence_items_default_pkey PRIMARY KEY (id, created_at);
+
+-- Name: form_revisions pk_form_revisions; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.form_revisions
+    ADD CONSTRAINT pk_form_revisions PRIMARY KEY (id);
+
+-- Name: form_revisions uq_form_revisions_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.form_revisions
+    ADD CONSTRAINT uq_form_revisions_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: form_revisions uq_form_revisions_template_id_revision_no; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.form_revisions
+    ADD CONSTRAINT uq_form_revisions_template_id_revision_no UNIQUE (template_id, revision_no);
+
+-- Name: form_templates pk_form_templates; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.form_templates
+    ADD CONSTRAINT pk_form_templates PRIMARY KEY (id);
+
+-- Name: form_templates uq_form_templates_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.form_templates
+    ADD CONSTRAINT uq_form_templates_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: glossary_entry pk_glossary_entry; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.glossary_entry
@@ -873,6 +901,18 @@ ALTER TABLE ONLY public.auth_event
 -- Name: evidence_items fk_evidence_items_control_id_tenant_id_control_records; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE public.evidence_items
     ADD CONSTRAINT fk_evidence_items_control_id_tenant_id_control_records FOREIGN KEY (control_id, tenant_id) REFERENCES public.control_records(id, tenant_id);
+
+-- Name: form_revisions fk_form_revisions_template; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.form_revisions
+    ADD CONSTRAINT fk_form_revisions_template FOREIGN KEY (template_id, tenant_id) REFERENCES public.form_templates(id, tenant_id);
+
+-- Name: form_templates fk_form_templates_current_revision; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.form_templates
+    ADD CONSTRAINT fk_form_templates_current_revision FOREIGN KEY (current_revision_id, tenant_id) REFERENCES public.form_revisions(id, tenant_id);
+
+-- Name: form_templates fk_form_templates_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.form_templates
+    ADD CONSTRAINT fk_form_templates_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 -- Name: item_categories fk_item_categories_content_type; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.item_categories
@@ -1333,6 +1373,39 @@ CREATE FUNCTION public.domain_events_write_once() RETURNS trigger
     $$;
 
 ALTER FUNCTION public.domain_events_write_once() OWNER TO aip_owner;
+
+-- Name: form_revisions_freeze(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.form_revisions_freeze() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        IF TG_OP = 'DELETE' THEN
+          IF OLD.status <> 'draft' THEN
+            RAISE EXCEPTION 'form revision is frozen' USING ERRCODE = 'P0001';
+          END IF;
+          RETURN OLD;
+        END IF;
+        IF OLD.status <> 'draft' THEN
+          IF NEW.schema IS DISTINCT FROM OLD.schema
+             OR NEW.schema_hash IS DISTINCT FROM OLD.schema_hash
+             OR NEW.evaluator_version IS DISTINCT FROM OLD.evaluator_version
+             OR NEW.revision_no IS DISTINCT FROM OLD.revision_no
+             OR NEW.template_id IS DISTINCT FROM OLD.template_id
+             OR NEW.published_at IS DISTINCT FROM OLD.published_at
+             OR NEW.published_by IS DISTINCT FROM OLD.published_by
+             OR NEW.deleted_at IS DISTINCT FROM OLD.deleted_at THEN
+            RAISE EXCEPTION 'form revision is frozen' USING ERRCODE = 'P0001';
+          END IF;
+          IF NEW.status IS DISTINCT FROM OLD.status
+             AND NOT (OLD.status = 'published' AND NEW.status = 'superseded') THEN
+            RAISE EXCEPTION 'form revision is frozen' USING ERRCODE = 'P0001';
+          END IF;
+        END IF;
+        RETURN NEW;
+      END;
+      $$;
+
+ALTER FUNCTION public.form_revisions_freeze() OWNER TO aip_owner;
 
 -- Name: identity_register_email(public.citext, uuid); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.identity_register_email(p_email public.citext, p_tenant uuid) RETURNS void
@@ -2095,6 +2168,18 @@ CREATE INDEX ix_evidence_items_tenant_id ON ONLY public.evidence_items USING btr
 -- Name: ix_evidence_items_tenant_id_control_id_collected_at; Type: INDEX; Schema: public
 CREATE INDEX ix_evidence_items_tenant_id_control_id_collected_at ON ONLY public.evidence_items USING btree (tenant_id, control_id, collected_at DESC);
 
+-- Name: ix_form_revisions_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_form_revisions_tenant_id ON public.form_revisions USING btree (tenant_id);
+
+-- Name: ix_form_revisions_tenant_id_template_id_status; Type: INDEX; Schema: public
+CREATE INDEX ix_form_revisions_tenant_id_template_id_status ON public.form_revisions USING btree (tenant_id, template_id, status);
+
+-- Name: ix_form_templates_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_form_templates_tenant_id ON public.form_templates USING btree (tenant_id);
+
+-- Name: ix_form_templates_tenant_id_kind_status; Type: INDEX; Schema: public
+CREATE INDEX ix_form_templates_tenant_id_kind_status ON public.form_templates USING btree (tenant_id, kind, status);
+
 -- Name: ix_glossary_entry_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_glossary_entry_tenant_id ON public.glossary_entry USING btree (tenant_id);
 
@@ -2380,6 +2465,15 @@ CREATE UNIQUE INDEX uq_content_types_tenant_id_key ON public.content_types USING
 -- Name: uq_control_records_tenant_id_control_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_control_records_tenant_id_control_key ON public.control_records USING btree (tenant_id, control_key) WHERE (deleted_at IS NULL);
 
+-- Name: uq_form_revisions_one_draft; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_form_revisions_one_draft ON public.form_revisions USING btree (template_id) WHERE ((status = 'draft'::text) AND (deleted_at IS NULL));
+
+-- Name: uq_form_revisions_one_published; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_form_revisions_one_published ON public.form_revisions USING btree (template_id) WHERE (status = 'published'::text);
+
+-- Name: uq_form_templates_tenant_id_code; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_form_templates_tenant_id_code ON public.form_templates USING btree (tenant_id, code) WHERE (deleted_at IS NULL);
+
 -- Name: uq_item_categories_tenant_id_content_type_id_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_item_categories_tenant_id_content_type_id_key ON public.item_categories USING btree (tenant_id, content_type_id, key) WHERE (deleted_at IS NULL);
 
@@ -2436,6 +2530,9 @@ CREATE UNIQUE INDEX uq_upload_sessions_client_request_id ON public.upload_sessio
 
 -- Name: ux_assets_client_generated_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_assets_client_generated_id ON public.assets USING btree (tenant_id, client_generated_id);
+
+-- Name: ux_form_templates_client_generated_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_form_templates_client_generated_id ON public.form_templates USING btree (tenant_id, client_generated_id);
 
 -- Name: ux_record_links_live; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_record_links_live ON public.record_links USING btree (tenant_id, from_type, from_id, to_type, to_id, link_kind) WHERE (deleted_at IS NULL);
@@ -2556,6 +2653,12 @@ CREATE POLICY tenant_isolation ON public.domain_events USING ((tenant_id = (NULL
 
 -- Name: evidence_items tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.evidence_items USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: form_revisions tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.form_revisions USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: form_templates tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.form_templates USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: glossary_entry platform_read; Type: POLICY; Schema: public
 CREATE POLICY platform_read ON public.glossary_entry FOR SELECT USING ((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid));
@@ -2751,6 +2854,12 @@ ALTER TABLE public.domain_events ENABLE ROW LEVEL SECURITY;
 
 -- Name: evidence_items; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.evidence_items ENABLE ROW LEVEL SECURITY;
+
+-- Name: form_revisions; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.form_revisions ENABLE ROW LEVEL SECURITY;
+
+-- Name: form_templates; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.form_templates ENABLE ROW LEVEL SECURITY;
 
 -- Name: glossary_entry; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.glossary_entry ENABLE ROW LEVEL SECURITY;
@@ -3312,6 +3421,56 @@ CREATE TABLE public.evidence_items_default (
 );
 
 ALTER TABLE public.evidence_items_default OWNER TO aip_owner;
+
+-- Name: form_revisions; Type: TABLE; Schema: public
+CREATE TABLE public.form_revisions (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    template_id uuid NOT NULL,
+    revision_no integer NOT NULL,
+    status text DEFAULT 'draft'::text NOT NULL,
+    schema jsonb NOT NULL,
+    schema_hash text,
+    evaluator_version text,
+    change_note text,
+    published_at timestamp with time zone,
+    published_by uuid,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_form_revisions_frozen_shape CHECK (((status = 'draft'::text) OR ((schema_hash ~ '^[0-9a-f]{64}$'::text) AND (published_at IS NOT NULL)))),
+    CONSTRAINT ck_form_revisions_revision_no CHECK ((revision_no >= 1)),
+    CONSTRAINT ck_form_revisions_status CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'superseded'::text])))
+);
+
+ALTER TABLE ONLY public.form_revisions FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.form_revisions OWNER TO aip_owner;
+
+-- Name: form_templates; Type: TABLE; Schema: public
+CREATE TABLE public.form_templates (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    code text NOT NULL,
+    name text NOT NULL,
+    kind text NOT NULL,
+    status text DEFAULT 'draft'::text NOT NULL,
+    current_revision_id uuid,
+    created_by uuid,
+    client_generated_id uuid,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_form_templates_code CHECK ((code ~ '^[a-z][a-z0-9-]{1,62}$'::text)),
+    CONSTRAINT ck_form_templates_kind CHECK ((kind = ANY (ARRAY['inspection'::text, 'itp'::text, 'rfi'::text, 'permit'::text, 'test_report'::text]))),
+    CONSTRAINT ck_form_templates_status CHECK ((status = ANY (ARRAY['draft'::text, 'active'::text, 'retired'::text])))
+);
+
+ALTER TABLE ONLY public.form_templates FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.form_templates OWNER TO aip_owner;
 
 -- Name: glossary_entry; Type: TABLE; Schema: public
 CREATE TABLE public.glossary_entry (
@@ -4407,6 +4566,9 @@ CREATE TRIGGER audit_log_append_only BEFORE DELETE OR UPDATE ON public.audit_log
 
 -- Name: domain_events domain_events_write_once; Type: TRIGGER; Schema: public
 CREATE TRIGGER domain_events_write_once BEFORE UPDATE ON public.domain_events FOR EACH ROW EXECUTE FUNCTION public.domain_events_write_once();
+
+-- Name: form_revisions form_revisions_freeze; Type: TRIGGER; Schema: public
+CREATE TRIGGER form_revisions_freeze BEFORE DELETE OR UPDATE ON public.form_revisions FOR EACH ROW EXECUTE FUNCTION public.form_revisions_freeze();
 
 -- Name: procrastinate_jobs procrastinate_jobs_notify_queue_job_aborted_v1; Type: TRIGGER; Schema: public
 CREATE TRIGGER procrastinate_jobs_notify_queue_job_aborted_v1 AFTER UPDATE OF abort_requested ON public.procrastinate_jobs FOR EACH ROW WHEN (((old.abort_requested = false) AND (new.abort_requested = true) AND (new.status = 'doing'::public.procrastinate_job_status))) EXECUTE FUNCTION public.procrastinate_notify_queue_abort_job_v1();
