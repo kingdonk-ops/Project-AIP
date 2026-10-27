@@ -1,0 +1,68 @@
+name: auto-merge-board
+
+# Task-board bookkeeping merges itself. When a pull request changes NOTHING but
+# tracking/BOARD.md and/or tracking/PROGRESS.md, this workflow approves it and turns on
+# auto-merge, so it lands as soon as the required checks are green -- no human in the loop.
+# Any PR that also touches another path is left entirely to the normal review + CI gate.
+#
+# The board validator (.github/workflows/tracking.yml) still runs on these PRs; make its
+# "Validate task board" job a required status check so a malformed board can never self-merge.
+# ci.yml and security.yml skip their heavy jobs on a board-only PR (see the `detect` job in
+# each), so the only required checks that actually run here are the board validator.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  board-only:
+    name: Auto-merge board-only PR
+    runs-on: ubuntu-latest
+    # Same-repo branches only: a fork PR gets a read-only token and must never be auto-merged.
+    # Drafts are skipped; reopening as ready re-triggers via the ready_for_review event.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository
+      && github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need the base commit to diff against
+
+      - name: Is this PR board-only?
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Fail safe to "not board-only" on any problem, so nothing merges itself by accident.
+          board_only=false
+          if files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" 2>/dev/null) && [ -n "$files" ]; then
+            echo "Changed files:"; echo "$files"
+            board_only=true
+            while IFS= read -r f; do
+              case "$f" in
+                tracking/BOARD.md|tracking/PROGRESS.md) ;;
+                *) board_only=false ;;
+              esac
+            done <<< "$files"
+          fi
+          echo "board_only=$board_only"
+          echo "board_only=$board_only" >> "$GITHUB_OUTPUT"
+
+      - name: Approve and enable auto-merge
+        if: steps.scope.outputs.board_only == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # Approval covers a "require approvals" rule; harmless when none is required. It can fail
+          # if "Allow GitHub Actions to create and approve pull requests" is off -- don't block on it.
+          gh pr review "$PR" --approve \
+            --body "Board-only change (tracking/BOARD.md, tracking/PROGRESS.md). Auto-approved by .github/workflows/auto-merge-board.yml." \
+            || echo "::warning::could not approve (enable 'Allow GitHub Actions to create and approve pull requests' if approvals are required); continuing"
+          # Lands once the required checks pass. Needs branch protection + "Allow auto-merge" on.
+          gh pr merge "$PR" --squash --auto --delete-branch

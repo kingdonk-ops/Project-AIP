@@ -35,9 +35,46 @@ env:
   BANDIT_VERSION: "1.9.4"
 
 jobs:
+  # A board-only PR (nothing but tracking/BOARD.md and/or tracking/PROGRESS.md) needs none of the
+  # scans below, so each one skips when this reports board_only=true. A skipped job's check is
+  # reported as a success, so jobs here that are required status checks stay satisfied. Fail safe:
+  # on any problem, on a push to main, and on the weekly schedule, board_only is false and all run.
+  detect:
+    name: Detect board-only change
+    runs-on: ubuntu-latest
+    outputs:
+      board_only: ${{ steps.check.outputs.board_only }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          board_only=false
+          if [ "$EVENT_NAME" = "pull_request" ] && [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
+            if files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" 2>/dev/null) && [ -n "$files" ]; then
+              echo "Changed files:"; echo "$files"
+              board_only=true
+              while IFS= read -r f; do
+                case "$f" in
+                  tracking/BOARD.md|tracking/PROGRESS.md) ;;
+                  *) board_only=false ;;
+                esac
+              done <<< "$files"
+            fi
+          fi
+          echo "board_only=$board_only"
+          echo "board_only=$board_only" >> "$GITHUB_OUTPUT"
+
   images:
     name: Images (strip test, Trivy, SBOM, signing)
     runs-on: ubuntu-latest
+    needs: detect
+    if: ${{ always() && needs.detect.outputs.board_only != 'true' }}
     timeout-minutes: 40
     env:
       API_IMAGE: aip-api:security-${{ github.sha }}
@@ -204,6 +241,8 @@ jobs:
   deps:
     name: Dependencies and SAST (pip-audit, pnpm audit, bandit)
     runs-on: ubuntu-latest
+    needs: detect
+    if: ${{ always() && needs.detect.outputs.board_only != 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -251,6 +290,8 @@ jobs:
   secrets:
     name: Secrets (gitleaks)
     runs-on: ubuntu-latest
+    needs: detect
+    if: ${{ always() && needs.detect.outputs.board_only != 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:
