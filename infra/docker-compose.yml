@@ -49,6 +49,9 @@ x-app-env: &app-env
   OBJECT_STORE_SECRET_ACCESS_KEY: ${OBJECT_STORE_SECRET_ACCESS_KEY:-rustfs_dev_only_secret}
   PDF_RENDERER: ${PDF_RENDERER:-gotenberg}
   GOTENBERG_URL: ${GOTENBERG_URL:-http://gotenberg:3000}
+  # UPLOADS-02: the scan worker reaches clamd on the internal scan network; no other service does.
+  CLAMD_HOST: ${CLAMD_HOST:-clamav}
+  CLAMD_PORT: ${CLAMD_PORT:-3310}
   # STACK-06: transactional email goes through the `ops.send_email` job. Mailpit here (UI on
   # :8025); MAILER=ses in AWS (SES in ap-southeast-2, credentials from the ECS task role).
   # Fixed here (like KC_SMTP_* below): the dev stack always mails Mailpit.
@@ -418,6 +421,49 @@ services:
       retries: 3
       start_period: 5s
 
+  clamav:
+    # UPLOADS-02: ClamAV daemon (GPL) for the scan pipeline, with freshclam keeping signatures
+    # current. Attached only to the internal `scan-net`, never the default network, so it has no
+    # inbound path from anything but the scan worker and no published port.
+    image: clamav/clamav:1.4
+    networks: [scan-net]
+    healthcheck:
+      # The image ships clamdcheck.sh; clamd answers only once freshclam has loaded the database,
+      # so the start period is generous.
+      test: ["CMD-SHELL", "/usr/local/bin/clamdcheck.sh || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 180s
+    security_opt: ["no-new-privileges:true"]
+
+  worker-scan:
+    # UPLOADS-02: a worker for the `scan` queue only, the one service that reaches clamd. Separate
+    # from the default worker so scan work (clamd I/O) does not block other queues.
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    init: true
+    command: ["python", "-m", "aip.worker", "--queues", "scan"]
+    stop_grace_period: 70s
+    environment: *app-env
+    networks: [default, scan-net]
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+      object-store-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import aip"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
   web:
     # The built web app on nginx; /api is proxied to the api service.
     <<: *app-hardening
@@ -467,6 +513,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+
+networks:
+  # UPLOADS-02: clamd and the scan worker share this isolated network; `internal: true` gives it no
+  # route to the outside, so the scanner is never exposed.
+  scan-net:
+    internal: true
 
 volumes:
   postgres-data:

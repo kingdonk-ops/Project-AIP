@@ -1,0 +1,13 @@
+# UPLOADS-02 fixture: the real repo's no-direct-object-store contract, rooted at os_app.
+[importlinter]
+root_packages =
+    os_app
+
+[importlinter:contract:no-direct-object-store]
+name = no-direct-object-store
+type = forbidden
+source_modules =
+    os_app.modules
+forbidden_modules =
+    os_app.platform.capabilities.adapters
+allow_indirect_imports = true

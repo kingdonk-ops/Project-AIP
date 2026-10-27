@@ -1,0 +1,27 @@
+{
+  "additionalProperties": false,
+  "description": "``upload.rejected`` v1: the upload was rejected; ``reason`` is the failing stage or code.",
+  "properties": {
+    "projectId": {
+      "format": "uuid",
+      "title": "Projectid",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "sessionId": {
+      "format": "uuid",
+      "title": "Sessionid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "sessionId",
+    "projectId",
+    "reason"
+  ],
+  "title": "UploadRejectedEvent",
+  "type": "object"
+}

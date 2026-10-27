@@ -1881,6 +1881,25 @@
         "title": "FieldTypesOut",
         "type": "object"
       },
+      "FileDownloadUrl": {
+        "description": "A short-lived presigned GET for a released (clean) file.",
+        "properties": {
+          "expiresInS": {
+            "title": "Expiresins",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "expiresInS"
+        ],
+        "title": "FileDownloadUrl",
+        "type": "object"
+      },
       "FormErrorBody": {
         "additionalProperties": true,
         "description": "A domain error: a stable ``code`` (``CODE_TAKEN``, ``TEMPLATE_INVALID``, ...) plus extras\nsuch as the lint ``issues`` or a ``VERSION_CONFLICT`` ``current`` row.",
@@ -11854,6 +11873,69 @@
         "summary": "Coverage",
         "tags": [
           "terms"
+        ]
+      }
+    },
+    "/api/v1/uploads/files/{file_id}/url": {
+      "get": {
+        "operationId": "uploads_file_url",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileDownloadUrl"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadErrorBody"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadErrorBody"
+                }
+              }
+            },
+            "description": "File is not released yet"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "File Url",
+        "tags": [
+          "uploads"
         ]
       }
     },

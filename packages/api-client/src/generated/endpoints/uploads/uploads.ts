@@ -19,6 +19,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  FileDownloadUrl,
   HTTPValidationError,
   SessionCreate,
   SessionCreated,
@@ -47,6 +48,135 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export type uploadsFileUrlResponse200 = {
+  data: FileDownloadUrl
+  status: 200
+}
+
+export type uploadsFileUrlResponse404 = {
+  data: UploadErrorBody
+  status: 404
+}
+
+export type uploadsFileUrlResponse409 = {
+  data: UploadErrorBody
+  status: 409
+}
+
+export type uploadsFileUrlResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type uploadsFileUrlResponseSuccess = (uploadsFileUrlResponse200) & {
+  headers: Headers;
+};
+export type uploadsFileUrlResponseError = (uploadsFileUrlResponse404 | uploadsFileUrlResponse409 | uploadsFileUrlResponse422) & {
+  headers: Headers;
+};
+
+export type uploadsFileUrlResponse = (uploadsFileUrlResponseSuccess | uploadsFileUrlResponseError)
+
+export const getUploadsFileUrlUrl = (fileId: string,) => {
+
+
+
+
+  return `/api/v1/uploads/files/${fileId}/url`
+}
+
+/**
+ * @summary File Url
+ */
+export const uploadsFileUrl = async (fileId: string, options?: Parameters<typeof apiFetch>[1]): Promise<uploadsFileUrlResponse> => {
+
+  return apiFetch<uploadsFileUrlResponse>(getUploadsFileUrlUrl(fileId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getUploadsFileUrlQueryKey = (fileId: string,) => {
+    return [
+    `/api/v1/uploads/files/${fileId}/url`
+    ] as const;
+    }
+
+
+export const getUploadsFileUrlQueryOptions = <TData = Awaited<ReturnType<typeof uploadsFileUrl>>, TError = UploadErrorBody | HTTPValidationError>(fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsFileUrl>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUploadsFileUrlQueryKey(fileId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof uploadsFileUrl>>> = ({ signal }) => uploadsFileUrl(fileId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: fileId !== null && fileId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof uploadsFileUrl>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UploadsFileUrlQueryResult = NonNullable<Awaited<ReturnType<typeof uploadsFileUrl>>>
+export type UploadsFileUrlQueryError = UploadErrorBody | HTTPValidationError
+
+
+export function useUploadsFileUrl<TData = Awaited<ReturnType<typeof uploadsFileUrl>>, TError = UploadErrorBody | HTTPValidationError>(
+ fileId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsFileUrl>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof uploadsFileUrl>>,
+          TError,
+          Awaited<ReturnType<typeof uploadsFileUrl>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUploadsFileUrl<TData = Awaited<ReturnType<typeof uploadsFileUrl>>, TError = UploadErrorBody | HTTPValidationError>(
+ fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsFileUrl>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof uploadsFileUrl>>,
+          TError,
+          Awaited<ReturnType<typeof uploadsFileUrl>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUploadsFileUrl<TData = Awaited<ReturnType<typeof uploadsFileUrl>>, TError = UploadErrorBody | HTTPValidationError>(
+ fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsFileUrl>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary File Url
+ */
+
+export function useUploadsFileUrl<TData = Awaited<ReturnType<typeof uploadsFileUrl>>, TError = UploadErrorBody | HTTPValidationError>(
+ fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsFileUrl>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUploadsFileUrlQueryOptions(fileId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
 
 export type uploadsCreateSessionResponse201 = {
   data: SessionCreated

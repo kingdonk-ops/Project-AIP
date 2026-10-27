@@ -1262,6 +1262,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/uploads/files/{file_id}/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** File Url */
+        get: operations["uploads_file_url"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/uploads/sessions": {
         parameters: {
             query?: never;
@@ -2002,6 +2019,16 @@ export interface components {
             fieldTypes: components["schemas"]["FieldTypeOut"][];
             /** Version */
             version: number;
+        };
+        /**
+         * FileDownloadUrl
+         * @description A short-lived presigned GET for a released (clean) file.
+         */
+        FileDownloadUrl: {
+            /** Expiresins */
+            expiresInS: number;
+            /** Url */
+            url: string;
         };
         /**
          * FormErrorBody
@@ -7656,6 +7683,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TermsCoverage"];
+                };
+            };
+        };
+    };
+    uploads_file_url: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileDownloadUrl"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadErrorBody"];
+                };
+            };
+            /** @description File is not released yet */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

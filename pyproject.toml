@@ -78,3 +78,16 @@ name = "audit-chain-hash-is-pure (AUDIT-01)"
 type = "forbidden"
 source_modules = ["aip.modules.audit.chain_hash"]
 forbidden_modules = ["aip.platform", "aip.modules"]
+
+[[tool.importlinter.contracts]]
+id = "no-direct-object-store"
+name = "no-direct-object-store (UPLOADS-02)"
+type = "forbidden"
+# Files go only through the upload pipeline, and object storage only through the capability facade
+# (``get_object_store``). No module may reach past it into the S3/MinIO adapters, so a direct-S3
+# path can never bypass tenant-prefix keys and SSE-KMS (ADR 0006).
+source_modules = ["aip.modules"]
+forbidden_modules = ["aip.platform.capabilities.adapters"]
+# Only a *direct* import is a violation: every module reaches the adapters indirectly through the
+# facade (``get_object_store``), which is the one allowed path.
+allow_indirect_imports = "true"

@@ -3,6 +3,18 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary File Url
+ */
+export const UploadsFileUrlParams = zod.object({
+  "file_id": zod.uuid()
+})
+
+export const UploadsFileUrlResponse = zod.object({
+  "expiresInS": zod.int(),
+  "url": zod.string()
+}).describe('A short-lived presigned GET for a released (clean) file.')
+
+/**
  * @summary Create Session
  */
 export const uploadsCreateSessionBodyDeclaredMimeMin = 3;
