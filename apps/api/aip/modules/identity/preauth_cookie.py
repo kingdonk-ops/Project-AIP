@@ -8,6 +8,9 @@ can neither read nor change them. It lives 10 minutes and is cleared on every ca
 IDENTITY-04: a step-up (``GET /auth/step-up/start``) seals the same cookie with
 ``purpose='step_up'``, the session being elevated and when the step-up started (epoch seconds);
 the callback then checks the new sign-in against them instead of provisioning a login.
+
+IDENTITY-10: ``audience`` (``app`` or ``portal``) seals which sign-in flow started, so a portal
+cookie cannot finish at the staff callback or the reverse.
 """
 
 from __future__ import annotations
@@ -55,6 +58,8 @@ class PreAuthState(BaseModel):
     return_to: str
     exp: int
     purpose: Literal["login", "step_up"] = "login"
+    audience: Literal["app", "portal"] = "app"
+
     session_id: UUID | None = None
     started_at: int | None = None
 

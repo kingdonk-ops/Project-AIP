@@ -36,6 +36,7 @@ DEV_PREAUTH_COOKIE_KEY = (
 # Every publicly known dev secret, by the variable that carries it.
 DEV_SECRETS: Mapping[str, frozenset[str]] = {
     "OIDC_CLIENT_SECRET": frozenset({"aip_api_dev_only_secret"}),
+    "PORTAL_OIDC_CLIENT_SECRET": frozenset({"aip_portal_dev_only_secret"}),
     "KEYCLOAK_ADMIN_CLIENT_SECRET": frozenset({"aip_admin_dev_only_secret"}),
     "PREAUTH_COOKIE_KEY": frozenset({DEV_PREAUTH_COOKIE_KEY}),
     "PROJECTS_CURSOR_KEY": frozenset({"dev-only-projects-cursor-key-not-secret"}),

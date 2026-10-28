@@ -9,6 +9,10 @@
 # IDENTITY-04: user_invite, signoff_policy, app_user.mfa_enrolled_at; invites (Keycloak sends the
 #   email), MFA reset, step-up (GET /api/v1/auth/step-up/start) and sign-off assurance (ADR 0010);
 #   jobs identity.send_invite, identity.disable_keycloak_user, identity.reset_keycloak_mfa.
+# IDENTITY-10: the portal audience. POST /api/v1/auth/portal/login/start and
+#   GET /api/v1/auth/portal/oidc/callback (public, the aip-portal client, local portal accounts at
+#   aal 2), the __Host-aip_portal_sid / __Host-aip_portal_csrf cookies, portal invites (local,
+#   client membership, email via aip-portal); portal idle is capped at staff idle.
 # depends_on tenancy: login_directory and the user tables reference tenants (TENANCY-01).
 #   ops: revocation enqueues its Keycloak job through the ops job registry (ADR 0003).
 id = "identity"
@@ -22,6 +26,9 @@ settings = [
   "OIDC_CLIENT_ID",
   "OIDC_CLIENT_SECRET",
   "APP_ORIGIN",
+  "PORTAL_ORIGIN",
+  "PORTAL_OIDC_CLIENT_ID",
+  "PORTAL_OIDC_CLIENT_SECRET",
   "PREAUTH_COOKIE_KEY",
   "AUTH_TEST_STUB",
   "KEYCLOAK_ADMIN_CLIENT_ID",

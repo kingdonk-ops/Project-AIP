@@ -46,7 +46,8 @@ class VerifiedExternalIdentity(BaseModel):
 
     ``upstream_amr`` is the customer IdP's ``amr`` for a brokered sign-in (IDENTITY-04: imported by
     the IdP mapper, emitted as the ``upstream_amr`` claim); ``step_up`` is set when this sign-in
-    was a step-up rather than a login.
+    was a step-up rather than a login. ``audience`` (IDENTITY-10) is the flow that signed in:
+    ``app`` (staff, ``aip-api``) or ``portal`` (clients, ``aip-portal``).
     """
 
     model_config = ConfigDict(frozen=True)
@@ -63,9 +64,11 @@ class VerifiedExternalIdentity(BaseModel):
     return_to: str = "/"
     upstream_amr: list[str] = Field(default_factory=list[str])
     step_up: StepUpState | None = None
+    audience: Literal["app", "portal"] = "app"
 
     @property
     def aal(self) -> Literal[1, 2]:
+
         from aip.modules.identity.sessions import derive_aal
 
         return derive_aal(self.acr, self.amr, self.upstream_amr)
