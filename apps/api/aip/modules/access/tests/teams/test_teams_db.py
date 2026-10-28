@@ -181,7 +181,8 @@ async def test_a_role_edit_invalidates_the_whole_tenant(
     client: httpx.AsyncClient, db: TenantDb
 ) -> None:
     inspector = await role_id(client, "inspector")
-    current = (await client.get(f"{ROLES}/{inspector}", headers=ALICE)).json()["permissions"]
+    roles = (await client.get(ROLES, headers=ALICE)).json()["items"]
+    current = next(r["permissions"] for r in roles if r["id"] == inspector)
     patch = {"permissions": [p for p in current if p != "form.view"]}
     response = await client.patch(f"{ROLES}/{inspector}", json=patch, headers=ALICE)
     assert response.status_code == 200, response.text

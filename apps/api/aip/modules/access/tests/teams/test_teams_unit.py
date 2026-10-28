@@ -49,7 +49,9 @@ def test_operator_codes_are_never_granted_through_a_team() -> None:
 def test_the_schema_rejects_a_team_scope_with_a_user() -> None:
     team_scope = {"type": "team", "teamId": str(TEAM)}
     with pytest.raises(ValidationError):
-        AssignmentCreate.model_validate({"userId": str(U1), "roleId": str(ROLE), "scope": team_scope})
+        AssignmentCreate.model_validate(
+            {"userId": str(U1), "roleId": str(ROLE), "scope": team_scope}
+        )
     ok = AssignmentCreate.model_validate({"roleId": str(ROLE), "scope": team_scope})
     assert ok.user_id is None
     with pytest.raises(ValidationError):  # every other scope needs a user
