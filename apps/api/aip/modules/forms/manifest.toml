@@ -34,6 +34,18 @@ term_keys = [
   "forms.lint.EXPRESSION_INVALID",
   "forms.lint.UNKNOWN_REFERENCE",
   "forms.lint.CONDITION_CYCLE",
+  "forms.answer.REQUIRED",
+  "forms.answer.WRONG_TYPE",
+  "forms.answer.NOT_AN_OPTION",
+  "forms.answer.BELOW_MIN",
+  "forms.answer.ABOVE_MAX",
+  "forms.answer.TOO_SHORT",
+  "forms.answer.TOO_LONG",
+  "forms.answer.TOO_FEW",
+  "forms.answer.TOO_MANY",
+  "forms.answer.RULE_FAILED",
+  "forms.answer.UNKNOWN_FIELD",
+  "forms.answer.failed",
 ]
 
 # ADR 0027 verbs: `view` is granted from the `view` level up; `manage` is an `admin` verb; and

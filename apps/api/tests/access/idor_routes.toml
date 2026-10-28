@@ -207,3 +207,7 @@ table = "form_revisions"
 
 ["POST /api/v1/forms/revisions/{revision_id}/publish"]
 table = "form_revisions"
+
+["POST /api/v1/forms/revisions/{revision_id}/evaluate"]
+table = "form_revisions"
+body = '{"answers": {}}'

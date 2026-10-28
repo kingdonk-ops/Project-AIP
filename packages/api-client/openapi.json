@@ -115,6 +115,96 @@
         "title": "Ancestor",
         "type": "object"
       },
+      "AnswerErrorOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "fieldKey": {
+            "title": "Fieldkey",
+            "type": "string"
+          },
+          "messageKey": {
+            "title": "Messagekey",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          }
+        },
+        "required": [
+          "fieldKey",
+          "code",
+          "messageKey",
+          "params"
+        ],
+        "title": "AnswerErrorOut",
+        "type": "object"
+      },
+      "AnswerEvaluationOut": {
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerErrorOut"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "expressionErrors": {
+            "items": {
+              "$ref": "#/components/schemas/ExpressionErrorOut"
+            },
+            "title": "Expressionerrors",
+            "type": "array"
+          },
+          "failed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Failed",
+            "type": "array"
+          },
+          "ignored": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Ignored",
+            "type": "array"
+          },
+          "required": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Required",
+            "type": "object"
+          },
+          "visible": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Visible",
+            "type": "object"
+          }
+        },
+        "required": [
+          "visible",
+          "required",
+          "errors",
+          "failed",
+          "ignored",
+          "expressionErrors",
+          "complete"
+        ],
+        "title": "AnswerEvaluationOut",
+        "type": "object"
+      },
       "ApprovalsErrorBody": {
         "additionalProperties": false,
         "properties": {
@@ -1735,6 +1825,80 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "EvaluateBody": {
+        "additionalProperties": false,
+        "description": "Answers to evaluate against a revision. ``complete`` and the rest of the result are computed\nserver-side and never accepted from the client (unknown keys → 422).",
+        "properties": {
+          "answers": {
+            "additionalProperties": true,
+            "title": "Answers",
+            "type": "object"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvaluateContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mode": {
+            "default": "submit",
+            "enum": [
+              "draft",
+              "submit"
+            ],
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "answers"
+        ],
+        "title": "EvaluateBody",
+        "type": "object"
+      },
+      "EvaluateContext": {
+        "additionalProperties": false,
+        "description": "The evaluation context an expression may read as ``context.<key>`` (camelCase keys).",
+        "properties": {
+          "assetId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assetid"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "EvaluateContext",
+        "type": "object"
+      },
       "EventCatalogue": {
         "additionalProperties": false,
         "properties": {
@@ -1860,6 +2024,29 @@
           "schema"
         ],
         "title": "EventVersionDetail",
+        "type": "object"
+      },
+      "ExpressionErrorOut": {
+        "properties": {
+          "expression": {
+            "title": "Expression",
+            "type": "string"
+          },
+          "fieldKey": {
+            "title": "Fieldkey",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fieldKey",
+          "expression",
+          "message"
+        ],
+        "title": "ExpressionErrorOut",
         "type": "object"
       },
       "FeatureFlag": {
@@ -9185,6 +9372,69 @@
           }
         },
         "summary": "Replace Revision",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/api/v1/forms/revisions/{revision_id}/evaluate": {
+      "post": {
+        "operationId": "forms_revisions_evaluate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerEvaluationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Evaluate Revision",
         "tags": [
           "forms"
         ]
