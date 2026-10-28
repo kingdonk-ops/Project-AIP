@@ -18,7 +18,7 @@ ACCESS-04: teams, team membership and roles assigned to a whole team.
   INVOKER, as in ACCESS-03. Rows are unique per (assignment, user) instead of per assignment.
 
 Revision ID: 202610291000
-Revises: 202610281300
+Revises: 202610281500
 Create Date: 2026-10-29 10:00:00+00:00
 """
 
@@ -27,7 +27,7 @@ from alembic import op
 from aip.platform.db.templates import render_template
 
 revision: str = "202610291000"
-down_revision: str | None = "202610281300"
+down_revision: str | None = "202610281500"
 branch_labels = None
 depends_on = None
 
