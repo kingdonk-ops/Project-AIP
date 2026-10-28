@@ -161,7 +161,8 @@ function lookup(data: unknown, path: unknown, dflt: unknown = null): unknown {
   let current: unknown = data;
   for (const part of String(path).split(".")) {
     if (isObject(current)) {
-      if (!(part in current)) return dflt;
+      // Own keys only, as Python's dict lookup: "constructor" must not reach Object.prototype.
+      if (!Object.hasOwn(current, part)) return dflt;
       current = current[part];
     } else if (Array.isArray(current) && /^[0-9]+$/.test(part)) {
       const index = Number(part);

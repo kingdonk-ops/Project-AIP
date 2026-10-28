@@ -2680,6 +2680,56 @@
         "expressionErrors": [],
         "complete": true
       }
+    },
+    {
+      "name": "a key named like an Object.prototype member is just a key",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "constructor",
+                "type": "text",
+                "label": "Constructor"
+              },
+              {
+                "key": "flag",
+                "type": "boolean",
+                "label": "Flag",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.constructor"
+                    },
+                    null
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {},
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "constructor": true,
+          "flag": true
+        },
+        "required": {
+          "constructor": false,
+          "flag": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
     }
   ]
 }

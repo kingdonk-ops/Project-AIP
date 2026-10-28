@@ -73,7 +73,7 @@ function isFileRef(value: unknown): boolean {
   return (
     isObject(value) &&
     Object.keys(value).length === 1 &&
-    "fileId" in value &&
+    Object.hasOwn(value, "fileId") &&
     isUuid(value["fileId"])
   );
 }
@@ -274,7 +274,8 @@ export function evaluateAnswers(
     const isVisible = (sectionVisible[field.sectionKey] ?? true) && fieldVis;
     visible[field.key] = isVisible;
 
-    if (isVisible && field.key in answers) {
+    // Own keys only: a field keyed e.g. "constructor" must not read Object.prototype.
+    if (isVisible && Object.hasOwn(answers, field.key)) {
       visibleAnswers[field.key] = answers[field.key] as Json;
     }
 
@@ -298,7 +299,7 @@ export function evaluateAnswers(
   const fieldKeys = new Set(fields.keys());
   const ordered = [...fields.values()].sort((a, b) => a.docIndex - b.docIndex);
   for (const field of ordered) {
-    const answer: Answer = field.key in answers ? (answers[field.key] as Json) : MISSING;
+    const answer: Answer = Object.hasOwn(answers, field.key) ? (answers[field.key] as Json) : MISSING;
     if (!visible[field.key]) {
       if (answer !== MISSING) ignored.push(field.key);
       continue;
