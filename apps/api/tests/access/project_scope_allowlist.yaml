@@ -36,3 +36,9 @@ tables:
     reason: >-
       Predates ACCESS-03 (APPROVALS); a running workflow's project_id. Project-scope hardening of
       approvals is tracked separately, not widened here.
+  - table: portal_grants
+    reason: >-
+      PORTAL-01: project_id is the scope *target* of an external user's grant (like role_assignment),
+      not a project-scoped record. PortalGrantProvider reads a portal user's own grants, and a
+      portal user holds no access_user_scope row, so gating on project visibility would deny every
+      portal user; the admin routes check portal.grant.manage on the project in PolicyService.

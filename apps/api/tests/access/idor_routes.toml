@@ -226,3 +226,23 @@ table = "report_templates"
 
 ["DELETE /api/v1/reports/templates/{template_id}"]
 table = "report_templates"
+
+["GET /api/v1/admin/portal/users/{portal_user_id}"]
+table = "portal_users"
+
+["POST /api/v1/admin/portal/users/{portal_user_id}/suspend"]
+table = "portal_users"
+body = '{"reason": "idor"}'
+
+["POST /api/v1/admin/portal/users/{portal_user_id}/reinstate"]
+table = "portal_users"
+
+["POST /api/v1/admin/portal/users/{portal_user_id}/grants"]
+table = "portal_users"
+body = '{"projectId": "00000000-0000-4000-8000-0000000000a1", "actions": ["view"]}'
+
+["POST /api/v1/admin/portal/users/{portal_user_id}/grants/{grant_id}/renew"]
+table = "portal_grants"
+
+["DELETE /api/v1/admin/portal/users/{portal_user_id}/grants/{grant_id}"]
+table = "portal_grants"
