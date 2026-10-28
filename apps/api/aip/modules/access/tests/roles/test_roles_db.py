@@ -343,6 +343,8 @@ async def test_editing_a_system_role_customises_it_and_takes_effect(
     assert event["before"] == [
         "approvals.view",
         "asset.view",
+        "portal.record.view",
+        "portal.user.view",
         "project.view",
         "report.template.view",
         "site.view",
@@ -405,6 +407,8 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
     assert response.json()["permissions"] == [
         "approvals.view",
         "asset.view",
+        "portal.record.view",
+        "portal.user.view",
         "project.view",
         "report.template.view",
         "site.view",
@@ -416,6 +420,8 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
         [
             "approvals.view",
             "asset.view",
+            "portal.record.view",
+            "portal.user.view",
             "project.view",
             "report.template.view",
             "site.view",
