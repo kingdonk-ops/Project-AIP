@@ -1,6 +1,6 @@
 """SQLAlchemy Core declarations for portal users and grants (PORTAL-01, ADR 0002).
 
-Created only by the Alembic revision ``202610281500_portal_users_grants``; ``aip-db check-schema``
+Created only by the Alembic revision ``202610281600_portal_users_grants``; ``aip-db check-schema``
 compares these declarations with the migrated database. Both tables are tenant-scoped with soft
 delete and FORCE ROW LEVEL SECURITY; ``aip_app`` has no DELETE on either.
 """

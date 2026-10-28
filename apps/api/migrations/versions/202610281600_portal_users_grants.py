@@ -16,17 +16,17 @@ INSERT and UPDATE.
   user, project and subtree (a partial unique index, the null subtree coalesced to the nil uuid);
   the ``(tenant_id, expires_at)`` index serves PORTAL-08's reminder job.
 
-Revision ID: 202610281500
-Revises: 202610281300
-Create Date: 2026-10-28 15:00:00+00:00
+Revision ID: 202610281600
+Revises: 202610281500
+Create Date: 2026-10-28 16:00:00+00:00
 """
 
 from alembic import op
 
 from aip.platform.db.templates import render_template
 
-revision: str = "202610281500"
-down_revision: str | None = "202610281300"
+revision: str = "202610281600"
+down_revision: str | None = "202610281500"
 branch_labels = None
 depends_on = None
 

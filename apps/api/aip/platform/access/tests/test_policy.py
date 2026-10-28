@@ -227,7 +227,16 @@ SUBTREE = Grant("project.view", AssetSubtreeScope(P1, NODE))
         (Resource(project_id=P2, asset_path=f"{ROOT.hex}.{NODE.hex}.{CHILD.hex}"), False),
         (None, False),
     ],
-    ids=["child", "node", "sibling", "parent", "no-path", "no-path-default", "other-project", "none"],
+    ids=[
+        "child",
+        "node",
+        "sibling",
+        "parent",
+        "no-path",
+        "no-path-default",
+        "other-project",
+        "none",
+    ],
 )
 def test_asset_subtree_scope_matches_only_its_subtree_in_its_project(
     resource: Resource | None, allowed: bool

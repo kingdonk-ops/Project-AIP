@@ -348,9 +348,7 @@ class PortalService:
         by_user: dict[UUID, list[repo.Row]] = {}
         for grant in grants:
             by_user.setdefault(grant["portal_user_id"], []).append(grant)
-        items = [
-            user_out(r, by_user.get(r["id"], []), emails.get(r["user_id"]), now) for r in page
-        ]
+        items = [user_out(r, by_user.get(r["id"], []), emails.get(r["user_id"]), now) for r in page]
         more = len(rows) > limit
         return PortalUserPage(
             items=items, next_cursor=_encode_cursor(page[-1]["id"]) if more else None
@@ -430,7 +428,9 @@ class PortalService:
     async def revoke(self, portal_user_id: UUID, grant_id: UUID) -> None:
         async with _tx() as conn:
             grant = await self._grant_of(conn, portal_user_id, grant_id)
-            row = await repo.revoke_grant(conn, grant["id"], reason="manual", revoked_by=self._actor)
+            row = await repo.revoke_grant(
+                conn, grant["id"], reason="manual", revoked_by=self._actor
+            )
             if row is None:  # already revoked: as absent
                 raise _not_found(f"grant {grant_id}")
             await emit_grant_revoked(conn, row, "manual")

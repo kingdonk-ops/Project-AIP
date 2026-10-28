@@ -1,6 +1,6 @@
 """Pydantic request/response models for portal users and grants (PORTAL-01).
 
-JSON uses camelCase (``companyName``, ``expiresAt``). Request bodies are strict (``extra="forbid"``),
+JSON uses camelCase (``companyName``). Request bodies are strict (``extra="forbid"``),
 so a client can never set an expiry, a status or a role. A grant's ``actions`` are 1 to 4 distinct
 codes of ``view``/``sign_off``/``witness``/``download`` and always include ``view``.
 """
@@ -46,7 +46,7 @@ class _Out(BaseModel):
 
 
 class ErrorBody(_Out):
-    """A domain error: a stable ``code`` (``PROJECT_CLOSED``, ``REVOKED``, ``GRANT_EXISTS``, ...)."""
+    """A domain error: a stable ``code`` (``PROJECT_CLOSED``, ``REVOKED``, ``GRANT_EXISTS``)."""
 
     code: str
 
