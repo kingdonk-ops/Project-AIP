@@ -1,7 +1,9 @@
 // DESIGN-02: the app shell main journey. Runs on the Vite dev server with the fixture session stub
-// (preview/production builds cannot contain it). Tests tagged @needs-identity-03 need real sessions.
+// (preview/production builds cannot contain it). The real Keycloak sign-in, the HttpOnly session
+// cookie and real sign-out run in the skeleton lane (sessions.spec.ts, TESTING-12).
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { SESSION_COOKIE } from "../fixtures/login";
 import { devBaseURL } from "../playwright.config";
 import { signInAsStub } from "./stub-session";
 
@@ -44,7 +46,9 @@ test("shell landmarks, nav and axe on the signed-in page", async ({ page }) => {
   }
   await expect(page.getByRole("link", { name: "Projects" })).toBeVisible();
   await expectNoBlockingAxe(page);
-  expect(await page.evaluate(() => document.cookie)).not.toContain("__Host-");
+  // The stub has no server session; the real-session check that script cannot read the session
+  // cookie (while the CSRF cookie is readable by design) is in sessions.spec.ts.
+  expect(await page.evaluate(() => document.cookie)).not.toContain(`${SESSION_COOKIE}=`);
 });
 
 // DESIGN-08: under 768px the rail is a drawer with a backdrop; Escape or a backdrop click closes it.
@@ -188,8 +192,4 @@ test("unknown email gets the same generic failure, with no enumeration", async (
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page).toHaveURL(/\/login\?error=failed$/);
   await expect(page.getByRole("alert")).toContainText("We could not sign you in");
-});
-
-test("@needs-identity-03 real Keycloak sign-in lands on next with an HttpOnly cookie", () => {
-  test.skip(true, "needs IDENTITY-03 (app sessions) and IDENTITY-02 (GET /me); the stub covers the shell until then");
 });

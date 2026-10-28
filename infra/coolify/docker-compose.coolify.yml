@@ -222,6 +222,9 @@ services:
       KEYCLOAK_PUBLIC_URL: ${APP_ORIGIN:?}/auth
       KEYCLOAK_INTERNAL_URL: http://localhost:8080/auth
       APP_ORIGIN: ${APP_ORIGIN:?}
+      # TESTING-12: where Keycloak posts back-channel logout tokens (realm-aip.json). The public
+      # origin, as before; only read when a realm is first imported.
+      AIP_BACKCHANNEL_ORIGIN: ${APP_ORIGIN:?}
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:?}
       AIP_API_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:?}
       AIP_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:?}
@@ -267,6 +270,9 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?}
       MOCK_IDP_ALICE_PASSWORD: ${MOCK_IDP_ALICE_PASSWORD:?}
       MOCK_IDP_BOB_PASSWORD: ${MOCK_IDP_BOB_PASSWORD:?}
+      # TESTING-12: optional; set it (and the E2E_USER_VIEWER/E2E_PASS_VIEWER secrets) to run the
+      # viewer journey against the demo.
+      MOCK_IDP_VIEWER_PASSWORD: ${MOCK_IDP_VIEWER_PASSWORD:-}
     depends_on:
       keycloak:
         condition: service_healthy
@@ -336,7 +342,8 @@ services:
 
   admin-bootstrap:
     # TESTING-09: each fixture tenant's first tenant_admin, linked on their first SSO sign-in
-    # (alice@kaefer.test, bob@acme.test from the mock IdP). Idempotent.
+    # (alice@kaefer.test, bob@acme.test from the mock IdP), and (TESTING-12) the read-only viewer
+    # viewer@kaefer.test (auditor: no project.create). Idempotent.
     <<: *oneshot
     image: *api-image
     command:
@@ -348,6 +355,8 @@ services:
       - 00000000-0000-4000-8000-00000000000a,alice@kaefer.test,kaefer-oidc
       - --admin
       - 00000000-0000-4000-8000-00000000000b,bob@acme.test,acme-oidc
+      - --viewer
+      - 00000000-0000-4000-8000-00000000000a,viewer@kaefer.test,kaefer-oidc
     environment: *app-env
     depends_on:
       access-seed:

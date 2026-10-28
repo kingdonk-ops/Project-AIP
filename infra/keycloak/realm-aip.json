@@ -648,7 +648,7 @@
       "webOrigins": [],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "backchannel.logout.url": "${APP_ORIGIN:http://localhost:8080}/api/v1/auth/oidc/backchannel-logout",
+        "backchannel.logout.url": "${AIP_BACKCHANNEL_ORIGIN:http://localhost:8080}/api/v1/auth/oidc/backchannel-logout",
         "backchannel.logout.session.required": "true",
         "backchannel.logout.revoke.offline.tokens": "false",
         "default.acr.values": "aal2",

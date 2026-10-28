@@ -20,3 +20,11 @@ export function tenantUsers(env: NodeJS.ProcessEnv = process.env): { a: TenantUs
     b: { tenant: "tenant-b", email: required(env, "E2E_USER_B"), password: required(env, "E2E_PASS_B") },
   };
 }
+
+/**
+ * TESTING-12 (QA-3): the kaefer-demo viewer (read-only `auditor`, no `project.create`), seeded by
+ * the admin bootstrap. CI passes the dev realm user; the demo passes E2E_USER_VIEWER/E2E_PASS_VIEWER.
+ */
+export function viewerUser(env: NodeJS.ProcessEnv = process.env): TenantUser {
+  return { tenant: "kaefer-demo", email: required(env, "E2E_USER_VIEWER"), password: required(env, "E2E_PASS_VIEWER") };
+}

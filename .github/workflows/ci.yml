@@ -512,12 +512,13 @@ jobs:
   # TESTING-09: the M0 exit proof on every build. The compose stack runs the migrator, the seeds
   # and the dev admin bootstrap as one-shots; the journey signs in for real through Keycloak and
   # the mock IdP (dev realm users, public dev-only passwords). Retries are off for this spec.
+  # TESTING-12: plus session revocation, SSO and back-channel logout, and the viewer's server 403.
   e2e-skeleton:
     name: E2E walking skeleton (compose, real sign-in, two tenants)
     runs-on: ubuntu-latest
     needs: detect
     if: ${{ always() && needs.detect.outputs.board_only != 'true' }}
-    timeout-minutes: 15
+    timeout-minutes: 20  # TESTING-12 added the session and viewer journeys
     env:
       CI: "true"
       COMPOSE: docker compose -f infra/docker-compose.yml
@@ -530,6 +531,13 @@ jobs:
       E2E_PASS_A: alice_dev_only_password
       E2E_USER_B: bob@acme.test
       E2E_PASS_B: bob_dev_only_password
+      # TESTING-12: the seeded read-only viewer (admin-bootstrap --viewer) and the compose Keycloak's
+      # bootstrap admin, for the journeys that inspect or end aip realm SSO sessions (dev-only values).
+      E2E_USER_VIEWER: viewer@kaefer.test
+      E2E_PASS_VIEWER: viewer_dev_only_password
+      E2E_KEYCLOAK_URL: http://localhost:8180
+      E2E_KEYCLOAK_ADMIN: admin
+      E2E_KEYCLOAK_ADMIN_PASSWORD: keycloak_admin_dev_only
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -556,7 +564,7 @@ jobs:
         run: echo "127.0.0.1 rustfs" | sudo tee -a /etc/hosts
       # One worker: the specs sign the same fixture users in, and the mock IdP's brute-force
       # protection treats two sign-ins of one user within a second as an attack (quick-login check).
-      - name: Walking skeleton and UPLOADS-01 presign journey (web project, @skeleton)
+      - name: Walking skeleton, UPLOADS-01 presign, TESTING-12 session and viewer journeys (web project, @skeleton)
         run: pnpm --filter e2e exec playwright test --project web --grep @skeleton --workers 1
       - name: Upload the trace, video and report
         if: failure()

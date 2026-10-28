@@ -93,13 +93,17 @@ committed passwords are for local dev and CI only). On every deploy the `mock-id
 creates alice and bob if missing and sets their passwords from `MOCK_IDP_ALICE_PASSWORD` and
 `MOCK_IDP_BOB_PASSWORD`. A missing value fails the deploy, and the committed dev passwords are
 refused. The `admin-bootstrap` one-shot (TESTING-09) makes `alice@kaefer.test` the kaefer-demo
-`tenant_admin` and `bob@acme.test` the tenant-b `tenant_admin` before their first sign-in.
+`tenant_admin` and `bob@acme.test` the tenant-b `tenant_admin` before their first sign-in, and
+(TESTING-12) gives `viewer@kaefer.test` the read-only `auditor` role. The viewer exists in the mock
+IdP only when the optional `MOCK_IDP_VIEWER_PASSWORD` is set.
 
 After each deploy the workflow runs the walking-skeleton journey against `DEMO_URL` when the
 `coolify-demo` environment has the secrets `E2E_USER_A`, `E2E_PASS_A`, `E2E_USER_B` and
 `E2E_PASS_B`; without them the step is skipped with a notice. `E2E_PASS_A`/`E2E_PASS_B` must equal
 `MOCK_IDP_ALICE_PASSWORD`/`MOCK_IDP_BOB_PASSWORD`. Each run creates one project in kaefer-demo and
-archives it at the end.
+archives it at the end. The viewer's server-403 journey (tagged `@viewer`) also runs when the
+secrets `E2E_USER_VIEWER` (`viewer@kaefer.test`) and `E2E_PASS_VIEWER` (equal to
+`MOCK_IDP_VIEWER_PASSWORD`) are set; without them it is left out with a notice.
 
 Rotating a demo password: change the Coolify variable and the matching `E2E_PASS_*` secret, then
 redeploy (the one-shot sets the new password).

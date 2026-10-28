@@ -351,4 +351,9 @@ def test_the_mock_idp_users_come_from_secrets_before_web_starts(
     )
     script = (IMAGES / "mock-idp-users.sh").read_text()
     assert ': "${MOCK_IDP_ALICE_PASSWORD:?}"' in script
-    assert "alice_dev_only_password | bob_dev_only_password" in script
+    assert "alice_dev_only_password | bob_dev_only_password | viewer_dev_only_password" in script
+    # TESTING-12: the viewer is optional (created only when its password is set).
+    assert users["environment"]["MOCK_IDP_VIEWER_PASSWORD"] == "${MOCK_IDP_VIEWER_PASSWORD:-}"
+    assert 'if [ -n "$MOCK_IDP_VIEWER_PASSWORD" ]; then' in script
+    # The demo keeps posting back-channel logout tokens to its public origin.
+    assert services["keycloak"]["environment"]["AIP_BACKCHANNEL_ORIGIN"] == "${APP_ORIGIN:?}"

@@ -61,6 +61,39 @@ Session revocation and SSO logout are proven end to end against real Keycloak in
     - two browsers, revoke the other from Active sessions → its next request is 401
     - Active sessions page: tenant B sees none of tenant A's sessions; axe clean
 
+## Carried forward from TESTING-09 (owned here)
+
+Copied verbatim from [TESTING-09](TESTING-09.md) ("Carried forward from IDENTITY-03 and ACCESS-02"); each item's
+owner and test follow the copy.
+
+> - Live Keycloak on compose: after `POST /api/v1/auth/logout` and the queued `identity.revoke_keycloak_sessions` job,
+>   Keycloak's admin `get_sessions(carol)` is empty and the next sign-in shows the password form; running the job again
+>   succeeds (404 is success). Keycloak admin `user_logout(carol)` calls the back-channel endpoint and her next
+>   `GET /api/v1/me` is 401 `SESSION_EXPIRED`.
+> - Playwright: sign in as alice and reload (still signed in); from a second context, sign in again and revoke it from
+>   the first context's Active sessions page (`/settings/profile/sessions`), so the second context's next navigation
+>   lands on `/login`; Logout clears both `__Host-` cookies.
+> - The TENANCY-01 (`/me/tenant` per tenant), ACCESS-01 (no roles: abilities empty, a `requires()` route 403) and
+>   ACCESS-02 (assign alice `inspector` on P1; abilities for P1 vs P2) journeys.
+> - Nobody holds a role after JIT sign-in: the demo/dev bootstrap must give the first kaefer-demo user `tenant_admin`
+>   (a tenant-scope `role_assignment` after `seed_default_roles`) before these journeys can create projects.
+
+| Item | Owner | Test |
+|---|---|---|
+| Logout → the queued job ends the Keycloak SSO session; the next sign-in asks for credentials | TESTING-12 | `e2e/web/sessions.spec.ts` "Sign out ends the aip realm's Keycloak SSO session…" (admin API: this browser's aip-realm session is gone; replaying the authorize request shows the aip sign-in form; the app sends the browser to `/login`). The mock IdP's own session is the customer IdP's, so it is not asserted. |
+| Running the revocation job again succeeds (404 is success) | IDENTITY-03 (done) | `identity/tests/sessions/test_sessions_unit.py::test_keycloak_admin_revocation_is_idempotent` |
+| Keycloak admin `user_logout` → back-channel → next `GET /me` is 401 `SESSION_EXPIRED` | TESTING-12 | `sessions.spec.ts` "Keycloak's admin sign-out reaches the back-channel endpoint…". Needed a fix: in compose the realm's back-channel URL was `APP_ORIGIN` (`localhost:8080`), which inside the Keycloak container is Keycloak itself; it is now `${AIP_BACKCHANNEL_ORIGIN}` (compose: `http://api:8000`; the demo keeps `APP_ORIGIN`). |
+| Sign in and reload (still signed in) | TESTING-12 | `sessions.spec.ts` "real sign-in returns to next with an HttpOnly session cookie…" |
+| Revoke a second context from Active sessions → its next navigation lands on `/login` | TESTING-12 | `sessions.spec.ts` "revoking another browser from Active sessions…" (plus the 401, cross-tenant 404 and axe); the page on all three device projects in `sessions-page.spec.ts` |
+| Logout clears both `__Host-` cookies | TESTING-12 | `sessions.spec.ts` "Sign out ends the aip realm's Keycloak SSO session…" |
+| TENANCY-01 `/me/tenant` per tenant | TESTING-12 | `sessions.spec.ts` "real sign-in returns to next…" |
+| ACCESS-01: a `requires()` route 403 with a real session | TESTING-12 | `projects-viewer.spec.ts` (the viewer's `POST /projects` is 403) |
+| ACCESS-01: no roles → abilities empty; ACCESS-02: alice `inspector` on P1, abilities P1 vs P2 | ACCESS-05 | API level already: `access/tests` (abilities, project-scope grants). The browser journeys need the Users & Roles UI that assigns roles, so they move to ACCESS-05 (noted on its board row). |
+| First kaefer-demo `tenant_admin` bootstrap | TESTING-09 (done) | compose and Coolify `admin-bootstrap`; `access/tests/roles/test_bootstrap_admin_db.py` |
+
+Review 11 M16 (passkey `hwk` sign-in) is not folded in here; it needs a WebAuthn virtual authenticator journey and
+stays with the identity carry-forwards (IDENTITY-08).
+
 ## Part B — seed a viewer; real-session server-403 journey (merged from QA-3, review 11 M12)
 
 ### Background

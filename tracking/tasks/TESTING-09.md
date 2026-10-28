@@ -89,3 +89,4 @@ Prove M0 end to end. A Keycloak user of tenant A signs in to the Vite + React we
   `E2E_PASS_B` to the `coolify-demo` environment (the deploy skips the journey with a notice until then).
 - Carried forward (non-blocking, still open): the IDENTITY-03 live-Keycloak revocation checks and the Active sessions
   journey, and the TENANCY-01 / ACCESS-01 / ACCESS-02 journeys listed above.
+- 2026-10-28: the carried-forward list is owned by [TESTING-12](TESTING-12.md), which records each item's test or owner.

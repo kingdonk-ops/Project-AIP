@@ -236,6 +236,9 @@ jobs:
           E2E_PASS_A: ${{ secrets.E2E_PASS_A }}
           E2E_USER_B: ${{ secrets.E2E_USER_B }}
           E2E_PASS_B: ${{ secrets.E2E_PASS_B }}
+          # TESTING-12: the read-only viewer (needs MOCK_IDP_VIEWER_PASSWORD on the demo).
+          E2E_USER_VIEWER: ${{ secrets.E2E_USER_VIEWER }}
+          E2E_PASS_VIEWER: ${{ secrets.E2E_PASS_VIEWER }}
         run: |
           set -euo pipefail
           if [ -z "${E2E_USER_A}" ] || [ -z "${E2E_USER_B}" ]; then
@@ -244,7 +247,12 @@ jobs:
           fi
           pnpm install --frozen-lockfile
           pnpm --filter e2e exec playwright install --with-deps chromium
-          pnpm --filter e2e exec playwright test --project staging --grep @staging
+          skip=()
+          if [ -z "${E2E_USER_VIEWER}" ] || [ -z "${E2E_PASS_VIEWER}" ]; then
+            echo "::notice::E2E_USER_VIEWER/E2E_PASS_VIEWER secrets are not set on coolify-demo: the @viewer journey is left out"
+            skip=(--grep-invert @viewer)
+          fi
+          pnpm --filter e2e exec playwright test --project staging --grep @staging "${skip[@]}"
       - name: Upload the demo journey trace
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

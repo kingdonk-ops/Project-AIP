@@ -7,8 +7,20 @@ import type { TenantUser } from "./tenants";
 export const SESSION_COOKIE = "__Host-aip_sid";
 export const CSRF_COOKIE = "__Host-aip_csrf";
 
-export async function loginAs(page: Page, user: TenantUser): Promise<void> {
-  await page.goto("/login");
+/**
+ * Sign `user` in for real. With `from`, start at that signed-in page instead of /login: the app
+ * must send the browser to /login?next=<from> and land back on `from` (TESTING-12).
+ */
+export async function loginAs(page: Page, user: TenantUser, options: { from?: string } = {}): Promise<void> {
+  const from = options.from;
+  if (from) {
+    await page.goto(from);
+    await expect(page, `${user.tenant}: a signed-out visit is sent to sign in`).toHaveURL(
+      (url) => url.pathname === "/login" && url.searchParams.get("next") === from,
+    );
+  } else {
+    await page.goto("/login");
+  }
   await page.getByLabel("Work email").fill(user.email);
   await page.getByRole("button", { name: "Continue" }).click();
 
@@ -24,6 +36,11 @@ export async function loginAs(page: Page, user: TenantUser): Promise<void> {
     page.getByRole("button", { name: "Account menu" }),
     `${user.tenant}: the signed-in shell is shown`,
   ).toBeVisible();
+  if (from) {
+    await expect(page, `${user.tenant}: sign-in returns to the page that asked for it`).toHaveURL(
+      (url) => url.pathname === from,
+    );
+  }
   await expectSessionCookie(page.context(), user);
 }
 

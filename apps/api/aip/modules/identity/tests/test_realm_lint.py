@@ -81,7 +81,11 @@ def test_api_client(realm: dict[str, Any]) -> None:
     assert attrs["minimum.acr.value"] == "aal2"
     assert attrs["default.acr.values"] == "aal2"
     assert attrs["backchannel.logout.session.required"] == "true"
-    assert attrs["backchannel.logout.url"].endswith("/api/v1/auth/oidc/backchannel-logout")
+    # TESTING-12: its own origin variable (compose points it at the api service), defaulting to
+    # the app origin for a Keycloak run outside compose.
+    assert attrs["backchannel.logout.url"] == (
+        "${AIP_BACKCHANNEL_ORIGIN:http://localhost:8080}/api/v1/auth/oidc/backchannel-logout"
+    )
     # Only the API callback: a code sent to the SPA lands in its URL and history (review 11 L6).
     assert [u.rsplit("}", 1)[-1] for u in api["redirectUris"]] == ["/api/v1/auth/oidc/callback"]
     mappers = {m["protocolMapper"]: m for m in api["protocolMappers"]}

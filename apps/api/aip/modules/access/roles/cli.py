@@ -11,7 +11,8 @@ not changed.
 ``bootstrap-admin --admin <tenant-id>,<email>,<idp-alias> [...]`` (TESTING-09; runs only when
 ``AIP_ENV`` is development, demo or test): make each email its tenant's ``tenant_admin`` before
 their first SSO sign-in, so the fixture tenants have someone who can create projects and assign
-roles.
+roles. ``--viewer <tenant-id>,<email>,<idp-alias>`` (TESTING-12) also gives each email the read-only
+``VIEWER_ROLE`` (no ``project.create``), for the e2e lane's server-403 journey.
 Idempotent; run after ``seed-roles``.
 """
 
@@ -26,7 +27,11 @@ from pathlib import Path
 from uuid import UUID
 
 from aip.modules.access.roles.seed import seed_default_roles
-from aip.modules.access.roles.service import bootstrap_tenant_admin
+from aip.modules.access.roles.service import (
+    VIEWER_ROLE,
+    bootstrap_tenant_admin,
+    bootstrap_tenant_viewer,
+)
 from aip.modules.access.service import sync_catalogue
 from aip.platform.access import build_catalogue, load_manifests
 from aip.platform.context import RequestContext, new_request_id, use_context
@@ -73,16 +78,19 @@ def _admin(value: str) -> tuple[UUID, str, str]:
         raise argparse.ArgumentTypeError(f"not a tenant id: {parts[0]}") from exc
 
 
-async def _bootstrap(admins: Sequence[tuple[UUID, str, str]]) -> int:
+async def _bootstrap(
+    admins: Sequence[tuple[UUID, str, str]], viewers: Sequence[tuple[UUID, str, str]] = ()
+) -> int:
+    jobs = [(a, bootstrap_tenant_admin, "tenant_admin") for a in admins] + [
+        (v, bootstrap_tenant_viewer, VIEWER_ROLE) for v in viewers
+    ]
     try:
-        for tenant, email, alias in admins:
+        for (tenant, email, alias), bootstrap, role in jobs:
             ctx = RequestContext(tenant_id=tenant, request_id=new_request_id())
             with use_context(ctx):
                 async with with_tenant(ctx) as conn:
-                    assigned = await bootstrap_tenant_admin(
-                        conn, tenant_id=tenant, email=email, idp_alias=alias
-                    )
-            print(f"{tenant}: {email} tenant_admin {'assigned' if assigned else 'already held'}")
+                    assigned = await bootstrap(conn, tenant_id=tenant, email=email, idp_alias=alias)
+            print(f"{tenant}: {email} {role} {'assigned' if assigned else 'already held'}")
     finally:
         await dispose_engine()
     return 0
@@ -97,6 +105,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     boot.add_argument(
         "--admin", type=_admin, action="append", required=True, help="<tenant-id>,<email>,<idp>"
     )
+    boot.add_argument(
+        "--viewer",
+        type=_admin,
+        action="append",
+        default=[],
+        help=f"<tenant-id>,<email>,<idp>: also seed a read-only {VIEWER_ROLE}",
+    )
     args = parser.parse_args(argv)
     if args.command == "bootstrap-admin":
         env = os.environ.get("AIP_ENV", "").strip().lower()
@@ -106,7 +121,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 1
-        return asyncio.run(_bootstrap(args.admin))
+        return asyncio.run(_bootstrap(args.admin, args.viewer))
     return asyncio.run(_seed(args.tenant))
 
 

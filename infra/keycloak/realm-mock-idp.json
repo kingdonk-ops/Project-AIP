@@ -125,6 +125,17 @@
       "credentials": [
         { "type": "password", "value": "bob_dev_only_password", "temporary": false }
       ]
+    },
+    {
+      "username": "viewer@kaefer.test",
+      "email": "viewer@kaefer.test",
+      "emailVerified": true,
+      "firstName": "Vera",
+      "lastName": "Viewer",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "viewer_dev_only_password", "temporary": false }
+      ]
     }
   ]
 }

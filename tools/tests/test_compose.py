@@ -212,6 +212,18 @@ def test_keycloak_imports_the_realms_theme_and_blocklist(
     assert keycloak["environment"]["KC_SMTP_HOST"] == "mailpit"
 
 
+def test_keycloak_back_channel_logout_reaches_the_api_and_the_viewer_is_seeded(
+    services: dict[str, dict[str, Any]],
+) -> None:
+    """TESTING-12: inside the keycloak container localhost:8080 is Keycloak itself, so the realm's
+    back-channel logout URL is built from AIP_BACKCHANNEL_ORIGIN (the api service); and the
+    admin bootstrap seeds the read-only kaefer-demo viewer for the server-403 journey."""
+    assert services["keycloak"]["environment"]["AIP_BACKCHANNEL_ORIGIN"] == "http://api:8000"
+    command = services["admin-bootstrap"]["command"]
+    viewer = command[command.index("--viewer") + 1]
+    assert viewer == "00000000-0000-4000-8000-00000000000a,viewer@kaefer.test,kaefer-oidc"
+
+
 def test_api_runs_uvicorn_factory(services: dict[str, dict[str, Any]]) -> None:
     command = services["api"]["command"]
     assert command[:3] == ["uvicorn", "aip.main:create_app", "--factory"]

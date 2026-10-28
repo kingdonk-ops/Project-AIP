@@ -12,6 +12,7 @@ from tests.conftest import TENANT_A_ID, TENANT_B_ID
 from tests.fixtures.postgres import TenantDb
 
 from aip.modules.access.roles.cli import _bootstrap, main  # pyright: ignore[reportPrivateUsage]
+from aip.modules.access.roles.service import VIEWER_ROLE
 
 from .conftest import seed_roles, su_fetch
 
@@ -53,6 +54,44 @@ async def test_bootstrap_creates_an_invited_sso_admin_once(db: TenantDb) -> None
         TENANT_A_ID,
     )
     assert again == events and events[0][0] >= 1
+
+
+async def test_bootstrap_seeds_a_read_only_viewer_without_project_create(db: TenantDb) -> None:
+    """TESTING-12: the fixture viewer reads projects but cannot create them (server 403 journey)."""
+    await seed_roles(TENANT_A_ID)
+    viewer = "viewer.e2e@kaefer.test"
+    viewers = [(TENANT_A_ID, viewer, "kaefer-oidc")]
+    assert await _bootstrap([(TENANT_A_ID, EMAIL, "kaefer-oidc")], viewers) == 0
+    rows = await _holders(db, viewer)
+    assert rows == [("invited", True, "kaefer-oidc", None, VIEWER_ROLE, "tenant", 1)]
+    grants = await su_fetch(
+        db,
+        "SELECT rp.permission_code FROM app_user u"
+        " JOIN role_assignment ra ON ra.user_id = u.id AND ra.deleted_at IS NULL"
+        " JOIN role_permission rp ON rp.role_id = ra.role_id AND rp.deleted_at IS NULL"
+        " WHERE u.email = $1 AND rp.permission_code LIKE 'project.%'",
+        viewer,
+    )
+    codes = {code for (code,) in grants}
+    assert "project.view" in codes
+    assert "project.create" not in codes
+
+    assert await _bootstrap([], viewers) == 0  # idempotent
+    assert await _holders(db, viewer) == rows
+
+
+def test_the_viewer_flag_parses_like_admin(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AIP_ENV", "production")  # refused before any database work
+    argv = [
+        "bootstrap-admin",
+        "--admin",
+        f"{TENANT_A_ID},{EMAIL},kaefer-oidc",
+        "--viewer",
+        f"{TENANT_A_ID},viewer.e2e@kaefer.test,kaefer-oidc",
+    ]
+    assert main(argv) == 1
+    with pytest.raises(SystemExit):
+        main([*argv[:3], "--viewer", "not-a-viewer"])
 
 
 async def test_bootstrap_stays_inside_its_tenant(db: TenantDb) -> None:

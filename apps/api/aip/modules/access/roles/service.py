@@ -62,9 +62,19 @@ from aip.platform.db.session import with_tenant
 from aip.platform.events import Aggregate, emit
 from aip.platform.http import DomainError
 
-__all__ = ["AssignmentService", "RoleService", "bootstrap_tenant_admin"]
+__all__ = [
+    "VIEWER_ROLE",
+    "AssignmentService",
+    "RoleService",
+    "bootstrap_tenant_admin",
+    "bootstrap_tenant_role",
+    "bootstrap_tenant_viewer",
+]
 
 TENANT_ADMIN: Final = "tenant_admin"
+# TESTING-12: the fixture viewer's role. Auditor is view-only on every module (the access matrix),
+# so it reads projects but never holds project.create.
+VIEWER_ROLE: Final = "auditor"
 ROLE_MANAGE: Final = "access.role.manage"
 _UNIQUE_VIOLATION: Final = "23505"
 
@@ -311,10 +321,36 @@ async def bootstrap_tenant_admin(
     ``with_tenant`` connection inside a request context. Idempotent; ``True`` when it assigned.
     ``LookupError`` when the tenant has no ``tenant_admin`` role (run ``seed-roles`` first).
     """
+    return await bootstrap_tenant_role(
+        conn, tenant_id=tenant_id, email=email, idp_alias=idp_alias, role_code=TENANT_ADMIN
+    )
+
+
+async def bootstrap_tenant_viewer(
+    conn: AsyncConnection, *, tenant_id: UUID, email: str, idp_alias: str
+) -> bool:
+    """Dev and demo only (TESTING-12): give ``email`` the read-only ``VIEWER_ROLE`` tenant-wide.
+
+    The fixture viewer can read the projects register but holds no ``project.create``, so the
+    e2e lane can prove the server's 403 with a real session. Same contract as
+    ``bootstrap_tenant_admin``.
+    """
+    return await bootstrap_tenant_role(
+        conn, tenant_id=tenant_id, email=email, idp_alias=idp_alias, role_code=VIEWER_ROLE
+    )
+
+
+async def bootstrap_tenant_role(
+    conn: AsyncConnection, *, tenant_id: UUID, email: str, idp_alias: str, role_code: str
+) -> bool:
+    """Make ``email`` (an invited SSO user, linked on first sign-in) hold ``role_code`` tenant-wide.
+
+    The shared body of the dev/demo bootstraps; never reachable from the API.
+    """
     await repo.lock_tenant_roles(conn)
-    role = await repo.get_role_by_code(conn, TENANT_ADMIN)
+    role = await repo.get_role_by_code(conn, role_code)
     if role is None:
-        raise LookupError("tenant_admin role missing: run `aip-access seed-roles` first")
+        raise LookupError(f"{role_code} role missing: run `aip-access seed-roles` first")
     user_id = await ensure_invited_sso_user(
         conn, tenant_id=tenant_id, email=email, idp_alias=idp_alias
     )
