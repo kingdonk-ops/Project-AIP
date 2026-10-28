@@ -14,6 +14,12 @@ IDENTITY-04 adds ``start_step_up``: the same authorize request with ``prompt=log
 ``max_age=0`` and ``acr_values=aal2`` (``step_up.build_step_up_url``), sealed with
 ``purpose='step_up'``. ``complete`` then returns the identity with its ``step_up`` state, and the
 callback elevates the session instead of provisioning a login (``step_up.complete_step_up``).
+
+IDENTITY-10: ``LoginService(..., audience="portal")`` is the client portal's sign-in on the
+``aip-portal`` client and the portal's callback URL. Its ``start`` never consults the login
+directory and never sends ``kc_idp_hint`` (portal accounts are local Keycloak accounts), asks for
+``acr_values=aal2`` and always answers ``method: "password"``; its ``complete`` accepts only a
+pre-auth cookie sealed for the portal (and the staff service only one sealed for staff).
 """
 
 from __future__ import annotations
@@ -22,7 +28,7 @@ import hmac
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from limits import RateLimitItem, parse
@@ -61,6 +67,7 @@ from aip.platform.db.tls import redis_tls_kwargs
 
 LOGIN_START_LIMIT = "10/minute"
 REQUIRED_LOCAL_ACR = "aal2"
+LoginAudience = Literal["app", "portal"]
 
 
 @dataclass(frozen=True)
@@ -71,19 +78,31 @@ class LoginStart:
 
 class LoginService:
     def __init__(
-        self, settings: IdentitySettings, directory: LoginDirectory, oidc: KeycloakOidcClient
+        self,
+        settings: IdentitySettings,
+        directory: LoginDirectory,
+        oidc: KeycloakOidcClient,
+        *,
+        audience: LoginAudience = "app",
     ) -> None:
         self._settings = settings
         self._directory = directory
         self._oidc = oidc
+        self._audience: LoginAudience = audience
 
     @property
     def oidc(self) -> KeycloakOidcClient:
         return self._oidc
 
+    @property
+    def audience(self) -> LoginAudience:
+        return self._audience
+
     async def start(self, email: str, return_to: str | None) -> LoginStart:
         """``ValueError`` for a malformed email; otherwise the same shape for every domain."""
         domain = domain_of(email)
+        if self._audience == "portal":
+            return self._start_portal(email, return_to)
         target = await self._directory.resolve("email_domain", domain)
         tenant_id = target.tenant_id if target else None
         idp_alias = target.idp_alias if target else None
@@ -109,6 +128,32 @@ class LoginService:
         response = LoginStartResponse(
             method="sso" if idp_alias is not None else "password", redirect_url=url
         )
+        return LoginStart(response=response, sealed_cookie=seal(state, self._settings.preauth_key))
+
+    def _start_portal(self, email: str, return_to: str | None) -> LoginStart:
+        """A portal sign-in: a local account on ``aip-portal``, a second factor always asked."""
+        state = PreAuthState(
+            state=new_state(),
+            nonce=new_nonce(),
+            code_verifier=new_code_verifier(),
+            tenant_id=None,  # a local account's tenant is its email registration (JIT)
+            idp_alias=None,
+            return_to=safe_return_to(return_to),
+            exp=new_expiry(),
+            audience="portal",
+        )
+        url = build_authorize_url(
+            authorize_endpoint=self._settings.authorize_endpoint,
+            client_id=self._settings.portal_oidc_client_id,
+            redirect_uri=self._settings.portal_redirect_uri,
+            email=email.strip(),
+            idp_alias=None,
+            state=state.state,
+            nonce=state.nonce,
+            code_verifier=state.code_verifier,
+            extra_params={"acr_values": REQUIRED_LOCAL_ACR},
+        )
+        response = LoginStartResponse(method="password", redirect_url=url)
         return LoginStart(response=response, sealed_cookie=seal(state, self._settings.preauth_key))
 
     def start_step_up(
@@ -158,6 +203,8 @@ class LoginService:
             raise OidcError("INVALID_STATE", 400, "sign-in state is missing or invalid") from exc
         state = params.get("state", "")
         if not hmac.compare_digest(state.encode(), pre.state.encode()):
+            raise OidcError("INVALID_STATE", 400, "sign-in state is missing or invalid")
+        if pre.audience != self._audience:  # a portal sign-in at the staff callback, or the reverse
             raise OidcError("INVALID_STATE", 400, "sign-in state is missing or invalid")
         iss = params.get("iss")
         if iss is not None and iss != self._settings.issuer:  # RFC 9207 mix-up defence
@@ -214,6 +261,7 @@ def _identity(
         return_to=pre.return_to,
         upstream_amr=_str_list(claims.get("upstream_amr"))[:16] if alias is not None else [],
         step_up=step_up,
+        audience=pre.audience,
     )
 
 

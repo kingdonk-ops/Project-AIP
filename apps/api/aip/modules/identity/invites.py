@@ -17,6 +17,13 @@ connection, so an invite and its queued job commit together or not at all (ADR 0
   ``INVITE_INVALID``; a revoked or expired invite stays refused even if the Keycloak account works.
 - ``reset_mfa``: queue the Keycloak credential reset, revoke every session, clear
   ``mfa_enrolled_at``; SSO users' MFA belongs to their IdP (``MFA_MANAGED_BY_IDP``).
+
+IDENTITY-10: ``create_invite(..., user_class="portal")`` (PORTAL-01's client invite) is always
+``local`` (clients have their own Keycloak account on the ``aip-portal`` client, never company SSO;
+a domain an SSO IdP claims is still refused by the email registration, ``EMAIL_DOMAIN_SSO``), gets a
+``client`` membership, and its email's "back to the application" link is the portal
+(``identity.send_invite`` uses the ``aip-portal`` client). Re-inviting an invited user of another
+class is ``USER_EXISTS``.
 """
 
 from __future__ import annotations
@@ -114,24 +121,29 @@ async def create_invite(
 
     No step-up here: the route adds it, and TENANCY-05's first-admin invite calls this directly.
     ``InviteError`` for a refusal; the caller's transaction must then roll back.
+    A ``portal`` invite is always ``local`` with a ``client`` membership (IDENTITY-10).
     """
     email = email.strip()
     try:
         domain = domain_of(email)
     except ValueError:
         raise InviteError("INVALID_EMAIL", 422, "enter a valid email address") from None
+    portal = user_class == "portal"
+    membership_type: repo.MembershipType = "client" if portal else "member"
     target = await repo.resolve_login(conn, "email_domain", domain)
     idp_alias = target.idp_alias if target is not None else None
     if idp_alias is not None and target is not None and target.tenant_id != tenant_id:
         raise InviteError(
             "EMAIL_DOMAIN_SSO", 409, "people with this email domain sign in with company SSO"
         )
-    method: InviteMethod = "sso" if idp_alias is not None else "local"
+    method: InviteMethod = "sso" if idp_alias is not None and not portal else "local"
 
     existing = await repo.find_by_email(conn, email)
     if existing is not None and existing.status != "invited":
         code = "USER_DEACTIVATED" if existing.status == "deactivated" else "USER_EXISTS"
         raise InviteError(code, 409, "this person already has an account")
+    if existing is not None and existing.user_class != user_class:
+        raise InviteError("USER_EXISTS", 409, "this person already has an account")
     await repo.revoke_live_invites(conn, email)
 
     if existing is not None:
@@ -171,7 +183,7 @@ async def create_invite(
             conn,
             tenant_id=tenant_id,
             user_id=user_id,
-            membership_type="member",
+            membership_type=membership_type,
             organisation_id=organisation_id,
         )
         try:
@@ -198,13 +210,17 @@ async def create_invite(
     )
     if method == "local":
         await _enqueue_send(conn, tenant_id, invite_id)
+    detail: dict[str, object] = {"inviteId": str(invite_id), "method": method}
+    if portal:
+        detail["audience"] = "portal"
     await repo.record_auth_event(
         conn,
         tenant_id=tenant_id,
         event_type="invite.created",
         user_id=user_id,
-        detail={"inviteId": str(invite_id), "method": method},
+        detail=detail,
     )
+
     return CreatedInvite(invite_id=invite_id, user_id=user_id, method=method)
 
 

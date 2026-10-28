@@ -26,6 +26,11 @@ assurance (Part D, ADR 0010): ``check_signoff_assurance``, ``derive_assurance``,
 ``SignoffDecision``, ``SignoffContext`` and ``SessionFacts`` (APPROVALS-02 calls it).
 APPROVALS-02 also raises ``StepUpRequiredError`` (the 401 ``STEP_UP_REQUIRED`` body, ADR 0034) and
 reads ``mfa_enrolled_at`` to know whether a signer could step up.
+
+IDENTITY-10 (portal audience, for PORTAL-01/02): ``create_invite(..., user_class="portal")`` makes
+a local, ``client``-membership invite whose email links to the portal; ``Principal.audience``;
+``Audience``, ``SESSION_COOKIES``, ``set_session_cookies`` and ``clear_session_cookies(response,
+audience=...)``; ``get_portal_login_handler`` (the portal callback's handler, overridable).
 """
 
 from __future__ import annotations
@@ -46,7 +51,7 @@ from aip.modules.identity.assurance import (
 )
 from aip.modules.identity.invites import CreatedInvite, InviteError, create_invite
 from aip.modules.identity.jit import JitLoginHandler
-from aip.modules.identity.login_session import session_login_handler
+from aip.modules.identity.login_session import portal_login_handler, session_login_handler
 from aip.modules.identity.principal import (
     PlatformPrincipalAdapter,
     Principal,
@@ -68,10 +73,14 @@ from aip.modules.identity.repository import (
 )
 from aip.modules.identity.schemas import VerifiedExternalIdentity
 from aip.modules.identity.sessions import (
+    SESSION_COOKIES,
+    Audience,
+    clear_session_cookies,
     issue_session,
     revoke_all_for_user,
     revoke_session,
     rotate_session,
+    set_session_cookies,
 )
 from aip.modules.identity.step_up import StepUpRequiredError, require_step_up, step_up
 from aip.modules.identity.wiring import (
@@ -81,7 +90,9 @@ from aip.modules.identity.wiring import (
 )
 
 __all__ = [
+    "SESSION_COOKIES",
     "Assurance",
+    "Audience",
     "CreatedInvite",
     "ExternalLoginHandler",
     "InviteError",
@@ -100,6 +111,7 @@ __all__ = [
     "VerifiedExternalIdentity",
     "add_session_middleware",
     "check_signoff_assurance",
+    "clear_session_cookies",
     "create_invite",
     "derive_assurance",
     "ensure_invited_sso_user",
@@ -107,6 +119,7 @@ __all__ = [
     "get_api",
     "get_display_names",
     "get_external_login_handler",
+    "get_portal_login_handler",
     "get_principal",
     "get_user",
     "install_session_errors",
@@ -119,6 +132,7 @@ __all__ = [
     "revoke_session",
     "rotate_session",
     "session_resolver",
+    "set_session_cookies",
     "set_user_status",
     "step_up",
     "stub_principal_resolver",
@@ -157,6 +171,14 @@ def get_external_login_handler(request: Request) -> ExternalLoginHandler:
     Overridable via ``dependency_overrides``.
     """
     return session_login_handler(request)
+
+
+def get_portal_login_handler(request: Request) -> ExternalLoginHandler:
+    """FastAPI dependency for the portal callback (IDENTITY-10): JIT, then a portal session.
+
+    Overridable via ``dependency_overrides``.
+    """
+    return portal_login_handler(request)
 
 
 class ModuleApi(Protocol):
