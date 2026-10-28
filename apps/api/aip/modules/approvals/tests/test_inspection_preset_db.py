@@ -108,9 +108,7 @@ async def new_inspection(
     record_id = uuid.uuid4()
     inspections.projects[record_id] = project_id
     body = {"recordType": "inspection", "recordId": str(record_id)}
-    response = await client.post(
-        "/api/v1/approvals/instances", json=body, headers=fresh(ALICE_ID)
-    )
+    response = await client.post("/api/v1/approvals/instances", json=body, headers=fresh(ALICE_ID))
     assert response.status_code == 201, response.text
     return response.json()
 
