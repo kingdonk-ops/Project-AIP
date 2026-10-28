@@ -345,6 +345,24 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  approvals-seed:
+    # One-shot (TESTING-13, was APPROVALS-07): the dev-only `demo` workflow (record type
+    # approvals_demo) in kaefer-demo, for the approvals transition journeys. Idempotent; runs as
+    # aip_app (RLS on); refused unless AIP_ENV is development, test or demo.
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    command: ["python", "-m", "aip.modules.approvals.demo", "seed"]
+    environment:
+      AIP_ENV: ${AIP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://aip_app:aip_app_dev_only@postgres:5432/aip}
+    depends_on:
+      tenancy-seed:
+        condition: service_completed_successfully
+      terms-load:
+        condition: service_completed_successfully
+    restart: "no"
+
   object-store-init:
     # One-shot: creates the dev bucket in RustFS (idempotent).
     <<: *app-hardening
@@ -377,6 +395,8 @@ services:
       access-seed:
         condition: service_completed_successfully
       admin-bootstrap:
+        condition: service_completed_successfully
+      approvals-seed:
         condition: service_completed_successfully
       object-store-init:
         condition: service_completed_successfully
@@ -415,11 +435,14 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import aip"]
-      interval: 30s
+      # TESTING-13 (review 11 M10): healthy only while the worker keeps reaching aip_jobs and the
+      # audit writer (a heartbeat file it rewrites every 10 s after a good probe; aip/worker_health.py).
+      test: ["CMD", "python", "-m", "aip.worker_health", "--max-age", "45"]
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 60s
+      start_interval: 2s
 
   clamav:
     # UPLOADS-02: ClamAV daemon (GPL) for the scan pipeline, with freshclam keeping signatures
@@ -465,11 +488,13 @@ services:
       object-store-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "python", "-c", "import aip"]
-      interval: 30s
+      # TESTING-13: the same heartbeat as `worker` (it probes aip_jobs only: no outbox queue here).
+      test: ["CMD", "python", "-m", "aip.worker_health", "--max-age", "45"]
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 60s
+      start_interval: 2s
 
   web:
     # The built web app on nginx; /api is proxied to the api service.

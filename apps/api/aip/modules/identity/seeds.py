@@ -9,6 +9,10 @@ The tenant ids are the shared fixture ids from AGENTS.md / ``apps/api/tests/conf
 IDENTITY-04 Part D: ``kaefer-demo`` gets the ADR 0010 defaults as explicit ``signoff_policy`` rows
 (min aal 2, 10 minutes) for its four critical actions, inside that tenant's context (FORCE RLS).
 An existing row is left as the tenant admin set it.
+
+TESTING-13: ``kaefer-demo`` also gets ``approvals.demo_approve`` (min aal 1, 10 minutes) for the
+dev-only approvals ``demo`` workflow, whose fixture users sign in through the mock IdP without a
+second factor.
 """
 
 from __future__ import annotations
@@ -35,9 +39,14 @@ DEV_ROWS: tuple[tuple[str, str, UUID, str | None], ...] = (
 )
 
 # (tenant_id, action_code, min_aal, step_up_max_age_min)
-SIGNOFF_ROWS: tuple[tuple[UUID, str, int, int], ...] = tuple(
-    (TENANT_A_ID, code, 2, 10)
-    for code in ("hold_point.release", "witness.countersign", "itp.signoff", "record.seal")
+SIGNOFF_ROWS: tuple[tuple[UUID, str, int, int], ...] = (
+    *(
+        (TENANT_A_ID, code, 2, 10)
+        for code in ("hold_point.release", "witness.countersign", "itp.signoff", "record.seal")
+    ),
+    # TESTING-13: the dev-only approvals ``demo`` workflow's critical ``approve``. The mock IdP has
+    # no second factor, so a fresh (10-minute) sign-in is enough there (aip.modules.approvals.demo).
+    (TENANT_A_ID, "approvals.demo_approve", 1, 10),
 )
 
 _SIGNOFF = text(

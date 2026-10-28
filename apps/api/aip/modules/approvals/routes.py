@@ -11,6 +11,9 @@ Every route is ``authenticated()`` and the service checks each permission agains
 project, which is known only once the instance is loaded (deny by default either way). Another
 tenant's instance is 404. Bodies forbid unknown keys (422), so a client cannot send a guard
 outcome. Explicit ``operation_id``s keep the generated client's hook names stable.
+
+TESTING-13 also mounts ``demo.router``: the dev/test-only ``approvals_demo`` fixture switch,
+hidden from the OpenAPI document and 404 outside development, test and demo (see ``demo.py``).
 """
 
 from __future__ import annotations
@@ -20,6 +23,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, Response, status
 
+from aip.modules.approvals import demo
 from aip.modules.approvals.decision_chain import ChainBroken
 from aip.modules.approvals.schemas import (
     ApprovalsErrorBody,
@@ -222,3 +226,6 @@ async def get_history(instance_id: UUID, request: Request, who: CurrentActor) ->
 
 router = APIRouter(dependencies=[Depends(require_active_tenant)])
 router.include_router(instances_router)
+# TESTING-13: the dev/test-only demo record type and its fixture switch (404 in production).
+demo.install()
+router.include_router(demo.router)

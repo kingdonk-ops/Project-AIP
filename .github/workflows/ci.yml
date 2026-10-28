@@ -556,8 +556,21 @@ jobs:
         run: echo "127.0.0.1 rustfs" | sudo tee -a /etc/hosts
       # One worker: the specs sign the same fixture users in, and the mock IdP's brute-force
       # protection treats two sign-ins of one user within a second as an attack (quick-login check).
-      - name: Walking skeleton and UPLOADS-01 presign journey (web project, @skeleton)
+      - name: Walking skeleton, UPLOADS-01 presign and approvals transition journeys (web project, @skeleton)
         run: pnpm --filter e2e exec playwright test --project web --grep @skeleton --workers 1
+      # TESTING-13 (review 11 M10): the journeys' events reached the worker, were published and
+      # landed in the audit chain; the outbox drains; the worker is still healthy (heartbeat).
+      - name: The skeleton's project and workflow events are published and audited
+        run: $COMPOSE exec -T api python - < infra/docker/smoke_outbox_audit.py
+      - name: Outbox-lag smoke check (no event unpublished for more than 30 s, none dead-lettered)
+        run: $COMPOSE exec -T worker python -m aip.platform.events.lag --max-age 30 --wait 60
+      - name: The worker is healthy (its heartbeat reached aip_jobs and the audit writer)
+        run: |
+          cid=$($COMPOSE ps --quiet worker)
+          status=$(docker inspect --format '{{.State.Health.Status}}' "$cid")
+          echo "worker health: $status"
+          $COMPOSE exec -T worker python -m aip.worker_health
+          test "$status" = "healthy"
       - name: Upload the trace, video and report
         if: failure()
         uses: actions/upload-artifact@v4
@@ -567,7 +580,7 @@ jobs:
           retention-days: 7
       - name: Stack logs
         if: failure()
-        run: $COMPOSE logs --no-color --timestamps --tail 200 api keycloak web
+        run: $COMPOSE logs --no-color --timestamps --tail 200 api worker approvals-seed keycloak web
       - name: Tear down
         if: always()
         run: $COMPOSE down --volumes --remove-orphans

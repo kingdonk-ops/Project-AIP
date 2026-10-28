@@ -446,11 +446,14 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import aip"]
-      interval: 30s
+      # TESTING-13 (review 11 M10): healthy only while the worker keeps reaching aip_jobs and the
+      # audit writer (a heartbeat file it rewrites every 10 s after a good probe).
+      test: ["CMD", "python", "-m", "aip.worker_health", "--max-age", "45"]
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 60s
+      start_interval: 2s
 
   web:
     # The only routed service: give it the demo domain in Coolify, container port 8080.

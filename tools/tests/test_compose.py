@@ -31,6 +31,7 @@ APP_SERVICES = {
     "identity-seed",
     "access-seed",
     "admin-bootstrap",
+    "approvals-seed",
     "object-store-init",
     "web",
     "sandbox",
@@ -43,6 +44,7 @@ ONE_SHOT = {
     "identity-seed",
     "access-seed",
     "admin-bootstrap",
+    "approvals-seed",
     "object-store-init",
 }
 DEFAULT_SERVICES = {
@@ -58,6 +60,7 @@ DEFAULT_SERVICES = {
     "identity-seed",
     "access-seed",
     "admin-bootstrap",
+    "approvals-seed",
     "object-store-init",
     "api",
     "worker",
@@ -137,6 +140,27 @@ def test_api_healthcheck_curls_ready(services: dict[str, dict[str, Any]]) -> Non
     joined = " ".join(test) if isinstance(test, list) else test
     assert "curl" in joined
     assert "/api/v1/health/ready" in joined
+
+
+def test_worker_healthchecks_read_the_heartbeat(services: dict[str, dict[str, Any]]) -> None:
+    """TESTING-13 (review 11 M10): ``import aip`` proved nothing about a running worker."""
+    for name in ("worker", "worker-scan"):
+        test = services[name]["healthcheck"]["test"]
+        assert test[:4] == ["CMD", "python", "-m", "aip.worker_health"], name
+    # The outbox worker writes the audit chains, so it has (and its heartbeat probes) the writer.
+    assert "DATABASE_AUDIT_WRITER_URL" in services["worker"]["environment"]
+    assert "outbox" in " ".join(services["worker"]["command"])
+
+
+def test_the_approvals_demo_seed_runs_before_the_api(services: dict[str, dict[str, Any]]) -> None:
+    """TESTING-13 Part B: the demo workflow exists before the approvals journeys run."""
+    seed = services["approvals-seed"]
+    assert seed["command"] == ["python", "-m", "aip.modules.approvals.demo", "seed"]
+    assert seed["depends_on"]["tenancy-seed"]["condition"] == "service_completed_successfully"
+    assert (
+        services["api"]["depends_on"]["approvals-seed"]["condition"]
+        == "service_completed_successfully"
+    )
 
 
 def test_one_shots_gate_their_dependents(services: dict[str, dict[str, Any]]) -> None:

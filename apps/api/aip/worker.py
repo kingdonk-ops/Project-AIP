@@ -14,22 +14,38 @@ triggers that graceful stop, so the orchestrator restarts the process.
 
 Gotenberg (``pdf``) and sandbox (``scan``) work run in their own worker processes: start one
 process per queue group.
+
+TESTING-13 (review 11 M10): while it runs, the worker probes its databases every
+``WORKER_HEARTBEAT_INTERVAL_S`` seconds (``aip_jobs``, plus ``aip_audit_writer`` when it works the
+``outbox`` queue) and rewrites a heartbeat file after each good probe; ``python -m
+aip.worker_health`` is the container healthcheck that reads it.
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import importlib
 import logging
 import os
 import signal
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 
+from sqlalchemy import text
+
+from aip import worker_health
 from aip.modules.ops.runner import memory_guard
 from aip.modules.terms.api import install as install_term_resolver
-from aip.platform.db.engine import dispose_engine, dispose_jobs_engine, get_jobs_engine
+from aip.platform.db.engine import (
+    dispose_audit_writer_engine,
+    dispose_engine,
+    dispose_jobs_engine,
+    get_audit_writer_engine,
+    get_jobs_engine,
+)
 from aip.platform.db.tls import check_transport_security
 from aip.platform.dev_secrets import check_no_dev_secrets
 from aip.platform.events.jobs import active_subscribers
@@ -41,7 +57,15 @@ from aip.platform.modules.registry import (
 )
 from aip.platform.observability.logging import configure_logging
 
-__all__ = ["PLATFORM_JOB_MODULES", "check_jobs_login", "import_job_modules", "main", "parse_args"]
+__all__ = [
+    "PLATFORM_JOB_MODULES",
+    "check_jobs_login",
+    "heartbeat_once",
+    "import_job_modules",
+    "main",
+    "parse_args",
+    "probe_databases",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -107,16 +131,80 @@ async def check_jobs_login() -> None:
         pass
 
 
+# The outbox dispatcher runs the audit module's catch-all subscriber, which writes the chains
+# as aip_audit_writer (AUDIT-02): a worker of that queue is useless without the writer login.
+AUDIT_WRITER_QUEUES: frozenset[str] = frozenset({"outbox"})
+PROBE_TIMEOUT_S = 5.0
+
+
+async def probe_databases(*, audit_writer: bool) -> None:
+    """``select 1`` as ``aip_jobs`` and, when ``audit_writer``, as ``aip_audit_writer``.
+
+    Raises whatever the connection raises: an unset URL (``DatabaseConfigError``), a refused or
+    unauthenticated login, a privileged login the engine refuses, or a timeout.
+    """
+    async with get_jobs_engine().connect() as conn:
+        await conn.execute(text("select 1"))
+    if audit_writer:
+        async with get_audit_writer_engine().connect() as conn:
+            await conn.execute(text("select 1"))
+
+
+async def heartbeat_once(
+    path: Path, *, audit_writer: bool, timeout: float = PROBE_TIMEOUT_S
+) -> bool:
+    """Probe the databases; write the heartbeat when they answer, delete it when one does not."""
+    try:
+        await asyncio.wait_for(probe_databases(audit_writer=audit_writer), timeout)
+    except Exception as exc:  # any failure makes the worker unhealthy; the loop keeps probing
+        logger.warning("worker heartbeat: a database probe failed: %s", type(exc).__name__)
+        worker_health.clear_heartbeat(path)
+        return False
+    worker_health.write_heartbeat(path)
+    return True
+
+
+async def _heartbeat_loop(path: Path, *, audit_writer: bool, interval: float) -> None:
+    while True:
+        await heartbeat_once(path, audit_writer=audit_writer)
+        await asyncio.sleep(interval)
+
+
+def _heartbeat_interval() -> float:
+    raw = os.environ.get(worker_health.HEARTBEAT_INTERVAL_ENV, "")
+    try:
+        interval = float(raw) if raw else worker_health.DEFAULT_INTERVAL_S
+    except ValueError:
+        interval = worker_health.DEFAULT_INTERVAL_S
+    return max(interval, 1.0)
+
+
 async def _run(queues: list[str], concurrency: int, shutdown_timeout: float) -> None:
+    path = worker_health.heartbeat_path()
+    heartbeat: asyncio.Task[None] | None = None
     try:
         await check_jobs_login()
+        heartbeat = asyncio.create_task(
+            _heartbeat_loop(
+                path,
+                audit_writer=bool(AUDIT_WRITER_QUEUES & set(queues)),
+                interval=_heartbeat_interval(),
+            ),
+            name="worker-heartbeat",
+        )
         await run_worker(
             queues=queues,
             concurrency=concurrency,
             shutdown_graceful_timeout=shutdown_timeout,
         )
     finally:
+        if heartbeat is not None:
+            heartbeat.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await heartbeat
+        worker_health.clear_heartbeat(path)
         await dispose_jobs_engine()
+        await dispose_audit_writer_engine()
         await dispose_engine()
 
 

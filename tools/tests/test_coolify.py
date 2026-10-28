@@ -136,6 +136,15 @@ def test_api_waits_for_the_migrator(services: dict[str, dict[str, Any]]) -> None
         )
 
 
+def test_the_demo_worker_healthcheck_reads_the_heartbeat(
+    services: dict[str, dict[str, Any]],
+) -> None:
+    """TESTING-13 (review 11 M10): a crash-looping or writer-less worker is unhealthy."""
+    test = services["worker"]["healthcheck"]["test"]
+    assert test[:4] == ["CMD", "python", "-m", "aip.worker_health"]
+    assert "DATABASE_AUDIT_WRITER_URL" in services["worker"]["environment"]
+
+
 @pytest.mark.parametrize("conf", NGINX_CONFS, ids=lambda p: str(p.relative_to(ROOT)))
 def test_nginx_repeats_every_security_header(conf: Path) -> None:
     text = conf.read_text()

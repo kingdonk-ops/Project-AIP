@@ -199,19 +199,33 @@ class DefinitionsService:
         preset, ``ValidationError`` for a spec that fails the graph rules.
         """
         preset: Preset = load_preset(preset_key, base_dir)
-        spec = validate_spec(preset.spec)
-        current_row = await repo.active_in_scope_for_update(conn, preset.key, project_id)
+        return await self.install_spec(
+            conn, preset.key, preset.record_type, preset.spec, project_id=project_id
+        )
+
+    async def install_spec(
+        self,
+        conn: AsyncConnection,
+        key: str,
+        record_type: str,
+        spec: object,
+        *,
+        project_id: UUID | None = None,
+    ) -> WorkflowDefinition:
+        """Publish ``spec`` as ``key`` idempotently: the active definition when it already matches.
+
+        The engine behind ``install_preset``; the TESTING-13 dev seed calls it with an in-code spec.
+        """
+        checked = validate_spec(spec)
+        current_row = await repo.active_in_scope_for_update(conn, key, project_id)
         if current_row is not None:
             current = definition_from_row(current_row)
             unchanged = (
-                current.record_type == preset.record_type
-                and current.spec.to_json() == spec.to_json()
+                current.record_type == record_type and current.spec.to_json() == checked.to_json()
             )
             if unchanged:
                 return current
-        draft = await self.create_draft(
-            conn, preset.key, preset.record_type, preset.spec, project_id
-        )
+        draft = await self.create_draft(conn, key, record_type, spec, project_id)
         return await self.publish(conn, draft.id)
 
 

@@ -49,6 +49,9 @@ ALLOWED = {
     # The worker's startup check opens one aip_jobs connection so a privileged login stops it
     # before any job runs; it reads nothing.
     ("worker.py", "get_jobs_engine().connect"),
+    # TESTING-13: the worker's heartbeat runs `select 1` as aip_audit_writer (no tenant data) so
+    # a wrong DATABASE_AUDIT_WRITER_URL makes the worker unhealthy.
+    ("worker.py", "get_audit_writer_engine().connect"),
 }
 
 
