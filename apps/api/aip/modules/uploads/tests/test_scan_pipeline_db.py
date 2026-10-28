@@ -11,6 +11,8 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import hashlib
+import io
+import zipfile
 from collections.abc import AsyncIterator
 from uuid import UUID, uuid4
 
@@ -351,3 +353,45 @@ async def test_file_url_is_409_while_a_file_is_not_released(
     resp = await client.get(f"/api/v1/uploads/files/{file_id}/url", headers=ALICE)
     assert resp.status_code == 409
     assert resp.json()["code"] == "NOT_RELEASED"
+
+
+def _xlsx() -> bytes:
+    """A minimal OOXML workbook container (enough for magic bytes and the zip caps)."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("[Content_Types].xml", '<?xml version="1.0"?><Types/>')
+        zf.writestr("xl/workbook.xml", '<?xml version="1.0"?><workbook/>')
+        zf.writestr("xl/worksheets/sheet1.xml", '<?xml version="1.0"?><worksheet/>')
+    return buf.getvalue()
+
+
+@pytest.mark.parametrize(
+    ("content", "mime"),
+    [
+        (b"\xef\xbb\xbfTag Number,Name,Rating\nKF-01,Pump,1.5\n", "text/csv"),
+        (_xlsx(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+    ],
+)
+async def test_csv_and_xlsx_imports_are_released_with_their_type_and_file_id(
+    client: httpx.AsyncClient, db: TenantDb, content: bytes, mime: str
+) -> None:
+    # UPLOADS-08: data_io reads these; a CSV must keep ``text/csv`` (not ``text/plain``), and the
+    # session status names the released file.
+    session_id = await _upload_and_confirm(client, content, mime=mime)
+    async with _clamd("clean") as clamd:
+        result = await _run_pipeline(db, session_id, clamd)
+    assert result.startswith("released:"), result
+
+    rows = await su_fetch(
+        db,
+        "SELECT f.id, f.detected_mime, f.filename, f.source FROM stored_files f "
+        "JOIN upload_sessions s ON s.file_id = f.id WHERE s.id = $1",
+        session_id,
+    )
+    assert len(rows) == 1
+    file_id, detected_mime, filename, source = rows[0]
+    assert (detected_mime, filename, source) == (mime, "doc.pdf", "upload")
+
+    status = await client.get(f"/api/v1/uploads/sessions/{session_id}/status", headers=ALICE)
+    assert status.status_code == 200, status.text
+    assert status.json() == {"status": "released", "rejectReason": None, "fileId": str(file_id)}
