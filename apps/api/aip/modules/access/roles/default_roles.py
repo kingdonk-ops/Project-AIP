@@ -5,13 +5,15 @@ Super Admin is the operator realm (ADR 0017) and API Client is IDENTITY-06 scope
 here. ``default_permissions`` expands each level over the permission catalogue:
 
 - a permission's verb is the last segment of its code (``project.view`` -> ``view``);
-- levels are cumulative: view gives read; create adds create; edit adds update and delete;
-  approve adds approve and sign; admin adds manage and export (``LEVEL_VERBS``);
+- levels are cumulative: view gives read; create adds create; edit adds update, delete and move;
+  approve adds approve, sign and invite; admin adds manage and export (``LEVEL_VERBS``; ``move``
+  and ``invite`` are the ACCESS-07 amendment to ADR 0027);
 - a verb no level names is granted only at ``admin`` (fail closed), and a matrix module with no
   catalogue entries is skipped with a log line;
 - ``platform.*`` codes (operator-only, ADR 0029) are never granted to a tenant role;
 - Client Reviewer is read-only plus sign-off (owner decision 2026-10-10, see the matrix note), so
-  for ``SIGN_OFF_ONLY_ROLES`` the ``approve`` level adds approve and sign on top of view only.
+  for ``SIGN_OFF_ONLY_ROLES`` the ``approve`` level adds only ``SIGN_OFF_VERBS`` (approve and
+  sign, not invite) on top of view.
 
 Display names are the term keys ``access.role.<code>.name``.
 """
@@ -29,6 +31,7 @@ __all__ = [
     "OPERATOR_ONLY_PREFIX",
     "ROLE_CODES",
     "SIGN_OFF_ONLY_ROLES",
+    "SIGN_OFF_VERBS",
     "Level",
     "default_permissions",
     "expand_level",
@@ -50,8 +53,8 @@ LEVEL_VERBS: Final[Mapping[Level, frozenset[str]]] = {
     "none": frozenset(),
     "view": frozenset({"read", "view"}),
     "create": frozenset({"create"}),
-    "edit": frozenset({"update", "delete", "edit", "archive"}),
-    "approve": frozenset({"approve", "sign"}),
+    "edit": frozenset({"update", "delete", "edit", "archive", "move"}),
+    "approve": frozenset({"approve", "sign", "invite"}),
     "admin": frozenset({"manage", "export"}),
 }
 
@@ -70,6 +73,8 @@ ROLE_CODES: Final[tuple[str, ...]] = (
 )
 
 SIGN_OFF_ONLY_ROLES: Final[frozenset[str]] = frozenset({"client_reviewer"})
+# What the ``approve`` level gives a sign-off-only role: sign-off, never invite (ADR 0027 §4).
+SIGN_OFF_VERBS: Final[frozenset[str]] = frozenset({"approve", "sign"})
 
 # Generated from the access matrix table (columns Tenant Admin .. Auditor); keep in sync with it.
 MATRIX: Final[Mapping[str, tuple[Level, ...]]] = {
@@ -943,16 +948,16 @@ def default_permissions(
             skipped.append(module_id)
             continue
         for role, level in zip(ROLE_CODES, levels, strict=True):
-            allowed = _granted_levels(role, level)
             granted[role].update(
-                code for code in codes if level_of_verb(code.rsplit(".", 1)[-1]) in allowed
+                code for code in codes if _grants(role, level, code.rsplit(".", 1)[-1])
             )
     if skipped:
         logger.info("access matrix modules without catalogue permissions skipped: %s", skipped)
     return {role: frozenset(codes) for role, codes in granted.items()}
 
 
-def _granted_levels(role: str, level: Level) -> tuple[Level, ...]:
+def _grants(role: str, level: Level, verb: str) -> bool:
+    needed = level_of_verb(verb)
     if role in SIGN_OFF_ONLY_ROLES and level == "approve":
-        return ("view", "approve")
-    return LEVELS[1 : LEVELS.index(level) + 1]
+        return needed == "view" or verb in SIGN_OFF_VERBS
+    return LEVELS.index(needed) <= LEVELS.index(level)
