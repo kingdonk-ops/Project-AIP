@@ -17,9 +17,9 @@ from uuid import UUID
 from aip.modules.uploads.schemas import SessionCreate, SessionCreated, SessionStatus
 from aip.modules.uploads.service import AdminCheck, UploadSessionService
 from aip.modules.uploads.stored_files import (
-    StoredFileConflict,
+    StoredFileConflictError,
     StoredFileIntegrityError,
-    StoredFileNotFound,
+    StoredFileNotFoundError,
     StoredFileRef,
     get_stored_file,
     open_stored_file,
@@ -30,9 +30,9 @@ __all__ = [
     "SessionCreate",
     "SessionCreated",
     "SessionStatus",
-    "StoredFileConflict",
+    "StoredFileConflictError",
     "StoredFileIntegrityError",
-    "StoredFileNotFound",
+    "StoredFileNotFoundError",
     "StoredFileRef",
     "create_session",
     "get_session_status",

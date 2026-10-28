@@ -368,9 +368,7 @@ def _xlsx() -> bytes:
 @pytest.mark.parametrize(
     ("content", "mime"),
     [
-        ("﻿Tag Number,Name,Rating
-KF-01,Pump,1.5
-".encode(), "text/csv"),
+        (b"\xef\xbb\xbfTag Number,Name,Rating\nKF-01,Pump,1.5\n", "text/csv"),
         (_xlsx(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
     ],
 )

@@ -63,7 +63,7 @@ place" helper), INSPECTIONS-04 / ISSUES-04 / ELIGIBILITY-04 (check an attached f
       file → `None`, never an error, so a caller cannot tell them apart.
     - `open_stored_file(conn, file_id) -> bytes`: `get_stored_file`, then the object's bytes, re-hashed: a size or
       sha256 that differs from the row raises `StoredFileIntegrityError` (never hand out bytes the row does not
-      describe). A missing/invisible/unclean file raises `StoredFileNotFound`.
+      describe). A missing/invisible/unclean file raises `StoredFileNotFoundError`.
     - `store_generated_file(conn, *, data, filename, content_type, purpose, idempotency_key, project_id=None,
       created_by=None) -> StoredFileRef`:
       - `content_type` must be on the platform allow-list and `data` must pass the magic-bytes check for it, and be
@@ -73,12 +73,12 @@ place" helper), INSPECTIONS-04 / ISSUES-04 / ELIGIBILITY-04 (check an attached f
         `tenant/<tenant>/files/<id>` (the one key builder), so a retried job writes the **same** object: a rolled-back
         attempt leaves nothing that the retry does not overwrite.
       - An existing row with that key: same sha256 → return it, no new object or row (idempotent replay); a different
-        sha256 → `StoredFileConflict`.
+        sha256 → `StoredFileConflictError`.
       - Otherwise put the object, then insert the row `source = 'generated'`, `scan_status = 'clean'`,
         `preview_status = 'none'` in the caller's transaction. No event (callers emit their own).
       - Runs with the caller's principal: a worker handler must already be a `system` principal (as the scan runner
         does); without one the project-scope RLS refuses the insert (fail closed).
-  - 5. **`api.py`** exports `StoredFileRef`, `StoredFileNotFound`, `StoredFileIntegrityError`, `StoredFileConflict`,
+  - 5. **`api.py`** exports `StoredFileRef`, `StoredFileNotFoundError`, `StoredFileIntegrityError`, `StoredFileConflictError`,
     `get_stored_file`, `open_stored_file`, `store_generated_file`.
   - 6. **Session status** (`schemas.SessionStatus`, `service.get_status`/`confirm`): add `file_id: UUID | None`
     (`fileId`), set once the session is `released`. Regenerate `packages/api-client` (`make generate-client`).
@@ -97,11 +97,11 @@ place" helper), INSPECTIONS-04 / ISSUES-04 / ELIGIBILITY-04 (check an attached f
     - As system on `kaefer-demo`: `store_generated_file(%PDF..., purpose='report', idempotency_key='report-render:1',
       project_id=P1)` → a `stored_files` row `source='generated'`, `scan_status='clean'`, 64-hex sha256 of the bytes,
       key under `tenant/<A>/files/`; `open_stored_file` returns the same bytes.
-    - The same call again → the same id, 1 row. Different bytes with the same key → `StoredFileConflict`.
+    - The same call again → the same id, 1 row. Different bytes with the same key → `StoredFileConflictError`.
     - A first attempt that rolls back after storing, then a retry with the same key → 1 row and the object at the
       row's key holds the retry's bytes (no orphan key).
     - `get_stored_file` from `tenant-b` → `None`; a quarantined row → `None`; a soft-deleted row → `None`;
-      `open_stored_file` on each → `StoredFileNotFound`.
+      `open_stored_file` on each → `StoredFileNotFoundError`.
     - An object altered behind the row → `open_stored_file` raises `StoredFileIntegrityError`.
     - With no principal set, `store_generated_file` is refused by RLS.
     - In `test_scan_pipeline_db.py`: upload, scan and release a CSV and an XLSX → both `released`, `detected_mime` `text/csv` and the OOXML type,

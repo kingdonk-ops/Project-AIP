@@ -1,4 +1,4 @@
-"""Integration tests for server-side file access (UPLOADS-08): real Postgres and a real object store.
+"""Integration tests for server-side file access (UPLOADS-08): real Postgres and object store.
 
 Each test calls the published interface the way a worker does: on a ``run_as_system`` connection
 for the job's tenant. The ``client`` fixture is requested for its environment (object-store
@@ -15,9 +15,9 @@ from sqlalchemy import text
 from tests.conftest import ALICE_ID, PROJECT_A1_ID, TENANT_A_ID, TENANT_B_ID
 
 from aip.modules.uploads.api import (
-    StoredFileConflict,
+    StoredFileConflictError,
     StoredFileIntegrityError,
-    StoredFileNotFound,
+    StoredFileNotFoundError,
     get_stored_file,
     open_stored_file,
     store_generated_file,
@@ -35,7 +35,7 @@ _KEY = "report-render:1"
 pytestmark = pytest.mark.usefixtures("client")
 
 
-class _Rollback(Exception):
+class _RollbackError(Exception):
     pass
 
 
@@ -107,14 +107,14 @@ async def test_the_same_key_replays_and_different_bytes_conflict(db: TenantDb) -
     first = await _store(db)
     assert await _store(db) == first
     assert await _count(db) == 1
-    with pytest.raises(StoredFileConflict):
+    with pytest.raises(StoredFileConflictError):
         await _store(db, _PDF_B)
     assert await _count(db) == 1
 
 
 async def test_a_rolled_back_attempt_leaves_no_orphan_object(db: TenantDb) -> None:
     # The first attempt stores the object, then the job's transaction rolls back.
-    with pytest.raises(_Rollback):
+    with pytest.raises(_RollbackError):
         async with run_as_system(TENANT_A_ID, engine=db.engine) as conn:
             await store_generated_file(
                 conn,
@@ -124,7 +124,7 @@ async def test_a_rolled_back_attempt_leaves_no_orphan_object(db: TenantDb) -> No
                 purpose="report",
                 idempotency_key=_KEY,
             )
-            raise _Rollback
+            raise _RollbackError
     assert await _count(db) == 0
 
     # The retry renders slightly different bytes; it writes the same key, so nothing is orphaned.
@@ -140,7 +140,7 @@ async def test_only_clean_live_files_of_the_tenant_are_visible(db: TenantDb) -> 
     # Another tenant sees nothing.
     async with run_as_system(TENANT_B_ID, engine=db.engine) as conn:
         assert await get_stored_file(conn, file_id) is None
-        with pytest.raises(StoredFileNotFound):
+        with pytest.raises(StoredFileNotFoundError):
             await open_stored_file(conn, file_id)
 
     # A file that is not clean is invisible too.
@@ -162,14 +162,14 @@ async def test_only_clean_live_files_of_the_tenant_are_visible(db: TenantDb) -> 
         )
     async with run_as_system(TENANT_A_ID, engine=db.engine) as conn:
         assert await get_stored_file(conn, quarantined) is None
-        with pytest.raises(StoredFileNotFound):
+        with pytest.raises(StoredFileNotFoundError):
             await open_stored_file(conn, quarantined)
 
     # So is a soft-deleted one.
     await su_execute(db, f"UPDATE stored_files SET deleted_at = now() WHERE id = '{file_id}'")
     async with run_as_system(TENANT_A_ID, engine=db.engine) as conn:
         assert await get_stored_file(conn, file_id) is None
-        with pytest.raises(StoredFileNotFound):
+        with pytest.raises(StoredFileNotFoundError):
             await open_stored_file(conn, file_id)
 
 

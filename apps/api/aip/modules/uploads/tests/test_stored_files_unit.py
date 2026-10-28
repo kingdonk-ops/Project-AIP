@@ -54,6 +54,6 @@ async def test_store_generated_file_refuses_bad_input(
 
 
 def test_a_clean_csv_keeps_its_declared_type() -> None:
-    result = check_magic_bytes("Tag Number,Name\nKF-01,Pump\n".encode(), "text/csv")
+    result = check_magic_bytes(b"Tag Number,Name\nKF-01,Pump\n", "text/csv")
     assert result.outcome == "pass"
     assert result.detail["detected"] == "text/csv"

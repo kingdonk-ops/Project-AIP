@@ -63,7 +63,8 @@ stored_files = Table(
     Column("sha256", Text, nullable=False),
     Column("storage_key", Text, nullable=False),
     Column("legal_hold", Boolean, nullable=False, server_default=text("false")),
-    Column("source", Text, nullable=False, server_default=text("'upload'")),  # upload | generated
+    # upload | generated
+    Column("source", Text, nullable=False, server_default=text("'upload'")),
     Column("filename", Text, nullable=True),  # display-only, never a path
     Column("purpose", Text, nullable=True),  # report | import | export | ...
     Column("idempotency_key", Text, nullable=True),

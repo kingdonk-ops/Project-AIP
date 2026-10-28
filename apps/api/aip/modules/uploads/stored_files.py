@@ -7,7 +7,7 @@ file with ``get_stored_file`` / ``open_stored_file``. Every function runs on the
 is visible; a worker handler must already act as the ``system`` principal (as the scan runner does).
 
 Only ``clean`` files are ever handed out. Another tenant's, a deleted or a not-yet-clean file look
-exactly the same to a caller: ``None`` from ``get_stored_file``, ``StoredFileNotFound`` from
+exactly the same to a caller: ``None`` from ``get_stored_file``, ``StoredFileNotFoundError`` from
 ``open_stored_file``.
 """
 
@@ -30,9 +30,9 @@ from .pipeline.magic_bytes import HEAD_BYTES, check_magic_bytes
 from .platform_limits import SINGLE_PART_MAX_BYTES, is_allowed_type
 
 __all__ = [
-    "StoredFileConflict",
+    "StoredFileConflictError",
     "StoredFileIntegrityError",
-    "StoredFileNotFound",
+    "StoredFileNotFoundError",
     "StoredFileRef",
     "generated_file_id",
     "get_stored_file",
@@ -62,7 +62,7 @@ class StoredFileRef:
     created_at: datetime
 
 
-class StoredFileNotFound(LookupError):
+class StoredFileNotFoundError(LookupError):
     """No clean file with that id is visible to the caller (missing, another tenant's, deleted,
     out of the principal's project scope, or not yet clean)."""
 
@@ -71,7 +71,7 @@ class StoredFileIntegrityError(RuntimeError):
     """The stored object's bytes no longer match the row's size or sha256."""
 
 
-class StoredFileConflict(RuntimeError):
+class StoredFileConflictError(RuntimeError):
     """An idempotency key was reused for different bytes (or for a file since deleted)."""
 
 
@@ -104,7 +104,7 @@ async def open_stored_file(conn: AsyncConnection, file_id: UUID) -> bytes:
     """The bytes of the clean file ``file_id``, verified against the row's size and sha256."""
     row = await repo.get_clean_stored_file(conn, file_id)
     if row is None:
-        raise StoredFileNotFound(f"file {file_id} not found")
+        raise StoredFileNotFoundError(f"file {file_id} not found")
     try:
         data = await get_object_store().get(ObjectKey(row["storage_key"]))
     except ObjectNotFoundError:
@@ -146,7 +146,7 @@ async def store_generated_file(
 
     The id is derived from the tenant and ``idempotency_key``, so a retried job writes the same
     object key: a rolled-back attempt leaves nothing the retry does not overwrite. A replay with the
-    same bytes returns the stored file; different bytes raise ``StoredFileConflict``.
+    same bytes returns the stored file; different bytes raise ``StoredFileConflictError``.
     """
     content_type = content_type.strip().lower()
     _check_label("filename", filename, _MAX_FILENAME)
@@ -158,7 +158,7 @@ async def store_generated_file(
     existing = await repo.find_stored_file_by_idempotency_key(conn, idempotency_key)
     if existing is not None:
         if existing["deleted_at"] is not None or existing["sha256"] != sha256:
-            raise StoredFileConflict(f"idempotency key {idempotency_key!r} names another file")
+            raise StoredFileConflictError(f"idempotency key {idempotency_key!r} names another file")
         return _ref(existing)
 
     tenant_id = UUID(str((await conn.execute(_CURRENT_TENANT)).scalar_one()))
