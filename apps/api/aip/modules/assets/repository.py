@@ -13,6 +13,7 @@ from typing import Any, Final
 from uuid import UUID
 
 from sqlalchemy import func, insert, select, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.assets.tables import assets
@@ -258,5 +259,5 @@ async def list_assets(
         f"WHERE {' AND '.join(where)} ORDER BY {order_by} LIMIT :lim"
     ).bindparams(**params)
     # Type the JSONB column so the driver's text result is decoded as it is for select(assets).
-    typed = sql.columns(assets.c.attributes)
+    typed = sql.columns(attributes=JSONB)
     return [dict(r) for r in (await conn.execute(typed)).mappings()]
