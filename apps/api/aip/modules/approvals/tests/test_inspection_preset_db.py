@@ -180,11 +180,13 @@ async def test_standard_happy_path_by_role_writes_a_valid_six_entry_chain(
         ("review_pass", LEAD_ID),
         ("approve", SUPERVISOR_ID),
     ]
+    last: dict[str, Any] = {}
     for action, user in steps:
         response = await act(client, instance["id"], action, fresh(user))
         assert response.status_code == 200, (action, response.text)
-    assert response.json()["instance"]["currentState"] == "completed"
-    assert response.json()["instance"]["availableTransitions"] == []
+        last = response.json()["instance"]
+    assert last["currentState"] == "completed"
+    assert last["availableTransitions"] == []
 
     found = await history(client, instance["id"], fresh(ALICE_ID))
     assert found["chainValid"] is True
