@@ -17,10 +17,27 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.forms import repository as repo
+from aip.modules.forms.evaluator import (
+    EVALUATOR_VERSION,
+    AnswerError,
+    AnswerEvaluation,
+    ExpressionError,
+    evaluate_answers,
+)
 from aip.modules.forms.lint import LintIssue, lint_template
 from aip.modules.forms.schemas import FormRevisionOut
 
-__all__ = ["FormRevisionOut", "FormsApi", "LintIssue", "lint_template"]
+__all__ = [
+    "EVALUATOR_VERSION",
+    "AnswerError",
+    "AnswerEvaluation",
+    "ExpressionError",
+    "FormRevisionOut",
+    "FormsApi",
+    "LintIssue",
+    "evaluate_answers",
+    "lint_template",
+]
 
 _FROZEN = ("published", "superseded")
 

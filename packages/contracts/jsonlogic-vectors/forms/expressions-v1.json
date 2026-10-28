@@ -1,0 +1,1435 @@
+{
+  "version": 1,
+  "description": "Shared JSONLogic guard evaluator (the approvals allow-list) golden vectors.",
+  "cases": [
+    {
+      "name": "eq loose number string",
+      "expr": {
+        "==": [
+          1,
+          "1"
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "eq loose zero and zero string",
+      "expr": {
+        "==": [
+          0,
+          "0"
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "eq loose null and zero",
+      "expr": {
+        "==": [
+          null,
+          0
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "eq loose null and null",
+      "expr": {
+        "==": [
+          null,
+          null
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "eq loose true and one string",
+      "expr": {
+        "==": [
+          true,
+          "1"
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "eq loose false and zero",
+      "expr": {
+        "==": [
+          false,
+          0
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "eq loose true and one",
+      "expr": {
+        "==": [
+          true,
+          1
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "eq loose two numbers",
+      "expr": {
+        "==": [
+          2,
+          2
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "eq loose int and float",
+      "expr": {
+        "==": [
+          1,
+          1.0
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "eq loose different strings",
+      "expr": {
+        "==": [
+          "a",
+          "b"
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "strict number string",
+      "expr": {
+        "===": [
+          1,
+          "1"
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "strict number number",
+      "expr": {
+        "===": [
+          1,
+          1
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "strict int float",
+      "expr": {
+        "===": [
+          1,
+          1.0
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "strict null and zero",
+      "expr": {
+        "===": [
+          null,
+          0
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "strict bool and one",
+      "expr": {
+        "===": [
+          true,
+          1
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "strict string equal",
+      "expr": {
+        "===": [
+          "x",
+          "x"
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "ne loose",
+      "expr": {
+        "!=": [
+          1,
+          2
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "ne loose equal",
+      "expr": {
+        "!=": [
+          1,
+          "1"
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "strict ne",
+      "expr": {
+        "!==": [
+          1,
+          "1"
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "strict ne equal",
+      "expr": {
+        "!==": [
+          1,
+          1
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "lt true",
+      "expr": {
+        "<": [
+          1,
+          2
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "lt false",
+      "expr": {
+        "<": [
+          2,
+          1
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "lt equal",
+      "expr": {
+        "<": [
+          2,
+          2
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "lt strings",
+      "expr": {
+        "<": [
+          "a",
+          "b"
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "lt coerced string number",
+      "expr": {
+        "<": [
+          "1",
+          2
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "lt between true",
+      "expr": {
+        "<": [
+          1,
+          2,
+          3
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "lt between false high",
+      "expr": {
+        "<": [
+          1,
+          5,
+          3
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "lt between false low",
+      "expr": {
+        "<": [
+          5,
+          2,
+          3
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "le true",
+      "expr": {
+        "<=": [
+          1,
+          1
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "le false",
+      "expr": {
+        "<=": [
+          2,
+          1
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "le between true",
+      "expr": {
+        "<=": [
+          1,
+          1,
+          2
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "le between false",
+      "expr": {
+        "<=": [
+          1,
+          3,
+          2
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "gt true",
+      "expr": {
+        ">": [
+          2,
+          1
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "gt false",
+      "expr": {
+        ">": [
+          1,
+          2
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "ge true",
+      "expr": {
+        ">=": [
+          2,
+          2
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "ge false",
+      "expr": {
+        ">=": [
+          1,
+          2
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "gt coerced",
+      "expr": {
+        ">": [
+          "10",
+          9
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "not of false",
+      "expr": {
+        "!": [
+          false
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "not of truthy string",
+      "expr": {
+        "!": [
+          "x"
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "not of empty array",
+      "expr": {
+        "!": [
+          []
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "not of zero",
+      "expr": {
+        "!": [
+          0
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "double not truthy string zero",
+      "expr": {
+        "!!": [
+          "0"
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "double not zero",
+      "expr": {
+        "!!": [
+          0
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "double not empty array",
+      "expr": {
+        "!!": [
+          []
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "double not object via var",
+      "expr": {
+        "!!": [
+          {
+            "var": "o"
+          }
+        ]
+      },
+      "data": {
+        "o": {}
+      },
+      "expected": true
+    },
+    {
+      "name": "double not nonempty array",
+      "expr": {
+        "!!": [
+          [
+            1
+          ]
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "and both truthy",
+      "expr": {
+        "and": [
+          1,
+          2
+        ]
+      },
+      "data": {},
+      "expected": 2
+    },
+    {
+      "name": "and short circuit",
+      "expr": {
+        "and": [
+          0,
+          2
+        ]
+      },
+      "data": {},
+      "expected": 0
+    },
+    {
+      "name": "and three",
+      "expr": {
+        "and": [
+          1,
+          2,
+          3
+        ]
+      },
+      "data": {},
+      "expected": 3
+    },
+    {
+      "name": "or first truthy",
+      "expr": {
+        "or": [
+          3,
+          0
+        ]
+      },
+      "data": {},
+      "expected": 3
+    },
+    {
+      "name": "or returns last",
+      "expr": {
+        "or": [
+          0,
+          "",
+          5
+        ]
+      },
+      "data": {},
+      "expected": 5
+    },
+    {
+      "name": "or all falsy",
+      "expr": {
+        "or": [
+          0,
+          ""
+        ]
+      },
+      "data": {},
+      "expected": ""
+    },
+    {
+      "name": "and single",
+      "expr": {
+        "and": [
+          true
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "if then",
+      "expr": {
+        "if": [
+          true,
+          "a",
+          "b"
+        ]
+      },
+      "data": {},
+      "expected": "a"
+    },
+    {
+      "name": "if else",
+      "expr": {
+        "if": [
+          false,
+          "a",
+          "b"
+        ]
+      },
+      "data": {},
+      "expected": "b"
+    },
+    {
+      "name": "if elif",
+      "expr": {
+        "if": [
+          false,
+          "a",
+          true,
+          "b",
+          "c"
+        ]
+      },
+      "data": {},
+      "expected": "b"
+    },
+    {
+      "name": "if odd two then",
+      "expr": {
+        "if": [
+          true,
+          "a"
+        ]
+      },
+      "data": {},
+      "expected": "a"
+    },
+    {
+      "name": "if odd two else none",
+      "expr": {
+        "if": [
+          false,
+          "a"
+        ]
+      },
+      "data": {},
+      "expected": null
+    },
+    {
+      "name": "if single",
+      "expr": {
+        "if": [
+          "only"
+        ]
+      },
+      "data": {},
+      "expected": "only"
+    },
+    {
+      "name": "if chain to default",
+      "expr": {
+        "if": [
+          false,
+          1,
+          false,
+          2,
+          3
+        ]
+      },
+      "data": {},
+      "expected": 3
+    },
+    {
+      "name": "var simple",
+      "expr": {
+        "var": "a"
+      },
+      "data": {
+        "a": 7
+      },
+      "expected": 7
+    },
+    {
+      "name": "var dotted",
+      "expr": {
+        "var": "a.b"
+      },
+      "data": {
+        "a": {
+          "b": "deep"
+        }
+      },
+      "expected": "deep"
+    },
+    {
+      "name": "var array index",
+      "expr": {
+        "var": "a.1"
+      },
+      "data": {
+        "a": [
+          10,
+          20,
+          30
+        ]
+      },
+      "expected": 20
+    },
+    {
+      "name": "var missing returns null",
+      "expr": {
+        "var": "nope"
+      },
+      "data": {
+        "a": 1
+      },
+      "expected": null
+    },
+    {
+      "name": "var default used",
+      "expr": {
+        "var": [
+          "nope",
+          99
+        ]
+      },
+      "data": {
+        "a": 1
+      },
+      "expected": 99
+    },
+    {
+      "name": "var default not used",
+      "expr": {
+        "var": [
+          "a",
+          99
+        ]
+      },
+      "data": {
+        "a": 5
+      },
+      "expected": 5
+    },
+    {
+      "name": "var empty path returns data",
+      "expr": {
+        "var": ""
+      },
+      "data": {
+        "a": 1
+      },
+      "expected": {
+        "a": 1
+      }
+    },
+    {
+      "name": "var deep missing",
+      "expr": {
+        "var": "a.b.c"
+      },
+      "data": {
+        "a": {
+          "b": {}
+        }
+      },
+      "expected": null
+    },
+    {
+      "name": "var index out of range",
+      "expr": {
+        "var": [
+          "a.5",
+          "x"
+        ]
+      },
+      "data": {
+        "a": [
+          1
+        ]
+      },
+      "expected": "x"
+    },
+    {
+      "name": "missing none",
+      "expr": {
+        "missing": [
+          "a",
+          "b"
+        ]
+      },
+      "data": {
+        "a": 1,
+        "b": 2
+      },
+      "expected": []
+    },
+    {
+      "name": "missing some",
+      "expr": {
+        "missing": [
+          "a",
+          "b"
+        ]
+      },
+      "data": {
+        "a": 1
+      },
+      "expected": [
+        "b"
+      ]
+    },
+    {
+      "name": "missing single array arg",
+      "expr": {
+        "missing": [
+          [
+            "a",
+            "b"
+          ]
+        ]
+      },
+      "data": {
+        "b": 2
+      },
+      "expected": [
+        "a"
+      ]
+    },
+    {
+      "name": "missing empty string counts",
+      "expr": {
+        "missing": [
+          "a"
+        ]
+      },
+      "data": {
+        "a": ""
+      },
+      "expected": [
+        "a"
+      ]
+    },
+    {
+      "name": "missing_some satisfied",
+      "expr": {
+        "missing_some": [
+          1,
+          [
+            "a",
+            "b"
+          ]
+        ]
+      },
+      "data": {
+        "a": 1
+      },
+      "expected": []
+    },
+    {
+      "name": "missing_some not satisfied",
+      "expr": {
+        "missing_some": [
+          2,
+          [
+            "a",
+            "b"
+          ]
+        ]
+      },
+      "data": {
+        "a": 1
+      },
+      "expected": [
+        "b"
+      ]
+    },
+    {
+      "name": "missing_some all present",
+      "expr": {
+        "missing_some": [
+          1,
+          [
+            "a",
+            "b"
+          ]
+        ]
+      },
+      "data": {
+        "a": 1,
+        "b": 2
+      },
+      "expected": []
+    },
+    {
+      "name": "in string substring",
+      "expr": {
+        "in": [
+          "ell",
+          "hello"
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "in string absent",
+      "expr": {
+        "in": [
+          "zz",
+          "hello"
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "in array present",
+      "expr": {
+        "in": [
+          2,
+          [
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "in array absent",
+      "expr": {
+        "in": [
+          9,
+          [
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "in array strict no coerce",
+      "expr": {
+        "in": [
+          "1",
+          [
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "in non-collection",
+      "expr": {
+        "in": [
+          1,
+          5
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "in needle not string in string",
+      "expr": {
+        "in": [
+          1,
+          "hello"
+        ]
+      },
+      "data": {},
+      "expected": false
+    },
+    {
+      "name": "nested and or",
+      "expr": {
+        "and": [
+          {
+            "or": [
+              0,
+              1
+            ]
+          },
+          {
+            "==": [
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "data": {},
+      "expected": true
+    },
+    {
+      "name": "var in comparison",
+      "expr": {
+        "<": [
+          {
+            "var": "age"
+          },
+          18
+        ]
+      },
+      "data": {
+        "age": 15
+      },
+      "expected": true
+    },
+    {
+      "name": "measurement value compare",
+      "expr": {
+        "<": [
+          {
+            "var": "answers.dft.value"
+          },
+          0.25
+        ]
+      },
+      "data": {
+        "answers": {
+          "dft": {
+            "value": 0.18
+          }
+        }
+      },
+      "expected": true
+    },
+    {
+      "name": "context kind equals",
+      "expr": {
+        "==": [
+          {
+            "var": "context.kind"
+          },
+          "inspection"
+        ]
+      },
+      "data": {
+        "context": {
+          "kind": "inspection"
+        }
+      },
+      "expected": true
+    },
+    {
+      "name": "if with var branches",
+      "expr": {
+        "if": [
+          {
+            "var": "flag"
+          },
+          "on",
+          "off"
+        ]
+      },
+      "data": {
+        "flag": true
+      },
+      "expected": "on"
+    },
+    {
+      "name": "operator some refused",
+      "expr": {
+        "some": [
+          [
+            1
+          ],
+          {
+            "==": [
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "error": "operator not allowed: some"
+    },
+    {
+      "name": "operator plus refused",
+      "expr": {
+        "+": [
+          1,
+          1
+        ]
+      },
+      "error": "operator not allowed: +"
+    },
+    {
+      "name": "operator exec refused",
+      "expr": {
+        "exec": [
+          "ls"
+        ]
+      },
+      "error": "operator not allowed: exec"
+    },
+    {
+      "name": "operator reduce refused",
+      "expr": {
+        "reduce": [
+          [
+            1
+          ],
+          {
+            "+": [
+              1,
+              1
+            ]
+          },
+          0
+        ]
+      },
+      "error": "operator not allowed: reduce"
+    },
+    {
+      "name": "operator map refused",
+      "expr": {
+        "map": [
+          [
+            1
+          ],
+          {
+            "var": ""
+          }
+        ]
+      },
+      "error": "operator not allowed: map"
+    },
+    {
+      "name": "two operators refused",
+      "expr": {
+        "==": [
+          1,
+          1
+        ],
+        "!=": [
+          1,
+          2
+        ]
+      },
+      "error": "a guard operation has exactly one operator"
+    },
+    {
+      "name": "empty operation refused",
+      "expr": {},
+      "error": "a guard operation has exactly one operator"
+    },
+    {
+      "name": "non-object guard refused",
+      "expr": [
+        1,
+        2
+      ],
+      "error": "a guard is a JSONLogic operation (an object)"
+    },
+    {
+      "name": "nested bad operator refused",
+      "expr": {
+        "and": [
+          {
+            "foo": [
+              1
+            ]
+          }
+        ]
+      },
+      "error": "operator not allowed: foo"
+    },
+    {
+      "name": "guard too deep (depth 21)",
+      "expr": {
+        "and": [
+          {
+            "and": [
+              {
+                "and": [
+                  {
+                    "and": [
+                      {
+                        "and": [
+                          {
+                            "and": [
+                              {
+                                "and": [
+                                  {
+                                    "and": [
+                                      {
+                                        "and": [
+                                          {
+                                            "and": [
+                                              true
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "error": "guard too deep"
+    },
+    {
+      "name": "guard too large (201 nodes)",
+      "expr": {
+        "and": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "error": "guard too large"
+    }
+  ]
+}

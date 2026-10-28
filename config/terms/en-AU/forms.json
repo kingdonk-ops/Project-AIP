@@ -26,5 +26,17 @@
   "forms.lint.VALIDATION_RANGE": "The minimum is greater than the maximum.",
   "forms.lint.EXPRESSION_INVALID": "This expression is not an allowed guard.",
   "forms.lint.UNKNOWN_REFERENCE": "This expression refers to something that does not exist.",
-  "forms.lint.CONDITION_CYCLE": "These visibility or required-if conditions refer to each other in a loop."
+  "forms.lint.CONDITION_CYCLE": "These visibility or required-if conditions refer to each other in a loop.",
+  "forms.answer.REQUIRED": "This field is required.",
+  "forms.answer.WRONG_TYPE": "This value is not valid for this field.",
+  "forms.answer.NOT_AN_OPTION": "Choose one of the allowed options.",
+  "forms.answer.BELOW_MIN": "Must be at least {min}.",
+  "forms.answer.ABOVE_MAX": "Must be at most {max}.",
+  "forms.answer.TOO_SHORT": "Must be at least {minLength} characters.",
+  "forms.answer.TOO_LONG": "Must be at most {maxLength} characters.",
+  "forms.answer.TOO_FEW": "Select at least {minItems}.",
+  "forms.answer.TOO_MANY": "Select at most {maxItems}.",
+  "forms.answer.RULE_FAILED": "This value does not meet the rule.",
+  "forms.answer.UNKNOWN_FIELD": "This field is not part of the form.",
+  "forms.answer.failed": "Fail"
 }
