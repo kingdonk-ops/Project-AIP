@@ -127,6 +127,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/access/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Teams */
+        get: operations["access_teams_list"];
+        put?: never;
+        /** Create Team */
+        post: operations["access_teams_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/access/teams/{team_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Team */
+        delete: operations["access_teams_delete"];
+        options?: never;
+        head?: never;
+        /** Update Team */
+        patch: operations["access_teams_update"];
+        trace?: never;
+    };
+    "/api/v1/access/teams/{team_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Members */
+        get: operations["access_team_members_list"];
+        put?: never;
+        /** Add Members */
+        post: operations["access_team_members_add"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/access/teams/{team_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Member */
+        delete: operations["access_team_members_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/jobs": {
         parameters: {
             query?: never;
@@ -1719,7 +1790,10 @@ export interface components {
             /** Tagnumber */
             tagNumber?: string | null;
         };
-        /** AssignmentCreate */
+        /**
+         * AssignmentCreate
+         * @description A team scope names no user (its members hold the role); every other scope needs userId.
+         */
         AssignmentCreate: {
             /**
              * Roleid
@@ -1727,11 +1801,8 @@ export interface components {
              */
             roleId: string;
             scope: components["schemas"]["Scope"];
-            /**
-             * Userid
-             * Format: uuid
-             */
-            userId: string;
+            /** Userid */
+            userId?: string | null;
             /** Validto */
             validTo?: string | null;
         };
@@ -1769,11 +1840,10 @@ export interface components {
             scopeType: string;
             /** Source */
             source: string;
-            /**
-             * Userid
-             * Format: uuid
-             */
-            userId: string;
+            /** Teamid */
+            teamId?: string | null;
+            /** Userid */
+            userId: string | null;
             /**
              * Validfrom
              * Format: date-time
@@ -2929,6 +2999,11 @@ export interface components {
              */
             userClass: "staff" | "field" | "portal";
         };
+        /** MembersAdd */
+        MembersAdd: {
+            /** Userids */
+            userIds: string[];
+        };
         /**
          * ModuleInfo
          * @description A mounted module as reported by the registry.
@@ -3502,11 +3577,14 @@ export interface components {
         };
         /**
          * Scope
-         * @description ``tenant``, or ``project`` with ``projectId``. ``team`` and ``asset_subtree`` -> 400.
+         * @description ``tenant``; ``project`` with ``projectId``; ``team`` with ``teamId`` (ACCESS-04).
+         *     ``asset_subtree`` -> 400.
          */
         Scope: {
             /** Projectid */
             projectId?: string | null;
+            /** Teamid */
+            teamId?: string | null;
             /**
              * Type
              * @enum {string}
@@ -3813,6 +3891,93 @@ export interface components {
              */
             term: "annual" | "multi_year" | "trial" | "sandbox";
         };
+        /** TeamCreate */
+        TeamCreate: {
+            /** Name */
+            name: string;
+            /** Organisationid */
+            organisationId?: string | null;
+            /** Projectid */
+            projectId?: string | null;
+            /**
+             * Teamtype
+             * @enum {string}
+             */
+            teamType: "internal" | "subcontractor" | "client";
+        };
+        /** TeamList */
+        TeamList: {
+            /** Items */
+            items: components["schemas"]["TeamOut"][];
+        };
+        /** TeamMemberList */
+        TeamMemberList: {
+            /** Items */
+            items: components["schemas"]["TeamMemberOut"][];
+        };
+        /** TeamMemberOut */
+        TeamMemberOut: {
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "manual" | "scim";
+            /**
+             * Userid
+             * Format: uuid
+             */
+            userId: string;
+        };
+        /** TeamOut */
+        TeamOut: {
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Membercount */
+            memberCount: number;
+            /** Name */
+            name: string;
+            /** Organisationid */
+            organisationId: string | null;
+            /** Projectid */
+            projectId: string | null;
+            /** Scimgroupid */
+            scimGroupId: string | null;
+            /**
+             * Teamtype
+             * @enum {string}
+             */
+            teamType: "internal" | "subcontractor" | "client";
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /**
+         * TeamUpdate
+         * @description Every field optional; the project cannot change.
+         */
+        TeamUpdate: {
+            /** Name */
+            name?: string | null;
+            /** Organisationid */
+            organisationId?: string | null;
+            /** Teamtype */
+            teamType?: ("internal" | "subcontractor" | "client") | null;
+        };
         /** TemplateCreate */
         TemplateCreate: {
             /** Changenote */
@@ -4114,6 +4279,7 @@ export interface operations {
             query?: {
                 userId?: string | null;
                 projectId?: string | null;
+                teamId?: string | null;
             };
             header?: never;
             path?: never;
@@ -4589,6 +4755,411 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AccessErrorBody"];
                 };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    access_teams_list: {
+        parameters: {
+            query?: {
+                projectId?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamList"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    access_teams_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    access_teams_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    access_teams_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    access_team_members_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamMemberList"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    access_team_members_add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MembersAdd"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamMemberList"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessErrorBody"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    access_team_members_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Forbidden */
             403: {

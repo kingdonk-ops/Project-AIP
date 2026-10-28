@@ -23,15 +23,22 @@ import type {
   AccessErrorBody,
   AccessGetMyAbilitiesParams,
   AccessRoleAssignmentsListParams,
+  AccessTeamsListParams,
   AssignmentCreate,
   AssignmentList,
   AssignmentOut,
   HTTPValidationError,
+  MembersAdd,
   RoleClone,
   RoleCreate,
   RoleList,
   RoleOut,
-  RoleUpdate
+  RoleUpdate,
+  TeamCreate,
+  TeamList,
+  TeamMemberList,
+  TeamOut,
+  TeamUpdate
 } from '../../model';
 
 import { apiFetch } from '../../../fetcher';
@@ -1266,4 +1273,860 @@ export const useAccessRolesReset = <TError = AccessErrorBody | HTTPValidationErr
         TContext
       > => {
       return useMutation(getAccessRolesResetMutationOptions(options), queryClient);
+    }
+    export type accessTeamsListResponse200 = {
+  data: TeamList
+  status: 200
+}
+
+export type accessTeamsListResponse403 = {
+  data: AccessErrorBody
+  status: 403
+}
+
+export type accessTeamsListResponse404 = {
+  data: AccessErrorBody
+  status: 404
+}
+
+export type accessTeamsListResponse409 = {
+  data: AccessErrorBody
+  status: 409
+}
+
+export type accessTeamsListResponse422 = {
+  data: void
+  status: 422
+}
+
+export type accessTeamsListResponseSuccess = (accessTeamsListResponse200) & {
+  headers: Headers;
+};
+export type accessTeamsListResponseError = (accessTeamsListResponse403 | accessTeamsListResponse404 | accessTeamsListResponse409 | accessTeamsListResponse422) & {
+  headers: Headers;
+};
+
+export type accessTeamsListResponse = (accessTeamsListResponseSuccess | accessTeamsListResponseError)
+
+export const getAccessTeamsListUrl = (params?: AccessTeamsListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/access/teams?${stringifiedParams}` : `/api/v1/access/teams`
+}
+
+/**
+ * @summary List Teams
+ */
+export const accessTeamsList = async (params?: AccessTeamsListParams, options?: Parameters<typeof apiFetch>[1]): Promise<accessTeamsListResponse> => {
+
+  return apiFetch<accessTeamsListResponse>(getAccessTeamsListUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAccessTeamsListQueryKey = (params?: AccessTeamsListParams,) => {
+    return [
+    `/api/v1/access/teams`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAccessTeamsListQueryOptions = <TData = Awaited<ReturnType<typeof accessTeamsList>>, TError = AccessErrorBody | void>(params?: AccessTeamsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAccessTeamsListQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof accessTeamsList>>> = ({ signal }) => accessTeamsList(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof accessTeamsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AccessTeamsListQueryResult = NonNullable<Awaited<ReturnType<typeof accessTeamsList>>>
+export type AccessTeamsListQueryError = AccessErrorBody | void
+
+
+export function useAccessTeamsList<TData = Awaited<ReturnType<typeof accessTeamsList>>, TError = AccessErrorBody | void>(
+ params: undefined |  AccessTeamsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamsList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof accessTeamsList>>,
+          TError,
+          Awaited<ReturnType<typeof accessTeamsList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAccessTeamsList<TData = Awaited<ReturnType<typeof accessTeamsList>>, TError = AccessErrorBody | void>(
+ params?: AccessTeamsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamsList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof accessTeamsList>>,
+          TError,
+          Awaited<ReturnType<typeof accessTeamsList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAccessTeamsList<TData = Awaited<ReturnType<typeof accessTeamsList>>, TError = AccessErrorBody | void>(
+ params?: AccessTeamsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Teams
+ */
+
+export function useAccessTeamsList<TData = Awaited<ReturnType<typeof accessTeamsList>>, TError = AccessErrorBody | void>(
+ params?: AccessTeamsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAccessTeamsListQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type accessTeamsCreateResponse201 = {
+  data: TeamOut
+  status: 201
+}
+
+export type accessTeamsCreateResponse403 = {
+  data: AccessErrorBody
+  status: 403
+}
+
+export type accessTeamsCreateResponse404 = {
+  data: AccessErrorBody
+  status: 404
+}
+
+export type accessTeamsCreateResponse409 = {
+  data: AccessErrorBody
+  status: 409
+}
+
+export type accessTeamsCreateResponse422 = {
+  data: void
+  status: 422
+}
+
+export type accessTeamsCreateResponseSuccess = (accessTeamsCreateResponse201) & {
+  headers: Headers;
+};
+export type accessTeamsCreateResponseError = (accessTeamsCreateResponse403 | accessTeamsCreateResponse404 | accessTeamsCreateResponse409 | accessTeamsCreateResponse422) & {
+  headers: Headers;
+};
+
+export type accessTeamsCreateResponse = (accessTeamsCreateResponseSuccess | accessTeamsCreateResponseError)
+
+export const getAccessTeamsCreateUrl = () => {
+
+
+
+
+  return `/api/v1/access/teams`
+}
+
+/**
+ * @summary Create Team
+ */
+export const accessTeamsCreate = async (teamCreate: TeamCreate, options?: Parameters<typeof apiFetch>[1]): Promise<accessTeamsCreateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<accessTeamsCreateResponse>(getAccessTeamsCreateUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(teamCreate)
+  }
+);}
+
+
+
+
+
+export const getAccessTeamsCreateMutationKey = () => ['accessTeamsCreate'] as const;
+
+export const getAccessTeamsCreateMutationOptions = <TError = AccessErrorBody | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamsCreate>>, TError,AccessTeamsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accessTeamsCreate>>, TError,AccessTeamsCreateMutationVariables, TContext> => {
+
+const mutationKey = getAccessTeamsCreateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessTeamsCreate>>, AccessTeamsCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  accessTeamsCreate(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccessTeamsCreateMutationResult = NonNullable<Awaited<ReturnType<typeof accessTeamsCreate>>>
+    export type AccessTeamsCreateMutationBody = TeamCreate
+    export type AccessTeamsCreateMutationError = AccessErrorBody | void
+    export type AccessTeamsCreateMutationVariables = {data: TeamCreate}
+
+    /**
+ * @summary Create Team
+ */
+export const useAccessTeamsCreate = <TError = AccessErrorBody | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamsCreate>>, TError,AccessTeamsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accessTeamsCreate>>,
+        TError,
+        AccessTeamsCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAccessTeamsCreateMutationOptions(options), queryClient);
+    }
+    export type accessTeamsDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type accessTeamsDeleteResponse403 = {
+  data: AccessErrorBody
+  status: 403
+}
+
+export type accessTeamsDeleteResponse404 = {
+  data: AccessErrorBody
+  status: 404
+}
+
+export type accessTeamsDeleteResponse409 = {
+  data: AccessErrorBody
+  status: 409
+}
+
+export type accessTeamsDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type accessTeamsDeleteResponseSuccess = (accessTeamsDeleteResponse204) & {
+  headers: Headers;
+};
+export type accessTeamsDeleteResponseError = (accessTeamsDeleteResponse403 | accessTeamsDeleteResponse404 | accessTeamsDeleteResponse409 | accessTeamsDeleteResponse422) & {
+  headers: Headers;
+};
+
+export type accessTeamsDeleteResponse = (accessTeamsDeleteResponseSuccess | accessTeamsDeleteResponseError)
+
+export const getAccessTeamsDeleteUrl = (teamId: string,) => {
+
+
+
+
+  return `/api/v1/access/teams/${teamId}`
+}
+
+/**
+ * @summary Delete Team
+ */
+export const accessTeamsDelete = async (teamId: string, options?: Parameters<typeof apiFetch>[1]): Promise<accessTeamsDeleteResponse> => {
+
+  return apiFetch<accessTeamsDeleteResponse>(getAccessTeamsDeleteUrl(teamId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getAccessTeamsDeleteMutationKey = () => ['accessTeamsDelete'] as const;
+
+export const getAccessTeamsDeleteMutationOptions = <TError = AccessErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamsDelete>>, TError,AccessTeamsDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accessTeamsDelete>>, TError,AccessTeamsDeleteMutationVariables, TContext> => {
+
+const mutationKey = getAccessTeamsDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessTeamsDelete>>, AccessTeamsDeleteMutationVariables> = (props) => {
+          const {teamId} = props ?? {};
+
+          return  accessTeamsDelete(teamId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccessTeamsDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof accessTeamsDelete>>>
+
+    export type AccessTeamsDeleteMutationError = AccessErrorBody | HTTPValidationError
+    export type AccessTeamsDeleteMutationVariables = {teamId: string}
+
+    /**
+ * @summary Delete Team
+ */
+export const useAccessTeamsDelete = <TError = AccessErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamsDelete>>, TError,AccessTeamsDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accessTeamsDelete>>,
+        TError,
+        AccessTeamsDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAccessTeamsDeleteMutationOptions(options), queryClient);
+    }
+    export type accessTeamsUpdateResponse200 = {
+  data: TeamOut
+  status: 200
+}
+
+export type accessTeamsUpdateResponse403 = {
+  data: AccessErrorBody
+  status: 403
+}
+
+export type accessTeamsUpdateResponse404 = {
+  data: AccessErrorBody
+  status: 404
+}
+
+export type accessTeamsUpdateResponse409 = {
+  data: AccessErrorBody
+  status: 409
+}
+
+export type accessTeamsUpdateResponse422 = {
+  data: void
+  status: 422
+}
+
+export type accessTeamsUpdateResponseSuccess = (accessTeamsUpdateResponse200) & {
+  headers: Headers;
+};
+export type accessTeamsUpdateResponseError = (accessTeamsUpdateResponse403 | accessTeamsUpdateResponse404 | accessTeamsUpdateResponse409 | accessTeamsUpdateResponse422) & {
+  headers: Headers;
+};
+
+export type accessTeamsUpdateResponse = (accessTeamsUpdateResponseSuccess | accessTeamsUpdateResponseError)
+
+export const getAccessTeamsUpdateUrl = (teamId: string,) => {
+
+
+
+
+  return `/api/v1/access/teams/${teamId}`
+}
+
+/**
+ * @summary Update Team
+ */
+export const accessTeamsUpdate = async (teamId: string,
+    teamUpdate: TeamUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<accessTeamsUpdateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<accessTeamsUpdateResponse>(getAccessTeamsUpdateUrl(teamId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(teamUpdate)
+  }
+);}
+
+
+
+
+
+export const getAccessTeamsUpdateMutationKey = () => ['accessTeamsUpdate'] as const;
+
+export const getAccessTeamsUpdateMutationOptions = <TError = AccessErrorBody | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamsUpdate>>, TError,AccessTeamsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accessTeamsUpdate>>, TError,AccessTeamsUpdateMutationVariables, TContext> => {
+
+const mutationKey = getAccessTeamsUpdateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessTeamsUpdate>>, AccessTeamsUpdateMutationVariables> = (props) => {
+          const {teamId,data} = props ?? {};
+
+          return  accessTeamsUpdate(teamId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccessTeamsUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof accessTeamsUpdate>>>
+    export type AccessTeamsUpdateMutationBody = TeamUpdate
+    export type AccessTeamsUpdateMutationError = AccessErrorBody | void
+    export type AccessTeamsUpdateMutationVariables = {teamId: string;data: TeamUpdate}
+
+    /**
+ * @summary Update Team
+ */
+export const useAccessTeamsUpdate = <TError = AccessErrorBody | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamsUpdate>>, TError,AccessTeamsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accessTeamsUpdate>>,
+        TError,
+        AccessTeamsUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAccessTeamsUpdateMutationOptions(options), queryClient);
+    }
+    export type accessTeamMembersListResponse200 = {
+  data: TeamMemberList
+  status: 200
+}
+
+export type accessTeamMembersListResponse403 = {
+  data: AccessErrorBody
+  status: 403
+}
+
+export type accessTeamMembersListResponse404 = {
+  data: AccessErrorBody
+  status: 404
+}
+
+export type accessTeamMembersListResponse409 = {
+  data: AccessErrorBody
+  status: 409
+}
+
+export type accessTeamMembersListResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type accessTeamMembersListResponseSuccess = (accessTeamMembersListResponse200) & {
+  headers: Headers;
+};
+export type accessTeamMembersListResponseError = (accessTeamMembersListResponse403 | accessTeamMembersListResponse404 | accessTeamMembersListResponse409 | accessTeamMembersListResponse422) & {
+  headers: Headers;
+};
+
+export type accessTeamMembersListResponse = (accessTeamMembersListResponseSuccess | accessTeamMembersListResponseError)
+
+export const getAccessTeamMembersListUrl = (teamId: string,) => {
+
+
+
+
+  return `/api/v1/access/teams/${teamId}/members`
+}
+
+/**
+ * @summary List Members
+ */
+export const accessTeamMembersList = async (teamId: string, options?: Parameters<typeof apiFetch>[1]): Promise<accessTeamMembersListResponse> => {
+
+  return apiFetch<accessTeamMembersListResponse>(getAccessTeamMembersListUrl(teamId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAccessTeamMembersListQueryKey = (teamId: string,) => {
+    return [
+    `/api/v1/access/teams/${teamId}/members`
+    ] as const;
+    }
+
+
+export const getAccessTeamMembersListQueryOptions = <TData = Awaited<ReturnType<typeof accessTeamMembersList>>, TError = AccessErrorBody | HTTPValidationError>(teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamMembersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAccessTeamMembersListQueryKey(teamId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof accessTeamMembersList>>> = ({ signal }) => accessTeamMembersList(teamId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: teamId !== null && teamId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof accessTeamMembersList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AccessTeamMembersListQueryResult = NonNullable<Awaited<ReturnType<typeof accessTeamMembersList>>>
+export type AccessTeamMembersListQueryError = AccessErrorBody | HTTPValidationError
+
+
+export function useAccessTeamMembersList<TData = Awaited<ReturnType<typeof accessTeamMembersList>>, TError = AccessErrorBody | HTTPValidationError>(
+ teamId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamMembersList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof accessTeamMembersList>>,
+          TError,
+          Awaited<ReturnType<typeof accessTeamMembersList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAccessTeamMembersList<TData = Awaited<ReturnType<typeof accessTeamMembersList>>, TError = AccessErrorBody | HTTPValidationError>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamMembersList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof accessTeamMembersList>>,
+          TError,
+          Awaited<ReturnType<typeof accessTeamMembersList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAccessTeamMembersList<TData = Awaited<ReturnType<typeof accessTeamMembersList>>, TError = AccessErrorBody | HTTPValidationError>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamMembersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Members
+ */
+
+export function useAccessTeamMembersList<TData = Awaited<ReturnType<typeof accessTeamMembersList>>, TError = AccessErrorBody | HTTPValidationError>(
+ teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamMembersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAccessTeamMembersListQueryOptions(teamId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type accessTeamMembersAddResponse200 = {
+  data: TeamMemberList
+  status: 200
+}
+
+export type accessTeamMembersAddResponse403 = {
+  data: AccessErrorBody
+  status: 403
+}
+
+export type accessTeamMembersAddResponse404 = {
+  data: AccessErrorBody
+  status: 404
+}
+
+export type accessTeamMembersAddResponse409 = {
+  data: AccessErrorBody
+  status: 409
+}
+
+export type accessTeamMembersAddResponse422 = {
+  data: void
+  status: 422
+}
+
+export type accessTeamMembersAddResponseSuccess = (accessTeamMembersAddResponse200) & {
+  headers: Headers;
+};
+export type accessTeamMembersAddResponseError = (accessTeamMembersAddResponse403 | accessTeamMembersAddResponse404 | accessTeamMembersAddResponse409 | accessTeamMembersAddResponse422) & {
+  headers: Headers;
+};
+
+export type accessTeamMembersAddResponse = (accessTeamMembersAddResponseSuccess | accessTeamMembersAddResponseError)
+
+export const getAccessTeamMembersAddUrl = (teamId: string,) => {
+
+
+
+
+  return `/api/v1/access/teams/${teamId}/members`
+}
+
+/**
+ * @summary Add Members
+ */
+export const accessTeamMembersAdd = async (teamId: string,
+    membersAdd: MembersAdd, options?: Parameters<typeof apiFetch>[1]): Promise<accessTeamMembersAddResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<accessTeamMembersAddResponse>(getAccessTeamMembersAddUrl(teamId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(membersAdd)
+  }
+);}
+
+
+
+
+
+export const getAccessTeamMembersAddMutationKey = () => ['accessTeamMembersAdd'] as const;
+
+export const getAccessTeamMembersAddMutationOptions = <TError = AccessErrorBody | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamMembersAdd>>, TError,AccessTeamMembersAddMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accessTeamMembersAdd>>, TError,AccessTeamMembersAddMutationVariables, TContext> => {
+
+const mutationKey = getAccessTeamMembersAddMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessTeamMembersAdd>>, AccessTeamMembersAddMutationVariables> = (props) => {
+          const {teamId,data} = props ?? {};
+
+          return  accessTeamMembersAdd(teamId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccessTeamMembersAddMutationResult = NonNullable<Awaited<ReturnType<typeof accessTeamMembersAdd>>>
+    export type AccessTeamMembersAddMutationBody = MembersAdd
+    export type AccessTeamMembersAddMutationError = AccessErrorBody | void
+    export type AccessTeamMembersAddMutationVariables = {teamId: string;data: MembersAdd}
+
+    /**
+ * @summary Add Members
+ */
+export const useAccessTeamMembersAdd = <TError = AccessErrorBody | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamMembersAdd>>, TError,AccessTeamMembersAddMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accessTeamMembersAdd>>,
+        TError,
+        AccessTeamMembersAddMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAccessTeamMembersAddMutationOptions(options), queryClient);
+    }
+    export type accessTeamMembersRemoveResponse204 = {
+  data: void
+  status: 204
+}
+
+export type accessTeamMembersRemoveResponse403 = {
+  data: AccessErrorBody
+  status: 403
+}
+
+export type accessTeamMembersRemoveResponse404 = {
+  data: AccessErrorBody
+  status: 404
+}
+
+export type accessTeamMembersRemoveResponse409 = {
+  data: AccessErrorBody
+  status: 409
+}
+
+export type accessTeamMembersRemoveResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type accessTeamMembersRemoveResponseSuccess = (accessTeamMembersRemoveResponse204) & {
+  headers: Headers;
+};
+export type accessTeamMembersRemoveResponseError = (accessTeamMembersRemoveResponse403 | accessTeamMembersRemoveResponse404 | accessTeamMembersRemoveResponse409 | accessTeamMembersRemoveResponse422) & {
+  headers: Headers;
+};
+
+export type accessTeamMembersRemoveResponse = (accessTeamMembersRemoveResponseSuccess | accessTeamMembersRemoveResponseError)
+
+export const getAccessTeamMembersRemoveUrl = (teamId: string,
+    userId: string,) => {
+
+
+
+
+  return `/api/v1/access/teams/${teamId}/members/${userId}`
+}
+
+/**
+ * @summary Remove Member
+ */
+export const accessTeamMembersRemove = async (teamId: string,
+    userId: string, options?: Parameters<typeof apiFetch>[1]): Promise<accessTeamMembersRemoveResponse> => {
+
+  return apiFetch<accessTeamMembersRemoveResponse>(getAccessTeamMembersRemoveUrl(teamId,userId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getAccessTeamMembersRemoveMutationKey = () => ['accessTeamMembersRemove'] as const;
+
+export const getAccessTeamMembersRemoveMutationOptions = <TError = AccessErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamMembersRemove>>, TError,AccessTeamMembersRemoveMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accessTeamMembersRemove>>, TError,AccessTeamMembersRemoveMutationVariables, TContext> => {
+
+const mutationKey = getAccessTeamMembersRemoveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accessTeamMembersRemove>>, AccessTeamMembersRemoveMutationVariables> = (props) => {
+          const {teamId,userId} = props ?? {};
+
+          return  accessTeamMembersRemove(teamId,userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccessTeamMembersRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof accessTeamMembersRemove>>>
+
+    export type AccessTeamMembersRemoveMutationError = AccessErrorBody | HTTPValidationError
+    export type AccessTeamMembersRemoveMutationVariables = {teamId: string;userId: string}
+
+    /**
+ * @summary Remove Member
+ */
+export const useAccessTeamMembersRemove = <TError = AccessErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamMembersRemove>>, TError,AccessTeamMembersRemoveMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accessTeamMembersRemove>>,
+        TError,
+        AccessTeamMembersRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAccessTeamMembersRemoveMutationOptions(options), queryClient);
     }
