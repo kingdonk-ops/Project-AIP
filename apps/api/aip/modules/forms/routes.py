@@ -15,6 +15,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Response, status
 
 from aip.modules.forms.schemas import (
+    AnswerEvaluationOut,
+    EvaluateBody,
     FormErrorBody,
     LintBody,
     LintResult,
@@ -145,6 +147,17 @@ async def discard_revision(revision_id: UUID) -> Response:
 async def publish_revision(revision_id: UUID, body: PublishBody | None = None) -> UploadResult:
     expected = body.expected_sync_version if body is not None else None
     return await FormsService().publish(revision_id, expected)
+
+
+@router.post(
+    "/revisions/{revision_id}/evaluate",
+    operation_id="forms_revisions_evaluate",
+    response_model=AnswerEvaluationOut,
+    responses={**_NOT_FOUND, **_INVALID},
+    dependencies=[Depends(requires("form.view"))],
+)
+async def evaluate_revision(revision_id: UUID, body: EvaluateBody) -> dict[str, Any]:
+    return await FormsService().evaluate(revision_id, body)
 
 
 # --- lint -------------------------------------------------------------------------------------

@@ -78,6 +78,44 @@ export const FormsRevisionsReplaceResponse = zod.object({
 })
 
 /**
+ * @summary Evaluate Revision
+ */
+export const FormsRevisionsEvaluateParams = zod.object({
+  "revision_id": zod.uuid()
+})
+
+export const formsRevisionsEvaluateBodyModeDefault = `submit`;
+
+export const FormsRevisionsEvaluateBody = zod.object({
+  "answers": zod.record(zod.string(), zod.unknown()),
+  "context": zod.union([zod.object({
+  "assetId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "kind": zod.string(),
+  "projectId": zod.union([zod.uuid(),zod.null()]).optional()
+}).describe('The evaluation context an expression may read as ``context.<key>`` (camelCase keys).'),zod.null()]).optional(),
+  "mode": zod.enum(['draft', 'submit']).default(formsRevisionsEvaluateBodyModeDefault)
+}).describe('Answers to evaluate against a revision. ``complete`` and the rest of the result are computed\nserver-side and never accepted from the client (unknown keys → 422).')
+
+export const FormsRevisionsEvaluateResponse = zod.object({
+  "complete": zod.boolean(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "fieldKey": zod.string(),
+  "messageKey": zod.string(),
+  "params": zod.record(zod.string(), zod.unknown())
+})),
+  "expressionErrors": zod.array(zod.object({
+  "expression": zod.string(),
+  "fieldKey": zod.string(),
+  "message": zod.string()
+})),
+  "failed": zod.array(zod.string()),
+  "ignored": zod.array(zod.string()),
+  "required": zod.record(zod.string(), zod.boolean()),
+  "visible": zod.record(zod.string(), zod.boolean())
+})
+
+/**
  * @summary Publish Revision
  */
 export const FormsRevisionsPublishParams = zod.object({

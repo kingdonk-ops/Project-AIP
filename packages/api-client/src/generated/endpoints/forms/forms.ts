@@ -19,6 +19,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AnswerEvaluationOut,
+  EvaluateBody,
   FormErrorBody,
   FormsTemplatesListParams,
   HTTPValidationError,
@@ -504,6 +506,118 @@ export const useFormsRevisionsReplace = <TError = FormErrorBody,
         TContext
       > => {
       return useMutation(getFormsRevisionsReplaceMutationOptions(options), queryClient);
+    }
+    export type formsRevisionsEvaluateResponse200 = {
+  data: AnswerEvaluationOut
+  status: 200
+}
+
+export type formsRevisionsEvaluateResponse404 = {
+  data: FormErrorBody
+  status: 404
+}
+
+export type formsRevisionsEvaluateResponse422 = {
+  data: FormErrorBody
+  status: 422
+}
+
+export type formsRevisionsEvaluateResponseSuccess = (formsRevisionsEvaluateResponse200) & {
+  headers: Headers;
+};
+export type formsRevisionsEvaluateResponseError = (formsRevisionsEvaluateResponse404 | formsRevisionsEvaluateResponse422) & {
+  headers: Headers;
+};
+
+export type formsRevisionsEvaluateResponse = (formsRevisionsEvaluateResponseSuccess | formsRevisionsEvaluateResponseError)
+
+export const getFormsRevisionsEvaluateUrl = (revisionId: string,) => {
+
+
+
+
+  return `/api/v1/forms/revisions/${revisionId}/evaluate`
+}
+
+/**
+ * @summary Evaluate Revision
+ */
+export const formsRevisionsEvaluate = async (revisionId: string,
+    evaluateBody: EvaluateBody, options?: Parameters<typeof apiFetch>[1]): Promise<formsRevisionsEvaluateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<formsRevisionsEvaluateResponse>(getFormsRevisionsEvaluateUrl(revisionId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(evaluateBody)
+  }
+);}
+
+
+
+
+
+export const getFormsRevisionsEvaluateMutationKey = () => ['formsRevisionsEvaluate'] as const;
+
+export const getFormsRevisionsEvaluateMutationOptions = <TError = FormErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsRevisionsEvaluate>>, TError,FormsRevisionsEvaluateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof formsRevisionsEvaluate>>, TError,FormsRevisionsEvaluateMutationVariables, TContext> => {
+
+const mutationKey = getFormsRevisionsEvaluateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof formsRevisionsEvaluate>>, FormsRevisionsEvaluateMutationVariables> = (props) => {
+          const {revisionId,data} = props ?? {};
+
+          return  formsRevisionsEvaluate(revisionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FormsRevisionsEvaluateMutationResult = NonNullable<Awaited<ReturnType<typeof formsRevisionsEvaluate>>>
+    export type FormsRevisionsEvaluateMutationBody = EvaluateBody
+    export type FormsRevisionsEvaluateMutationError = FormErrorBody
+    export type FormsRevisionsEvaluateMutationVariables = {revisionId: string;data: EvaluateBody}
+
+    /**
+ * @summary Evaluate Revision
+ */
+export const useFormsRevisionsEvaluate = <TError = FormErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsRevisionsEvaluate>>, TError,FormsRevisionsEvaluateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof formsRevisionsEvaluate>>,
+        TError,
+        FormsRevisionsEvaluateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFormsRevisionsEvaluateMutationOptions(options), queryClient);
     }
     export type formsRevisionsPublishResponse200 = {
   data: UploadResult

@@ -184,6 +184,10 @@ table = "form_revisions"
 ["POST /api/v1/forms/revisions/{revision_id}/publish"]
 table = "form_revisions"
 
+["POST /api/v1/forms/revisions/{revision_id}/evaluate"]
+table = "form_revisions"
+body = '{"answers": {}}'
+
 ["GET /api/v1/reports/templates/{template_id}"]
 table = "report_templates"
 
