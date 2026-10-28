@@ -23,9 +23,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.forms import repository as repo
+from aip.modules.forms.evaluator import EVALUATOR_VERSION, evaluate_answers, evaluation_as_json
 from aip.modules.forms.events import FORM_REVISION_PUBLISHED, RevisionPublished
 from aip.modules.forms.lint import LintIssue, lint_template
 from aip.modules.forms.schemas import (
+    EvaluateBody,
     LintIssueOut,
     LintResult,
     RevisionCreate,
@@ -49,7 +51,6 @@ from aip.platform.http import DomainError
 __all__ = ["FormsService"]
 
 _UNIQUE_VIOLATION: Final = "23505"
-EVALUATOR_VERSION: Final = "1"  # FORMS-02 owns the real constant; until then the literal.
 
 
 def _new_id() -> UUID:
@@ -211,6 +212,23 @@ class FormsService:
         if revision is None:
             raise NotFoundError(f"form revision {revision_id} not found")
         return _revision_out(revision)
+
+    async def evaluate(self, revision_id: UUID, body: EvaluateBody) -> dict[str, Any]:
+        """Evaluate ``answers`` against any revision of this tenant (drafts included, so a template
+        can be tested before publishing). Another tenant's id → 404 (RLS hides it)."""
+        async with _tx() as conn:
+            revision = await repo.get_revision(conn, revision_id)
+        if revision is None:
+            raise NotFoundError(f"form revision {revision_id} not found")
+        context = (
+            body.context.model_dump(by_alias=True, exclude_none=True)
+            if body.context is not None
+            else None
+        )
+        evaluation = evaluate_answers(
+            revision["schema"], body.answers, mode=body.mode, context=context
+        )
+        return evaluation_as_json(evaluation)
 
     async def replace_draft(self, revision_id: UUID, body: RevisionReplace) -> RevisionOut:
         _lint_or_raise(body.schema_)
