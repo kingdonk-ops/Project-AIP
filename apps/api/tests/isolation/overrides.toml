@@ -32,10 +32,6 @@ values = { segment = "'2026-10'" }
 reason = "event_type is a dotted lowercase name (ck_auth_event_event_type)."
 values = { event_type = "'iso.event'" }
 
-[tables.stored_files]
-reason = "an uploaded file needs a project and an uploader (ck_stored_files_upload_owner, UPLOADS-08); only a generated file may leave them NULL."
-values = { project_id = "'00000000-0000-4000-8000-0000000000f{tag}'::uuid", uploaded_by = "'00000000-0000-4000-8000-0000000000e{tag}'::uuid" }
-
 [tables.tenant_entitlement_override]
 reason = "key is feature.* or limit.* (ck_tenant_entitlement_override_key)."
 values = { key = "'feature.iso'" }
@@ -98,8 +94,9 @@ reason = "ACCESS-03 adds a restrictive project-scope policy, so a principal is n
 principal_kind = "system"
 
 [tables.stored_files]
-reason = "UPLOADS-02 puts a released file behind the ACCESS-03 project-scope policy, so a principal is needed to see any row. A system principal is tenant-wide, so the own-row probe sees tenant A's row while the permissive tenant-isolation policy still hides tenant B's and refuses every move into B."
+reason = "UPLOADS-02 puts a released file behind the ACCESS-03 project-scope policy, so a principal is needed to see any row. A system principal is tenant-wide, so the own-row probe sees tenant A's row while the permissive tenant-isolation policy still hides tenant B's and refuses every move into B. UPLOADS-08: an uploaded file also needs a project and an uploader (ck_stored_files_upload_owner); only a generated file may leave them NULL."
 principal_kind = "system"
+values = { project_id = "'00000000-0000-4000-8000-0000000000f{tag}'::uuid", uploaded_by = "'00000000-0000-4000-8000-0000000000e{tag}'::uuid" }
 
 [tables.form_templates]
 reason = "code is a lowercase slug of letters, digits and hyphens (ck_form_templates_code); the generic 'iso_code_{tag}' has an underscore. Unique per row."
