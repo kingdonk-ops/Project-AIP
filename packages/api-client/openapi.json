@@ -32,6 +32,7 @@
                 "identity.user.read",
                 "item_type.edit",
                 "item_type.manage",
+                "item_type.publish",
                 "item_type.view",
                 "ops.jobs.admin",
                 "platform.events.manage",
@@ -714,6 +715,120 @@
           "deviceId"
         ],
         "title": "AssuranceOut",
+        "type": "object"
+      },
+      "AttributeDefinition": {
+        "additionalProperties": false,
+        "description": "One attribute's shape. Key pattern, field type and config are checked by the lint, so a\nbad value comes back as a 422 ``ATTRIBUTES_INVALID`` issue with a path, not a schema error.",
+        "properties": {
+          "config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config"
+          },
+          "fieldType": {
+            "title": "Fieldtype",
+            "type": "string"
+          },
+          "helpText": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Helptext"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "title": "Label",
+            "type": "string"
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "fieldType"
+        ],
+        "title": "AttributeDefinition",
+        "type": "object"
+      },
+      "AttributeErrorOut": {
+        "properties": {
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "termKey": {
+            "title": "Termkey",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "termKey",
+          "params"
+        ],
+        "title": "AttributeErrorOut",
+        "type": "object"
+      },
+      "AttributeValidateBody": {
+        "additionalProperties": false,
+        "properties": {
+          "attributes": {
+            "additionalProperties": true,
+            "title": "Attributes",
+            "type": "object"
+          }
+        },
+        "required": [
+          "attributes"
+        ],
+        "title": "AttributeValidateBody",
+        "type": "object"
+      },
+      "AttributeValidateResult": {
+        "properties": {
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/AttributeErrorOut"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid",
+          "errors"
+        ],
+        "title": "AttributeValidateResult",
         "type": "object"
       },
       "AuthErrorBody": {
@@ -2403,6 +2518,18 @@
             ],
             "title": "Description"
           },
+          "draftVersionId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draftversionid"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -2419,6 +2546,29 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "publishedVersion": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedversion"
+          },
+          "publishedVersionId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedversionid"
           },
           "syncVersion": {
             "title": "Syncversion",
@@ -2522,6 +2672,258 @@
           "syncVersion"
         ],
         "title": "ItemTypeUpdate",
+        "type": "object"
+      },
+      "ItemTypeVersionListItem": {
+        "properties": {
+          "attributes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Attributes",
+            "type": "array"
+          },
+          "changeSummary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changesummary"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "createdBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdby"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "itemTypeId": {
+            "format": "uuid",
+            "title": "Itemtypeid",
+            "type": "string"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "publishedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedby"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "itemTypeId",
+          "version",
+          "status",
+          "attributes",
+          "changeSummary",
+          "publishedAt",
+          "publishedBy",
+          "createdBy",
+          "syncVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "ItemTypeVersionListItem",
+        "type": "object"
+      },
+      "ItemTypeVersionOut": {
+        "description": "One version; ``compiledSchema`` is set once it is published.",
+        "properties": {
+          "attributes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Attributes",
+            "type": "array"
+          },
+          "changeSummary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changesummary"
+          },
+          "compiledSchema": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compiledschema"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "createdBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdby"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "itemTypeId": {
+            "format": "uuid",
+            "title": "Itemtypeid",
+            "type": "string"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "publishedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedby"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "itemTypeId",
+          "version",
+          "status",
+          "attributes",
+          "changeSummary",
+          "publishedAt",
+          "publishedBy",
+          "createdBy",
+          "syncVersion",
+          "createdAt",
+          "updatedAt",
+          "compiledSchema"
+        ],
+        "title": "ItemTypeVersionOut",
+        "type": "object"
+      },
+      "ItemTypeVersionPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemTypeVersionListItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ItemTypeVersionPage",
         "type": "object"
       },
       "JobErrorBody": {
@@ -4305,6 +4707,7 @@
                 "identity.user.read",
                 "item_type.edit",
                 "item_type.manage",
+                "item_type.publish",
                 "item_type.view",
                 "ops.jobs.admin",
                 "platform.events.manage",
@@ -4435,6 +4838,7 @@
                 "identity.user.read",
                 "item_type.edit",
                 "item_type.manage",
+                "item_type.publish",
                 "item_type.view",
                 "ops.jobs.admin",
                 "platform.events.manage",
@@ -4532,6 +4936,7 @@
                     "identity.user.read",
                     "item_type.edit",
                     "item_type.manage",
+                    "item_type.publish",
                     "item_type.view",
                     "ops.jobs.admin",
                     "platform.events.manage",
@@ -6021,6 +6426,33 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "VersionPublish": {
+        "additionalProperties": false,
+        "properties": {
+          "changeSummary": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changesummary"
+          },
+          "syncVersion": {
+            "minimum": 1.0,
+            "title": "Syncversion",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "syncVersion"
+        ],
+        "title": "VersionPublish",
+        "type": "object"
+      },
       "VersionResponse": {
         "description": "Body of GET /api/v1/platform/version. Changing it changes the generated client.",
         "properties": {
@@ -6038,6 +6470,48 @@
           "commit"
         ],
         "title": "VersionResponse",
+        "type": "object"
+      },
+      "VersionUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "attributes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AttributeDefinition"
+                },
+                "maxItems": 1000,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes"
+          },
+          "changeSummary": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changesummary"
+          },
+          "syncVersion": {
+            "minimum": 1.0,
+            "title": "Syncversion",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "syncVersion"
+        ],
+        "title": "VersionUpdate",
         "type": "object"
       }
     }
@@ -10218,6 +10692,485 @@
           }
         },
         "summary": "Update Item Type",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
+    "/api/v1/item-types/{item_type_id}/versions": {
+      "get": {
+        "operationId": "item_types_versions_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeVersionPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Versions",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "post": {
+        "operationId": "item_types_versions_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeVersionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Version",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
+    "/api/v1/item-types/{item_type_id}/versions/{version_id}": {
+      "delete": {
+        "operationId": "item_types_versions_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Type Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Version",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "get": {
+        "operationId": "item_types_versions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Type Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeVersionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Version",
+        "tags": [
+          "item_types"
+        ]
+      },
+      "patch": {
+        "operationId": "item_types_versions_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Type Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeVersionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Update Version",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
+    "/api/v1/item-types/{item_type_id}/versions/{version_id}/publish": {
+      "post": {
+        "operationId": "item_types_versions_publish",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Type Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionPublish"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeVersionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Publish Version",
+        "tags": [
+          "item_types"
+        ]
+      }
+    },
+    "/api/v1/item-types/{item_type_id}/versions/{version_id}/validate": {
+      "post": {
+        "description": "Check sample attribute values against a published version (the editor and asset form).",
+        "operationId": "item_types_versions_validate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Type Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttributeValidateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttributeValidateResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTypeErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate Version Attributes",
         "tags": [
           "item_types"
         ]
