@@ -1,4 +1,5 @@
 import {
+  BadgeLockup,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -90,7 +91,10 @@ export function Header({ session, navOpen, onToggleNav, onSignOut, menuButtonRef
   );
 }
 
-/** DESIGN-14: "<Company> AIP" as one link to Home; long names truncate and show a tooltip. */
+/**
+ * DESIGN-14 + DESIGN-17: "<Company> [AIP]" (lockup A) as one link to Home: the company name in the tenant's
+ * brand colour, then the green AIP tag. Long names truncate and show a tooltip.
+ */
 function BrandLockup({ company }: { company: string }) {
   const product = productWord();
   const long = company.length > BRAND_TOOLTIP_AT;
@@ -98,10 +102,12 @@ function BrandLockup({ company }: { company: string }) {
     <Link to="/" className="shell-brand" aria-label={t("shell.brand.home", { company, product })}>
       {/* Logo slot: empty until tenant branding has a logo. */}
       <span className="shell-header__logo" data-slot="tenant-logo" />
-      <span className={long ? "shell-brand__company shell-brand__company--long" : "shell-brand__company"}>
-        {company}
-      </span>
-      <span className="shell-brand__product">{product}</span>
+      <BadgeLockup
+        company={company}
+        product={product}
+        className="shell-brand__lockup"
+        companyClassName={long ? "shell-brand__company shell-brand__company--long" : "shell-brand__company"}
+      />
     </Link>
   );
   if (!long) return link;

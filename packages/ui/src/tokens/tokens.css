@@ -37,6 +37,13 @@
   --accent-foreground: #ffffff;
   --focus-ring: var(--accent);
 
+  /* ProjectAIP master brand (DESIGN-17): logotype colours, never used for text or controls */
+  --brand-green: #6bb23f;
+  --brand-on-green: #ffffff;
+  --brand-ink: #141414;
+  /* The client's own colour for their name in the lockups; DESIGN-05 sets it per tenant */
+  --tenant-brand: var(--foreground);
+
   /* Status colours: always paired with an icon or visible text */
   --status-success: #15803d;
   --status-warning: #b45309;

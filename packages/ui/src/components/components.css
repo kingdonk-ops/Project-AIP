@@ -719,3 +719,85 @@ kbd {
   justify-content: center;
   gap: var(--space-2);
 }
+
+/* DESIGN-17: ProjectAIP marks and the co-branded lockups (A badge, C endorsed). */
+.aip-mark {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.aip-lockup {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  white-space: nowrap;
+}
+.aip-lockup__company {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--tenant-brand);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}
+.aip-lockup--badge {
+  gap: 0.35em;
+}
+.aip-lockup__product {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.aip-lockup--badge .aip-mark--tag {
+  height: 1.05em;
+  width: auto;
+}
+.aip-lockup--endorsed {
+  gap: var(--space-4);
+  font-size: var(--text-md);
+}
+/* The client leads: their name is about twice the height of the "projectAIP" sign-off. */
+.aip-lockup--endorsed .aip-lockup__company {
+  font-size: 2em;
+}
+.aip-lockup__divider {
+  align-self: stretch;
+  width: 1px;
+  min-height: 2.5em;
+  background: var(--border);
+}
+.aip-lockup__platform {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+.aip-lockup__icon {
+  height: 2.4em;
+  width: 2.4em;
+}
+.aip-lockup__endorsement {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.aip-lockup__powered-by {
+  color: var(--foreground-muted);
+  font-size: 0.75em;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.aip-lockup__wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  color: var(--brand-ink);
+  font-size: 1.15em;
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.02em;
+}
+.aip-lockup__wordmark .aip-mark--plain {
+  height: 0.7em;
+  width: auto;
+  margin-left: 0.04em;
+  vertical-align: baseline;
+}
