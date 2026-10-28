@@ -34,6 +34,7 @@ export const RoleOutPermissionsItem = {
   identityuserread: 'identity.user.read',
   item_typeedit: 'item_type.edit',
   item_typemanage: 'item_type.manage',
+  item_typepublish: 'item_type.publish',
   item_typeview: 'item_type.view',
   opsjobsadmin: 'ops.jobs.admin',
   platformeventsmanage: 'platform.events.manage',

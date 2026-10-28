@@ -292,6 +292,10 @@ GRANT SELECT ON TABLE public.glossary_entry TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.item_categories TO aip_app;
 GRANT SELECT ON TABLE public.item_categories TO aip_readonly;
 
+-- Name: TABLE item_type_versions; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.item_type_versions TO aip_app;
+GRANT SELECT ON TABLE public.item_type_versions TO aip_readonly;
+
 -- Name: TABLE item_types; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.item_types TO aip_app;
 GRANT SELECT ON TABLE public.item_types TO aip_readonly;
@@ -584,6 +588,14 @@ ALTER TABLE ONLY public.item_categories
 -- Name: item_categories uq_item_categories_id_tenant_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.item_categories
     ADD CONSTRAINT uq_item_categories_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: item_type_versions pk_item_type_versions; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.item_type_versions
+    ADD CONSTRAINT pk_item_type_versions PRIMARY KEY (id);
+
+-- Name: item_type_versions uq_item_type_versions_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.item_type_versions
+    ADD CONSTRAINT uq_item_type_versions_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: item_types pk_item_types; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.item_types
@@ -918,9 +930,17 @@ ALTER TABLE ONLY public.form_templates
 ALTER TABLE ONLY public.item_categories
     ADD CONSTRAINT fk_item_categories_content_type FOREIGN KEY (content_type_id, tenant_id) REFERENCES public.content_types(id, tenant_id);
 
+-- Name: item_type_versions fk_item_type_versions_item_type; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.item_type_versions
+    ADD CONSTRAINT fk_item_type_versions_item_type FOREIGN KEY (item_type_id, tenant_id) REFERENCES public.item_types(id, tenant_id);
+
 -- Name: item_types fk_item_types_category; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.item_types
     ADD CONSTRAINT fk_item_types_category FOREIGN KEY (category_id, tenant_id) REFERENCES public.item_categories(id, tenant_id);
+
+-- Name: item_types fk_item_types_published_version; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.item_types
+    ADD CONSTRAINT fk_item_types_published_version FOREIGN KEY (published_version_id, tenant_id) REFERENCES public.item_type_versions(id, tenant_id);
 
 -- Name: job_events fk_job_events_job_id_tenant_id_jobs; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
@@ -1485,6 +1505,20 @@ CREATE FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) RETURNS TABLE(
     $$;
 
 ALTER FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) OWNER TO aip_owner;
+
+-- Name: item_type_versions_freeze(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.item_type_versions_freeze() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        IF OLD.status = 'published' THEN
+          RAISE EXCEPTION 'published item type version is immutable' USING ERRCODE = '55000';
+        END IF;
+        RETURN NEW;
+      END;
+      $$;
+
+ALTER FUNCTION public.item_type_versions_freeze() OWNER TO aip_owner;
 
 -- Name: ops_active_tenant_ids(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.ops_active_tenant_ids() RETURNS SETOF uuid
@@ -2195,6 +2229,9 @@ CREATE INDEX ix_item_categories_tenant_id ON public.item_categories USING btree 
 -- Name: ix_item_categories_tenant_id_content_type_id_sort_order; Type: INDEX; Schema: public
 CREATE INDEX ix_item_categories_tenant_id_content_type_id_sort_order ON public.item_categories USING btree (tenant_id, content_type_id, sort_order);
 
+-- Name: ix_item_type_versions_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_item_type_versions_tenant_id ON public.item_type_versions USING btree (tenant_id);
+
 -- Name: ix_item_types_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_item_types_tenant_id ON public.item_types USING btree (tenant_id);
 
@@ -2477,6 +2514,12 @@ CREATE UNIQUE INDEX uq_form_templates_tenant_id_code ON public.form_templates US
 -- Name: uq_item_categories_tenant_id_content_type_id_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_item_categories_tenant_id_content_type_id_key ON public.item_categories USING btree (tenant_id, content_type_id, key) WHERE (deleted_at IS NULL);
 
+-- Name: uq_item_type_versions_one_draft; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_item_type_versions_one_draft ON public.item_type_versions USING btree (tenant_id, item_type_id) WHERE ((status = 'draft'::text) AND (deleted_at IS NULL));
+
+-- Name: uq_item_type_versions_tenant_id_item_type_id_version; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_item_type_versions_tenant_id_item_type_id_version ON public.item_type_versions USING btree (tenant_id, item_type_id, version) WHERE (deleted_at IS NULL);
+
 -- Name: uq_item_types_tenant_id_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_item_types_tenant_id_key ON public.item_types USING btree (tenant_id, key) WHERE (deleted_at IS NULL);
 
@@ -2671,6 +2714,9 @@ CREATE POLICY tenant_write ON public.glossary_entry USING (((tenant_id = (NULLIF
 
 -- Name: item_categories tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.item_categories USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: item_type_versions tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.item_type_versions USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: item_types tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.item_types USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -2869,6 +2915,9 @@ ALTER TABLE public.glossary_entry ENABLE ROW LEVEL SECURITY;
 
 -- Name: item_categories; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.item_categories ENABLE ROW LEVEL SECURITY;
+
+-- Name: item_type_versions; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.item_type_versions ENABLE ROW LEVEL SECURITY;
 
 -- Name: item_types; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.item_types ENABLE ROW LEVEL SECURITY;
@@ -3517,6 +3566,34 @@ ALTER TABLE ONLY public.item_categories FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.item_categories OWNER TO aip_owner;
 
+-- Name: item_type_versions; Type: TABLE; Schema: public
+CREATE TABLE public.item_type_versions (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    item_type_id uuid NOT NULL,
+    version integer NOT NULL,
+    status text DEFAULT 'draft'::text NOT NULL,
+    attributes jsonb DEFAULT '[]'::jsonb NOT NULL,
+    compiled_schema jsonb,
+    change_summary text,
+    published_at timestamp with time zone,
+    published_by uuid,
+    created_by uuid,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_item_type_versions_attributes CHECK ((jsonb_typeof(attributes) = 'array'::text)),
+    CONSTRAINT ck_item_type_versions_published_shape CHECK (((status = 'published'::text) = ((compiled_schema IS NOT NULL) AND (published_at IS NOT NULL)))),
+    CONSTRAINT ck_item_type_versions_status CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text]))),
+    CONSTRAINT ck_item_type_versions_sync_version CHECK ((sync_version >= 1)),
+    CONSTRAINT ck_item_type_versions_version CHECK ((version >= 1))
+);
+
+ALTER TABLE ONLY public.item_type_versions FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.item_type_versions OWNER TO aip_owner;
+
 -- Name: item_types; Type: TABLE; Schema: public
 CREATE TABLE public.item_types (
     id uuid NOT NULL,
@@ -3531,6 +3608,7 @@ CREATE TABLE public.item_types (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    published_version_id uuid,
     CONSTRAINT ck_item_types_key CHECK ((key ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
     CONSTRAINT ck_item_types_name CHECK ((name <> ''::text)),
     CONSTRAINT ck_item_types_sync_version CHECK ((sync_version >= 1))
@@ -4578,6 +4656,9 @@ CREATE TRIGGER domain_events_write_once BEFORE UPDATE ON public.domain_events FO
 
 -- Name: form_revisions form_revisions_freeze; Type: TRIGGER; Schema: public
 CREATE TRIGGER form_revisions_freeze BEFORE DELETE OR UPDATE ON public.form_revisions FOR EACH ROW EXECUTE FUNCTION public.form_revisions_freeze();
+
+-- Name: item_type_versions item_type_versions_freeze; Type: TRIGGER; Schema: public
+CREATE TRIGGER item_type_versions_freeze BEFORE UPDATE ON public.item_type_versions FOR EACH ROW EXECUTE FUNCTION public.item_type_versions_freeze();
 
 -- Name: procrastinate_jobs procrastinate_jobs_notify_queue_job_aborted_v1; Type: TRIGGER; Schema: public
 CREATE TRIGGER procrastinate_jobs_notify_queue_job_aborted_v1 AFTER UPDATE OF abort_requested ON public.procrastinate_jobs FOR EACH ROW WHEN (((old.abort_requested = false) AND (new.abort_requested = true) AND (new.status = 'doing'::public.procrastinate_job_status))) EXECUTE FUNCTION public.procrastinate_notify_queue_abort_job_v1();
