@@ -122,8 +122,7 @@ async def _counts(db: TenantDb) -> tuple[int, int]:
 async def _updated_events(db: TenantDb) -> list[dict[str, Any]]:
     rows = await su_fetch(
         db,
-        "SELECT payload FROM domain_events WHERE event_name = 'asset.updated'"
-        " ORDER BY occurred_at",
+        "SELECT payload FROM domain_events WHERE event_name = 'asset.updated' ORDER BY occurred_at",
     )
     return [json.loads(r[0]) for r in rows]  # asyncpg returns jsonb as text
 
