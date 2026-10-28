@@ -6,10 +6,13 @@ export interface ItemTypeOut {
   contentTypeId: string;
   createdAt: string;
   description: string | null;
+  draftVersionId?: string | null;
   id: string;
   isComponent: boolean;
   key: string;
   name: string;
+  publishedVersion?: number | null;
+  publishedVersionId?: string | null;
   syncVersion: number;
   updatedAt: string;
 }

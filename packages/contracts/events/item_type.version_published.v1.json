@@ -1,0 +1,44 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "itemTypeId": {
+      "format": "uuid",
+      "title": "Itemtypeid",
+      "type": "string"
+    },
+    "itemTypeKey": {
+      "title": "Itemtypekey",
+      "type": "string"
+    },
+    "previousVersionId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Previousversionid"
+    },
+    "version": {
+      "title": "Version",
+      "type": "integer"
+    },
+    "versionId": {
+      "format": "uuid",
+      "title": "Versionid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "itemTypeId",
+    "itemTypeKey",
+    "versionId",
+    "version",
+    "previousVersionId"
+  ],
+  "title": "VersionPublished",
+  "type": "object"
+}
