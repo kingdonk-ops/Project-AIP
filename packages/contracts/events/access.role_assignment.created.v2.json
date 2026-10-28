@@ -1,0 +1,97 @@
+{
+  "additionalProperties": false,
+  "description": "v2: a ``team`` assignment has ``teamId`` and a null ``userId``.",
+  "properties": {
+    "approvedBy": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approvedby"
+    },
+    "assignmentId": {
+      "format": "uuid",
+      "title": "Assignmentid",
+      "type": "string"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Projectid"
+    },
+    "roleCode": {
+      "title": "Rolecode",
+      "type": "string"
+    },
+    "roleId": {
+      "format": "uuid",
+      "title": "Roleid",
+      "type": "string"
+    },
+    "scopeType": {
+      "title": "Scopetype",
+      "type": "string"
+    },
+    "teamId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Teamid"
+    },
+    "userId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Userid"
+    },
+    "validTo": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Validto"
+    }
+  },
+  "required": [
+    "assignmentId",
+    "roleId",
+    "roleCode",
+    "scopeType"
+  ],
+  "title": "RoleAssignmentEventV2",
+  "type": "object"
+}
