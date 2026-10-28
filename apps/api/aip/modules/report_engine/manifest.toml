@@ -1,0 +1,59 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+id = "report_engine"
+context = "report_engine"
+depends_on = ["tenancy", "terms"]
+permission_namespaces = ["report"]
+subscribes = []
+settings = []
+term_keys = [
+  "report.permission.template_view",
+  "report.permission.template_manage",
+  "report.template.project_summary",
+  "report.template.status.draft",
+  "report.template.status.published",
+  "report.template.status.retired",
+  "report.label.generated_at",
+  "report.label.page",
+  "report.label.project_code",
+  "report.label.project_name",
+  "report.label.project_status",
+  "report.label.project_created",
+  "report.label.time_zone",
+  "report.error.SCHEMA_INVALID",
+  "report.error.ASSET_TOO_LARGE",
+  "report.error.ASSET_TYPE_MISMATCH",
+  "report.error.HTML_POLICY",
+  "report.error.CSS_POLICY",
+  "report.error.TEMPLATE_SYNTAX",
+  "report.error.UNKNOWN_TERM_KEY",
+  "report.error.TERM_FORMAT",
+  "report.error.UNKNOWN_ASSET",
+  "report.error.UNKNOWN_UNIT",
+  "report.error.INVALID_DATETIME",
+  "report.error.UNKNOWN_TIME_ZONE",
+  "report.error.UNDEFINED_VALUE",
+  "report.error.OUTPUT_TOO_LARGE",
+  "report.error.SANDBOX",
+  "report.error.RENDER_FAILED",
+  "report.error.TEMPLATE_NOT_FOUND",
+  "report.error.TEMPLATE_NOT_DRAFT",
+  "report.error.TEMPLATE_NOT_PUBLISHED",
+  "report.error.TEMPLATE_VERSION_CONFLICT",
+  "report.error.TEMPLATE_VERSION_CHANGED",
+  "report.error.INVALID_CURSOR",
+]
+
+# ADR 0027 verbs: `view` reaches every role with a `view` level (or higher) on "Report engine &
+# published records"; `manage` is an `admin` verb, so only admin roles get it. Uploading,
+# publishing and retiring templates are tenant-admin actions in R1 (no designer, ADR 0007).
+[[permissions]]
+code = "report.template.view"
+description = "View report templates"
+
+[[permissions]]
+code = "report.template.manage"
+description = "Upload, publish and retire report templates"
+
+[[events]]
+name = "report.template_published"
+version = 1

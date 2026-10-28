@@ -46,6 +46,8 @@
                 "project.create",
                 "project.update",
                 "project.view",
+                "report.template.manage",
+                "report.template.view",
                 "site.manage",
                 "site.view",
                 "tenancy.organisation.manage",
@@ -401,6 +403,34 @@
           "code"
         ],
         "title": "AssetErrorBody",
+        "type": "object"
+      },
+      "AssetInfo": {
+        "properties": {
+          "contentType": {
+            "title": "Contenttype",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "sizeBytes": {
+            "title": "Sizebytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "contentType",
+          "sizeBytes",
+          "sha256"
+        ],
+        "title": "AssetInfo",
         "type": "object"
       },
       "AssetMove": {
@@ -4723,6 +4753,357 @@
         "title": "PublishBody",
         "type": "object"
       },
+      "ReportErrorBody": {
+        "description": "A domain error: a stable ``code``; package errors add ``path`` and ``detail``.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "ReportErrorBody",
+        "type": "object"
+      },
+      "ReportTemplateDetail": {
+        "properties": {
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/AssetInfo"
+            },
+            "title": "Assets",
+            "type": "array"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "contentSha256": {
+            "title": "Contentsha256",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "css": {
+            "title": "Css",
+            "type": "string"
+          },
+          "definition": {
+            "additionalProperties": true,
+            "title": "Definition",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "nameKey": {
+            "title": "Namekey",
+            "type": "string"
+          },
+          "orientation": {
+            "enum": [
+              "portrait",
+              "landscape"
+            ],
+            "title": "Orientation",
+            "type": "string"
+          },
+          "paper": {
+            "enum": [
+              "A4",
+              "A3"
+            ],
+            "title": "Paper",
+            "type": "string"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "recordType": {
+            "title": "Recordtype",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "config",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "retired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          },
+          "variant": {
+            "enum": [
+              "internal",
+              "client",
+              "certificate"
+            ],
+            "title": "Variant",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "version",
+          "variant",
+          "recordType",
+          "nameKey",
+          "orientation",
+          "paper",
+          "status",
+          "source",
+          "contentSha256",
+          "publishedAt",
+          "createdAt",
+          "updatedAt",
+          "definition",
+          "body",
+          "css",
+          "assets"
+        ],
+        "title": "ReportTemplateDetail",
+        "type": "object"
+      },
+      "ReportTemplatePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReportTemplateSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "title": "ReportTemplatePage",
+        "type": "object"
+      },
+      "ReportTemplateSummary": {
+        "properties": {
+          "contentSha256": {
+            "title": "Contentsha256",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "nameKey": {
+            "title": "Namekey",
+            "type": "string"
+          },
+          "orientation": {
+            "enum": [
+              "portrait",
+              "landscape"
+            ],
+            "title": "Orientation",
+            "type": "string"
+          },
+          "paper": {
+            "enum": [
+              "A4",
+              "A3"
+            ],
+            "title": "Paper",
+            "type": "string"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishedat"
+          },
+          "recordType": {
+            "title": "Recordtype",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "config",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "retired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          },
+          "variant": {
+            "enum": [
+              "internal",
+              "client",
+              "certificate"
+            ],
+            "title": "Variant",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "version",
+          "variant",
+          "recordType",
+          "nameKey",
+          "orientation",
+          "paper",
+          "status",
+          "source",
+          "contentSha256",
+          "publishedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "ReportTemplateSummary",
+        "type": "object"
+      },
+      "ReportTemplateUpload": {
+        "additionalProperties": false,
+        "description": "A template package as JSON: ``template.json`` as ``definition``, the body, the stylesheet,\nthe sample data and ``assets`` mapping each declared asset name to its base64 bytes.",
+        "properties": {
+          "assets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "maxProperties": 20,
+            "title": "Assets",
+            "type": "object"
+          },
+          "body": {
+            "maxLength": 524288,
+            "title": "Body",
+            "type": "string"
+          },
+          "css": {
+            "maxLength": 262144,
+            "title": "Css",
+            "type": "string"
+          },
+          "definition": {
+            "additionalProperties": true,
+            "title": "Definition",
+            "type": "object"
+          },
+          "sampleData": {
+            "additionalProperties": true,
+            "title": "Sampledata",
+            "type": "object"
+          }
+        },
+        "required": [
+          "definition",
+          "body",
+          "css"
+        ],
+        "title": "ReportTemplateUpload",
+        "type": "object"
+      },
       "RevisionCreate": {
         "additionalProperties": false,
         "description": "A new draft revision. ``schema`` omitted copies the current published schema.",
@@ -5040,6 +5421,8 @@
                 "project.create",
                 "project.update",
                 "project.view",
+                "report.template.manage",
+                "report.template.view",
                 "site.manage",
                 "site.view",
                 "tenancy.organisation.manage",
@@ -5176,6 +5559,8 @@
                 "project.create",
                 "project.update",
                 "project.view",
+                "report.template.manage",
+                "report.template.view",
                 "site.manage",
                 "site.view",
                 "tenancy.organisation.manage",
@@ -5279,6 +5664,8 @@
                     "project.create",
                     "project.update",
                     "project.view",
+                    "report.template.manage",
+                    "report.template.view",
                     "site.manage",
                     "site.view",
                     "tenancy.organisation.manage",
@@ -12685,6 +13072,437 @@
         "summary": "Update Project",
         "tags": [
           "projects"
+        ]
+      }
+    },
+    "/api/v1/reports/templates": {
+      "get": {
+        "operationId": "reports_templates_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "recordType",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[a-z][a-z_]{1,40}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Recordtype"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(draft|published|retired)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportTemplatePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "List Templates",
+        "tags": [
+          "reports"
+        ]
+      },
+      "post": {
+        "operationId": "reports_templates_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportTemplateUpload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportTemplateDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Create Template",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/templates/{template_id}": {
+      "delete": {
+        "operationId": "reports_templates_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Template",
+        "tags": [
+          "reports"
+        ]
+      },
+      "get": {
+        "operationId": "reports_templates_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportTemplateDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Template",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/templates/{template_id}/preview": {
+      "post": {
+        "operationId": "reports_templates_preview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Preview Template",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/templates/{template_id}/publish": {
+      "post": {
+        "operationId": "reports_templates_publish",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportTemplateDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Publish Template",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/templates/{template_id}/retire": {
+      "post": {
+        "operationId": "reports_templates_retire",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportTemplateDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retire Template",
+        "tags": [
+          "reports"
         ]
       }
     },

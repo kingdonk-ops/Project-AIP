@@ -43,6 +43,8 @@ export const RoleCreatePermissionsItem = {
   projectcreate: 'project.create',
   projectupdate: 'project.update',
   projectview: 'project.view',
+  reporttemplatemanage: 'report.template.manage',
+  reporttemplateview: 'report.template.view',
   sitemanage: 'site.manage',
   siteview: 'site.view',
   tenancyorganisationmanage: 'tenancy.organisation.manage',

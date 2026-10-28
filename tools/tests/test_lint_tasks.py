@@ -216,8 +216,10 @@ def test_r1_waves_become_ready_in_order(tmp_path: Path) -> None:
     # opens once its P0 dependencies are done. FORMS-01 has since merged (PR #143), which satisfies
     # INSPECTIONS-01's last R1 dependency, so INSPECTIONS-01 has now entered the ready wave in turn
     # (exactly the in-order opening this test checks) and is no longer a not-yet-ready example.
-    # UPLOADS-08 has since merged too (PR #150), so it is consumed rather than ready.
-    assert {"REPORTS-01"} <= ready
+    # UPLOADS-08 has since merged too (PR #150), so it is consumed rather than ready, and REPORTS-01
+    # (PR #154) likewise; ACCESS-07 is a first-wave row still waiting, and REPORTS-02 has opened now
+    # that OPS-17, REPORTS-01 and UPLOADS-08 are all done.
+    assert {"ACCESS-07", "REPORTS-02"} <= ready
     assert {"TENANCY-06", "OPS-06"} <= ready  # P0-hardening rows
     assert not ready & {
         "TENANCY-04",  # needs PLAN-P2
@@ -226,6 +228,7 @@ def test_r1_waves_become_ready_in_order(tmp_path: Path) -> None:
         "TERMS-06",  # needs DATAIO-01
         "FORMS-01",  # merged (done), so consumed rather than ready
         "UPLOADS-08",  # merged (done), so consumed rather than ready
+        "REPORTS-01",  # done, so consumed rather than ready
     }
     statuses = dict(
         re.findall(r"\[([A-Z0-9-]+)\][^|]*\|(?:[^|]*\|){4}\s*([a-z-]+)", "\n".join(lines))

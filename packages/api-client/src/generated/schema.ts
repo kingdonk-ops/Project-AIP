@@ -246,23 +246,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/approvals/definitions/from-preset": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Install Preset */
-        post: operations["approvals_install_preset"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/approvals/instances": {
         parameters: {
             query?: never;
@@ -325,23 +308,6 @@ export interface paths {
         put?: never;
         /** Transition */
         post: operations["approvals_transition"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/approvals/presets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Presets */
-        get: operations["approvals_list_presets"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1246,6 +1212,93 @@ export interface paths {
         patch: operations["projects_update"];
         trace?: never;
     };
+    "/api/v1/reports/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Templates */
+        get: operations["reports_templates_list"];
+        put?: never;
+        /** Create Template */
+        post: operations["reports_templates_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Template */
+        get: operations["reports_templates_get"];
+        put?: never;
+        post?: never;
+        /** Delete Template */
+        delete: operations["reports_templates_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/templates/{template_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Template */
+        post: operations["reports_templates_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/templates/{template_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish Template */
+        post: operations["reports_templates_publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/templates/{template_id}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retire Template */
+        post: operations["reports_templates_retire"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings/flags": {
         parameters: {
             query?: never;
@@ -1465,7 +1518,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.template.manage" | "report.template.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -1586,6 +1639,17 @@ export interface components {
         AssetErrorBody: {
             /** Code */
             code: string;
+        };
+        /** AssetInfo */
+        AssetInfo: {
+            /** Contenttype */
+            contentType: string;
+            /** Name */
+            name: string;
+            /** Sha256 */
+            sha256: string;
+            /** Sizebytes */
+            sizeBytes: number;
         };
         /** AssetMove */
         AssetMove: {
@@ -1807,8 +1871,6 @@ export interface components {
             labelKey: string;
             /** Reasonkey */
             reasonKey?: string | null;
-            /** Requirescomment */
-            requiresComment: boolean;
             /** Tostate */
             toState: string;
         };
@@ -2069,27 +2131,6 @@ export interface components {
             status: "applied" | "pending_countersign";
             /** Tostate */
             toState: string;
-        };
-        /** DefinitionOut */
-        DefinitionOut: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Key */
-            key: string;
-            /** Projectid */
-            projectId: string | null;
-            /** Recordtype */
-            recordType: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "draft" | "active" | "retired";
-            /** Version */
-            version: number;
         };
         /** Dependencies */
         Dependencies: {
@@ -3038,29 +3079,6 @@ export interface components {
             /** Usageperiod */
             usagePeriod: string | null;
         };
-        /** PresetInstall */
-        PresetInstall: {
-            /** Presetkey */
-            presetKey: string;
-            /** Projectid */
-            projectId?: string | null;
-        };
-        /**
-         * PresetOut
-         * @description A ``config/workflows`` preset: its key, record type and neutral codes (no display text).
-         */
-        PresetOut: {
-            /** Actions */
-            actions: string[];
-            /** Initial */
-            initial: string;
-            /** Key */
-            key: string;
-            /** Recordtype */
-            recordType: string;
-            /** States */
-            states: string[];
-        };
         /** ProjectCreate */
         ProjectCreate: {
             /** Classificationid */
@@ -3174,6 +3192,168 @@ export interface components {
             expectedSyncVersion?: number | null;
         };
         /**
+         * ReportErrorBody
+         * @description A domain error: a stable ``code``; package errors add ``path`` and ``detail``.
+         */
+        ReportErrorBody: {
+            /** Code */
+            code: string;
+            /** Detail */
+            detail?: string | null;
+            /** Path */
+            path?: string | null;
+        };
+        /** ReportTemplateDetail */
+        ReportTemplateDetail: {
+            /** Assets */
+            assets: components["schemas"]["AssetInfo"][];
+            /** Body */
+            body: string;
+            /** Contentsha256 */
+            contentSha256: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Css */
+            css: string;
+            /** Definition */
+            definition: {
+                [key: string]: unknown;
+            };
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Key */
+            key: string;
+            /** Namekey */
+            nameKey: string;
+            /**
+             * Orientation
+             * @enum {string}
+             */
+            orientation: "portrait" | "landscape";
+            /**
+             * Paper
+             * @enum {string}
+             */
+            paper: "A4" | "A3";
+            /** Publishedat */
+            publishedAt: string | null;
+            /** Recordtype */
+            recordType: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "config" | "upload";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published" | "retired";
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /**
+             * Variant
+             * @enum {string}
+             */
+            variant: "internal" | "client" | "certificate";
+            /** Version */
+            version: number;
+        };
+        /** ReportTemplatePage */
+        ReportTemplatePage: {
+            /** Items */
+            items: components["schemas"]["ReportTemplateSummary"][];
+            /** Nextcursor */
+            nextCursor: string | null;
+        };
+        /** ReportTemplateSummary */
+        ReportTemplateSummary: {
+            /** Contentsha256 */
+            contentSha256: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Key */
+            key: string;
+            /** Namekey */
+            nameKey: string;
+            /**
+             * Orientation
+             * @enum {string}
+             */
+            orientation: "portrait" | "landscape";
+            /**
+             * Paper
+             * @enum {string}
+             */
+            paper: "A4" | "A3";
+            /** Publishedat */
+            publishedAt: string | null;
+            /** Recordtype */
+            recordType: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "config" | "upload";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published" | "retired";
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /**
+             * Variant
+             * @enum {string}
+             */
+            variant: "internal" | "client" | "certificate";
+            /** Version */
+            version: number;
+        };
+        /**
+         * ReportTemplateUpload
+         * @description A template package as JSON: ``template.json`` as ``definition``, the body, the stylesheet,
+         *     the sample data and ``assets`` mapping each declared asset name to its base64 bytes.
+         */
+        ReportTemplateUpload: {
+            /** Assets */
+            assets?: {
+                [key: string]: string;
+            };
+            /** Body */
+            body: string;
+            /** Css */
+            css: string;
+            /** Definition */
+            definition: {
+                [key: string]: unknown;
+            };
+            /** Sampledata */
+            sampleData?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
          * RevisionCreate
          * @description A new draft revision. ``schema`` omitted copies the current published schema.
          */
@@ -3281,7 +3461,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.template.manage" | "report.template.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -3306,7 +3486,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.template.manage" | "report.template.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -3318,7 +3498,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.template.manage" | "report.template.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * Scope
@@ -4678,48 +4858,6 @@ export interface operations {
             };
         };
     };
-    approvals_install_preset: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PresetInstall"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DefinitionOut"];
-                };
-            };
-            /** @description PRESET_NOT_FOUND */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApprovalsErrorBody"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     approvals_start_instance: {
         parameters: {
             query?: never;
@@ -4965,33 +5103,13 @@ export interface operations {
                     "application/json": components["schemas"]["ApprovalsErrorBody"];
                 };
             };
-            /** @description Validation error, COMMENT_REQUIRED, GUARD_FAILED or GUARD_ERROR */
+            /** @description Validation error, GUARD_FAILED or GUARD_ERROR */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ApprovalsErrorBody"];
-                };
-            };
-        };
-    };
-    approvals_list_presets: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PresetOut"][];
                 };
             };
         };
@@ -8076,6 +8194,307 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    reports_templates_list: {
+        parameters: {
+            query?: {
+                recordType?: string | null;
+                status?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportTemplatePage"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+        };
+    };
+    reports_templates_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportTemplateUpload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportTemplateDetail"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+        };
+    };
+    reports_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportTemplateDetail"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reports_templates_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reports_templates_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+        };
+    };
+    reports_templates_publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportTemplateDetail"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reports_templates_retire: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportTemplateDetail"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

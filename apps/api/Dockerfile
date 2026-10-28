@@ -101,6 +101,8 @@ COPY config/terms config/terms
 # The workflow presets: validated at startup, installed by `python -m aip.modules.approvals.seeds`
 # and POST /api/v1/approvals/definitions/from-preset (APPROVALS-05).
 COPY config/workflows config/workflows
+# The config report templates installed by `python -m aip.modules.report_engine.loader` (REPORTS-01).
+COPY config/report-templates config/report-templates
 
 USER 10001:10001
 
