@@ -38,6 +38,11 @@ ALL_PERMISSIONS = (
     "asset.update",
     "asset.move",
     "asset.delete",
+    # ASSETS-02 tests define and publish item types through the item_types routes.
+    "item_type.view",
+    "item_type.edit",
+    "item_type.manage",
+    "item_type.publish",
 )
 
 SEED_TENANTS_SQL = (

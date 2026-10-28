@@ -58,8 +58,10 @@ async def list_assets(
     under: UUID | None = None,
     q: Search = None,
     tag_number: Annotated[str | None, Query(alias="tagNumber", min_length=1, max_length=64)] = None,
+    item_type_id: Annotated[list[UUID] | None, Query(alias="itemTypeId", max_length=50)] = None,
 ) -> AssetPage:
     return await AssetService().list(
+        item_type_ids=item_type_id,
         limit=limit,
         cursor=cursor,
         sort=sort,
