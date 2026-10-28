@@ -14,6 +14,7 @@
           "key": "blast_standard",
           "type": "dropdown",
           "label": "Blast standard",
+          "required": true,
           "options": [
             {"value": "sa2_5", "label": "Sa 2.5"},
             {"value": "sa3", "label": "Sa 3"}

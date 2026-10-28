@@ -563,6 +563,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/forms/revisions/{revision_id}/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Evaluate Revision */
+        post: operations["forms_revisions_evaluate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/forms/revisions/{revision_id}/publish": {
         parameters: {
             query?: never;
@@ -1361,6 +1378,40 @@ export interface components {
             /** Tagnumber */
             tagNumber: string | null;
         };
+        /** AnswerErrorOut */
+        AnswerErrorOut: {
+            /** Code */
+            code: string;
+            /** Fieldkey */
+            fieldKey: string;
+            /** Messagekey */
+            messageKey: string;
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+        };
+        /** AnswerEvaluationOut */
+        AnswerEvaluationOut: {
+            /** Complete */
+            complete: boolean;
+            /** Errors */
+            errors: components["schemas"]["AnswerErrorOut"][];
+            /** Expressionerrors */
+            expressionErrors: components["schemas"]["ExpressionErrorOut"][];
+            /** Failed */
+            failed: string[];
+            /** Ignored */
+            ignored: string[];
+            /** Required */
+            required: {
+                [key: string]: boolean;
+            };
+            /** Visible */
+            visible: {
+                [key: string]: boolean;
+            };
+        };
         /** ApprovalsErrorBody */
         ApprovalsErrorBody: {
             /** Code */
@@ -1923,6 +1974,36 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /**
+         * EvaluateBody
+         * @description Answers to evaluate against a revision. ``complete`` and the rest of the result are computed
+         *     server-side and never accepted from the client (unknown keys → 422).
+         */
+        EvaluateBody: {
+            /** Answers */
+            answers: {
+                [key: string]: unknown;
+            };
+            context?: components["schemas"]["EvaluateContext"] | null;
+            /**
+             * Mode
+             * @default submit
+             * @enum {string}
+             */
+            mode: "draft" | "submit";
+        };
+        /**
+         * EvaluateContext
+         * @description The evaluation context an expression may read as ``context.<key>`` (camelCase keys).
+         */
+        EvaluateContext: {
+            /** Assetid */
+            assetId?: string | null;
+            /** Kind */
+            kind: string;
+            /** Projectid */
+            projectId?: string | null;
+        };
         /** EventCatalogue */
         EventCatalogue: {
             /** Events */
@@ -1970,6 +2051,15 @@ export interface components {
             subscribers: string[];
             /** Version */
             version: number;
+        };
+        /** ExpressionErrorOut */
+        ExpressionErrorOut: {
+            /** Expression */
+            expression: string;
+            /** Fieldkey */
+            fieldKey: string;
+            /** Message */
+            message: string;
         };
         /** FeatureFlag */
         FeatureFlag: {
@@ -5391,6 +5481,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    forms_revisions_evaluate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                revision_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnswerEvaluationOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormErrorBody"];
                 };
             };
         };

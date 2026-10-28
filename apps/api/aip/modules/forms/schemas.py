@@ -17,6 +17,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 __all__ = [
+    "AnswerErrorOut",
+    "AnswerEvaluationOut",
+    "EvaluateBody",
+    "EvaluateContext",
+    "ExpressionErrorOut",
     "FormErrorBody",
     "FormRevisionOut",
     "LintBody",
@@ -94,6 +99,49 @@ class PublishBody(_In):
 
 class LintBody(_In):
     schema_: SchemaObject = Field(alias="schema")
+
+
+class EvaluateContext(_In):
+    """The evaluation context an expression may read as ``context.<key>`` (camelCase keys)."""
+
+    kind: str
+    asset_id: UUID | None = None
+    project_id: UUID | None = None
+
+
+class EvaluateBody(_In):
+    """Answers to evaluate against a revision. ``complete`` and the rest of the result are computed
+    server-side and never accepted from the client (unknown keys → 422)."""
+
+    answers: dict[str, Any]
+    mode: Literal["draft", "submit"] = "submit"
+    context: EvaluateContext | None = None
+
+
+# --- evaluation result (camelCase; the shared ``AnswerEvaluation``) ----------------------------
+
+
+class AnswerErrorOut(_Out):
+    field_key: str
+    code: str
+    message_key: str
+    params: dict[str, Any]
+
+
+class ExpressionErrorOut(_Out):
+    field_key: str
+    expression: str
+    message: str
+
+
+class AnswerEvaluationOut(_Out):
+    visible: dict[str, bool]
+    required: dict[str, bool]
+    errors: list[AnswerErrorOut]
+    failed: list[str]
+    ignored: list[str]
+    expression_errors: list[ExpressionErrorOut]
+    complete: bool
 
 
 # --- lint -------------------------------------------------------------------------------------

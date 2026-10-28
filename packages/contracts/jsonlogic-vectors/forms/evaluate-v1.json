@@ -1,0 +1,2735 @@
+{
+  "version": 1,
+  "description": "Shared form answer evaluator golden vectors.",
+  "cases": [
+    {
+      "name": "coating submit: required and failing dft",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "preparation",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared to standard"
+              },
+              {
+                "key": "blast_standard",
+                "type": "dropdown",
+                "label": "Blast standard",
+                "required": true,
+                "options": [
+                  {
+                    "value": "sa2_5",
+                    "label": "Sa 2.5"
+                  },
+                  {
+                    "value": "sa3",
+                    "label": "Sa 3"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "fields": [
+              {
+                "key": "dft_avg",
+                "type": "measurement",
+                "label": "Average dry film thickness",
+                "unit": "mm",
+                "failWhen": {
+                  "<": [
+                    {
+                      "var": "answers.dft_avg.value"
+                    },
+                    0.25
+                  ]
+                }
+              },
+              {
+                "key": "photos",
+                "type": "photo",
+                "label": "Coating photos"
+              },
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.surface_prepared"
+                    },
+                    false
+                  ]
+                }
+              },
+              {
+                "key": "signature",
+                "type": "signature",
+                "label": "Inspector signature"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "dft_avg": {
+          "value": 0.18,
+          "unit": "mm"
+        }
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "blast_standard": true,
+          "dft_avg": true,
+          "photos": true,
+          "signature": true,
+          "remarks": false
+        },
+        "required": {
+          "surface_prepared": false,
+          "blast_standard": true,
+          "dft_avg": false,
+          "photos": false,
+          "signature": false,
+          "remarks": false
+        },
+        "errors": [
+          {
+            "fieldKey": "blast_standard",
+            "code": "REQUIRED",
+            "messageKey": "forms.answer.REQUIRED",
+            "params": {}
+          }
+        ],
+        "failed": [
+          "dft_avg"
+        ],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "coating draft: no required error",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "preparation",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared to standard"
+              },
+              {
+                "key": "blast_standard",
+                "type": "dropdown",
+                "label": "Blast standard",
+                "required": true,
+                "options": [
+                  {
+                    "value": "sa2_5",
+                    "label": "Sa 2.5"
+                  },
+                  {
+                    "value": "sa3",
+                    "label": "Sa 3"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "fields": [
+              {
+                "key": "dft_avg",
+                "type": "measurement",
+                "label": "Average dry film thickness",
+                "unit": "mm",
+                "failWhen": {
+                  "<": [
+                    {
+                      "var": "answers.dft_avg.value"
+                    },
+                    0.25
+                  ]
+                }
+              },
+              {
+                "key": "photos",
+                "type": "photo",
+                "label": "Coating photos"
+              },
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.surface_prepared"
+                    },
+                    false
+                  ]
+                }
+              },
+              {
+                "key": "signature",
+                "type": "signature",
+                "label": "Inspector signature"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "dft_avg": {
+          "value": 0.18,
+          "unit": "mm"
+        }
+      },
+      "mode": "draft",
+      "context": null,
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "blast_standard": true,
+          "dft_avg": true,
+          "photos": true,
+          "signature": true,
+          "remarks": false
+        },
+        "required": {
+          "surface_prepared": false,
+          "blast_standard": true,
+          "dft_avg": false,
+          "photos": false,
+          "signature": false,
+          "remarks": false
+        },
+        "errors": [],
+        "failed": [
+          "dft_avg"
+        ],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "coating surface not prepared shows remarks",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "preparation",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared to standard"
+              },
+              {
+                "key": "blast_standard",
+                "type": "dropdown",
+                "label": "Blast standard",
+                "required": true,
+                "options": [
+                  {
+                    "value": "sa2_5",
+                    "label": "Sa 2.5"
+                  },
+                  {
+                    "value": "sa3",
+                    "label": "Sa 3"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "fields": [
+              {
+                "key": "dft_avg",
+                "type": "measurement",
+                "label": "Average dry film thickness",
+                "unit": "mm",
+                "failWhen": {
+                  "<": [
+                    {
+                      "var": "answers.dft_avg.value"
+                    },
+                    0.25
+                  ]
+                }
+              },
+              {
+                "key": "photos",
+                "type": "photo",
+                "label": "Coating photos"
+              },
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.surface_prepared"
+                    },
+                    false
+                  ]
+                }
+              },
+              {
+                "key": "signature",
+                "type": "signature",
+                "label": "Inspector signature"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": false
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "blast_standard": true,
+          "dft_avg": true,
+          "photos": true,
+          "signature": true,
+          "remarks": true
+        },
+        "required": {
+          "surface_prepared": false,
+          "blast_standard": true,
+          "dft_avg": false,
+          "photos": false,
+          "signature": false,
+          "remarks": false
+        },
+        "errors": [
+          {
+            "fieldKey": "blast_standard",
+            "code": "REQUIRED",
+            "messageKey": "forms.answer.REQUIRED",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "coating surface prepared hides remarks (ignored)",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "preparation",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared to standard"
+              },
+              {
+                "key": "blast_standard",
+                "type": "dropdown",
+                "label": "Blast standard",
+                "required": true,
+                "options": [
+                  {
+                    "value": "sa2_5",
+                    "label": "Sa 2.5"
+                  },
+                  {
+                    "value": "sa3",
+                    "label": "Sa 3"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "fields": [
+              {
+                "key": "dft_avg",
+                "type": "measurement",
+                "label": "Average dry film thickness",
+                "unit": "mm",
+                "failWhen": {
+                  "<": [
+                    {
+                      "var": "answers.dft_avg.value"
+                    },
+                    0.25
+                  ]
+                }
+              },
+              {
+                "key": "photos",
+                "type": "photo",
+                "label": "Coating photos"
+              },
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.surface_prepared"
+                    },
+                    false
+                  ]
+                }
+              },
+              {
+                "key": "signature",
+                "type": "signature",
+                "label": "Inspector signature"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": true,
+        "remarks": "old",
+        "blast_standard": "sa3",
+        "dft_avg": {
+          "value": 0.5,
+          "unit": "mm"
+        }
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "blast_standard": true,
+          "dft_avg": true,
+          "photos": true,
+          "signature": true,
+          "remarks": false
+        },
+        "required": {
+          "surface_prepared": false,
+          "blast_standard": true,
+          "dft_avg": false,
+          "photos": false,
+          "signature": false,
+          "remarks": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [
+          "remarks"
+        ],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "coating dft passes threshold",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "preparation",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared to standard"
+              },
+              {
+                "key": "blast_standard",
+                "type": "dropdown",
+                "label": "Blast standard",
+                "required": true,
+                "options": [
+                  {
+                    "value": "sa2_5",
+                    "label": "Sa 2.5"
+                  },
+                  {
+                    "value": "sa3",
+                    "label": "Sa 3"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "fields": [
+              {
+                "key": "dft_avg",
+                "type": "measurement",
+                "label": "Average dry film thickness",
+                "unit": "mm",
+                "failWhen": {
+                  "<": [
+                    {
+                      "var": "answers.dft_avg.value"
+                    },
+                    0.25
+                  ]
+                }
+              },
+              {
+                "key": "photos",
+                "type": "photo",
+                "label": "Coating photos"
+              },
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.surface_prepared"
+                    },
+                    false
+                  ]
+                }
+              },
+              {
+                "key": "signature",
+                "type": "signature",
+                "label": "Inspector signature"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "blast_standard": "sa3",
+        "dft_avg": {
+          "value": 0.3,
+          "unit": "mm"
+        }
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "blast_standard": true,
+          "dft_avg": true,
+          "photos": true,
+          "signature": true,
+          "remarks": false
+        },
+        "required": {
+          "surface_prepared": false,
+          "blast_standard": true,
+          "dft_avg": false,
+          "photos": false,
+          "signature": false,
+          "remarks": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "coating dft wrong unit",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "preparation",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared to standard"
+              },
+              {
+                "key": "blast_standard",
+                "type": "dropdown",
+                "label": "Blast standard",
+                "required": true,
+                "options": [
+                  {
+                    "value": "sa2_5",
+                    "label": "Sa 2.5"
+                  },
+                  {
+                    "value": "sa3",
+                    "label": "Sa 3"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "fields": [
+              {
+                "key": "dft_avg",
+                "type": "measurement",
+                "label": "Average dry film thickness",
+                "unit": "mm",
+                "failWhen": {
+                  "<": [
+                    {
+                      "var": "answers.dft_avg.value"
+                    },
+                    0.25
+                  ]
+                }
+              },
+              {
+                "key": "photos",
+                "type": "photo",
+                "label": "Coating photos"
+              },
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.surface_prepared"
+                    },
+                    false
+                  ]
+                }
+              },
+              {
+                "key": "signature",
+                "type": "signature",
+                "label": "Inspector signature"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "blast_standard": "sa3",
+        "dft_avg": {
+          "value": 0.3,
+          "unit": "in"
+        }
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "blast_standard": true,
+          "dft_avg": true,
+          "photos": true,
+          "signature": true,
+          "remarks": false
+        },
+        "required": {
+          "surface_prepared": false,
+          "blast_standard": true,
+          "dft_avg": false,
+          "photos": false,
+          "signature": false,
+          "remarks": false
+        },
+        "errors": [
+          {
+            "fieldKey": "dft_avg",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "coating blast not an option",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "preparation",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared to standard"
+              },
+              {
+                "key": "blast_standard",
+                "type": "dropdown",
+                "label": "Blast standard",
+                "required": true,
+                "options": [
+                  {
+                    "value": "sa2_5",
+                    "label": "Sa 2.5"
+                  },
+                  {
+                    "value": "sa3",
+                    "label": "Sa 3"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "fields": [
+              {
+                "key": "dft_avg",
+                "type": "measurement",
+                "label": "Average dry film thickness",
+                "unit": "mm",
+                "failWhen": {
+                  "<": [
+                    {
+                      "var": "answers.dft_avg.value"
+                    },
+                    0.25
+                  ]
+                }
+              },
+              {
+                "key": "photos",
+                "type": "photo",
+                "label": "Coating photos"
+              },
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.surface_prepared"
+                    },
+                    false
+                  ]
+                }
+              },
+              {
+                "key": "signature",
+                "type": "signature",
+                "label": "Inspector signature"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "blast_standard": "sa4"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "blast_standard": true,
+          "dft_avg": true,
+          "photos": true,
+          "signature": true,
+          "remarks": false
+        },
+        "required": {
+          "surface_prepared": false,
+          "blast_standard": true,
+          "dft_avg": false,
+          "photos": false,
+          "signature": false,
+          "remarks": false
+        },
+        "errors": [
+          {
+            "fieldKey": "blast_standard",
+            "code": "NOT_AN_OPTION",
+            "messageKey": "forms.answer.NOT_AN_OPTION",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "coating unknown field",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "preparation",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared to standard"
+              },
+              {
+                "key": "blast_standard",
+                "type": "dropdown",
+                "label": "Blast standard",
+                "required": true,
+                "options": [
+                  {
+                    "value": "sa2_5",
+                    "label": "Sa 2.5"
+                  },
+                  {
+                    "value": "sa3",
+                    "label": "Sa 3"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "fields": [
+              {
+                "key": "dft_avg",
+                "type": "measurement",
+                "label": "Average dry film thickness",
+                "unit": "mm",
+                "failWhen": {
+                  "<": [
+                    {
+                      "var": "answers.dft_avg.value"
+                    },
+                    0.25
+                  ]
+                }
+              },
+              {
+                "key": "photos",
+                "type": "photo",
+                "label": "Coating photos"
+              },
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.surface_prepared"
+                    },
+                    false
+                  ]
+                }
+              },
+              {
+                "key": "signature",
+                "type": "signature",
+                "label": "Inspector signature"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "blast_standard": "sa3",
+        "dft_avg": {
+          "value": 0.5,
+          "unit": "mm"
+        },
+        "extra": 1
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "blast_standard": true,
+          "dft_avg": true,
+          "photos": true,
+          "signature": true,
+          "remarks": false
+        },
+        "required": {
+          "surface_prepared": false,
+          "blast_standard": true,
+          "dft_avg": false,
+          "photos": false,
+          "signature": false,
+          "remarks": false
+        },
+        "errors": [
+          {
+            "fieldKey": "extra",
+            "code": "UNKNOWN_FIELD",
+            "messageKey": "forms.answer.UNKNOWN_FIELD",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "all types valid",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "f_text",
+                "type": "text",
+                "label": "F Text"
+              },
+              {
+                "key": "f_number",
+                "type": "number",
+                "label": "F Number"
+              },
+              {
+                "key": "f_decimal",
+                "type": "decimal",
+                "label": "F Decimal"
+              },
+              {
+                "key": "f_date",
+                "type": "date",
+                "label": "F Date"
+              },
+              {
+                "key": "f_dropdown",
+                "type": "dropdown",
+                "label": "F Dropdown",
+                "options": [
+                  {
+                    "value": "a",
+                    "label": "A"
+                  },
+                  {
+                    "value": "b",
+                    "label": "B"
+                  }
+                ]
+              },
+              {
+                "key": "f_multi",
+                "type": "multi_select",
+                "label": "F Multi",
+                "options": [
+                  {
+                    "value": "a",
+                    "label": "A"
+                  },
+                  {
+                    "value": "b",
+                    "label": "B"
+                  }
+                ]
+              },
+              {
+                "key": "f_meas",
+                "type": "measurement",
+                "label": "F Meas",
+                "unit": "mm"
+              },
+              {
+                "key": "f_bool",
+                "type": "boolean",
+                "label": "F Bool"
+              },
+              {
+                "key": "f_photo",
+                "type": "photo",
+                "label": "F Photo"
+              },
+              {
+                "key": "f_sig",
+                "type": "signature",
+                "label": "F Sig"
+              },
+              {
+                "key": "f_asset",
+                "type": "asset_ref",
+                "label": "F Asset"
+              },
+              {
+                "key": "f_user",
+                "type": "user_ref",
+                "label": "F User"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "f_text": "hello",
+        "f_number": 3,
+        "f_decimal": 1.5,
+        "f_date": "2026-03-01",
+        "f_dropdown": "a",
+        "f_multi": [
+          "a",
+          "b"
+        ],
+        "f_meas": {
+          "value": 0.5,
+          "unit": "mm"
+        },
+        "f_bool": true,
+        "f_photo": [
+          {
+            "fileId": "11111111-1111-4111-8111-111111111111"
+          }
+        ],
+        "f_sig": {
+          "fileId": "11111111-1111-4111-8111-111111111111"
+        },
+        "f_asset": "11111111-1111-4111-8111-111111111111",
+        "f_user": "11111111-1111-4111-8111-111111111111"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "f_text": true,
+          "f_number": true,
+          "f_decimal": true,
+          "f_date": true,
+          "f_dropdown": true,
+          "f_multi": true,
+          "f_meas": true,
+          "f_bool": true,
+          "f_photo": true,
+          "f_sig": true,
+          "f_asset": true,
+          "f_user": true
+        },
+        "required": {
+          "f_text": false,
+          "f_number": false,
+          "f_decimal": false,
+          "f_date": false,
+          "f_dropdown": false,
+          "f_multi": false,
+          "f_meas": false,
+          "f_bool": false,
+          "f_photo": false,
+          "f_sig": false,
+          "f_asset": false,
+          "f_user": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "all types wrong",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "f_text",
+                "type": "text",
+                "label": "F Text"
+              },
+              {
+                "key": "f_number",
+                "type": "number",
+                "label": "F Number"
+              },
+              {
+                "key": "f_decimal",
+                "type": "decimal",
+                "label": "F Decimal"
+              },
+              {
+                "key": "f_date",
+                "type": "date",
+                "label": "F Date"
+              },
+              {
+                "key": "f_dropdown",
+                "type": "dropdown",
+                "label": "F Dropdown",
+                "options": [
+                  {
+                    "value": "a",
+                    "label": "A"
+                  },
+                  {
+                    "value": "b",
+                    "label": "B"
+                  }
+                ]
+              },
+              {
+                "key": "f_multi",
+                "type": "multi_select",
+                "label": "F Multi",
+                "options": [
+                  {
+                    "value": "a",
+                    "label": "A"
+                  },
+                  {
+                    "value": "b",
+                    "label": "B"
+                  }
+                ]
+              },
+              {
+                "key": "f_meas",
+                "type": "measurement",
+                "label": "F Meas",
+                "unit": "mm"
+              },
+              {
+                "key": "f_bool",
+                "type": "boolean",
+                "label": "F Bool"
+              },
+              {
+                "key": "f_photo",
+                "type": "photo",
+                "label": "F Photo"
+              },
+              {
+                "key": "f_sig",
+                "type": "signature",
+                "label": "F Sig"
+              },
+              {
+                "key": "f_asset",
+                "type": "asset_ref",
+                "label": "F Asset"
+              },
+              {
+                "key": "f_user",
+                "type": "user_ref",
+                "label": "F User"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "f_text": 5,
+        "f_number": 1.5,
+        "f_decimal": "x",
+        "f_date": "2026-02-30",
+        "f_dropdown": 5,
+        "f_multi": "a",
+        "f_meas": {
+          "value": 0.5,
+          "unit": "in"
+        },
+        "f_bool": "true",
+        "f_photo": [
+          {
+            "fileId": "nope"
+          }
+        ],
+        "f_sig": {
+          "fileId": "nope"
+        },
+        "f_asset": "nope",
+        "f_user": 7
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "f_text": true,
+          "f_number": true,
+          "f_decimal": true,
+          "f_date": true,
+          "f_dropdown": true,
+          "f_multi": true,
+          "f_meas": true,
+          "f_bool": true,
+          "f_photo": true,
+          "f_sig": true,
+          "f_asset": true,
+          "f_user": true
+        },
+        "required": {
+          "f_text": false,
+          "f_number": false,
+          "f_decimal": false,
+          "f_date": false,
+          "f_dropdown": false,
+          "f_multi": false,
+          "f_meas": false,
+          "f_bool": false,
+          "f_photo": false,
+          "f_sig": false,
+          "f_asset": false,
+          "f_user": false
+        },
+        "errors": [
+          {
+            "fieldKey": "f_text",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_number",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_decimal",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_date",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_dropdown",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_multi",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_meas",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_bool",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_photo",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_sig",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_asset",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          },
+          {
+            "fieldKey": "f_user",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "text too long",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "code",
+                "type": "text",
+                "label": "Code",
+                "validations": {
+                  "minLength": 3,
+                  "maxLength": 3
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "code": "h\u00e9llo"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "code": true
+        },
+        "required": {
+          "code": false
+        },
+        "errors": [
+          {
+            "fieldKey": "code",
+            "code": "TOO_LONG",
+            "messageKey": "forms.answer.TOO_LONG",
+            "params": {
+              "maxLength": 3
+            }
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "text too short",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "code",
+                "type": "text",
+                "label": "Code",
+                "validations": {
+                  "minLength": 3,
+                  "maxLength": 3
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "code": "a"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "code": true
+        },
+        "required": {
+          "code": false
+        },
+        "errors": [
+          {
+            "fieldKey": "code",
+            "code": "TOO_SHORT",
+            "messageKey": "forms.answer.TOO_SHORT",
+            "params": {
+              "minLength": 3
+            }
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "number below min",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "n",
+                "type": "number",
+                "label": "N",
+                "validations": {
+                  "min": 5,
+                  "max": 10
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "n": 2
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "n": true
+        },
+        "required": {
+          "n": false
+        },
+        "errors": [
+          {
+            "fieldKey": "n",
+            "code": "BELOW_MIN",
+            "messageKey": "forms.answer.BELOW_MIN",
+            "params": {
+              "min": 5
+            }
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "number above max",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "n",
+                "type": "number",
+                "label": "N",
+                "validations": {
+                  "min": 5,
+                  "max": 10
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "n": 20
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "n": true
+        },
+        "required": {
+          "n": false
+        },
+        "errors": [
+          {
+            "fieldKey": "n",
+            "code": "ABOVE_MAX",
+            "messageKey": "forms.answer.ABOVE_MAX",
+            "params": {
+              "max": 10
+            }
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "number in range",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "n",
+                "type": "number",
+                "label": "N",
+                "validations": {
+                  "min": 5,
+                  "max": 10
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "n": 7
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "n": true
+        },
+        "required": {
+          "n": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "decimal below min",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "d",
+                "type": "decimal",
+                "label": "D",
+                "validations": {
+                  "min": 0.5
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "d": 0.1
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "d": true
+        },
+        "required": {
+          "d": false
+        },
+        "errors": [
+          {
+            "fieldKey": "d",
+            "code": "BELOW_MIN",
+            "messageKey": "forms.answer.BELOW_MIN",
+            "params": {
+              "min": 0.5
+            }
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "measurement above max",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "m",
+                "type": "measurement",
+                "label": "M",
+                "unit": "mm",
+                "validations": {
+                  "max": 2
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "m": {
+          "value": 5,
+          "unit": "mm"
+        }
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "m": true
+        },
+        "required": {
+          "m": false
+        },
+        "errors": [
+          {
+            "fieldKey": "m",
+            "code": "ABOVE_MAX",
+            "messageKey": "forms.answer.ABOVE_MAX",
+            "params": {
+              "max": 2
+            }
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "multi_select too few",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "picks",
+                "type": "multi_select",
+                "label": "Picks",
+                "options": [
+                  {
+                    "value": "a",
+                    "label": "A"
+                  },
+                  {
+                    "value": "b",
+                    "label": "B"
+                  },
+                  {
+                    "value": "c",
+                    "label": "C"
+                  }
+                ],
+                "validations": {
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "picks": [
+          "a"
+        ]
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "picks": true
+        },
+        "required": {
+          "picks": false
+        },
+        "errors": [
+          {
+            "fieldKey": "picks",
+            "code": "TOO_FEW",
+            "messageKey": "forms.answer.TOO_FEW",
+            "params": {
+              "minItems": 2
+            }
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "multi_select too many",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "picks",
+                "type": "multi_select",
+                "label": "Picks",
+                "options": [
+                  {
+                    "value": "a",
+                    "label": "A"
+                  },
+                  {
+                    "value": "b",
+                    "label": "B"
+                  },
+                  {
+                    "value": "c",
+                    "label": "C"
+                  }
+                ],
+                "validations": {
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "picks": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "picks": true
+        },
+        "required": {
+          "picks": false
+        },
+        "errors": [
+          {
+            "fieldKey": "picks",
+            "code": "TOO_MANY",
+            "messageKey": "forms.answer.TOO_MANY",
+            "params": {
+              "maxItems": 2
+            }
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "photo too few empty is required-free",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "pics",
+                "type": "photo",
+                "label": "Pics",
+                "validations": {
+                  "minItems": 1,
+                  "maxItems": 2
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "pics": []
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "pics": true
+        },
+        "required": {
+          "pics": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "photo too many",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "pics",
+                "type": "photo",
+                "label": "Pics",
+                "validations": {
+                  "minItems": 1,
+                  "maxItems": 2
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "pics": [
+          {
+            "fileId": "11111111-1111-4111-8111-111111111111"
+          },
+          {
+            "fileId": "11111111-1111-4111-8111-111111111111"
+          },
+          {
+            "fileId": "11111111-1111-4111-8111-111111111111"
+          }
+        ]
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "pics": true
+        },
+        "required": {
+          "pics": false
+        },
+        "errors": [
+          {
+            "fieldKey": "pics",
+            "code": "TOO_MANY",
+            "messageKey": "forms.answer.TOO_MANY",
+            "params": {
+              "maxItems": 2
+            }
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "dropdown not an option",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "choice",
+                "type": "dropdown",
+                "label": "Choice",
+                "options": [
+                  {
+                    "value": "a",
+                    "label": "A"
+                  },
+                  {
+                    "value": "b",
+                    "label": "B"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "choice": "zzz"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "choice": true
+        },
+        "required": {
+          "choice": false
+        },
+        "errors": [
+          {
+            "fieldKey": "choice",
+            "code": "NOT_AN_OPTION",
+            "messageKey": "forms.answer.NOT_AN_OPTION",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "rule failed",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "temp",
+                "type": "number",
+                "label": "Temp",
+                "rules": [
+                  {
+                    "rule": {
+                      "<": [
+                        {
+                          "var": "answers.temp"
+                        },
+                        40
+                      ]
+                    },
+                    "messageKey": "forms.rule.too_hot",
+                    "message": "Too hot"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "temp": 50
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "temp": true
+        },
+        "required": {
+          "temp": false
+        },
+        "errors": [
+          {
+            "fieldKey": "temp",
+            "code": "RULE_FAILED",
+            "messageKey": "forms.rule.too_hot",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "rule passes",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "temp",
+                "type": "number",
+                "label": "Temp",
+                "rules": [
+                  {
+                    "rule": {
+                      "<": [
+                        {
+                          "var": "answers.temp"
+                        },
+                        40
+                      ]
+                    },
+                    "messageKey": "forms.rule.too_hot",
+                    "message": "Too hot"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "temp": 20
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "temp": true
+        },
+        "required": {
+          "temp": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "chain hides c when a false even with stale b",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "a",
+                "type": "boolean",
+                "label": "A"
+              },
+              {
+                "key": "b",
+                "type": "boolean",
+                "label": "B",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.a"
+                    },
+                    true
+                  ]
+                }
+              },
+              {
+                "key": "c",
+                "type": "text",
+                "label": "C",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.b"
+                    },
+                    true
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "a": false,
+        "b": true,
+        "c": "stale"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "a": true,
+          "b": false,
+          "c": false
+        },
+        "required": {
+          "a": false,
+          "b": false,
+          "c": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [
+          "b",
+          "c"
+        ],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "chain shows c when a and b true",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "a",
+                "type": "boolean",
+                "label": "A"
+              },
+              {
+                "key": "b",
+                "type": "boolean",
+                "label": "B",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.a"
+                    },
+                    true
+                  ]
+                }
+              },
+              {
+                "key": "c",
+                "type": "text",
+                "label": "C",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.b"
+                    },
+                    true
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "a": true,
+        "b": true,
+        "c": "note"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "required": {
+          "a": false,
+          "b": false,
+          "c": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "section hidden hides its fields",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s1",
+            "label": "S1",
+            "fields": [
+              {
+                "key": "gate",
+                "type": "boolean",
+                "label": "Gate"
+              }
+            ]
+          },
+          {
+            "key": "s2",
+            "label": "S2",
+            "fields": [
+              {
+                "key": "hidden_field",
+                "type": "text",
+                "label": "Hidden Field"
+              }
+            ],
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.gate"
+                },
+                true
+              ]
+            }
+          }
+        ]
+      },
+      "answers": {
+        "gate": false,
+        "hidden_field": "x"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "gate": true,
+          "hidden_field": false
+        },
+        "required": {
+          "gate": false,
+          "hidden_field": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [
+          "hidden_field"
+        ],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "section shown shows its fields",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s1",
+            "label": "S1",
+            "fields": [
+              {
+                "key": "gate",
+                "type": "boolean",
+                "label": "Gate"
+              }
+            ]
+          },
+          {
+            "key": "s2",
+            "label": "S2",
+            "fields": [
+              {
+                "key": "hidden_field",
+                "type": "text",
+                "label": "Hidden Field"
+              }
+            ],
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.gate"
+                },
+                true
+              ]
+            }
+          }
+        ]
+      },
+      "answers": {
+        "gate": true,
+        "hidden_field": "x"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "gate": true,
+          "hidden_field": true
+        },
+        "required": {
+          "gate": false,
+          "hidden_field": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "requiredIf triggers required",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "has_defect",
+                "type": "boolean",
+                "label": "Has Defect"
+              },
+              {
+                "key": "defect_note",
+                "type": "text",
+                "label": "Defect Note",
+                "requiredIf": {
+                  "==": [
+                    {
+                      "var": "answers.has_defect"
+                    },
+                    true
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "has_defect": true
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "has_defect": true,
+          "defect_note": true
+        },
+        "required": {
+          "has_defect": false,
+          "defect_note": true
+        },
+        "errors": [
+          {
+            "fieldKey": "defect_note",
+            "code": "REQUIRED",
+            "messageKey": "forms.answer.REQUIRED",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false
+      }
+    },
+    {
+      "name": "requiredIf not triggered",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "has_defect",
+                "type": "boolean",
+                "label": "Has Defect"
+              },
+              {
+                "key": "defect_note",
+                "type": "text",
+                "label": "Defect Note",
+                "requiredIf": {
+                  "==": [
+                    {
+                      "var": "answers.has_defect"
+                    },
+                    true
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "has_defect": false
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "has_defect": true,
+          "defect_note": true
+        },
+        "required": {
+          "has_defect": false,
+          "defect_note": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "fail closed visibleIf",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "x",
+                "type": "text",
+                "label": "X",
+                "visibleIf": {
+                  "missing_some": [
+                    "x",
+                    []
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "x": "v"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "x": true
+        },
+        "required": {
+          "x": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [
+          {
+            "fieldKey": "x",
+            "expression": "visibleIf",
+            "message": "missing_some needs [minimum, [keys]]"
+          }
+        ],
+        "complete": true
+      }
+    },
+    {
+      "name": "fail closed requiredIf",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "x",
+                "type": "text",
+                "label": "X",
+                "requiredIf": {
+                  "missing_some": [
+                    "x",
+                    []
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {},
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "x": true
+        },
+        "required": {
+          "x": true
+        },
+        "errors": [
+          {
+            "fieldKey": "x",
+            "code": "REQUIRED",
+            "messageKey": "forms.answer.REQUIRED",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [
+          {
+            "fieldKey": "x",
+            "expression": "requiredIf",
+            "message": "missing_some needs [minimum, [keys]]"
+          }
+        ],
+        "complete": false
+      }
+    },
+    {
+      "name": "fail closed failWhen",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "x",
+                "type": "text",
+                "label": "X",
+                "failWhen": {
+                  "missing_some": [
+                    "x",
+                    []
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "x": "v"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "x": true
+        },
+        "required": {
+          "x": false
+        },
+        "errors": [],
+        "failed": [
+          "x"
+        ],
+        "ignored": [],
+        "expressionErrors": [
+          {
+            "fieldKey": "x",
+            "expression": "failWhen",
+            "message": "missing_some needs [minimum, [keys]]"
+          }
+        ],
+        "complete": true
+      }
+    },
+    {
+      "name": "fail closed rule",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "x",
+                "type": "text",
+                "label": "X",
+                "rules": [
+                  {
+                    "rule": {
+                      "missing_some": [
+                        "x",
+                        []
+                      ]
+                    },
+                    "messageKey": "forms.rule.r",
+                    "message": "r"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "x": "v"
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "x": true
+        },
+        "required": {
+          "x": false
+        },
+        "errors": [
+          {
+            "fieldKey": "x",
+            "code": "RULE_FAILED",
+            "messageKey": "forms.rule.r",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [
+          {
+            "fieldKey": "x",
+            "expression": "rule",
+            "message": "missing_some needs [minimum, [keys]]"
+          }
+        ],
+        "complete": false
+      }
+    },
+    {
+      "name": "context readable in expression",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "choice",
+                "type": "dropdown",
+                "label": "Choice",
+                "options": [
+                  {
+                    "value": "a",
+                    "label": "A"
+                  },
+                  {
+                    "value": "b",
+                    "label": "B"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "choice": "a"
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection",
+        "assetId": "11111111-1111-4111-8111-111111111111"
+      },
+      "expected": {
+        "visible": {
+          "choice": true
+        },
+        "required": {
+          "choice": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    },
+    {
+      "name": "a key named like an Object.prototype member is just a key",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "s",
+            "label": "S",
+            "fields": [
+              {
+                "key": "constructor",
+                "type": "text",
+                "label": "Constructor"
+              },
+              {
+                "key": "flag",
+                "type": "boolean",
+                "label": "Flag",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.constructor"
+                    },
+                    null
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {},
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "constructor": true,
+          "flag": true
+        },
+        "required": {
+          "constructor": false,
+          "flag": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true
+      }
+    }
+  ]
+}
