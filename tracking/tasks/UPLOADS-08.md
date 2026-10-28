@@ -54,8 +54,9 @@ place" helper), INSPECTIONS-04 / ISSUES-04 / ELIGIBILITY-04 (check an attached f
     `declared_filename` as `filename`.
   - 3. **CSV/XLSX admitted for imports** (`pipeline/magic_bytes.py`): both were on the declared allow-list, but a
     clean CSV was stored with `detected_mime = 'text/plain'`, which an importer refuses. A text type that passes
-    the UTF-8/NUL check now reports the declared type (`text/csv` or `text/plain`) as detected. XLSX already passes
-    as a ZIP compatible with the OOXML declaration; an integration test proves both end to end.
+    the UTF-8/NUL check now reports the declared type (`text/csv` or `text/plain`) as detected. XLSX passed the scan
+    but was stored as its container `application/zip`; `stored_mime` (used by release) stores an OOXML file as its
+    declared type while the ratio cap still sees the container. An integration test proves both end to end.
   - 4. **`stored_files.py`** (new, private) with `StoredFileRef` (frozen dataclass: `id`, `project_id | None`,
     `filename | None`, `content_type`, `size_bytes`, `sha256`, `source`, `purpose | None`, `created_at`) and:
     - `get_stored_file(conn, file_id) -> StoredFileRef | None`: a live, `clean` file visible on `conn` (tenant RLS
@@ -92,7 +93,8 @@ place" helper), INSPECTIONS-04 / ISSUES-04 / ELIGIBILITY-04 (check an attached f
     - `generated_file_id(t, "k")` is stable and differs for another tenant or key.
     - `store_generated_file` input checks: empty data, `image/svg+xml`, `%PDF` bytes declared `image/png`, NUL bytes
       as CSV, a 256-char filename → `ValueError`.
-    - magic bytes: a UTF-8 CSV declared `text/csv` passes with `detected == 'text/csv'`.
+    - magic bytes: a UTF-8 CSV declared `text/csv` passes with `detected == 'text/csv'`; `stored_mime('application/zip',
+      <xlsx>)` → the xlsx type.
   - **integration** (`test_stored_files_db.py`, Testcontainers Postgres + RustFS, tenants `kaefer-demo`, `tenant-b`):
     - As system on `kaefer-demo`: `store_generated_file(%PDF..., purpose='report', idempotency_key='report-render:1',
       project_id=P1)` → a `stored_files` row `source='generated'`, `scan_status='clean'`, 64-hex sha256 of the bytes,

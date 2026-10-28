@@ -28,6 +28,7 @@ from aip.platform.context import get_context, new_request_id
 from aip.platform.events.outbox import Aggregate, emit
 
 from .clamav_client import ClamdSettings
+from .magic_bytes import stored_mime
 from .reducer import ScanInput, ScanVerdict, run_scan
 
 __all__ = ["clamd_settings_from_env", "run_scan_pipeline"]
@@ -134,7 +135,7 @@ async def _release(
     ctx = get_context()
     file_id = UUID(new_request_id())
     released_key = tenant_key(ctx.tenant_id, "files", str(file_id))
-    detected_mime = verdict.detected_mime or str(session["declared_mime"])
+    detected_mime = stored_mime(verdict.detected_mime, str(session["declared_mime"]))
 
     store = get_object_store()
     # No server-side copy on the ObjectStore protocol: re-put the bytes already read. KMS key ref is

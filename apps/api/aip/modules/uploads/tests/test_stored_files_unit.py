@@ -11,7 +11,7 @@ from uuid import UUID
 import pytest
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from aip.modules.uploads.pipeline.magic_bytes import check_magic_bytes
+from aip.modules.uploads.pipeline.magic_bytes import check_magic_bytes, stored_mime
 from aip.modules.uploads.stored_files import generated_file_id, store_generated_file
 
 _T1 = UUID("00000000-0000-4000-8000-000000000001")
@@ -57,3 +57,10 @@ def test_a_clean_csv_keeps_its_declared_type() -> None:
     result = check_magic_bytes(b"Tag Number,Name\nKF-01,Pump\n", "text/csv")
     assert result.outcome == "pass"
     assert result.detail["detected"] == "text/csv"
+
+
+def test_an_ooxml_file_is_stored_as_its_declared_type_not_its_container() -> None:
+    xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    assert stored_mime("application/zip", xlsx) == xlsx
+    assert stored_mime("application/pdf", "application/pdf") == "application/pdf"
+    assert stored_mime(None, "text/csv") == "text/csv"
