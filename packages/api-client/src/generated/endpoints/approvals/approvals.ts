@@ -20,10 +20,13 @@ import type {
 
 import type {
   ApprovalsErrorBody,
+  DefinitionOut,
   HTTPValidationError,
   HistoryOut,
   InstanceOut,
   InstanceStart,
+  PresetInstall,
+  PresetOut,
   TransitionOut,
   TransitionRequest
 } from '../../model';
@@ -50,7 +53,118 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export type approvalsStartInstanceResponse201 = {
+export type approvalsInstallPresetResponse200 = {
+  data: DefinitionOut
+  status: 200
+}
+
+export type approvalsInstallPresetResponse404 = {
+  data: ApprovalsErrorBody
+  status: 404
+}
+
+export type approvalsInstallPresetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type approvalsInstallPresetResponseSuccess = (approvalsInstallPresetResponse200) & {
+  headers: Headers;
+};
+export type approvalsInstallPresetResponseError = (approvalsInstallPresetResponse404 | approvalsInstallPresetResponse422) & {
+  headers: Headers;
+};
+
+export type approvalsInstallPresetResponse = (approvalsInstallPresetResponseSuccess | approvalsInstallPresetResponseError)
+
+export const getApprovalsInstallPresetUrl = () => {
+
+
+
+
+  return `/api/v1/approvals/definitions/from-preset`
+}
+
+/**
+ * @summary Install Preset
+ */
+export const approvalsInstallPreset = async (presetInstall: PresetInstall, options?: Parameters<typeof apiFetch>[1]): Promise<approvalsInstallPresetResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<approvalsInstallPresetResponse>(getApprovalsInstallPresetUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(presetInstall)
+  }
+);}
+
+
+
+
+
+export const getApprovalsInstallPresetMutationKey = () => ['approvalsInstallPreset'] as const;
+
+export const getApprovalsInstallPresetMutationOptions = <TError = ApprovalsErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsInstallPreset>>, TError,ApprovalsInstallPresetMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approvalsInstallPreset>>, TError,ApprovalsInstallPresetMutationVariables, TContext> => {
+
+const mutationKey = getApprovalsInstallPresetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approvalsInstallPreset>>, ApprovalsInstallPresetMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  approvalsInstallPreset(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApprovalsInstallPresetMutationResult = NonNullable<Awaited<ReturnType<typeof approvalsInstallPreset>>>
+    export type ApprovalsInstallPresetMutationBody = PresetInstall
+    export type ApprovalsInstallPresetMutationError = ApprovalsErrorBody | HTTPValidationError
+    export type ApprovalsInstallPresetMutationVariables = {data: PresetInstall}
+
+    /**
+ * @summary Install Preset
+ */
+export const useApprovalsInstallPreset = <TError = ApprovalsErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsInstallPreset>>, TError,ApprovalsInstallPresetMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approvalsInstallPreset>>,
+        TError,
+        ApprovalsInstallPresetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApprovalsInstallPresetMutationOptions(options), queryClient);
+    }
+    export type approvalsStartInstanceResponse201 = {
   data: InstanceOut
   status: 201
 }
@@ -571,3 +685,115 @@ export const useApprovalsTransition = <TError = ApprovalsErrorBody,
       > => {
       return useMutation(getApprovalsTransitionMutationOptions(options), queryClient);
     }
+    export type approvalsListPresetsResponse200 = {
+  data: PresetOut[]
+  status: 200
+}
+
+export type approvalsListPresetsResponseSuccess = (approvalsListPresetsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type approvalsListPresetsResponse = (approvalsListPresetsResponseSuccess)
+
+export const getApprovalsListPresetsUrl = () => {
+
+
+
+
+  return `/api/v1/approvals/presets`
+}
+
+/**
+ * @summary Get Presets
+ */
+export const approvalsListPresets = async ( options?: Parameters<typeof apiFetch>[1]): Promise<approvalsListPresetsResponse> => {
+
+  return apiFetch<approvalsListPresetsResponse>(getApprovalsListPresetsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getApprovalsListPresetsQueryKey = () => {
+    return [
+    `/api/v1/approvals/presets`
+    ] as const;
+    }
+
+
+export const getApprovalsListPresetsQueryOptions = <TData = Awaited<ReturnType<typeof approvalsListPresets>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListPresets>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getApprovalsListPresetsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof approvalsListPresets>>> = ({ signal }) => approvalsListPresets({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof approvalsListPresets>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ApprovalsListPresetsQueryResult = NonNullable<Awaited<ReturnType<typeof approvalsListPresets>>>
+export type ApprovalsListPresetsQueryError = unknown
+
+
+export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approvalsListPresets>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListPresets>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof approvalsListPresets>>,
+          TError,
+          Awaited<ReturnType<typeof approvalsListPresets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approvalsListPresets>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListPresets>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof approvalsListPresets>>,
+          TError,
+          Awaited<ReturnType<typeof approvalsListPresets>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approvalsListPresets>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListPresets>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Presets
+ */
+
+export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approvalsListPresets>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListPresets>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getApprovalsListPresetsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

@@ -3,6 +3,29 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Install Preset
+ */
+export const approvalsInstallPresetBodyPresetKeyMax = 63;
+
+
+export const approvalsInstallPresetBodyPresetKeyRegExp = new RegExp('^[a-z][a-z0-9_]*$');
+
+
+export const ApprovalsInstallPresetBody = zod.object({
+  "presetKey": zod.string().max(approvalsInstallPresetBodyPresetKeyMax).regex(approvalsInstallPresetBodyPresetKeyRegExp),
+  "projectId": zod.union([zod.uuid(),zod.null()]).optional()
+})
+
+export const ApprovalsInstallPresetResponse = zod.object({
+  "id": zod.uuid(),
+  "key": zod.string(),
+  "projectId": zod.union([zod.uuid(),zod.null()]),
+  "recordType": zod.string(),
+  "status": zod.enum(['draft', 'active', 'retired']),
+  "version": zod.int()
+})
+
+/**
  * @summary Start Instance
  */
 export const approvalsStartInstanceBodyRecordTypeMax = 63;
@@ -24,6 +47,7 @@ export const ApprovalsStartInstanceResponse = zod.object({
   "critical": zod.boolean(),
   "labelKey": zod.string(),
   "reasonKey": zod.union([zod.string(),zod.null()]).optional(),
+  "requiresComment": zod.boolean(),
   "toState": zod.string()
 })),
   "currentState": zod.string(),
@@ -52,6 +76,7 @@ export const ApprovalsGetInstanceResponse = zod.object({
   "critical": zod.boolean(),
   "labelKey": zod.string(),
   "reasonKey": zod.union([zod.string(),zod.null()]).optional(),
+  "requiresComment": zod.boolean(),
   "toState": zod.string()
 })),
   "currentState": zod.string(),
@@ -154,6 +179,7 @@ export const ApprovalsTransitionResponse = zod.object({
   "critical": zod.boolean(),
   "labelKey": zod.string(),
   "reasonKey": zod.union([zod.string(),zod.null()]).optional(),
+  "requiresComment": zod.boolean(),
   "toState": zod.string()
 })),
   "currentState": zod.string(),
@@ -168,4 +194,16 @@ export const ApprovalsTransitionResponse = zod.object({
   "version": zod.int()
 })
 })
+
+/**
+ * @summary Get Presets
+ */
+export const ApprovalsListPresetsResponseItem = zod.object({
+  "actions": zod.array(zod.string()),
+  "initial": zod.string(),
+  "key": zod.string(),
+  "recordType": zod.string(),
+  "states": zod.array(zod.string())
+}).describe('A ``config/workflows`` preset: its key, record type and neutral codes (no display text).')
+export const ApprovalsListPresetsResponse = zod.array(ApprovalsListPresetsResponseItem)
 

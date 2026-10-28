@@ -37,10 +37,20 @@ python3 "$ROOT/tools/ci/sbom_fill_licences.py" "$OUT/python.cdx.json" \
 
 echo "sbom: pnpm workspace -> $OUT/js.cdx.json"
 # cyclonedx-npm does not read pnpm lockfiles. FETCH_LICENSE fills licences from the registry.
-FETCH_LICENSE=true npx --yes "@cyclonedx/cdxgen@$CDXGEN_VERSION" -t pnpm --no-install-deps \
-  --spec-version 1.6 -o "$OUT/js.cdx.json" "$ROOT" >"$WORK/cdxgen.log" 2>&1 \
-  || { cat "$WORK/cdxgen.log"; exit 1; }
-test -s "$OUT/js.cdx.json"
+# That lookup occasionally drops one package's licence (a different package each run, e.g. vite
+# or @typescript-eslint/type-utils, all MIT), so a run the licence policy refuses is repeated,
+# up to three attempts. A package that really has no allowed licence fails every attempt, and
+# the CI "Licence policy" step still denies it.
+for attempt in 1 2 3; do
+  FETCH_LICENSE=true npx --yes "@cyclonedx/cdxgen@$CDXGEN_VERSION" -t pnpm --no-install-deps \
+    --spec-version 1.6 -o "$OUT/js.cdx.json" "$ROOT" >"$WORK/cdxgen.log" 2>&1 \
+    || { cat "$WORK/cdxgen.log"; exit 1; }
+  test -s "$OUT/js.cdx.json"
+  python3 "$ROOT/tools/ci/check_licences.py" "$OUT/js.cdx.json" >"$WORK/js-policy.log" 2>&1 \
+    && break
+  echo "sbom: the JS SBOM fails the licence policy (attempt $attempt):"
+  grep -v '^{' "$WORK/js-policy.log" || true
+done
 
 for spec in "$@"; do
   name="${spec%%=*}"
