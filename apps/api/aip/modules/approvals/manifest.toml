@@ -19,6 +19,28 @@ description = "Create, edit and publish workflow definitions"
 code = "approvals.start"
 description = "Start the workflow of a record"
 
+# APPROVALS-05: the inspection lifecycle presets (config/workflows/inspection_*.json). The R1
+# inspections tasks may move these to the inspections manifest.
+[[permissions]]
+code = "approvals.inspection.assign"
+description = "Ready, assign, unassign and resend inspections"
+
+[[permissions]]
+code = "approvals.inspection.execute"
+description = "Start an assigned inspection and submit it for review"
+
+[[permissions]]
+code = "approvals.inspection.review"
+description = "Pass or reject an inspection at inspector review"
+
+[[permissions]]
+code = "approvals.inspection.approve"
+description = "Approve or reject an inspection at supervisor review"
+
+[[permissions]]
+code = "approvals.inspection.client_approve"
+description = "Approve or reject an inspection at client review"
+
 [[events]]
 name = "workflow.transitioned"
 version = 1

@@ -372,6 +372,16 @@ services:
       access-seed:
         condition: service_completed_successfully
 
+  approvals-seed:
+    # APPROVALS-05: the inspection_standard workflow preset in kaefer-demo. Idempotent.
+    <<: *oneshot
+    image: *api-image
+    command: ["python", "-m", "aip.modules.approvals.seeds"]
+    environment: *app-env
+    depends_on:
+      tenancy-seed:
+        condition: service_completed_successfully
+
   object-store-init:
     <<: *oneshot
     image: *api-image
@@ -432,6 +442,8 @@ services:
       access-seed:
         condition: service_completed_successfully
       admin-bootstrap:
+        condition: service_completed_successfully
+      approvals-seed:
         condition: service_completed_successfully
       report-templates-load:
         condition: service_completed_successfully

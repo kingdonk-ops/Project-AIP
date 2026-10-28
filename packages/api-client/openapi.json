@@ -14,6 +14,11 @@
                 "access.role_assignment.read",
                 "access.team.manage",
                 "approvals.design",
+                "approvals.inspection.approve",
+                "approvals.inspection.assign",
+                "approvals.inspection.client_approve",
+                "approvals.inspection.execute",
+                "approvals.inspection.review",
                 "approvals.start",
                 "approvals.view",
                 "asset.create",
@@ -1012,6 +1017,10 @@
             ],
             "title": "Reasonkey"
           },
+          "requiresComment": {
+            "title": "Requirescomment",
+            "type": "boolean"
+          },
           "toState": {
             "title": "Tostate",
             "type": "string"
@@ -1022,6 +1031,7 @@
           "toState",
           "labelKey",
           "critical",
+          "requiresComment",
           "allowed"
         ],
         "title": "AvailableTransition",
@@ -1690,6 +1700,59 @@
           "createdAt"
         ],
         "title": "DecisionOut",
+        "type": "object"
+      },
+      "DefinitionOut": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          },
+          "recordType": {
+            "title": "Recordtype",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "active",
+              "retired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "recordType",
+          "projectId",
+          "version",
+          "status"
+        ],
+        "title": "DefinitionOut",
         "type": "object"
       },
       "Dependencies": {
@@ -4164,6 +4227,75 @@
         "title": "PlanAndUsage",
         "type": "object"
       },
+      "PresetInstall": {
+        "additionalProperties": false,
+        "properties": {
+          "presetKey": {
+            "maxLength": 63,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Presetkey",
+            "type": "string"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          }
+        },
+        "required": [
+          "presetKey"
+        ],
+        "title": "PresetInstall",
+        "type": "object"
+      },
+      "PresetOut": {
+        "additionalProperties": false,
+        "description": "A ``config/workflows`` preset: its key, record type and neutral codes (no display text).",
+        "properties": {
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "initial": {
+            "title": "Initial",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "recordType": {
+            "title": "Recordtype",
+            "type": "string"
+          },
+          "states": {
+            "items": {
+              "type": "string"
+            },
+            "title": "States",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "recordType",
+          "initial",
+          "states",
+          "actions"
+        ],
+        "title": "PresetOut",
+        "type": "object"
+      },
       "ProjectCreate": {
         "additionalProperties": false,
         "properties": {
@@ -5257,6 +5389,11 @@
                 "access.role_assignment.read",
                 "access.team.manage",
                 "approvals.design",
+                "approvals.inspection.approve",
+                "approvals.inspection.assign",
+                "approvals.inspection.client_approve",
+                "approvals.inspection.execute",
+                "approvals.inspection.review",
                 "approvals.start",
                 "approvals.view",
                 "asset.create",
@@ -5390,6 +5527,11 @@
                 "access.role_assignment.read",
                 "access.team.manage",
                 "approvals.design",
+                "approvals.inspection.approve",
+                "approvals.inspection.assign",
+                "approvals.inspection.client_approve",
+                "approvals.inspection.execute",
+                "approvals.inspection.review",
                 "approvals.start",
                 "approvals.view",
                 "asset.create",
@@ -5490,6 +5632,11 @@
                     "access.role_assignment.read",
                     "access.team.manage",
                     "approvals.design",
+                    "approvals.inspection.approve",
+                    "approvals.inspection.assign",
+                    "approvals.inspection.client_approve",
+                    "approvals.inspection.execute",
+                    "approvals.inspection.review",
                     "approvals.start",
                     "approvals.view",
                     "asset.create",
@@ -8250,6 +8397,57 @@
         ]
       }
     },
+    "/api/v1/approvals/definitions/from-preset": {
+      "post": {
+        "operationId": "approvals_install_preset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresetInstall"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefinitionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "PRESET_NOT_FOUND"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Install Preset",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
     "/api/v1/approvals/instances": {
       "post": {
         "operationId": "approvals_start_instance",
@@ -8561,10 +8759,35 @@
                 }
               }
             },
-            "description": "Validation error, GUARD_FAILED or GUARD_ERROR"
+            "description": "Validation error, COMMENT_REQUIRED, GUARD_FAILED or GUARD_ERROR"
           }
         },
         "summary": "Transition",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/presets": {
+      "get": {
+        "operationId": "approvals_list_presets",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PresetOut"
+                  },
+                  "title": "Response Approvals List Presets",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Presets",
         "tags": [
           "approvals"
         ]

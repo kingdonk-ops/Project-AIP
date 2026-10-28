@@ -341,6 +341,7 @@ async def test_editing_a_system_role_customises_it_and_takes_effect(
 
     (event,) = [e for e in await events(db, "access.role.changed") if e["action"] == "updated"]
     assert event["before"] == [
+        "approvals.inspection.approve",  # APPROVALS-05: sign-off at the approve level
         "approvals.view",
         "asset.view",
         "project.view",
@@ -427,6 +428,7 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
     assert response.status_code == 200, response.text
     assert response.json()["customisedAt"] is None
     assert response.json()["permissions"] == [
+        "approvals.inspection.approve",  # APPROVALS-05: sign-off at the approve level
         "approvals.view",
         "asset.view",
         "project.view",
@@ -438,6 +440,7 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
     assert (event["before"], event["after"]) == (
         ["site.view"],
         [
+            "approvals.inspection.approve",
             "approvals.view",
             "asset.view",
             "project.view",

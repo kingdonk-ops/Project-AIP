@@ -14,10 +14,12 @@ reported at ``("transitions", i, "guard")``; the transition service evaluates it
 Part B).
 ``guardMessageKey`` is the term key shown when the guard is false; ``signoffAction`` names the
 ADR 0010 sign-off policy a ``critical`` transition is checked against (``workflow.<action>`` when
-absent).
+absent). ``requiresComment`` (APPROVALS-05) makes the transition service refuse the action without a
+non-blank comment (422 ``COMMENT_REQUIRED``).
 
 The HTTP models (``InstanceStart``, ``TransitionRequest``, ``InstanceOut``, ``TransitionOut``,
-``HistoryOut``) use camelCase JSON and forbid unknown keys, so a client can never send a guard
+``HistoryOut``, and the APPROVALS-05 preset models ``PresetOut``, ``PresetInstall`` and
+``DefinitionOut``) use camelCase JSON and forbid unknown keys, so a client can never send a guard
 outcome or any other server-decided field.
 """
 
@@ -40,10 +42,13 @@ __all__ = [
     "AvailableTransition",
     "DecisionOut",
     "DecisionStatus",
+    "DefinitionOut",
     "DefinitionStatus",
     "HistoryOut",
     "InstanceOut",
     "InstanceStart",
+    "PresetInstall",
+    "PresetOut",
     "StateSpec",
     "TransitionOut",
     "TransitionRequest",
@@ -85,6 +90,7 @@ class TransitionSpec(_Spec):
     label_key: TermKey = Field(alias="labelKey")
     guard_message_key: TermKey | None = Field(default=None, alias="guardMessageKey")
     signoff_action: SignoffAction | None = Field(default=None, alias="signoffAction")
+    requires_comment: bool = Field(default=False, alias="requiresComment")
 
 
 class WorkflowDefinitionSpec(_Spec):
@@ -236,6 +242,7 @@ class AvailableTransition(_Http):
     to_state: str
     label_key: str
     critical: bool
+    requires_comment: bool
     allowed: bool
     reason_key: str | None = None
 
@@ -289,3 +296,27 @@ class HistoryOut(_Http):
     entries: list[DecisionOut]
     chain_valid: bool
     broken_at_seq: int | None = None
+
+
+class PresetOut(_Http):
+    """A ``config/workflows`` preset: its key, record type and neutral codes (no display text)."""
+
+    key: str
+    record_type: str
+    initial: str
+    states: list[str]
+    actions: list[str]
+
+
+class PresetInstall(_Http):
+    preset_key: Code
+    project_id: UUID | None = None
+
+
+class DefinitionOut(_Http):
+    id: UUID
+    key: str
+    record_type: str
+    project_id: UUID | None
+    version: int
+    status: DefinitionStatus
