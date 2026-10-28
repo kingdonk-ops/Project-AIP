@@ -53,12 +53,12 @@ email registered to one tenant (`identity_register_email`, unchanged).
   - apps/api/aip/modules/identity/jobs.py
   - apps/api/aip/modules/identity/api.py
   - apps/api/aip/modules/identity/manifest.toml
+  - apps/api/aip/modules/identity/tests/conftest.py (the OIDC stub takes a client id and secret)
   - apps/api/aip/modules/identity/tests/test_portal_unit.py (new)
   - apps/api/aip/modules/identity/tests/test_portal_routes.py (new)
   - apps/api/aip/modules/identity/tests/sessions/test_portal_sessions_db.py (new)
   - apps/api/aip/modules/identity/tests/invites/test_portal_invites_db.py (new)
   - apps/api/aip/platform/dev_secrets.py
-  - .env.example
   - packages/api-client/ (regenerated: the two portal auth routes)
 - **steps**:
   - 1. **Settings** (`settings.py`): `portal_origin` (`PORTAL_ORIGIN`, default `http://portal.localhost:8081`),
@@ -67,7 +67,7 @@ email registered to one tenant (`identity_register_email`, unchanged).
     and the portal routes answer 503 `PORTAL_NOT_CONFIGURED`), property `portal_redirect_uri` =
     `<PORTAL_ORIGIN>/api/v1/auth/portal/oidc/callback`. The dev secret `aip_portal_dev_only_secret` joins
     `DEV_SECRETS` (SECURITY-11 Part D) and is refused outside development and test, like `OIDC_CLIENT_SECRET`.
-    `.env.example` documents the three variables.
+    The compose/Coolify variables and `.env.example` entries come with PORTAL-02 step 1 (it owns the realm client).
   - 2. **Cookies per audience** (`sessions.py`): `SESSION_COOKIES = {"app": ("__Host-aip_sid", "__Host-aip_csrf"),
     "portal": ("__Host-aip_portal_sid", "__Host-aip_portal_csrf")}` (the `device` audience has no browser cookie:
     `ValueError`). `IssuedSession` gains `audience` (default `app`), `issue_session(..., audience=)` records it,
@@ -93,7 +93,7 @@ email registered to one tenant (`identity_register_email`, unchanged).
     - `PreAuthState.audience` (`app`/`portal`, default `app`) seals which flow started; `LoginService.complete`
       refuses a cookie of the other audience (400 `INVALID_STATE`), so a portal pre-auth cookie cannot finish at the
       staff callback or the reverse.
-    - `LoginService.start_portal(email, return_to)`: never consults the login directory and never sends
+    - `LoginService(..., audience="portal").start(email, return_to)`: never consults the login directory and never sends
       `kc_idp_hint` (portal accounts are local); the authorize URL carries `client_id=<PORTAL_OIDC_CLIENT_ID>`,
       `redirect_uri=<portal_redirect_uri>` and `acr_values=aal2`; the answer is always `{method: "password",
       redirectUrl}` (no account enumeration).
