@@ -9,6 +9,7 @@ import pytest
 from aip.modules.access.roles.default_roles import (
     MATRIX,
     ROLE_CODES,
+    Level,
     default_permissions,
     expand_level,
 )
@@ -93,3 +94,58 @@ def test_default_roles_never_get_operator_only_codes() -> None:
     ]
     granted = default_permissions(catalogue)
     assert not any(c.startswith("platform.") for codes in granted.values() for c in codes)
+
+
+# --- ACCESS-07: `move` at edit, `invite` at approve (ADR 0027 amendment) ----------------------
+
+ASSETS = [
+    ("asset.view", "assets"),
+    ("asset.create", "assets"),
+    ("asset.update", "assets"),
+    ("asset.move", "assets"),
+    ("asset.delete", "assets"),
+]
+
+PORTAL = [
+    ("portal.user.view", "portal"),
+    ("portal.user.invite", "portal"),
+    ("portal.user.suspend", "portal"),
+    ("portal.grant.manage", "portal"),
+]
+
+
+def test_move_is_an_edit_verb_and_invite_an_approve_verb() -> None:
+    verbs = ["read", "create", "update", "move", "invite", "manage"]
+    assert expand_level("create", verbs) == ["read", "create"]
+    assert expand_level("edit", verbs) == ["read", "create", "update", "move"]
+    assert expand_level("approve", verbs) == ["read", "create", "update", "move", "invite"]
+
+
+def test_roles_that_edit_assets_can_move_them_and_creators_cannot() -> None:
+    roles = default_permissions(ASSETS)
+    for role in ("tenant_admin", "project_manager", "qaqc_manager", "supervisor"):
+        assert "asset.move" in roles[role], role
+    assert roles["inspector"] == {"asset.view", "asset.create"}
+    assert roles["field_worker"] == {"asset.view"}
+    assert roles["client_reviewer"] == {"asset.view"}
+
+
+def test_project_managers_can_invite_portal_clients() -> None:
+    roles = default_permissions(PORTAL)
+    assert roles["project_manager"] == {"portal.user.view", "portal.user.invite"}
+    assert roles["tenant_admin"] == {code for code, _ in PORTAL}
+    # The edit level (QA/QC manager, document controller) sees portal users but cannot invite.
+    assert roles["qaqc_manager"] == {"portal.user.view"}
+    assert roles["document_controller"] == {"portal.user.view"}
+
+
+def test_client_reviewer_approve_level_is_sign_off_only_not_invite() -> None:
+    levels: list[Level] = ["none"] * len(ROLE_CODES)
+    levels[ROLE_CODES.index("client_reviewer")] = "approve"
+    catalogue = [*PORTAL, ("portal.record.approve", "portal"), ("portal.record.sign", "portal")]
+    roles = default_permissions(catalogue, {"portal": tuple(levels)})
+    assert roles["client_reviewer"] == {
+        "portal.user.view",
+        "portal.record.approve",
+        "portal.record.sign",
+    }
