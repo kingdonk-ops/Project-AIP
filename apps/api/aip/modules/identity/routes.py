@@ -21,6 +21,13 @@ fresh second factor, the callback then rotates the session), the invite routes u
 
 ``/me`` checks, in order and failing closed: a principal (401), the tenant active (401/403, via
 tenancy's ``require_active_tenant``), then the user live and ``active`` in that tenant (401).
+
+IDENTITY-10: ``POST /api/v1/auth/portal/login/start`` and ``GET /api/v1/auth/portal/oidc/callback``
+(both public) sign clients in on the ``aip-portal`` client (``LoginService(audience="portal")``,
+``portal_login_handler``); without ``PORTAL_OIDC_CLIENT_SECRET`` they answer 503
+``PORTAL_NOT_CONFIGURED``. Logout and the session list clear the cookies of the presented
+audience; the back-channel logout accepts logout tokens for both clients; step-up start refuses a
+portal session (client sign-off step-up is PORTAL-04's).
 """
 
 from __future__ import annotations
@@ -43,7 +50,11 @@ from starlette.responses import Response
 
 from aip.modules.identity import preauth_cookie
 from aip.modules.identity import repository as repo
-from aip.modules.identity.api import ExternalLoginHandler, get_external_login_handler
+from aip.modules.identity.api import (
+    ExternalLoginHandler,
+    get_external_login_handler,
+    get_portal_login_handler,
+)
 from aip.modules.identity.assurance import DEFAULT_MAX_AGE_MIN as DEFAULT_SIGNOFF_MAX_AGE_MIN
 from aip.modules.identity.assurance import DEFAULT_MIN_AAL, SIGNOFF_ACTIONS
 from aip.modules.identity.events import (
@@ -82,7 +93,7 @@ from aip.modules.identity.schemas import (
     StepUpErrorResponse,
 )
 from aip.modules.identity.service import LoginRateLimiter, LoginService
-from aip.modules.identity.session_store import current_session
+from aip.modules.identity.session_store import current_session, presented_audience
 from aip.modules.identity.sessions import (
     clear_session_cookies,
     list_user_sessions,
@@ -132,6 +143,30 @@ def get_login_service(
         )
         service = LoginService(settings, SqlLoginDirectory(), oidc)
         request.app.state.identity_login_service = service
+    return service
+
+
+def get_portal_login_service(
+    request: Request, settings: Annotated[IdentitySettings, Depends(get_identity_settings)]
+) -> LoginService | None:
+    """The portal's sign-in service on the ``aip-portal`` client; ``None`` when not configured."""
+    service: LoginService | None = getattr(request.app.state, "identity_portal_login_service", None)
+    if service is None:
+        secret = settings.portal_oidc_client_secret
+        if secret is None or not settings.portal_configured:
+            return None
+        oidc = KeycloakOidcClient(
+            issuer=settings.issuer,
+            token_endpoint=settings.token_endpoint,
+            jwks_uri=settings.jwks_uri,
+            client_id=settings.portal_oidc_client_id,
+            client_secret=secret.get_secret_value(),
+            redirect_uri=settings.portal_redirect_uri,
+            jwks_ttl=settings.jwks_ttl_seconds,
+            timeout=settings.http_timeout_seconds,
+        )
+        service = LoginService(settings, SqlLoginDirectory(), oidc, audience="portal")
+        request.app.state.identity_portal_login_service = service
     return service
 
 
@@ -199,6 +234,73 @@ async def oidc_callback(
     return response
 
 
+_PORTAL_NOT_CONFIGURED = ("PORTAL_NOT_CONFIGURED", 503, "portal sign-in is not configured")
+
+
+@auth_router.post(
+    "/portal/login/start",
+    response_model=LoginStartResponse,
+    responses={
+        422: {"model": ErrorResponse, "description": "Unprocessable Entity"},
+        429: {"model": ErrorResponse},
+        503: {"model": ErrorResponse},
+    },
+)
+async def portal_login_start(
+    body: LoginStartRequest,
+    request: Request,
+    service: Annotated[LoginService | None, Depends(get_portal_login_service)],
+    limiter: Annotated[LoginRateLimiter, Depends(get_login_rate_limiter)],
+) -> Response:
+    """Start a client's sign-in on the portal (``aip-portal``, a second factor always asked)."""
+    if service is None:
+        return _error(*_PORTAL_NOT_CONFIGURED)
+    client_ip = request.client.host if request.client else "unknown"
+    if not await limiter.hit(f"portal:{client_ip}"):
+        return _error("RATE_LIMITED", 429, "too many sign-in attempts; try again shortly")
+    try:
+        start = await service.start(body.email, body.return_to)
+    except ValueError:
+        return _error("INVALID_EMAIL", 422, "enter a valid email address")
+    response = JSONResponse(start.response.model_dump(mode="json", by_alias=True))
+    preauth_cookie.set_cookie(response, start.sealed_cookie)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@auth_router.get(
+    "/portal/oidc/callback",
+    responses={
+        400: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        503: {"model": ErrorResponse},
+    },
+)
+async def portal_oidc_callback(
+    request: Request,
+    service: Annotated[LoginService | None, Depends(get_portal_login_service)],
+    handler: Annotated[ExternalLoginHandler, Depends(get_portal_login_handler)],
+) -> Response:
+    """Finish a client's portal sign-in: a local ``portal`` account at aal 2, a portal session."""
+    cookie = request.cookies.get(preauth_cookie.COOKIE_NAME)
+    if service is None:
+        response: Response = _error(*_PORTAL_NOT_CONFIGURED)
+    else:
+        try:
+            identity = await service.complete(dict(request.query_params), cookie)
+        except OidcError as exc:
+            logger.info("portal oidc callback refused: %s", exc.code)
+            response = _error(exc.code, exc.status_code, exc.message)
+        else:
+            if identity.step_up is not None or identity.audience != "portal":
+                response = _error("INVALID_STATE", 400, "sign-in state is missing or invalid")
+            else:
+                response = await handler(identity)
+    preauth_cookie.clear_cookie(response)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @auth_router.post("/logout", status_code=204, response_class=Response)
 async def logout() -> Response:
     """Revoke the current session (the Keycloak SSO session ends through the queued job)."""
@@ -207,7 +309,7 @@ async def logout() -> Response:
         async with with_tenant(session.tenant_id) as conn:
             await revoke_session(conn, session.session_id, "logout")
     response = Response(status_code=204)
-    clear_session_cookies(response)
+    clear_session_cookies(response, audience=presented_audience() or "app")
     response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -218,11 +320,15 @@ _BY_KC_SID = text("SELECT tenant_id, session_id FROM identity_sessions_by_kc_sid
 
 def get_logout_verifier(
     service: Annotated[LoginService, Depends(get_login_service)],
+    settings: Annotated[IdentitySettings, Depends(get_identity_settings)],
 ) -> Callable[[str], Awaitable[str]]:
-    """How a logout token becomes a Keycloak ``sid`` (tests may override)."""
+    """How a logout token becomes a Keycloak ``sid`` (tests may override). Tokens for the staff
+    client and for the portal client (same realm and keys, IDENTITY-10) are accepted."""
 
     async def verify(token: str) -> str:
-        return await verify_logout_token(service.oidc, token)
+        return await verify_logout_token(
+            service.oidc, token, also_audiences=(settings.portal_oidc_client_id,)
+        )
 
     return verify
 
@@ -370,7 +476,7 @@ async def revoke_my_session(
         await revoke_session(conn, session_id, "user_revoked")
     response = Response(status_code=204)
     if session_id == principal.session_id:
-        clear_session_cookies(response)
+        clear_session_cookies(response, audience=presented_audience() or "app")
     return response
 
 
@@ -394,8 +500,11 @@ async def step_up_start(
     service: Annotated[LoginService, Depends(get_login_service)],
     return_to: Annotated[str | None, Query(alias="returnTo", max_length=2048)] = None,
 ) -> Response:
-    if principal.session_id is None:
-        raise _not_authenticated()  # step-up elevates a browser session; nothing else has one
+    if principal.session_id is None or principal.audience != "app":
+        # Step-up elevates a staff browser session; a portal one steps up on its own client
+        # (PORTAL-04), and nothing else has a session.
+        raise _not_authenticated()
+
     async with with_tenant(principal.tenant_id) as conn:
         user = await repo.get_user(conn, principal.user_id)
     if user is None or user.status != "active":

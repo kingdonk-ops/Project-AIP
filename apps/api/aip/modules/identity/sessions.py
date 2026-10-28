@@ -14,6 +14,13 @@ requests echo in ``X-CSRF-Token`` (``csrf.py``).
   (ADR 0003) so the Keycloak SSO session ends too.
 
 Every function that touches the database takes the caller's ``with_tenant`` connection.
+
+IDENTITY-10: a session belongs to one audience, and each browser audience has its own cookie pair
+(``SESSION_COOKIES``): ``app`` uses ``__Host-aip_sid`` / ``__Host-aip_csrf``, ``portal`` uses
+``__Host-aip_portal_sid`` / ``__Host-aip_portal_csrf`` (ports do not separate cookies, so two dev
+hosts on ``localhost`` would otherwise share one sid). ``audience_allows`` keeps portal users in
+portal sessions and everyone else out of them. The ``portal`` idle timeout is capped at the
+tenant's ``staff`` idle timeout.
 """
 
 from __future__ import annotations
@@ -38,14 +45,20 @@ from aip.platform.context import new_request_id
 __all__ = [
     "CSRF_COOKIE",
     "DEFAULT_POLICY",
+    "PORTAL_CSRF_COOKIE",
+    "PORTAL_SID_COOKIE",
     "REVOKE_KEYCLOAK_JOB",
+    "SESSION_COOKIES",
     "SID_COOKIE",
     "Audience",
+    "CookieAudience",
     "Expiry",
     "IssuedSession",
     "SessionPolicy",
+    "audience_allows",
     "clear_session_cookies",
     "compute_expiry",
+    "cookie_names",
     "derive_aal",
     "hash_sid",
     "issue_session",
@@ -64,6 +77,8 @@ logger = logging.getLogger(__name__)
 
 SID_COOKIE: Final = "__Host-aip_sid"
 CSRF_COOKIE: Final = "__Host-aip_csrf"
+PORTAL_SID_COOKIE: Final = "__Host-aip_portal_sid"
+PORTAL_CSRF_COOKIE: Final = "__Host-aip_portal_csrf"
 REVOKE_KEYCLOAK_JOB: Final = "identity.revoke_keycloak_sessions"
 # ``amr`` values that prove a second factor: Keycloak's own (otp, hwk) and what an upstream IdP
 # reports (RFC 8176 mfa, otp, hwk, swk; fido from some IdPs).
@@ -71,6 +86,26 @@ _MFA_METHODS: Final = frozenset({"otp", "hwk", "mfa", "swk", "fido"})
 _USER_AGENT_MAX: Final = 512
 
 Audience = Literal["app", "portal", "device"]
+CookieAudience = Literal["app", "portal"]  # the audiences a browser holds a cookie for
+
+# (sid cookie, csrf cookie) per browser audience.
+SESSION_COOKIES: Final[Mapping[CookieAudience, tuple[str, str]]] = {
+    "app": (SID_COOKIE, CSRF_COOKIE),
+    "portal": (PORTAL_SID_COOKIE, PORTAL_CSRF_COOKIE),
+}
+
+
+def cookie_names(audience: str) -> tuple[str, str]:
+    """The (sid, csrf) cookie names of a browser audience; ``ValueError`` for ``device``."""
+    try:
+        return SESSION_COOKIES[audience]  # pyright: ignore[reportArgumentType]
+    except KeyError:
+        raise ValueError(f"the {audience!r} audience has no browser cookie") from None
+
+
+def audience_allows(audience: str, user_class: str) -> bool:
+    """A ``portal`` session only for a ``portal`` user, and a ``portal`` user only in one."""
+    return (audience == "portal") == (user_class == "portal")
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,6 +134,7 @@ class IssuedSession:
     sid: str  # the raw cookie value: hand it to the browser, never store or log it
     csrf: str
     expiry: Expiry
+    audience: Audience = "app"
 
 
 def derive_aal(
@@ -130,10 +166,12 @@ def _token() -> str:
 
 
 def set_session_cookies(response: Response, issued: IssuedSession) -> None:
-    """``__Host-`` cookies: Secure, Path=/, no Domain. Only the sid cookie is HttpOnly."""
+    """``__Host-`` cookies of ``issued.audience``: Secure, Path=/, no Domain; only the sid cookie
+    is HttpOnly."""
+    sid_cookie, csrf_cookie = cookie_names(issued.audience)
     max_age = None  # session cookies: the server-side expiry decides, the browser drops on close
     response.set_cookie(
-        SID_COOKIE,
+        sid_cookie,
         issued.sid,
         max_age=max_age,
         path="/",
@@ -142,7 +180,7 @@ def set_session_cookies(response: Response, issued: IssuedSession) -> None:
         samesite="lax",
     )
     response.set_cookie(
-        CSRF_COOKIE,
+        csrf_cookie,
         issued.csrf,
         max_age=max_age,
         path="/",
@@ -152,8 +190,10 @@ def set_session_cookies(response: Response, issued: IssuedSession) -> None:
     )
 
 
-def clear_session_cookies(response: Response) -> None:
-    for name, http_only in ((SID_COOKIE, True), (CSRF_COOKIE, False)):
+def clear_session_cookies(response: Response, audience: str = "app") -> None:
+    """Clear the cookie pair of ``audience`` only (the portal host never gets a staff cookie)."""
+    sid_cookie, csrf_cookie = cookie_names(audience)
+    for name, http_only in ((sid_cookie, True), (csrf_cookie, False)):
         response.delete_cookie(name, path="/", secure=True, httponly=http_only, samesite="lax")
 
 
@@ -178,10 +218,21 @@ def _policy_from(raw: Mapping[str, Any], user_class: str) -> SessionPolicy:
     return SessionPolicy(idle=idle, absolute=absolute)
 
 
+def policy_for(raw: Mapping[str, Any], user_class: str) -> SessionPolicy:
+    """``user_class``'s policy from a tenant's ``session_policy``; ``portal`` idle is capped at
+    ``staff`` idle (IDENTITY-10), so a client never stays signed in longer than staff."""
+    policy = _policy_from(raw, user_class)
+    if user_class == "portal":
+        staff = _policy_from(raw, "staff")
+        if staff.idle < policy.idle:
+            policy = SessionPolicy(idle=staff.idle, absolute=policy.absolute)
+    return policy
+
+
 async def load_policy(conn: AsyncConnection, user_class: str) -> SessionPolicy:
     """The bound tenant's policy for ``user_class`` (defaults when it has none)."""
     raw = (await conn.execute(_POLICY)).scalar_one_or_none()
-    return _policy_from(raw if isinstance(raw, Mapping) else {}, user_class)
+    return policy_for(raw if isinstance(raw, Mapping) else {}, user_class)
 
 
 _INSERT = text(
@@ -228,16 +279,24 @@ async def issue_session(
     """Insert a new session for ``user_id`` in the bound tenant and return its cookie values.
 
     A sid presented with the login (``presented_sid``) is revoked with reason ``rotated``, without
-    ending the Keycloak session the new sign-in just created.
+    ending the Keycloak session the new sign-in just created. ``ValueError`` when ``audience``
+    does not fit ``user_class`` (``audience_allows``).
     """
+    if not audience_allows(audience, user_class):
+        raise ValueError(f"a {user_class} user cannot hold a {audience} session")
     if presented_sid:
         await _revoke(conn, "sid_hash", hash_sid(presented_sid), "rotated", end_keycloak=False)
     now: datetime = (await conn.execute(_NOW)).scalar_one()
     policy = await load_policy(conn, user_class)
     expiry = compute_expiry(now, policy)
     issued = IssuedSession(
-        session_id=UUID(new_request_id()), sid=_token(), csrf=_token(), expiry=expiry
+        session_id=UUID(new_request_id()),
+        sid=_token(),
+        csrf=_token(),
+        expiry=expiry,
+        audience=audience,
     )
+
     await conn.execute(
         _INSERT,
         {
