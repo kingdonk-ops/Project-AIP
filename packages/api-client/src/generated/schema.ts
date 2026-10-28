@@ -3244,6 +3244,8 @@ export interface components {
         };
         /** SessionStatus */
         SessionStatus: {
+            /** Fileid */
+            fileId?: string | null;
             /** Rejectreason */
             rejectReason?: string | null;
             /** Status */

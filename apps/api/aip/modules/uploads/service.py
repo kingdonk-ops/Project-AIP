@@ -119,6 +119,12 @@ def _require_actor(ctx: RequestContext) -> UUID:
     return ctx.actor_id
 
 
+def _status(session: repo.Row) -> SessionStatus:
+    return SessionStatus(
+        status=session["status"], reject_reason=session["reject_reason"], file_id=session["file_id"]
+    )
+
+
 @asynccontextmanager
 async def _tx() -> AsyncIterator[AsyncConnection]:
     async with with_tenant(get_context()) as conn:
@@ -240,7 +246,7 @@ class UploadSessionService:
             await ops.enqueue(
                 conn, SCAN, {"session_id": str(session_id)}, idempotency_key=str(session_id)
             )
-        return SessionStatus(status=row["status"], reject_reason=row["reject_reason"])
+        return _status(row)
 
     async def get_status(self, session_id: UUID, *, is_admin: AdminCheck) -> SessionStatus:
         """Return a session's status to its requester, or to a holder of ``uploads.admin`` in scope.
@@ -257,7 +263,7 @@ class UploadSessionService:
                 raise NotFoundError(f"upload session {session_id} not found")
             if session["requested_by"] != actor and not await is_admin(session["project_id"]):
                 raise NotFoundError(f"upload session {session_id} not found")
-        return SessionStatus(status=session["status"], reject_reason=session["reject_reason"])
+        return _status(session)
 
     async def file_download_url(self, file_id: UUID, *, can_view: AdminCheck) -> FileDownloadUrl:
         """A presigned GET for a released file, gated by ``uploads.view`` on the file's project.
