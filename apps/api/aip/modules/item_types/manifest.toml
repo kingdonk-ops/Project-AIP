@@ -18,6 +18,34 @@ term_keys = [
   "item_types.field_type.signature",
   "item_types.field_type.asset_ref",
   "item_types.field_type.user_ref",
+  "item_types.version.status.draft",
+  "item_types.version.status.published",
+  "item_types.issue.attribute_key_invalid",
+  "item_types.issue.attribute_key_duplicate",
+  "item_types.issue.attribute_label_missing",
+  "item_types.issue.attribute_field_type_unknown",
+  "item_types.issue.attribute_field_type_not_allowed",
+  "item_types.issue.attribute_config_invalid",
+  "item_types.issue.attribute_range_invalid",
+  "item_types.issue.attribute_option_duplicate",
+  "item_types.issue.attributes_too_many",
+  "validation.attribute.required",
+  "validation.attribute.type",
+  "validation.attribute.enum",
+  "validation.attribute.const",
+  "validation.attribute.format",
+  "validation.attribute.minimum",
+  "validation.attribute.maximum",
+  "validation.attribute.exclusiveMinimum",
+  "validation.attribute.exclusiveMaximum",
+  "validation.attribute.minLength",
+  "validation.attribute.maxLength",
+  "validation.attribute.minItems",
+  "validation.attribute.maxItems",
+  "validation.attribute.uniqueItems",
+  "validation.attribute.multipleOf",
+  "validation.attribute.pattern",
+  "validation.attribute.additionalProperties",
 ]
 
 # ADR 0027 verbs: view -> view level, edit -> edit level, manage -> admin level, so the default
@@ -28,8 +56,18 @@ description = "Read content types, categories, item types and the field-type reg
 
 [[permissions]]
 code = "item_type.edit"
-description = "Create, edit and delete item categories and item types"
+description = "Create, edit and delete item categories, item types and draft versions"
 
 [[permissions]]
 code = "item_type.manage"
 description = "Create, edit, reorder and delete content types"
+
+# `publish` is named by no ADR 0027 level, so only `admin` roles get it by default (fail closed):
+# publishing freezes a version that assets then pin (ITEMTYPES-02).
+[[permissions]]
+code = "item_type.publish"
+description = "Publish an item-type attribute-schema version, freezing it"
+
+[[events]]
+name = "item_type.version_published"
+version = 1

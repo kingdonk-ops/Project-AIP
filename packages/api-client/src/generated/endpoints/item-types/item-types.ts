@@ -19,6 +19,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AttributeValidateBody,
+  AttributeValidateResult,
   CategoryCreate,
   CategoryOut,
   CategoryPage,
@@ -35,9 +37,13 @@ import type {
   ItemTypeOut,
   ItemTypePage,
   ItemTypeUpdate,
+  ItemTypeVersionOut,
+  ItemTypeVersionPage,
   ItemTypesCategoriesListParams,
   ItemTypesContentTypesListParams,
-  ItemTypesItemTypesListParams
+  ItemTypesItemTypesListParams,
+  VersionPublish,
+  VersionUpdate
 } from '../../model';
 
 import { apiFetch } from '../../../fetcher';
@@ -2029,4 +2035,819 @@ export const useItemTypesItemTypesUpdate = <TError = ItemTypeErrorBody,
         TContext
       > => {
       return useMutation(getItemTypesItemTypesUpdateMutationOptions(options), queryClient);
+    }
+    export type itemTypesVersionsListResponse200 = {
+  data: ItemTypeVersionPage
+  status: 200
+}
+
+export type itemTypesVersionsListResponse404 = {
+  data: ItemTypeErrorBody
+  status: 404
+}
+
+export type itemTypesVersionsListResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type itemTypesVersionsListResponseSuccess = (itemTypesVersionsListResponse200) & {
+  headers: Headers;
+};
+export type itemTypesVersionsListResponseError = (itemTypesVersionsListResponse404 | itemTypesVersionsListResponse422) & {
+  headers: Headers;
+};
+
+export type itemTypesVersionsListResponse = (itemTypesVersionsListResponseSuccess | itemTypesVersionsListResponseError)
+
+export const getItemTypesVersionsListUrl = (itemTypeId: string,) => {
+
+
+
+
+  return `/api/v1/item-types/${itemTypeId}/versions`
+}
+
+/**
+ * @summary List Versions
+ */
+export const itemTypesVersionsList = async (itemTypeId: string, options?: Parameters<typeof apiFetch>[1]): Promise<itemTypesVersionsListResponse> => {
+
+  return apiFetch<itemTypesVersionsListResponse>(getItemTypesVersionsListUrl(itemTypeId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getItemTypesVersionsListQueryKey = (itemTypeId: string,) => {
+    return [
+    `/api/v1/item-types/${itemTypeId}/versions`
+    ] as const;
+    }
+
+
+export const getItemTypesVersionsListQueryOptions = <TData = Awaited<ReturnType<typeof itemTypesVersionsList>>, TError = ItemTypeErrorBody | HTTPValidationError>(itemTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getItemTypesVersionsListQueryKey(itemTypeId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof itemTypesVersionsList>>> = ({ signal }) => itemTypesVersionsList(itemTypeId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: itemTypeId !== null && itemTypeId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ItemTypesVersionsListQueryResult = NonNullable<Awaited<ReturnType<typeof itemTypesVersionsList>>>
+export type ItemTypesVersionsListQueryError = ItemTypeErrorBody | HTTPValidationError
+
+
+export function useItemTypesVersionsList<TData = Awaited<ReturnType<typeof itemTypesVersionsList>>, TError = ItemTypeErrorBody | HTTPValidationError>(
+ itemTypeId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof itemTypesVersionsList>>,
+          TError,
+          Awaited<ReturnType<typeof itemTypesVersionsList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useItemTypesVersionsList<TData = Awaited<ReturnType<typeof itemTypesVersionsList>>, TError = ItemTypeErrorBody | HTTPValidationError>(
+ itemTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof itemTypesVersionsList>>,
+          TError,
+          Awaited<ReturnType<typeof itemTypesVersionsList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useItemTypesVersionsList<TData = Awaited<ReturnType<typeof itemTypesVersionsList>>, TError = ItemTypeErrorBody | HTTPValidationError>(
+ itemTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Versions
+ */
+
+export function useItemTypesVersionsList<TData = Awaited<ReturnType<typeof itemTypesVersionsList>>, TError = ItemTypeErrorBody | HTTPValidationError>(
+ itemTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getItemTypesVersionsListQueryOptions(itemTypeId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type itemTypesVersionsCreateResponse201 = {
+  data: ItemTypeVersionOut
+  status: 201
+}
+
+export type itemTypesVersionsCreateResponse404 = {
+  data: ItemTypeErrorBody
+  status: 404
+}
+
+export type itemTypesVersionsCreateResponse409 = {
+  data: ItemTypeErrorBody
+  status: 409
+}
+
+export type itemTypesVersionsCreateResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type itemTypesVersionsCreateResponseSuccess = (itemTypesVersionsCreateResponse201) & {
+  headers: Headers;
+};
+export type itemTypesVersionsCreateResponseError = (itemTypesVersionsCreateResponse404 | itemTypesVersionsCreateResponse409 | itemTypesVersionsCreateResponse422) & {
+  headers: Headers;
+};
+
+export type itemTypesVersionsCreateResponse = (itemTypesVersionsCreateResponseSuccess | itemTypesVersionsCreateResponseError)
+
+export const getItemTypesVersionsCreateUrl = (itemTypeId: string,) => {
+
+
+
+
+  return `/api/v1/item-types/${itemTypeId}/versions`
+}
+
+/**
+ * @summary Create Version
+ */
+export const itemTypesVersionsCreate = async (itemTypeId: string, options?: Parameters<typeof apiFetch>[1]): Promise<itemTypesVersionsCreateResponse> => {
+
+  return apiFetch<itemTypesVersionsCreateResponse>(getItemTypesVersionsCreateUrl(itemTypeId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getItemTypesVersionsCreateMutationKey = () => ['itemTypesVersionsCreate'] as const;
+
+export const getItemTypesVersionsCreateMutationOptions = <TError = ItemTypeErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsCreate>>, TError,ItemTypesVersionsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsCreate>>, TError,ItemTypesVersionsCreateMutationVariables, TContext> => {
+
+const mutationKey = getItemTypesVersionsCreateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof itemTypesVersionsCreate>>, ItemTypesVersionsCreateMutationVariables> = (props) => {
+          const {itemTypeId} = props ?? {};
+
+          return  itemTypesVersionsCreate(itemTypeId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ItemTypesVersionsCreateMutationResult = NonNullable<Awaited<ReturnType<typeof itemTypesVersionsCreate>>>
+
+    export type ItemTypesVersionsCreateMutationError = ItemTypeErrorBody | HTTPValidationError
+    export type ItemTypesVersionsCreateMutationVariables = {itemTypeId: string}
+
+    /**
+ * @summary Create Version
+ */
+export const useItemTypesVersionsCreate = <TError = ItemTypeErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsCreate>>, TError,ItemTypesVersionsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof itemTypesVersionsCreate>>,
+        TError,
+        ItemTypesVersionsCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getItemTypesVersionsCreateMutationOptions(options), queryClient);
+    }
+    export type itemTypesVersionsDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type itemTypesVersionsDeleteResponse404 = {
+  data: ItemTypeErrorBody
+  status: 404
+}
+
+export type itemTypesVersionsDeleteResponse409 = {
+  data: ItemTypeErrorBody
+  status: 409
+}
+
+export type itemTypesVersionsDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type itemTypesVersionsDeleteResponseSuccess = (itemTypesVersionsDeleteResponse204) & {
+  headers: Headers;
+};
+export type itemTypesVersionsDeleteResponseError = (itemTypesVersionsDeleteResponse404 | itemTypesVersionsDeleteResponse409 | itemTypesVersionsDeleteResponse422) & {
+  headers: Headers;
+};
+
+export type itemTypesVersionsDeleteResponse = (itemTypesVersionsDeleteResponseSuccess | itemTypesVersionsDeleteResponseError)
+
+export const getItemTypesVersionsDeleteUrl = (itemTypeId: string,
+    versionId: string,) => {
+
+
+
+
+  return `/api/v1/item-types/${itemTypeId}/versions/${versionId}`
+}
+
+/**
+ * @summary Delete Version
+ */
+export const itemTypesVersionsDelete = async (itemTypeId: string,
+    versionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<itemTypesVersionsDeleteResponse> => {
+
+  return apiFetch<itemTypesVersionsDeleteResponse>(getItemTypesVersionsDeleteUrl(itemTypeId,versionId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getItemTypesVersionsDeleteMutationKey = () => ['itemTypesVersionsDelete'] as const;
+
+export const getItemTypesVersionsDeleteMutationOptions = <TError = ItemTypeErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsDelete>>, TError,ItemTypesVersionsDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsDelete>>, TError,ItemTypesVersionsDeleteMutationVariables, TContext> => {
+
+const mutationKey = getItemTypesVersionsDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof itemTypesVersionsDelete>>, ItemTypesVersionsDeleteMutationVariables> = (props) => {
+          const {itemTypeId,versionId} = props ?? {};
+
+          return  itemTypesVersionsDelete(itemTypeId,versionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ItemTypesVersionsDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof itemTypesVersionsDelete>>>
+
+    export type ItemTypesVersionsDeleteMutationError = ItemTypeErrorBody | HTTPValidationError
+    export type ItemTypesVersionsDeleteMutationVariables = {itemTypeId: string;versionId: string}
+
+    /**
+ * @summary Delete Version
+ */
+export const useItemTypesVersionsDelete = <TError = ItemTypeErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsDelete>>, TError,ItemTypesVersionsDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof itemTypesVersionsDelete>>,
+        TError,
+        ItemTypesVersionsDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getItemTypesVersionsDeleteMutationOptions(options), queryClient);
+    }
+    export type itemTypesVersionsGetResponse200 = {
+  data: ItemTypeVersionOut
+  status: 200
+}
+
+export type itemTypesVersionsGetResponse404 = {
+  data: ItemTypeErrorBody
+  status: 404
+}
+
+export type itemTypesVersionsGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type itemTypesVersionsGetResponseSuccess = (itemTypesVersionsGetResponse200) & {
+  headers: Headers;
+};
+export type itemTypesVersionsGetResponseError = (itemTypesVersionsGetResponse404 | itemTypesVersionsGetResponse422) & {
+  headers: Headers;
+};
+
+export type itemTypesVersionsGetResponse = (itemTypesVersionsGetResponseSuccess | itemTypesVersionsGetResponseError)
+
+export const getItemTypesVersionsGetUrl = (itemTypeId: string,
+    versionId: string,) => {
+
+
+
+
+  return `/api/v1/item-types/${itemTypeId}/versions/${versionId}`
+}
+
+/**
+ * @summary Get Version
+ */
+export const itemTypesVersionsGet = async (itemTypeId: string,
+    versionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<itemTypesVersionsGetResponse> => {
+
+  return apiFetch<itemTypesVersionsGetResponse>(getItemTypesVersionsGetUrl(itemTypeId,versionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getItemTypesVersionsGetQueryKey = (itemTypeId: string,
+    versionId: string,) => {
+    return [
+    `/api/v1/item-types/${itemTypeId}/versions/${versionId}`
+    ] as const;
+    }
+
+
+export const getItemTypesVersionsGetQueryOptions = <TData = Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(itemTypeId: string,
+    versionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getItemTypesVersionsGetQueryKey(itemTypeId,versionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof itemTypesVersionsGet>>> = ({ signal }) => itemTypesVersionsGet(itemTypeId,versionId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: itemTypeId !== null && itemTypeId !== undefined && versionId !== null && versionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ItemTypesVersionsGetQueryResult = NonNullable<Awaited<ReturnType<typeof itemTypesVersionsGet>>>
+export type ItemTypesVersionsGetQueryError = ItemTypeErrorBody | HTTPValidationError
+
+
+export function useItemTypesVersionsGet<TData = Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
+ itemTypeId: string,
+    versionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof itemTypesVersionsGet>>,
+          TError,
+          Awaited<ReturnType<typeof itemTypesVersionsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useItemTypesVersionsGet<TData = Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
+ itemTypeId: string,
+    versionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof itemTypesVersionsGet>>,
+          TError,
+          Awaited<ReturnType<typeof itemTypesVersionsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useItemTypesVersionsGet<TData = Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
+ itemTypeId: string,
+    versionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Version
+ */
+
+export function useItemTypesVersionsGet<TData = Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
+ itemTypeId: string,
+    versionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getItemTypesVersionsGetQueryOptions(itemTypeId,versionId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type itemTypesVersionsUpdateResponse200 = {
+  data: ItemTypeVersionOut
+  status: 200
+}
+
+export type itemTypesVersionsUpdateResponse404 = {
+  data: ItemTypeErrorBody
+  status: 404
+}
+
+export type itemTypesVersionsUpdateResponse409 = {
+  data: ItemTypeErrorBody
+  status: 409
+}
+
+export type itemTypesVersionsUpdateResponse422 = {
+  data: ItemTypeErrorBody
+  status: 422
+}
+
+export type itemTypesVersionsUpdateResponseSuccess = (itemTypesVersionsUpdateResponse200) & {
+  headers: Headers;
+};
+export type itemTypesVersionsUpdateResponseError = (itemTypesVersionsUpdateResponse404 | itemTypesVersionsUpdateResponse409 | itemTypesVersionsUpdateResponse422) & {
+  headers: Headers;
+};
+
+export type itemTypesVersionsUpdateResponse = (itemTypesVersionsUpdateResponseSuccess | itemTypesVersionsUpdateResponseError)
+
+export const getItemTypesVersionsUpdateUrl = (itemTypeId: string,
+    versionId: string,) => {
+
+
+
+
+  return `/api/v1/item-types/${itemTypeId}/versions/${versionId}`
+}
+
+/**
+ * @summary Update Version
+ */
+export const itemTypesVersionsUpdate = async (itemTypeId: string,
+    versionId: string,
+    versionUpdate: VersionUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<itemTypesVersionsUpdateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<itemTypesVersionsUpdateResponse>(getItemTypesVersionsUpdateUrl(itemTypeId,versionId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(versionUpdate)
+  }
+);}
+
+
+
+
+
+export const getItemTypesVersionsUpdateMutationKey = () => ['itemTypesVersionsUpdate'] as const;
+
+export const getItemTypesVersionsUpdateMutationOptions = <TError = ItemTypeErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsUpdate>>, TError,ItemTypesVersionsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsUpdate>>, TError,ItemTypesVersionsUpdateMutationVariables, TContext> => {
+
+const mutationKey = getItemTypesVersionsUpdateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof itemTypesVersionsUpdate>>, ItemTypesVersionsUpdateMutationVariables> = (props) => {
+          const {itemTypeId,versionId,data} = props ?? {};
+
+          return  itemTypesVersionsUpdate(itemTypeId,versionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ItemTypesVersionsUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof itemTypesVersionsUpdate>>>
+    export type ItemTypesVersionsUpdateMutationBody = VersionUpdate
+    export type ItemTypesVersionsUpdateMutationError = ItemTypeErrorBody
+    export type ItemTypesVersionsUpdateMutationVariables = {itemTypeId: string;versionId: string;data: VersionUpdate}
+
+    /**
+ * @summary Update Version
+ */
+export const useItemTypesVersionsUpdate = <TError = ItemTypeErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsUpdate>>, TError,ItemTypesVersionsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof itemTypesVersionsUpdate>>,
+        TError,
+        ItemTypesVersionsUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getItemTypesVersionsUpdateMutationOptions(options), queryClient);
+    }
+    export type itemTypesVersionsPublishResponse200 = {
+  data: ItemTypeVersionOut
+  status: 200
+}
+
+export type itemTypesVersionsPublishResponse404 = {
+  data: ItemTypeErrorBody
+  status: 404
+}
+
+export type itemTypesVersionsPublishResponse409 = {
+  data: ItemTypeErrorBody
+  status: 409
+}
+
+export type itemTypesVersionsPublishResponse422 = {
+  data: ItemTypeErrorBody
+  status: 422
+}
+
+export type itemTypesVersionsPublishResponseSuccess = (itemTypesVersionsPublishResponse200) & {
+  headers: Headers;
+};
+export type itemTypesVersionsPublishResponseError = (itemTypesVersionsPublishResponse404 | itemTypesVersionsPublishResponse409 | itemTypesVersionsPublishResponse422) & {
+  headers: Headers;
+};
+
+export type itemTypesVersionsPublishResponse = (itemTypesVersionsPublishResponseSuccess | itemTypesVersionsPublishResponseError)
+
+export const getItemTypesVersionsPublishUrl = (itemTypeId: string,
+    versionId: string,) => {
+
+
+
+
+  return `/api/v1/item-types/${itemTypeId}/versions/${versionId}/publish`
+}
+
+/**
+ * @summary Publish Version
+ */
+export const itemTypesVersionsPublish = async (itemTypeId: string,
+    versionId: string,
+    versionPublish: VersionPublish, options?: Parameters<typeof apiFetch>[1]): Promise<itemTypesVersionsPublishResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<itemTypesVersionsPublishResponse>(getItemTypesVersionsPublishUrl(itemTypeId,versionId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(versionPublish)
+  }
+);}
+
+
+
+
+
+export const getItemTypesVersionsPublishMutationKey = () => ['itemTypesVersionsPublish'] as const;
+
+export const getItemTypesVersionsPublishMutationOptions = <TError = ItemTypeErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsPublish>>, TError,ItemTypesVersionsPublishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsPublish>>, TError,ItemTypesVersionsPublishMutationVariables, TContext> => {
+
+const mutationKey = getItemTypesVersionsPublishMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof itemTypesVersionsPublish>>, ItemTypesVersionsPublishMutationVariables> = (props) => {
+          const {itemTypeId,versionId,data} = props ?? {};
+
+          return  itemTypesVersionsPublish(itemTypeId,versionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ItemTypesVersionsPublishMutationResult = NonNullable<Awaited<ReturnType<typeof itemTypesVersionsPublish>>>
+    export type ItemTypesVersionsPublishMutationBody = VersionPublish
+    export type ItemTypesVersionsPublishMutationError = ItemTypeErrorBody
+    export type ItemTypesVersionsPublishMutationVariables = {itemTypeId: string;versionId: string;data: VersionPublish}
+
+    /**
+ * @summary Publish Version
+ */
+export const useItemTypesVersionsPublish = <TError = ItemTypeErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsPublish>>, TError,ItemTypesVersionsPublishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof itemTypesVersionsPublish>>,
+        TError,
+        ItemTypesVersionsPublishMutationVariables,
+        TContext
+      > => {
+      return useMutation(getItemTypesVersionsPublishMutationOptions(options), queryClient);
+    }
+    export type itemTypesVersionsValidateResponse200 = {
+  data: AttributeValidateResult
+  status: 200
+}
+
+export type itemTypesVersionsValidateResponse404 = {
+  data: ItemTypeErrorBody
+  status: 404
+}
+
+export type itemTypesVersionsValidateResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type itemTypesVersionsValidateResponseSuccess = (itemTypesVersionsValidateResponse200) & {
+  headers: Headers;
+};
+export type itemTypesVersionsValidateResponseError = (itemTypesVersionsValidateResponse404 | itemTypesVersionsValidateResponse422) & {
+  headers: Headers;
+};
+
+export type itemTypesVersionsValidateResponse = (itemTypesVersionsValidateResponseSuccess | itemTypesVersionsValidateResponseError)
+
+export const getItemTypesVersionsValidateUrl = (itemTypeId: string,
+    versionId: string,) => {
+
+
+
+
+  return `/api/v1/item-types/${itemTypeId}/versions/${versionId}/validate`
+}
+
+/**
+ * Check sample attribute values against a published version (the editor and asset form).
+ * @summary Validate Version Attributes
+ */
+export const itemTypesVersionsValidate = async (itemTypeId: string,
+    versionId: string,
+    attributeValidateBody: AttributeValidateBody, options?: Parameters<typeof apiFetch>[1]): Promise<itemTypesVersionsValidateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<itemTypesVersionsValidateResponse>(getItemTypesVersionsValidateUrl(itemTypeId,versionId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(attributeValidateBody)
+  }
+);}
+
+
+
+
+
+export const getItemTypesVersionsValidateMutationKey = () => ['itemTypesVersionsValidate'] as const;
+
+export const getItemTypesVersionsValidateMutationOptions = <TError = ItemTypeErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsValidate>>, TError,ItemTypesVersionsValidateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsValidate>>, TError,ItemTypesVersionsValidateMutationVariables, TContext> => {
+
+const mutationKey = getItemTypesVersionsValidateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof itemTypesVersionsValidate>>, ItemTypesVersionsValidateMutationVariables> = (props) => {
+          const {itemTypeId,versionId,data} = props ?? {};
+
+          return  itemTypesVersionsValidate(itemTypeId,versionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ItemTypesVersionsValidateMutationResult = NonNullable<Awaited<ReturnType<typeof itemTypesVersionsValidate>>>
+    export type ItemTypesVersionsValidateMutationBody = AttributeValidateBody
+    export type ItemTypesVersionsValidateMutationError = ItemTypeErrorBody | HTTPValidationError
+    export type ItemTypesVersionsValidateMutationVariables = {itemTypeId: string;versionId: string;data: AttributeValidateBody}
+
+    /**
+ * @summary Validate Version Attributes
+ */
+export const useItemTypesVersionsValidate = <TError = ItemTypeErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsValidate>>, TError,ItemTypesVersionsValidateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof itemTypesVersionsValidate>>,
+        TError,
+        ItemTypesVersionsValidateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getItemTypesVersionsValidateMutationOptions(options), queryClient);
     }

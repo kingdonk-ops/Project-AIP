@@ -37,6 +37,7 @@ ALL_PERMISSIONS = (
     "item_type.view",
     "item_type.edit",
     "item_type.manage",
+    "item_type.publish",
 )
 
 SEED_TENANTS_SQL = (
@@ -115,5 +116,13 @@ async def app(
 @pytest.fixture
 async def client(app: FastAPI) -> AsyncIterator[httpx.AsyncClient]:
     transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+        yield c
+
+
+@pytest.fixture
+async def lenient_client(app: FastAPI) -> AsyncIterator[httpx.AsyncClient]:
+    """Turns an unhandled server error into a 500 response instead of raising it."""
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         yield c

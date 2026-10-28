@@ -1,9 +1,10 @@
-"""HTTP routes for item_types (ITEMTYPES-01), mounted under ``/api/v1``.
+"""HTTP routes for item_types (ITEMTYPES-01/02), mounted under ``/api/v1``.
 
 Every route declares its permission with ``requires(...)`` (deny by default, ACCESS-01) and needs
-an active tenant. Reading anything needs ``item_type.view``; categories and item types are edited
-with ``item_type.edit``; content types are managed with ``item_type.manage``. Explicit
-``operation_id``s keep the generated client's hook names stable.
+an active tenant. Reading anything needs ``item_type.view``; categories, item types and draft
+versions are edited with ``item_type.edit``; publishing a version needs ``item_type.publish``;
+content types are managed with ``item_type.manage``. Explicit ``operation_id``s keep the
+generated client's hook names stable.
 """
 
 from __future__ import annotations
@@ -13,7 +14,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response, status
 
+from aip.modules.item_types.api import ItemTypesApi
 from aip.modules.item_types.schemas import (
+    AttributeErrorOut,
+    AttributeValidateBody,
+    AttributeValidateResult,
     CategoryCreate,
     CategoryOut,
     CategoryPage,
@@ -29,15 +34,23 @@ from aip.modules.item_types.schemas import (
     ItemTypeOut,
     ItemTypePage,
     ItemTypeUpdate,
+    ItemTypeVersionOut,
+    ItemTypeVersionPage,
+    VersionPublish,
+    VersionUpdate,
 )
 from aip.modules.item_types.service import (
     CategoryService,
     ContentTypeService,
     ItemTypeService,
+    ItemTypeVersionService,
     field_registry,
 )
 from aip.modules.tenancy.api import require_active_tenant
 from aip.platform.access import requires
+from aip.platform.context import get_context
+from aip.platform.db.errors import NotFoundError
+from aip.platform.db.session import with_tenant
 
 __all__ = ["router"]
 
@@ -55,6 +68,7 @@ field_types_router = APIRouter(prefix="/field-types", tags=["item_types"])
 content_types_router = APIRouter(prefix="/content-types", tags=["item_types"])
 categories_router = APIRouter(prefix="/item-categories", tags=["item_types"])
 item_types_router = APIRouter(prefix="/item-types", tags=["item_types"])
+versions_router = APIRouter(prefix="/item-types/{item_type_id}/versions", tags=["item_types"])
 
 
 # --- field-type registry ----------------------------------------------------------------------
@@ -271,8 +285,110 @@ async def delete_item_type(item_type_id: UUID) -> Response:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+# --- item-type versions (ITEMTYPES-02) ------------------------------------------------------
+
+
+@versions_router.get(
+    "",
+    operation_id="item_types_versions_list",
+    response_model=ItemTypeVersionPage,
+    responses=_NOT_FOUND,
+    dependencies=[Depends(requires("item_type.view"))],
+)
+async def list_versions(item_type_id: UUID) -> ItemTypeVersionPage:
+    return await ItemTypeVersionService().list(item_type_id)
+
+
+@versions_router.get(
+    "/{version_id}",
+    operation_id="item_types_versions_get",
+    response_model=ItemTypeVersionOut,
+    responses=_NOT_FOUND,
+    dependencies=[Depends(requires("item_type.view"))],
+)
+async def get_version(item_type_id: UUID, version_id: UUID) -> ItemTypeVersionOut:
+    return await ItemTypeVersionService().get(item_type_id, version_id)
+
+
+@versions_router.post(
+    "",
+    operation_id="item_types_versions_create",
+    response_model=ItemTypeVersionOut,
+    status_code=status.HTTP_201_CREATED,
+    responses={**_NOT_FOUND, **_CONFLICT},
+    dependencies=[Depends(requires("item_type.edit"))],
+)
+async def create_version(item_type_id: UUID) -> ItemTypeVersionOut:
+    return await ItemTypeVersionService().create_draft(item_type_id)
+
+
+@versions_router.patch(
+    "/{version_id}",
+    operation_id="item_types_versions_update",
+    response_model=ItemTypeVersionOut,
+    responses={**_NOT_FOUND, **_CONFLICT, **_INVALID},
+    dependencies=[Depends(requires("item_type.edit"))],
+)
+async def update_version(
+    item_type_id: UUID, version_id: UUID, body: VersionUpdate
+) -> ItemTypeVersionOut:
+    return await ItemTypeVersionService().update_draft(item_type_id, version_id, body)
+
+
+@versions_router.delete(
+    "/{version_id}",
+    operation_id="item_types_versions_delete",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    responses={**_NOT_FOUND, **_CONFLICT},
+    dependencies=[Depends(requires("item_type.edit"))],
+)
+async def delete_version(item_type_id: UUID, version_id: UUID) -> Response:
+    await ItemTypeVersionService().discard_draft(item_type_id, version_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@versions_router.post(
+    "/{version_id}/publish",
+    operation_id="item_types_versions_publish",
+    response_model=ItemTypeVersionOut,
+    responses={**_NOT_FOUND, **_CONFLICT, **_INVALID},
+    dependencies=[Depends(requires("item_type.publish"))],
+)
+async def publish_version(
+    item_type_id: UUID, version_id: UUID, body: VersionPublish
+) -> ItemTypeVersionOut:
+    return await ItemTypeVersionService().publish(item_type_id, version_id, body)
+
+
+@versions_router.post(
+    "/{version_id}/validate",
+    operation_id="item_types_versions_validate",
+    response_model=AttributeValidateResult,
+    responses=_NOT_FOUND,
+    dependencies=[Depends(requires("item_type.view"))],
+)
+async def validate_version_attributes(
+    item_type_id: UUID, version_id: UUID, body: AttributeValidateBody
+) -> AttributeValidateResult:
+    """Check sample attribute values against a published version (the editor and asset form)."""
+    api = ItemTypesApi()
+    async with with_tenant(get_context()) as conn:
+        version = await api.get_version(conn, version_id)
+        if version is None or version.item_type_id != item_type_id:
+            raise NotFoundError(f"item type version {version_id} not found")
+        errors = await api.validate_attributes(conn, version_id, body.attributes)
+    return AttributeValidateResult(
+        valid=not errors,
+        errors=[
+            AttributeErrorOut(path=e.path, term_key=e.term_key, params=e.params) for e in errors
+        ],
+    )
+
+
 router = APIRouter(dependencies=[Depends(require_active_tenant)])
 router.include_router(field_types_router)
 router.include_router(content_types_router)
 router.include_router(categories_router)
 router.include_router(item_types_router)
+router.include_router(versions_router)
