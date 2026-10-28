@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import base64
 import binascii
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -165,6 +165,22 @@ async def get_user(conn: AsyncConnection, user_id: UUID) -> UserRow | None:
     """The live user ``user_id`` in the bound tenant, or ``None`` (also for another tenant's id)."""
     stmt = _users_in_bound_tenant().where(app_user.c.id == user_id, app_user.c.deleted_at.is_(None))
     return await _one_user(conn, stmt)
+
+
+async def get_display_names(conn: AsyncConnection, user_ids: Iterable[UUID]) -> dict[UUID, str]:
+    """``{user id: display name}`` for the given users of the bound tenant (IDENTITY-09).
+
+    Reports and registers print who signed or approved, long after the fact, so deactivated and
+    soft-deleted users keep their name here. Ids of another tenant or unknown ids are left out.
+    Only the display name is read: no email or other PII.
+    """
+    ids = set(user_ids)
+    if not ids:
+        return {}
+    stmt = select(app_user.c.id, app_user.c.display_name).where(
+        app_user.c.tenant_id == _bound_tenant(), app_user.c.id.in_(ids)
+    )
+    return {row.id: row.display_name for row in await conn.execute(stmt)}
 
 
 async def find_by_email(conn: AsyncConnection, email: str) -> UserRow | None:
