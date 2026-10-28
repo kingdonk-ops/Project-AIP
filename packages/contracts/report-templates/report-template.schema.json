@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aip.kaefer.test/contracts/report-templates/report-template.schema.json",
+  "title": "Report template definition (template.json)",
+  "description": "REPORTS-01: the definition of one versioned report template package (config/report-templates/<key>/<variant>/v<version>/). The body, stylesheet, sample data and assets sit next to it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "key",
+    "version",
+    "variant",
+    "recordType",
+    "nameKey",
+    "orientation",
+    "paper",
+    "marginsMm",
+    "termKeys",
+    "assets",
+    "dataSchemaVersion"
+  ],
+  "properties": {
+    "key": { "type": "string", "pattern": "^[a-z][a-z0-9-]{1,62}$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "variant": { "enum": ["internal", "client", "certificate"] },
+    "recordType": { "type": "string", "pattern": "^[a-z][a-z_]{1,40}$" },
+    "nameKey": { "$ref": "#/$defs/termKey" },
+    "orientation": { "enum": ["portrait", "landscape"] },
+    "paper": { "enum": ["A4", "A3"] },
+    "marginsMm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["top", "right", "bottom", "left"],
+      "properties": {
+        "top": { "$ref": "#/$defs/margin" },
+        "right": { "$ref": "#/$defs/margin" },
+        "bottom": { "$ref": "#/$defs/margin" },
+        "left": { "$ref": "#/$defs/margin" }
+      }
+    },
+    "termKeys": {
+      "type": "array",
+      "maxItems": 300,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/termKey" }
+    },
+    "assets": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "contentType"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,62}$",
+            "not": { "const": "index.html" }
+          },
+          "contentType": { "enum": ["image/png", "image/jpeg", "image/webp", "font/woff2"] }
+        }
+      }
+    },
+    "fontLicences": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "const": "OFL-1.1" }
+    },
+    "dataSchemaVersion": { "const": 1 }
+  },
+  "$defs": {
+    "termKey": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^[a-z][a-z0-9_]*(\\.[A-Za-z0-9_-]+)+$"
+    },
+    "margin": { "type": "number", "minimum": 0, "maximum": 50 }
+  }
+}

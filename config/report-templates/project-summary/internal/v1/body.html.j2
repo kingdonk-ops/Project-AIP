@@ -1,0 +1,17 @@
+{# REPORTS-01 example and the REPORTS-02 smoke template: a one-page project summary. #}
+<header class="masthead">
+  <img class="logo" src="{{ asset('logo.png') }}" alt="">
+  <h1>{{ t('report.template.project_summary') }}</h1>
+</header>
+<main>
+  <table class="facts">
+    <tr><th>{{ t('report.label.project_code') }}</th><td>{{ project.code }}</td></tr>
+    <tr><th>{{ t('report.label.project_name') }}</th><td>{{ project.name }}</td></tr>
+    <tr><th>{{ t('report.label.project_status') }}</th><td>{{ t('projects.status.' ~ project.status) }}</td></tr>
+    <tr><th>{{ t('report.label.project_created') }}</th><td>{{ fmt_datetime(project.createdAt) }}</td></tr>
+    <tr><th>{{ t('report.label.time_zone') }}</th><td>{{ time_zone }}</td></tr>
+  </table>
+</main>
+<footer class="footer">
+  {{ t('report.label.generated_at', at=fmt_datetime(generatedAt)) }}
+</footer>

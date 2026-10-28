@@ -353,6 +353,10 @@ GRANT SELECT ON TABLE public.provenance_entries TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.record_links TO aip_app;
 GRANT SELECT ON TABLE public.record_links TO aip_readonly;
 
+-- Name: TABLE report_templates; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.report_templates TO aip_app;
+GRANT SELECT ON TABLE public.report_templates TO aip_readonly;
+
 -- Name: TABLE restore_test_records; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.restore_test_records TO aip_app;
 GRANT SELECT ON TABLE public.restore_test_records TO aip_readonly;
@@ -693,6 +697,14 @@ ALTER TABLE ONLY public.provenance_entries_default
 ALTER TABLE ONLY public.record_links
     ADD CONSTRAINT pk_record_links PRIMARY KEY (id);
 
+-- Name: report_templates pk_report_templates; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_templates
+    ADD CONSTRAINT pk_report_templates PRIMARY KEY (id);
+
+-- Name: report_templates uq_report_templates_tenant_id_key_variant_version; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_templates
+    ADD CONSTRAINT uq_report_templates_tenant_id_key_variant_version UNIQUE (tenant_id, key, variant, version);
+
 -- Name: restore_test_records pk_restore_test_records; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.restore_test_records
     ADD CONSTRAINT pk_restore_test_records PRIMARY KEY (id, created_at);
@@ -973,6 +985,10 @@ ALTER TABLE ONLY public.projects
 -- Name: record_links fk_record_links_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.record_links
     ADD CONSTRAINT fk_record_links_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: report_templates fk_report_templates_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_templates
+    ADD CONSTRAINT fk_report_templates_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 -- Name: role fk_role_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.role
@@ -2069,6 +2085,43 @@ $$;
 
 ALTER FUNCTION public.procrastinate_update_heartbeat_v1(worker_id bigint) OWNER TO aip_owner;
 
+-- Name: report_templates_published_immutable(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.report_templates_published_immutable() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        IF OLD.status <> 'draft' THEN
+          IF NEW.id IS DISTINCT FROM OLD.id
+             OR NEW.tenant_id IS DISTINCT FROM OLD.tenant_id
+             OR NEW.key IS DISTINCT FROM OLD.key
+             OR NEW.version IS DISTINCT FROM OLD.version
+             OR NEW.variant IS DISTINCT FROM OLD.variant
+             OR NEW.record_type IS DISTINCT FROM OLD.record_type
+             OR NEW.name_key IS DISTINCT FROM OLD.name_key
+             OR NEW.orientation IS DISTINCT FROM OLD.orientation
+             OR NEW.paper IS DISTINCT FROM OLD.paper
+             OR NEW.definition IS DISTINCT FROM OLD.definition
+             OR NEW.body IS DISTINCT FROM OLD.body
+             OR NEW.css IS DISTINCT FROM OLD.css
+             OR NEW.assets IS DISTINCT FROM OLD.assets
+             OR NEW.content_sha256 IS DISTINCT FROM OLD.content_sha256
+             OR NEW.source IS DISTINCT FROM OLD.source
+             OR NEW.client_company_id IS DISTINCT FROM OLD.client_company_id
+             OR NEW.published_at IS DISTINCT FROM OLD.published_at
+             OR NEW.published_by IS DISTINCT FROM OLD.published_by
+             OR NEW.created_at IS DISTINCT FROM OLD.created_at
+             OR NEW.deleted_at IS DISTINCT FROM OLD.deleted_at
+             OR (NEW.status IS DISTINCT FROM OLD.status
+                 AND NOT (OLD.status = 'published' AND NEW.status = 'retired')) THEN
+            RAISE EXCEPTION 'report template is published' USING ERRCODE = '23514';
+          END IF;
+        END IF;
+        RETURN NEW;
+      END;
+      $$;
+
+ALTER FUNCTION public.report_templates_published_immutable() OWNER TO aip_owner;
+
 -- Name: security_audit_events_forbid_mutation(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.security_audit_events_forbid_mutation() RETURNS trigger
     LANGUAGE plpgsql
@@ -2291,6 +2344,12 @@ CREATE INDEX ix_record_links_tenant_id ON public.record_links USING btree (tenan
 
 -- Name: ix_record_links_to; Type: INDEX; Schema: public
 CREATE INDEX ix_record_links_to ON public.record_links USING btree (tenant_id, to_type, to_id) WHERE (deleted_at IS NULL);
+
+-- Name: ix_report_templates_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_report_templates_tenant_id ON public.report_templates USING btree (tenant_id);
+
+-- Name: ix_report_templates_tenant_id_record_type_variant_status; Type: INDEX; Schema: public
+CREATE INDEX ix_report_templates_tenant_id_record_type_variant_status ON public.report_templates USING btree (tenant_id, record_type, variant, status);
 
 -- Name: ix_restore_test_records_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_restore_test_records_tenant_id ON ONLY public.restore_test_records USING btree (tenant_id);
@@ -2748,6 +2807,9 @@ CREATE POLICY tenant_isolation ON public.provenance_entries USING ((tenant_id = 
 -- Name: record_links tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.record_links USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: report_templates tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.report_templates USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: restore_test_records tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.restore_test_records USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -2942,6 +3004,9 @@ ALTER TABLE public.provenance_entries ENABLE ROW LEVEL SECURITY;
 
 -- Name: record_links; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.record_links ENABLE ROW LEVEL SECURITY;
+
+-- Name: report_templates; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.report_templates ENABLE ROW LEVEL SECURITY;
 
 -- Name: restore_test_records; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.restore_test_records ENABLE ROW LEVEL SECURITY;
@@ -3906,6 +3971,44 @@ ALTER TABLE ONLY public.record_links FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.record_links OWNER TO aip_owner;
 
+-- Name: report_templates; Type: TABLE; Schema: public
+CREATE TABLE public.report_templates (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    key text NOT NULL,
+    version integer NOT NULL,
+    variant text NOT NULL,
+    record_type text NOT NULL,
+    name_key text NOT NULL,
+    orientation text NOT NULL,
+    paper text NOT NULL,
+    definition jsonb NOT NULL,
+    body text NOT NULL,
+    css text NOT NULL,
+    assets jsonb NOT NULL,
+    content_sha256 text NOT NULL,
+    status text DEFAULT 'draft'::text NOT NULL,
+    source text NOT NULL,
+    client_company_id uuid,
+    published_at timestamp with time zone,
+    published_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_report_templates_content_sha256 CHECK ((content_sha256 ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_report_templates_orientation CHECK ((orientation = ANY (ARRAY['portrait'::text, 'landscape'::text]))),
+    CONSTRAINT ck_report_templates_paper CHECK ((paper = ANY (ARRAY['A4'::text, 'A3'::text]))),
+    CONSTRAINT ck_report_templates_published_at CHECK (((status <> 'published'::text) OR (published_at IS NOT NULL))),
+    CONSTRAINT ck_report_templates_source CHECK ((source = ANY (ARRAY['config'::text, 'upload'::text]))),
+    CONSTRAINT ck_report_templates_status CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text, 'retired'::text]))),
+    CONSTRAINT ck_report_templates_variant CHECK ((variant = ANY (ARRAY['internal'::text, 'client'::text, 'certificate'::text]))),
+    CONSTRAINT ck_report_templates_version CHECK ((version >= 1))
+);
+
+ALTER TABLE ONLY public.report_templates FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.report_templates OWNER TO aip_owner;
+
 -- Name: restore_test_records; Type: TABLE; Schema: public
 CREATE TABLE public.restore_test_records (
     id uuid NOT NULL,
@@ -4680,6 +4783,9 @@ CREATE TRIGGER procrastinate_trigger_status_events_insert_v1 AFTER INSERT ON pub
 
 -- Name: procrastinate_jobs procrastinate_trigger_status_events_update_v1; Type: TRIGGER; Schema: public
 CREATE TRIGGER procrastinate_trigger_status_events_update_v1 AFTER UPDATE OF status ON public.procrastinate_jobs FOR EACH ROW EXECUTE FUNCTION public.procrastinate_trigger_function_status_events_update_v1();
+
+-- Name: report_templates report_templates_published_immutable; Type: TRIGGER; Schema: public
+CREATE TRIGGER report_templates_published_immutable BEFORE UPDATE ON public.report_templates FOR EACH ROW EXECUTE FUNCTION public.report_templates_published_immutable();
 
 -- Name: role_assignment trg_access_user_scope_sync; Type: TRIGGER; Schema: public
 CREATE TRIGGER trg_access_user_scope_sync AFTER INSERT OR DELETE OR UPDATE ON public.role_assignment FOR EACH ROW EXECUTE FUNCTION public.access_user_scope_sync();

@@ -8,6 +8,7 @@ export * from './item-types/item-types';
 export * from './jobs/jobs';
 export * from './platform/platform';
 export * from './projects/projects';
+export * from './reports/reports';
 export * from './sites/sites';
 export * from './tenancy/tenancy';
 export * from './terms/terms';

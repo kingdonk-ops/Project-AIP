@@ -322,6 +322,32 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  report-templates-load:
+    # One-shot (REPORTS-01): the config report templates (config/report-templates, baked into the
+    # image) for the dev tenants, as published versions. Idempotent; runs as aip_app (RLS on). A
+    # changed template without a new version folder fails with TEMPLATE_VERSION_CHANGED.
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    command:
+      - python
+      - -m
+      - aip.modules.report_engine.loader
+      - config/report-templates
+      - --tenant
+      - 00000000-0000-4000-8000-00000000000a
+      - --tenant
+      - 00000000-0000-4000-8000-00000000000b
+    environment:
+      AIP_ENV: ${AIP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://aip_app:aip_app_dev_only@postgres:5432/aip}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      tenancy-seed:
+        condition: service_completed_successfully
+    restart: "no"
+
   admin-bootstrap:
     # One-shot (TESTING-09): each dev tenant's first tenant_admin, before their first SSO sign-in
     # (alice@kaefer.test, bob@acme.test from the mock IdP). Idempotent; refused in production.
@@ -377,6 +403,8 @@ services:
       access-seed:
         condition: service_completed_successfully
       admin-bootstrap:
+        condition: service_completed_successfully
+      report-templates-load:
         condition: service_completed_successfully
       object-store-init:
         condition: service_completed_successfully
