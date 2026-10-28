@@ -81,9 +81,7 @@ class RoleChangedEvent(BaseModel):
     after: list[str] | None = None
 
 
-class RoleAssignmentEvent(BaseModel):
-    """v1 (released, no longer emitted)."""
-
+class RoleAssignmentEvent(BaseModel):  # v1: released, no longer emitted
     model_config = _CONFIG
 
     assignment_id: UUID

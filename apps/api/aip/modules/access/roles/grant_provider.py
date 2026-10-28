@@ -95,9 +95,7 @@ class RoleGrantProvider:
             if cached is not None:
                 return _as_grants(cached)
         async with with_tenant(tenant_id) as conn:
-            assignments = [
-                AssignmentGrant(*row) for row in await repo.active_grants(conn, user_id)
-            ]
+            assignments = [AssignmentGrant(*row) for row in await repo.active_grants(conn, user_id)]
             teams = await repo.member_teams(conn, user_id)
         rows = resolve_grants(assignments, teams)
         if versions is not None:

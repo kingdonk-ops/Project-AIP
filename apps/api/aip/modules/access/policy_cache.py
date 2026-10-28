@@ -1,4 +1,4 @@
-"""The cross-request cache of resolved grants (ACCESS-04, ADR 0039; Redis is a cache only, ADR 0003).
+"""The cross-request cache of resolved grants (ACCESS-04, ADR 0039; Redis is only a cache).
 
 Keys, built with the TENANCY-02 ``redis_key`` builder, for tenant ``t`` and user ``u``:
 
@@ -82,8 +82,9 @@ class PolicyCache(Protocol):
         """The current versions, or ``None`` when the cache is unusable (bypass it)."""
         ...
 
-    async def get(self, tenant_id: UUID, user_id: UUID, versions: Versions) -> list[GrantRow] | None:
-        ...
+    async def get(
+        self, tenant_id: UUID, user_id: UUID, versions: Versions
+    ) -> list[GrantRow] | None: ...
 
     async def put(
         self, tenant_id: UUID, user_id: UUID, versions: Versions, rows: Sequence[GrantRow]
@@ -100,7 +101,9 @@ class NullPolicyCache:
     async def versions(self, tenant_id: UUID, user_id: UUID) -> Versions | None:
         return None
 
-    async def get(self, tenant_id: UUID, user_id: UUID, versions: Versions) -> list[GrantRow] | None:
+    async def get(
+        self, tenant_id: UUID, user_id: UUID, versions: Versions
+    ) -> list[GrantRow] | None:
         return None
 
     async def put(
@@ -161,11 +164,15 @@ class RedisPolicyCache:
             self._failed("versions")
             return None
 
-    async def get(self, tenant_id: UUID, user_id: UUID, versions: Versions) -> list[GrantRow] | None:
+    async def get(
+        self, tenant_id: UUID, user_id: UUID, versions: Versions
+    ) -> list[GrantRow] | None:
         if self._down():
             return None
         try:
-            raw: bytes | str | None = await self._redis.get(grants_key(tenant_id, user_id, versions))
+            raw: bytes | str | None = await self._redis.get(
+                grants_key(tenant_id, user_id, versions)
+            )
             return None if raw is None else _decode(raw)
         except Exception:
             self._failed("get")

@@ -49,9 +49,7 @@ def _service(request: Request) -> TeamService:
 
 Service = Annotated[TeamService, Depends(_service)]
 
-router = APIRouter(
-    prefix="/teams", tags=["access"], dependencies=[Depends(require_active_tenant)]
-)
+router = APIRouter(prefix="/teams", tags=["access"], dependencies=[Depends(require_active_tenant)])
 
 
 @router.get(

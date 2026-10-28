@@ -48,7 +48,10 @@ async def get_team(
     lock = " FOR UPDATE OF t" if for_update else ""
     row = (
         await conn.execute(
-            text(f"SELECT {_TEAM_COLUMNS} FROM team t WHERE t.id = :id AND t.deleted_at IS NULL{lock}"),
+            text(
+                f"SELECT {_TEAM_COLUMNS} FROM team t"
+                f" WHERE t.id = :id AND t.deleted_at IS NULL{lock}"
+            ),
             {"id": team_id},
         )
     ).first()
@@ -63,7 +66,10 @@ async def list_teams(conn: AsyncConnection, *, project_id: UUID | None) -> list[
         where += " AND t.project_id = :project"
         params["project"] = project_id
     rows = await conn.execute(
-        text(f"SELECT {_TEAM_COLUMNS} FROM team t WHERE {where} ORDER BY lower(t.name), t.id LIMIT 1000"),
+        text(
+            f"SELECT {_TEAM_COLUMNS} FROM team t WHERE {where}"
+            " ORDER BY lower(t.name), t.id LIMIT 1000"
+        ),
         params,
     )
     return [dict(r._mapping) for r in rows]

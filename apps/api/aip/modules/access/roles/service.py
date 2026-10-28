@@ -51,7 +51,6 @@ from aip.modules.access.events import (
 )
 from aip.modules.access.repository import bump_access_version
 from aip.modules.access.roles import repository as repo
-from aip.modules.access.teams import repository as teams_repo
 from aip.modules.access.roles.default_roles import OPERATOR_ONLY_PREFIX, ROLE_CODES
 from aip.modules.access.roles.schemas import (
     AssignmentCreate,
@@ -62,6 +61,7 @@ from aip.modules.access.roles.schemas import (
     RoleUpdate,
 )
 from aip.modules.access.roles.seed import default_role_permissions
+from aip.modules.access.teams import repository as teams_repo
 from aip.modules.identity.api import ensure_invited_sso_user, get_user
 from aip.modules.projects.api import ProjectsApi
 from aip.platform.access import AccessPrincipal
