@@ -13,8 +13,8 @@ Each file is one definition:
 
 ```json
 {
-  "key": "inspection_lifecycle",
-  "recordType": "inspection",
+  "key": "widget_lifecycle",
+  "recordType": "widget",
   "spec": {
     "states": [
       { "code": "draft", "labelKey": "inspections.state.draft" },
@@ -38,4 +38,18 @@ Each file is one definition:
 - `spec` follows `aip.modules.approvals.schemas.WorkflowDefinitionSpec` (states, `initial`,
   transitions; guards are allow-listed JSONLogic). Labels are terminology keys, never text.
 
-APPROVALS-05 ships the first real preset (`inspection_lifecycle`) and adds the image copy.
+- `requiresComment: true` on a transition makes the transition service refuse it without a
+  non-blank comment (422 `COMMENT_REQUIRED`).
+- Every preset here is validated when the API starts (`list_presets`), so a broken file stops startup.
+  The API image copies this directory to `/app/config/workflows` (`AIP_WORKFLOWS_DIR`).
+
+## Shipped presets
+
+| Preset | Record type | Scope | Notes |
+|---|---|---|---|
+| `inspection_standard` | `inspection` | tenant-wide | APPROVALS-05. draft → assignable → assigned → in_progress → inspector_review → supervisor_review → completed; `reject` (comment) → rejected → `resend` → assigned. `approve` is critical. Seeded in `kaefer-demo` by `python -m aip.modules.approvals.seeds`. INSPECTIONS-02/03 publish later versions with guards (ADR 0036 §9). |
+| `inspection_client_review` | `inspection` | **project only** | APPROVALS-05. As standard, but `approve` → client_review → `client_approve` (critical) → completed. Install it with a `projectId`: resolution prefers a project's definition, then the tenant-wide one, so a tenant-wide install would compete with `inspection_standard`. |
+
+The inspection cases are provisional (blueprint-derived, OPEN-QUESTIONS #4): see
+`apps/api/aip/modules/approvals/tests/golden/inspection_lifecycle_cases.json`. A lifecycle that differs
+from AIP is fixed in these JSON files and the golden cases, never in engine code.

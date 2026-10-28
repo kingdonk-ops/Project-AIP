@@ -1,0 +1,251 @@
+{
+  "source": "blueprint (provisional)",
+  "confirmedBy": null,
+  "confirmedOn": null,
+  "derivedFrom": "docs/blueprint/modules/inspections/README.md, Features: draft > assignable > assigned > in progress > inspector review > supervisor review > [client review] > completed; reject/resend; re-inspect (a new inspection, not a transition)",
+  "pathsNote": "How each case reaches its start state from draft when run through TransitionService.",
+  "paths": {
+    "standard": {
+      "draft": [],
+      "assigned": [
+        "ready",
+        "assign"
+      ],
+      "inspector_review": [
+        "ready",
+        "assign",
+        "start",
+        "submit"
+      ],
+      "supervisor_review": [
+        "ready",
+        "assign",
+        "start",
+        "submit",
+        "review_pass"
+      ],
+      "completed": [
+        "ready",
+        "assign",
+        "start",
+        "submit",
+        "review_pass",
+        "approve"
+      ]
+    },
+    "client_review": {
+      "draft": [],
+      "assigned": [
+        "ready",
+        "assign"
+      ],
+      "inspector_review": [
+        "ready",
+        "assign",
+        "start",
+        "submit"
+      ],
+      "supervisor_review": [
+        "ready",
+        "assign",
+        "start",
+        "submit",
+        "review_pass"
+      ],
+      "client_review": [
+        "ready",
+        "assign",
+        "start",
+        "submit",
+        "review_pass",
+        "approve"
+      ],
+      "completed": [
+        "ready",
+        "assign",
+        "start",
+        "submit",
+        "review_pass",
+        "approve",
+        "client_approve"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "standard-happy-path",
+      "variant": "standard",
+      "start": "draft",
+      "actions": [
+        "ready",
+        "assign",
+        "start",
+        "submit",
+        "review_pass",
+        "approve"
+      ],
+      "expect": {
+        "state": "completed"
+      }
+    },
+    {
+      "name": "client-happy-path",
+      "variant": "client_review",
+      "start": "draft",
+      "actions": [
+        "ready",
+        "assign",
+        "start",
+        "submit",
+        "review_pass",
+        "approve",
+        "client_approve"
+      ],
+      "expect": {
+        "state": "completed"
+      }
+    },
+    {
+      "name": "client-review-follows-approve",
+      "variant": "client_review",
+      "start": "supervisor_review",
+      "actions": [
+        "approve"
+      ],
+      "expect": {
+        "state": "client_review"
+      }
+    },
+    {
+      "name": "approve-too-early",
+      "variant": "standard",
+      "start": "inspector_review",
+      "actions": [
+        "approve"
+      ],
+      "expect": {
+        "error": "INVALID_TRANSITION"
+      }
+    },
+    {
+      "name": "reject-at-inspector-review",
+      "variant": "standard",
+      "start": "inspector_review",
+      "actions": [
+        "reject"
+      ],
+      "expect": {
+        "state": "rejected"
+      }
+    },
+    {
+      "name": "reject-and-resend",
+      "variant": "standard",
+      "start": "supervisor_review",
+      "actions": [
+        "reject",
+        "resend",
+        "start"
+      ],
+      "expect": {
+        "state": "in_progress"
+      }
+    },
+    {
+      "name": "client-reject",
+      "variant": "client_review",
+      "start": "client_review",
+      "actions": [
+        "reject"
+      ],
+      "expect": {
+        "state": "rejected"
+      }
+    },
+    {
+      "name": "client-cannot-skip",
+      "variant": "client_review",
+      "start": "client_review",
+      "actions": [
+        "approve"
+      ],
+      "expect": {
+        "error": "INVALID_TRANSITION"
+      }
+    },
+    {
+      "name": "client-approve-not-in-standard",
+      "variant": "standard",
+      "start": "supervisor_review",
+      "actions": [
+        "client_approve"
+      ],
+      "expect": {
+        "error": "INVALID_TRANSITION"
+      }
+    },
+    {
+      "name": "unassign",
+      "variant": "standard",
+      "start": "assigned",
+      "actions": [
+        "unassign"
+      ],
+      "expect": {
+        "state": "assignable"
+      }
+    },
+    {
+      "name": "draft-offers-ready-only",
+      "variant": "standard",
+      "start": "draft",
+      "actions": [],
+      "expect": {
+        "available": [
+          "ready"
+        ]
+      }
+    },
+    {
+      "name": "supervisor-review-offers",
+      "variant": "standard",
+      "start": "supervisor_review",
+      "actions": [],
+      "expect": {
+        "available": [
+          "approve",
+          "reject"
+        ]
+      }
+    },
+    {
+      "name": "completed-is-final",
+      "variant": "standard",
+      "start": "completed",
+      "actions": [],
+      "expect": {
+        "available": []
+      }
+    },
+    {
+      "name": "client-completed-is-final",
+      "variant": "client_review",
+      "start": "completed",
+      "actions": [],
+      "expect": {
+        "available": []
+      }
+    },
+    {
+      "name": "no-re-inspect-transition",
+      "variant": "standard",
+      "start": "completed",
+      "actions": [
+        "re_inspect"
+      ],
+      "expect": {
+        "error": "INVALID_TRANSITION"
+      }
+    }
+  ]
+}

@@ -53,6 +53,7 @@ from aip.modules.tenancy.api import (
     active_tenant_guard,
     assert_demo_has_no_real_customers,
 )
+from aip.modules.approvals.api import list_presets
 from aip.modules.terms.api import install as install_term_resolver
 from aip.platform.access import (
     AccessPrincipal,
@@ -235,6 +236,8 @@ def create_app(
         app.state.flag_entitlements = FlagEntitlements(app)
     if any(module.id == "terms" for module in modules):
         install_term_resolver()  # TERMS-02: the aip.platform.terms port for emails and PDFs
+    if any(module.id == "approvals" for module in modules):
+        list_presets()  # APPROVALS-05: a malformed config/workflows preset stops startup
 
     @app.exception_handler(ContextMissingError)
     async def context_missing(  # pyright: ignore[reportUnusedFunction]

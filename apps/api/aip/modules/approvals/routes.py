@@ -5,7 +5,10 @@
   caller (``approvals.view``);
 - ``POST /instances/{id}/transition`` takes an action (``approvals.view`` plus the transition's own
   ``requiredPermission``); 200 when it took effect, 202 when it waits for a countersign;
-- ``GET /instances/{id}/history`` returns the decisions and ``chainValid`` (``approvals.view``).
+- ``GET /instances/{id}/history`` returns the decisions and ``chainValid`` (``approvals.view``);
+- ``GET /presets`` lists the ``config/workflows`` presets (``approvals.view``) and
+  ``POST /definitions/from-preset`` installs one, tenant-wide or for a project, idempotently
+  (``approvals.design``; 404 ``PRESET_NOT_FOUND``) (APPROVALS-05).
 
 Every route is ``authenticated()`` and the service checks each permission against the instance's
 project, which is known only once the instance is loaded (deny by default either way). Another
@@ -21,23 +24,35 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Request, Response, status
 
 from aip.modules.approvals.decision_chain import ChainBroken
+from aip.modules.approvals.presets import list_presets
 from aip.modules.approvals.schemas import (
     ApprovalsErrorBody,
     AssuranceOut,
     AvailableTransition,
     DecisionOut,
+    DefinitionOut,
     HistoryOut,
     InstanceOut,
     InstanceStart,
+    PresetInstall,
+    PresetOut,
     TransitionOut,
     TransitionRequest,
 )
+from aip.modules.approvals.service import DefinitionsService
 from aip.modules.approvals.transition import Actor, InstanceView, TransitionService
 from aip.modules.identity.api import Principal, SessionFacts, get_principal
 from aip.modules.tenancy.api import require_active_tenant
-from aip.platform.access import AccessPrincipal, PolicyService, authenticated, current_principal
+from aip.platform.access import (
+    AccessPrincipal,
+    PolicyService,
+    authenticated,
+    current_principal,
+    requires,
+)
 from aip.platform.context import get_context
 from aip.platform.db.session import with_tenant
+from aip.platform.http import DomainError
 
 __all__ = ["router"]
 
@@ -55,7 +70,7 @@ _TRANSITION_ERRORS: dict[int | str, dict[str, Any]] = {
     },
     422: {
         "model": ApprovalsErrorBody,
-        "description": "Validation error, GUARD_FAILED or GUARD_ERROR",
+        "description": "Validation error, COMMENT_REQUIRED, GUARD_FAILED or GUARD_ERROR",
     },
 }
 
@@ -103,6 +118,7 @@ def _instance_out(view: InstanceView) -> InstanceOut:
                 to_state=a.transition.to_state,
                 label_key=a.transition.label_key,
                 critical=a.transition.critical,
+                requires_comment=a.transition.requires_comment,
                 allowed=a.allowed,
                 reason_key=a.reason_key,
             )
@@ -220,5 +236,52 @@ async def get_history(instance_id: UUID, request: Request, who: CurrentActor) ->
     )
 
 
+presets_router = APIRouter(prefix="/approvals", tags=["approvals"])
+
+
+@presets_router.get(
+    "/presets",
+    operation_id="approvals_list_presets",
+    response_model=list[PresetOut],
+    dependencies=[Depends(requires("approvals.view"))],
+)
+async def get_presets() -> list[PresetOut]:
+    return [
+        PresetOut(
+            key=p.key,
+            record_type=p.record_type,
+            initial=p.spec["initial"],
+            states=[s["code"] for s in p.spec["states"]],
+            actions=list(dict.fromkeys(t["action"] for t in p.spec["transitions"])),
+        )
+        for p in list_presets()
+    ]
+
+
+@presets_router.post(
+    "/definitions/from-preset",
+    operation_id="approvals_install_preset",
+    response_model=DefinitionOut,
+    responses={404: {"model": ApprovalsErrorBody, "description": "PRESET_NOT_FOUND"}},
+    dependencies=[Depends(requires("approvals.design"))],
+)
+async def install_preset(body: PresetInstall) -> DefinitionOut:
+    if all(p.key != body.preset_key for p in list_presets()):
+        raise DomainError(404, "PRESET_NOT_FOUND")
+    async with with_tenant(get_context()) as conn:
+        definition = await DefinitionsService().install_preset(
+            conn, body.preset_key, project_id=body.project_id
+        )
+    return DefinitionOut(
+        id=definition.id,
+        key=definition.key,
+        record_type=definition.record_type,
+        project_id=definition.project_id,
+        version=definition.version,
+        status=definition.status,
+    )
+
+
 router = APIRouter(dependencies=[Depends(require_active_tenant)])
 router.include_router(instances_router)
+router.include_router(presets_router)

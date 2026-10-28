@@ -9,6 +9,8 @@ a. lock the instance (``FOR UPDATE``); none in this tenant is 404 (another tenan
 b. load the definition the instance is pinned to, never the active one;
 c. ``apply_transition``; an illegal action is 409 ``INVALID_TRANSITION``;
 d. ``PolicyService`` for the transition's ``requiredPermission`` on the instance's project (403);
+   a ``requiresComment`` transition without a non-blank comment is 422 ``COMMENT_REQUIRED``
+   (APPROVALS-05);
    while a critical decision waits for a countersign, only that action may be taken (409
    ``COUNTERSIGN_PENDING``), and never by the person who made it (409 ``SELF_COUNTERSIGN``);
 e. the JSONLogic guard over host-module facts (Part B): false is 422 ``GUARD_FAILED``, a provider
@@ -94,6 +96,7 @@ GUARD_ERROR_KEY: Final = "approvals.guard.error"
 NO_PERMISSION_KEY: Final = "approvals.permission.denied"
 COUNTERSIGN_PENDING_KEY: Final = "approvals.countersign.pending"
 SELF_COUNTERSIGN_KEY: Final = "approvals.countersign.self"
+COMMENT_REQUIRED_KEY: Final = "approvals.comment.required"
 
 # How the signer authenticated, in the data model's ``auth_strength`` vocabulary.
 _AUTH_STRENGTH: Final = {
@@ -406,6 +409,8 @@ class TransitionService:
             raise DomainError(409, outcome.error)
         t = outcome.transition
         await self._policy.assert_can(actor.principal, t.required_permission, _resource(instance))
+        if t.requires_comment and not (comment and comment.strip()):
+            raise DomainError(422, "COMMENT_REQUIRED", messageKey=COMMENT_REQUIRED_KEY)
         last = await repo.last_decision(conn, instance_id)  # (d)
         pending = _pending(last)
         if pending is not None:
