@@ -748,17 +748,21 @@ kbd {
   flex-shrink: 0;
 }
 .aip-lockup--badge .aip-mark--tag {
-  height: 1.35em;
+  height: 1.05em;
   width: auto;
 }
 .aip-lockup--endorsed {
   gap: var(--space-4);
-  font-size: var(--text-lg);
+  font-size: var(--text-md);
+}
+/* The client leads: their name is about twice the height of the "projectAIP" sign-off. */
+.aip-lockup--endorsed .aip-lockup__company {
+  font-size: 2em;
 }
 .aip-lockup__divider {
   align-self: stretch;
   width: 1px;
-  min-height: 1.5em;
+  min-height: 2.5em;
   background: var(--border);
 }
 .aip-lockup__platform {
@@ -768,8 +772,8 @@ kbd {
   flex-shrink: 0;
 }
 .aip-lockup__icon {
-  height: 32px;
-  width: 32px;
+  height: 2.4em;
+  width: 2.4em;
 }
 .aip-lockup__endorsement {
   display: inline-flex;
@@ -778,7 +782,7 @@ kbd {
 }
 .aip-lockup__powered-by {
   color: var(--foreground-muted);
-  font-size: var(--text-xs);
+  font-size: 0.75em;
   font-weight: var(--weight-medium);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -787,7 +791,7 @@ kbd {
   display: inline-flex;
   align-items: baseline;
   color: var(--brand-ink);
-  font-size: var(--text-md);
+  font-size: 1.15em;
   font-weight: var(--weight-semibold);
   letter-spacing: -0.02em;
 }
