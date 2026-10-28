@@ -121,7 +121,7 @@ def test_a_code_missing_from_the_catalogue_fails_app_start() -> None:
     check_action_codes(catalogue)  # every built-in code known: starts
     register_action_permissions("sign_off", ["inspection.client_review.sign"])
     assert unknown_action_codes(catalogue) == ["inspection.client_review.sign"]
-    with pytest.raises(RuntimeError, match="inspection.client_review.sign"):
+    with pytest.raises(RuntimeError, match=r"inspection\.client_review\.sign"):
         check_action_codes(catalogue)
 
 

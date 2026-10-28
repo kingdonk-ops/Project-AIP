@@ -298,7 +298,8 @@ async def test_renew_restores_an_expired_grant(client: httpx.AsyncClient, db: Te
     pid, grant_id = created["id"], created["grants"][0]["id"]
     await su_execute(
         db,
-        f"UPDATE portal_grants SET expires_at = now() - interval '1 second' WHERE id = '{grant_id}'",
+        "UPDATE portal_grants SET expires_at = now() - interval '1 second'"
+        f" WHERE id = '{grant_id}'",
     )
     shown = (await client.get(f"{USERS}/{pid}", headers=dict(ALICE))).json()
     assert shown["grants"][0]["state"] == "expired"
