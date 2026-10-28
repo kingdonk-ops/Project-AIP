@@ -32,6 +32,10 @@ values = { segment = "'2026-10'" }
 reason = "event_type is a dotted lowercase name (ck_auth_event_event_type)."
 values = { event_type = "'iso.event'" }
 
+[tables.stored_files]
+reason = "an uploaded file needs a project and an uploader (ck_stored_files_upload_owner, UPLOADS-08); only a generated file may leave them NULL."
+values = { project_id = "'00000000-0000-4000-8000-0000000000f{tag}'::uuid", uploaded_by = "'00000000-0000-4000-8000-0000000000e{tag}'::uuid" }
+
 [tables.tenant_entitlement_override]
 reason = "key is feature.* or limit.* (ck_tenant_entitlement_override_key)."
 values = { key = "'feature.iso'" }
