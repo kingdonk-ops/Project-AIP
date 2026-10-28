@@ -36,6 +36,8 @@ export type PermissionCode =
   | "project.create"
   | "project.update"
   | "project.view"
+  | "report.template.manage"
+  | "report.template.view"
   | "site.manage"
   | "site.view"
   | "tenancy.organisation.manage"
@@ -81,6 +83,8 @@ export const PERMISSIONS = {
   "project.create": { module: "projects", privileged: false },
   "project.update": { module: "projects", privileged: false },
   "project.view": { module: "projects", privileged: false },
+  "report.template.manage": { module: "report_engine", privileged: false },
+  "report.template.view": { module: "report_engine", privileged: false },
   "site.manage": { module: "projects", privileged: false },
   "site.view": { module: "projects", privileged: false },
   "tenancy.organisation.manage": { module: "tenancy", privileged: false },

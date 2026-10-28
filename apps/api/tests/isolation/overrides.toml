@@ -100,3 +100,7 @@ principal_kind = "system"
 [tables.form_templates]
 reason = "code is a lowercase slug of letters, digits and hyphens (ck_form_templates_code); the generic 'iso_code_{tag}' has an underscore. Unique per row."
 values = { code = "'iso-code-{tag}'" }
+
+[tables.report_templates]
+reason = "content_sha256 must be 64 lowercase hex digits (ck_report_templates_content_sha256); the generic text seed is not."
+values = { content_sha256 = "repeat('{tag}', 64)" }
