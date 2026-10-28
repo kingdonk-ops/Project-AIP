@@ -47,8 +47,8 @@ upload_sessions = Table(
 
 # UPLOADS-02: a released, scanned file. Created only by the scan pipeline's ``release`` step, never
 # by a request. Tenant-scoped with soft delete and FORCE RLS; ``aip_app`` has no DELETE.
-# UPLOADS-08: also a worker-made file (``source = 'generated'``, via ``store_generated_file``), which
-# may have no project or user; an upload keeps both (CHECK in the revision).
+# UPLOADS-08: also a worker-made file (``source = 'generated'``, via ``store_generated_file``),
+# which may have no project or user; an upload keeps both (CHECK in the revision).
 stored_files = Table(
     "stored_files",
     metadata,

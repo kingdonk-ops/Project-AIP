@@ -195,4 +195,3 @@ async def test_without_a_principal_the_store_is_refused(db: TenantDb) -> None:
                 project_id=PROJECT_A1_ID,
             )
     assert await _count(db) == 0
-
