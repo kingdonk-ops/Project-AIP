@@ -14,7 +14,7 @@ from uuid import UUID
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from aip.modules.uploads.tables import upload_sessions
+from aip.modules.uploads.tables import scan_results, stored_files, upload_sessions
 
 __all__ = [
     "Row",
@@ -23,7 +23,11 @@ __all__ = [
     "find_by_client_request_id",
     "get_for_requester",
     "get_session",
+    "get_stored_file",
+    "insert_scan_result",
     "insert_session",
+    "insert_stored_file",
+    "set_released",
     "set_status",
     "touch_expiry",
 ]
@@ -107,6 +111,37 @@ async def touch_expiry(conn: AsyncConnection, session_id: UUID, expires_at: date
         .returning(*upload_sessions.c)
     )
     return dict((await conn.execute(stmt)).mappings().one())
+
+
+async def set_released(conn: AsyncConnection, session_id: UUID, file_id: UUID) -> Row:
+    """Mark a session ``released`` and link it to the released ``stored_files`` row."""
+    stmt = (
+        update(upload_sessions)
+        .where(upload_sessions.c.id == session_id, _live())
+        .values(status="released", file_id=file_id, reject_reason=None, updated_at=func.now())
+        .returning(*upload_sessions.c)
+    )
+    return dict((await conn.execute(stmt)).mappings().one())
+
+
+async def insert_stored_file(conn: AsyncConnection, values: Mapping[str, Any]) -> Row:
+    """Insert the released, scanned file. Called only from the pipeline's ``release`` step."""
+    stmt = insert(stored_files).values(**values).returning(*stored_files.c)
+    return dict((await conn.execute(stmt)).mappings().one())
+
+
+async def get_stored_file(conn: AsyncConnection, file_id: UUID) -> Row | None:
+    """A live released file by id; ``None`` (so 404) for another tenant's (RLS) or a deleted one."""
+    stmt = select(stored_files).where(
+        stored_files.c.id == file_id, stored_files.c.deleted_at.is_(None)
+    )
+    row = (await conn.execute(stmt)).mappings().first()
+    return None if row is None else dict(row)
+
+
+async def insert_scan_result(conn: AsyncConnection, values: Mapping[str, Any]) -> None:
+    """Append one ``scan_results`` row (append-only: ``aip_app`` has INSERT/SELECT only)."""
+    await conn.execute(insert(scan_results).values(**values))
 
 
 async def expire_stale(conn: AsyncConnection, now: datetime) -> int:

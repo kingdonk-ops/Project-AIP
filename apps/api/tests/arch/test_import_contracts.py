@@ -54,9 +54,21 @@ def test_platform_importing_a_module_breaks_platform_contract() -> None:
     assert _broken(output) == ["platform-never-imports-modules"], output
 
 
+def test_direct_object_store_import_breaks_contract() -> None:
+    fixture = FIXTURES / "direct_object_store"
+    result = _lint_imports("--config", str(fixture / ".importlinter"), pythonpath=fixture)
+    output = result.stdout + result.stderr
+    assert result.returncode == 1, output
+    assert _broken(output) == ["no-direct-object-store"], output
+    # The service reaching the adapter directly is the violation; the api using the facade is not.
+    assert "os_app.modules.a.service -> os_app.platform.capabilities.adapters.s3" in output
+    assert "os_app.modules.a.api ->" not in output
+
+
 def test_real_repo_keeps_every_contract() -> None:
     result = _lint_imports()
     output = result.stdout + result.stderr
     assert result.returncode == 0, output
     assert "no-deep-module-import KEPT" in output
     assert "platform-never-imports-modules KEPT" in output
+    assert "no-direct-object-store (UPLOADS-02) KEPT" in output

@@ -23,9 +23,16 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from aip.modules.ops import api as ops
 from aip.modules.uploads import repository as repo
+from aip.modules.uploads.jobs import SCAN
 from aip.modules.uploads.platform_limits import PRESIGN_TTL_S, classify_declared
-from aip.modules.uploads.schemas import SessionCreate, SessionCreated, SessionStatus
+from aip.modules.uploads.schemas import (
+    FileDownloadUrl,
+    SessionCreate,
+    SessionCreated,
+    SessionStatus,
+)
 from aip.platform.capabilities import ObjectNotFoundError, PresignedPost, get_object_store
 from aip.platform.capabilities.keys import ObjectKey, tenant_key
 from aip.platform.context import RequestContext, get_context, new_request_id
@@ -45,6 +52,8 @@ _STATUS_FOR: Final[Mapping[str, int]] = {
     "USE_MULTIPART": 413,
 }
 _MAX_OPEN_SESSIONS: Final = 20
+# A released-file presigned GET is short-lived: long enough to start a download, not to be shared.
+FILE_DOWNLOAD_TTL_S: Final = 300
 _SSE_HEADER: Final = "x-amz-server-side-encryption"
 _SSE_KMS_KEY_HEADER: Final = "x-amz-server-side-encryption-aws-kms-key-id"
 _SSE_CONTEXT_HEADER: Final = "x-amz-server-side-encryption-context"
@@ -226,6 +235,11 @@ class UploadSessionService:
             if head.size_bytes > int(session["declared_size_bytes"]):
                 raise DomainError(422, "SIZE_MISMATCH")
             row = await repo.set_status(conn, session_id, "uploaded")
+            # Enqueue the scan in the same transaction; jobId = sessionId makes a double confirm (or
+            # retry) idempotent -> one scan job -> one released file (UPLOADS-02 step 2).
+            await ops.enqueue(
+                conn, SCAN, {"session_id": str(session_id)}, idempotency_key=str(session_id)
+            )
         return SessionStatus(status=row["status"], reject_reason=row["reject_reason"])
 
     async def get_status(self, session_id: UUID, *, is_admin: AdminCheck) -> SessionStatus:
@@ -244,6 +258,25 @@ class UploadSessionService:
             if session["requested_by"] != actor and not await is_admin(session["project_id"]):
                 raise NotFoundError(f"upload session {session_id} not found")
         return SessionStatus(status=session["status"], reject_reason=session["reject_reason"])
+
+    async def file_download_url(self, file_id: UUID, *, can_view: AdminCheck) -> FileDownloadUrl:
+        """A presigned GET for a released file, gated by ``uploads.view`` on the file's project.
+
+        A file in another tenant is invisible under RLS and surfaces as 404; a caller without
+        ``uploads.view`` also gets 404, so a file's existence is never leaked. A file that is not
+        yet released (``scan_status != 'clean'``) gives 409 ``NOT_RELEASED``.
+        """
+        async with _tx() as conn:
+            stored = await repo.get_stored_file(conn, file_id)
+            if stored is None or not await can_view(stored["project_id"]):
+                raise NotFoundError(f"file {file_id} not found")
+            if stored["scan_status"] != "clean":
+                raise DomainError(409, "NOT_RELEASED")
+            store = get_object_store()
+            presigned = await store.presign_get(
+                ObjectKey(stored["storage_key"]), expires_s=FILE_DOWNLOAD_TTL_S
+            )
+        return FileDownloadUrl(url=presigned.url, expires_in_s=FILE_DOWNLOAD_TTL_S)
 
     async def expire_stale_sessions(self, now: datetime) -> int:
         """Mark ``requested`` sessions past their TTL as ``expired`` (scheduled by UPLOADS-02)."""

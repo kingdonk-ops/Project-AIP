@@ -65,6 +65,7 @@ export * from './featureOutSource';
 export * from './fieldTypeOut';
 export * from './fieldTypeOutConfigSchema';
 export * from './fieldTypesOut';
+export * from './fileDownloadUrl';
 export * from './formErrorBody';
 export * from './formsTemplatesListParams';
 export * from './healthResponse';

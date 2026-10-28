@@ -17,6 +17,7 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 __all__ = [
+    "FileDownloadUrl",
     "SessionCreate",
     "SessionCreated",
     "SessionStatus",
@@ -73,6 +74,13 @@ class SessionCreated(_Out):
 class SessionStatus(_Out):
     status: str
     reject_reason: str | None = None
+
+
+class FileDownloadUrl(_Out):
+    """A short-lived presigned GET for a released (clean) file."""
+
+    url: str
+    expires_in_s: int
 
 
 class UploadErrorBody(_Out):

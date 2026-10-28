@@ -97,6 +97,10 @@ def _default(services: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
 def test_default_profile_has_the_expected_services(services: dict[str, dict[str, Any]]) -> None:
     assert set(_default(services)) == DEFAULT_SERVICES
     assert services["sandbox"]["profiles"] == ["sandbox"]
+    # UPLOADS-02: the scanner and its worker are opt-in (clamav's init needs root; the default
+    # stack stays lean), brought up with `--profile scan`.
+    assert services["clamav"]["profiles"] == ["scan"]
+    assert services["worker-scan"]["profiles"] == ["scan"]
 
 
 def test_images_are_pinned_and_permissive(services: dict[str, dict[str, Any]]) -> None:

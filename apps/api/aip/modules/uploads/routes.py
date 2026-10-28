@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, Request, status
 
 from aip.modules.tenancy.api import require_active_tenant
 from aip.modules.uploads.schemas import (
+    FileDownloadUrl,
     SessionCreate,
     SessionCreated,
     SessionStatus,
@@ -102,5 +103,32 @@ async def session_status(
     return await UploadSessionService().get_status(session_id, is_admin=is_admin)
 
 
+files_router = APIRouter(prefix="/uploads/files", tags=["uploads"])
+
+
+@files_router.get(
+    "/{file_id}/url",
+    operation_id="uploads_file_url",
+    response_model=FileDownloadUrl,
+    responses={
+        **_NOT_FOUND,
+        409: {"model": UploadErrorBody, "description": "File is not released yet"},
+    },
+)
+async def file_url(
+    file_id: UUID,
+    request: Request,
+    principal: Annotated[AccessPrincipal, Depends(authenticated())],
+) -> FileDownloadUrl:
+    policy: PolicyService = request.app.state.access_policy
+
+    async def can_view(project_id: UUID) -> bool:
+        resource = Resource(project_id=project_id, tenant_id=principal.tenant_id)
+        return (await policy.can(principal, "uploads.view", resource)).allowed
+
+    return await UploadSessionService().file_download_url(file_id, can_view=can_view)
+
+
 router = APIRouter(dependencies=[Depends(require_active_tenant)])
 router.include_router(sessions_router)
+router.include_router(files_router)

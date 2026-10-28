@@ -114,6 +114,9 @@ table = "upload_sessions"
 ["POST /api/v1/uploads/sessions/{session_id}/confirm"]
 table = "upload_sessions"
 
+["GET /api/v1/uploads/files/{file_id}/url"]
+table = "stored_files"
+
 ["PUT /api/v1/settings/flags/{flag}"]
 skip = true
 reason = "The path names a release flag (code), not a row; the row is the caller's own tenant's."

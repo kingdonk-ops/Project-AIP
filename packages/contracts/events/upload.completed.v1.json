@@ -1,0 +1,43 @@
+{
+  "additionalProperties": false,
+  "description": "``upload.completed`` v1: a scanned object was released into tenant storage.",
+  "properties": {
+    "detectedMime": {
+      "title": "Detectedmime",
+      "type": "string"
+    },
+    "fileId": {
+      "format": "uuid",
+      "title": "Fileid",
+      "type": "string"
+    },
+    "projectId": {
+      "format": "uuid",
+      "title": "Projectid",
+      "type": "string"
+    },
+    "sessionId": {
+      "format": "uuid",
+      "title": "Sessionid",
+      "type": "string"
+    },
+    "sha256": {
+      "title": "Sha256",
+      "type": "string"
+    },
+    "sizeBytes": {
+      "title": "Sizebytes",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "sessionId",
+    "fileId",
+    "projectId",
+    "detectedMime",
+    "sizeBytes",
+    "sha256"
+  ],
+  "title": "UploadCompletedEvent",
+  "type": "object"
+}
