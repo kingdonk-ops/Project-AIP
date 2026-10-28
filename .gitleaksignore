@@ -26,3 +26,8 @@ d7a52f33e6c04c99fb7e909b66482276f66544c5:apps/api/aip/modules/projects/settings.
 # assets cursor signing secret as a Field default. The constant is an obviously fake placeholder, refused
 # outside development and test by AssetsSettings (mirrors the PROJECTS-01 entry above).
 3349e5dc2d030ad3f0e3d649e0bacf907b004d96:apps/api/aip/modules/assets/settings.py:generic-api-key:31
+
+# Reviewed false positive (2026-10-29, IDENTITY-10): a test-only PREAUTH_COOKIE_KEY, base64url of
+# "real-key-real-key-real-key-real-", in an early commit of the PR branch. A later commit builds it at
+# run time, so the squash commit on main carries no literal.
+4578110f7752f50e8adc6c979dae8a649eafe9cc:apps/api/aip/modules/identity/tests/test_portal_unit.py:generic-api-key:236

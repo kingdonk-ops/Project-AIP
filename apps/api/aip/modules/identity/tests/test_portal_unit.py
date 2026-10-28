@@ -3,6 +3,7 @@ settings and back-channel logout audiences. No database."""
 
 from __future__ import annotations
 
+import base64
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
@@ -236,7 +237,10 @@ def test_the_dev_portal_secret_is_refused_when_deployed() -> None:
     deployed = {
         "AIP_ENV": "production",
         "OIDC_CLIENT_SECRET": "a-real-secret",
-        "PREAUTH_COOKIE_KEY": "cmVhbC1rZXktcmVhbC1rZXktcmVhbC1rZXktcmVhbC0",
+        # Built at run time so no key-shaped literal is committed (gitleaks).
+        "PREAUTH_COOKIE_KEY": base64.urlsafe_b64encode((b"real-key-" * 4)[:32])
+        .rstrip(b"=")
+        .decode(),
     }
     assert make_settings(**deployed, PORTAL_OIDC_CLIENT_SECRET="real").portal_configured
     with pytest.raises((IdentitySettingsError, ValueError), match="PORTAL_OIDC_CLIENT_SECRET"):
