@@ -14,12 +14,18 @@ triggers that graceful stop, so the orchestrator restarts the process.
 
 Gotenberg (``pdf``) and sandbox (``scan``) work run in their own worker processes: start one
 process per queue group.
+
+TESTING-13: while it runs, the worker writes a heartbeat file the container healthcheck reads
+(``python -m aip.platform.jobs.heartbeat``). A beat needs an ``aip_jobs`` login and, for a worker
+on the ``outbox`` queue, an ``aip_audit_writer`` login, so a wrong ``DATABASE_AUDIT_WRITER_URL``
+makes the worker unhealthy instead of silently dead-lettering every audit write.
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import importlib
 import logging
 import os
@@ -29,11 +35,22 @@ from collections.abc import Sequence
 
 from aip.modules.ops.runner import memory_guard
 from aip.modules.terms.api import install as install_term_resolver
-from aip.platform.db.engine import dispose_engine, dispose_jobs_engine, get_jobs_engine
+from aip.platform.db.engine import (
+    dispose_audit_writer_engine,
+    dispose_engine,
+    dispose_jobs_engine,
+    get_jobs_engine,
+)
 from aip.platform.db.tls import check_transport_security
 from aip.platform.dev_secrets import check_no_dev_secrets
-from aip.platform.events.jobs import active_subscribers
+from aip.platform.events.jobs import OUTBOX_QUEUE, active_subscribers
 from aip.platform.jobs.app import DEFAULT_QUEUE, QUEUES, run_worker
+from aip.platform.jobs.heartbeat import (
+    default_probes,
+    heartbeat_file,
+    heartbeat_interval,
+    run_heartbeat,
+)
 from aip.platform.modules.registry import (
     DEFAULT_MODULES_PACKAGE,
     MODULES_PACKAGE_ENV,
@@ -108,14 +125,24 @@ async def check_jobs_login() -> None:
 
 
 async def _run(queues: list[str], concurrency: int, shutdown_timeout: float) -> None:
+    heartbeat: asyncio.Task[None] | None = None
     try:
         await check_jobs_login()
+        probes = default_probes(audit_writer=OUTBOX_QUEUE in queues)
+        heartbeat = asyncio.create_task(
+            run_heartbeat(heartbeat_file(), probes, heartbeat_interval()), name="heartbeat"
+        )
         await run_worker(
             queues=queues,
             concurrency=concurrency,
             shutdown_graceful_timeout=shutdown_timeout,
         )
     finally:
+        if heartbeat is not None:
+            heartbeat.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await heartbeat
+        await dispose_audit_writer_engine()
         await dispose_jobs_engine()
         await dispose_engine()
 

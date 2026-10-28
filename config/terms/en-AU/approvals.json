@@ -74,5 +74,41 @@
   "workflow.inspection.action.client_approve": {
     "text": "Client approve",
     "description": "Button for the inspection workflow action 'client_approve' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+  },
+  "workflow.demo.state.draft": {
+    "text": "Draft",
+    "description": "Workflow state 'draft' in the dev and demo `demo` workflow that the compose-stack journeys run (TESTING-13)."
+  },
+  "workflow.demo.state.submitted": {
+    "text": "Submitted",
+    "description": "Workflow state 'submitted' in the dev and demo `demo` workflow that the compose-stack journeys run (TESTING-13)."
+  },
+  "workflow.demo.state.approved": {
+    "text": "Approved",
+    "description": "Workflow state 'approved' in the dev and demo `demo` workflow that the compose-stack journeys run (TESTING-13)."
+  },
+  "workflow.demo.state.rejected": {
+    "text": "Rejected",
+    "description": "Workflow state 'rejected' in the dev and demo `demo` workflow that the compose-stack journeys run (TESTING-13)."
+  },
+  "workflow.demo.action.submit": {
+    "text": "Submit",
+    "description": "Button for the workflow action 'submit' in the dev and demo `demo` workflow that the compose-stack journeys run (TESTING-13)."
+  },
+  "workflow.demo.action.approve": {
+    "text": "Approve",
+    "description": "Button for the workflow action 'approve' in the dev and demo `demo` workflow that the compose-stack journeys run (TESTING-13)."
+  },
+  "workflow.demo.action.reject": {
+    "text": "Reject",
+    "description": "Button for the workflow action 'reject' in the dev and demo `demo` workflow that the compose-stack journeys run (TESTING-13)."
+  },
+  "workflow.demo.action.resubmit": {
+    "text": "Resubmit",
+    "description": "Button for the workflow action 'resubmit' in the dev and demo `demo` workflow that the compose-stack journeys run (TESTING-13)."
+  },
+  "workflow.demo.guard.photos_not_clean": {
+    "text": "Every photo must be clean before approval.",
+    "description": "Why 'approve' is refused while the record's photos are not all clean, in the dev and demo `demo` workflow that the compose-stack journeys run (TESTING-13)."
   }
 }

@@ -37,7 +37,7 @@ from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
 from aip.modules.access.api import RoleGrantProvider, sync_catalogue
-from aip.modules.approvals.api import list_presets
+from aip.modules.approvals.api import install_demo_records, list_presets
 from aip.modules.identity.api import (
     PlatformPrincipalAdapter,
     add_session_middleware,
@@ -238,6 +238,9 @@ def create_app(
         install_term_resolver()  # TERMS-02: the aip.platform.terms port for emails and PDFs
     if any(module.id == "approvals" for module in modules):
         list_presets()  # APPROVALS-05: a malformed config/workflows preset stops startup
+        # TESTING-13: the project-backed `demo` record type, only with AIP_APPROVALS_DEMO_RECORDS=1
+        # on a development, test or demo stack (refuses production).
+        install_demo_records(env)
 
     @app.exception_handler(ContextMissingError)
     async def context_missing(  # pyright: ignore[reportUnusedFunction]

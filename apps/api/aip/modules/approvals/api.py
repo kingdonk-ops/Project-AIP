@@ -10,6 +10,9 @@ guard and sign-off checks as ``/api/v1/approvals``. ``register_guard_context_pro
 module supply the read-only ``record`` facts its record type's guards see, and
 ``register_record_resolver`` tells approvals which project a record belongs to (required before
 ``POST /approvals/instances`` accepts that record type).
+
+TESTING-13: ``install_demo_records`` registers the dev and demo ``demo`` record type (see
+``demo.py``); ``create_app`` calls it.
 """
 
 from __future__ import annotations
@@ -18,6 +21,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from aip.modules.approvals.demo import install_demo_records
 from aip.modules.approvals.engine.evaluator import available_transitions as allowed_actions
 from aip.modules.approvals.errors import NoActiveDefinitionError
 from aip.modules.approvals.guards.context_providers import (
@@ -77,6 +81,7 @@ __all__ = [
     "WorkflowInstance",
     "allowed_actions",
     "evaluate_guard",
+    "install_demo_records",
     "list_presets",
     "register_guard_context_provider",
     "register_record_resolver",
