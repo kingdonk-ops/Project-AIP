@@ -37,6 +37,7 @@ from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
 from aip.modules.access.api import RoleGrantProvider, sync_catalogue
+from aip.modules.approvals.api import list_presets
 from aip.modules.identity.api import (
     PlatformPrincipalAdapter,
     add_session_middleware,
@@ -53,7 +54,6 @@ from aip.modules.tenancy.api import (
     active_tenant_guard,
     assert_demo_has_no_real_customers,
 )
-from aip.modules.approvals.api import list_presets
 from aip.modules.terms.api import install as install_term_resolver
 from aip.platform.access import (
     AccessPrincipal,

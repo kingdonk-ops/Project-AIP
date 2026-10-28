@@ -1,4 +1,4 @@
-"""APPROVALS-05: the inspection lifecycle presets and their golden cases, through the pure evaluator.
+"""APPROVALS-05: the inspection lifecycle presets and their golden cases, through the evaluator.
 
 The same cases run through ``TransitionService`` on Postgres in ``test_inspection_preset_db.py``.
 While the cases file has no ``confirmedBy`` they are blueprint-derived and provisional (the AIP

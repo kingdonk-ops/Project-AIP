@@ -157,7 +157,8 @@ async def test_golden_case_through_the_transition_service(
         state = response.json()["instance"]["currentState"]
     else:
         if "available" in expect:
-            view = await client.get(f"/api/v1/approvals/instances/{instance['id']}", headers=headers)
+            url = f"/api/v1/approvals/instances/{instance['id']}"
+            view = await client.get(url, headers=headers)
             outcome = {"available": [t["action"] for t in view.json()["availableTransitions"]]}
         else:
             outcome = {"state": state}
@@ -306,7 +307,8 @@ async def test_install_from_preset_route(
     assert response.status_code == 200, response.text
     installed = response.json()
     assert installed["key"] == "inspection_standard"
-    assert (installed["version"], installed["status"], installed["projectId"]) == (1, "active", None)
+    assert (installed["version"], installed["status"]) == (1, "active")
+    assert installed["projectId"] is None
 
     again = await client.post(
         "/api/v1/approvals/definitions/from-preset", json=body, headers=fresh(ALICE_ID)

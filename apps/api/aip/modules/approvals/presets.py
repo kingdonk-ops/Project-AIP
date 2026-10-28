@@ -90,7 +90,7 @@ def load_preset(preset_key: str, base_dir: Path | None = None) -> Preset:
 
 
 def list_presets(base_dir: Path | None = None) -> list[Preset]:
-    """Every ``*.json`` preset in the directory, sorted by key, each spec checked by ``validate_spec``.
+    """Every ``*.json`` preset in the directory, by key, each spec checked by ``validate_spec``.
 
     Raises :class:`PresetError` naming the first preset that is malformed or fails the graph rules.
     """
