@@ -10,7 +10,7 @@ from __future__ import annotations
 from ..platform_limits import DENIED_MIMES
 from .types import StageResult
 
-__all__ = ["HEAD_BYTES", "check_magic_bytes", "detect_mime"]
+__all__ = ["HEAD_BYTES", "check_magic_bytes", "detect_mime", "stored_mime"]
 
 # UPLOADS-02 step 3b: the detector reads the first 4 KB.
 HEAD_BYTES = 4096
@@ -113,10 +113,21 @@ def check_magic_bytes(head: bytes, declared_mime: str) -> StageResult:
                 head[: max(0, len(head) - 3)].decode("utf-8")
             except UnicodeDecodeError:
                 return StageResult("magic_bytes", "fail", {"reason": "not_utf8"})
-        return StageResult("magic_bytes", "pass", {"detected": detected or "text/plain"})
+        # Text has no signature, so the checked declaration is the detected type: a CSV is stored as
+        # ``text/csv`` (an importer refuses ``text/plain``), UPLOADS-08.
+        return StageResult("magic_bytes", "pass", {"detected": declared_mime})
 
     if detected is None:
         return StageResult("magic_bytes", "fail", {"detected": None, "declared": declared_mime})
     if declared_mime not in _COMPATIBLE.get(detected, frozenset()):
         return StageResult("magic_bytes", "fail", {"detected": detected, "declared": declared_mime})
     return StageResult("magic_bytes", "pass", {"detected": detected})
+
+
+def stored_mime(detected: str | None, declared_mime: str) -> str:
+    """The type a released file is stored as (UPLOADS-08). An OOXML file is detected as its ZIP
+    container (which the ratio cap needs), but is stored as the declared xlsx/docx type that the
+    compatibility check already accepted, so an importer sees the spreadsheet type."""
+    if detected is None or (detected == "application/zip" and declared_mime in _OOXML):
+        return declared_mime
+    return detected

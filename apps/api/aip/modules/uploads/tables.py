@@ -47,13 +47,15 @@ upload_sessions = Table(
 
 # UPLOADS-02: a released, scanned file. Created only by the scan pipeline's ``release`` step, never
 # by a request. Tenant-scoped with soft delete and FORCE RLS; ``aip_app`` has no DELETE.
+# UPLOADS-08: also a worker-made file (``source = 'generated'``, via ``store_generated_file``),
+# which may have no project or user; an upload keeps both (CHECK in the revision).
 stored_files = Table(
     "stored_files",
     metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
     Column("tenant_id", UUID(as_uuid=True), nullable=False),
-    Column("project_id", UUID(as_uuid=True), nullable=False),
-    Column("uploaded_by", UUID(as_uuid=True), nullable=False),
+    Column("project_id", UUID(as_uuid=True), nullable=True),
+    Column("uploaded_by", UUID(as_uuid=True), nullable=True),
     Column("scan_status", Text, nullable=False),  # quarantined | clean | failed
     Column("preview_status", Text, nullable=False),  # pending | ready | none | failed
     Column("detected_mime", Text, nullable=False),
@@ -61,6 +63,11 @@ stored_files = Table(
     Column("sha256", Text, nullable=False),
     Column("storage_key", Text, nullable=False),
     Column("legal_hold", Boolean, nullable=False, server_default=text("false")),
+    # upload | generated
+    Column("source", Text, nullable=False, server_default=text("'upload'")),
+    Column("filename", Text, nullable=True),  # display-only, never a path
+    Column("purpose", Text, nullable=True),  # report | import | export | ...
+    Column("idempotency_key", Text, nullable=True),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", TIMESTAMP(timezone=True), nullable=True),

@@ -2566,6 +2566,9 @@ CREATE UNIQUE INDEX uq_security_audit_events_tenant_id_source_event_id ON public
 -- Name: uq_sites_tenant_id_upper_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_sites_tenant_id_upper_code ON public.sites USING btree (tenant_id, upper(code)) WHERE (deleted_at IS NULL);
 
+-- Name: uq_stored_files_tenant_id_idempotency_key; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_stored_files_tenant_id_idempotency_key ON public.stored_files USING btree (tenant_id, idempotency_key) WHERE (idempotency_key IS NOT NULL);
+
 -- Name: uq_tenant_membership_tenant_id_user_id_organisation_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_tenant_membership_tenant_id_user_id_organisation_id ON public.tenant_membership USING btree (tenant_id, user_id, organisation_id) NULLS NOT DISTINCT WHERE (deleted_at IS NULL);
 
@@ -4135,8 +4138,8 @@ ALTER TABLE public.sites OWNER TO aip_owner;
 CREATE TABLE public.stored_files (
     id uuid NOT NULL,
     tenant_id uuid NOT NULL,
-    project_id uuid NOT NULL,
-    uploaded_by uuid NOT NULL,
+    project_id uuid,
+    uploaded_by uuid,
     scan_status text NOT NULL,
     preview_status text NOT NULL,
     detected_mime text NOT NULL,
@@ -4147,8 +4150,14 @@ CREATE TABLE public.stored_files (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    source text DEFAULT 'upload'::text NOT NULL,
+    filename text,
+    purpose text,
+    idempotency_key text,
     CONSTRAINT ck_stored_files_preview_status CHECK ((preview_status = ANY (ARRAY['pending'::text, 'ready'::text, 'none'::text, 'failed'::text]))),
-    CONSTRAINT ck_stored_files_scan_status CHECK ((scan_status = ANY (ARRAY['quarantined'::text, 'clean'::text, 'failed'::text])))
+    CONSTRAINT ck_stored_files_scan_status CHECK ((scan_status = ANY (ARRAY['quarantined'::text, 'clean'::text, 'failed'::text]))),
+    CONSTRAINT ck_stored_files_source CHECK ((source = ANY (ARRAY['upload'::text, 'generated'::text]))),
+    CONSTRAINT ck_stored_files_upload_owner CHECK (((source = 'generated'::text) OR ((project_id IS NOT NULL) AND (uploaded_by IS NOT NULL))))
 );
 
 ALTER TABLE ONLY public.stored_files FORCE ROW LEVEL SECURITY;
