@@ -201,7 +201,7 @@ async def test_each_callback_refuses_the_other_class(
     denied = await su_fetch(
         db,
         "SELECT detail->>'reason' FROM auth_event WHERE event_type = 'login.denied'"
-        " ORDER BY created_at",
+        " ORDER BY occurred_at",
     )
     assert denied == [("portal_sign_in_required",), ("staff_sign_in_required",)]
 
