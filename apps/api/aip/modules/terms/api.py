@@ -6,7 +6,8 @@ Other modules may import only this file. Keep it small and stable.
 the caller's ``with_tenant`` connection. Platform code reaches the same resolver through the
 ``aip.platform.terms`` port, which :func:`install` registers at startup.
 
-``format_message`` resolves a key and formats it as an ICU message; ``display_system``,
+``format_message`` resolves a key and formats it as an ICU message; ``format_icu`` formats an
+already-resolved text with no database (the report render contract, REPORTS-01); ``display_system``,
 ``to_display`` and ``to_si`` convert between SI storage and display units; ``template_environment``,
 ``template_scope`` and ``render_template`` give email and PDF templates the ``t`` and
 ``fmt_measure`` filters (TERMS-03).
@@ -23,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from aip.platform.terms import register_term_resolver
 
 from .icu import MessageFormatError, format_message
+from .icu import render as format_icu
 from .service import bulk_resolve, resolve
 from .templating import (
     TemplateScope,
@@ -42,6 +44,7 @@ __all__ = [
     "UnknownUnitError",
     "bulk_resolve",
     "display_system",
+    "format_icu",
     "format_message",
     "get_api",
     "install",
