@@ -26,6 +26,24 @@ body = '{"code": "iso_clone", "name": "Isolation clone"}'
 ["POST /api/v1/access/roles/{role_id}/reset"]
 table = "role"
 
+["PATCH /api/v1/access/teams/{team_id}"]
+table = "team"
+body = '{"name": "Isolation probe"}'
+
+["DELETE /api/v1/access/teams/{team_id}"]
+table = "team"
+
+["GET /api/v1/access/teams/{team_id}/members"]
+table = "team"
+
+["POST /api/v1/access/teams/{team_id}/members"]
+table = "team"
+body = '{"userIds": ["00000000-0000-4000-8000-0000000000ff"]}'
+
+["DELETE /api/v1/access/teams/{team_id}/members/{user_id}"]
+skip = true
+reason = "The last parameter is the user, so the team gets a random id (404). Cross-tenant teams are covered by the other /teams/{team_id} routes and the ACCESS-04 tenant tests."
+
 ["GET /api/v1/approvals/instances/{instance_id}"]
 table = "workflow_instances"
 
