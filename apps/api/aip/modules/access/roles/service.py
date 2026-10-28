@@ -23,6 +23,11 @@ Guards (error codes in brackets):
   anyone holding ``access.role.manage`` at tenant scope [409 LAST_ROLE_MANAGER].
 
 Rows of another tenant are invisible under RLS and come back as 404.
+
+ACCESS-04: a role may be assigned to a team (``scope.type == "team"``; 404 TEAM_NOT_FOUND, one
+live assignment per team and role). Every change that can alter someone's grants records it
+(``changes.record_grants_changed``: the ``access.grants_changed`` event, the access version and
+the after-commit policy cache bump); assignment events are emitted at v2 (with ``teamId``).
 """
 
 from __future__ import annotations
@@ -37,13 +42,16 @@ from uuid import UUID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from aip.modules.access.changes import record_grants_changed
 from aip.modules.access.events import (
     ROLE_ASSIGNMENT_CREATED,
     ROLE_ASSIGNMENT_REMOVED,
+    ROLE_ASSIGNMENT_VERSION,
     ROLE_CHANGED,
 )
 from aip.modules.access.repository import bump_access_version
 from aip.modules.access.roles import repository as repo
+from aip.modules.access.teams import repository as teams_repo
 from aip.modules.access.roles.default_roles import OPERATOR_ONLY_PREFIX, ROLE_CODES
 from aip.modules.access.roles.schemas import (
     AssignmentCreate,
@@ -62,7 +70,13 @@ from aip.platform.db.session import with_tenant
 from aip.platform.events import Aggregate, emit
 from aip.platform.http import DomainError
 
-__all__ = ["AssignmentService", "RoleService", "bootstrap_tenant_admin"]
+__all__ = [
+    "AssignmentService",
+    "RoleService",
+    "bootstrap_tenant_admin",
+    "locked_tx",
+    "require_stepped_up_admin",
+]
 
 TENANT_ADMIN: Final = "tenant_admin"
 ROLE_MANAGE: Final = "access.role.manage"
@@ -78,6 +92,9 @@ async def _locked_tx() -> AsyncIterator[AsyncConnection]:
     async with _tx() as conn:
         await repo.lock_tenant_roles(conn)
         yield conn
+
+
+locked_tx = _locked_tx  # the teams service shares the tenant's role lock (ACCESS-04)
 
 
 @asynccontextmanager
@@ -136,6 +153,9 @@ async def _require_stepped_up_admin(
     if actor.aal < 2:
         raise DomainError(403, "STEP_UP_REQUIRED")
     return True
+
+
+require_stepped_up_admin = _require_stepped_up_admin  # teams gate privileged memberships too
 
 
 def _check_code(code: str) -> None:
@@ -253,7 +273,10 @@ class RoleService:
                 await lockout.check(conn)
                 code = role["code"] if role["is_system"] or body.code is None else body.code
                 await _role_event(conn, role_id, code, "updated", before, after)
-                await bump_access_version(conn)
+                if changed:
+                    await record_grants_changed(conn, None)  # every holder, tenant-wide
+                else:
+                    await bump_access_version(conn)
             return _role_out(await _role_or_404(conn, role_id))
 
     async def delete(self, role_id: UUID) -> None:
@@ -284,7 +307,10 @@ class RoleService:
             if after != before or role["customised_at"] is not None:
                 await lockout.check(conn)
                 await _role_event(conn, role_id, role["code"], "reset", before, after)
-                await bump_access_version(conn)
+                if after != before:
+                    await record_grants_changed(conn, None)
+                else:
+                    await bump_access_version(conn)
             return _role_out(await _role_or_404(conn, role_id))
 
     @staticmethod
@@ -337,11 +363,11 @@ async def bootstrap_tenant_admin(
     await emit(
         conn,
         ROLE_ASSIGNMENT_CREATED,
-        1,
+        ROLE_ASSIGNMENT_VERSION,
         Aggregate("role_assignment", assignment_id),
         _assignment_payload(row),
     )
-    await bump_access_version(conn)
+    await record_grants_changed(conn, [user_id])
     return True
 
 
@@ -349,6 +375,7 @@ def _assignment_payload(row: dict[str, Any]) -> dict[str, Any]:
     return {
         "assignmentId": row["id"],
         "userId": row["user_id"],
+        "teamId": row["team_id"],
         "roleId": row["role_id"],
         "roleCode": row["role_code"],
         "scopeType": row["scope_type"],
@@ -358,26 +385,40 @@ def _assignment_payload(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+async def _holders(conn: AsyncConnection, row: dict[str, Any]) -> list[UUID]:
+    """The users an assignment row gives grants to: its user, or its team's live members."""
+    if row["team_id"] is not None:
+        return await teams_repo.member_ids(conn, row["team_id"])
+    return [row["user_id"]]
+
+
 class AssignmentService:
-    async def list(self, *, user_id: UUID | None, project_id: UUID | None) -> list[AssignmentOut]:
+    async def list(
+        self, *, user_id: UUID | None, project_id: UUID | None, team_id: UUID | None = None
+    ) -> list[AssignmentOut]:
         async with _tx() as conn:
-            rows = await repo.list_assignments(conn, user_id=user_id, project_id=project_id)
+            rows = await repo.list_assignments(
+                conn, user_id=user_id, project_id=project_id, team_id=team_id
+            )
         return [AssignmentOut.model_validate(row) for row in rows]
 
     async def create(self, body: AssignmentCreate, actor: AccessPrincipal) -> AssignmentOut:
         if actor.kind != "user" or actor.actor_id is None:
             raise DomainError(403, "TENANT_ADMIN_REQUIRED")  # only people assign roles
         scope = body.scope
-        if scope.type not in ("tenant", "project"):
+        if scope.type not in ("tenant", "project", "team"):
             raise DomainError(400, "SCOPE_NOT_SUPPORTED")
         if body.valid_to is not None and body.valid_to <= datetime.now(UTC):
             raise DomainError(422, "INVALID_VALID_TO", field="validTo")
         async with _locked_tx() as conn:
-            user = await get_user(conn, body.user_id)
-            if user is None:
-                raise DomainError(404, "USER_NOT_FOUND")
-            if user.status != "active":
-                raise DomainError(422, "USER_INACTIVE", field="userId")
+            if body.user_id is not None:
+                user = await get_user(conn, body.user_id)
+                if user is None:
+                    raise DomainError(404, "USER_NOT_FOUND")
+                if user.status != "active":
+                    raise DomainError(422, "USER_INACTIVE", field="userId")
+            if scope.team_id is not None and await teams_repo.get_team(conn, scope.team_id) is None:
+                raise DomainError(404, "TEAM_NOT_FOUND")
             role = await repo.get_role(conn, body.role_id)
             if role is None:
                 raise DomainError(404, "ROLE_NOT_FOUND")
@@ -399,17 +440,18 @@ class AssignmentService:
                     valid_to=body.valid_to,
                     approved_by=approved_by,
                     created_by=actor.actor_id,
+                    team_id=scope.team_id,
                 )
             row = await repo.get_assignment(conn, assignment_id)
             assert row is not None
             await emit(
                 conn,
                 ROLE_ASSIGNMENT_CREATED,
-                1,
+                ROLE_ASSIGNMENT_VERSION,
                 Aggregate("role_assignment", assignment_id),
                 _assignment_payload(row),
             )
-            await bump_access_version(conn)
+            await record_grants_changed(conn, await _holders(conn, row))
         return AssignmentOut.model_validate(row)
 
     async def delete(self, assignment_id: UUID, actor: AccessPrincipal) -> None:
@@ -426,8 +468,8 @@ class AssignmentService:
             await emit(
                 conn,
                 ROLE_ASSIGNMENT_REMOVED,
-                1,
+                ROLE_ASSIGNMENT_VERSION,
                 Aggregate("role_assignment", assignment_id),
                 _assignment_payload(row),
             )
-            await bump_access_version(conn)
+            await record_grants_changed(conn, await _holders(conn, row))
