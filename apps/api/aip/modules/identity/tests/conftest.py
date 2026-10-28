@@ -90,6 +90,8 @@ class StubProvider:
     key: RSAKey = field(default_factory=lambda: RSAKey.generate_key(2048, parameters={"kid": "k1"}))
     grants: dict[str, _Grant] = field(default_factory=dict[str, _Grant])
     token_requests: int = 0
+    client_id: str = "aip-api"  # IDENTITY-10: "aip-portal" for the portal client's stub
+    client_secret: str = CLIENT_SECRET
 
     def authorize(self, redirect_url: str, **claims: Any) -> str:
         """Play the browser + Keycloak: approve the authorize request, return the code."""
@@ -98,8 +100,8 @@ class StubProvider:
         now = int(time.time())
         base: dict[str, Any] = {
             "iss": self.issuer,
-            "aud": "aip-api",
-            "azp": "aip-api",
+            "aud": self.client_id,
+            "azp": self.client_id,
             "sub": "kc-user-1",
             "iat": now,
             "exp": now + 300,
@@ -130,7 +132,10 @@ class StubProvider:
             return httpx.Response(200, json={"keys": [self.key.as_dict(private=False)]})
         if request.url.path.endswith("/token"):
             self.token_requests += 1
-            expected = base64.b64encode(f"aip-api:{CLIENT_SECRET}".encode()).decode()
+            expected = base64.b64encode(
+                f"{self.client_id}:{self.client_secret}".encode()
+            ).decode()
+
             if request.headers.get("authorization") != f"Basic {expected}":
                 return httpx.Response(401, json={"error": "unauthorized_client"})
             form = {k: v[0] for k, v in parse_qs(request.content.decode()).items()}
