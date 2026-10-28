@@ -15,6 +15,15 @@ export {
 export { contrastRatio, relativeLuminance, isAccessibleAccent, MIN_TEXT_CONTRAST } from "./tokens/contrast";
 
 export { Badge, badgeVariants, type BadgeProps } from "./components/badge";
+export {
+  AipMark,
+  BadgeLockup,
+  EndorsedLockup,
+  type AipMarkProps,
+  type AipMarkShape,
+  type BadgeLockupProps,
+  type EndorsedLockupProps,
+} from "./components/brand";
 export { Button, buttonVariants, type ButtonProps } from "./components/button";
 export { Checkbox, type CheckboxProps } from "./components/checkbox";
 export { Combobox, type ComboboxOption, type ComboboxProps } from "./components/combobox";

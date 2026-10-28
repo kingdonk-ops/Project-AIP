@@ -51,11 +51,11 @@ body {
 .shell-header__logo:empty {
   display: none;
 }
-/* DESIGN-14: the brand lockup, "<Company> AIP", one link to Home. */
+/* DESIGN-14 + DESIGN-17: the brand lockup A, "<Company> [AIP]", one link to Home. */
 .shell-brand {
   display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-1);
+  align-items: center;
+  gap: var(--space-2);
   min-width: 0;
   flex: 0 1 auto;
   color: var(--foreground);
@@ -68,17 +68,12 @@ body {
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
-.shell-brand__company {
+.shell-brand__lockup {
   min-width: 0;
-  max-width: 32ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-weight: var(--weight-semibold);
+  font-size: var(--text-lg);
 }
-.shell-brand__product {
-  flex-shrink: 0;
-  font-weight: var(--weight-regular);
-  color: var(--foreground-muted);
+.shell-brand__company {
+  max-width: 32ch;
 }
 .shell-header__slot--grow {
   flex: 1;
