@@ -13,17 +13,17 @@ the fail-closed NULLIF policy). Deletes are soft, so ``aip_app`` loses the templ
 - ``item_types.published_version_id`` points at the current published version; ``(id,
   tenant_id)`` is unique on the versions table so the composite FKs keep both in one tenant.
 
-Revision ID: 202610281200
-Revises: 202610261200
-Create Date: 2026-10-28 12:00:00+00:00
+Revision ID: 202610281300
+Revises: 202610281200
+Create Date: 2026-10-28 13:00:00+00:00
 """
 
 from alembic import op
 
 from aip.platform.db.templates import render_template
 
-revision: str = "202610281200"
-down_revision: str | None = "202610261200"
+revision: str = "202610281300"
+down_revision: str | None = "202610281200"
 branch_labels = None
 depends_on = None
 

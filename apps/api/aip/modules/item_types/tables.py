@@ -1,7 +1,7 @@
 """SQLAlchemy Core declarations for the item_types tables (ITEMTYPES-01/02, ADR 0002).
 
 Created only by the Alembic revisions ``202610251200_item_types_core`` and
-``202610281200_item_types_versions``; ``aip-db check-schema`` compares these declarations with the
+``202610281300_item_types_versions``; ``aip-db check-schema`` compares these declarations with the
 migrated database. All four tables are tenant-scoped with soft delete and FORCE ROW LEVEL SECURITY;
 ``aip_app`` has no DELETE on any of them. A published ``item_type_versions`` row is frozen by a
 database trigger.
