@@ -154,6 +154,8 @@ async def _release(
             "size_bytes": len(data),
             "sha256": sha256,
             "storage_key": released_key,
+            "source": "upload",
+            "filename": session["declared_filename"],
         },
     )
     await repo.set_released(conn, session["id"], file_id)

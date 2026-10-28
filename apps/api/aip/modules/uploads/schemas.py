@@ -74,6 +74,8 @@ class SessionCreated(_Out):
 class SessionStatus(_Out):
     status: str
     reject_reason: str | None = None
+    # The released, clean stored file; set once ``status`` is ``released`` (UPLOADS-08).
+    file_id: UUID | None = None
 
 
 class FileDownloadUrl(_Out):

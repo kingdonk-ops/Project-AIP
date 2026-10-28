@@ -113,7 +113,9 @@ def check_magic_bytes(head: bytes, declared_mime: str) -> StageResult:
                 head[: max(0, len(head) - 3)].decode("utf-8")
             except UnicodeDecodeError:
                 return StageResult("magic_bytes", "fail", {"reason": "not_utf8"})
-        return StageResult("magic_bytes", "pass", {"detected": detected or "text/plain"})
+        # Text has no signature, so the checked declaration is the detected type: a CSV is stored as
+        # ``text/csv`` (an importer refuses ``text/plain``), UPLOADS-08.
+        return StageResult("magic_bytes", "pass", {"detected": declared_mime})
 
     if detected is None:
         return StageResult("magic_bytes", "fail", {"detected": None, "declared": declared_mime})
