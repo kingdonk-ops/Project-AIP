@@ -23,7 +23,14 @@ from aip.platform.access.dependencies import (
     public,
     requires,
 )
-from aip.platform.access.grants import Grant, GrantProvider, GrantScope, ProjectScope, TenantScope
+from aip.platform.access.grants import (
+    AssetSubtreeScope,
+    Grant,
+    GrantProvider,
+    GrantScope,
+    ProjectScope,
+    TenantScope,
+)
 from aip.platform.access.policy import (
     AccessPrincipal,
     Decision,
@@ -43,6 +50,7 @@ __all__ = [
     "AccessCheckedRoute",
     "AccessDeclaration",
     "AccessPrincipal",
+    "AssetSubtreeScope",
     "Catalogue",
     "CatalogueError",
     "Decision",
