@@ -43,7 +43,9 @@ describe("header brand lockup", () => {
     const link = await screen.findByRole("link", { name: "Kaefer Demo AIP, home" });
     expect(link.getAttribute("href")).toBe("/");
     expect(link.querySelector(".shell-brand__company")?.textContent).toBe("Kaefer Demo");
-    expect(link.querySelector(".shell-brand__product")?.textContent).toBe("AIP");
+    // DESIGN-17 lockup A: the green AIP tag (drawn, not text) with the product word for assistive tech.
+    expect(link.querySelector(".aip-lockup__product")?.textContent).toBe("AIP");
+    expect(link.querySelector(".aip-lockup__product svg.aip-mark--tag")).not.toBeNull();
     expect(link.querySelector(".shell-brand__company--long")).toBeNull();
   });
 

@@ -1,6 +1,7 @@
 # PORTAL-03 — Portal app: Vite build and container, sign-in, needs-my-action inbox
 
 <!-- hand-edited: owner answers 2026-10-18 (no second approval: a client is active from first sign-in; access expires per project and is renewed by the project admin) -->
+<!-- hand-edited: owner brand decision 2026-10-28 (DESIGN-17): header is lockup A, footer is lockup C -->
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
 | Field | Value |
@@ -32,7 +33,8 @@ action" inbox that lists the inspections awaiting the client within their grants
 a portal API route (tag: extend).
 
 Out of scope: acting on an item (review, sign-off, hold-point release: PORTAL-04), witness (PORTAL-06), client
-reports (PORTAL-05), the internal admin page (PORTAL-07), branding, share packs and the condition dashboard (not R1).
+reports (PORTAL-05), the internal admin page (PORTAL-07), per-client theming beyond the lockups below, share packs and
+the condition dashboard (not R1).
 
 - **files**:
   - apps/portal/package.json
@@ -99,8 +101,12 @@ reports (PORTAL-05), the internal admin page (PORTAL-07), branding, share packs 
       `?reason=` query) shown as term strings in an `aria-live` region. No password field in the app (Keycloak's
       themed page, DESIGN-07, takes the password and the code).
     - `__root.tsx`: loads `GET /api/v1/portal/me`; 401 → `/signin`; `effectiveStatus` `expired` → `/expired`;
-      `suspended` → `/signin?reason=suspended`; a header with the company name, the signed-in name and Sign out
-      (`POST /api/v1/portal/logout` with the CSRF header read from `__Host-aip_portal_csrf`, then `/signin`).
+      `suspended` → `/signin?reason=suspended`; a header with the company lockup (owner 2026-10-28: `BadgeLockup` from
+      `@aip/ui`, lockup A, the tenant's display name in `--tenant-brand` followed by the green AIP tag), the
+      signed-in name and Sign out
+      (`POST /api/v1/portal/logout` with the CSRF header read from `__Host-aip_portal_csrf`, then `/signin`), and a
+      footer with `EndorsedLockup` (lockup C: "<Company> | [AIP] Powered by projectAIP") on every page, `/signin`
+      and `/expired` included. `index.html` links `/favicon.svg` (copy `apps/web/public/favicon.svg`).
     - `/expired`: "Your access has expired" with the term explaining that the project admin who invited them can
       renew it; no data calls besides `/me`.
     - `/` (inbox): `InboxList` renders the items as a list (title, project, asset tag, a `StatusChip` for the state,
@@ -127,7 +133,8 @@ reports (PORTAL-05), the internal admin page (PORTAL-07), branding, share packs 
     `apps/portal/security-headers.json` in every `location` and proxy no `/api/` path outside the allow-list.
   - 6. Term keys (en-AU) in `config/terms/en-AU/portal.json`: `portal.app.title` ("Client portal"),
     `portal.signin.*`, `portal.expired.*`, `portal.inbox.title` ("Needs your action"), `portal.inbox.empty`,
-    `portal.inbox.waitingSince`, `portal.inbox.loadMore`, `portal.signout`, error codes. Regenerate
+    `portal.inbox.waitingSince`, `portal.inbox.loadMore`, `portal.signout`, `portal.brand.product` ("AIP"),
+    `portal.brand.poweredBy` ("Powered by"), `portal.brand.platformPrefix` ("project"), error codes. Regenerate
     `packages/api-client/openapi.json`; the portal uses the generated client.
   - 7. e2e (skeleton lane, needs the compose stack and Keycloak): `e2e/playwright.config.ts` adds projects `portal`
     and `portal-mobile` (`testMatch: "portal/*.spec.ts"`, `baseURL: process.env.E2E_PORTAL_URL ?? "http://portal.localhost:8081"`,

@@ -163,6 +163,8 @@ for (const [email, company] of [
     await page.goto("/projects");
     const lockup = page.getByRole("banner").getByRole("link", { name: `${company} AIP, home` });
     await expect(lockup).toBeVisible();
+    // DESIGN-17 lockup A: the company name followed by the green AIP tag.
+    await expect(lockup.locator("svg.aip-mark--tag")).toBeVisible();
     await expect(page).toHaveTitle(new RegExp(`${company} AIP$`));
     await lockup.click();
     await expect(page).toHaveURL(/\/$/);
@@ -170,6 +172,15 @@ for (const [email, company] of [
     await expectNoBlockingAxe(page);
   });
 }
+
+// DESIGN-17: the ProjectAIP favicon (the green "A" tile) is linked and served.
+test("serves the ProjectAIP favicon", async ({ page }) => {
+  await page.goto("/login");
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", "/favicon.svg");
+  const res = await page.request.get("/favicon.svg");
+  expect(res.ok()).toBe(true);
+  expect(res.headers()["content-type"]).toContain("image/svg+xml");
+});
 
 test("unknown email gets the same generic failure, with no enumeration", async ({ page }) => {
   await page.goto("/login");
