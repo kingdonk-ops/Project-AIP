@@ -306,10 +306,13 @@ export const ItemTypesItemTypesListResponse = zod.object({
   "contentTypeId": zod.uuid(),
   "createdAt": zod.iso.datetime({"offset":true}),
   "description": zod.union([zod.string(),zod.null()]),
+  "draftVersionId": zod.union([zod.uuid(),zod.null()]).optional(),
   "id": zod.uuid(),
   "isComponent": zod.boolean(),
   "key": zod.string(),
   "name": zod.string(),
+  "publishedVersion": zod.union([zod.int(),zod.null()]).optional(),
+  "publishedVersionId": zod.union([zod.uuid(),zod.null()]).optional(),
   "syncVersion": zod.int(),
   "updatedAt": zod.iso.datetime({"offset":true})
 }))
@@ -342,10 +345,13 @@ export const ItemTypesItemTypesCreateResponse = zod.object({
   "contentTypeId": zod.uuid(),
   "createdAt": zod.iso.datetime({"offset":true}),
   "description": zod.union([zod.string(),zod.null()]),
+  "draftVersionId": zod.union([zod.uuid(),zod.null()]).optional(),
   "id": zod.uuid(),
   "isComponent": zod.boolean(),
   "key": zod.string(),
   "name": zod.string(),
+  "publishedVersion": zod.union([zod.int(),zod.null()]).optional(),
+  "publishedVersionId": zod.union([zod.uuid(),zod.null()]).optional(),
   "syncVersion": zod.int(),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -372,10 +378,13 @@ export const ItemTypesItemTypesGetResponse = zod.object({
   "contentTypeId": zod.uuid(),
   "createdAt": zod.iso.datetime({"offset":true}),
   "description": zod.union([zod.string(),zod.null()]),
+  "draftVersionId": zod.union([zod.uuid(),zod.null()]).optional(),
   "id": zod.uuid(),
   "isComponent": zod.boolean(),
   "key": zod.string(),
   "name": zod.string(),
+  "publishedVersion": zod.union([zod.int(),zod.null()]).optional(),
+  "publishedVersionId": zod.union([zod.uuid(),zod.null()]).optional(),
   "syncVersion": zod.int(),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -408,11 +417,199 @@ export const ItemTypesItemTypesUpdateResponse = zod.object({
   "contentTypeId": zod.uuid(),
   "createdAt": zod.iso.datetime({"offset":true}),
   "description": zod.union([zod.string(),zod.null()]),
+  "draftVersionId": zod.union([zod.uuid(),zod.null()]).optional(),
   "id": zod.uuid(),
   "isComponent": zod.boolean(),
   "key": zod.string(),
   "name": zod.string(),
+  "publishedVersion": zod.union([zod.int(),zod.null()]).optional(),
+  "publishedVersionId": zod.union([zod.uuid(),zod.null()]).optional(),
   "syncVersion": zod.int(),
   "updatedAt": zod.iso.datetime({"offset":true})
+})
+
+/**
+ * @summary List Versions
+ */
+export const ItemTypesVersionsListParams = zod.object({
+  "item_type_id": zod.uuid()
+})
+
+export const ItemTypesVersionsListResponse = zod.object({
+  "items": zod.array(zod.object({
+  "attributes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "changeSummary": zod.union([zod.string(),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "createdBy": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "itemTypeId": zod.uuid(),
+  "publishedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "publishedBy": zod.union([zod.uuid(),zod.null()]),
+  "status": zod.enum(['draft', 'published']),
+  "syncVersion": zod.int(),
+  "updatedAt": zod.iso.datetime({"offset":true}),
+  "version": zod.int()
+}))
+})
+
+/**
+ * @summary Create Version
+ */
+export const ItemTypesVersionsCreateParams = zod.object({
+  "item_type_id": zod.uuid()
+})
+
+export const ItemTypesVersionsCreateResponse = zod.object({
+  "attributes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "changeSummary": zod.union([zod.string(),zod.null()]),
+  "compiledSchema": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "createdBy": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "itemTypeId": zod.uuid(),
+  "publishedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "publishedBy": zod.union([zod.uuid(),zod.null()]),
+  "status": zod.enum(['draft', 'published']),
+  "syncVersion": zod.int(),
+  "updatedAt": zod.iso.datetime({"offset":true}),
+  "version": zod.int()
+}).describe('One version; ``compiledSchema`` is set once it is published.')
+
+/**
+ * @summary Delete Version
+ */
+export const ItemTypesVersionsDeleteParams = zod.object({
+  "item_type_id": zod.uuid(),
+  "version_id": zod.uuid()
+})
+
+export const ItemTypesVersionsDeleteResponse = zod.void()
+
+/**
+ * @summary Get Version
+ */
+export const ItemTypesVersionsGetParams = zod.object({
+  "item_type_id": zod.uuid(),
+  "version_id": zod.uuid()
+})
+
+export const ItemTypesVersionsGetResponse = zod.object({
+  "attributes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "changeSummary": zod.union([zod.string(),zod.null()]),
+  "compiledSchema": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "createdBy": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "itemTypeId": zod.uuid(),
+  "publishedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "publishedBy": zod.union([zod.uuid(),zod.null()]),
+  "status": zod.enum(['draft', 'published']),
+  "syncVersion": zod.int(),
+  "updatedAt": zod.iso.datetime({"offset":true}),
+  "version": zod.int()
+}).describe('One version; ``compiledSchema`` is set once it is published.')
+
+/**
+ * @summary Update Version
+ */
+export const ItemTypesVersionsUpdateParams = zod.object({
+  "item_type_id": zod.uuid(),
+  "version_id": zod.uuid()
+})
+
+export const itemTypesVersionsUpdateBodyAttributesOneItemHelpTextOneMax = 2000;
+
+export const itemTypesVersionsUpdateBodyAttributesOneItemLabelDefault = ``;
+export const itemTypesVersionsUpdateBodyAttributesOneItemRequiredDefault = false;
+export const itemTypesVersionsUpdateBodyAttributesOneMax = 1000;
+
+export const itemTypesVersionsUpdateBodyChangeSummaryOneMax = 2000;
+
+
+
+
+export const ItemTypesVersionsUpdateBody = zod.object({
+  "attributes": zod.union([zod.array(zod.object({
+  "config": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]).optional(),
+  "fieldType": zod.string(),
+  "helpText": zod.union([zod.string().max(itemTypesVersionsUpdateBodyAttributesOneItemHelpTextOneMax),zod.null()]).optional(),
+  "key": zod.string(),
+  "label": zod.string().default(itemTypesVersionsUpdateBodyAttributesOneItemLabelDefault),
+  "required": zod.boolean().default(itemTypesVersionsUpdateBodyAttributesOneItemRequiredDefault)
+}).describe('One attribute\'s shape. Key pattern, field type and config are checked by the lint, so a\nbad value comes back as a 422 ``ATTRIBUTES_INVALID`` issue with a path, not a schema error.')).max(itemTypesVersionsUpdateBodyAttributesOneMax),zod.null()]).optional(),
+  "changeSummary": zod.union([zod.string().max(itemTypesVersionsUpdateBodyChangeSummaryOneMax),zod.null()]).optional(),
+  "syncVersion": zod.int().min(1)
+})
+
+export const ItemTypesVersionsUpdateResponse = zod.object({
+  "attributes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "changeSummary": zod.union([zod.string(),zod.null()]),
+  "compiledSchema": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "createdBy": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "itemTypeId": zod.uuid(),
+  "publishedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "publishedBy": zod.union([zod.uuid(),zod.null()]),
+  "status": zod.enum(['draft', 'published']),
+  "syncVersion": zod.int(),
+  "updatedAt": zod.iso.datetime({"offset":true}),
+  "version": zod.int()
+}).describe('One version; ``compiledSchema`` is set once it is published.')
+
+/**
+ * @summary Publish Version
+ */
+export const ItemTypesVersionsPublishParams = zod.object({
+  "item_type_id": zod.uuid(),
+  "version_id": zod.uuid()
+})
+
+export const itemTypesVersionsPublishBodyChangeSummaryOneMax = 2000;
+
+
+
+
+export const ItemTypesVersionsPublishBody = zod.object({
+  "changeSummary": zod.union([zod.string().max(itemTypesVersionsPublishBodyChangeSummaryOneMax),zod.null()]).optional(),
+  "syncVersion": zod.int().min(1)
+})
+
+export const ItemTypesVersionsPublishResponse = zod.object({
+  "attributes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "changeSummary": zod.union([zod.string(),zod.null()]),
+  "compiledSchema": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "createdBy": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "itemTypeId": zod.uuid(),
+  "publishedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "publishedBy": zod.union([zod.uuid(),zod.null()]),
+  "status": zod.enum(['draft', 'published']),
+  "syncVersion": zod.int(),
+  "updatedAt": zod.iso.datetime({"offset":true}),
+  "version": zod.int()
+}).describe('One version; ``compiledSchema`` is set once it is published.')
+
+/**
+ * Check sample attribute values against a published version (the editor and asset form).
+ * @summary Validate Version Attributes
+ */
+export const ItemTypesVersionsValidateParams = zod.object({
+  "item_type_id": zod.uuid(),
+  "version_id": zod.uuid()
+})
+
+export const ItemTypesVersionsValidateBody = zod.object({
+  "attributes": zod.record(zod.string(), zod.unknown())
+})
+
+export const ItemTypesVersionsValidateResponse = zod.object({
+  "errors": zod.array(zod.object({
+  "params": zod.record(zod.string(), zod.unknown()),
+  "path": zod.string(),
+  "termKey": zod.string()
+})),
+  "valid": zod.boolean()
 })
 

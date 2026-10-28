@@ -81,6 +81,30 @@ body = '{"name": "Isolation probe", "syncVersion": 1}'
 ["DELETE /api/v1/item-types/{item_type_id}"]
 table = "item_types"
 
+["GET /api/v1/item-types/{item_type_id}/versions"]
+table = "item_types"
+
+["POST /api/v1/item-types/{item_type_id}/versions"]
+table = "item_types"
+
+["GET /api/v1/item-types/{item_type_id}/versions/{version_id}"]
+table = "item_type_versions"
+
+["PATCH /api/v1/item-types/{item_type_id}/versions/{version_id}"]
+table = "item_type_versions"
+body = '{"attributes": [], "syncVersion": 1}'
+
+["DELETE /api/v1/item-types/{item_type_id}/versions/{version_id}"]
+table = "item_type_versions"
+
+["POST /api/v1/item-types/{item_type_id}/versions/{version_id}/publish"]
+table = "item_type_versions"
+body = '{"syncVersion": 1}'
+
+["POST /api/v1/item-types/{item_type_id}/versions/{version_id}/validate"]
+table = "item_type_versions"
+body = '{"attributes": {}}'
+
 ["DELETE /api/v1/me/sessions/{session_id}"]
 table = "user_session"
 

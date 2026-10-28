@@ -1,4 +1,4 @@
-"""Pydantic request/response models for item_types (ITEMTYPES-01).
+"""Pydantic request/response models for item_types (ITEMTYPES-01/02).
 
 JSON is camelCase (``syncVersion``, ``contentTypeId``), bodies forbid unknown fields. Keys are
 immutable after create, so no update model declares ``key``: sending it is a 422. ``value_schema``
@@ -15,6 +15,10 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
 __all__ = [
+    "AttributeDefinition",
+    "AttributeErrorOut",
+    "AttributeValidateBody",
+    "AttributeValidateResult",
     "CategoryCreate",
     "CategoryOut",
     "CategoryPage",
@@ -31,6 +35,12 @@ __all__ = [
     "ItemTypeOut",
     "ItemTypePage",
     "ItemTypeUpdate",
+    "ItemTypeVersionListItem",
+    "ItemTypeVersionOut",
+    "ItemTypeVersionPage",
+    "VersionPublish",
+    "VersionUpdate",
+    "attribute_dicts",
 ]
 
 ApplicableFor = Literal["any", "item", "module"]
@@ -192,6 +202,9 @@ class ItemTypeOut(_Out):
     description: str | None
     is_component: bool
     allows_components: bool
+    published_version_id: UUID | None = None
+    published_version: int | None = None
+    draft_version_id: UUID | None = None
     sync_version: int
     created_at: datetime
     updated_at: datetime
@@ -199,6 +212,83 @@ class ItemTypeOut(_Out):
 
 class ItemTypePage(_Out):
     items: list[ItemTypeOut]
+
+
+# --- item-type versions (ITEMTYPES-02) ------------------------------------------------------
+
+VersionStatus = Literal["draft", "published"]
+ChangeSummary = Annotated[str, Field(max_length=2000)]
+
+
+class AttributeDefinition(_Model):
+    """One attribute's shape. Key pattern, field type and config are checked by the lint, so a
+    bad value comes back as a 422 ``ATTRIBUTES_INVALID`` issue with a path, not a schema error."""
+
+    key: str
+    label: str = ""
+    field_type: str
+    required: bool = False
+    config: dict[str, Any] | None = None
+    help_text: Annotated[str, Field(max_length=2000)] | None = None
+
+
+Attributes = Annotated[list[AttributeDefinition], Field(max_length=1000)]
+
+
+def attribute_dicts(attributes: list[AttributeDefinition]) -> list[dict[str, Any]]:
+    """The stored, camelCase form of an attribute list (unset optional keys left out)."""
+    return [a.model_dump(by_alias=True, exclude_none=True) for a in attributes]
+
+
+class VersionUpdate(_Model):
+    sync_version: int = Field(ge=1)
+    attributes: Attributes | None = None
+    change_summary: ChangeSummary | None = None
+
+
+class VersionPublish(_Model):
+    sync_version: int = Field(ge=1)
+    change_summary: ChangeSummary | None = None
+
+
+class ItemTypeVersionListItem(_Out):
+    id: UUID
+    item_type_id: UUID
+    version: int
+    status: VersionStatus
+    attributes: list[dict[str, Any]]
+    change_summary: str | None
+    published_at: datetime | None
+    published_by: UUID | None
+    created_by: UUID | None
+    sync_version: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class ItemTypeVersionOut(ItemTypeVersionListItem):
+    """One version; ``compiledSchema`` is set once it is published."""
+
+    compiled_schema: dict[str, Any] | None
+
+
+class ItemTypeVersionPage(_Out):
+    items: list[ItemTypeVersionListItem]
+
+
+class AttributeValidateBody(_Model):
+    attributes: dict[str, Any]
+
+
+class AttributeErrorOut(_Out):
+    path: str
+    term_key: str
+    params: dict[str, Any]
+
+
+class AttributeValidateResult(_Out):
+    valid: bool
+    errors: list[AttributeErrorOut]
 
 
 # --- field-type registry ----------------------------------------------------------------------

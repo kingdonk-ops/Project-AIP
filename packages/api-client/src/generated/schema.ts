@@ -861,6 +861,80 @@ export interface paths {
         patch: operations["item_types_item_types_update"];
         trace?: never;
     };
+    "/api/v1/item-types/{item_type_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Versions */
+        get: operations["item_types_versions_list"];
+        put?: never;
+        /** Create Version */
+        post: operations["item_types_versions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/item-types/{item_type_id}/versions/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Version */
+        get: operations["item_types_versions_get"];
+        put?: never;
+        post?: never;
+        /** Delete Version */
+        delete: operations["item_types_versions_delete"];
+        options?: never;
+        head?: never;
+        /** Update Version */
+        patch: operations["item_types_versions_update"];
+        trace?: never;
+    };
+    "/api/v1/item-types/{item_type_id}/versions/{version_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish Version */
+        post: operations["item_types_versions_publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/item-types/{item_type_id}/versions/{version_id}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Version Attributes
+         * @description Check sample attribute values against a published version (the editor and asset form).
+         */
+        post: operations["item_types_versions_validate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/jobs/mine": {
         parameters: {
             query?: never;
@@ -1357,7 +1431,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -1620,6 +1694,58 @@ export interface components {
             level: number | null;
             /** Method */
             method: string | null;
+        };
+        /**
+         * AttributeDefinition
+         * @description One attribute's shape. Key pattern, field type and config are checked by the lint, so a
+         *     bad value comes back as a 422 ``ATTRIBUTES_INVALID`` issue with a path, not a schema error.
+         */
+        AttributeDefinition: {
+            /** Config */
+            config?: {
+                [key: string]: unknown;
+            } | null;
+            /** Fieldtype */
+            fieldType: string;
+            /** Helptext */
+            helpText?: string | null;
+            /** Key */
+            key: string;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+            /**
+             * Required
+             * @default false
+             */
+            required: boolean;
+        };
+        /** AttributeErrorOut */
+        AttributeErrorOut: {
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /** Path */
+            path: string;
+            /** Termkey */
+            termKey: string;
+        };
+        /** AttributeValidateBody */
+        AttributeValidateBody: {
+            /** Attributes */
+            attributes: {
+                [key: string]: unknown;
+            };
+        };
+        /** AttributeValidateResult */
+        AttributeValidateResult: {
+            /** Errors */
+            errors: components["schemas"]["AttributeErrorOut"][];
+            /** Valid */
+            valid: boolean;
         };
         /** AuthErrorBody */
         AuthErrorBody: {
@@ -2348,6 +2474,8 @@ export interface components {
             createdAt: string;
             /** Description */
             description: string | null;
+            /** Draftversionid */
+            draftVersionId?: string | null;
             /**
              * Id
              * Format: uuid
@@ -2359,6 +2487,10 @@ export interface components {
             key: string;
             /** Name */
             name: string;
+            /** Publishedversion */
+            publishedVersion?: number | null;
+            /** Publishedversionid */
+            publishedVersionId?: string | null;
             /** Syncversion */
             syncVersion: number;
             /**
@@ -2384,6 +2516,106 @@ export interface components {
             name?: string | null;
             /** Syncversion */
             syncVersion: number;
+        };
+        /** ItemTypeVersionListItem */
+        ItemTypeVersionListItem: {
+            /** Attributes */
+            attributes: {
+                [key: string]: unknown;
+            }[];
+            /** Changesummary */
+            changeSummary: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Createdby */
+            createdBy: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Itemtypeid
+             * Format: uuid
+             */
+            itemTypeId: string;
+            /** Publishedat */
+            publishedAt: string | null;
+            /** Publishedby */
+            publishedBy: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published";
+            /** Syncversion */
+            syncVersion: number;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Version */
+            version: number;
+        };
+        /**
+         * ItemTypeVersionOut
+         * @description One version; ``compiledSchema`` is set once it is published.
+         */
+        ItemTypeVersionOut: {
+            /** Attributes */
+            attributes: {
+                [key: string]: unknown;
+            }[];
+            /** Changesummary */
+            changeSummary: string | null;
+            /** Compiledschema */
+            compiledSchema: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Createdby */
+            createdBy: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Itemtypeid
+             * Format: uuid
+             */
+            itemTypeId: string;
+            /** Publishedat */
+            publishedAt: string | null;
+            /** Publishedby */
+            publishedBy: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published";
+            /** Syncversion */
+            syncVersion: number;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Version */
+            version: number;
+        };
+        /** ItemTypeVersionPage */
+        ItemTypeVersionPage: {
+            /** Items */
+            items: components["schemas"]["ItemTypeVersionListItem"][];
         };
         /**
          * JobErrorBody
@@ -2969,7 +3201,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -2994,7 +3226,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -3006,7 +3238,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "project.archive" | "project.create" | "project.update" | "project.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * Scope
@@ -3544,6 +3776,13 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /** VersionPublish */
+        VersionPublish: {
+            /** Changesummary */
+            changeSummary?: string | null;
+            /** Syncversion */
+            syncVersion: number;
+        };
         /**
          * VersionResponse
          * @description Body of GET /api/v1/platform/version. Changing it changes the generated client.
@@ -3553,6 +3792,15 @@ export interface components {
             build: string;
             /** Commit */
             commit: string;
+        };
+        /** VersionUpdate */
+        VersionUpdate: {
+            /** Attributes */
+            attributes?: components["schemas"]["AttributeDefinition"][] | null;
+            /** Changesummary */
+            changeSummary?: string | null;
+            /** Syncversion */
+            syncVersion: number;
         };
     };
     responses: never;
@@ -6668,6 +6916,337 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+        };
+    };
+    item_types_versions_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_type_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeVersionPage"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    item_types_versions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_type_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeVersionOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    item_types_versions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_type_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeVersionOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    item_types_versions_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_type_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    item_types_versions_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_type_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeVersionOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+        };
+    };
+    item_types_versions_publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_type_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionPublish"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeVersionOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+        };
+    };
+    item_types_versions_validate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_type_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttributeValidateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttributeValidateResult"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemTypeErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

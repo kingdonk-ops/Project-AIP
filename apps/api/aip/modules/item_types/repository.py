@@ -1,4 +1,4 @@
-"""Data access for item_types (ITEMTYPES-01).
+"""Data access for item_types (ITEMTYPES-01/02).
 
 Every function takes the tenant-bound connection from ``with_tenant`` and never creates its own
 (ADR 0002). RLS limits every statement to the caller's tenant; reads skip soft-deleted rows. Lists
@@ -11,14 +11,20 @@ from collections.abc import Mapping
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, Table, and_, func, insert, or_, select
+from sqlalchemy import ColumnElement, Table, and_, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from aip.modules.item_types.tables import content_types, item_categories, item_types
+from aip.modules.item_types.tables import (
+    content_types,
+    item_categories,
+    item_type_versions,
+    item_types,
+)
 from aip.platform.db.concurrency import update_with_version
 from aip.platform.db.soft_delete import soft_delete
 
 __all__ = [
+    "any_published_version",
     "category_in_use",
     "content_type_in_use",
     "content_type_item_count",
@@ -29,12 +35,18 @@ __all__ = [
     "get_category",
     "get_content_type",
     "get_item_type",
+    "get_version",
     "insert_row",
     "list_categories",
     "list_content_types",
     "list_item_types",
+    "list_versions",
     "live_content_type_ids",
+    "live_draft",
+    "lock_item_type",
+    "max_live_version",
     "set_content_type_order",
+    "set_published_version",
     "update_row",
 ]
 
@@ -195,14 +207,28 @@ async def category_in_use(conn: AsyncConnection, category_id: UUID) -> int:
 
 
 def _item_type_select() -> Any:
-    """Item types joined to their live category, carrying the resolved ``content_type_id``."""
+    """Item types joined to their live category, carrying the resolved ``content_type_id``, the
+    current published version's number and the open draft's id (ITEMTYPES-02)."""
+    published = item_type_versions.alias("published")
+    draft_id = (
+        select(item_type_versions.c.id)
+        .where(
+            item_type_versions.c.item_type_id == item_types.c.id,
+            item_type_versions.c.status == "draft",
+            _live(item_type_versions),
+        )
+        .scalar_subquery()
+    )
     return select(
-        item_types, item_categories.c.content_type_id.label("content_type_id")
+        item_types,
+        item_categories.c.content_type_id.label("content_type_id"),
+        published.c.version.label("published_version"),
+        draft_id.label("draft_version_id"),
     ).select_from(
         item_types.join(
             item_categories,
             and_(item_categories.c.id == item_types.c.category_id, _live(item_categories)),
-        )
+        ).join(published, published.c.id == item_types.c.published_version_id, isouter=True)
     )
 
 
@@ -228,3 +254,65 @@ async def list_item_types(
         stmt = stmt.where(_ilike(item_types, q))
     stmt = stmt.order_by(item_types.c.key)
     return [dict(r) for r in (await conn.execute(stmt)).mappings()]
+
+
+async def lock_item_type(conn: AsyncConnection, id: UUID) -> Row | None:
+    """The live item type, locked ``FOR UPDATE`` until the transaction ends."""
+    stmt = select(item_types).where(item_types.c.id == id, _live(item_types)).with_for_update()
+    row = (await conn.execute(stmt)).mappings().first()
+    return None if row is None else dict(row)
+
+
+async def set_published_version(conn: AsyncConnection, id: UUID, version_id: UUID) -> None:
+    stmt = (
+        update(item_types)
+        .where(item_types.c.id == id, _live(item_types))
+        .values(published_version_id=version_id, updated_at=func.now())
+    )
+    await conn.execute(stmt)
+
+
+async def any_published_version(conn: AsyncConnection, item_type_id: UUID) -> bool:
+    stmt = select(func.count()).where(
+        item_type_versions.c.item_type_id == item_type_id,
+        item_type_versions.c.status == "published",
+    )
+    return int((await conn.execute(stmt)).scalar_one()) > 0
+
+
+# --- item-type versions -----------------------------------------------------------------------
+
+
+async def get_version(conn: AsyncConnection, id: UUID) -> Row | None:
+    stmt = select(item_type_versions).where(
+        item_type_versions.c.id == id, _live(item_type_versions)
+    )
+    row = (await conn.execute(stmt)).mappings().first()
+    return None if row is None else dict(row)
+
+
+async def list_versions(conn: AsyncConnection, item_type_id: UUID) -> list[Row]:
+    """Live versions of an item type, newest first."""
+    stmt = (
+        select(item_type_versions)
+        .where(item_type_versions.c.item_type_id == item_type_id, _live(item_type_versions))
+        .order_by(item_type_versions.c.version.desc())
+    )
+    return [dict(r) for r in (await conn.execute(stmt)).mappings()]
+
+
+async def live_draft(conn: AsyncConnection, item_type_id: UUID) -> Row | None:
+    stmt = select(item_type_versions).where(
+        item_type_versions.c.item_type_id == item_type_id,
+        item_type_versions.c.status == "draft",
+        _live(item_type_versions),
+    )
+    row = (await conn.execute(stmt)).mappings().first()
+    return None if row is None else dict(row)
+
+
+async def max_live_version(conn: AsyncConnection, item_type_id: UUID) -> int:
+    stmt = select(func.coalesce(func.max(item_type_versions.c.version), 0)).where(
+        item_type_versions.c.item_type_id == item_type_id, _live(item_type_versions)
+    )
+    return int((await conn.execute(stmt)).scalar_one())
