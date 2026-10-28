@@ -4975,6 +4975,18 @@
       },
       "SessionStatus": {
         "properties": {
+          "fileId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fileid"
+          },
           "rejectReason": {
             "anyOf": [
               {
