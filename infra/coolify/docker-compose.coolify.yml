@@ -334,6 +334,25 @@ services:
       tenancy-seed:
         condition: service_completed_successfully
 
+  report-templates-load:
+    # REPORTS-01: the config report templates (baked into the image) for the demo tenants, as
+    # published versions. Idempotent; a changed template needs a new version folder.
+    <<: *oneshot
+    image: *api-image
+    command:
+      - python
+      - -m
+      - aip.modules.report_engine.loader
+      - config/report-templates
+      - --tenant
+      - 00000000-0000-4000-8000-00000000000a
+      - --tenant
+      - 00000000-0000-4000-8000-00000000000b
+    environment: *app-env
+    depends_on:
+      tenancy-seed:
+        condition: service_completed_successfully
+
   admin-bootstrap:
     # TESTING-09: each fixture tenant's first tenant_admin, linked on their first SSO sign-in
     # (alice@kaefer.test, bob@acme.test from the mock IdP). Idempotent.
@@ -351,6 +370,16 @@ services:
     environment: *app-env
     depends_on:
       access-seed:
+        condition: service_completed_successfully
+
+  approvals-seed:
+    # APPROVALS-05: the inspection_standard workflow preset in kaefer-demo. Idempotent.
+    <<: *oneshot
+    image: *api-image
+    command: ["python", "-m", "aip.modules.approvals.seeds"]
+    environment: *app-env
+    depends_on:
+      tenancy-seed:
         condition: service_completed_successfully
 
   object-store-init:
@@ -413,6 +442,10 @@ services:
       access-seed:
         condition: service_completed_successfully
       admin-bootstrap:
+        condition: service_completed_successfully
+      approvals-seed:
+        condition: service_completed_successfully
+      report-templates-load:
         condition: service_completed_successfully
       object-store-init:
         condition: service_completed_successfully

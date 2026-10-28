@@ -1,0 +1,26 @@
+{
+  "key": "project-summary",
+  "version": 1,
+  "variant": "internal",
+  "recordType": "project",
+  "nameKey": "report.template.project_summary",
+  "orientation": "portrait",
+  "paper": "A4",
+  "marginsMm": { "top": 15, "right": 12, "bottom": 18, "left": 12 },
+  "termKeys": [
+    "report.template.project_summary",
+    "report.label.project_code",
+    "report.label.project_name",
+    "report.label.project_status",
+    "report.label.project_created",
+    "report.label.time_zone",
+    "report.label.generated_at",
+    "report.label.page",
+    "projects.status.draft",
+    "projects.status.active",
+    "projects.status.closing",
+    "projects.status.archived"
+  ],
+  "assets": [{ "name": "logo.png", "contentType": "image/png" }],
+  "dataSchemaVersion": 1
+}

@@ -118,6 +118,7 @@ async def test_system_roles_match_the_access_matrix(client: httpx.AsyncClient) -
         "asset.view",
         "form.view",
         "project.view",
+        "report.template.view",
         "site.view",
         "uploads.create",
         "uploads.view",
@@ -340,9 +341,11 @@ async def test_editing_a_system_role_customises_it_and_takes_effect(
 
     (event,) = [e for e in await events(db, "access.role.changed") if e["action"] == "updated"]
     assert event["before"] == [
+        "approvals.inspection.approve",  # APPROVALS-05: sign-off at the approve level
         "approvals.view",
         "asset.view",
         "project.view",
+        "report.template.view",
         "site.view",
         "uploads.view",
     ]
@@ -369,6 +372,30 @@ async def test_reseeding_leaves_a_customised_role_alone_and_reports_new_codes(
         r for r in (await client.get(ROLES, headers=ALICE)).json()["items"] if r["id"] == reviewer
     )
     assert role["permissions"] == ["site.view"]
+
+
+async def test_roles_that_edit_assets_hold_asset_move_and_a_reseed_extends_older_roles(
+    app: FastAPI, client: httpx.AsyncClient, db: TenantDb
+) -> None:
+    # ACCESS-07 (ADR 0027 amendment): `move` is an edit-level verb.
+    roles = {r["code"]: r for r in (await client.get(ROLES, headers=ALICE)).json()["items"]}
+    for code in ("tenant_admin", "project_manager", "qaqc_manager", "supervisor"):
+        assert "asset.move" in roles[code]["permissions"], code
+    for code in ("inspector", "field_worker", "client_reviewer", "auditor"):
+        assert "asset.move" not in roles[code]["permissions"], code
+
+    # A supervisor role seeded before ACCESS-07 (no asset.move) picks it up on the next seed.
+    await su_execute(
+        db,
+        "UPDATE role_permission SET deleted_at = now() WHERE permission_code = 'asset.move'"
+        f" AND role_id = (SELECT id FROM role WHERE tenant_id = '{TENANT_A_ID}'"
+        " AND code = 'supervisor')",
+    )
+    await su_assign(db, TENANT_A_ID, CAROL_ID, "supervisor")
+    assert not await can(app, CAROL_ID, "asset.move")
+    report = await seed_roles(TENANT_A_ID)
+    assert report.updated == ["supervisor"]
+    assert await can(app, CAROL_ID, "asset.move")
 
 
 async def test_system_codes_are_reserved_and_assignments_are_unique(
@@ -401,16 +428,26 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
     assert response.status_code == 200, response.text
     assert response.json()["customisedAt"] is None
     assert response.json()["permissions"] == [
+        "approvals.inspection.approve",  # APPROVALS-05: sign-off at the approve level
         "approvals.view",
         "asset.view",
         "project.view",
+        "report.template.view",
         "site.view",
         "uploads.view",
     ]
     (event,) = [e for e in await events(db, "access.role.changed") if e["action"] == "reset"]
     assert (event["before"], event["after"]) == (
         ["site.view"],
-        ["approvals.view", "asset.view", "project.view", "site.view", "uploads.view"],
+        [
+            "approvals.inspection.approve",
+            "approvals.view",
+            "asset.view",
+            "project.view",
+            "report.template.view",
+            "site.view",
+            "uploads.view",
+        ],
     )
 
 
@@ -451,6 +488,7 @@ async def test_custom_role_lifecycle(client: httpx.AsyncClient, db: TenantDb) ->
         "asset.view",
         "form.view",
         "project.view",
+        "report.template.view",
         "site.view",
         "uploads.create",
         "uploads.view",

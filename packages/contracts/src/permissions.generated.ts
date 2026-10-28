@@ -10,6 +10,11 @@ export type PermissionCode =
   | "access.role_assignment.read"
   | "access.team.manage"
   | "approvals.design"
+  | "approvals.inspection.approve"
+  | "approvals.inspection.assign"
+  | "approvals.inspection.client_approve"
+  | "approvals.inspection.execute"
+  | "approvals.inspection.review"
   | "approvals.start"
   | "approvals.view"
   | "asset.create"
@@ -37,6 +42,8 @@ export type PermissionCode =
   | "project.create"
   | "project.update"
   | "project.view"
+  | "report.template.manage"
+  | "report.template.view"
   | "site.manage"
   | "site.view"
   | "tenancy.organisation.manage"
@@ -56,6 +63,11 @@ export const PERMISSIONS = {
   "access.role_assignment.read": { module: "access", privileged: false },
   "access.team.manage": { module: "access", privileged: false },
   "approvals.design": { module: "approvals", privileged: false },
+  "approvals.inspection.approve": { module: "approvals", privileged: false },
+  "approvals.inspection.assign": { module: "approvals", privileged: false },
+  "approvals.inspection.client_approve": { module: "approvals", privileged: false },
+  "approvals.inspection.execute": { module: "approvals", privileged: false },
+  "approvals.inspection.review": { module: "approvals", privileged: false },
   "approvals.start": { module: "approvals", privileged: false },
   "approvals.view": { module: "approvals", privileged: false },
   "asset.create": { module: "assets", privileged: false },
@@ -83,6 +95,8 @@ export const PERMISSIONS = {
   "project.create": { module: "projects", privileged: false },
   "project.update": { module: "projects", privileged: false },
   "project.view": { module: "projects", privileged: false },
+  "report.template.manage": { module: "report_engine", privileged: false },
+  "report.template.view": { module: "report_engine", privileged: false },
   "site.manage": { module: "projects", privileged: false },
   "site.view": { module: "projects", privileged: false },
   "tenancy.organisation.manage": { module: "tenancy", privileged: false },

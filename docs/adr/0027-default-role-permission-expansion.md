@@ -29,3 +29,18 @@ edit anywhere, which a strictly cumulative `approve` level would break.
 - New modules should name permissions with the verbs above so the default roles get them at the right level.
 - Tenant admins can still change any role (ADR 0020); this only sets the shipped defaults and what `reset` restores.
 - A customised role never gains new catalogue codes automatically; the seed reports them instead.
+
+## Amendment (ACCESS-07, 2026-10-28): `move` at `edit`, `invite` at `approve`
+
+Owner, 2026-10-18 (ADR 0036 §10, PORTAL-01):
+
+- `edit` also adds `move`. Default roles that edit assets (`asset.update`) can now reorganise the tree
+  (`asset.move`), while `asset.move` stays a separate code a tenant admin can withhold from any role.
+- `approve` also adds `invite`. That is the level Project Manager holds on the portal module, so project admins get
+  `portal.user.invite` and can invite portal clients; edit-level roles (QA/QC Manager, Document Controller) see
+  portal users but cannot invite them.
+- §4 is tightened to keep its intent: Client Reviewer's `approve` grants the `view` verbs plus only `approve` and
+  `sign` (`SIGN_OFF_VERBS`), never `invite`.
+
+Existing tenants pick the new codes up with `aip-access seed-roles`: uncustomised system roles are extended in place;
+a customised role is left alone and its new codes are reported as pending (§5, ADR 0020).

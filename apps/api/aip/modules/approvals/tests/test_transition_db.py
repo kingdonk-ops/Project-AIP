@@ -286,6 +286,7 @@ async def test_available_transitions_reflect_the_callers_permissions(
         "toState": "submitted",
         "labelKey": "approvals.demo.action.submit",
         "critical": False,
+        "requiresComment": False,
         "allowed": True,
         "reasonKey": None,
     }

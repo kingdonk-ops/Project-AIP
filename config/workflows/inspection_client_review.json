@@ -1,0 +1,137 @@
+{
+  "key": "inspection_client_review",
+  "recordType": "inspection",
+  "spec": {
+    "states": [
+      {
+        "code": "draft",
+        "labelKey": "workflow.inspection.state.draft"
+      },
+      {
+        "code": "assignable",
+        "labelKey": "workflow.inspection.state.assignable"
+      },
+      {
+        "code": "assigned",
+        "labelKey": "workflow.inspection.state.assigned"
+      },
+      {
+        "code": "in_progress",
+        "labelKey": "workflow.inspection.state.in_progress"
+      },
+      {
+        "code": "inspector_review",
+        "labelKey": "workflow.inspection.state.inspector_review"
+      },
+      {
+        "code": "supervisor_review",
+        "labelKey": "workflow.inspection.state.supervisor_review"
+      },
+      {
+        "code": "client_review",
+        "labelKey": "workflow.inspection.state.client_review"
+      },
+      {
+        "code": "rejected",
+        "labelKey": "workflow.inspection.state.rejected"
+      },
+      {
+        "code": "completed",
+        "labelKey": "workflow.inspection.state.completed",
+        "terminal": true
+      }
+    ],
+    "initial": "draft",
+    "transitions": [
+      {
+        "action": "ready",
+        "from": "draft",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.ready"
+      },
+      {
+        "action": "assign",
+        "from": "assignable",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.assign"
+      },
+      {
+        "action": "unassign",
+        "from": "assigned",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.unassign"
+      },
+      {
+        "action": "start",
+        "from": "assigned",
+        "to": "in_progress",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.start"
+      },
+      {
+        "action": "submit",
+        "from": "in_progress",
+        "to": "inspector_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.submit"
+      },
+      {
+        "action": "review_pass",
+        "from": "inspector_review",
+        "to": "supervisor_review",
+        "requiredPermission": "approvals.inspection.review",
+        "labelKey": "workflow.inspection.action.review_pass"
+      },
+      {
+        "action": "reject",
+        "from": "inspector_review",
+        "to": "rejected",
+        "requiredPermission": "approvals.inspection.review",
+        "labelKey": "workflow.inspection.action.reject",
+        "requiresComment": true
+      },
+      {
+        "action": "approve",
+        "from": "supervisor_review",
+        "to": "client_review",
+        "requiredPermission": "approvals.inspection.approve",
+        "labelKey": "workflow.inspection.action.approve"
+      },
+      {
+        "action": "reject",
+        "from": "supervisor_review",
+        "to": "rejected",
+        "requiredPermission": "approvals.inspection.approve",
+        "labelKey": "workflow.inspection.action.reject",
+        "requiresComment": true
+      },
+      {
+        "action": "client_approve",
+        "from": "client_review",
+        "to": "completed",
+        "requiredPermission": "approvals.inspection.client_approve",
+        "labelKey": "workflow.inspection.action.client_approve",
+        "critical": true,
+        "signoffAction": "inspection.client_approve"
+      },
+      {
+        "action": "reject",
+        "from": "client_review",
+        "to": "rejected",
+        "requiredPermission": "approvals.inspection.client_approve",
+        "labelKey": "workflow.inspection.action.reject",
+        "requiresComment": true
+      },
+      {
+        "action": "resend",
+        "from": "rejected",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.resend"
+      }
+    ]
+  }
+}

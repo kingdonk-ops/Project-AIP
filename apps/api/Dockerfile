@@ -85,7 +85,7 @@ ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     AIP_ENV=production \
-    AIP_ALEMBIC_CONFIG=/app/apps/api/alembic.ini \
+    AIP_ALEMBIC_CONFIG=/app/apps/api/alembic.ini     AIP_WORKFLOWS_DIR=/app/config/workflows \
     GIT_SHA="${GIT_SHA}" \
     BUILD_ID="${BUILD_ID}" \
     FORWARDED_ALLOW_IPS="127.0.0.1,::1"
@@ -98,6 +98,11 @@ COPY apps/api/alembic.ini apps/api/alembic.ini
 COPY apps/api/migrations apps/api/migrations
 # The platform dictionary loaded by `python -m aip.modules.terms.loader` (TERMS-01).
 COPY config/terms config/terms
+# The workflow presets: validated at startup, installed by `python -m aip.modules.approvals.seeds`
+# and POST /api/v1/approvals/definitions/from-preset (APPROVALS-05).
+COPY config/workflows config/workflows
+# The config report templates installed by `python -m aip.modules.report_engine.loader` (REPORTS-01).
+COPY config/report-templates config/report-templates
 
 USER 10001:10001
 
