@@ -170,9 +170,12 @@ def test_principal_audience_defaults_from_the_user_class() -> None:
     assert _principal(userClass="portal").audience == "portal"
     assert _principal(userClass="staff").audience == "app"
     assert _principal(userClass="field", audience="device").audience == "device"
-    assert Principal.model_validate_json(
-        _principal(userClass="portal").model_dump_json(by_alias=True)
-    ).audience == "portal"
+    assert (
+        Principal.model_validate_json(
+            _principal(userClass="portal").model_dump_json(by_alias=True)
+        ).audience
+        == "portal"
+    )
 
 
 # --- policy -------------------------------------------------------------------------------------

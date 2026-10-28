@@ -1,7 +1,8 @@
 """The portal sign-in routes against the in-process OIDC stub (IDENTITY-10).
 
-The portal's Keycloak client is stubbed like the staff one (``StubProvider(client_id="aip-portal")``);
-the verified identity is echoed by the placeholder handler, JIT and the session are covered by
+The portal's Keycloak client is stubbed like the staff one
+(``StubProvider(client_id="aip-portal")``); the verified identity is echoed by the placeholder
+handler, JIT and the session are covered by
 ``sessions/test_portal_sessions_db.py``.
 """
 
@@ -137,9 +138,13 @@ async def test_a_pre_auth_cookie_only_finishes_at_its_own_callback(
     provider: StubProvider,
     portal_provider: StubProvider,
 ) -> None:
-    staff, staff_cookie = await _start(client, "carol@unknown.test", path="/api/v1/auth/login/start")
+    staff, staff_cookie = await _start(
+        client, "carol@unknown.test", path="/api/v1/auth/login/start"
+    )
     code = provider.authorize(staff["redirectUrl"])
-    r = await _callback(client, staff_cookie, code=code, state=_query(staff["redirectUrl"])["state"])
+    r = await _callback(
+        client, staff_cookie, code=code, state=_query(staff["redirectUrl"])["state"]
+    )
     assert (r.status_code, r.json()["code"]) == (400, "INVALID_STATE")
 
     portal, portal_cookie = await _start(client, "client.a@rio.example")

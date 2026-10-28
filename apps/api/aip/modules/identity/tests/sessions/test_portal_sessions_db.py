@@ -159,9 +159,7 @@ async def test_a_portal_user_signs_in_with_only_portal_cookies(
     sid = r.cookies.get("__Host-aip_portal_sid")
     assert sid
 
-    rows = await su_fetch(
-        db, "SELECT audience, aal FROM user_session WHERE user_id = $1", user_id
-    )
+    rows = await su_fetch(db, "SELECT audience, aal FROM user_session WHERE user_id = $1", user_id)
     assert rows == [("portal", 2)]
     status = await su_fetch(db, "SELECT status FROM app_user WHERE id = $1", user_id)
     assert status == [("active",)]
@@ -315,7 +313,7 @@ async def test_portal_idle_is_capped_at_the_tenants_staff_idle(db: TenantDb, dav
     await su_execute(
         db,
         "INSERT INTO tenant_auth_policy (tenant_id, session_policy) VALUES "
-        f"('{TENANT_A_ID}', '{{\"staff\": {{\"idleMin\": 10}}, \"portal\": {{\"idleMin\": 60}}}}')",
+        f'(\'{TENANT_A_ID}\', \'{{"staff": {{"idleMin": 10}}, "portal": {{"idleMin": 60}}}}\')',
     )
     portal = await _portal_session(dave)
     rows = await su_fetch(

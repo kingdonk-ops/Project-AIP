@@ -40,7 +40,9 @@ async def test_a_portal_invite_is_local_with_a_client_membership(db: TenantDb) -
     async with db.with_tenant(TENANT_A_ID) as conn:
         user = await repo.get_user(conn, created.user_id)
         memberships = await repo.list_memberships(conn, created.user_id)
-        events = [e for e in await repo.list_auth_events(conn) if e["event_type"] == "invite.created"]
+        events = [
+            e for e in await repo.list_auth_events(conn) if e["event_type"] == "invite.created"
+        ]
     assert user is not None
     assert (user.user_class, user.status, user.sso_managed, user.idp_alias) == (
         "portal",

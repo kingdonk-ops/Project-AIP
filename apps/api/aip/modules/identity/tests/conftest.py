@@ -132,9 +132,7 @@ class StubProvider:
             return httpx.Response(200, json={"keys": [self.key.as_dict(private=False)]})
         if request.url.path.endswith("/token"):
             self.token_requests += 1
-            expected = base64.b64encode(
-                f"{self.client_id}:{self.client_secret}".encode()
-            ).decode()
+            expected = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
 
             if request.headers.get("authorization") != f"Basic {expected}":
                 return httpx.Response(401, json={"error": "unauthorized_client"})
