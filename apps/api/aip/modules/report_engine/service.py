@@ -37,8 +37,8 @@ from aip.modules.report_engine.render import RenderContractError, inline_assets,
 from aip.modules.report_engine.schemas import (
     ReportTemplateDetail,
     ReportTemplatePage,
-    TemplateRow,
     ReportTemplateSummary,
+    TemplateRow,
 )
 from aip.modules.report_engine.template_package import TemplatePackage
 from aip.modules.terms.api import bulk_resolve, display_system

@@ -21,13 +21,13 @@ from pydantic.alias_generators import to_camel
 __all__ = [
     "AssetInfo",
     "ReportErrorBody",
-    "StoredAsset",
     "ReportTemplateDetail",
     "ReportTemplatePage",
-    "TemplateRow",
-    "TemplateStatus",
     "ReportTemplateSummary",
     "ReportTemplateUpload",
+    "StoredAsset",
+    "TemplateRow",
+    "TemplateStatus",
     "TemplateVariant",
 ]
 
