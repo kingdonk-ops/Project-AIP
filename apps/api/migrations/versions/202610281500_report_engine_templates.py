@@ -12,7 +12,7 @@ its ``content_sha256``. A ``BEFORE UPDATE`` trigger freezes a row once it leaves
 soft-deleted. A retired row is kept, so a pinned report can always be re-rendered.
 
 Revision ID: 202610281500
-Revises: 202610261200
+Revises: 202610281200
 Create Date: 2026-10-28 15:00:00+00:00
 """
 
@@ -21,7 +21,7 @@ from alembic import op
 from aip.platform.db.templates import render_template
 
 revision: str = "202610281500"
-down_revision: str | None = "202610261200"
+down_revision: str | None = "202610281200"
 branch_labels = None
 depends_on = None
 
