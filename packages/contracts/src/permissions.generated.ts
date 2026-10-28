@@ -28,6 +28,7 @@ export type PermissionCode =
   | "identity.user.read"
   | "item_type.edit"
   | "item_type.manage"
+  | "item_type.publish"
   | "item_type.view"
   | "ops.jobs.admin"
   | "platform.events.manage"
@@ -73,6 +74,7 @@ export const PERMISSIONS = {
   "identity.user.read": { module: "identity", privileged: false },
   "item_type.edit": { module: "item_types", privileged: false },
   "item_type.manage": { module: "item_types", privileged: false },
+  "item_type.publish": { module: "item_types", privileged: false },
   "item_type.view": { module: "item_types", privileged: false },
   "ops.jobs.admin": { module: "ops", privileged: false },
   "platform.events.manage": { module: "ops", privileged: true },
