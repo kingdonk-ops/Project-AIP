@@ -21,6 +21,8 @@ __all__ = [
     "count_active_for_user",
     "expire_stale",
     "find_by_client_request_id",
+    "find_stored_file_by_idempotency_key",
+    "get_clean_stored_file",
     "get_for_requester",
     "get_session",
     "get_stored_file",
@@ -125,7 +127,7 @@ async def set_released(conn: AsyncConnection, session_id: UUID, file_id: UUID) -
 
 
 async def insert_stored_file(conn: AsyncConnection, values: Mapping[str, Any]) -> Row:
-    """Insert the released, scanned file. Called only from the pipeline's ``release`` step."""
+    """Insert a clean file: the pipeline's ``release`` step or ``store_generated_file`` only."""
     stmt = insert(stored_files).values(**values).returning(*stored_files.c)
     return dict((await conn.execute(stmt)).mappings().one())
 
@@ -135,6 +137,27 @@ async def get_stored_file(conn: AsyncConnection, file_id: UUID) -> Row | None:
     stmt = select(stored_files).where(
         stored_files.c.id == file_id, stored_files.c.deleted_at.is_(None)
     )
+    row = (await conn.execute(stmt)).mappings().first()
+    return None if row is None else dict(row)
+
+
+async def get_clean_stored_file(conn: AsyncConnection, file_id: UUID) -> Row | None:
+    """A live, ``clean`` file visible on ``conn`` (tenant RLS and the principal's project scope)."""
+    stmt = select(stored_files).where(
+        stored_files.c.id == file_id,
+        stored_files.c.scan_status == "clean",
+        stored_files.c.deleted_at.is_(None),
+    )
+    row = (await conn.execute(stmt)).mappings().first()
+    return None if row is None else dict(row)
+
+
+async def find_stored_file_by_idempotency_key(
+    conn: AsyncConnection, idempotency_key: str
+) -> Row | None:
+    """The file stored under ``idempotency_key`` in this tenant, deleted or not (the key is unique
+    per tenant whatever the row's state, so a deleted one still blocks reuse)."""
+    stmt = select(stored_files).where(stored_files.c.idempotency_key == idempotency_key)
     row = (await conn.execute(stmt)).mappings().first()
     return None if row is None else dict(row)
 

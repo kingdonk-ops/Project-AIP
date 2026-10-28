@@ -52,6 +52,7 @@ export const UploadsConfirmSessionParams = zod.object({
 })
 
 export const UploadsConfirmSessionResponse = zod.object({
+  "fileId": zod.union([zod.uuid(),zod.null()]).optional(),
   "rejectReason": zod.union([zod.string(),zod.null()]).optional(),
   "status": zod.string()
 })
@@ -64,6 +65,7 @@ export const UploadsSessionStatusParams = zod.object({
 })
 
 export const UploadsSessionStatusResponse = zod.object({
+  "fileId": zod.union([zod.uuid(),zod.null()]).optional(),
   "rejectReason": zod.union([zod.string(),zod.null()]).optional(),
   "status": zod.string()
 })
