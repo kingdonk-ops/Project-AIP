@@ -118,6 +118,7 @@ async def test_system_roles_match_the_access_matrix(client: httpx.AsyncClient) -
         "asset.view",
         "form.view",
         "project.view",
+        "report.template.view",
         "site.view",
         "uploads.create",
         "uploads.view",
@@ -343,6 +344,7 @@ async def test_editing_a_system_role_customises_it_and_takes_effect(
         "approvals.view",
         "asset.view",
         "project.view",
+        "report.template.view",
         "site.view",
         "uploads.view",
     ]
@@ -428,13 +430,21 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
         "approvals.view",
         "asset.view",
         "project.view",
+        "report.template.view",
         "site.view",
         "uploads.view",
     ]
     (event,) = [e for e in await events(db, "access.role.changed") if e["action"] == "reset"]
     assert (event["before"], event["after"]) == (
         ["site.view"],
-        ["approvals.view", "asset.view", "project.view", "site.view", "uploads.view"],
+        [
+            "approvals.view",
+            "asset.view",
+            "project.view",
+            "report.template.view",
+            "site.view",
+            "uploads.view",
+        ],
     )
 
 
@@ -475,6 +485,7 @@ async def test_custom_role_lifecycle(client: httpx.AsyncClient, db: TenantDb) ->
         "asset.view",
         "form.view",
         "project.view",
+        "report.template.view",
         "site.view",
         "uploads.create",
         "uploads.view",
