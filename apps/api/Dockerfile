@@ -98,6 +98,8 @@ COPY apps/api/alembic.ini apps/api/alembic.ini
 COPY apps/api/migrations apps/api/migrations
 # The platform dictionary loaded by `python -m aip.modules.terms.loader` (TERMS-01).
 COPY config/terms config/terms
+# The config report templates installed by `python -m aip.modules.report_engine.loader` (REPORTS-01).
+COPY config/report-templates config/report-templates
 
 USER 10001:10001
 

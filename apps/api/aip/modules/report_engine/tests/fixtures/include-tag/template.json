@@ -1,0 +1,18 @@
+{
+  "key": "include-tag",
+  "version": 1,
+  "variant": "internal",
+  "recordType": "project",
+  "nameKey": "report.template.project_summary",
+  "orientation": "portrait",
+  "paper": "A4",
+  "marginsMm": {
+    "top": 10,
+    "right": 10,
+    "bottom": 10,
+    "left": 10
+  },
+  "termKeys": [],
+  "assets": [],
+  "dataSchemaVersion": 1
+}

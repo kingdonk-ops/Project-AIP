@@ -211,3 +211,18 @@ table = "form_revisions"
 ["POST /api/v1/forms/revisions/{revision_id}/evaluate"]
 table = "form_revisions"
 body = '{"answers": {}}'
+
+["GET /api/v1/reports/templates/{template_id}"]
+table = "report_templates"
+
+["POST /api/v1/reports/templates/{template_id}/publish"]
+table = "report_templates"
+
+["POST /api/v1/reports/templates/{template_id}/retire"]
+table = "report_templates"
+
+["POST /api/v1/reports/templates/{template_id}/preview"]
+table = "report_templates"
+
+["DELETE /api/v1/reports/templates/{template_id}"]
+table = "report_templates"
