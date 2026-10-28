@@ -150,7 +150,7 @@ async def test_golden_case_through_the_transition_service(
         response = await act(client, instance["id"], action, headers, comment="golden")
         if response.status_code != 200:
             assert response.status_code == 409, response.text
-            outcome = {"error": response.json()["detail"]["code"]}
+            outcome = {"error": response.json()["code"]}
             break
         state = response.json()["instance"]["currentState"]
     else:
@@ -238,7 +238,7 @@ async def test_reject_needs_a_comment(
     for body in ({}, {"comment": "   "}):
         response = await act(client, instance["id"], "reject", fresh(LEAD_ID), **body)
         assert response.status_code == 422, response.text
-        assert response.json()["detail"]["code"] == "COMMENT_REQUIRED"
+        assert response.json()["code"] == "COMMENT_REQUIRED"
     assert len((await history(client, instance["id"], fresh(ALICE_ID)))["entries"]) == 4
 
     response = await act(client, instance["id"], "reject", fresh(LEAD_ID), comment="DFT low")
@@ -336,7 +336,7 @@ async def test_install_from_preset_needs_design_and_a_known_preset(
     assert denied.status_code == 403
     missing = await client.post(path, json={"presetKey": "no_such_preset"}, headers=fresh(ALICE_ID))
     assert missing.status_code == 404
-    assert missing.json()["detail"]["code"] == "PRESET_NOT_FOUND"
+    assert missing.json()["code"] == "PRESET_NOT_FOUND"
     # Another tenant's install is its own: tenant B still has no inspection definition.
     response = await client.post(
         "/api/v1/approvals/instances",
@@ -344,7 +344,7 @@ async def test_install_from_preset_needs_design_and_a_known_preset(
         headers=BOB,
     )
     assert response.status_code == 422
-    assert response.json()["detail"]["code"] == "NO_ACTIVE_DEFINITION"
+    assert response.json()["code"] == "NO_ACTIVE_DEFINITION"
 
 
 # --- the seed ------------------------------------------------------------------------------------

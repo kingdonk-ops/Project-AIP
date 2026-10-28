@@ -21,7 +21,6 @@ from aip.modules.approvals.engine.evaluator import (
 )
 from aip.modules.approvals.presets import list_presets, load_preset, workflows_dir
 from aip.modules.approvals.schemas import WorkflowDefinitionSpec, validate_spec
-from aip.modules.terms.loader import read_dictionary
 from aip.platform.db.migrator import repo_root
 
 CASES_FILE = Path(__file__).parent / "golden" / "inspection_lifecycle_cases.json"
@@ -130,7 +129,10 @@ def test_every_transition_uses_an_inspection_permission() -> None:
 
 
 def test_every_label_key_is_in_the_en_au_dictionary() -> None:
-    known = {entry.key for entry in read_dictionary(repo_root() / "config" / "terms" / "en-AU")}
+    # The dictionary files directly: tests may import another module only through its api.
+    known: set[str] = set()
+    for path in (repo_root() / "config" / "terms" / "en-AU").glob("*.json"):
+        known |= set(json.loads(path.read_text(encoding="utf-8")))
     missing: list[str] = []
     for variant in PRESET_FOR:
         spec = preset_spec(variant)
