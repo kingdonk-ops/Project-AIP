@@ -530,6 +530,8 @@ jobs:
       E2E_PASS_A: alice_dev_only_password
       E2E_USER_B: bob@acme.test
       E2E_PASS_B: bob_dev_only_password
+      E2E_USER_VIEWER: vera@kaefer.test
+      E2E_PASS_VIEWER: vera_dev_only_password
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -556,7 +558,7 @@ jobs:
         run: echo "127.0.0.1 rustfs" | sudo tee -a /etc/hosts
       # One worker: the specs sign the same fixture users in, and the mock IdP's brute-force
       # protection treats two sign-ins of one user within a second as an attack (quick-login check).
-      - name: Walking skeleton and UPLOADS-01 presign journey (web project, @skeleton)
+      - name: Walking skeleton, UPLOADS-01 presign and TESTING-12 session journeys (web project, @skeleton)
         run: pnpm --filter e2e exec playwright test --project web --grep @skeleton --workers 1
       - name: Upload the trace, video and report
         if: failure()
