@@ -910,6 +910,14 @@ ALTER TABLE ONLY public.access_user_scope
 ALTER TABLE ONLY public.app_user
     ADD CONSTRAINT fk_app_user_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
+-- Name: assets fk_assets_item_type; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT fk_assets_item_type FOREIGN KEY (item_type_id, tenant_id) REFERENCES public.item_types(id, tenant_id);
+
+-- Name: assets fk_assets_item_type_version; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT fk_assets_item_type_version FOREIGN KEY (item_type_version_id, tenant_id) REFERENCES public.item_type_versions(id, tenant_id);
+
 -- Name: assets fk_assets_parent; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.assets
     ADD CONSTRAINT fk_assets_parent FOREIGN KEY (parent_id, tenant_id) REFERENCES public.assets(id, tenant_id);
@@ -2177,6 +2185,9 @@ CREATE INDEX ix_app_user_tenant_id_organisation_id ON public.app_user USING btre
 -- Name: ix_app_user_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_app_user_tenant_id_status ON public.app_user USING btree (tenant_id, status) WHERE (deleted_at IS NULL);
 
+-- Name: ix_assets_attributes; Type: INDEX; Schema: public
+CREATE INDEX ix_assets_attributes ON public.assets USING gin (attributes jsonb_path_ops);
+
 -- Name: ix_assets_name_trgm; Type: INDEX; Schema: public
 CREATE INDEX ix_assets_name_trgm ON public.assets USING gin (name public.gin_trgm_ops);
 
@@ -2185,6 +2196,9 @@ CREATE INDEX ix_assets_path_gist ON public.assets USING gist (path);
 
 -- Name: ix_assets_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_assets_tenant_id ON public.assets USING btree (tenant_id);
+
+-- Name: ix_assets_tenant_id_item_type_id; Type: INDEX; Schema: public
+CREATE INDEX ix_assets_tenant_id_item_type_id ON public.assets USING btree (tenant_id, item_type_id);
 
 -- Name: ix_assets_tenant_id_parent_id_sort_order; Type: INDEX; Schema: public
 CREATE INDEX ix_assets_tenant_id_parent_id_sort_order ON public.assets USING btree (tenant_id, parent_id, sort_order);
@@ -3251,11 +3265,17 @@ CREATE TABLE public.assets (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    item_type_id uuid,
+    item_type_version_id uuid,
+    attributes jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT ck_assets_attributes_object CHECK ((jsonb_typeof(attributes) = 'object'::text)),
     CONSTRAINT ck_assets_depth CHECK ((public.nlevel(path) <= 15)),
+    CONSTRAINT ck_assets_item_type_pinned CHECK (((item_type_id IS NULL) = (item_type_version_id IS NULL))),
     CONSTRAINT ck_assets_name CHECK (((btrim(name) <> ''::text) AND (length(name) <= 200))),
     CONSTRAINT ck_assets_path_leaf CHECK ((public.ltree2text(public.subpath(path, (public.nlevel(path) - 1))) = replace((id)::text, '-'::text, ''::text))),
     CONSTRAINT ck_assets_root CHECK (((parent_id IS NULL) = (public.nlevel(path) = 1))),
-    CONSTRAINT ck_assets_tag_number CHECK (((tag_number IS NULL) OR ((btrim(tag_number) = tag_number) AND (tag_number <> ''::text) AND (length(tag_number) <= 64))))
+    CONSTRAINT ck_assets_tag_number CHECK (((tag_number IS NULL) OR ((btrim(tag_number) = tag_number) AND (tag_number <> ''::text) AND (length(tag_number) <= 64)))),
+    CONSTRAINT ck_assets_untyped_attributes CHECK (((item_type_id IS NOT NULL) OR (attributes = '{}'::jsonb)))
 );
 
 ALTER TABLE ONLY public.assets FORCE ROW LEVEL SECURITY;
