@@ -3,7 +3,7 @@
 The worker runs :func:`run_heartbeat` next to Procrastinate. Every ``WORKER_HEARTBEAT_INTERVAL_S``
 seconds (default 10) it checks that ``aip_jobs`` can log in and, when the worker drains the outbox,
 that ``aip_audit_writer`` can too (the audit subscriber writes through it, AUDIT-02). On success it
-writes the current time to ``WORKER_HEARTBEAT_FILE`` (default ``/tmp/aip-worker-heartbeat``); on
+writes the current time to ``WORKER_HEARTBEAT_FILE`` (default ``<tmp>/aip-worker-heartbeat``); on
 failure it removes the file, so the check fails at once instead of when the beat goes stale.
 
 The healthcheck reads that file::
@@ -20,6 +20,7 @@ import argparse
 import asyncio
 import os
 import sys
+import tempfile
 import time
 from collections.abc import Awaitable, Callable, Sequence
 from pathlib import Path
@@ -42,7 +43,8 @@ logger = structlog.stdlib.get_logger(__name__)
 
 HEARTBEAT_FILE_ENV = "WORKER_HEARTBEAT_FILE"
 HEARTBEAT_INTERVAL_ENV = "WORKER_HEARTBEAT_INTERVAL_S"
-DEFAULT_HEARTBEAT_FILE = "/tmp/aip-worker-heartbeat"
+# The container's private tmpfs (/tmp, read_only root): tempfile honours TMPDIR elsewhere.
+DEFAULT_HEARTBEAT_FILE = str(Path(tempfile.gettempdir()) / "aip-worker-heartbeat")
 DEFAULT_INTERVAL_S = 10.0
 DEFAULT_MAX_AGE_S = 60.0
 # One probe may take this long before the beat counts as failed (a dead host never answers).
