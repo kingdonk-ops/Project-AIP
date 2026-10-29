@@ -345,10 +345,12 @@ def test_the_mock_idp_users_come_from_secrets_before_web_starts(
     assert users["depends_on"]["keycloak"]["condition"] == "service_healthy"
     assert users["environment"]["MOCK_IDP_ALICE_PASSWORD"] == "${MOCK_IDP_ALICE_PASSWORD:?}"
     assert users["environment"]["MOCK_IDP_BOB_PASSWORD"] == "${MOCK_IDP_BOB_PASSWORD:?}"
+    # TESTING-12: the viewer is optional, so an unset secret does not fail the deploy.
+    assert users["environment"]["MOCK_IDP_VIEWER_PASSWORD"] == "${MOCK_IDP_VIEWER_PASSWORD:-}"
     assert (
         services["web"]["depends_on"]["mock-idp-users"]["condition"]
         == "service_completed_successfully"
     )
     script = (IMAGES / "mock-idp-users.sh").read_text()
     assert ': "${MOCK_IDP_ALICE_PASSWORD:?}"' in script
-    assert "alice_dev_only_password | bob_dev_only_password" in script
+    assert "alice_dev_only_password | bob_dev_only_password | vera_dev_only_password" in script

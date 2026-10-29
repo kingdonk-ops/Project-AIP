@@ -20,3 +20,8 @@ export function tenantUsers(env: NodeJS.ProcessEnv = process.env): { a: TenantUs
     b: { tenant: "tenant-b", email: required(env, "E2E_USER_B"), password: required(env, "E2E_PASS_B") },
   };
 }
+
+/** TESTING-12: the kaefer-demo viewer, a seeded user who holds no role (so no `project.create`). */
+export function viewerUser(env: NodeJS.ProcessEnv = process.env): TenantUser {
+  return { tenant: "kaefer-demo", email: required(env, "E2E_USER_VIEWER"), password: required(env, "E2E_PASS_VIEWER") };
+}

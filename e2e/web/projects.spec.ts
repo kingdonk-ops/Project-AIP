@@ -4,7 +4,7 @@
 // with page.route (a fake that honours status and sort); the server's sorting, paging and CSV
 // export are proven against Postgres in apps/api (test_projects_db.py). Creating a project needs a
 // real API session: the walking skeleton covers creation and the cross-tenant check for real, and
-// the real-session server-403 journey is QA-3 / TESTING-12 (review 11 M12).
+// sessions.spec.ts the seeded viewer's server-403 journey (TESTING-12, review 11 M12).
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { devBaseURL } from "../playwright.config";
@@ -168,12 +168,4 @@ test("visiting /projects/new without project.create shows the permission-denied 
   await expect(page.getByRole("heading", { name: "You do not have permission to create projects." })).toBeVisible();
   await expect(page.getByLabel("Project code")).toHaveCount(0);
   await expectNoBlockingAxe(page);
-});
-
-test("@needs-identity-03 the kaefer-demo admin creates a project and sees it as Draft", () => {
-  test.skip(true, "needs IDENTITY-03 (API sessions) and ACCESS-02 (a role holding project.create)");
-});
-
-test("@needs-identity-03 the server answers 403 to a user without project.create", () => {
-  test.skip(true, "needs IDENTITY-03 (API sessions) and ACCESS-02 (seeded roles)");
 });

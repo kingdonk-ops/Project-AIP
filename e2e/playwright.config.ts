@@ -46,12 +46,13 @@ const webServer: PlaywrightTestConfig["webServer"] = [
 // `staging` against the Coolify demo after a deploy. Both need E2E_SKELETON=1 and the E2E_USER_*
 // / E2E_PASS_* variables, so the default run never needs Keycloak. `unit` runs the fixture tests.
 // The UPLOADS-01 presign journey runs in the skeleton lane too (review 11 M11); without these
-// projects it would skip in every lane.
-const SKELETON = ["web/walking-skeleton.spec.ts", "web/uploads-presign.spec.ts"];
+// projects it would skip in every lane. TESTING-12's real-session journeys need Keycloak too.
+const SKELETON = ["web/walking-skeleton.spec.ts", "web/uploads-presign.spec.ts", "web/sessions.spec.ts"];
 const UNIT = "fixtures/*.spec.ts";
 const skeletonProjects: PlaywrightTestConfig["projects"] = process.env.E2E_SKELETON
   ? [
-      { name: "web", testMatch: SKELETON, retries: 0, timeout: 120_000, use: { ...devices["Desktop Chrome"], actionTimeout: 15_000 } },
+      // 5 minutes: a sign-in may wait out the login/start rate-limit window (fixtures/login.ts).
+      { name: "web", testMatch: SKELETON, retries: 0, timeout: 300_000, use: { ...devices["Desktop Chrome"], actionTimeout: 15_000 } },
       // No trace on the demo: a trace records typed values, and its credentials come from secrets.
       // The demo is a remote deployment: its first loads through Keycloak can exceed 5 s.
       {
