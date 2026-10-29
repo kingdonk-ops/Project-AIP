@@ -19,7 +19,7 @@
 ## Spec
 
 Close the gaps the ACCESS-04 review (PR #163, 2026-10-29) found where a revoked grant can outlive its end by up to the
-5-minute cache TTL, and tighten project-level team delegation.
+5-minute cache TTL, and tighten project-level team delegation (tag: harden).
 
 - **files**:
   - apps/api/aip/modules/access/roles/repository.py (`active_grants`)

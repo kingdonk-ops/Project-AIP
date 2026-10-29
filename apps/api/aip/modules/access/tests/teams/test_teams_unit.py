@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from aip.modules.access.policy_cache import grants_key, version_key
 from aip.modules.access.roles.grant_provider import AssignmentGrant, resolve_grants
 from aip.modules.access.roles.schemas import AssignmentCreate
+from aip.platform.tenant_keys import redis_key
 
 T1 = UUID("00000000-0000-4000-8000-00000000a001")
 U1 = UUID("00000000-0000-4000-8000-00000000b001")
@@ -19,9 +20,10 @@ ROLE = UUID("00000000-0000-4000-8000-00000000e001")
 
 
 def test_version_key_uses_the_tenant_key_builder() -> None:
-    assert version_key(T1, U1) == f"tenant:{T1}:access:ver:{U1}"
-    assert version_key(T1) == f"tenant:{T1}:access:ver"
-    assert grants_key(T1, U1, (3, 7)) == f"tenant:{T1}:access:grants:{U1}:3:7"
+    assert version_key(T1, U1) == redis_key(T1, "access", "ver", str(U1))
+    assert version_key(T1) == redis_key(T1, "access", "ver")
+    assert grants_key(T1, U1, (3, 7)) == redis_key(T1, "access", "grants", str(U1), "3", "7")
+    assert version_key(T1, U1).startswith(redis_key(T1, "access"))
 
 
 def test_a_team_assignment_grants_members_at_the_teams_project() -> None:
