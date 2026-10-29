@@ -15,7 +15,7 @@
 # The base image is named directly (not via an ARG) so Dependabot's docker updater can bump it:
 # it cannot update a `FROM ${VAR}` line. Keep the `build` and `runtime` FROM lines on the same tag;
 # Dependabot bumps both together.
-FROM python:3.12.15-slim-bookworm AS build
+FROM python:3.15.0-slim-bookworm AS build
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /usr/local/bin/uv
 
@@ -58,7 +58,7 @@ RUN uv sync --frozen --package aip --no-editable
 ENV PATH="/opt/venv/bin:${PATH}"
 
 
-FROM python:3.12.15-slim-bookworm AS runtime
+FROM python:3.15.0-slim-bookworm AS runtime
 
 ARG GIT_SHA=unknown
 ARG BUILD_ID=dev
