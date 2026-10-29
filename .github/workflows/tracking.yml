@@ -2,6 +2,8 @@ name: tracking
 
 on:
   pull_request:
+  # Merge queue: CI runs on the PR merged onto the latest main before it lands.
+  merge_group:
   push:
     branches: [main]
 
