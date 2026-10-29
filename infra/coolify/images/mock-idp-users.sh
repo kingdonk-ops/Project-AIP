@@ -5,6 +5,7 @@
 # (infra/keycloak/deployed_realms.py), so no password of a demo user is in the repository or the
 # image; setting the password on every deploy also replaces the committed dev passwords on a demo
 # whose realm was imported before this change. Uses the bootstrap admin over the internal network.
+# TESTING-12: vera@kaefer.test, the viewer (no role), only once MOCK_IDP_VIEWER_PASSWORD is set.
 set -euo pipefail
 
 : "${KEYCLOAK_SERVER:=http://keycloak:8080/auth}"
@@ -13,9 +14,9 @@ set -euo pipefail
 : "${MOCK_IDP_ALICE_PASSWORD:?}"
 : "${MOCK_IDP_BOB_PASSWORD:?}"
 
-for value in "$MOCK_IDP_ALICE_PASSWORD" "$MOCK_IDP_BOB_PASSWORD"; do
+for value in "$MOCK_IDP_ALICE_PASSWORD" "$MOCK_IDP_BOB_PASSWORD" "${MOCK_IDP_VIEWER_PASSWORD:-}"; do
   case "$value" in
-    alice_dev_only_password | bob_dev_only_password)
+    alice_dev_only_password | bob_dev_only_password | vera_dev_only_password)
       echo "mock-idp-users: a password is the public dev value; refusing" >&2
       exit 1
       ;;
@@ -43,4 +44,7 @@ ensure_user() {
 
 ensure_user alice@kaefer.test Alice Kaefer "$MOCK_IDP_ALICE_PASSWORD"
 ensure_user bob@acme.test Bob Acme "$MOCK_IDP_BOB_PASSWORD"
+if [ -n "${MOCK_IDP_VIEWER_PASSWORD:-}" ]; then
+  ensure_user vera@kaefer.test Vera Viewer "$MOCK_IDP_VIEWER_PASSWORD"
+fi
 rm -f /tmp/kcadm.config

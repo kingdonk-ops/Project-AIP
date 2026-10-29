@@ -189,7 +189,11 @@ def test_no_real_secrets(realm: dict[str, Any]) -> None:
 def test_mock_idp_users() -> None:
     mock = json.loads((KEYCLOAK / "realm-mock-idp.json").read_text(encoding="utf-8"))
     assert mock["realm"] == "mock-idp"
-    assert {u["email"] for u in mock["users"]} == {"alice@kaefer.test", "bob@acme.test"}
+    assert {u["email"] for u in mock["users"]} == {
+        "alice@kaefer.test",
+        "bob@acme.test",
+        "vera@kaefer.test",
+    }
 
 
 def test_theme_files() -> None:
