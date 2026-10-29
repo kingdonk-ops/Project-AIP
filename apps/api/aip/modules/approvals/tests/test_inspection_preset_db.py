@@ -358,8 +358,8 @@ async def test_the_seed_installs_the_standard_preset_in_kaefer_demo_only(
 
     await dispose_engine()
     try:
-        [first] = await seed(env="test")
-        [second] = await seed(env="test")
+        first, _demo = await seed(env="test")
+        second, _ = await seed(env="test")
     finally:
         await dispose_engine()
     assert (first.key, first.version, first.status) == ("inspection_standard", 1, "active")
