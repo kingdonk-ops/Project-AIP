@@ -20,6 +20,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from aip.modules.access.changes import record_grants_changed
 from aip.modules.access.events import ROLE_CHANGED
 from aip.modules.access.repository import bump_access_version
 from aip.modules.access.roles import repository as repo
@@ -102,6 +103,9 @@ async def seed_default_roles(conn: AsyncConnection) -> SeedReport:
             await repo.set_role_permissions(conn, role["id"], wanted, keep=keep)
             report.updated.append(code)
             await _emit(conn, role["id"], code, held, wanted | keep)
-    if report.changed:
+    if report.updated:
+        # A changed system role changes its holders' grants: invalidate the tenant (ACCESS-04).
+        await record_grants_changed(conn, None)
+    elif report.changed:
         await bump_access_version(conn)
     return report

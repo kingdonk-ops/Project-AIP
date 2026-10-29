@@ -4,7 +4,9 @@
   ``PATCH /roles/{id}``, ``DELETE /roles/{id}``, ``POST /roles/{id}/clone``,
   ``POST /roles/{id}/reset``.
 - Assignments (``access.role_assignment.read`` / ``.manage``): ``GET /role-assignments``
-  (``?userId=&projectId=``), ``POST /role-assignments``, ``DELETE /role-assignments/{id}``.
+  (``?userId=&projectId=&teamId=``), ``POST /role-assignments`` (ACCESS-04: also
+  ``{"scope": {"type": "team", "teamId": ...}}`` without ``userId``),
+  ``DELETE /role-assignments/{id}``.
 
 Every route needs an active tenant. Errors are ``{"code": ...}`` (see ``service``).
 """
@@ -120,8 +122,9 @@ async def reset_role(role_id: UUID, principal: RoleManager) -> RoleOut:
 async def list_assignments(
     user_id: Annotated[UUID | None, Query(alias="userId")] = None,
     project_id: Annotated[UUID | None, Query(alias="projectId")] = None,
+    team_id: Annotated[UUID | None, Query(alias="teamId")] = None,
 ) -> AssignmentList:
-    items = await AssignmentService().list(user_id=user_id, project_id=project_id)
+    items = await AssignmentService().list(user_id=user_id, project_id=project_id, team_id=team_id)
     return AssignmentList(items=items)
 
 

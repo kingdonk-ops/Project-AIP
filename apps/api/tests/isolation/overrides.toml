@@ -105,3 +105,7 @@ values = { code = "'iso-code-{tag}'" }
 [tables.report_templates]
 reason = "content_sha256 must be 64 lowercase hex digits (ck_report_templates_content_sha256); the generic text seed is not."
 values = { content_sha256 = "repeat('{tag}', 64)" }
+
+[tables.role_assignment]
+reason = "ACCESS-04 made user_id nullable for team assignments; ck_role_assignment_scope needs a user_id on every non-team scope, so seed one (FKs are not checked by the generator's superuser seed)."
+values = { user_id = "gen_random_uuid()" }

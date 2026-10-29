@@ -2,6 +2,9 @@
 
 Every function takes the connection from ``with_tenant``: RLS limits it to the bound tenant, and
 inserts take ``tenant_id`` from ``app.tenant_id``. Deletes are soft (``aip_app`` has no DELETE).
+
+ACCESS-04: an assignment is held by a user, or (``scope_type = 'team'``) by a team, whose live
+members hold it; ``active_grants`` and ``member_teams`` feed ``RoleGrantProvider``.
 """
 
 from __future__ import annotations
@@ -29,7 +32,9 @@ __all__ = [
     "list_assignments",
     "list_roles",
     "live_catalogue",
+    "live_user_assignments",
     "lock_tenant_roles",
+    "member_teams",
     "privileged_codes",
     "role_codes",
     "role_in_use",
@@ -234,20 +239,44 @@ async def role_in_use(conn: AsyncConnection, role_id: UUID) -> bool:
     return row.first() is not None
 
 
-async def active_grants(conn: AsyncConnection, user_id: UUID) -> list[tuple[str, str, UUID | None]]:
-    """``(permission, scope_type, project_id)`` from the user's active tenant/project roles."""
+async def active_grants(
+    conn: AsyncConnection, user_id: UUID
+) -> list[tuple[str, str, UUID | None, UUID | None]]:
+    """``(permission, scope_type, project_id, team_id)`` from the active user's live, current
+    tenant/project assignments and the team assignments of the teams the user is a live member of.
+    """
     rows = await conn.execute(
         text(
-            "SELECT DISTINCT rp.permission_code, ra.scope_type, ra.project_id"
+            "SELECT DISTINCT rp.permission_code, ra.scope_type, ra.project_id, ra.team_id"
             " FROM role_assignment ra"
             " JOIN role r ON r.id = ra.role_id AND r.deleted_at IS NULL"
             " JOIN role_permission rp ON rp.role_id = r.id AND rp.deleted_at IS NULL"
-            f" WHERE ra.user_id = :user AND ra.scope_type IN ('tenant', 'project') AND"
-            f" {ACTIVE_ASSIGNMENT}"
+            " WHERE ra.deleted_at IS NULL AND ra.valid_from <= now()"
+            " AND (ra.valid_to IS NULL OR ra.valid_to > now())"
+            " AND EXISTS (SELECT 1 FROM app_user u WHERE u.id = :user AND u.status = 'active'"
+            "             AND u.deleted_at IS NULL)"
+            " AND ((ra.scope_type IN ('tenant', 'project') AND ra.user_id = :user)"
+            "   OR (ra.scope_type = 'team' AND ra.team_id IN"
+            "       (SELECT tm.team_id FROM team_member tm JOIN team t ON t.id = tm.team_id"
+            "        WHERE tm.user_id = :user AND tm.deleted_at IS NULL"
+            "        AND t.deleted_at IS NULL)))"
         ),
         {"user": user_id},
     )
-    return [(r[0], r[1], r[2]) for r in rows]
+    return [(r[0], r[1], r[2], r[3]) for r in rows]
+
+
+async def member_teams(conn: AsyncConnection, user_id: UUID) -> dict[UUID, UUID | None]:
+    """``{team id: team project or None}`` for every live team the user is a live member of."""
+    rows = await conn.execute(
+        text(
+            "SELECT t.id, t.project_id FROM team_member tm"
+            " JOIN team t ON t.id = tm.team_id AND t.deleted_at IS NULL"
+            " WHERE tm.user_id = :user AND tm.deleted_at IS NULL"
+        ),
+        {"user": user_id},
+    )
+    return {r[0]: r[1] for r in rows}
 
 
 async def has_role(
@@ -344,13 +373,18 @@ async def has_live_tenant_assignment(conn: AsyncConnection, user_id: UUID, role_
 
 
 _ASSIGNMENT_COLUMNS = (
-    "ra.id, ra.user_id, ra.role_id, r.code AS role_code, ra.scope_type, ra.project_id,"
-    " ra.source, ra.valid_from, ra.valid_to, ra.approved_by, ra.created_by, ra.created_at"
+    "ra.id, ra.user_id, ra.team_id, ra.role_id, r.code AS role_code, ra.scope_type,"
+    " ra.project_id, ra.source, ra.valid_from, ra.valid_to, ra.approved_by, ra.created_by,"
+    " ra.created_at"
 )
 
 
 async def list_assignments(
-    conn: AsyncConnection, *, user_id: UUID | None, project_id: UUID | None
+    conn: AsyncConnection,
+    *,
+    user_id: UUID | None,
+    project_id: UUID | None,
+    team_id: UUID | None = None,
 ) -> list[dict[str, Any]]:
     """Live (not soft-deleted) assignments, newest first; expired ones are included."""
     filters = ["ra.deleted_at IS NULL"]
@@ -361,6 +395,9 @@ async def list_assignments(
     if project_id is not None:
         filters.append("ra.project_id = :project")
         params["project"] = project_id
+    if team_id is not None:
+        filters.append("ra.team_id = :team")
+        params["team"] = team_id
     rows = await conn.execute(
         text(
             f"SELECT {_ASSIGNMENT_COLUMNS} FROM role_assignment ra"
@@ -390,24 +427,26 @@ async def insert_assignment(
     conn: AsyncConnection,
     *,
     assignment_id: UUID,
-    user_id: UUID,
+    user_id: UUID | None,
     role_id: UUID,
     scope_type: str,
     project_id: UUID | None,
     valid_to: datetime | None,
     approved_by: UUID | None,
     created_by: UUID | None,
+    team_id: UUID | None = None,
 ) -> None:
     await conn.execute(
         text(
-            "INSERT INTO role_assignment (id, tenant_id, user_id, role_id, scope_type, project_id,"
-            " valid_to, approved_by, created_by)"
-            f" VALUES (:id, {_TENANT}, :user, :role, :scope, :project, :valid_to, :approved,"
-            " :created)"
+            "INSERT INTO role_assignment (id, tenant_id, user_id, team_id, role_id, scope_type,"
+            " project_id, valid_to, approved_by, created_by)"
+            f" VALUES (:id, {_TENANT}, :user, :team, :role, :scope, :project, :valid_to,"
+            " :approved, :created)"
         ),
         {
             "id": assignment_id,
             "user": user_id,
+            "team": team_id,
             "role": role_id,
             "scope": scope_type,
             "project": project_id,
@@ -426,3 +465,17 @@ async def soft_delete_assignment(conn: AsyncConnection, assignment_id: UUID) -> 
         ),
         {"id": assignment_id},
     )
+
+
+async def live_user_assignments(conn: AsyncConnection, user_id: UUID) -> list[dict[str, Any]]:
+    """Every live assignment held by the user directly (any scope), locked for update."""
+    rows = await conn.execute(
+        text(
+            f"SELECT {_ASSIGNMENT_COLUMNS} FROM role_assignment ra"
+            " JOIN role r ON r.id = ra.role_id"
+            " WHERE ra.user_id = :user AND ra.deleted_at IS NULL ORDER BY ra.created_at, ra.id"
+            " FOR UPDATE OF ra"
+        ),
+        {"user": user_id},
+    )
+    return [dict(r._mapping) for r in rows]
