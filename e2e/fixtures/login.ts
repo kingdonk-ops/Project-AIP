@@ -7,10 +7,26 @@ import type { TenantUser } from "./tenants";
 export const SESSION_COOKIE = "__Host-aip_sid";
 export const CSRF_COOKIE = "__Host-aip_csrf";
 
+// The API allows 10 `login/start` calls per minute per client IP (moving window, IDENTITY-02), and
+// every sign-in in the skeleton lane comes from the runner's one IP. On a 429 wait the window out
+// and try again, instead of loosening the limit for tests (TESTING-12).
+const LOGIN_START_WINDOW_MS = 61_000;
+
 export async function loginAs(page: Page, user: TenantUser): Promise<void> {
-  await page.goto("/login");
-  await page.getByLabel("Work email").fill(user.email);
-  await page.getByRole("button", { name: "Continue" }).click();
+  for (let attempt = 0; ; attempt++) {
+    await page.goto("/login");
+    await page.getByLabel("Work email").fill(user.email);
+    const started = page.waitForResponse(
+      (r) => r.request().method() === "POST" && new URL(r.url()).pathname === "/api/v1/auth/login/start",
+    );
+    await page.getByRole("button", { name: "Continue" }).click();
+    const status = (await started).status();
+    if (status !== 429 || attempt >= 2) {
+      expect(status, `${user.tenant}: login/start is accepted`).toBe(200);
+      break;
+    }
+    await page.waitForTimeout(LOGIN_START_WINDOW_MS);
+  }
 
   // The IdP's own form (Keycloak's default theme on the mock IdP realm).
   const username = page.locator("#username");

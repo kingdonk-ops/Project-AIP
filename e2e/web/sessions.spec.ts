@@ -35,7 +35,7 @@ async function signIn(browser: Browser, user: TenantUser, options: { userAgent?:
   return { context, page, authorize: (await authorize).url() };
 }
 
-test("@skeleton a real session survives a reload, its cookie is HttpOnly and /me/tenant is the user's tenant", async ({ browser }) => {
+test("@skeleton a real session survives a reload, its cookie is HttpOnly, /me/tenant is the user's tenant, and tenant B cannot see or revoke A's sessions", async ({ browser }) => {
   const users = tenantUsers();
   const a = await signIn(browser, users.a);
   const b = await signIn(browser, users.b);
@@ -59,6 +59,23 @@ test("@skeleton a real session survives a reload, its cookie is HttpOnly and /me
       expect(tenant.status, `TENANCY-01: /me/tenant answers for ${slug}`).toBe(200);
       expect(tenant.json?.slug, `TENANCY-01: /me/tenant is ${slug}`).toBe(slug);
     }
+
+    // Active sessions cross-tenant: tenant B sees none of tenant A's sessions and cannot revoke them.
+    const listA = await apiCall(a.page, "GET", "/api/v1/me/sessions");
+    const idsA = (listA.json?.items as { id: string; current: boolean }[]).map((s) => s.id);
+    const currentA = (listA.json?.items as { id: string; current: boolean }[]).find((s) => s.current)?.id;
+    expect(currentA).toBeTruthy();
+
+    await b.page.goto("/settings/profile/sessions");
+    await expect(b.page.getByRole("heading", { name: "Active sessions", level: 1 })).toBeVisible();
+    await expect(b.page.getByRole("row").filter({ hasText: "This device" })).toHaveCount(1);
+    await expectNoBlockingAxe(b.page);
+    const idsB = ((await apiCall(b.page, "GET", "/api/v1/me/sessions")).json?.items as { id: string }[]).map((s) => s.id);
+    expect(idsB.filter((id) => idsA.includes(id)), "tenant B's list holds none of tenant A's sessions").toEqual([]);
+
+    const revoke = await apiCall(b.page, "DELETE", `/api/v1/me/sessions/${currentA}`);
+    expect(revoke.status, "tenant A's session id is 404 for tenant B").toBe(404);
+    expect((await apiCall(a.page, "GET", "/api/v1/me")).status, "tenant A's session is untouched").toBe(200);
   } finally {
     await a.context.close();
     await b.context.close();
@@ -151,32 +168,6 @@ test("@skeleton revoking another browser from Active sessions makes its next req
   } finally {
     await first.context.close();
     await second.context.close();
-  }
-});
-
-test("@skeleton Active sessions: tenant B sees none of tenant A's sessions and cannot revoke them", async ({ browser }) => {
-  const users = tenantUsers();
-  const a = await signIn(browser, users.a);
-  const b = await signIn(browser, users.b);
-  try {
-    const listA = await apiCall(a.page, "GET", "/api/v1/me/sessions");
-    const idsA = (listA.json?.items as { id: string; current: boolean }[]).map((s) => s.id);
-    const currentA = (listA.json?.items as { id: string; current: boolean }[]).find((s) => s.current)?.id;
-    expect(currentA).toBeTruthy();
-
-    await b.page.goto("/settings/profile/sessions");
-    await expect(b.page.getByRole("heading", { name: "Active sessions", level: 1 })).toBeVisible();
-    await expect(b.page.getByRole("row").filter({ hasText: "This device" })).toHaveCount(1);
-    await expectNoBlockingAxe(b.page);
-    const idsB = ((await apiCall(b.page, "GET", "/api/v1/me/sessions")).json?.items as { id: string }[]).map((s) => s.id);
-    expect(idsB.filter((id) => idsA.includes(id)), "tenant B's list holds none of tenant A's sessions").toEqual([]);
-
-    const revoke = await apiCall(b.page, "DELETE", `/api/v1/me/sessions/${currentA}`);
-    expect(revoke.status, "tenant A's session id is 404 for tenant B").toBe(404);
-    expect((await apiCall(a.page, "GET", "/api/v1/me")).status, "tenant A's session is untouched").toBe(200);
-  } finally {
-    await a.context.close();
-    await b.context.close();
   }
 });
 
