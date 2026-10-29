@@ -10,7 +10,9 @@
 id = "access"
 context = "identity"
 depends_on = ["tenancy", "identity", "projects"]
-subscribes = []
+# ACCESS-04: teams, membership, team role assignments and the policy cache. The cache-bump
+#   subscribers listen to access's own invalidation events; user.deactivated comes from identity
+#   (IDENTITY-05) and revokes the user's memberships and assignments.
 settings = []
 term_keys = [
   "access.role.tenant_admin.name",
@@ -62,4 +64,36 @@ version = 1
 
 [[events]]
 name = "access.role_assignment.removed"
+version = 1
+
+[[events]]
+name = "access.role_assignment.created"
+version = 2
+
+[[events]]
+name = "access.role_assignment.removed"
+version = 2
+
+[[events]]
+name = "access.team.changed"
+version = 1
+
+[[events]]
+name = "team.membership_changed"
+version = 1
+
+[[events]]
+name = "access.grants_changed"
+version = 1
+
+[[subscribes]]
+name = "team.membership_changed"
+version = 1
+
+[[subscribes]]
+name = "access.grants_changed"
+version = 1
+
+[[subscribes]]
+name = "user.deactivated"
 version = 1

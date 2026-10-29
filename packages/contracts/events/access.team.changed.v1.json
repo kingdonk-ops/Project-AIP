@@ -1,0 +1,48 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "enum": [
+        "created",
+        "updated",
+        "deleted"
+      ],
+      "title": "Action",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Projectid"
+    },
+    "teamId": {
+      "format": "uuid",
+      "title": "Teamid",
+      "type": "string"
+    },
+    "teamType": {
+      "title": "Teamtype",
+      "type": "string"
+    }
+  },
+  "required": [
+    "teamId",
+    "action",
+    "name",
+    "teamType"
+  ],
+  "title": "TeamChangedEvent",
+  "type": "object"
+}

@@ -4,6 +4,7 @@
   codes for the tenant, or for one project when ``projectId`` is given (tenant grants plus that
   project's grants). The UI uses it to hide actions; the API still checks every call.
 - ACCESS-02: roles and role assignments (``aip.modules.access.roles.routes``).
+- ACCESS-04: teams and team membership (``aip.modules.access.teams.routes``).
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from aip.modules.access.roles.routes import router as roles_router
 from aip.modules.access.schemas import AbilitiesResponse
+from aip.modules.access.teams.routes import router as teams_router
 from aip.platform.access import AccessPrincipal, PolicyService, Resource, authenticated
 
 router = APIRouter(prefix="/access", tags=["access"])
@@ -40,3 +42,4 @@ async def get_my_abilities(
 
 
 router.include_router(roles_router)
+router.include_router(teams_router)

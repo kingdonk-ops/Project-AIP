@@ -193,9 +193,9 @@ async def test_assignment_scope_validation(client: httpx.AsyncClient) -> None:
     no_project = {"userId": str(CAROL_ID), "roleId": inspector, "scope": {"type": "project"}}
     assert (await client.post(ASSIGNMENTS, json=no_project, headers=ALICE)).status_code == 422
 
+    # ACCESS-04: a team scope needs a teamId (and no userId); the schema mirrors the CHECK.
     team = {"userId": str(CAROL_ID), "roleId": inspector, "scope": {"type": "team"}}
-    response = await client.post(ASSIGNMENTS, json=team, headers=ALICE)
-    assert (response.status_code, response.json()) == (400, {"code": "SCOPE_NOT_SUPPORTED"})
+    assert (await client.post(ASSIGNMENTS, json=team, headers=ALICE)).status_code == 422
 
     missing = {"type": "project", "projectId": "00000000-0000-4000-8000-000000000999"}
     response = await assign(client, CAROL_ID, "inspector", scope=missing)
@@ -393,9 +393,14 @@ async def test_roles_that_edit_assets_hold_asset_move_and_a_reseed_extends_older
     )
     await su_assign(db, TENANT_A_ID, CAROL_ID, "supervisor")
     assert not await can(app, CAROL_ID, "asset.move")
+    seen = len(await events(db, "access.grants_changed"))
     report = await seed_roles(TENANT_A_ID)
     assert report.updated == ["supervisor"]
     assert await can(app, CAROL_ID, "asset.move")
+    # ACCESS-04: the seed's role change invalidates every cached grant in the tenant.
+    changed = await events(db, "access.grants_changed")
+    assert len(changed) == seen + 1
+    assert changed[-1] == {"userIds": None}
 
 
 async def test_system_codes_are_reserved_and_assignments_are_unique(
