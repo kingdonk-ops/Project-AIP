@@ -45,7 +45,7 @@ dev = [
     "pypdf>=6.21.2",
     "pyyaml>=6",
     "testcontainers[keycloak,postgres,redis]>=4.8",
-    "types-aioboto3[s3]>=13.2",
+    "types-aioboto3[s3]>=15.5.0",
     "hypothesis>=6.100",
 ]
 
