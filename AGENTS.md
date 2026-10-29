@@ -58,6 +58,32 @@ blueprint describes*, proven by golden tests. If a doc mentions NestJS, Kysely, 
   URL (`E2E_BASE_URL`). A failure becomes a `todo` fix task on the board (`QA-<n>`) and is reported to the owner.
   Never skip, disable or quarantine a failing test to get green.
 
+## Image vulnerability scans
+
+Two gates share one recipe, [`tools/ci/scan_images.sh`](tools/ci/scan_images.sh): the `security`
+workflow (PR / merge-queue) and `deploy-coolify` (post-merge) build and Trivy-scan the same five
+demo images (`aip-api`, `aip-migrator`, `aip-web-demo`, `aip-postgres-demo`, `aip-keycloak-demo`).
+Keep both on the script so they can't drift — a CVE that passes a PR must not first fail after merge.
+
+- **Before merging** any change to a Dockerfile, a base image, or a dependency lockfile, run the
+  five-image scan locally and make it pass (`TAG=local TRIVY_IMAGE=aquasec/trivy:0.74.0 bash
+  tools/ci/scan_images.sh build && TAG=local TRIVY_IMAGE=aquasec/trivy:0.74.0 bash
+  tools/ci/scan_images.sh scan`).
+- **On a scan failure**, fix in this order:
+  1. Upgrade the base image or the package to a fixed version.
+  2. If the base lags, add an `apk upgrade` / `apt-get upgrade` or pin a patched dependency in the
+     Dockerfile.
+  3. Only if no fix is released yet, propose a time-boxed entry in
+     [`config/vuln-exceptions.txt`](config/vuln-exceptions.txt) (format: a `# why: <reason, who
+     accepted it>` line, then `<ID> exp:YYYY-MM-DD`, at most 180 days ahead; validated by
+     [`tools/ci/check_vuln_exceptions.py`](tools/ci/check_vuln_exceptions.py)).
+- **Never add an exception without the owner's explicit acceptance. Ask first.**
+- When an exception's upstream fix lands, **remove the entry in the same PR as the upgrade.**
+
+Base images and actions are bumped automatically by [`.github/dependabot.yml`](.github/dependabot.yml)
+(weekly, minor/patch grouped). The `security` scan runs daily; on a scheduled failure it opens or
+updates one `security`-labelled issue with the failing CVEs and a link to the run.
+
 ## Shared test fixtures (use these names everywhere)
 
 | Fixture | Tenant slug | Email domain | Keycloak IdP alias | Dev user |

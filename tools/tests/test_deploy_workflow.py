@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 WORKFLOWS = ROOT / ".github" / "workflows"
 DEPLOY = WORKFLOWS / "deploy-coolify.yml"
 SECURITY = WORKFLOWS / "security.yml"
+SCAN_SCRIPT = ROOT / "tools" / "ci" / "scan_images.sh"
 DEMO_IMAGES = {
     "aip-api",
     "aip-migrator",
@@ -69,15 +70,24 @@ def test_all_five_images_are_scanned_and_sboms_made_before_anything_is_pushed(
     workflow: dict[Any, Any],
 ) -> None:
     names = [s.get("name", "") for s in _steps(workflow, "images")]
+    # Build and scan go through the shared recipe, so this gate and the security gate can't drift.
     build = _run(workflow, "images", "Build the demo images")
-    assert set(re.findall(r"^\s*build (aip-[a-z-]+) ", build, flags=re.M)) == DEMO_IMAGES
+    assert "scan_images.sh build" in build
     assert "docker push" not in build
     scan = _run(workflow, "images", "Trivy scan")
-    assert "--exit-code 1" in scan and "--ignorefile /cfg/vuln-exceptions.txt" in scan
-    assert '< "$RUNNER_TEMP/images.txt"' in scan and "exit $fail" in scan
-    sbom = _run(workflow, "images", "SBOM")
-    assert '< "$RUNNER_TEMP/images.txt"' in sbom and "cyclonedx-json" in sbom
+    assert "scan_images.sh scan" in scan
+    # The shared recipe is the single definition of the five images and the exact gate flags.
+    script = SCAN_SCRIPT.read_text()
+    assert set(re.findall(r"^\s*build_one (aip-[a-z-]+) ", script, flags=re.M)) == DEMO_IMAGES
+    assert "docker push" not in script
+    assert "--exit-code 1" in script and "--ignorefile /cfg/vuln-exceptions.txt" in script
+    assert "--scanners vuln --severity HIGH,CRITICAL" in script and "--ignore-unfixed" in script
+    assert "cyclonedx-json" in _run(workflow, "images", "SBOM")
+    # The push and sign steps read the image list the shared build step wrote.
+    assert '< "$RUNNER_TEMP/images.txt"' in _run(workflow, "images", "Push the scanned images")
+    # Nothing is pushed before it is built, scanned, SBOM'd and the registry login done.
     push = names.index(next(n for n in names if n.startswith("Push")))
+    assert names.index(next(n for n in names if n.startswith("Build the demo images"))) < push
     assert names.index(next(n for n in names if n.startswith("Trivy"))) < push
     assert names.index(next(n for n in names if n.startswith("SBOM"))) < push
     assert names.index(next(n for n in names if n.startswith("Log in"))) < push
