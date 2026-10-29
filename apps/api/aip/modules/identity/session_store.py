@@ -16,6 +16,12 @@ never the absolute one.
 The result travels to ``SessionPrincipalResolver`` (the identity ``PrincipalResolver``) through a
 context variable, so the platform middleware and ``get_principal`` see the same session without
 resolving it twice.
+
+IDENTITY-10: a request carries the staff cookie ``__Host-aip_sid`` or the portal cookie
+``__Host-aip_portal_sid``. ``select_session_cookie`` picks one (with both, the portal cookie on the
+portal paths and the staff cookie elsewhere); the session behind it must have that cookie's
+audience and a user class the audience allows, otherwise the request is ``expired`` and the 401
+clears that audience's cookies (``presented_audience``).
 """
 
 from __future__ import annotations
@@ -37,7 +43,12 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from aip.modules.identity import repository as repo
 from aip.modules.identity.principal import Principal, PrincipalResolver
-from aip.modules.identity.sessions import SID_COOKIE, hash_sid
+from aip.modules.identity.sessions import (
+    SESSION_COOKIES,
+    CookieAudience,
+    audience_allows,
+    hash_sid,
+)
 from aip.platform.db.session import before_tenant, with_tenant
 from aip.platform.db.tls import redis_tls_kwargs
 
@@ -51,6 +62,9 @@ __all__ = [
     "SessionPrincipalResolver",
     "SessionStore",
     "current_session",
+    "presented_audience",
+    "read_sid",
+    "select_session_cookie",
     "session_expired",
 ]
 
@@ -60,6 +74,8 @@ CACHE_TTL: Final = timedelta(seconds=60)
 TOUCH_INTERVAL: Final = timedelta(seconds=60)
 _KEY_PREFIX: Final = "aip:sess:"
 _MAX_SID_LEN: Final = 128
+# Paths where, with both session cookies present, the portal cookie is the credential.
+PORTAL_PATH_PREFIXES: Final = ("/api/v1/portal/", "/api/v1/auth/portal/")
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,6 +95,12 @@ class ResolvedSession:
 
     def live_at(self, now: datetime) -> bool:
         return now < self.idle_expires_at and now < self.absolute_expires_at
+
+    def fits(self, audience: str | None) -> bool:
+        """Presented under ``audience``'s cookie (``None``: any) and allowed for its user class."""
+        if audience is not None and self.audience != audience:
+            return False
+        return audience_allows(self.audience, self.user_class)
 
     def to_json(self) -> str:
         data = asdict(self)
@@ -201,13 +223,16 @@ class SessionStore:
         left = min(session.idle_expires_at, session.absolute_expires_at) - now
         return min(self.cache_ttl, left)
 
-    async def resolve(self, sid: str, now: datetime | None = None) -> ResolvedSession | None:
-        """The live session behind ``sid``, or ``None`` (unknown, revoked, expired, inactive)."""
+    async def resolve(
+        self, sid: str, now: datetime | None = None, *, audience: str | None = None
+    ) -> ResolvedSession | None:
+        """The live session behind ``sid``, or ``None`` (unknown, revoked, expired, inactive, or
+        not of ``audience``, the audience of the cookie it came in)."""
         now = now or datetime.now(UTC)
         sid_hash = hash_sid(sid)
         cached = await self.cache.get(sid_hash)
         if cached is not None:
-            return cached if cached.live_at(now) else None
+            return cached if cached.live_at(now) and cached.fits(audience) else None
         async with before_tenant() as conn:
             row = (await conn.execute(_RESOLVE, {"sid_hash": sid_hash})).mappings().first()
         if row is None:
@@ -233,6 +258,9 @@ class SessionStore:
         if not session.live_at(now):
             return None
         await self.cache.put(sid_hash, session, self._ttl(session, now))
+        if not session.fits(audience):
+            logger.warning("a session was presented under another audience's cookie; refusing")
+            return None
         return session
 
     async def touch(self, sid: str, session: ResolvedSession, now: datetime | None = None) -> None:
@@ -254,6 +282,9 @@ _Expired = Literal["expired"]
 _current: ContextVar[ResolvedSession | _Expired | None] = ContextVar(
     "aip_identity_session", default=None
 )
+_presented: ContextVar[CookieAudience | None] = ContextVar(
+    "aip_identity_session_audience", default=None
+)
 
 
 def current_session() -> ResolvedSession | None:
@@ -266,19 +297,50 @@ def session_expired() -> bool:
     return _current.get() == "expired"
 
 
-def read_sid(headers: Headers) -> str | None:
+def presented_audience() -> CookieAudience | None:
+    """The audience of the session cookie this request carried (``None``: no session cookie)."""
+    return _presented.get()
+
+
+def _cookie_jar(headers: Mapping[str, str]) -> dict[str, str]:
     raw = headers.get("cookie")
     if not raw:
-        return None
+        return {}
     jar: SimpleCookie = SimpleCookie()
     try:
         jar.load(raw)
     except CookieError:
+        return {}
+    return {name: morsel.value for name, morsel in jar.items()}
+
+
+def select_session_cookie(
+    path: str, cookies: Mapping[str, str]
+) -> tuple[CookieAudience, str] | None:
+    """The session cookie a request authenticates with, as ``(audience, value)``.
+
+    One session cookie: that one. Both (dev hosts that share cookies): the portal cookie under
+    ``PORTAL_PATH_PREFIXES``, else the staff cookie. Empty or oversized values do not count.
+    """
+    present: dict[CookieAudience, str] = {}
+    for audience, (sid_cookie, _csrf) in SESSION_COOKIES.items():
+        value = cookies.get(sid_cookie)
+        if value and len(value) <= _MAX_SID_LEN:
+            present[audience] = value
+    if len(present) > 1:
+        chosen: CookieAudience = "portal" if path.startswith(PORTAL_PATH_PREFIXES) else "app"
+        return chosen, present[chosen]
+    for audience, value in present.items():
+        return audience, value
+    return None
+
+
+def read_sid(headers: Mapping[str, str], audience: CookieAudience = "app") -> str | None:
+    """The raw sid cookie of ``audience`` (the one a new sign-in rotates), or ``None``."""
+    value = _cookie_jar(headers).get(SESSION_COOKIES[audience][0])
+    if not value or len(value) > _MAX_SID_LEN:
         return None
-    morsel = jar.get(SID_COOKIE)
-    if morsel is None or not morsel.value or len(morsel.value) > _MAX_SID_LEN:
-        return None
-    return morsel.value
+    return value
 
 
 class SessionMiddleware:
@@ -292,18 +354,27 @@ class SessionMiddleware:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
-        sid = read_sid(Headers(scope=scope))
-        if sid is None:
+        selected = select_session_cookie(scope["path"], _cookie_jar(Headers(scope=scope)))
+        if selected is None:
             await self.app(scope, receive, send)
             return
-        session = await self.store.resolve(sid)
+        audience, sid = selected
+        session = await self.store.resolve(sid, audience=audience)
         token = _current.set(session if session is not None else "expired")
+        audience_token = _presented.set(audience)
         try:
             if session is not None:
                 await self.store.touch(sid, session)
             await self.app(scope, receive, send)
         finally:
+            _presented.reset(audience_token)
             _current.reset(token)
+
+
+def _principal_audience(value: str) -> Literal["app", "portal", "device"]:
+    if value == "portal" or value == "device":
+        return value
+    return "app"
 
 
 class SessionPrincipalResolver:
@@ -324,6 +395,7 @@ class SessionPrincipalResolver:
                 user_id=session.user_id,
                 user_class=session.user_class,
                 session_id=session.session_id,
+                audience=_principal_audience(session.audience),
                 aal=2 if session.aal >= 2 else 1,
                 amr=list(session.amr),
                 authenticated_at=session.authenticated_at,
