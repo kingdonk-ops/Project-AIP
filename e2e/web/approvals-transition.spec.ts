@@ -126,8 +126,8 @@ async function history(page: Page, instanceId: string): Promise<History> {
 
       const found = await history(pageA, instance.id);
       expect(found.entries, "APPROVALS-02: one decision per transition").toHaveLength(1);
-      expect(found.entries[0].action).toBe("submit");
-      expect(found.entries[0].entryHash, "APPROVALS-02: a sha256 entry hash").toMatch(/^[0-9a-f]{64}$/);
+      expect(found.entries[0]?.action).toBe("submit");
+      expect(found.entries[0]?.entryHash, "APPROVALS-02: a sha256 entry hash").toMatch(/^[0-9a-f]{64}$/);
       expect(found.chainValid, "APPROVALS-02: the decision chain verifies").toBe(true);
 
       await loginAs(pageB, u.b);
@@ -175,7 +175,7 @@ async function history(page: Page, instanceId: string): Promise<History> {
 
       const found = await history(page, instance.id);
       expect(found.entries.map((e) => e.action)).toEqual(["submit", "approve"]);
-      expect(found.entries[1].guardResult?.passed, "the decision records the guard that passed").toBe(true);
+      expect(found.entries[1]?.guardResult?.passed, "the decision records the guard that passed").toBe(true);
       expect(found.chainValid, "APPROVALS-02: the chain verifies after two decisions").toBe(true);
     } finally {
       if (projectId) await archiveProject(page, projectId);
