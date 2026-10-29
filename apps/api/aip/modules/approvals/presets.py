@@ -5,8 +5,12 @@ its lifecycle lives in version control rather than in code. ``ApprovalsApi.insta
 one here, validates it and publishes it idempotently.
 
 The directory is ``$AIP_WORKFLOWS_DIR`` when set, else ``<repo root>/config/workflows`` (the same
-``repo_root`` override the migrator uses). The file is read only when a preset is installed, never
-at import time, so importing the module never touches the filesystem.
+``repo_root`` override the migrator uses). A file is read only when a preset is installed or listed,
+never at import time, so importing the module never touches the filesystem.
+
+APPROVALS-05: ``list_presets`` reads and fully validates every preset in the directory (a missing
+directory has none); ``create_app`` calls it once so a malformed preset stops startup instead of
+failing the first install.
 """
 
 from __future__ import annotations
@@ -17,7 +21,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-__all__ = ["Preset", "PresetError", "load_preset", "workflows_dir"]
+from pydantic import ValidationError
+
+from aip.modules.approvals.schemas import validate_spec
+
+__all__ = ["Preset", "PresetError", "list_presets", "load_preset", "workflows_dir"]
 
 WORKFLOWS_DIR_ENV = "AIP_WORKFLOWS_DIR"
 # A preset key is a snake_case file stem; the pattern also keeps the path inside the directory.
@@ -79,3 +87,22 @@ def load_preset(preset_key: str, base_dir: Path | None = None) -> Preset:
     if not isinstance(spec, dict):
         raise PresetError(f"preset {preset_key!r} needs a spec object")
     return Preset(key=preset_key, record_type=record_type, spec=spec)
+
+
+def list_presets(base_dir: Path | None = None) -> list[Preset]:
+    """Every ``*.json`` preset in the directory, by key, each spec checked by ``validate_spec``.
+
+    Raises :class:`PresetError` naming the first preset that is malformed or fails the graph rules.
+    """
+    directory = base_dir or workflows_dir()
+    if not directory.is_dir():
+        return []
+    presets: list[Preset] = []
+    for path in sorted(directory.glob("*.json")):
+        preset = load_preset(path.stem, directory)
+        try:
+            validate_spec(preset.spec)
+        except ValidationError as exc:
+            raise PresetError(f"preset {preset.key!r} is not a valid workflow: {exc}") from exc
+        presets.append(preset)
+    return presets

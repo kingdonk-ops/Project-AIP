@@ -10,7 +10,8 @@ export interface AssignmentOut {
   roleId: string;
   scopeType: string;
   source: string;
-  userId: string;
+  teamId?: string | null;
+  userId: string | null;
   validFrom: string;
   validTo: string | null;
 }

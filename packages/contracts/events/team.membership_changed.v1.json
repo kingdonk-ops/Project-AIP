@@ -1,0 +1,33 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "change": {
+      "enum": [
+        "added",
+        "removed"
+      ],
+      "title": "Change",
+      "type": "string"
+    },
+    "teamId": {
+      "format": "uuid",
+      "title": "Teamid",
+      "type": "string"
+    },
+    "userIds": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Userids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "teamId",
+    "userIds",
+    "change"
+  ],
+  "title": "TeamMembershipChangedEvent",
+  "type": "object"
+}

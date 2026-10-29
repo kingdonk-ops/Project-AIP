@@ -39,6 +39,33 @@ export const IdentityBackchannelLogoutResponse = zod.unknown()
 export const IdentityOidcCallbackResponse = zod.unknown()
 
 /**
+ * Start a client's sign-in on the portal (``aip-portal``, a second factor always asked).
+ * @summary Portal Login Start
+ */
+export const identityPortalLoginStartBodyEmailMin = 3;
+export const identityPortalLoginStartBodyEmailMax = 254;
+
+export const identityPortalLoginStartBodyReturnToOneMax = 2048;
+
+
+
+export const IdentityPortalLoginStartBody = zod.object({
+  "email": zod.string().min(identityPortalLoginStartBodyEmailMin).max(identityPortalLoginStartBodyEmailMax),
+  "returnTo": zod.union([zod.string().max(identityPortalLoginStartBodyReturnToOneMax),zod.null()]).optional()
+})
+
+export const IdentityPortalLoginStartResponse = zod.object({
+  "method": zod.enum(['sso', 'password']),
+  "redirectUrl": zod.string()
+}).describe('Same status and keys whether or not the email or domain is known; never the tenant.')
+
+/**
+ * Finish a client's portal sign-in: a local ``portal`` account at aal 2, a portal session.
+ * @summary Portal Oidc Callback
+ */
+export const IdentityPortalOidcCallbackResponse = zod.unknown()
+
+/**
  * @summary Step Up Start
  */
 export const identityStepUpStartQueryReturnToOneMax = 2048;

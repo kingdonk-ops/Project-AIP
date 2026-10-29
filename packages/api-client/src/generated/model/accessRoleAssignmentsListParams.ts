@@ -3,4 +3,5 @@
 export type AccessRoleAssignmentsListParams = {
 userId?: string | null;
 projectId?: string | null;
+teamId?: string | null;
 };

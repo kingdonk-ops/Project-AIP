@@ -10,8 +10,8 @@ Regenerate with `uv run python tools/gen_module_map.py`.
 | 1 | `audit` | audit | none |
 | 2 | `security` | security | none |
 | 3 | `tenancy` | tenancy | none |
-| 4 | `assets` | assets | `tenancy` |
-| 5 | `item_types` | item_types | `tenancy` |
+| 4 | `item_types` | item_types | `tenancy` |
+| 5 | `assets` | assets | `item_types`, `tenancy` |
 | 6 | `ops` | platform | `tenancy` |
 | 7 | `identity` | identity | `ops`, `tenancy` |
 | 8 | `projects` | projects | `tenancy` |
@@ -35,6 +35,7 @@ graph TD
     approvals --> access
     approvals --> identity
     approvals --> tenancy
+    assets --> item_types
     assets --> tenancy
     audit
     forms --> approvals

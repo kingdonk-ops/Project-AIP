@@ -1,4 +1,9 @@
-"""Request and response models for roles and role assignments (ACCESS-02), camelCase JSON."""
+"""Request and response models for roles and role assignments (ACCESS-02), camelCase JSON.
+
+ACCESS-04: an assignment may target a team (``{"type": "team", "teamId": ...}``). ``Scope`` and
+``AssignmentCreate`` mirror the ``ck_role_assignment_scope`` CHECK: a team scope names a team, no
+project and no user; every other scope names a user.
+"""
 
 from __future__ import annotations
 
@@ -71,30 +76,47 @@ class RoleClone(_Model):
 
 
 class Scope(_Model):
-    """``tenant``, or ``project`` with ``projectId``. ``team`` and ``asset_subtree`` -> 400."""
+    """``tenant``; ``project`` with ``projectId``; ``team`` with ``teamId`` (ACCESS-04).
+    ``asset_subtree`` -> 400."""
 
     type: Literal["tenant", "project", "team", "asset_subtree"]
     project_id: UUID | None = None
+    team_id: UUID | None = None
 
     @model_validator(mode="after")
-    def _project_id_matches_type(self) -> Scope:
+    def _ids_match_type(self) -> Scope:
         if self.type == "project" and self.project_id is None:
             raise ValueError("a project scope needs projectId")
         if self.type == "tenant" and self.project_id is not None:
             raise ValueError("a tenant scope has no projectId")
+        if self.type == "team" and (self.team_id is None or self.project_id is not None):
+            raise ValueError("a team scope needs teamId and no projectId (it is the team's)")
+        if self.type != "team" and self.team_id is not None:
+            raise ValueError("only a team scope has a teamId")
         return self
 
 
 class AssignmentCreate(_Model):
-    user_id: UUID
+    """A team scope names no user (its members hold the role); every other scope needs userId."""
+
+    user_id: UUID | None = None
     role_id: UUID
     scope: Scope
     valid_to: datetime | None = None
 
+    @model_validator(mode="after")
+    def _holder_matches_scope(self) -> AssignmentCreate:
+        if self.scope.type == "team" and self.user_id is not None:
+            raise ValueError("a team assignment has no userId")
+        if self.scope.type != "team" and self.user_id is None:
+            raise ValueError("userId is required")
+        return self
+
 
 class AssignmentOut(_Model):
     id: UUID
-    user_id: UUID
+    user_id: UUID | None
+    team_id: UUID | None = None
     role_id: UUID
     role_code: str
     scope_type: str

@@ -6,5 +6,6 @@ export interface AvailableTransition {
   critical: boolean;
   labelKey: string;
   reasonKey?: string | null;
+  requiresComment: boolean;
   toState: string;
 }

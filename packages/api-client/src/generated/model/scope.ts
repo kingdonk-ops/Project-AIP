@@ -2,9 +2,11 @@
 import type { ScopeType } from './scopeType';
 
 /**
- * ``tenant``, or ``project`` with ``projectId``. ``team`` and ``asset_subtree`` -> 400.
+ * ``tenant``; ``project`` with ``projectId``; ``team`` with ``teamId`` (ACCESS-04).
+ * ``asset_subtree`` -> 400.
  */
 export interface Scope {
   projectId?: string | null;
+  teamId?: string | null;
   type: ScopeType;
 }

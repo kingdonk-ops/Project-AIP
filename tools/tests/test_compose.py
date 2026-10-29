@@ -31,6 +31,7 @@ APP_SERVICES = {
     "identity-seed",
     "access-seed",
     "admin-bootstrap",
+    "approvals-seed",
     "report-templates-load",
     "object-store-init",
     "web",
@@ -44,6 +45,7 @@ ONE_SHOT = {
     "identity-seed",
     "access-seed",
     "admin-bootstrap",
+    "approvals-seed",
     "report-templates-load",
     "object-store-init",
 }
@@ -60,6 +62,7 @@ DEFAULT_SERVICES = {
     "identity-seed",
     "access-seed",
     "admin-bootstrap",
+    "approvals-seed",
     "report-templates-load",
     "object-store-init",
     "api",
@@ -177,6 +180,12 @@ def test_one_shots_gate_their_dependents(services: dict[str, dict[str, Any]]) ->
     )
     # TESTING-09: the fixture tenants' first admins are seeded after the roles, before the API.
     for dependent, dependency in (("admin-bootstrap", "access-seed"), ("api", "admin-bootstrap")):
+        assert (
+            services[dependent]["depends_on"][dependency]["condition"]
+            == "service_completed_successfully"
+        )
+    # APPROVALS-05: the inspection preset is installed in the fixture tenant before the API serves.
+    for dependent, dependency in (("approvals-seed", "tenancy-seed"), ("api", "approvals-seed")):
         assert (
             services[dependent]["depends_on"][dependency]["condition"]
             == "service_completed_successfully"

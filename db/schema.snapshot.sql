@@ -401,6 +401,14 @@ GRANT SELECT ON TABLE public.sites TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.stored_files TO aip_app;
 GRANT SELECT ON TABLE public.stored_files TO aip_readonly;
 
+-- Name: TABLE team; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.team TO aip_app;
+GRANT SELECT ON TABLE public.team TO aip_readonly;
+
+-- Name: TABLE team_member; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.team_member TO aip_app;
+GRANT SELECT ON TABLE public.team_member TO aip_readonly;
+
 -- Name: TABLE tenant_auth_policy; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_auth_policy TO aip_app;
 GRANT SELECT ON TABLE public.tenant_auth_policy TO aip_readonly;
@@ -489,9 +497,9 @@ ALTER TABLE ONLY public.access_settings
 ALTER TABLE ONLY public.access_user_scope
     ADD CONSTRAINT pk_access_user_scope PRIMARY KEY (id);
 
--- Name: access_user_scope uq_access_user_scope_role_assignment_id; Type: CONSTRAINT; Schema: public
+-- Name: access_user_scope uq_access_user_scope_role_assignment_id_user_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.access_user_scope
-    ADD CONSTRAINT uq_access_user_scope_role_assignment_id UNIQUE (role_assignment_id);
+    ADD CONSTRAINT uq_access_user_scope_role_assignment_id_user_id UNIQUE (role_assignment_id, user_id);
 
 -- Name: app_user pk_app_user; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.app_user
@@ -785,6 +793,22 @@ ALTER TABLE ONLY public.stored_files
 ALTER TABLE ONLY public.stored_files
     ADD CONSTRAINT uq_stored_files_id_tenant_id UNIQUE (id, tenant_id);
 
+-- Name: team pk_team; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.team
+    ADD CONSTRAINT pk_team PRIMARY KEY (id);
+
+-- Name: team uq_team_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.team
+    ADD CONSTRAINT uq_team_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: team_member pk_team_member; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.team_member
+    ADD CONSTRAINT pk_team_member PRIMARY KEY (id);
+
+-- Name: team_member uq_team_member_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.team_member
+    ADD CONSTRAINT uq_team_member_id_tenant_id UNIQUE (id, tenant_id);
+
 -- Name: tenant_auth_policy pk_tenant_auth_policy; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_auth_policy
     ADD CONSTRAINT pk_tenant_auth_policy PRIMARY KEY (tenant_id);
@@ -926,9 +950,21 @@ ALTER TABLE ONLY public.access_user_scope
 ALTER TABLE ONLY public.access_user_scope
     ADD CONSTRAINT fk_access_user_scope_role_assignment FOREIGN KEY (role_assignment_id, tenant_id) REFERENCES public.role_assignment(id, tenant_id) ON DELETE CASCADE;
 
+-- Name: access_user_scope fk_access_user_scope_team_member; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.access_user_scope
+    ADD CONSTRAINT fk_access_user_scope_team_member FOREIGN KEY (team_member_id, tenant_id) REFERENCES public.team_member(id, tenant_id) ON DELETE CASCADE;
+
 -- Name: app_user fk_app_user_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.app_user
     ADD CONSTRAINT fk_app_user_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: assets fk_assets_item_type; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT fk_assets_item_type FOREIGN KEY (item_type_id, tenant_id) REFERENCES public.item_types(id, tenant_id);
+
+-- Name: assets fk_assets_item_type_version; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT fk_assets_item_type_version FOREIGN KEY (item_type_version_id, tenant_id) REFERENCES public.item_type_versions(id, tenant_id);
 
 -- Name: assets fk_assets_parent; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.assets
@@ -1034,6 +1070,10 @@ ALTER TABLE ONLY public.role_assignment
 ALTER TABLE ONLY public.role_assignment
     ADD CONSTRAINT fk_role_assignment_role_id_tenant_id_role FOREIGN KEY (role_id, tenant_id) REFERENCES public.role(id, tenant_id);
 
+-- Name: role_assignment fk_role_assignment_team_id_tenant_id_team; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.role_assignment
+    ADD CONSTRAINT fk_role_assignment_team_id_tenant_id_team FOREIGN KEY (team_id, tenant_id) REFERENCES public.team(id, tenant_id);
+
 -- Name: role_assignment fk_role_assignment_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.role_assignment
     ADD CONSTRAINT fk_role_assignment_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
@@ -1045,6 +1085,30 @@ ALTER TABLE ONLY public.role_permission
 -- Name: role_permission fk_role_permission_role_id_tenant_id_role; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.role_permission
     ADD CONSTRAINT fk_role_permission_role_id_tenant_id_role FOREIGN KEY (role_id, tenant_id) REFERENCES public.role(id, tenant_id);
+
+-- Name: team fk_team_created_by_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.team
+    ADD CONSTRAINT fk_team_created_by_tenant_id_app_user FOREIGN KEY (created_by, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
+-- Name: team fk_team_organisation_id_tenant_id_organisations; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.team
+    ADD CONSTRAINT fk_team_organisation_id_tenant_id_organisations FOREIGN KEY (organisation_id, tenant_id) REFERENCES public.organisations(id, tenant_id);
+
+-- Name: team fk_team_project_id_tenant_id_projects; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.team
+    ADD CONSTRAINT fk_team_project_id_tenant_id_projects FOREIGN KEY (project_id, tenant_id) REFERENCES public.projects(id, tenant_id);
+
+-- Name: team_member fk_team_member_created_by_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.team_member
+    ADD CONSTRAINT fk_team_member_created_by_tenant_id_app_user FOREIGN KEY (created_by, tenant_id) REFERENCES public.app_user(id, tenant_id);
+
+-- Name: team_member fk_team_member_team_id_tenant_id_team; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.team_member
+    ADD CONSTRAINT fk_team_member_team_id_tenant_id_team FOREIGN KEY (team_id, tenant_id) REFERENCES public.team(id, tenant_id);
+
+-- Name: team_member fk_team_member_user_id_tenant_id_app_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.team_member
+    ADD CONSTRAINT fk_team_member_user_id_tenant_id_app_user FOREIGN KEY (user_id, tenant_id) REFERENCES public.app_user(id, tenant_id);
 
 -- Name: tenant_auth_policy fk_tenant_auth_policy_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.tenant_auth_policy
@@ -1215,6 +1279,32 @@ CREATE FUNCTION public.access_sync_permissions(p_catalogue jsonb) RETURNS void
 
 ALTER FUNCTION public.access_sync_permissions(p_catalogue jsonb) OWNER TO aip_owner;
 
+-- Name: access_team_member_scope_sync(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.access_team_member_scope_sync() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        IF TG_OP IN ('UPDATE', 'DELETE') THEN
+          DELETE FROM access_user_scope WHERE team_member_id = OLD.id;
+        END IF;
+        IF TG_OP IN ('INSERT', 'UPDATE') AND NEW.deleted_at IS NULL THEN
+          INSERT INTO access_user_scope
+            (id, tenant_id, user_id, scope_kind, project_id,
+             role_assignment_id, team_member_id, valid_from, valid_to)
+          SELECT gen_random_uuid(), NEW.tenant_id, NEW.user_id,
+                 CASE WHEN t.project_id IS NULL THEN 'tenant' ELSE 'project' END,
+                 t.project_id, ra.id, NEW.id, ra.valid_from, ra.valid_to
+          FROM team t
+          JOIN role_assignment ra
+            ON ra.team_id = t.id AND ra.scope_type = 'team' AND ra.deleted_at IS NULL
+          WHERE t.id = NEW.team_id AND t.tenant_id = NEW.tenant_id AND t.deleted_at IS NULL;
+        END IF;
+        RETURN NULL;
+      END
+      $$;
+
+ALTER FUNCTION public.access_team_member_scope_sync() OWNER TO aip_owner;
+
 -- Name: access_user_scope_sync(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.access_user_scope_sync() RETURNS trigger
     LANGUAGE plpgsql
@@ -1223,15 +1313,25 @@ CREATE FUNCTION public.access_user_scope_sync() RETURNS trigger
         IF TG_OP IN ('UPDATE', 'DELETE') THEN
           DELETE FROM access_user_scope WHERE role_assignment_id = OLD.id;
         END IF;
-        IF TG_OP IN ('INSERT', 'UPDATE')
-           AND NEW.deleted_at IS NULL
-           AND NEW.scope_type IN ('tenant', 'project') THEN
-          INSERT INTO access_user_scope
-            (id, tenant_id, user_id, scope_kind, project_id,
-             role_assignment_id, valid_from, valid_to)
-          VALUES
-            (gen_random_uuid(), NEW.tenant_id, NEW.user_id, NEW.scope_type, NEW.project_id,
-             NEW.id, NEW.valid_from, NEW.valid_to);
+        IF TG_OP IN ('INSERT', 'UPDATE') AND NEW.deleted_at IS NULL THEN
+          IF NEW.scope_type IN ('tenant', 'project') THEN
+            INSERT INTO access_user_scope
+              (id, tenant_id, user_id, scope_kind, project_id,
+               role_assignment_id, valid_from, valid_to)
+            VALUES
+              (gen_random_uuid(), NEW.tenant_id, NEW.user_id, NEW.scope_type, NEW.project_id,
+               NEW.id, NEW.valid_from, NEW.valid_to);
+          ELSIF NEW.scope_type = 'team' THEN
+            INSERT INTO access_user_scope
+              (id, tenant_id, user_id, scope_kind, project_id,
+               role_assignment_id, team_member_id, valid_from, valid_to)
+            SELECT gen_random_uuid(), NEW.tenant_id, tm.user_id,
+                   CASE WHEN t.project_id IS NULL THEN 'tenant' ELSE 'project' END,
+                   t.project_id, NEW.id, tm.id, NEW.valid_from, NEW.valid_to
+            FROM team t
+            JOIN team_member tm ON tm.team_id = t.id AND tm.deleted_at IS NULL
+            WHERE t.id = NEW.team_id AND t.tenant_id = NEW.tenant_id AND t.deleted_at IS NULL;
+          END IF;
         END IF;
         RETURN NULL;
       END
@@ -2186,6 +2286,9 @@ CREATE INDEX ix_access_reviews_tenant_id ON public.access_reviews USING btree (t
 -- Name: ix_access_settings_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_access_settings_tenant_id ON public.access_settings USING btree (tenant_id);
 
+-- Name: ix_access_user_scope_team_member_id; Type: INDEX; Schema: public
+CREATE INDEX ix_access_user_scope_team_member_id ON public.access_user_scope USING btree (team_member_id);
+
 -- Name: ix_access_user_scope_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_access_user_scope_tenant_id ON public.access_user_scope USING btree (tenant_id);
 
@@ -2201,6 +2304,9 @@ CREATE INDEX ix_app_user_tenant_id_organisation_id ON public.app_user USING btre
 -- Name: ix_app_user_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_app_user_tenant_id_status ON public.app_user USING btree (tenant_id, status) WHERE (deleted_at IS NULL);
 
+-- Name: ix_assets_attributes; Type: INDEX; Schema: public
+CREATE INDEX ix_assets_attributes ON public.assets USING gin (attributes jsonb_path_ops);
+
 -- Name: ix_assets_name_trgm; Type: INDEX; Schema: public
 CREATE INDEX ix_assets_name_trgm ON public.assets USING gin (name public.gin_trgm_ops);
 
@@ -2209,6 +2315,9 @@ CREATE INDEX ix_assets_path_gist ON public.assets USING gist (path);
 
 -- Name: ix_assets_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_assets_tenant_id ON public.assets USING btree (tenant_id);
+
+-- Name: ix_assets_tenant_id_item_type_id; Type: INDEX; Schema: public
+CREATE INDEX ix_assets_tenant_id_item_type_id ON public.assets USING btree (tenant_id, item_type_id);
 
 -- Name: ix_assets_tenant_id_parent_id_sort_order; Type: INDEX; Schema: public
 CREATE INDEX ix_assets_tenant_id_parent_id_sort_order ON public.assets USING btree (tenant_id, parent_id, sort_order);
@@ -2408,6 +2517,9 @@ CREATE INDEX ix_role_assignment_tenant_id_project_id ON public.role_assignment U
 -- Name: ix_role_assignment_tenant_id_role_id; Type: INDEX; Schema: public
 CREATE INDEX ix_role_assignment_tenant_id_role_id ON public.role_assignment USING btree (tenant_id, role_id);
 
+-- Name: ix_role_assignment_tenant_id_team_id; Type: INDEX; Schema: public
+CREATE INDEX ix_role_assignment_tenant_id_team_id ON public.role_assignment USING btree (tenant_id, team_id);
+
 -- Name: ix_role_assignment_tenant_id_user_id; Type: INDEX; Schema: public
 CREATE INDEX ix_role_assignment_tenant_id_user_id ON public.role_assignment USING btree (tenant_id, user_id);
 
@@ -2440,6 +2552,18 @@ CREATE INDEX ix_stored_files_tenant_id ON public.stored_files USING btree (tenan
 
 -- Name: ix_stored_files_tenant_id_project_id; Type: INDEX; Schema: public
 CREATE INDEX ix_stored_files_tenant_id_project_id ON public.stored_files USING btree (tenant_id, project_id);
+
+-- Name: ix_team_member_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_team_member_tenant_id ON public.team_member USING btree (tenant_id);
+
+-- Name: ix_team_member_tenant_id_user_id; Type: INDEX; Schema: public
+CREATE INDEX ix_team_member_tenant_id_user_id ON public.team_member USING btree (tenant_id, user_id);
+
+-- Name: ix_team_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_team_tenant_id ON public.team USING btree (tenant_id);
+
+-- Name: ix_team_tenant_id_project_id; Type: INDEX; Schema: public
+CREATE INDEX ix_team_tenant_id_project_id ON public.team USING btree (tenant_id, project_id);
 
 -- Name: ix_tenant_entitlement_override_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_tenant_entitlement_override_tenant_id ON public.tenant_entitlement_override USING btree (tenant_id);
@@ -2645,6 +2769,9 @@ CREATE UNIQUE INDEX uq_projects_tenant_id_upper_code ON public.projects USING bt
 -- Name: uq_role_assignment_live; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_role_assignment_live ON public.role_assignment USING btree (tenant_id, user_id, role_id, scope_type, COALESCE(project_id, '00000000-0000-0000-0000-000000000000'::uuid)) WHERE ((deleted_at IS NULL) AND (scope_type = ANY (ARRAY['tenant'::text, 'project'::text])));
 
+-- Name: uq_role_assignment_team_live; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_role_assignment_team_live ON public.role_assignment USING btree (tenant_id, team_id, role_id) WHERE ((deleted_at IS NULL) AND (scope_type = 'team'::text));
+
 -- Name: uq_role_permission_role_id_permission_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_role_permission_role_id_permission_code ON public.role_permission USING btree (role_id, permission_code) WHERE (deleted_at IS NULL);
 
@@ -2659,6 +2786,15 @@ CREATE UNIQUE INDEX uq_sites_tenant_id_upper_code ON public.sites USING btree (t
 
 -- Name: uq_stored_files_tenant_id_idempotency_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_stored_files_tenant_id_idempotency_key ON public.stored_files USING btree (tenant_id, idempotency_key) WHERE (idempotency_key IS NOT NULL);
+
+-- Name: uq_team_live_name; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_team_live_name ON public.team USING btree (tenant_id, COALESCE(project_id, '00000000-0000-0000-0000-000000000000'::uuid), lower(name)) WHERE (deleted_at IS NULL);
+
+-- Name: uq_team_member_live; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_team_member_live ON public.team_member USING btree (team_id, user_id) WHERE (deleted_at IS NULL);
+
+-- Name: uq_team_tenant_id_scim_group_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_team_tenant_id_scim_group_id ON public.team USING btree (tenant_id, scim_group_id) WHERE ((scim_group_id IS NOT NULL) AND (deleted_at IS NULL));
 
 -- Name: uq_tenant_membership_tenant_id_user_id_organisation_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_tenant_membership_tenant_id_user_id_organisation_id ON public.tenant_membership USING btree (tenant_id, user_id, organisation_id) NULLS NOT DISTINCT WHERE (deleted_at IS NULL);
@@ -2894,6 +3030,12 @@ CREATE POLICY project_scope ON public.stored_files AS RESTRICTIVE TO aip_app USI
 -- Name: stored_files tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.stored_files USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: team tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.team USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: team_member tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.team_member USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: tenant_auth_policy tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.tenant_auth_policy USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -3095,6 +3237,12 @@ ALTER TABLE public.sites ENABLE ROW LEVEL SECURITY;
 -- Name: stored_files; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.stored_files ENABLE ROW LEVEL SECURITY;
 
+-- Name: team; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.team ENABLE ROW LEVEL SECURITY;
+
+-- Name: team_member; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.team_member ENABLE ROW LEVEL SECURITY;
+
 -- Name: tenant_auth_policy; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.tenant_auth_policy ENABLE ROW LEVEL SECURITY;
 
@@ -3253,6 +3401,7 @@ CREATE TABLE public.access_user_scope (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    team_member_id uuid,
     CONSTRAINT ck_access_user_scope_kind CHECK ((scope_kind = ANY (ARRAY['tenant'::text, 'project'::text]))),
     CONSTRAINT ck_access_user_scope_project CHECK ((((scope_kind = 'tenant'::text) AND (project_id IS NULL)) OR ((scope_kind = 'project'::text) AND (project_id IS NOT NULL))))
 );
@@ -3311,11 +3460,17 @@ CREATE TABLE public.assets (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    item_type_id uuid,
+    item_type_version_id uuid,
+    attributes jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT ck_assets_attributes_object CHECK ((jsonb_typeof(attributes) = 'object'::text)),
     CONSTRAINT ck_assets_depth CHECK ((public.nlevel(path) <= 15)),
+    CONSTRAINT ck_assets_item_type_pinned CHECK (((item_type_id IS NULL) = (item_type_version_id IS NULL))),
     CONSTRAINT ck_assets_name CHECK (((btrim(name) <> ''::text) AND (length(name) <= 200))),
     CONSTRAINT ck_assets_path_leaf CHECK ((public.ltree2text(public.subpath(path, (public.nlevel(path) - 1))) = replace((id)::text, '-'::text, ''::text))),
     CONSTRAINT ck_assets_root CHECK (((parent_id IS NULL) = (public.nlevel(path) = 1))),
-    CONSTRAINT ck_assets_tag_number CHECK (((tag_number IS NULL) OR ((btrim(tag_number) = tag_number) AND (tag_number <> ''::text) AND (length(tag_number) <= 64))))
+    CONSTRAINT ck_assets_tag_number CHECK (((tag_number IS NULL) OR ((btrim(tag_number) = tag_number) AND (tag_number <> ''::text) AND (length(tag_number) <= 64)))),
+    CONSTRAINT ck_assets_untyped_attributes CHECK (((item_type_id IS NOT NULL) OR (attributes = '{}'::jsonb)))
 );
 
 ALTER TABLE ONLY public.assets FORCE ROW LEVEL SECURITY;
@@ -4198,7 +4353,7 @@ ALTER TABLE public.role OWNER TO aip_owner;
 CREATE TABLE public.role_assignment (
     id uuid NOT NULL,
     tenant_id uuid NOT NULL,
-    user_id uuid NOT NULL,
+    user_id uuid,
     role_id uuid NOT NULL,
     scope_type text NOT NULL,
     project_id uuid,
@@ -4212,7 +4367,7 @@ CREATE TABLE public.role_assignment (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
-    CONSTRAINT ck_role_assignment_scope CHECK ((((scope_type = 'tenant'::text) AND (project_id IS NULL) AND (team_id IS NULL) AND (asset_path IS NULL)) OR ((scope_type = 'project'::text) AND (project_id IS NOT NULL) AND (team_id IS NULL) AND (asset_path IS NULL)) OR ((scope_type = 'team'::text) AND (team_id IS NOT NULL) AND (asset_path IS NULL)) OR ((scope_type = 'asset_subtree'::text) AND (asset_path IS NOT NULL) AND (team_id IS NULL)))),
+    CONSTRAINT ck_role_assignment_scope CHECK ((((scope_type = 'tenant'::text) AND (user_id IS NOT NULL) AND (project_id IS NULL) AND (team_id IS NULL) AND (asset_path IS NULL)) OR ((scope_type = 'project'::text) AND (user_id IS NOT NULL) AND (project_id IS NOT NULL) AND (team_id IS NULL) AND (asset_path IS NULL)) OR ((scope_type = 'team'::text) AND (user_id IS NULL) AND (team_id IS NOT NULL) AND (project_id IS NULL) AND (asset_path IS NULL)) OR ((scope_type = 'asset_subtree'::text) AND (user_id IS NOT NULL) AND (asset_path IS NOT NULL) AND (team_id IS NULL)))),
     CONSTRAINT ck_role_assignment_scope_type CHECK ((scope_type = ANY (ARRAY['tenant'::text, 'project'::text, 'team'::text, 'asset_subtree'::text]))),
     CONSTRAINT ck_role_assignment_source CHECK ((source = ANY (ARRAY['manual'::text, 'scim'::text, 'delegation'::text]))),
     CONSTRAINT ck_role_assignment_valid CHECK (((valid_to IS NULL) OR (valid_to > valid_from)))
@@ -4356,6 +4511,45 @@ CREATE TABLE public.stored_files (
 ALTER TABLE ONLY public.stored_files FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.stored_files OWNER TO aip_owner;
+
+-- Name: team; Type: TABLE; Schema: public
+CREATE TABLE public.team (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    organisation_id uuid,
+    project_id uuid,
+    name text NOT NULL,
+    team_type text NOT NULL,
+    scim_group_id text,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_team_name CHECK (((length(btrim(name)) >= 1) AND (length(btrim(name)) <= 120))),
+    CONSTRAINT ck_team_team_type CHECK ((team_type = ANY (ARRAY['internal'::text, 'subcontractor'::text, 'client'::text])))
+);
+
+ALTER TABLE ONLY public.team FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.team OWNER TO aip_owner;
+
+-- Name: team_member; Type: TABLE; Schema: public
+CREATE TABLE public.team_member (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    team_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    source text DEFAULT 'manual'::text NOT NULL,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_team_member_source CHECK ((source = ANY (ARRAY['manual'::text, 'scim'::text])))
+);
+
+ALTER TABLE ONLY public.team_member FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.team_member OWNER TO aip_owner;
 
 -- Name: tenant_auth_policy; Type: TABLE; Schema: public
 CREATE TABLE public.tenant_auth_policy (
@@ -4907,6 +5101,9 @@ CREATE TRIGGER trg_access_user_scope_sync AFTER INSERT OR DELETE OR UPDATE ON pu
 
 -- Name: security_audit_events security_audit_events_append_only; Type: TRIGGER; Schema: public
 CREATE TRIGGER security_audit_events_append_only BEFORE DELETE OR UPDATE ON public.security_audit_events FOR EACH ROW EXECUTE FUNCTION public.security_audit_events_forbid_mutation();
+
+-- Name: team_member trg_access_team_member_scope_sync; Type: TRIGGER; Schema: public
+CREATE TRIGGER trg_access_team_member_scope_sync AFTER INSERT OR DELETE OR UPDATE ON public.team_member FOR EACH ROW EXECUTE FUNCTION public.access_team_member_scope_sync();
 
 -- Name: procrastinate_job_event_type; Type: TYPE; Schema: public
 CREATE TYPE public.procrastinate_job_event_type AS ENUM (

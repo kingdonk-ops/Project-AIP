@@ -36,7 +36,7 @@ from aip.modules.approvals.guards.jsonlogic import (
     truthy,
     validate_guard,
 )
-from aip.modules.approvals.presets import PresetError
+from aip.modules.approvals.presets import Preset, PresetError, list_presets
 from aip.modules.approvals.schemas import (
     StateSpec,
     TransitionSpec,
@@ -65,6 +65,7 @@ __all__ = [
     "History",
     "InstanceView",
     "NoActiveDefinitionError",
+    "Preset",
     "PresetError",
     "RecordRef",
     "RecordResolver",
@@ -76,6 +77,7 @@ __all__ = [
     "WorkflowInstance",
     "allowed_actions",
     "evaluate_guard",
+    "list_presets",
     "register_guard_context_provider",
     "register_record_resolver",
     "truthy",

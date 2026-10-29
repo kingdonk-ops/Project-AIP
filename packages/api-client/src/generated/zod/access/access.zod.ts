@@ -10,7 +10,7 @@ export const AccessGetMyAbilitiesQueryParams = zod.object({
 })
 
 export const AccessGetMyAbilitiesResponse = zod.object({
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'portal.grant.manage', 'portal.record.sign_off', 'portal.record.view', 'portal.record.witness', 'portal.report.download', 'portal.user.invite', 'portal.user.suspend', 'portal.user.view', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.inspection.approve', 'approvals.inspection.assign', 'approvals.inspection.client_approve', 'approvals.inspection.execute', 'approvals.inspection.review', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 }).describe('Body of GET /api/v1/access/me/abilities: what the caller may do (the UI hides the rest).')
 
 /**
@@ -18,7 +18,8 @@ export const AccessGetMyAbilitiesResponse = zod.object({
  */
 export const AccessRoleAssignmentsListQueryParams = zod.object({
   "userId": zod.union([zod.uuid(),zod.null()]).optional(),
-  "projectId": zod.union([zod.uuid(),zod.null()]).optional()
+  "projectId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "teamId": zod.union([zod.uuid(),zod.null()]).optional()
 })
 
 export const AccessRoleAssignmentsListResponse = zod.object({
@@ -32,7 +33,8 @@ export const AccessRoleAssignmentsListResponse = zod.object({
   "roleId": zod.uuid(),
   "scopeType": zod.string(),
   "source": zod.string(),
-  "userId": zod.uuid(),
+  "teamId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "userId": zod.union([zod.uuid(),zod.null()]),
   "validFrom": zod.iso.datetime({"offset":true}),
   "validTo": zod.union([zod.iso.datetime({"offset":true}),zod.null()])
 }))
@@ -45,11 +47,12 @@ export const AccessRoleAssignmentsCreateBody = zod.object({
   "roleId": zod.uuid(),
   "scope": zod.object({
   "projectId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "teamId": zod.union([zod.uuid(),zod.null()]).optional(),
   "type": zod.enum(['tenant', 'project', 'team', 'asset_subtree'])
-}).describe('``tenant``, or ``project`` with ``projectId``. ``team`` and ``asset_subtree`` -> 400.'),
-  "userId": zod.uuid(),
+}).describe('``tenant``; ``project`` with ``projectId``; ``team`` with ``teamId`` (ACCESS-04).\n``asset_subtree`` -> 400.'),
+  "userId": zod.union([zod.uuid(),zod.null()]).optional(),
   "validTo": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional()
-})
+}).describe('A team scope names no user (its members hold the role); every other scope needs userId.')
 
 export const AccessRoleAssignmentsCreateResponse = zod.object({
   "approvedBy": zod.union([zod.uuid(),zod.null()]),
@@ -61,7 +64,8 @@ export const AccessRoleAssignmentsCreateResponse = zod.object({
   "roleId": zod.uuid(),
   "scopeType": zod.string(),
   "source": zod.string(),
-  "userId": zod.uuid(),
+  "teamId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "userId": zod.union([zod.uuid(),zod.null()]),
   "validFrom": zod.iso.datetime({"offset":true}),
   "validTo": zod.union([zod.iso.datetime({"offset":true}),zod.null()])
 })
@@ -86,7 +90,7 @@ export const AccessRolesListResponse = zod.object({
   "isSystem": zod.boolean(),
   "name": zod.union([zod.string(),zod.null()]),
   "nameTermKey": zod.union([zod.string(),zod.null()]),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'portal.grant.manage', 'portal.record.sign_off', 'portal.record.view', 'portal.record.witness', 'portal.report.download', 'portal.user.invite', 'portal.user.suspend', 'portal.user.view', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.inspection.approve', 'approvals.inspection.assign', 'approvals.inspection.client_approve', 'approvals.inspection.execute', 'approvals.inspection.review', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 }))
 })
 
@@ -103,7 +107,7 @@ export const accessRolesCreateBodyPermissionsMax = 500;
 export const AccessRolesCreateBody = zod.object({
   "code": zod.string().regex(accessRolesCreateBodyCodeRegExp),
   "name": zod.string().min(1).max(accessRolesCreateBodyNameMax),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'portal.grant.manage', 'portal.record.sign_off', 'portal.record.view', 'portal.record.witness', 'portal.report.download', 'portal.user.invite', 'portal.user.suspend', 'portal.user.view', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view'])).max(accessRolesCreateBodyPermissionsMax)
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.inspection.approve', 'approvals.inspection.assign', 'approvals.inspection.client_approve', 'approvals.inspection.execute', 'approvals.inspection.review', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view'])).max(accessRolesCreateBodyPermissionsMax)
 })
 
 export const AccessRolesCreateResponse = zod.object({
@@ -113,7 +117,7 @@ export const AccessRolesCreateResponse = zod.object({
   "isSystem": zod.boolean(),
   "name": zod.union([zod.string(),zod.null()]),
   "nameTermKey": zod.union([zod.string(),zod.null()]),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'portal.grant.manage', 'portal.record.sign_off', 'portal.record.view', 'portal.record.witness', 'portal.report.download', 'portal.user.invite', 'portal.user.suspend', 'portal.user.view', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.inspection.approve', 'approvals.inspection.assign', 'approvals.inspection.client_approve', 'approvals.inspection.execute', 'approvals.inspection.review', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 })
 
 /**
@@ -142,7 +146,7 @@ export const accessRolesUpdateBodyPermissionsOneMax = 500;
 export const AccessRolesUpdateBody = zod.object({
   "code": zod.union([zod.string().regex(accessRolesUpdateBodyCodeOneRegExp),zod.null()]).optional(),
   "name": zod.union([zod.string().min(1).max(accessRolesUpdateBodyNameOneMax),zod.null()]).optional(),
-  "permissions": zod.union([zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'portal.grant.manage', 'portal.record.sign_off', 'portal.record.view', 'portal.record.witness', 'portal.report.download', 'portal.user.invite', 'portal.user.suspend', 'portal.user.view', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view'])).max(accessRolesUpdateBodyPermissionsOneMax),zod.null()]).optional()
+  "permissions": zod.union([zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.inspection.approve', 'approvals.inspection.assign', 'approvals.inspection.client_approve', 'approvals.inspection.execute', 'approvals.inspection.review', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view'])).max(accessRolesUpdateBodyPermissionsOneMax),zod.null()]).optional()
 }).describe('Every field optional. A system role keeps its code and name (409 SYSTEM_ROLE_IMMUTABLE).')
 
 export const AccessRolesUpdateResponse = zod.object({
@@ -152,7 +156,7 @@ export const AccessRolesUpdateResponse = zod.object({
   "isSystem": zod.boolean(),
   "name": zod.union([zod.string(),zod.null()]),
   "nameTermKey": zod.union([zod.string(),zod.null()]),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'portal.grant.manage', 'portal.record.sign_off', 'portal.record.view', 'portal.record.witness', 'portal.report.download', 'portal.user.invite', 'portal.user.suspend', 'portal.user.view', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.inspection.approve', 'approvals.inspection.assign', 'approvals.inspection.client_approve', 'approvals.inspection.execute', 'approvals.inspection.review', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 })
 
 /**
@@ -179,7 +183,7 @@ export const AccessRolesCloneResponse = zod.object({
   "isSystem": zod.boolean(),
   "name": zod.union([zod.string(),zod.null()]),
   "nameTermKey": zod.union([zod.string(),zod.null()]),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'portal.grant.manage', 'portal.record.sign_off', 'portal.record.view', 'portal.record.witness', 'portal.report.download', 'portal.user.invite', 'portal.user.suspend', 'portal.user.view', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.inspection.approve', 'approvals.inspection.assign', 'approvals.inspection.client_approve', 'approvals.inspection.execute', 'approvals.inspection.review', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 })
 
 /**
@@ -196,6 +200,139 @@ export const AccessRolesResetResponse = zod.object({
   "isSystem": zod.boolean(),
   "name": zod.union([zod.string(),zod.null()]),
   "nameTermKey": zod.union([zod.string(),zod.null()]),
-  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'portal.grant.manage', 'portal.record.sign_off', 'portal.record.view', 'portal.record.witness', 'portal.report.download', 'portal.user.invite', 'portal.user.suspend', 'portal.user.view', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
+  "permissions": zod.array(zod.enum(['access.matrix.export', 'access.role.manage', 'access.role.read', 'access.role_assignment.manage', 'access.role_assignment.read', 'access.team.manage', 'approvals.design', 'approvals.inspection.approve', 'approvals.inspection.assign', 'approvals.inspection.client_approve', 'approvals.inspection.execute', 'approvals.inspection.review', 'approvals.start', 'approvals.view', 'asset.create', 'asset.delete', 'asset.move', 'asset.update', 'asset.view', 'audit.activity.view', 'audit.log.read', 'form.manage', 'form.publish', 'form.view', 'identity.signoff_policy.manage', 'identity.signoff_policy.read', 'identity.user.manage', 'identity.user.read', 'item_type.edit', 'item_type.manage', 'item_type.publish', 'item_type.view', 'ops.jobs.admin', 'platform.events.manage', 'platform.tenants.manage', 'project.archive', 'project.create', 'project.update', 'project.view', 'report.template.manage', 'report.template.view', 'site.manage', 'site.view', 'tenancy.organisation.manage', 'tenancy.organisation.read', 'tenancy.plan.read', 'tenant.flags.manage', 'terms.coverage.read', 'uploads.admin', 'uploads.create', 'uploads.view']))
 })
+
+/**
+ * @summary List Teams
+ */
+export const AccessTeamsListQueryParams = zod.object({
+  "projectId": zod.union([zod.uuid(),zod.null()]).optional()
+})
+
+export const AccessTeamsListResponse = zod.object({
+  "items": zod.array(zod.object({
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "memberCount": zod.int(),
+  "name": zod.string(),
+  "organisationId": zod.union([zod.uuid(),zod.null()]),
+  "projectId": zod.union([zod.uuid(),zod.null()]),
+  "scimGroupId": zod.union([zod.string(),zod.null()]),
+  "teamType": zod.enum(['internal', 'subcontractor', 'client']),
+  "updatedAt": zod.iso.datetime({"offset":true})
+}))
+})
+
+/**
+ * @summary Create Team
+ */
+export const accessTeamsCreateBodyNameMax = 120;
+
+
+
+export const AccessTeamsCreateBody = zod.object({
+  "name": zod.string().min(1).max(accessTeamsCreateBodyNameMax),
+  "organisationId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "projectId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "teamType": zod.enum(['internal', 'subcontractor', 'client'])
+})
+
+export const AccessTeamsCreateResponse = zod.object({
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "memberCount": zod.int(),
+  "name": zod.string(),
+  "organisationId": zod.union([zod.uuid(),zod.null()]),
+  "projectId": zod.union([zod.uuid(),zod.null()]),
+  "scimGroupId": zod.union([zod.string(),zod.null()]),
+  "teamType": zod.enum(['internal', 'subcontractor', 'client']),
+  "updatedAt": zod.iso.datetime({"offset":true})
+})
+
+/**
+ * @summary Delete Team
+ */
+export const AccessTeamsDeleteParams = zod.object({
+  "team_id": zod.uuid()
+})
+
+export const AccessTeamsDeleteResponse = zod.void()
+
+/**
+ * @summary Update Team
+ */
+export const AccessTeamsUpdateParams = zod.object({
+  "team_id": zod.uuid()
+})
+
+export const accessTeamsUpdateBodyNameOneMax = 120;
+
+
+
+export const AccessTeamsUpdateBody = zod.object({
+  "name": zod.union([zod.string().min(1).max(accessTeamsUpdateBodyNameOneMax),zod.null()]).optional(),
+  "organisationId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "teamType": zod.union([zod.enum(['internal', 'subcontractor', 'client']),zod.null()]).optional()
+}).describe('Every field optional; the project cannot change.')
+
+export const AccessTeamsUpdateResponse = zod.object({
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "memberCount": zod.int(),
+  "name": zod.string(),
+  "organisationId": zod.union([zod.uuid(),zod.null()]),
+  "projectId": zod.union([zod.uuid(),zod.null()]),
+  "scimGroupId": zod.union([zod.string(),zod.null()]),
+  "teamType": zod.enum(['internal', 'subcontractor', 'client']),
+  "updatedAt": zod.iso.datetime({"offset":true})
+})
+
+/**
+ * @summary List Members
+ */
+export const AccessTeamMembersListParams = zod.object({
+  "team_id": zod.uuid()
+})
+
+export const AccessTeamMembersListResponse = zod.object({
+  "items": zod.array(zod.object({
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "source": zod.enum(['manual', 'scim']),
+  "userId": zod.uuid()
+}))
+})
+
+/**
+ * @summary Add Members
+ */
+export const AccessTeamMembersAddParams = zod.object({
+  "team_id": zod.uuid()
+})
+
+export const accessTeamMembersAddBodyUserIdsMax = 500;
+
+
+
+export const AccessTeamMembersAddBody = zod.object({
+  "userIds": zod.array(zod.uuid()).min(1).max(accessTeamMembersAddBodyUserIdsMax)
+})
+
+export const AccessTeamMembersAddResponse = zod.object({
+  "items": zod.array(zod.object({
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "source": zod.enum(['manual', 'scim']),
+  "userId": zod.uuid()
+}))
+})
+
+/**
+ * @summary Remove Member
+ */
+export const AccessTeamMembersRemoveParams = zod.object({
+  "team_id": zod.uuid(),
+  "user_id": zod.uuid()
+})
+
+export const AccessTeamMembersRemoveResponse = zod.void()
 
