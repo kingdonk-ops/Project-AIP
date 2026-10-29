@@ -1,0 +1,25 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "userIds": {
+      "anyOf": [
+        {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Userids"
+    }
+  },
+  "required": [
+    "userIds"
+  ],
+  "title": "GrantsChangedEvent",
+  "type": "object"
+}

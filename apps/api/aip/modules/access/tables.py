@@ -12,6 +12,10 @@ ACCESS-02 (revision ``202610131400_access_roles``): ``role``, ``role_permission`
 ACCESS-03 (revision ``202610191000_access_scope_rls``): ``access_user_scope``, the denormalised
 project/tenant scope maintained by a trigger on ``role_assignment`` and read by the RLS predicate
 ``access_project_visible``. Declared here so ``aip-db check-schema`` sees it.
+
+ACCESS-04 (revision ``202610291000_access_teams``): ``team`` and ``team_member`` (FORCE RLS, soft
+delete); ``role_assignment.user_id`` is nullable (a ``team`` assignment names a team, not a user);
+``access_user_scope.team_member_id`` links a scope row to the membership it came from.
 """
 
 from typing import Any
@@ -86,7 +90,7 @@ role_assignment = Table(
     metadata,
     Column("id", Uuid, primary_key=True),
     Column("tenant_id", Uuid, nullable=False),
-    Column("user_id", Uuid, nullable=False),
+    Column("user_id", Uuid, nullable=True),
     Column("role_id", Uuid, nullable=False),
     Column("scope_type", Text, nullable=False),
     Column("project_id", Uuid, nullable=True),
@@ -111,8 +115,39 @@ access_user_scope = Table(
     Column("scope_kind", Text, nullable=False),
     Column("project_id", Uuid, nullable=True),
     Column("role_assignment_id", Uuid, nullable=False),
+    Column("team_member_id", Uuid, nullable=True),
     Column("valid_from", DateTime(timezone=True), nullable=False),
     Column("valid_to", DateTime(timezone=True), nullable=True),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", DateTime(timezone=True), nullable=True),
+)
+
+team = Table(
+    "team",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("tenant_id", Uuid, nullable=False),
+    Column("organisation_id", Uuid, nullable=True),
+    Column("project_id", Uuid, nullable=True),
+    Column("name", Text, nullable=False),
+    Column("team_type", Text, nullable=False),
+    Column("scim_group_id", Text, nullable=True),
+    Column("created_by", Uuid, nullable=True),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", DateTime(timezone=True), nullable=True),
+)
+
+team_member = Table(
+    "team_member",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("tenant_id", Uuid, nullable=False),
+    Column("team_id", Uuid, nullable=False),
+    Column("user_id", Uuid, nullable=False),
+    Column("source", Text, nullable=False, server_default=text("'manual'")),
+    Column("created_by", Uuid, nullable=True),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", DateTime(timezone=True), nullable=True),

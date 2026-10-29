@@ -8,6 +8,12 @@ tables:
     reason: >-
       project_id is the scope *target* of the assignment, not a project-scoped record. Managing
       assignments must not be gated on seeing the project; RLS here is tenant isolation.
+  - table: team
+    reason: >-
+      ACCESS-04: like role_assignment, a team's project_id is the scope *target* of its role
+      assignments, not a project-scoped record. Tenant admins manage project-level teams without
+      seeing the project; the service checks access.team.manage on the team's project. RLS here is
+      tenant isolation.
   - table: access_user_scope
     reason: >-
       The denormalised scope cache this task maintains; project_id is the scope target. It is read
