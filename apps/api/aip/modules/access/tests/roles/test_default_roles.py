@@ -142,10 +142,10 @@ def test_project_managers_can_invite_portal_clients() -> None:
 def test_client_reviewer_approve_level_is_sign_off_only_not_invite() -> None:
     levels: list[Level] = ["none"] * len(ROLE_CODES)
     levels[ROLE_CODES.index("client_reviewer")] = "approve"
-    catalogue = [*PORTAL, ("portal.record.approve", "portal"), ("portal.record.sign", "portal")]
+    catalogue = [*PORTAL, ("portal.case.approve", "portal"), ("portal.case.sign", "portal")]
     roles = default_permissions(catalogue, {"portal": tuple(levels)})
     assert roles["client_reviewer"] == {
         "portal.user.view",
-        "portal.record.approve",
-        "portal.record.sign",
+        "portal.case.approve",
+        "portal.case.sign",
     }

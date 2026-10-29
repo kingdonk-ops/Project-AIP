@@ -136,6 +136,7 @@ async def test_invited_and_suspended_users_get_nothing(
             amr=["pwd", "otp"],
             authenticated_at=datetime.now(UTC),
             kc_sid=None,
+            audience="portal",  # IDENTITY-10: a portal user holds only portal sessions
         )
     live_sessions = "SELECT count(*) FROM user_session WHERE user_id = $1 AND revoked_at IS NULL"
     assert await su_count(db, live_sessions, user_id) == 1
