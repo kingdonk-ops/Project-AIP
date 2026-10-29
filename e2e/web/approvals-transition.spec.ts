@@ -6,7 +6,7 @@
 // active. The fixture admin (tenant_admin) holds the workflow's catalogue permissions.
 //
 // Not tagged @staging: the Coolify demo does not switch the demo record type on.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { CSRF_COOKIE, loginAs } from "../fixtures/login";
 import { runId } from "../fixtures/run-id";
 import { tenantUsers } from "../fixtures/tenants";
@@ -107,113 +107,105 @@ async function history(page: Page, instanceId: string): Promise<History> {
 (users ? test.describe : test.describe.skip)("TESTING-13 workflow transition journeys", () => {
   test.describe.configure({ mode: "serial" });
 
-  test("@skeleton submit writes one chained decision; tenant B gets 404 for the history", async ({ browser }) => {
-    const u = users!;
-    const contextA = await browser.newContext();
-    const contextB = await browser.newContext();
-    const pageA = await contextA.newPage();
-    const pageB = await contextB.newPage();
-    let projectId = "";
-    try {
-      await loginAs(pageA, u.a);
-      projectId = await createProject(pageA, "S");
-      const instance = await startDemo(pageA, projectId);
-      expect(instance.currentState, "a new demo workflow starts in draft").toBe("draft");
+  // One sign-in per user for the whole block: POST /auth/login/start allows 10 per minute per IP,
+  // and the other @skeleton specs in the lane sign in too.
+  let contextA: BrowserContext;
+  let contextB: BrowserContext;
+  let pageA: Page;
+  let pageB: Page;
+  const projects: string[] = [];
 
-      const submitted = await transition(pageA, instance.id, "submit");
-      expect(submitted.status, "APPROVALS-02: submit is applied").toBe(200);
-      expect((submitted.json.instance as Instance).currentState).toBe("submitted");
-
-      const found = await history(pageA, instance.id);
-      expect(found.entries, "APPROVALS-02: one decision per transition").toHaveLength(1);
-      expect(found.entries[0]?.action).toBe("submit");
-      expect(found.entries[0]?.entryHash, "APPROVALS-02: a sha256 entry hash").toMatch(/^[0-9a-f]{64}$/);
-      expect(found.chainValid, "APPROVALS-02: the decision chain verifies").toBe(true);
-
-      await loginAs(pageB, u.b);
-      const asB = await pageB.request.get(`/api/v1/approvals/instances/${instance.id}/history`);
-      expect(asB.status(), "ADR 0035: another tenant's instance is 404, not 403").toBe(404);
-      const startAsB = await apiJson(pageB, "POST", "/api/v1/approvals/instances", {
-        recordType: "demo",
-        recordId: projectId,
-      });
-      expect(startAsB.status, "ADR 0035: tenant B cannot start a workflow on tenant A's record").toBe(404);
-    } finally {
-      if (projectId) await archiveProject(pageA, projectId);
-      await contextA.close();
-      await contextB.close();
-    }
+  test.beforeAll(async ({ browser }) => {
+    contextA = await browser.newContext();
+    contextB = await browser.newContext();
+    pageA = await contextA.newPage();
+    pageB = await contextB.newPage();
+    await loginAs(pageA, users!.a);
+    await loginAs(pageB, users!.b);
   });
 
-  test("@skeleton approve is refused by its guard until the fixture flips allPhotosClean", async ({ browser }) => {
-    const u = users!;
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    let projectId = "";
-    try {
-      await loginAs(page, u.a);
-      projectId = await createProject(page, "G");
-      const instance = await startDemo(page, projectId);
-      expect((await transition(page, instance.id, "submit")).status).toBe(200);
-
-      const described = (await (await page.request.get(`/api/v1/approvals/instances/${instance.id}`)).json()) as Instance;
-      const approve = described.availableTransitions.find((t) => t.action === "approve");
-      expect(approve, "the submitted workflow offers approve").toBeDefined();
-      expect(approve!.allowed, "APPROVALS-02 Part B: the guard is false while the photos are not clean").toBe(false);
-      expect(approve!.reasonKey).toBe("workflow.demo.guard.photos_not_clean");
-
-      const refused = await transition(page, instance.id, "approve");
-      expect(refused.status, "APPROVALS-02 Part B: a false guard refuses the transition").toBe(422);
-      expect(refused.json).toMatchObject({ code: "GUARD_FAILED", messageKey: "workflow.demo.guard.photos_not_clean" });
-      expect((await history(page, instance.id)).entries, "a refused transition writes nothing").toHaveLength(1);
-
-      await moveProject(page, projectId, ["active"]); // the fixture switch: allPhotosClean = true
-
-      const approved = await transition(page, instance.id, "approve");
-      expect(approved.status, "APPROVALS-02 Part B: once the guard holds, approve is applied").toBe(200);
-      expect((approved.json.instance as Instance).currentState).toBe("approved");
-
-      const found = await history(page, instance.id);
-      expect(found.entries.map((e) => e.action)).toEqual(["submit", "approve"]);
-      expect(found.entries[1]?.guardResult?.passed, "the decision records the guard that passed").toBe(true);
-      expect(found.chainValid, "APPROVALS-02: the chain verifies after two decisions").toBe(true);
-    } finally {
-      if (projectId) await archiveProject(page, projectId);
-      await context.close();
-    }
+  test.afterAll(async () => {
+    for (const id of projects) await archiveProject(pageA, id);
+    await contextA?.close();
+    await contextB?.close();
   });
 
-  test("@skeleton an admin installs an inspection preset; a new inspection starts in draft with ready first", async ({
-    browser,
-  }) => {
-    const u = users!;
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    let projectId = "";
-    try {
-      await loginAs(page, u.a);
-      projectId = await createProject(page, "I");
-      const installed = await apiJson(page, "POST", "/api/v1/approvals/definitions/from-preset", {
-        presetKey: "inspection_client_review",
-        projectId,
-      });
-      expect(installed.status, "APPROVALS-05: the admin installs the client-review preset for a project").toBe(200);
-      expect(installed.json).toMatchObject({ key: "inspection_client_review", projectId, status: "active" });
+  test("@skeleton submit writes one chained decision; tenant B gets 404 for the history", async () => {
+    const projectId = await createProject(pageA, "S");
+    projects.push(projectId);
+    const instance = await startDemo(pageA, projectId);
+    expect(instance.currentState, "a new demo workflow starts in draft").toBe("draft");
 
-      const presets = (await (await page.request.get("/api/v1/approvals/presets")).json()) as { key: string }[];
-      expect(presets.map((p) => p.key), "APPROVALS-05: both inspection presets are listed").toEqual(
-        expect.arrayContaining(["inspection_standard", "inspection_client_review"]),
-      );
+    const submitted = await transition(pageA, instance.id, "submit");
+    expect(submitted.status, "APPROVALS-02: submit is applied").toBe(200);
+    expect((submitted.json.instance as Instance).currentState).toBe("submitted");
 
-      const instance = await startDemo(page, projectId, "inspection");
-      expect(instance.currentState, "APPROVALS-05: a new inspection starts in draft").toBe("draft");
-      expect(instance.availableTransitions[0]).toMatchObject({
-        action: "ready",
-        labelKey: "workflow.inspection.action.ready",
-      });
-    } finally {
-      if (projectId) await archiveProject(page, projectId);
-      await context.close();
-    }
+    const found = await history(pageA, instance.id);
+    expect(found.entries, "APPROVALS-02: one decision per transition").toHaveLength(1);
+    expect(found.entries[0]?.action).toBe("submit");
+    expect(found.entries[0]?.entryHash, "APPROVALS-02: a sha256 entry hash").toMatch(/^[0-9a-f]{64}$/);
+    expect(found.chainValid, "APPROVALS-02: the decision chain verifies").toBe(true);
+
+    const asB = await pageB.request.get(`/api/v1/approvals/instances/${instance.id}/history`);
+    expect(asB.status(), "ADR 0035: another tenant's instance is 404, not 403").toBe(404);
+    const startAsB = await apiJson(pageB, "POST", "/api/v1/approvals/instances", {
+      recordType: "demo",
+      recordId: projectId,
+    });
+    expect(startAsB.status, "ADR 0035: tenant B cannot start a workflow on tenant A's record").toBe(404);
+  });
+
+  test("@skeleton approve is refused by its guard until the fixture flips allPhotosClean", async () => {
+    const page = pageA;
+    const projectId = await createProject(page, "G");
+    projects.push(projectId);
+    const instance = await startDemo(page, projectId);
+    expect((await transition(page, instance.id, "submit")).status).toBe(200);
+
+    const described = (await (await page.request.get(`/api/v1/approvals/instances/${instance.id}`)).json()) as Instance;
+    const approve = described.availableTransitions.find((t) => t.action === "approve");
+    expect(approve, "the submitted workflow offers approve").toBeDefined();
+    expect(approve!.allowed, "APPROVALS-02 Part B: the guard is false while the photos are not clean").toBe(false);
+    expect(approve!.reasonKey).toBe("workflow.demo.guard.photos_not_clean");
+
+    const refused = await transition(page, instance.id, "approve");
+    expect(refused.status, "APPROVALS-02 Part B: a false guard refuses the transition").toBe(422);
+    expect(refused.json).toMatchObject({ code: "GUARD_FAILED", messageKey: "workflow.demo.guard.photos_not_clean" });
+    expect((await history(page, instance.id)).entries, "a refused transition writes nothing").toHaveLength(1);
+
+    await moveProject(page, projectId, ["active"]); // the fixture switch: allPhotosClean = true
+
+    const approved = await transition(page, instance.id, "approve");
+    expect(approved.status, "APPROVALS-02 Part B: once the guard holds, approve is applied").toBe(200);
+    expect((approved.json.instance as Instance).currentState).toBe("approved");
+
+    const found = await history(page, instance.id);
+    expect(found.entries.map((e) => e.action)).toEqual(["submit", "approve"]);
+    expect(found.entries[1]?.guardResult?.passed, "the decision records the guard that passed").toBe(true);
+    expect(found.chainValid, "APPROVALS-02: the chain verifies after two decisions").toBe(true);
+  });
+
+  test("@skeleton an admin installs an inspection preset; a new inspection starts in draft with ready first", async () => {
+    const page = pageA;
+    const projectId = await createProject(page, "I");
+    projects.push(projectId);
+    const installed = await apiJson(page, "POST", "/api/v1/approvals/definitions/from-preset", {
+      presetKey: "inspection_client_review",
+      projectId,
+    });
+    expect(installed.status, "APPROVALS-05: the admin installs the client-review preset for a project").toBe(200);
+    expect(installed.json).toMatchObject({ key: "inspection_client_review", projectId, status: "active" });
+
+    const presets = (await (await page.request.get("/api/v1/approvals/presets")).json()) as { key: string }[];
+    expect(presets.map((p) => p.key), "APPROVALS-05: both inspection presets are listed").toEqual(
+      expect.arrayContaining(["inspection_standard", "inspection_client_review"]),
+    );
+
+    const instance = await startDemo(page, projectId, "inspection");
+    expect(instance.currentState, "APPROVALS-05: a new inspection starts in draft").toBe("draft");
+    expect(instance.availableTransitions[0]).toMatchObject({
+      action: "ready",
+      labelKey: "workflow.inspection.action.ready",
+    });
   });
 });

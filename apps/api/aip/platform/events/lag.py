@@ -23,10 +23,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine
 
 from aip.platform.db.engine import dispose_jobs_engine, get_jobs_engine
-from aip.platform.db.session import as_jobs_role
+from aip.platform.db.session import DbEngine, as_jobs_role
 
 __all__ = ["OutboxLag", "lag_problems", "main", "outbox_lag"]
 
@@ -59,7 +58,7 @@ class OutboxLag:
         )
 
 
-async def outbox_lag(jobs_engine: AsyncEngine) -> OutboxLag:
+async def outbox_lag(jobs_engine: DbEngine) -> OutboxLag:
     async with as_jobs_role(jobs_engine) as conn:
         row = (await conn.execute(_LAG)).one()
     return OutboxLag(int(row.waiting), float(row.oldest_s), int(row.dead), int(row.published))
