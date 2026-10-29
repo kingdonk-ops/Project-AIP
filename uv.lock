@@ -320,7 +320,7 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pyyaml", specifier = ">=6" },
     { name = "ruff", specifier = ">=0.8" },
-    { name = "testcontainers", extras = ["keycloak", "postgres", "redis"], specifier = ">=4.8" },
+    { name = "testcontainers", extras = ["keycloak", "postgres", "redis"], specifier = ">=4.15.0" },
     { name = "types-aioboto3", extras = ["s3"], specifier = ">=13.2" },
 ]
 
