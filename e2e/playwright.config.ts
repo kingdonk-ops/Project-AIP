@@ -46,8 +46,14 @@ const webServer: PlaywrightTestConfig["webServer"] = [
 // `staging` against the Coolify demo after a deploy. Both need E2E_SKELETON=1 and the E2E_USER_*
 // / E2E_PASS_* variables, so the default run never needs Keycloak. `unit` runs the fixture tests.
 // The UPLOADS-01 presign journey runs in the skeleton lane too (review 11 M11); without these
-// projects it would skip in every lane. TESTING-12's real-session journeys need Keycloak too.
-const SKELETON = ["web/walking-skeleton.spec.ts", "web/uploads-presign.spec.ts", "web/sessions.spec.ts"];
+// projects it would skip in every lane. TESTING-12's real-session journeys need Keycloak too, and
+// TESTING-13's workflow transition journeys need the stack's seeded `demo` workflow.
+const SKELETON = [
+  "web/walking-skeleton.spec.ts",
+  "web/uploads-presign.spec.ts",
+  "web/sessions.spec.ts",
+  "web/approvals-transition.spec.ts",
+];
 const UNIT = "fixtures/*.spec.ts";
 const skeletonProjects: PlaywrightTestConfig["projects"] = process.env.E2E_SKELETON
   ? [

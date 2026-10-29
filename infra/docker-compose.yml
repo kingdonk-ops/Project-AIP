@@ -375,7 +375,8 @@ services:
     restart: "no"
 
   approvals-seed:
-    # One-shot (APPROVALS-05): the inspection_standard workflow preset in kaefer-demo. Idempotent;
+    # One-shot (APPROVALS-05, TESTING-13): the inspection_standard preset and the `demo` workflow in
+    # kaefer-demo. Idempotent;
     # runs as aip_app (RLS on); refuses when AIP_ENV=production.
     <<: *app-hardening
     build: *api-build
@@ -410,7 +411,11 @@ services:
     build: *api-build
     image: aip-api:${AIP_IMAGE_TAG:-dev}
     command: ["uvicorn", "aip.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
-    environment: *app-env
+    environment:
+      <<: *app-env
+      # TESTING-13: the project-backed `demo` workflow record type for the transition journeys
+      # (aip.modules.approvals.demo). Dev and test stacks only; the API refuses it in production.
+      AIP_APPROVALS_DEMO_RECORDS: "1"
     ports:
       - "127.0.0.1:${AIP_API_PORT:-8000}:8000"
     depends_on:
@@ -465,11 +470,13 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import aip"]
-      interval: 30s
-      timeout: 10s
+      # TESTING-13 (review 11 M10): the worker beats every 10 s only while its database logins work
+      # (aip_jobs, plus the audit writer on the outbox queue); stale after 60 s is unhealthy.
+      test: ["CMD", "python", "-m", "aip.platform.jobs.heartbeat", "--max-age", "60"]
+      interval: 10s
+      timeout: 30s
       retries: 3
-      start_period: 5s
+      start_period: 60s
 
   clamav:
     # UPLOADS-02: ClamAV daemon (GPL) for the scan pipeline, with freshclam keeping signatures
@@ -515,11 +522,13 @@ services:
       object-store-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "python", "-c", "import aip"]
-      interval: 30s
-      timeout: 10s
+      # TESTING-13 (review 11 M10): the worker beats every 10 s only while its database logins work
+      # (aip_jobs, plus the audit writer on the outbox queue); stale after 60 s is unhealthy.
+      test: ["CMD", "python", "-m", "aip.platform.jobs.heartbeat", "--max-age", "60"]
+      interval: 10s
+      timeout: 30s
       retries: 3
-      start_period: 5s
+      start_period: 60s
 
   web:
     # The built web app on nginx; /api is proxied to the api service.

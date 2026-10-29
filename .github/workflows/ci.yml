@@ -314,6 +314,24 @@ jobs:
           assert unknown["method"] == "password" and "kc_idp_hint" not in unknown["redirectUrl"], unknown
           assert set(sso) == set(unknown) == {"method", "redirectUrl"}
           EOF
+      - name: TESTING-13 the worker heartbeat is fresh and the outbox has drained (lag smoke check)
+        run: |
+          $COMPOSE exec -T worker python -m aip.platform.jobs.heartbeat --max-age 60
+          $COMPOSE exec -T worker python -m aip.platform.events.lag --max-lag 30 --wait 120
+      - name: TESTING-13 a worker whose audit-writer login fails never reports healthy
+        run: |
+          $COMPOSE run --detach --no-deps --name aip-bad-worker             -e DATABASE_AUDIT_WRITER_URL=postgresql://aip_audit_writer:wrong_password@postgres:5432/aip             worker python -m aip.worker --queues outbox
+          for _ in $(seq 1 60); do
+            docker logs aip-bad-worker 2>&1 | grep -q "worker heartbeat failed" && break
+            sleep 2
+          done
+          docker logs aip-bad-worker 2>&1 | tail -n 20
+          docker logs aip-bad-worker 2>&1 | grep -q "worker heartbeat failed"
+          if docker exec aip-bad-worker python -m aip.platform.jobs.heartbeat --max-age 60; then
+            echo "::error::a worker without its audit-writer login reported healthy"
+            exit 1
+          fi
+          docker rm --force aip-bad-worker
       - name: STACK-02 render, store and download inside the api container
         run: $COMPOSE exec -T api python - < infra/docker/smoke_render_store.py
       - uses: actions/setup-python@v5
@@ -561,8 +579,15 @@ jobs:
         run: echo "127.0.0.1 rustfs" | sudo tee -a /etc/hosts
       # One worker: the specs sign the same fixture users in, and the mock IdP's brute-force
       # protection treats two sign-ins of one user within a second as an attack (quick-login check).
-      - name: Walking skeleton, UPLOADS-01 presign and TESTING-12 session journeys (web project, @skeleton)
+      - name: Walking skeleton, UPLOADS-01 presign, TESTING-12 session and TESTING-13 workflow transition journeys (web project, @skeleton)
         run: pnpm --filter e2e exec playwright test --project web --grep @skeleton --workers 1
+      # TESTING-13 (review 11 M10): the worker drained the outbox the journeys filled, and the
+      # audit subscriber wrote a row for each event. A stopped worker, a dispatcher that never
+      # drains or a broken audit-writer login fails the lane here.
+      - name: The outbox drains (lag smoke check, 120 s) and every journey event is audited
+        run: |
+          $COMPOSE exec -T worker python -m aip.platform.events.lag --max-lag 30 --wait 120
+          $COMPOSE exec -T postgres psql -U postgres -d aip -v ON_ERROR_STOP=1 -f - < infra/docker/check_outbox_audited.sql
       - name: Upload the trace, video and report
         if: failure()
         uses: actions/upload-artifact@v4
@@ -572,7 +597,7 @@ jobs:
           retention-days: 7
       - name: Stack logs
         if: failure()
-        run: $COMPOSE logs --no-color --timestamps --tail 200 api keycloak web
+        run: $COMPOSE logs --no-color --timestamps --tail 200 api worker keycloak web
       - name: Tear down
         if: always()
         run: $COMPOSE down --volumes --remove-orphans
