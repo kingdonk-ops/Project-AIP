@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
 from collections import Counter
+from collections.abc import AsyncIterator
 from uuid import UUID
 
 import pytest
@@ -58,7 +58,9 @@ async def test_the_lag_is_read_across_tenants_and_clears_once_drained(
     assert lag_problems(lag, max_lag_s=60, max_dead_letters=0)
 
     calls: Counter[UUID] = Counter()
-    while (await dispatch_batch(jobs_engine, app_engine, counting(calls), DispatchSettings())).claimed:
+    while (
+        await dispatch_batch(jobs_engine, app_engine, counting(calls), DispatchSettings())
+    ).claimed:
         pass
     assert set(calls) == set(ids)
     drained = await outbox_lag(jobs_engine)

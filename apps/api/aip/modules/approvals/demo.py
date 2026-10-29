@@ -4,7 +4,7 @@ ADR 0035 §9: APPROVALS-02's API journeys could not run against a whole deployme
 record type existed whose workflow, permissions and guard facts a stack could seed. This module is
 that record type, for development, test and demo stacks only:
 
-- ``DEMO_SPEC``, published as definition ``demo`` in ``kaefer-demo`` by ``aip.modules.approvals.seeds``:
+- ``demo_spec()``, which ``aip.modules.approvals.seeds`` publishes as ``demo`` in ``kaefer-demo``:
   ``draft -> submitted -> approved | rejected`` (``resubmit`` from ``rejected``), using the real
   catalogue codes ``approvals.inspection.execute`` and ``approvals.inspection.approve``, which the
   fixture tenant admin holds. ``approve`` is guarded by ``record.allPhotosClean``. It is not
@@ -37,6 +37,7 @@ from aip.modules.approvals.guards.context_providers import (
     register_record_resolver,
     resolver_for,
 )
+
 __all__ = [
     "DEMO_DEFINITION_KEY",
     "DEMO_ENVS",
@@ -57,6 +58,7 @@ DEMO_DEFINITION_KEY: Final = "demo"
 INSPECTION_RECORD_TYPE: Final = "inspection"
 
 PHOTOS_CLEAN: Final[dict[str, Any]] = {"==": [{"var": "record.allPhotosClean"}, True]}
+
 
 class DemoRecordsRefusedError(RuntimeError):
     pass

@@ -42,7 +42,7 @@ logger = structlog.stdlib.get_logger(__name__)
 
 HEARTBEAT_FILE_ENV = "WORKER_HEARTBEAT_FILE"
 HEARTBEAT_INTERVAL_ENV = "WORKER_HEARTBEAT_INTERVAL_S"
-DEFAULT_HEARTBEAT_FILE = "/tmp/aip-worker-heartbeat"  # noqa: S108 - the container's private tmpfs
+DEFAULT_HEARTBEAT_FILE = "/tmp/aip-worker-heartbeat"
 DEFAULT_INTERVAL_S = 10.0
 DEFAULT_MAX_AGE_S = 60.0
 # One probe may take this long before the beat counts as failed (a dead host never answers).
@@ -80,7 +80,9 @@ async def beat_once(path: Path, probes: Sequence[tuple[str, Probe]]) -> bool:
             await asyncio.wait_for(probe(), timeout=PROBE_TIMEOUT_S)
         except Exception as exc:
             path.unlink(missing_ok=True)
-            logger.warning("worker heartbeat failed", probe=name, error=f"{type(exc).__name__}: {exc}")
+            logger.warning(
+                "worker heartbeat failed", probe=name, error=f"{type(exc).__name__}: {exc}"
+            )
             return False
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(f"{time.time():.3f}\n", encoding="ascii")
@@ -88,9 +90,7 @@ async def beat_once(path: Path, probes: Sequence[tuple[str, Probe]]) -> bool:
     return True
 
 
-async def run_heartbeat(
-    path: Path, probes: Sequence[tuple[str, Probe]], interval_s: float
-) -> None:
+async def run_heartbeat(path: Path, probes: Sequence[tuple[str, Probe]], interval_s: float) -> None:
     """Beat every ``interval_s`` seconds until cancelled; the file is removed on the way out."""
     healthy: bool | None = None
     try:

@@ -222,8 +222,7 @@ class DefinitionsService:
         if current_row is not None:
             current = definition_from_row(current_row)
             unchanged = (
-                current.record_type == record_type
-                and current.spec.to_json() == checked.to_json()
+                current.record_type == record_type and current.spec.to_json() == checked.to_json()
             )
             if unchanged:
                 return current

@@ -102,7 +102,7 @@ async def _check(max_lag_s: float, max_dead_letters: int, wait_s: float) -> int:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="python -m aip.platform.events.lag", description=__doc__.splitlines()[0]
+        prog="python -m aip.platform.events.lag", description="Outbox lag smoke check."
     )
     parser.add_argument("--max-lag", type=float, default=60.0, help="seconds (default 60)")
     parser.add_argument("--max-dead-letters", type=int, default=0)
