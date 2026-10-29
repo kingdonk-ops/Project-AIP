@@ -107,8 +107,12 @@ def test_no_service_bind_mounts_a_repository_file(services: dict[str, dict[str, 
 
 
 def test_every_ghcr_image_is_built_by_the_workflow(services: dict[str, dict[str, Any]]) -> None:
+    # The deploy builds the demo images through tools/ci/scan_images.sh (shared with the security
+    # gate), so the build recipe lives there now; the workflow just invokes it.
     workflow = (ROOT / ".github" / "workflows" / "deploy-coolify.yml").read_text()
-    built = set(re.findall(r"^\s*build (aip-[a-z-]+) ", workflow, flags=re.M))
+    assert "scan_images.sh build" in workflow
+    script = (ROOT / "tools" / "ci" / "scan_images.sh").read_text()
+    built = set(re.findall(r"^\s*build_one (aip-[a-z-]+) ", script, flags=re.M))
     used = {
         m.group(1)
         for svc in services.values()

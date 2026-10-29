@@ -19,7 +19,9 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "17 19 * * 1" # weekly, so new CVEs in unchanged code still surface
+    # Daily: a new CVE in an unchanged base image is caught within a day, not up to a week later.
+    # On a scheduled failure the report-scan-failure job opens/updates one tracking issue.
+    - cron: "17 19 * * *"
 
 permissions:
   contents: read
@@ -156,23 +158,15 @@ jobs:
             echo "::error::Trivy honoured an expired exception"; exit 1
           fi
 
-      - name: Trivy image scan (fixable HIGH/CRITICAL fail unless excepted)
-        run: |
-          mkdir -p evidence
-          cache="$RUNNER_TEMP/trivy-cache"; mkdir -p "$cache"
-          fail=0
-          for image in "$API_IMAGE" "$WEB_IMAGE"; do
-            name="${image%%:*}"
-            for format in table json; do
-              docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                -v "$cache:/root/.cache" -v "$PWD/config:/cfg:ro" -v "$PWD/evidence:/out" \
-                "$TRIVY_IMAGE" image --quiet --scanners vuln --severity HIGH,CRITICAL \
-                --ignore-unfixed --ignorefile /cfg/vuln-exceptions.txt --exit-code 1 \
-                --format "$format" --output "/out/trivy-$name.$format" "$image" || fail=1
-            done
-            cat "evidence/trivy-$name.table"
-          done
-          exit $fail
+      # Build and Trivy-scan the same five images deploy-coolify ships to the demo (aip-api,
+      # aip-migrator, aip-web-demo, aip-postgres-demo, aip-keycloak-demo), through the shared
+      # recipe tools/ci/scan_images.sh. Previously this gate scanned only aip-api and aip-web, so a
+      # CVE in migrator/postgres-demo/keycloak-demo passed every PR and only failed after merge in
+      # the deploy. aip-web-demo is the web image built the Coolify way, covering the prod web too.
+      - name: Build the demo image set the deploy ships (shared recipe)
+        run: TAG="scan-${GITHUB_SHA}" bash tools/ci/scan_images.sh build
+      - name: Trivy image scan of every demo image (fixable HIGH/CRITICAL fail unless excepted)
+        run: TAG="scan-${GITHUB_SHA}" bash tools/ci/scan_images.sh scan
 
       - name: Install syft
         uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
@@ -328,3 +322,60 @@ jobs:
             echo "::error::gitleaks passed a planted AWS key"; exit 1
           fi
           echo "gitleaks failed the planted secret, as it must"
+
+  report-scan-failure:
+    name: Open or update the daily scan failure issue
+    runs-on: ubuntu-latest
+    needs: [images, deps, secrets]
+    # Only the scheduled run, and only when a scan actually failed. A CVE in unchanged code is what
+    # the daily schedule exists to catch; this turns such a failure into ONE tracking issue instead
+    # of a silent red run nobody is watching. It needs only issues: write.
+    if: >-
+      always() && github.event_name == 'schedule'
+      && (needs.images.result == 'failure' || needs.deps.result == 'failure'
+          || needs.secrets.result == 'failure')
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Download this run's scan evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        # The images and deps jobs upload evidence with `if: always()`; tolerate a job that failed
+        # before it uploaded anything (the report then just links the run).
+        run: gh run download "$RUN_ID" --dir artifacts || true
+      - name: Build the issue body from the evidence
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          IMAGES_RESULT: ${{ needs.images.result }}
+          DEPS_RESULT: ${{ needs.deps.result }}
+          SECRETS_RESULT: ${{ needs.secrets.result }}
+        run: |
+          python3 tools/ci/scan_failure_report.py \
+            --evidence artifacts --run-url "$RUN_URL" --out issue-body.md \
+            --job "images=$IMAGES_RESULT" --job "deps=$DEPS_RESULT" --job "secrets=$SECRETS_RESULT"
+      - name: Open or update the "Daily security scan failing" issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          title="Daily security scan failing"
+          # The label must exist before an issue can carry it; --force makes this idempotent.
+          gh label create security --repo "$REPO" --color d73a4a \
+            --description "Security scanning" --force >/dev/null 2>&1 || true
+          number=$(gh issue list --repo "$REPO" --state open --label security \
+            --search "\"$title\" in:title" --json number,title \
+            --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --repo "$REPO" --body-file issue-body.md
+            gh issue comment "$number" --repo "$REPO" --body "Still failing — $RUN_URL"
+            echo "updated issue #$number"
+          else
+            gh issue create --repo "$REPO" --title "$title" --label security --body-file issue-body.md
+          fi

@@ -1,0 +1,69 @@
+# Dependabot version updates (SECURITY-08). Without this, base images and third-party actions are
+# never bumped automatically, so a CVE fix only lands when someone edits the file by hand. Weekly
+# updates per ecosystem, with minor/patch bumps grouped into one PR each to cut review noise; major
+# bumps still come as their own PRs. See also config/vuln-exceptions.txt and tools/ci/scan_images.sh.
+#
+# Known gap: none for Docker. apps/api/Dockerfile names its base image directly (not via an ARG), so
+# Dependabot can bump it; the other Dockerfiles already use plain `FROM` lines. Custom filenames
+# (migrator.Dockerfile, postgres.Dockerfile, keycloak.Dockerfile) are picked up — Dependabot's
+# docker updater matches any filename containing "dockerfile".
+version: 2
+updates:
+  # --- Container base images -------------------------------------------------------------------
+  - package-ecosystem: docker
+    directory: /apps/api # Dockerfile (aip-api / aip-migrator share this Python base)
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /apps/web # Dockerfile (node build stage, nginx-unprivileged runtime)
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /infra/docker # migrator.Dockerfile
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /infra/coolify/images # postgres.Dockerfile, keycloak.Dockerfile
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  # --- Workflow actions ------------------------------------------------------------------------
+  - package-ecosystem: github-actions
+    directory: / # .github/workflows/*
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  # --- Python (uv workspace) and the pnpm/npm workspace ----------------------------------------
+  - package-ecosystem: uv
+    directory: / # pyproject.toml + uv.lock (the uv workspace root)
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: / # package.json + pnpm-lock.yaml (the pnpm workspace; npm ecosystem covers pnpm)
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]

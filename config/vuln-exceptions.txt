@@ -9,3 +9,6 @@ CVE-2026-93687 exp:2027-01-05
 
 # why: libssl3/openssl HIGH in the Debian 12 base image (DTLS handshake retransmission info disclosure). Entered Trivy's DB on 2026-10-26 and fails the image scan on every build; fixed upstream in 3.0.22-1~deb12u2, which lands when the Debian base image rebuilds. Time-boxed until then. Accepted by the owner, SECURITY-08, 2026-10-26.
 CVE-2026-84782 exp:2027-01-24
+
+# why: guava 33.6.0 DoS (CVE-2026-102554) in the upstream Keycloak 26.8.1 image; demo IdP only, synthetic data. No Keycloak release ships guava >=33.7.2 yet (26.8.1 is still the newest tag on quay.io). Accepted by the owner, SECURITY-08, 2026-10-29. Remove in the same PR as the Keycloak upgrade when a fixed image ships.
+CVE-2026-102554 exp:2027-01-27
