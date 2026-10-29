@@ -472,6 +472,253 @@ export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identi
 
 
 
+export type identityPortalLoginStartResponse200 = {
+  data: LoginStartResponse
+  status: 200
+}
+
+export type identityPortalLoginStartResponse422 = {
+  data: ErrorResponse
+  status: 422
+}
+
+export type identityPortalLoginStartResponse429 = {
+  data: ErrorResponse
+  status: 429
+}
+
+export type identityPortalLoginStartResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
+export type identityPortalLoginStartResponseSuccess = (identityPortalLoginStartResponse200) & {
+  headers: Headers;
+};
+export type identityPortalLoginStartResponseError = (identityPortalLoginStartResponse422 | identityPortalLoginStartResponse429 | identityPortalLoginStartResponse503) & {
+  headers: Headers;
+};
+
+export type identityPortalLoginStartResponse = (identityPortalLoginStartResponseSuccess | identityPortalLoginStartResponseError)
+
+export const getIdentityPortalLoginStartUrl = () => {
+
+
+
+
+  return `/api/v1/auth/portal/login/start`
+}
+
+/**
+ * Start a client's sign-in on the portal (``aip-portal``, a second factor always asked).
+ * @summary Portal Login Start
+ */
+export const identityPortalLoginStart = async (loginStartRequest: LoginStartRequest, options?: Parameters<typeof apiFetch>[1]): Promise<identityPortalLoginStartResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<identityPortalLoginStartResponse>(getIdentityPortalLoginStartUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(loginStartRequest)
+  }
+);}
+
+
+
+
+
+export const getIdentityPortalLoginStartMutationKey = () => ['identityPortalLoginStart'] as const;
+
+export const getIdentityPortalLoginStartMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityPortalLoginStart>>, TError,IdentityPortalLoginStartMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof identityPortalLoginStart>>, TError,IdentityPortalLoginStartMutationVariables, TContext> => {
+
+const mutationKey = getIdentityPortalLoginStartMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof identityPortalLoginStart>>, IdentityPortalLoginStartMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  identityPortalLoginStart(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IdentityPortalLoginStartMutationResult = NonNullable<Awaited<ReturnType<typeof identityPortalLoginStart>>>
+    export type IdentityPortalLoginStartMutationBody = LoginStartRequest
+    export type IdentityPortalLoginStartMutationError = ErrorResponse
+    export type IdentityPortalLoginStartMutationVariables = {data: LoginStartRequest}
+
+    /**
+ * @summary Portal Login Start
+ */
+export const useIdentityPortalLoginStart = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityPortalLoginStart>>, TError,IdentityPortalLoginStartMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof identityPortalLoginStart>>,
+        TError,
+        IdentityPortalLoginStartMutationVariables,
+        TContext
+      > => {
+      return useMutation(getIdentityPortalLoginStartMutationOptions(options), queryClient);
+    }
+    export type identityPortalOidcCallbackResponse200 = {
+  data: unknown
+  status: 200
+}
+
+export type identityPortalOidcCallbackResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type identityPortalOidcCallbackResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type identityPortalOidcCallbackResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
+export type identityPortalOidcCallbackResponseSuccess = (identityPortalOidcCallbackResponse200) & {
+  headers: Headers;
+};
+export type identityPortalOidcCallbackResponseError = (identityPortalOidcCallbackResponse400 | identityPortalOidcCallbackResponse403 | identityPortalOidcCallbackResponse503) & {
+  headers: Headers;
+};
+
+export type identityPortalOidcCallbackResponse = (identityPortalOidcCallbackResponseSuccess | identityPortalOidcCallbackResponseError)
+
+export const getIdentityPortalOidcCallbackUrl = () => {
+
+
+
+
+  return `/api/v1/auth/portal/oidc/callback`
+}
+
+/**
+ * Finish a client's portal sign-in: a local ``portal`` account at aal 2, a portal session.
+ * @summary Portal Oidc Callback
+ */
+export const identityPortalOidcCallback = async ( options?: Parameters<typeof apiFetch>[1]): Promise<identityPortalOidcCallbackResponse> => {
+
+  return apiFetch<identityPortalOidcCallbackResponse>(getIdentityPortalOidcCallbackUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getIdentityPortalOidcCallbackQueryKey = () => {
+    return [
+    `/api/v1/auth/portal/oidc/callback`
+    ] as const;
+    }
+
+
+export const getIdentityPortalOidcCallbackQueryOptions = <TData = Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getIdentityPortalOidcCallbackQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof identityPortalOidcCallback>>> = ({ signal }) => identityPortalOidcCallback({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type IdentityPortalOidcCallbackQueryResult = NonNullable<Awaited<ReturnType<typeof identityPortalOidcCallback>>>
+export type IdentityPortalOidcCallbackQueryError = ErrorResponse
+
+
+export function useIdentityPortalOidcCallback<TData = Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError = ErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof identityPortalOidcCallback>>,
+          TError,
+          Awaited<ReturnType<typeof identityPortalOidcCallback>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useIdentityPortalOidcCallback<TData = Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof identityPortalOidcCallback>>,
+          TError,
+          Awaited<ReturnType<typeof identityPortalOidcCallback>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useIdentityPortalOidcCallback<TData = Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Portal Oidc Callback
+ */
+
+export function useIdentityPortalOidcCallback<TData = Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getIdentityPortalOidcCallbackQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 export type identityStepUpStartResponse303 = {
   data: void
   status: 303

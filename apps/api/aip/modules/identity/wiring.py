@@ -2,7 +2,8 @@
 
 ``install_sessions(app, ...)`` adds, inside the request-id middleware and outside the request
 context middleware: ``CsrfMiddleware`` then ``SessionMiddleware``. It also registers the 401
-``SESSION_EXPIRED`` handler (both cookies cleared) and wires revocation: the Redis cache purge
+``SESSION_EXPIRED`` handler (both cookies of the presented audience cleared, IDENTITY-10) and wires
+revocation: the Redis cache purge
 after commit and the Keycloak revocation job. It returns the ``PrincipalResolver`` the app should
 use: the session, with the test header stub as fallback only under ``AIP_ENV=test`` +
 ``AUTH_TEST_STUB=1``.
@@ -24,7 +25,9 @@ from aip.modules.identity.session_store import (
     SessionMiddleware,
     SessionPrincipalResolver,
     SessionStore,
+    presented_audience,
 )
+from aip.modules.identity.settings import portal_origin
 
 __all__ = ["add_session_middleware", "install_session_errors", "session_resolver"]
 
@@ -34,7 +37,7 @@ def _session_expired_response() -> JSONResponse:
         {"detail": {"code": "SESSION_EXPIRED", "message": "your session has ended"}},
         status_code=401,
     )
-    sessions.clear_session_cookies(response)
+    sessions.clear_session_cookies(response, audience=presented_audience() or "app")
     response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -67,6 +70,9 @@ def add_session_middleware(
     if resolve_sessions:
         app.add_middleware(SessionMiddleware, store=store)
     app.add_middleware(
-        CsrfMiddleware, app_origin=os.environ.get("APP_ORIGIN", "http://localhost:8080")
+        CsrfMiddleware,
+        app_origin=os.environ.get("APP_ORIGIN", "http://localhost:8080"),
+        portal_origin=portal_origin(),
     )
+
     return store
