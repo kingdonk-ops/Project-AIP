@@ -14,6 +14,8 @@ name: security
 
 on:
   pull_request:
+  # Merge queue: CI runs on the PR merged onto the latest main before it lands.
+  merge_group:
   push:
     branches: [main]
   schedule:
@@ -35,8 +37,8 @@ env:
   BANDIT_VERSION: "1.9.4"
 
 jobs:
-  # A board-only PR (nothing but tracking/BOARD.md and/or tracking/PROGRESS.md) needs none of the
-  # scans below, so each one skips when this reports board_only=true. A skipped job's check is
+  # A board-only PR or merge-queue entry (nothing but tracking/BOARD.md and/or tracking/PROGRESS.md)
+  # needs none of the scans below, so each one skips when this reports board_only=true. A skipped job's check is
   # reported as a success, so jobs here that are required status checks stay satisfied. Fail safe:
   # on any problem, on a push to main, and on the weekly schedule, board_only is false and all run.
   detect:
@@ -51,11 +53,11 @@ jobs:
       - id: check
         env:
           EVENT_NAME: ${{ github.event_name }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
         run: |
           board_only=false
-          if [ "$EVENT_NAME" = "pull_request" ] && [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
+          if { [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "merge_group" ]; } && [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
             if files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" 2>/dev/null) && [ -n "$files" ]; then
               echo "Changed files:"; echo "$files"
               board_only=true
@@ -301,14 +303,14 @@ jobs:
         env:
           # Bound through env, not inlined into the script (GitHub-generated values, but this is the safe form).
           EVENT_NAME: ${{ github.event_name }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         run: |
           # `gitleaks git` with no --log-opts runs `git log --full-history --all`, which scans
           # every fetched ref. With fetch-depth: 0 that is every branch, so one key-shaped string
           # on any unmerged branch fails the check on every PR (and on main). Scope it instead: a
           # PR to the commits it introduces (base..HEAD), main/scheduled to this ref's own history
           # (HEAD). Reviewed false positives are still suppressed by .gitleaksignore.
-          if [ "$EVENT_NAME" = "pull_request" ]; then
+          if [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "merge_group" ]; then
             log_opts="$BASE_SHA..HEAD"
           else
             log_opts="HEAD"
