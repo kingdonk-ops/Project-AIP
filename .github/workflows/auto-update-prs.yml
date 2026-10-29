@@ -1,0 +1,59 @@
+name: auto-update-prs
+
+# Stand-in for a merge queue (not available on this plan). The main ruleset requires PRs to be
+# up to date with main before merging, so every merge leaves the other open PRs behind. When main
+# moves, this merges main into each open PR that has auto-merge on and is behind, which re-runs
+# its CI against the new main; auto-merge then lands it once that CI is green.
+#
+# Only PRs with auto-merge enabled are touched: turning auto-merge on is the opt-in. Same-repo,
+# non-draft PRs only. A PR whose update conflicts is skipped with a warning (a human or agent
+# must merge main into it by hand).
+#
+# Needs the secret PR_UPDATE_TOKEN: a fine-grained token on this repo with Contents and Pull
+# requests read/write. A push made with the default GITHUB_TOKEN does not trigger workflows, so
+# the updated PR would never get CI and would sit blocked; the job fails loudly instead.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-update-prs
+  cancel-in-progress: true # a newer push to main supersedes this run
+
+jobs:
+  update:
+    name: Update auto-merge PRs that are behind main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge main into each behind PR
+        env:
+          GH_TOKEN: ${{ secrets.PR_UPDATE_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::secret PR_UPDATE_TOKEN is not set (see the header of auto-update-prs.yml)"
+            exit 1
+          fi
+          prs=$(gh pr list --repo "$REPO" --base main --state open --limit 100 \
+            --json number,isDraft,isCrossRepository,autoMergeRequest,headRefOid \
+            --jq '.[] | select(.autoMergeRequest != null and (.isDraft | not) and (.isCrossRepository | not))
+                       | "\(.number) \(.headRefOid)"')
+          if [ -z "$prs" ]; then
+            echo "No open auto-merge PRs."; exit 0
+          fi
+          while read -r pr head; do
+            # Commits on main that the PR head lacks.
+            behind=$(gh api "repos/$REPO/compare/$head...main" --jq .ahead_by)
+            if [ "$behind" = "0" ]; then
+              echo "#$pr is up to date"; continue
+            fi
+            echo "#$pr is $behind commit(s) behind main; updating"
+            if ! gh api -X PUT "repos/$REPO/pulls/$pr/update-branch" -f expected_head_sha="$head" >/dev/null; then
+              echo "::warning::#$pr could not be updated (merge conflict, or its head moved); merge main into it by hand"
+            fi
+          done <<< "$prs"
