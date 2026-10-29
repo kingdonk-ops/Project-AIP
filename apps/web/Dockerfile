@@ -2,7 +2,7 @@
 # Build from the repository root:
 #   docker build -f apps/web/Dockerfile -t aip-web .
 
-FROM node:22.23.3-bookworm-slim AS build
+FROM node:26.12.0-bookworm-slim AS build
 
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
     CI=true
