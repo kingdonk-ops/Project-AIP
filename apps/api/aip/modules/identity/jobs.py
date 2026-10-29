@@ -16,6 +16,9 @@ IDENTITY-04 (all idempotent; handlers run inside the job's tenant):
   ``KeycloakUnavailable`` re-raises so Procrastinate retries (5 attempts); ``KeycloakRejected``
   marks the invite ``failed`` with Keycloak's message.
   The account is enabled again first, so a re-invite after a revoke works.
+  IDENTITY-10: a ``portal`` invite's email names the ``aip-portal`` client
+  (``PORTAL_OIDC_CLIENT_ID``), so its link back leads to the portal (that client's base URL,
+  ``PORTAL_ORIGIN``).
 - ``identity.disable_keycloak_user`` ``{keycloak_user_id, user_id}``: a revoked invite's unused
   account; skipped when the user has a newer live invite (a re-invite queued after the revoke).
 - ``identity.reset_keycloak_mfa`` ``{keycloak_user_id}``: an admin MFA reset.
@@ -44,6 +47,7 @@ from aip.modules.identity.keycloak_admin import (
     KeycloakAdminSettings,
     KeycloakRejected,
 )
+from aip.modules.identity.settings import portal_client_id
 from aip.modules.ops import api as ops
 
 __all__ = [
@@ -54,6 +58,8 @@ __all__ = [
     "send_invite",
     "set_admin_factory",
 ]
+
+STAFF_CLIENT_ID = "aip-api"  # the staff invite email's client (its base URL is the web app)
 
 _admin_factory: Callable[[], KeycloakAdmin] | None = None
 
@@ -129,6 +135,7 @@ async def send_invite(
                 keycloak_id,
                 INVITE_REQUIRED_ACTIONS,
                 lifespan_s=int(INVITE_TTL.total_seconds()),
+                client_id=portal_client_id() if invite.user_class == "portal" else STAFF_CLIENT_ID,
             )
         except KeycloakRejected as exc:
             await repo.update_invite(conn, invite.id, status="failed", last_error=exc.message[:500])

@@ -1,7 +1,9 @@
 """The authenticated principal and how a request gets one (IDENTITY-02, ADR 0005).
 
 - ``Principal``: who is calling, for which tenant, at which assurance level (Pydantic v2,
-  camelCase JSON). ``tenant_id`` and ``user_id`` must be non-nil UUIDs.
+  camelCase JSON). ``tenant_id`` and ``user_id`` must be non-nil UUIDs. ``audience``
+  (IDENTITY-10) is the audience of the session: ``app`` (staff web), ``portal`` (client portal)
+  or ``device``; omitted, it is ``portal`` for a ``portal`` user and ``app`` otherwise.
 - ``PrincipalResolver``: the port that turns request headers into a ``Principal`` (or ``None``).
   IDENTITY-03's session cookie dependency and IDENTITY-06's bearer dependency implement it.
 - ``get_principal``: FastAPI dependency. 401 when there is no principal, or when the principal
@@ -23,11 +25,18 @@ import logging
 import os
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Literal, Protocol, runtime_checkable
+from typing import Any, Literal, Protocol, runtime_checkable
 from uuid import UUID
 
 from fastapi import HTTPException, Request
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 from pydantic.alias_generators import to_camel
 
 from aip.platform.context import ContextMissingError, get_context
@@ -52,6 +61,7 @@ TEST_PRINCIPAL_HEADER = "x-test-principal"
 _MAX_TEST_HEADER = 4096
 
 UserClass = Literal["staff", "field", "portal"]
+PrincipalAudience = Literal["app", "portal", "device"]
 
 
 class Principal(BaseModel):
@@ -66,10 +76,20 @@ class Principal(BaseModel):
     user_id: UUID
     user_class: UserClass
     session_id: UUID | None = None
+    audience: PrincipalAudience = "app"
     aal: Literal[1, 2]
     amr: list[str] = Field(default_factory=list[str], max_length=16)
     # When the person last authenticated (IDENTITY-04 step-up freshness); a session always has it.
     authenticated_at: datetime | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _default_audience(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "audience" not in data:
+            user_class = data.get("userClass", data.get("user_class"))  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+            if user_class == "portal":
+                return {**data, "audience": "portal"}  # pyright: ignore[reportUnknownVariableType]
+        return data  # pyright: ignore[reportUnknownVariableType]
 
     @field_validator("tenant_id", "user_id")
     @classmethod

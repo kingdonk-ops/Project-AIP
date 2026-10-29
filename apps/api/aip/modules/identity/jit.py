@@ -33,6 +33,11 @@ IDENTITY-04: an ``invited`` user who has a ``user_invite`` row signs in only whi
 usable (``invites.accept_on_login``: ``sent`` for a local invite, not expired, not revoked);
 otherwise ``INVITE_INVALID``. The invite is then ``accepted`` with the user.
 
+IDENTITY-10: the sign-in's ``audience`` must fit the user's class. A ``portal`` user at the staff
+callback is ``PORTAL_SIGN_IN_REQUIRED``; anyone else at the portal callback, and any SSO sign-in
+there, is ``STAFF_SIGN_IN_REQUIRED``. Both refuse before anything changes (no link, activation or
+invite acceptance) and record ``login.denied``.
+
 Error bodies are ``{code, detail}`` and never name a tenant, an email or a token.
 """
 
@@ -99,13 +104,17 @@ def decide_jit(
     via_sso: bool,
     *,
     matched_by_subject: bool = False,
+    audience: Literal["app", "portal"] = "app",
 ) -> JitDecision:
     """What to do with a verified sign-in. Pure; the order of the checks is the policy.
 
     ``existing`` is the user linked to the Keycloak subject (``matched_by_subject=True``), else
     the user with the token's email (live, or the latest soft-deleted one), else ``None``.
     ``domain_claimed`` only matters for SSO: the token email's domain belongs to this tenant's IdP.
+    ``audience`` is the sign-in flow (IDENTITY-10): portal users only through the portal.
     """
+    if audience == "portal" and via_sso:
+        return JitDecision.refuse("STAFF_SIGN_IN_REQUIRED")
     if via_sso and not domain_claimed:
         return JitDecision.refuse("DOMAIN_NOT_CLAIMED")
     if existing is not None:
@@ -113,6 +122,10 @@ def decide_jit(
             return JitDecision.refuse("USER_REMOVED")
         if existing.status == "deactivated":
             return JitDecision.refuse("USER_DEACTIVATED")
+        if existing.user_class == "portal" and audience != "portal":
+            return JitDecision.refuse("PORTAL_SIGN_IN_REQUIRED")
+        if existing.user_class != "portal" and audience == "portal":
+            return JitDecision.refuse("STAFF_SIGN_IN_REQUIRED")
     if existing is not None and matched_by_subject:
         if via_sso and not existing.sso_managed:
             return JitDecision.refuse("ACCOUNT_LINK_REQUIRED")
@@ -152,6 +165,8 @@ _MESSAGES: dict[str, str] = {
     "INVALID_SUBJECT": "the identity provider returned an unusable account id",
     "INVALID_EMAIL": "the identity provider returned an unusable email address",
     "INVITE_INVALID": "this invitation is no longer valid; ask for a new one",
+    "PORTAL_SIGN_IN_REQUIRED": "this account signs in on the client portal",
+    "STAFF_SIGN_IN_REQUIRED": "this account cannot sign in on the client portal",
 }
 
 
@@ -274,6 +289,9 @@ class JitProvisioner:
         tenant_id = binding.tenant_id
         method = "sso" if via_sso else "local"
         base_detail: dict[str, object] = {"method": method, "subject": str(subject)}
+        if identity.audience != "app":
+            base_detail["audience"] = identity.audience
+
         if identity.idp_alias is not None:
             base_detail["idpAlias"] = identity.idp_alias
 
@@ -320,6 +338,7 @@ class JitProvisioner:
             binding.domain_claimed,
             via_sso,
             matched_by_subject=matched_by_subject,
+            audience=identity.audience,
         )
         if decision.kind == "refuse":
             assert decision.reason is not None

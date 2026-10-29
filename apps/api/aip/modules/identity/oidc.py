@@ -14,7 +14,7 @@ import asyncio
 import re
 import secrets
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
@@ -279,19 +279,31 @@ _LOGOUT_MAX_AGE_S = 300
 
 
 def check_logout_claims(
-    claims: Mapping[str, Any], *, issuer: str, client_id: str, now: float
+    claims: Mapping[str, Any],
+    *,
+    issuer: str,
+    client_id: str,
+    now: float,
+    also_audiences: Sequence[str] = (),
 ) -> str:
     """OIDC back-channel logout token rules (IDENTITY-03 step 7); returns the Keycloak ``sid``.
 
     iss and aud must match, ``iat`` must be within 5 minutes, ``events`` must carry the
     back-channel-logout event, there must be no ``nonce``, and there must be a ``sid``.
+    ``also_audiences`` are further clients of the same realm whose logout tokens this endpoint
+    accepts (IDENTITY-10: ``aip-portal``).
     """
     aud: object = claims.get("aud")
     audiences = aud if isinstance(aud, list) else [aud]  # pyright: ignore[reportUnknownVariableType]
     iat: object = claims.get("iat")
     events: object = claims.get("events")
     sid: object = claims.get("sid")
-    if claims.get("iss") != issuer or client_id not in audiences:
+    accepted = {client_id, *also_audiences}
+    if claims.get("iss") != issuer or not accepted.intersection(
+        a
+        for a in audiences
+        if isinstance(a, str)  # pyright: ignore[reportUnknownVariableType]
+    ):
         raise OidcError("INVALID_LOGOUT_TOKEN", 400, "the logout token is for another client")
     if not isinstance(iat, int | float) or abs(now - iat) > _LOGOUT_MAX_AGE_S:
         raise OidcError("INVALID_LOGOUT_TOKEN", 400, "the logout token is stale")
@@ -305,7 +317,11 @@ def check_logout_claims(
 
 
 async def verify_logout_token(
-    client: KeycloakOidcClient, token: str, *, now: float | None = None
+    client: KeycloakOidcClient,
+    token: str,
+    *,
+    now: float | None = None,
+    also_audiences: Sequence[str] = (),
 ) -> str:
     """Verify a Keycloak logout token's signature (JWKS) and claims; return its ``sid``."""
     try:
@@ -322,4 +338,5 @@ async def verify_logout_token(
         issuer=client.issuer,
         client_id=client.client_id,
         now=time.time() if now is None else now,
+        also_audiences=also_audiences,
     )

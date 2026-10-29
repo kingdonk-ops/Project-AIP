@@ -37,6 +37,7 @@ from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
 from aip.modules.access.api import RoleGrantProvider, sync_catalogue
+from aip.modules.approvals.api import list_presets
 from aip.modules.identity.api import (
     PlatformPrincipalAdapter,
     add_session_middleware,
@@ -235,6 +236,8 @@ def create_app(
         app.state.flag_entitlements = FlagEntitlements(app)
     if any(module.id == "terms" for module in modules):
         install_term_resolver()  # TERMS-02: the aip.platform.terms port for emails and PDFs
+    if any(module.id == "approvals" for module in modules):
+        list_presets()  # APPROVALS-05: a malformed config/workflows preset stops startup
 
     @app.exception_handler(ContextMissingError)
     async def context_missing(  # pyright: ignore[reportUnusedFunction]

@@ -371,6 +371,23 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  approvals-seed:
+    # One-shot (APPROVALS-05): the inspection_standard workflow preset in kaefer-demo. Idempotent;
+    # runs as aip_app (RLS on); refuses when AIP_ENV=production.
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    command: ["python", "-m", "aip.modules.approvals.seeds"]
+    environment:
+      AIP_ENV: ${AIP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://aip_app:aip_app_dev_only@postgres:5432/aip}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      tenancy-seed:
+        condition: service_completed_successfully
+    restart: "no"
+
   object-store-init:
     # One-shot: creates the dev bucket in RustFS (idempotent).
     <<: *app-hardening
@@ -403,6 +420,8 @@ services:
       access-seed:
         condition: service_completed_successfully
       admin-bootstrap:
+        condition: service_completed_successfully
+      approvals-seed:
         condition: service_completed_successfully
       report-templates-load:
         condition: service_completed_successfully
