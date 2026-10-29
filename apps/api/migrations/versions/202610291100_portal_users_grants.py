@@ -15,6 +15,8 @@ INSERT and UPDATE.
   and a ``revoked_reason`` (``manual``/``project_closed``/``user_suspended``). One live grant per
   user, project and subtree (a partial unique index, the null subtree coalesced to the nil uuid);
   the ``(tenant_id, expires_at)`` index serves PORTAL-08's reminder job.
+- ``role_permission`` may never hold an external-only ``portal.record.*`` / ``portal.report.*``
+  code (``ck_role_permission_not_external_only``): only portal grants give those.
 
 Revision ID: 202610291100
 Revises: 202610291000
@@ -100,6 +102,14 @@ def upgrade() -> None:
                         coalesce(asset_id, '00000000-0000-0000-0000-000000000000'::uuid))
       WHERE revoked_at IS NULL AND deleted_at IS NULL;
     """)
+
+    # Defence in depth (PORTAL-01 review): no role may hold an external-only portal code,
+    # whatever the write path (mirrors ck_role_permission_not_operator_only).
+    op.execute(
+        "ALTER TABLE role_permission ADD CONSTRAINT ck_role_permission_not_external_only"
+        " CHECK (permission_code NOT LIKE 'portal.record.%'"
+        " AND permission_code NOT LIKE 'portal.report.%');"
+    )
 
 
 def downgrade() -> None:
