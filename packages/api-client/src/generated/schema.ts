@@ -1727,8 +1727,14 @@ export interface components {
         };
         /** AssetCreate */
         AssetCreate: {
+            /** Attributes */
+            attributes?: {
+                [key: string]: unknown;
+            };
             /** Clientgeneratedid */
             clientGeneratedId?: string | null;
+            /** Itemtypeid */
+            itemTypeId?: string | null;
             /** Name */
             name: string;
             /** Parentid */
@@ -1740,6 +1746,10 @@ export interface components {
         AssetDetail: {
             /** Ancestors */
             ancestors: components["schemas"]["Ancestor"][];
+            /** Attributes */
+            attributes: {
+                [key: string]: unknown;
+            };
             /**
              * Childcount
              * @default 0
@@ -1759,6 +1769,10 @@ export interface components {
             id: string;
             /** Internaltag */
             internalTag: string;
+            /** Itemtypeid */
+            itemTypeId: string | null;
+            /** Itemtypeversionid */
+            itemTypeVersionId: string | null;
             /** Name */
             name: string;
             /** Parentid */
@@ -1805,6 +1819,10 @@ export interface components {
         };
         /** AssetOut */
         AssetOut: {
+            /** Attributes */
+            attributes: {
+                [key: string]: unknown;
+            };
             /**
              * Childcount
              * @default 0
@@ -1824,6 +1842,10 @@ export interface components {
             id: string;
             /** Internaltag */
             internalTag: string;
+            /** Itemtypeid */
+            itemTypeId: string | null;
+            /** Itemtypeversionid */
+            itemTypeVersionId: string | null;
             /** Name */
             name: string;
             /** Parentid */
@@ -1855,8 +1877,17 @@ export interface components {
          *
          *     ``name`` may not be set to null; ``internalTag``, ``path`` and ``parentId`` are rejected
          *     (extra=forbid), so a rename can never move a node or rewrite its identity.
+         *
+         *     ``itemTypeId`` re-pins the asset to that type's current published version (``null`` clears the
+         *     type); ``attributes`` alone is validated against the version the asset is already pinned to.
          */
         AssetUpdate: {
+            /** Attributes */
+            attributes?: {
+                [key: string]: unknown;
+            } | null;
+            /** Itemtypeid */
+            itemTypeId?: string | null;
             /** Name */
             name?: string | null;
             /** Syncversion */
@@ -5877,6 +5908,7 @@ export interface operations {
                 under?: string | null;
                 q?: string | null;
                 tagNumber?: string | null;
+                itemTypeId?: string[] | null;
             };
             header?: never;
             path?: never;

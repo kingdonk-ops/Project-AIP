@@ -240,6 +240,11 @@
       "AssetCreate": {
         "additionalProperties": false,
         "properties": {
+          "attributes": {
+            "additionalProperties": true,
+            "title": "Attributes",
+            "type": "object"
+          },
           "clientGeneratedId": {
             "anyOf": [
               {
@@ -251,6 +256,18 @@
               }
             ],
             "title": "Clientgeneratedid"
+          },
+          "itemTypeId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemtypeid"
           },
           "name": {
             "maxLength": 200,
@@ -298,6 +315,11 @@
             "title": "Ancestors",
             "type": "array"
           },
+          "attributes": {
+            "additionalProperties": true,
+            "title": "Attributes",
+            "type": "object"
+          },
           "childCount": {
             "default": 0,
             "title": "Childcount",
@@ -328,6 +350,30 @@
           "internalTag": {
             "title": "Internaltag",
             "type": "string"
+          },
+          "itemTypeId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemtypeid"
+          },
+          "itemTypeVersionId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemtypeversionid"
           },
           "name": {
             "title": "Name",
@@ -382,6 +428,9 @@
           "tagNumber",
           "name",
           "sortOrder",
+          "itemTypeId",
+          "itemTypeVersionId",
+          "attributes",
           "createdBy",
           "syncVersion",
           "createdAt",
@@ -462,6 +511,11 @@
       },
       "AssetOut": {
         "properties": {
+          "attributes": {
+            "additionalProperties": true,
+            "title": "Attributes",
+            "type": "object"
+          },
           "childCount": {
             "default": 0,
             "title": "Childcount",
@@ -492,6 +546,30 @@
           "internalTag": {
             "title": "Internaltag",
             "type": "string"
+          },
+          "itemTypeId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemtypeid"
+          },
+          "itemTypeVersionId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemtypeversionid"
           },
           "name": {
             "title": "Name",
@@ -546,6 +624,9 @@
           "tagNumber",
           "name",
           "sortOrder",
+          "itemTypeId",
+          "itemTypeVersionId",
+          "attributes",
           "createdBy",
           "syncVersion",
           "createdAt",
@@ -584,8 +665,32 @@
       },
       "AssetUpdate": {
         "additionalProperties": false,
-        "description": "Only the fields sent change; ``syncVersion`` is the version the client last read.\n\n``name`` may not be set to null; ``internalTag``, ``path`` and ``parentId`` are rejected\n(extra=forbid), so a rename can never move a node or rewrite its identity.",
+        "description": "Only the fields sent change; ``syncVersion`` is the version the client last read.\n\n``name`` may not be set to null; ``internalTag``, ``path`` and ``parentId`` are rejected\n(extra=forbid), so a rename can never move a node or rewrite its identity.\n\n``itemTypeId`` re-pins the asset to that type's current published version (``null`` clears the\ntype); ``attributes`` alone is validated against the version the asset is already pinned to.",
         "properties": {
+          "attributes": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes"
+          },
+          "itemTypeId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemtypeid"
+          },
           "name": {
             "anyOf": [
               {
@@ -9748,6 +9853,27 @@
                 }
               ],
               "title": "Tagnumber"
+            }
+          },
+          {
+            "in": "query",
+            "name": "itemTypeId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "maxItems": 50,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Itemtypeid"
             }
           }
         ],

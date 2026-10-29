@@ -7,6 +7,9 @@ ROW LEVEL SECURITY; ``aip_app`` has no DELETE (deletes are soft).
 ``path`` is a Postgres ``ltree`` column; ltree work goes through ``aip.platform.db.ltree`` with
 ``text()`` SQL (ADR 0002). asyncpg hands ltree back as a plain dotted string, so repository reads of
 ``select(assets)`` get ``path`` as ``str``.
+
+ASSETS-02 (``202610281600_assets_item_types``) adds ``item_type_id``, the pinned
+``item_type_version_id`` and the JSONB ``attributes`` validated against that pinned version.
 """
 
 from __future__ import annotations
@@ -14,7 +17,7 @@ from __future__ import annotations
 from typing import Any
 
 from sqlalchemy import Column, Integer, Table, Text, text
-from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
+from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.types import UserDefinedType
 
 from aip.platform.db.metadata import metadata
@@ -46,4 +49,7 @@ assets = Table(
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", TIMESTAMP(timezone=True), nullable=True),
+    Column("item_type_id", UUID(as_uuid=True), nullable=True),
+    Column("item_type_version_id", UUID(as_uuid=True), nullable=True),
+    Column("attributes", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
 )

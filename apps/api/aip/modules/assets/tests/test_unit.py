@@ -1,5 +1,6 @@
 """ASSETS-01 unit tests: the derived internal tag, Tag Number normalisation, request validation,
-the event payload shape and the cursor-key settings guard."""
+the event payload shape and the cursor-key settings guard. ASSETS-02: typed-asset request shapes,
+the attribute error mapping and the untyped-attributes guard."""
 
 from __future__ import annotations
 
@@ -12,7 +13,10 @@ from pydantic import ValidationError
 from aip.modules.assets.events import AssetEvent
 from aip.modules.assets.policies import internal_tag, normalise_tag_number
 from aip.modules.assets.schemas import AssetCreate, AssetUpdate
+from aip.modules.assets.service import attribute_errors, create_asset_on
 from aip.modules.assets.settings import AssetsSettings
+from aip.modules.item_types.api import AttributeValidationError
+from aip.platform.http.errors import DomainError
 
 _TAG_RE = re.compile(r"^AT-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$")
 
@@ -91,3 +95,49 @@ def test_the_dev_cursor_key_is_refused_outside_dev_and_test(
         AssetsSettings()
     monkeypatch.setenv("ASSETS_CURSOR_KEY", "a-real-secret-from-the-store-123")
     assert AssetsSettings().cursor_key.get_secret_value().startswith("a-real")
+
+
+# --- ASSETS-02 ---------------------------------------------------------------------------------
+
+
+def test_the_pinned_version_is_never_accepted_in_a_body() -> None:
+    version = "0192f3c4-5e6f-7abc-8def-0123456789ab"
+    with pytest.raises(ValidationError) as caught:
+        AssetCreate.model_validate({"name": "P-101", "itemTypeVersionId": version})
+    assert error_locs(caught.value) == [("itemTypeVersionId",)]
+    with pytest.raises(ValidationError):
+        AssetUpdate.model_validate({"syncVersion": 1, "itemTypeVersionId": version})
+
+
+def test_update_refuses_null_attributes_but_allows_clearing_the_type() -> None:
+    with pytest.raises(ValidationError, match="attributes cannot be null"):
+        AssetUpdate.model_validate({"syncVersion": 1, "attributes": None})
+    cleared = AssetUpdate.model_validate({"syncVersion": 1, "itemTypeId": None})
+    assert cleared.changes() == {"item_type_id": None}
+
+
+def test_attribute_errors_map_to_field_paths_and_keyword_codes() -> None:
+    errors = [
+        AttributeValidationError(path="$.diameter_mm", term_key="validation.attribute.required"),
+        AttributeValidationError(
+            path="$.service", term_key="validation.attribute.enum", params={"enum": ["water"]}
+        ),
+    ]
+    assert attribute_errors(errors) == [
+        {"path": "attributes.diameter_mm", "code": "required"},
+        {"path": "attributes.service", "code": "enum"},
+    ]
+
+
+class _NoSql:
+    """A connection stand-in that fails the test on any use."""
+
+    def __getattr__(self, name: str) -> object:
+        raise AssertionError(f"SQL attempted: conn.{name}")
+
+
+async def test_attributes_without_a_type_are_refused_before_any_sql() -> None:
+    data = AssetCreate.model_validate({"name": "Folder", "attributes": {"x": 1}})
+    with pytest.raises(DomainError) as caught:
+        await create_asset_on(_NoSql(), None, data)  # type: ignore[arg-type]
+    assert (caught.value.status_code, caught.value.code) == (422, "ATTRIBUTES_WITHOUT_TYPE")

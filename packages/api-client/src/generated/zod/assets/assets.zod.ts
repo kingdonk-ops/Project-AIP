@@ -16,6 +16,8 @@ export const assetsListQueryQOneMax = 100;
 
 export const assetsListQueryTagNumberOneMax = 64;
 
+export const assetsListQueryItemTypeIdOneMax = 50;
+
 
 
 export const AssetsListQueryParams = zod.object({
@@ -25,18 +27,22 @@ export const AssetsListQueryParams = zod.object({
   "parentId": zod.union([zod.string().max(assetsListQueryParentIdOneMax),zod.null()]).optional(),
   "under": zod.union([zod.uuid(),zod.null()]).optional(),
   "q": zod.union([zod.string().min(1).max(assetsListQueryQOneMax),zod.null()]).optional(),
-  "tagNumber": zod.union([zod.string().min(1).max(assetsListQueryTagNumberOneMax),zod.null()]).optional()
+  "tagNumber": zod.union([zod.string().min(1).max(assetsListQueryTagNumberOneMax),zod.null()]).optional(),
+  "itemTypeId": zod.union([zod.array(zod.uuid()).max(assetsListQueryItemTypeIdOneMax),zod.null()]).optional()
 })
 
 export const assetsListResponseItemsItemChildCountDefault = 0;
 
 export const AssetsListResponse = zod.object({
   "items": zod.array(zod.object({
+  "attributes": zod.record(zod.string(), zod.unknown()),
   "childCount": zod.int().default(assetsListResponseItemsItemChildCountDefault),
   "createdAt": zod.iso.datetime({"offset":true}),
   "createdBy": zod.union([zod.uuid(),zod.null()]),
   "id": zod.uuid(),
   "internalTag": zod.string(),
+  "itemTypeId": zod.union([zod.uuid(),zod.null()]),
+  "itemTypeVersionId": zod.union([zod.uuid(),zod.null()]),
   "name": zod.string(),
   "parentId": zod.union([zod.uuid(),zod.null()]),
   "path": zod.string(),
@@ -58,7 +64,9 @@ export const assetsCreateBodyTagNumberOneMax = 200;
 
 
 export const AssetsCreateBody = zod.object({
+  "attributes": zod.record(zod.string(), zod.unknown()).optional(),
   "clientGeneratedId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "itemTypeId": zod.union([zod.uuid(),zod.null()]).optional(),
   "name": zod.string().min(1).max(assetsCreateBodyNameMax),
   "parentId": zod.union([zod.uuid(),zod.null()]).optional(),
   "tagNumber": zod.union([zod.string().max(assetsCreateBodyTagNumberOneMax),zod.null()]).optional()
@@ -67,11 +75,14 @@ export const AssetsCreateBody = zod.object({
 export const assetsCreateResponseChildCountDefault = 0;
 
 export const AssetsCreateResponse = zod.object({
+  "attributes": zod.record(zod.string(), zod.unknown()),
   "childCount": zod.int().default(assetsCreateResponseChildCountDefault),
   "createdAt": zod.iso.datetime({"offset":true}),
   "createdBy": zod.union([zod.uuid(),zod.null()]),
   "id": zod.uuid(),
   "internalTag": zod.string(),
+  "itemTypeId": zod.union([zod.uuid(),zod.null()]),
+  "itemTypeVersionId": zod.union([zod.uuid(),zod.null()]),
   "name": zod.string(),
   "parentId": zod.union([zod.uuid(),zod.null()]),
   "path": zod.string(),
@@ -113,11 +124,14 @@ export const AssetsGetResponse = zod.object({
   "name": zod.string(),
   "tagNumber": zod.union([zod.string(),zod.null()])
 })),
+  "attributes": zod.record(zod.string(), zod.unknown()),
   "childCount": zod.int().default(assetsGetResponseChildCountDefault),
   "createdAt": zod.iso.datetime({"offset":true}),
   "createdBy": zod.union([zod.uuid(),zod.null()]),
   "id": zod.uuid(),
   "internalTag": zod.string(),
+  "itemTypeId": zod.union([zod.uuid(),zod.null()]),
+  "itemTypeVersionId": zod.union([zod.uuid(),zod.null()]),
   "name": zod.string(),
   "parentId": zod.union([zod.uuid(),zod.null()]),
   "path": zod.string(),
@@ -142,19 +156,24 @@ export const assetsUpdateBodyTagNumberOneMax = 200;
 
 
 export const AssetsUpdateBody = zod.object({
+  "attributes": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]).optional(),
+  "itemTypeId": zod.union([zod.uuid(),zod.null()]).optional(),
   "name": zod.union([zod.string().min(1).max(assetsUpdateBodyNameOneMax),zod.null()]).optional(),
   "syncVersion": zod.int().min(1),
   "tagNumber": zod.union([zod.string().max(assetsUpdateBodyTagNumberOneMax),zod.null()]).optional()
-}).describe('Only the fields sent change; ``syncVersion`` is the version the client last read.\n\n``name`` may not be set to null; ``internalTag``, ``path`` and ``parentId`` are rejected\n(extra=forbid), so a rename can never move a node or rewrite its identity.')
+}).describe('Only the fields sent change; ``syncVersion`` is the version the client last read.\n\n``name`` may not be set to null; ``internalTag``, ``path`` and ``parentId`` are rejected\n(extra=forbid), so a rename can never move a node or rewrite its identity.\n\n``itemTypeId`` re-pins the asset to that type\'s current published version (``null`` clears the\ntype); ``attributes`` alone is validated against the version the asset is already pinned to.')
 
 export const assetsUpdateResponseChildCountDefault = 0;
 
 export const AssetsUpdateResponse = zod.object({
+  "attributes": zod.record(zod.string(), zod.unknown()),
   "childCount": zod.int().default(assetsUpdateResponseChildCountDefault),
   "createdAt": zod.iso.datetime({"offset":true}),
   "createdBy": zod.union([zod.uuid(),zod.null()]),
   "id": zod.uuid(),
   "internalTag": zod.string(),
+  "itemTypeId": zod.union([zod.uuid(),zod.null()]),
+  "itemTypeVersionId": zod.union([zod.uuid(),zod.null()]),
   "name": zod.string(),
   "parentId": zod.union([zod.uuid(),zod.null()]),
   "path": zod.string(),
@@ -182,11 +201,14 @@ export const AssetsMoveBody = zod.object({
 export const assetsMoveResponseChildCountDefault = 0;
 
 export const AssetsMoveResponse = zod.object({
+  "attributes": zod.record(zod.string(), zod.unknown()),
   "childCount": zod.int().default(assetsMoveResponseChildCountDefault),
   "createdAt": zod.iso.datetime({"offset":true}),
   "createdBy": zod.union([zod.uuid(),zod.null()]),
   "id": zod.uuid(),
   "internalTag": zod.string(),
+  "itemTypeId": zod.union([zod.uuid(),zod.null()]),
+  "itemTypeVersionId": zod.union([zod.uuid(),zod.null()]),
   "name": zod.string(),
   "parentId": zod.union([zod.uuid(),zod.null()]),
   "path": zod.string(),

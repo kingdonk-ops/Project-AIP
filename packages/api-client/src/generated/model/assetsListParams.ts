@@ -13,4 +13,5 @@ parentId?: string | null;
 under?: string | null;
 q?: string | null;
 tagNumber?: string | null;
+itemTypeId?: string[] | null;
 };
