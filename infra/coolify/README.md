@@ -101,6 +101,11 @@ After each deploy the workflow runs the walking-skeleton journey against `DEMO_U
 `MOCK_IDP_ALICE_PASSWORD`/`MOCK_IDP_BOB_PASSWORD`. Each run creates one project in kaefer-demo and
 archives it at the end.
 
+The TESTING-12 viewer journey (`@viewer`: `vera@kaefer.test`, who holds no role, is refused a
+project create by the server) also runs there once Coolify has `MOCK_IDP_VIEWER_PASSWORD` (the
+one-shot then creates vera) and the environment has `E2E_USER_VIEWER=vera@kaefer.test` and
+`E2E_PASS_VIEWER` equal to it; until then the step leaves it out with a notice.
+
 Rotating a demo password: change the Coolify variable and the matching `E2E_PASS_*` secret, then
 redeploy (the one-shot sets the new password).
 

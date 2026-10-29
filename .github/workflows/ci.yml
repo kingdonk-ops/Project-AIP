@@ -550,6 +550,9 @@ jobs:
       E2E_PASS_A: alice_dev_only_password
       E2E_USER_B: bob@acme.test
       E2E_PASS_B: bob_dev_only_password
+      E2E_USER_VIEWER: vera@kaefer.test
+      E2E_PASS_VIEWER: vera_dev_only_password
+      E2E_KC_ADMIN_CLIENT_SECRET: aip_admin_dev_only_secret
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -576,7 +579,7 @@ jobs:
         run: echo "127.0.0.1 rustfs" | sudo tee -a /etc/hosts
       # One worker: the specs sign the same fixture users in, and the mock IdP's brute-force
       # protection treats two sign-ins of one user within a second as an attack (quick-login check).
-      - name: Walking skeleton, UPLOADS-01 presign and workflow transition journeys (web project, @skeleton)
+      - name: Walking skeleton, UPLOADS-01 presign, TESTING-12 session and TESTING-13 workflow transition journeys (web project, @skeleton)
         run: pnpm --filter e2e exec playwright test --project web --grep @skeleton --workers 1
       # TESTING-13 (review 11 M10): the worker drained the outbox the journeys filled, and the
       # audit subscriber wrote a row for each event. A stopped worker, a dispatcher that never

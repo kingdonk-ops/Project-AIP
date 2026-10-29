@@ -222,6 +222,7 @@ services:
       KEYCLOAK_PUBLIC_URL: ${APP_ORIGIN:?}/auth
       KEYCLOAK_INTERNAL_URL: http://localhost:8080/auth
       APP_ORIGIN: ${APP_ORIGIN:?}
+      APP_BACKCHANNEL_ORIGIN: ${APP_ORIGIN:?}
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:?}
       AIP_API_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:?}
       AIP_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:?}
@@ -267,6 +268,8 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?}
       MOCK_IDP_ALICE_PASSWORD: ${MOCK_IDP_ALICE_PASSWORD:?}
       MOCK_IDP_BOB_PASSWORD: ${MOCK_IDP_BOB_PASSWORD:?}
+      # TESTING-12: optional; set it (with E2E_USER_VIEWER/E2E_PASS_VIEWER) to run the viewer journey.
+      MOCK_IDP_VIEWER_PASSWORD: ${MOCK_IDP_VIEWER_PASSWORD:-}
     depends_on:
       keycloak:
         condition: service_healthy

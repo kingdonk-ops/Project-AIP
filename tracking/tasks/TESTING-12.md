@@ -89,3 +89,43 @@ The UI's handling of a server-enforced 403 on project create is proven with a re
 - **tests**:
   - **e2e**:
     - viewer signs in, posts the create form → 403 surfaced as the permission message; no project created
+
+## Carried forward from TESTING-09 (copied verbatim, step A1) and who owns each item
+
+> - Live Keycloak on compose: after `POST /api/v1/auth/logout` and the queued `identity.revoke_keycloak_sessions` job,
+>   Keycloak's admin `get_sessions(carol)` is empty and the next sign-in shows the password form; running the job again
+>   succeeds (404 is success). Keycloak admin `user_logout(carol)` calls the back-channel endpoint and her next
+>   `GET /api/v1/me` is 401 `SESSION_EXPIRED`.
+> - Playwright: sign in as alice and reload (still signed in); from a second context, sign in again and revoke it from
+>   the first context's Active sessions page (`/settings/profile/sessions`), so the second context's next navigation
+>   lands on `/login`; Logout clears both `__Host-` cookies.
+> - The TENANCY-01 (`/me/tenant` per tenant), ACCESS-01 (no roles: abilities empty, a `requires()` route 403) and
+>   ACCESS-02 (assign alice `inspector` on P1; abilities for P1 vs P2) journeys.
+> - Nobody holds a role after JIT sign-in: the demo/dev bootstrap must give the first kaefer-demo user `tenant_admin`
+>   (a tenant-scope `role_assignment` after `seed_default_roles`) before these journeys can create projects.
+
+## As built (2026-10-29)
+
+All journeys are in `e2e/web/sessions.spec.ts` (skeleton lane: `--project web --grep @skeleton` in CI job
+`e2e-skeleton`, against compose with real Keycloak and the worker).
+
+| Carried-forward item | Owner / test |
+|---|---|
+| Logout + revoke job ends the Keycloak SSO session | "sign out ends the app session and the Keycloak SSO session": the app's authorize request replayed with `prompt=none` answers a code before and `login_required` after (the callback is answered by the test, so the probe makes no app session), then `/projects` asks for credentials. Asserted through the browser's own Keycloak cookie instead of the admin API, so the test needs no admin secret. |
+| Running the job again succeeds (404 is success) | Already proven in `apps/api` (`keycloak_admin.py` treats 404 as success; `tests/sessions/`). |
+| Back-channel logout → next `/me` is 401 | "Keycloak back-channel logout revokes the app session": ends the SSO session on Keycloak's own logout page (same back-channel path as admin `user_logout`). Needed a fix: in compose the realm's back-channel URL was `APP_ORIGIN` (`localhost:8080`), which inside the Keycloak container is Keycloak itself; the realm now uses `${APP_BACKCHANNEL_ORIGIN}` (compose: `http://api:8000`; Coolify: `APP_ORIGIN`, unchanged). |
+| Reload keeps the session; Logout clears both cookies; revoke another browser | "a real session survives a reload…", "sign out…", "revoking another browser from Active sessions…" (main journey + axe; the revoked browser's next `/me` is 401 `SESSION_EXPIRED` and it lands on `/login`). |
+| Active sessions cross-tenant | "tenant B sees none of tenant A's sessions and cannot revoke them" (404) + axe. |
+| TENANCY-01 `/me/tenant` | In the reload test, for both tenants (step A5; kept out of `walking-skeleton.spec.ts`). |
+| ACCESS-01 (no roles) | The viewer journey: abilities `[]` and `POST /projects` 403. |
+| ACCESS-02 (project-scope role, P1 vs P2) | **IDENTITY-08**: assigning a role needs a stepped-up tenant admin, and the step-up browser journey is IDENTITY-08's. |
+| Bootstrap `tenant_admin` | Done in TESTING-09 (`admin-bootstrap`). |
+
+- `shell.spec.ts`: the `@needs-identity-03` skip is gone; the stub test now asserts `__Host-aip_sid` is not readable
+  (the real HttpOnly check is in `sessions.spec.ts`). `projects.spec.ts`: both stale skips are gone.
+- Part B: mock-IdP user `vera@kaefer.test` (`vera_dev_only_password`, dev realm only) signs in by JIT and holds no
+  role. With the browser's copy of her abilities widened to show the form, the server answers 403, the form shows
+  the permission message, and alice's search finds no project. CI sets `E2E_USER_VIEWER`/`E2E_PASS_VIEWER`.
+- Demo: the viewer journey is `@staging @viewer`. Owner steps: set Coolify `MOCK_IDP_VIEWER_PASSWORD` (the
+  `mock-idp-users` one-shot then creates vera) and the `coolify-demo` secrets `E2E_USER_VIEWER=vera@kaefer.test`
+  and `E2E_PASS_VIEWER`; until then the deploy step leaves `@viewer` out with a notice.
