@@ -110,7 +110,9 @@ async def add_project(db: TenantDb, tenant: UUID = TENANT_A_ID) -> UUID:
     return project_id
 
 
-async def start(client: httpx.AsyncClient, record_id: UUID, headers: dict[str, str]) -> httpx.Response:
+async def start(
+    client: httpx.AsyncClient, record_id: UUID, headers: dict[str, str]
+) -> httpx.Response:
     body = {"recordType": DEMO_RECORD_TYPE, "recordId": str(record_id)}
     return await client.post("/api/v1/approvals/instances", json=body, headers=headers)
 
