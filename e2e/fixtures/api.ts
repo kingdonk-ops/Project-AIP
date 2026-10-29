@@ -33,33 +33,38 @@ export function isAuthorizeRequest(request: Request): boolean {
   return /\/realms\/aip\/protocol\/openid-connect\/auth\b/.test(request.url());
 }
 
+/** The `sid` of the browser's aip realm SSO session, from Keycloak's identity cookie (a JWT). */
+async function keycloakSid(context: BrowserContext, realmUrl: string): Promise<string> {
+  const identity = (await context.cookies(realmUrl)).find((c) => c.name === "KEYCLOAK_IDENTITY");
+  if (!identity) throw new Error("no KEYCLOAK_IDENTITY cookie for the aip realm");
+  const claims = JSON.parse(Buffer.from(identity.value.split(".")[1] ?? "", "base64url").toString()) as Record<string, unknown>;
+  const sid = claims.sid ?? claims.session_state;
+  if (typeof sid !== "string") throw new Error("the identity cookie has no sid");
+  return sid;
+}
+
 /**
- * Whether the browser still has a Keycloak SSO session in the aip realm: replay the app's authorize
- * request with `prompt=none` and no IdP hint. Keycloak answers the redirect URI with a code while
- * the session lives and with `error=login_required` once it is gone. The callback is answered here,
- * never by the API, so the probe creates no app session.
+ * Whether the browser's Keycloak SSO session in the aip realm still exists, asked of Keycloak's
+ * admin API with the `aip-admin` service account (the client the API's revoke job uses). Compose
+ * only: CI passes its dev secret as `E2E_KC_ADMIN_CLIENT_SECRET`. A `prompt=none` probe cannot
+ * answer this, because aip-api demands aal2 and a password-only session never satisfies it.
  */
-export async function keycloakSso(context: BrowserContext, authorize: string): Promise<string> {
-  const url = new URL(authorize);
-  url.searchParams.set("prompt", "none");
-  url.searchParams.delete("kc_idp_hint");
-  url.searchParams.delete("login_hint");
-  const page = await context.newPage();
-  try {
-    let landed: URL | null = null;
-    await page.route(
-      (u) => u.pathname === "/api/v1/auth/oidc/callback",
-      (route) => {
-        landed = new URL(route.request().url());
-        return route.fulfill({ status: 200, contentType: "text/plain", body: "probe" });
-      },
-    );
-    await page.goto(url.toString());
-    const params = (landed as URL | null)?.searchParams;
-    if (params?.get("code")) return "active";
-    if (params?.get("error") === "login_required") return "ended";
-    return `unexpected: ${page.url()}`;
-  } finally {
-    await page.close();
-  }
+export async function keycloakSso(context: BrowserContext, authorize: string, email: string): Promise<"active" | "ended"> {
+  const secret = process.env.E2E_KC_ADMIN_CLIENT_SECRET?.trim();
+  if (!secret) throw new Error("Missing E2E_KC_ADMIN_CLIENT_SECRET");
+  const realmUrl = authorize.replace(/\/protocol\/openid-connect\/auth.*$/, "");
+  const sid = await keycloakSid(context, `${realmUrl}/`);
+  const token = await fetch(`${realmUrl}/protocol/openid-connect/token`, {
+    method: "POST",
+    body: new URLSearchParams({ grant_type: "client_credentials", client_id: "aip-admin", client_secret: secret }),
+  });
+  if (!token.ok) throw new Error(`aip-admin token: ${token.status}`);
+  const auth = { authorization: `Bearer ${((await token.json()) as { access_token: string }).access_token}` };
+  const admin = realmUrl.replace("/realms/", "/admin/realms/");
+  const users = (await (await fetch(`${admin}/users?exact=true&email=${encodeURIComponent(email)}`, { headers: auth })).json()) as {
+    id: string;
+  }[];
+  if (users.length !== 1) throw new Error(`expected one aip realm user ${email}, got ${users.length}`);
+  const sessions = (await (await fetch(`${admin}/users/${users[0]?.id}/sessions`, { headers: auth })).json()) as { id: string }[];
+  return sessions.some((s) => s.id === sid) ? "active" : "ended";
 }

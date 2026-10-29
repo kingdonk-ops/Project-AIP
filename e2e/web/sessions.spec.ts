@@ -66,9 +66,10 @@ test("@skeleton a real session survives a reload, its cookie is HttpOnly and /me
 });
 
 test("@skeleton sign out ends the app session and the Keycloak SSO session", async ({ browser }) => {
-  const a = await signIn(browser, tenantUsers().a);
+  const users = tenantUsers();
+  const a = await signIn(browser, users.a);
   try {
-    expect(await keycloakSso(a.context, a.authorize), "the Keycloak SSO session exists after sign-in").toBe("active");
+    expect(await keycloakSso(a.context, a.authorize, users.a.email), "the Keycloak SSO session exists after sign-in").toBe("active");
 
     await a.page.getByRole("button", { name: "Account menu" }).click();
     await a.page.getByRole("menuitem", { name: "Sign out" }).click();
@@ -79,7 +80,7 @@ test("@skeleton sign out ends the app session and the Keycloak SSO session", asy
 
     // The queued identity.revoke_keycloak_sessions job (worker) ends the SSO session.
     await expect
-      .poll(() => keycloakSso(a.context, a.authorize), {
+      .poll(() => keycloakSso(a.context, a.authorize, users.a.email), {
         message: "IDENTITY-03: the Keycloak SSO session is gone after logout",
         timeout: 90_000,
         intervals: [1_000, 2_000, 5_000],

@@ -532,6 +532,7 @@ jobs:
       E2E_PASS_B: bob_dev_only_password
       E2E_USER_VIEWER: vera@kaefer.test
       E2E_PASS_VIEWER: vera_dev_only_password
+      E2E_KC_ADMIN_CLIENT_SECRET: aip_admin_dev_only_secret
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
