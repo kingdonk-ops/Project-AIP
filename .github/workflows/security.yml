@@ -227,7 +227,7 @@ jobs:
 
       - name: Upload evidence (SBOMs, scan reports, digests, signatures)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: security-evidence-${{ github.sha }}
           path: evidence/
@@ -275,7 +275,7 @@ jobs:
         run: |
           uvx "bandit==$BANDIT_VERSION" -r apps/api/aip -x '*/tests/*,*/_template/*' \
             --severity-level medium --confidence-level medium
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: dependency-audit-${{ github.sha }}
