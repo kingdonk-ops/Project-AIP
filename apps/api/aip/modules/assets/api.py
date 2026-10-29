@@ -41,7 +41,10 @@ class AssetsApi:
     ) -> AssetOut:
         """Create one asset (ASSETS-01 step 6a) on the caller's connection; emits ``asset.created``.
 
-        ``actor_id`` is stored in ``created_by``; used by DATAIO-02.
+        ``actor_id`` is stored in ``created_by``; used by DATAIO-02. With ``item_type_id`` the
+        asset is pinned to that type's current published version and ``attributes`` are validated
+        against it (ASSETS-02): ``DomainError`` 422 ``ITEM_TYPE_NOT_PUBLISHED``,
+        ``ATTRIBUTES_WITHOUT_TYPE`` or ``ATTRIBUTES_INVALID`` (with ``errors``) otherwise.
         """
         asset, _created = await create_asset_on(conn, actor_id, data)
         return asset

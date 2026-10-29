@@ -3,6 +3,9 @@
 JSON is camelCase (``syncVersion``, ``parentId``, ``tagNumber``). Requests forbid unknown keys, so
 an attempt to set ``internalTag`` or ``path`` is a 422. Tag Numbers are normalised (trim, collapse
 inner whitespace) before they reach the service; an empty Tag Number becomes ``null``.
+
+ASSETS-02: an asset may carry an ``itemTypeId`` and JSONB ``attributes``. ``itemTypeVersionId`` is
+response-only: the server pins the version, so a request that sends it is a 422.
 """
 
 from __future__ import annotations
@@ -65,6 +68,8 @@ class AssetCreate(_Model):
     parent_id: UUID | None = None
     tag_number: Annotated[str | None, Field(max_length=200)] = None
     client_generated_id: UUID | None = None
+    item_type_id: UUID | None = None
+    attributes: dict[str, Any] = Field(default_factory=lambda: {})
 
     @model_validator(mode="after")
     def _normalise(self) -> Self:
@@ -77,13 +82,18 @@ class AssetUpdate(_Model):
 
     ``name`` may not be set to null; ``internalTag``, ``path`` and ``parentId`` are rejected
     (extra=forbid), so a rename can never move a node or rewrite its identity.
+
+    ``itemTypeId`` re-pins the asset to that type's current published version (``null`` clears the
+    type); ``attributes`` alone is validated against the version the asset is already pinned to.
     """
 
-    REQUIRED: ClassVar[tuple[str, ...]] = ("name",)
+    REQUIRED: ClassVar[tuple[str, ...]] = ("name", "attributes")
 
     sync_version: int = Field(ge=1)
     name: Name | None = None
     tag_number: Annotated[str | None, Field(max_length=200)] = None
+    item_type_id: UUID | None = None
+    attributes: dict[str, Any] | None = None
 
     @model_validator(mode="after")
     def _required_not_null_and_normalise(self) -> Self:
@@ -113,6 +123,9 @@ class AssetOut(_Out):
     tag_number: str | None
     name: str
     sort_order: int
+    item_type_id: UUID | None
+    item_type_version_id: UUID | None
+    attributes: dict[str, Any]
     created_by: UUID | None
     sync_version: int
     created_at: datetime

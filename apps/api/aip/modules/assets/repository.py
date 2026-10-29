@@ -13,6 +13,7 @@ from typing import Any, Final
 from uuid import UUID
 
 from sqlalchemy import func, insert, select, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.assets.tables import assets
@@ -206,8 +207,12 @@ async def list_assets(
     under_path: str | None = None,
     q: str | None = None,
     tag_number: str | None = None,
+    item_type_ids: list[UUID] | None = None,
 ) -> list[dict[str, Any]]:
-    """Up to ``page.limit + 1`` live rows (the extra means "more"), each with ``child_count``."""
+    """Up to ``page.limit + 1`` live rows (the extra means "more"), each with ``child_count``.
+
+    ``item_type_ids`` keeps assets typed with any of those item types (ASSETS-02).
+    """
     columns = SORTS[page.sort]
     params: dict[str, Any] = {}
     where = ["a.deleted_at IS NULL"]
@@ -228,6 +233,9 @@ async def list_assets(
     if tag_number is not None:
         where.append("upper(a.tag_number) = upper(:tagnum)")
         params["tagnum"] = tag_number
+    if item_type_ids is not None:
+        where.append("a.item_type_id = ANY(CAST(:item_type_ids AS uuid[]))")
+        params["item_type_ids"] = item_type_ids
 
     # Qualify bare column names with the alias; expressions (coalesce(...)) stay as written.
     sort_exprs = [c if "(" in c else f"a.{c}" for c in columns]
@@ -250,4 +258,6 @@ async def list_assets(
         f"SELECT a.*, {_CHILD_COUNT_EXPR} AS child_count FROM assets a "
         f"WHERE {' AND '.join(where)} ORDER BY {order_by} LIMIT :lim"
     ).bindparams(**params)
-    return [dict(r) for r in (await conn.execute(sql)).mappings()]
+    # Type the JSONB column so the driver's text result is decoded as it is for select(assets).
+    typed = sql.columns(attributes=JSONB)
+    return [dict(r) for r in (await conn.execute(typed)).mappings()]

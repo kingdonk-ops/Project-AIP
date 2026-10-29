@@ -1,7 +1,7 @@
 # Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
 id = "assets"
 context = "assets"
-depends_on = ["tenancy"]
+depends_on = ["tenancy", "item_types"]
 permission_namespaces = ["asset"]
 subscribes = []
 settings = ["ASSETS_CURSOR_KEY"]

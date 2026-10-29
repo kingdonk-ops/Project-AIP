@@ -4,6 +4,11 @@ Every operation runs in one ``with_tenant(get_context())`` transaction, so the o
 or rolls back with the change. Rows of another tenant are invisible under RLS and come back as 404,
 never 403. Writes that read a parent's path (create-with-parent, move, delete) take a tenant-scoped
 advisory lock first, so concurrent tree edits serialise.
+
+Typed assets (ASSETS-02): an asset with an item type is pinned to the version of that type that was
+published when it was typed, and its ``attributes`` are validated against that pinned version on
+every create and edit. Item types are reached only through ``ItemTypesApi`` (ADR 0004), inside the
+operation's transaction; the service never reads item_types tables or re-implements schema checks.
 """
 
 from __future__ import annotations
@@ -37,6 +42,7 @@ from aip.modules.assets.schemas import (
 )
 from aip.modules.assets.settings import get_settings
 from aip.modules.assets.tables import assets
+from aip.modules.item_types.api import AttributeValidationError, ItemTypesApi
 from aip.platform.context import get_context, new_request_id
 from aip.platform.db.concurrency import update_with_version
 from aip.platform.db.errors import ConflictError, CycleError, NotFoundError
@@ -46,7 +52,7 @@ from aip.platform.events import Aggregate, emit
 from aip.platform.http import DomainError
 from aip.platform.http.cursor import CursorCodec, InvalidCursorError
 
-__all__ = ["AssetService", "cursor_codec"]
+__all__ = ["AssetService", "attribute_errors", "cursor_codec"]
 
 MAX_DEPTH: Final = 15
 _TAG_INDEX: Final = "uq_assets_tenant_id_upper_tag_number"
@@ -55,7 +61,15 @@ _COLLISION_INDEXES: Final = frozenset(
 )
 
 # The event ``before``/``after`` keys for the columns a PATCH can change (ASSETS-01 step 6b).
-_CHANGE_ALIASES: Final = {"name": "name", "tag_number": "tagNumber"}
+_CHANGE_ALIASES: Final = {
+    "name": "name",
+    "tag_number": "tagNumber",
+    "item_type_id": "itemTypeId",
+    "item_type_version_id": "itemTypeVersionId",
+    "attributes": "attributes",
+}
+
+_item_types: Final = ItemTypesApi()
 
 
 def cursor_codec() -> CursorCodec:
@@ -101,7 +115,80 @@ def _changed(patch: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:
 
 
 def _camel(fields: dict[str, Any]) -> dict[str, Any]:
-    return {_CHANGE_ALIASES[field]: value for field, value in fields.items()}
+    return {
+        _CHANGE_ALIASES[field]: str(value) if isinstance(value, UUID) else value
+        for field, value in fields.items()
+    }
+
+
+# --- typing (ASSETS-02) -----------------------------------------------------------------------
+
+
+def attribute_errors(errors: list[AttributeValidationError]) -> list[dict[str, str]]:
+    """The 422 ``errors`` list: ``$.diameter_mm`` → ``attributes.diameter_mm``; the code is the
+    JSON Schema keyword at the end of the ``validation.attribute.<keyword>`` term key."""
+    return [
+        {
+            "path": "attributes" + error.path.removeprefix("$"),
+            "code": error.term_key.rsplit(".", 1)[-1],
+        }
+        for error in errors
+    ]
+
+
+def _require_type_for(attributes: dict[str, Any] | None) -> None:
+    """An untyped asset carries no attributes (``ck_assets_untyped_attributes``)."""
+    if attributes:
+        raise DomainError(422, "ATTRIBUTES_WITHOUT_TYPE", field="attributes")
+
+
+async def _pin(conn: AsyncConnection, item_type_id: UUID) -> UUID:
+    """The id of the item type's current published version, or 422 ``ITEM_TYPE_NOT_PUBLISHED``
+    (an unknown, another tenant's, archived or never-published type all look the same)."""
+    version = await _item_types.get_published_version(conn, item_type_id)
+    if version is None:
+        raise DomainError(422, "ITEM_TYPE_NOT_PUBLISHED", field="itemTypeId")
+    return version.id
+
+
+async def _validate(conn: AsyncConnection, version_id: UUID, attributes: dict[str, Any]) -> None:
+    errors = await _item_types.validate_attributes(conn, version_id, attributes)
+    if errors:
+        raise DomainError(
+            422, "ATTRIBUTES_INVALID", field="attributes", errors=attribute_errors(errors)
+        )
+
+
+async def _typing_patch(
+    conn: AsyncConnection, current: dict[str, Any], patch: dict[str, Any]
+) -> dict[str, Any]:
+    """The ``item_type_id``/``item_type_version_id``/``attributes`` columns a PATCH sets.
+
+    ``itemTypeId`` (same type or another) re-pins to that type's current published version and
+    validates the body's attributes, or the stored ones when absent; ``itemTypeId: null`` clears
+    the type and needs ``{}`` or no attributes. ``attributes`` alone is validated against the
+    version the asset is already pinned to, never a newer one.
+    """
+    if "item_type_id" in patch:
+        item_type_id: UUID | None = patch["item_type_id"]
+        if item_type_id is None:
+            _require_type_for(patch.get("attributes"))
+            return {"item_type_id": None, "item_type_version_id": None, "attributes": {}}
+        version_id = await _pin(conn, item_type_id)
+        attributes = patch.get("attributes", current["attributes"])
+        await _validate(conn, version_id, attributes)
+        return {
+            "item_type_id": item_type_id,
+            "item_type_version_id": version_id,
+            "attributes": attributes,
+        }
+    if "attributes" in patch:
+        if current["item_type_version_id"] is None:
+            _require_type_for(patch["attributes"])
+            return {"attributes": {}}
+        await _validate(conn, current["item_type_version_id"], patch["attributes"])
+        return {"attributes": patch["attributes"]}
+    return {}
 
 
 # --- create (shared by the API router and the published interface) ----------------------------
@@ -113,8 +200,15 @@ async def create_asset_on(
     """Create one asset on ``conn`` and emit ``asset.created``; the ASSETS-01 step 6a rules.
 
     Returns ``(asset, created)``; a ``clientGeneratedId`` replay returns the first row with
-    ``created=False`` and emits nothing.
+    ``created=False`` and emits nothing. With ``itemTypeId`` the asset is pinned to the type's
+    current published version and its attributes validated against it (ASSETS-02).
     """
+    if data.item_type_id is None:
+        _require_type_for(data.attributes)  # before any SQL
+    version_id: UUID | None = None
+    if data.item_type_id is not None:
+        version_id = await _pin(conn, data.item_type_id)
+        await _validate(conn, version_id, data.attributes)
     parent: dict[str, Any] | None = None
     if data.parent_id is not None:
         await repo.lock_tree(conn)
@@ -129,14 +223,19 @@ async def create_asset_on(
             _raise_tag_in_use(holder)
 
     sort_order = await repo.max_sibling_sort_order(conn, data.parent_id) + 1
-    row, created = await _insert_with_retry(conn, actor_id, data, parent, sort_order)
+    row, created = await _insert_with_retry(conn, actor_id, data, parent, sort_order, version_id)
     if created:
+        typed = (
+            _camel({f: row[f] for f in ("item_type_id", "item_type_version_id", "attributes")})
+            if row["item_type_id"] is not None
+            else None
+        )
         await emit(
             conn,
             ASSET_CREATED,
             1,
             Aggregate("asset", row["id"]),
-            _event_payload(row, after=None),
+            _event_payload(row, after=typed),
             asset_id=row["id"],
         )
     return await _out(conn, row), created
@@ -148,6 +247,7 @@ async def _insert_with_retry(
     data: AssetCreate,
     parent: dict[str, Any] | None,
     sort_order: int,
+    version_id: UUID | None,
 ) -> tuple[dict[str, Any], bool]:
     """Insert the row, regenerating the id once on the (astronomically unlikely) internal-tag or
     path collision; a Tag Number index race becomes a 409. Each attempt is its own savepoint, so a
@@ -165,6 +265,9 @@ async def _insert_with_retry(
             "name": data.name,
             "sort_order": sort_order,
             "created_by": actor_id,
+            "item_type_id": data.item_type_id,
+            "item_type_version_id": version_id,
+            "attributes": data.attributes,
         }
         try:
             async with conn.begin_nested():
@@ -288,6 +391,11 @@ class AssetService:
                 holder = await repo.find_live_by_tag_number(conn, patch["tag_number"])
                 if holder is not None and holder["id"] != asset_id:
                     _raise_tag_in_use(holder)
+            typing = await _typing_patch(conn, current, patch)
+            patch = {
+                **{f: v for f, v in patch.items() if f not in ("item_type_id", "attributes")},
+                **typing,
+            }
             changed = _changed(patch, current)
             if not changed:
                 return await _out(conn, current)
@@ -404,6 +512,7 @@ class AssetService:
         under: UUID | None,
         q: str | None,
         tag_number: str | None,
+        item_type_ids: list[UUID] | None = None,
     ) -> AssetPage:
         roots_only = parent_id == "root"
         parent_uuid = _parse_parent(parent_id) if parent_id is not None and not roots_only else None
@@ -424,6 +533,7 @@ class AssetService:
                 under_path=under_path,
                 q=q,
                 tag_number=tag_number,
+                item_type_ids=item_type_ids or None,
             )
         items = [AssetOut.model_validate(r) for r in rows[:limit]]
         return AssetPage(items=items, next_cursor=_next_cursor(rows, token, limit))

@@ -2,6 +2,8 @@ name: ci
 
 on:
   pull_request:
+  # Merge queue: CI runs on the PR merged onto the latest main before it lands.
+  merge_group:
   push:
     branches: [main]
 
@@ -13,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # A board-only PR (nothing but tracking/BOARD.md and/or tracking/PROGRESS.md) needs none of the
-  # jobs below, so each one skips when this reports board_only=true. A skipped job's check is
+  # A board-only PR or merge-queue entry (nothing but tracking/BOARD.md and/or tracking/PROGRESS.md)
+  # needs none of the jobs below, so each one skips when this reports board_only=true. A skipped job's check is
   # reported as a success, so jobs here that are required status checks stay satisfied. Fail safe:
   # on any problem, on a push to main, and on the weekly schedule, board_only is false and all run.
   detect:
@@ -29,11 +31,11 @@ jobs:
       - id: check
         env:
           EVENT_NAME: ${{ github.event_name }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
         run: |
           board_only=false
-          if [ "$EVENT_NAME" = "pull_request" ] && [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
+          if { [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "merge_group" ]; } && [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
             if files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" 2>/dev/null) && [ -n "$files" ]; then
               echo "Changed files:"; echo "$files"
               board_only=true
