@@ -91,3 +91,18 @@ permissions and fixture users a stack can seed (ADR 0035 §9).
     - The guarded flow: `approve` is refused with 422 `GUARD_FAILED`. After the fixture flips
       `allPhotosClean`, `approve` (with a fresh aal 2 sign-in, or after a step-up) → 200, and
       `GET /history` shows `chainValid: true`.
+
+## Delivery notes (2026-10-29)
+
+- **Heartbeat:** `aip.platform.jobs.heartbeat` (file in the container's `/tmp`, 10 s beat, healthy
+  under 60 s). A beat needs `aip_jobs` and, for a worker on the `outbox` queue, `aip_audit_writer`;
+  the probes live in `aip.platform.db.probes` (ADR 0002: only `platform/db` opens raw connections).
+- **Outbox lag:** `python -m aip.platform.events.lag --max-lag 30 --wait 120` (as `aip_jobs`) in the
+  `compose` and `e2e-skeleton` lanes; `infra/docker/check_outbox_audited.sql` then asserts the
+  journeys' events are published and audited. `tools/smoke.py` is unchanged: it is anonymous HTTP
+  only, so it cannot read the outbox; the demo can run the lag command inside its worker container.
+- **Demo record type (Part B):** `aip.modules.approvals.demo`. A `demo` record is a project of the
+  tenant and `allPhotosClean` is "the project is `active`", so the journeys flip the guard through
+  the real projects API and nothing new is stored. `approve` is not `critical`: the stack's fixture
+  users sign in at aal 1 through the mock IdP, and the step-up journeys belong to IDENTITY-08.
+  Not tagged `@staging`: the Coolify demo does not set `AIP_APPROVALS_DEMO_RECORDS`.

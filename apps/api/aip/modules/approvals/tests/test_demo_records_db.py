@@ -42,6 +42,24 @@ from aip.modules.approvals.tests.conftest import (
 )
 from aip.platform.context import use_context
 
+ROLE_A_ID = UUID("00000000-0000-4000-8000-00000000d1a0")
+ROLE_B_ID = UUID("00000000-0000-4000-8000-00000000d1b0")
+
+# ADR 0037: `projects` is project-scoped by RLS, so alice and bob need a tenant-scope assignment
+# (as the fixture admins have on the stack) to see their tenant's projects. Permissions still come
+# from the test grant table; this only establishes the RLS scope.
+SEED_SCOPE_SQL = (
+    "INSERT INTO app_user (id, tenant_id, user_class, email, display_name, status) VALUES "
+    f"('{ALICE_ID}', '{TENANT_A_ID}', 'staff', 'alice@kaefer.test', 'Alice', 'active'), "
+    f"('{BOB_ID}', '{TENANT_B_ID}', 'staff', 'bob@acme.test', 'Bob', 'active');"
+    "INSERT INTO role (id, tenant_id, code, name) VALUES "
+    f"('{ROLE_A_ID}', '{TENANT_A_ID}', 'member', 'Member'), "
+    f"('{ROLE_B_ID}', '{TENANT_B_ID}', 'member', 'Member');"
+    "INSERT INTO role_assignment (id, tenant_id, user_id, role_id, scope_type) VALUES "
+    f"(gen_random_uuid(), '{TENANT_A_ID}', '{ALICE_ID}', '{ROLE_A_ID}', 'tenant'), "
+    f"(gen_random_uuid(), '{TENANT_B_ID}', '{BOB_ID}', '{ROLE_B_ID}', 'tenant')"
+)
+
 DEMO_ROLE = {
     "approvals.view",
     "approvals.start",
@@ -72,6 +90,7 @@ def roles(grants: GrantTable) -> GrantTable:
 
 @pytest.fixture
 async def demo_definition(db: TenantDb) -> UUID:
+    await su_execute(db, SEED_SCOPE_SQL)
     with use_context(ctx()):
         async with db.with_tenant(TENANT_A_ID) as conn:
             definition = await DefinitionsService().install_spec(
