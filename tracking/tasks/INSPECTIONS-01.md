@@ -1,4 +1,4 @@
-# INSPECTIONS-01 — Inspections against an asset with a pinned form revision, lifecycle on the APPROVALS-05 preset
+# INSPECTIONS-01 — Inspections against an asset with a pinned form revision, lifecycle on the APPROVALS-09 preset
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
@@ -7,7 +7,7 @@
 | Module | [`inspections`](../../docs/blueprint/modules/inspections/README.md) |
 | Phase | R1 |
 | Size | M |
-| Depends on | APPROVALS-05, ASSETS-01, FORMS-01 |
+| Depends on | APPROVALS-09, ASSETS-01, FORMS-01 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
@@ -17,6 +17,13 @@
 3. [APPROVALS-05](APPROVALS-05.md): the preset's definition key `inspection`, its state and action codes and its `approvals.inspection.*` permissions
 4. ADRs: [0002](../../docs/adr/0002-data-access-and-migrations.md) (Core + raw-SQL Alembic, `with_tenant`), [0003](../../docs/adr/0003-jobs-outbox-and-sidecar.md) (outbox in the same transaction), [0004](../../docs/adr/0004-repository-layout.md) (only `api.py` crosses modules), [0007](../../docs/adr/0007-mvp-scope-and-strangler.md) (R1 scope), [0025](../../docs/adr/0025-time-and-timezones.md) (UTC storage), [0035](../../docs/adr/0035-transition-service-implementation.md) (record resolver, guard facts provider, 401 `STEP_UP_REQUIRED`), [0036](../../docs/adr/0036-r1-module-decisions.md) (R1 decisions)
 5. Code to build on: `apps/api/aip/modules/projects/` (module pattern, `tests/conftest.py`), `apps/api/aip/modules/approvals/api.py`, `apps/api/aip/modules/approvals/guards/context_providers.py`, `apps/api/migrations/versions/202610181200_approvals_decision_history.py`, `db/templates/tenant_table.sql.tpl`
+
+> **Lifecycle v2 (owner, 2026-10-31).** This task now starts after APPROVALS-09, which replaces the APPROVALS-05
+> codes with the owner's AIP lifecycle. Read every APPROVALS-05 state, action and permission below as its
+> APPROVALS-09 equivalent: `completed` → `performed`, `rejected` → `rework_required`, `approve` → `mark_performed`,
+> `reject` → `request_rework` / `request_clarification`, and `submit`/`review_pass` → `request_supervisor_review`. In
+> step 7, re-inspection starts from `performed`. Moving the original to `superseded` is INSPECTIONS-09. Update the
+> golden and integration cases to the v2 codes.
 
 ## Spec
 
