@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as pkg from "../index";
@@ -52,7 +53,7 @@ describe("expressions-v1 vectors", () => {
 describe("the allow-list cannot be widened", () => {
   it("exposes exactly the intended runtime exports and no operator registry", () => {
     expect(Object.keys(pkg).sort()).toEqual(
-      ["ALLOWED_OPERATORS", "EVALUATOR_VERSION", "GuardError", "evaluateAnswers", "evaluateGuard", "truthy", "validateGuard"].sort(),
+      ["ALLOWED_OPERATORS", "EVALUATOR_VERSION", "FormRenderer", "GuardError", "evaluateAnswers", "evaluateGuard", "truthy", "validateGuard"].sort(),
     );
   });
 
