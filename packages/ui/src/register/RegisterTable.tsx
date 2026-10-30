@@ -28,11 +28,14 @@
  * ```
  */
 import {
-  getCoreRowModel,
-  useReactTable,
+  columnVisibilityFeature,
+  rowSelectionFeature,
+  tableFeatures,
+  useTable,
   type ColumnDef,
+  type ColumnVisibilityState,
+  type RowData,
   type RowSelectionState,
-  type VisibilityState,
 } from "@tanstack/react-table";
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Button } from "../components/button";
@@ -54,6 +57,9 @@ import {
 } from "./types";
 
 const SKELETON_ROWS = 5;
+
+// Sorting and paging are the server's (cursor pages), so the table only selects rows and hides columns.
+const features = tableFeatures({ rowSelectionFeature, columnVisibilityFeature });
 
 export interface RegisterTableProps<T> {
   /** Stable register id (column preferences are kept per id). */
@@ -98,7 +104,7 @@ function pageKey(query: RegisterQuery): string {
   return JSON.stringify(omit(query, "cursor", "columns"));
 }
 
-export function RegisterTable<T>({
+export function RegisterTable<T extends RowData>({
   id,
   captionKey,
   columns,
@@ -135,24 +141,31 @@ export function RegisterTable<T>({
   // Columns: the URL wins, then the stored preference, then the defaults.
   const [stored, setStored] = useState<string[] | null>(() => prefs.get(id));
   const visible = query.columns ?? stored ?? defaultColumns(columns);
-  const visibility: VisibilityState = Object.fromEntries(columns.map((c) => [c.id, visible.includes(c.id)]));
+  const visibility: ColumnVisibilityState = Object.fromEntries(columns.map((c) => [c.id, visible.includes(c.id)]));
 
   const actions = bulkActions.filter((a) => !a.permission || permissions.includes(a.permission));
   const selectable = actions.length > 0;
   const [selection, setSelection] = useState<RowSelectionState>({});
-  useEffect(() => setSelection({}), [query.cursor, key]);
+  // Keyboard: one row is in the tab order (see onRowKey).
+  const [active, setActive] = useState(0);
+  // Another page or query starts with nothing selected and its first row active (reset while rendering).
+  const shown = `${key}\n${query.cursor ?? ""}`;
+  const [shownPage, setShownPage] = useState(shown);
+  if (shownPage !== shown) {
+    setShownPage(shown);
+    setSelection({});
+    setActive(0);
+  }
 
-  const defs = useMemo<ColumnDef<T>[]>(
+  const defs = useMemo<ColumnDef<typeof features, T>[]>(
     () => columns.map((c) => ({ id: c.id, header: c.headerKey, cell: (ctx) => c.cell(ctx.row.original) })),
     [columns],
   );
-  const table = useReactTable({
+  const table = useTable({
+    features,
     data: items,
     columns: defs,
     getRowId: (row) => rowId(row),
-    getCoreRowModel: getCoreRowModel(),
-    manualSorting: true,
-    manualPagination: true,
     enableRowSelection: selectable,
     state: { columnVisibility: visibility, rowSelection: selection },
     onRowSelectionChange: setSelection,
@@ -161,10 +174,8 @@ export function RegisterTable<T>({
   const shownColumns = columns.filter((c) => visibility[c.id]);
   const selectedRows = rows.filter((r) => r.getIsSelected()).map((r) => r.original);
 
-  // Keyboard: one row is in the tab order; arrows move between rows, Enter opens.
-  const [active, setActive] = useState(0);
+  // Keyboard: arrows move between rows, Enter opens.
   const body = useRef<HTMLTableSectionElement>(null);
-  useEffect(() => setActive(0), [query.cursor, key]);
   function onRowKey(event: KeyboardEvent<HTMLTableRowElement>, index: number, row: T) {
     if (event.target !== event.currentTarget) return; // keys inside a cell control stay there
     let next: number;
