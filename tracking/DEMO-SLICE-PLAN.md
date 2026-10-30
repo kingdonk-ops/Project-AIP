@@ -31,13 +31,13 @@ this R1 slice on top of it.
 Six serial "M" tasks on the backend; nothing can beat this depth:
 
 ```
-ASSETS-01 → FORMS-01 → FORMS-02 → INSPECTIONS-01 → INSPECTIONS-02 → REPORTS-03
+ASSETS-01 → FORMS-01 → FORMS-02 → APPROVALS-09 → INSPECTIONS-01 → INSPECTIONS-02 → REPORTS-03
 ```
 
 Feeder branches that must land before their consumer but do not lengthen the path:
 
 - **Forms enablers:** ITEMTYPES-01 + APPROVALS-08 → FORMS-01
-- **Inspection lifecycle:** APPROVALS-05 → INSPECTIONS-01
+- **Inspection lifecycle:** APPROVALS-05 → APPROVALS-09 → INSPECTIONS-01 (owner 2026-10-31: v2 lands first)
 - **Report render:** OPS-17 → UPLOADS-02 → UPLOADS-08 → REPORTS-02 (+ REPORTS-01, IDENTITY-09) → REPORTS-03
 
 **OPS-17 is done** (PR #129, merged 2026-10-24) — the former chokepoint is cleared, so UPLOADS-02,
@@ -85,11 +85,12 @@ sprint; within a round, order by the critical path (ASSETS-01 and OPS-17 first).
 
 | Order | Task | Stream | Deps cleared by |
 |---|---|---|---|
-| 1 | INSPECTIONS-01 | api | APPROVALS-05, ASSETS-01, FORMS-01 |
-| 2 | INSPECTIONS-02 | api | FORMS-02, INSPECTIONS-01 |
-| 3 | INSPECTIONS-03 | api | INSPECTIONS-02 (ITP/hold points; R1 midpoint) |
-| 4 | REPORTS-02 | api | OPS-17, REPORTS-01, UPLOADS-08 (Gotenberg render job) |
-| 5 | ASSETS-03 | web | ACCESS-07, ASSETS-02, ITEMTYPES-03 (asset tree + register) |
+| 1 | APPROVALS-09 | api | APPROVALS-05 (inspection lifecycle v2) |
+| 2 | INSPECTIONS-01 | api | APPROVALS-09, ASSETS-01, FORMS-01 |
+| 3 | INSPECTIONS-02 | api | FORMS-02, INSPECTIONS-01 |
+| 4 | INSPECTIONS-03 | api | INSPECTIONS-02 (ITP/hold points; R1 midpoint) |
+| 5 | REPORTS-02 | api | OPS-17, REPORTS-01, UPLOADS-08 (Gotenberg render job) |
+| 6 | ASSETS-03 | web | ACCESS-07, ASSETS-02, ITEMTYPES-03 (asset tree + register) |
 
 ### Round 4 — close the loop
 
