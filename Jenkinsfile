@@ -33,7 +33,8 @@ pipeline {
                     steps {
                         sh 'uv --version && node --version && pnpm --version'
                         sh 'uv sync --all-packages --frozen'
-                        sh 'pnpm install --frozen-lockfile'
+                        sh "uv pip install 'psycopg[binary]'"
+                        sh 'pnpm install --frozen-lockfile --store-dir "$WORKSPACE/.pnpm-store"'
 
                         // make check-py
                         sh 'uv run ruff check'
@@ -75,7 +76,7 @@ pipeline {
                     agent any
                     steps {
                         sh 'node --version && pnpm --version'
-                        sh 'pnpm install --frozen-lockfile'
+                        sh 'pnpm install --frozen-lockfile --store-dir "$WORKSPACE/.pnpm-store"'
                         sh 'pnpm -r lint'
                         sh 'pnpm -r typecheck'
                         sh 'pnpm -r build'
