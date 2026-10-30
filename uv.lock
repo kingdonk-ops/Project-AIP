@@ -321,7 +321,7 @@ dev = [
     { name = "pyyaml", specifier = ">=6" },
     { name = "ruff", specifier = ">=0.8" },
     { name = "testcontainers", extras = ["keycloak", "postgres", "redis"], specifier = ">=4.8" },
-    { name = "types-aioboto3", extras = ["s3"], specifier = ">=13.2" },
+    { name = "types-aioboto3", extras = ["s3"], specifier = ">=15.5.0" },
 ]
 
 [[package]]
