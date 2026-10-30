@@ -45,6 +45,12 @@ function demoBanner(): Plugin {
 
 export default defineConfig({
   plugins: [react(), demoBanner()],
+  // Hashed build files go under /static/, not Vite's default /assets/: /assets is an app route
+  // (ASSETS-03), and nginx serves the build folder with try_files $uri =404, which would 404 a
+  // deep link such as /assets/new. Keep in sync with `location /static/` in both nginx configs.
+  build: {
+    assetsDir: "static",
+  },
   server: {
     proxy: apiProxy,
     headers: devHeaders,
