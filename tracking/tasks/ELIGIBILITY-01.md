@@ -65,6 +65,8 @@ Create the eligibility module with configurable certificate types and per-owner 
       `amber_days integer NOT NULL DEFAULT 30` (`CHECK (amber_days BETWEEN 0 AND 365)`),
       `reminder_offsets jsonb NOT NULL DEFAULT '[60,30,7]'` (stored for ELIGIBILITY-05),
       `suppress_when_unavailable boolean NOT NULL DEFAULT false` (stored for ELIGIBILITY-05),
+      `enforcement text NOT NULL DEFAULT 'hard_stop'` (`CHECK (enforcement IN ('ignore','notify','hard_stop'))`;
+      owner answer #44, [ADR 0039](../../docs/adr/0039-owner-answers-item-types-witness-root-cause.md); read by ELIGIBILITY-02, settable on create and update),
       `sync_version integer NOT NULL DEFAULT 1`; `UNIQUE (id, tenant_id)`; unique index
       `(tenant_id, upper(code)) WHERE deleted_at IS NULL`.
     - create `certificates` with `certificate_type_id uuid NOT NULL`, `owner_kind text NOT NULL` (same check),
@@ -137,6 +139,8 @@ Create the eligibility module with configurable certificate types and per-owner 
     `superseded`, `revoked`), owner kinds ("Person", "Asset") and one message key per error code above. Codes stay
     stable; only labels are terms.
 - **acceptance**:
+  - A certificate type stores its `enforcement` (`ignore`, `notify` or `hard_stop`, default `hard_stop`); any other
+    value is a 422.
   - No column stores green/amber/red or `expired`; the API computes them from the UTC date at request time, so a
     certificate turns red at 00:00:00 UTC the day after `expires_on` with no job and no write.
   - A certificate can only belong to an existing person or asset of the caller's tenant, of the type's owner kind.
