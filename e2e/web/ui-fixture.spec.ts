@@ -9,7 +9,8 @@ test.use({ baseURL: process.env.E2E_DEV_URL ?? devBaseURL });
 test("ui fixture: 0 serious/critical axe violations, IBM Plex Sans, no Google Fonts", async ({ page }) => {
   const external: string[] = [];
   page.on("request", (request) => {
-    if (new URL(request.url()).hostname.endsWith("fonts.googleapis.com")) external.push(request.url());
+    const host = new URL(request.url()).hostname;
+    if (host === "fonts.googleapis.com" || host.endsWith(".fonts.googleapis.com")) external.push(request.url());
   });
 
   await page.goto("/__fixtures/ui");
