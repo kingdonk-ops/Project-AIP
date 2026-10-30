@@ -1,0 +1,58 @@
+name: dependabot-no-auto-merge
+
+# Dependabot dependency PRs must be merged by a human after review -- never auto-merged. The repo
+# has generic auto-merge machinery (auto-merge-board.yml enables it on board-only PRs;
+# auto-update-prs.yml keeps any auto-merge PR up to date with main), and auto-merge can also be
+# turned on by a person, an agent, or a repo-level default. This guard makes sure none of that
+# ever lands a Dependabot PR without a human: it fires on Dependabot PRs and turns auto-merge back
+# OFF whenever it is on. It never merges, approves, or closes anything itself.
+#
+# Why pull_request_target: a Dependabot `pull_request` run gets a read-only GITHUB_TOKEN with no
+# secrets, which cannot disable auto-merge. pull_request_target runs in the base-repo context with
+# a writable token. That is safe here only because this job checks out and runs NO PR code -- it
+# makes gh API calls against the PR number and nothing else. Keep it that way.
+#
+# Note: pull_request_target workflows run from the version of this file on the base branch (main),
+# so this takes effect once it is merged to main.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review, auto_merge_enabled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  # One run per PR; a newer event supersedes an in-flight one.
+  group: dependabot-no-auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  block:
+    name: Block auto-merge on Dependabot PRs
+    runs-on: ubuntu-latest
+    # Gate on the PR author, not github.actor: a synchronize or auto_merge_enabled event can be
+    # triggered by a human, but the PR is still Dependabot's.
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Turn auto-merge off (Dependabot PRs merge by hand)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          EVENT: ${{ github.event.action }}
+        run: |
+          # `gh pr merge --disable-auto` exits non-zero when auto-merge is already off, so treat
+          # that as the expected "nothing to do" case rather than a failure.
+          if gh pr merge "$PR" --repo "$REPO" --disable-auto 2>/dev/null; then
+            echo "Auto-merge disabled on #$PR."
+            # Explain it only when someone just enabled it, so we don't comment on every push.
+            if [ "$EVENT" = "auto_merge_enabled" ]; then
+              gh pr comment "$PR" --repo "$REPO" --body \
+                "Auto-merge was turned off. Dependabot dependency PRs are merged by a human after review, per .github/workflows/dependabot-no-auto-merge.yml." \
+                || echo "::warning::could not post comment; continuing"
+            fi
+          else
+            echo "Auto-merge was not enabled on #$PR; nothing to do."
+          fi
