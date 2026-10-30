@@ -100,6 +100,7 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | Calibration schedule and quarantine status for instruments | README | Not in the R1 cut |
 | Project register of credentials (licences, insurance, bonds, permits) and company, material-batch and project owner kinds | README, ELIGIBILITY-01 author | R1 owners are people and assets |
 | Extra fields per certificate type and the profile "Add qualification" selector (ADR 0039, #44) | ELIGIBILITY-01 author, owner | Not in the R1 cut; R1 stores `enforcement` only |
+| Verification workflow: QA-named verifiers notified of new qualifications and data, verified-by and date recorded, QA alerted after 3 days unverified (ADR 0039, #44) | owner | No notifications module in R1 |
 
 ## Scope of work
 
@@ -132,7 +133,7 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 
 | Item | Source | Why it waits |
 |---|---|---|
-| Approval adds a KMS-held PAdES signature to PDF reports, plus a verification page for PDFs and files (ADR 0039, #47–#48) | README | Not in the R1 cut; R1 records a sha256 |
+| Approval adds a KMS-held PAdES signature to PDF reports, plus a verification page for PDFs and files (ADR 0039, #47–#48) | README | Hash-only for now; required before the AWS production go-live |
 | Immutable storage of issued PDFs | README, #49 | Open question |
 | Publishing to a named distribution list with delivery receipts and expiring links (`published_records`, `delivery_receipts`, `delivery_access_log`) | README, data model | Not in the R1 cut |
 | Report QA pre-flight through a rules engine | README | No rules engine in R1 |

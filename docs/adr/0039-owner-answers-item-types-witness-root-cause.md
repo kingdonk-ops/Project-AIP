@@ -84,7 +84,10 @@ applied. This unblocks ITEMTYPES-06.
 - Each certificate type can define **its own extra fields**, the way item types do. On a profile, "Add qualification"
   opens a selector of types; choosing one shows the standard fields (number, issued, expiry, copy) plus that type's
   fields. The fields use the item_types field-type registry.
-- Checking licences against issuing registers is not planned.
+- No automatic checks against issuing registers for now. **QA owns verification**: they make sure qualifications and
+  data are in the system and valid. QA can name one or more verifiers (for example the storeman or an admin). A
+  verifier is notified when something that needs verifying enters the system, and records who verified it and when.
+  If it is not verified within **3 days**, QA is notified that the verification is overdue.
 
 ### #46 Root-cause method: both, tenant chooses the default
 
@@ -104,7 +107,8 @@ The system itself signs and verifies PDF reports and files; there is no DocuSign
   stay verifiable.
 - AIP offers verification: upload or open a PDF or file and the system reports whether it matches a sealed original,
   who approved it and when.
-- R1 keeps hash-only reports ([ADR 0036](0036-r1-module-decisions.md)); signing is a task after R1. The demo on Coolify
+- Hash-only reports stay for now ([ADR 0036](0036-r1-module-decisions.md)). **Signed PDFs are required once
+  production is live on AWS**, so signing must land before the AWS go-live. The demo on Coolify
   has no KMS and needs a software key or a placeholder signer there. A certificate from a trusted provider is needed
   for readers to show a trusted signature without a warning.
 
@@ -117,5 +121,7 @@ The system itself signs and verifies PDF reports and files; there is no DocuSign
   `witness_notice_hours`.
 - The item_types, inspections, issues and report_engine READMEs mark these questions answered.
 - ELIGIBILITY-01 adds `certificate_types.enforcement`; ELIGIBILITY-02 blocks only on `hard_stop` types. Per-type
-  fields and the "Add qualification" selector, and discipline gating, are eligibility work after R1.
-- PAdES signing on approval and the verification page go to the backlog as report_engine work after R1.
+  fields and the "Add qualification" selector, the verifier workflow (notify verifiers, 3-day overdue alert to QA)
+  and discipline gating are eligibility work after R1.
+- PAdES signing on approval and the verification page go to the backlog as report_engine work, required before the
+  AWS production go-live.
