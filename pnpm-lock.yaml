@@ -36,6 +36,9 @@ importers:
       '@aip/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@aip/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@aip/form-renderer':
         specifier: workspace:*
         version: link:../../packages/form-renderer

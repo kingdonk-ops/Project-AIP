@@ -53,6 +53,7 @@ const SKELETON = [
   "web/uploads-presign.spec.ts",
   "web/sessions.spec.ts",
   "web/approvals-transition.spec.ts",
+  "web/item-types.spec.ts", // ITEMTYPES-03: needs both tenants signed in for real
 ];
 const UNIT = "fixtures/*.spec.ts";
 const skeletonProjects: PlaywrightTestConfig["projects"] = process.env.E2E_SKELETON

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@aip/api-client": "workspace:*",
+    "@aip/contracts": "workspace:*",
     "@aip/form-renderer": "workspace:*",
     "@aip/ui": "workspace:*",
     "@hookform/resolvers": "^6.0.0",
