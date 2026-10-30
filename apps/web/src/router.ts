@@ -9,6 +9,9 @@ import { platformEventsRoute } from "./routes/_app/admin/platform/events/index";
 import { contentTypeDetailRoute } from "./routes/_app/admin/content-types/$contentTypeId/index";
 import { itemTypeEditorRoute } from "./routes/_app/admin/content-types/$contentTypeId/item-types/$itemTypeId";
 import { contentTypesIndexRoute } from "./routes/_app/admin/content-types/index";
+import { assetEditRoute } from "./routes/_app/assets/edit";
+import { assetsIndexRoute } from "./routes/_app/assets/index";
+import { assetsNewRoute } from "./routes/_app/assets/new";
 import { homeRoute } from "./routes/_app/index";
 import { projectDetailRoute } from "./routes/_app/projects/$projectId";
 import { projectsIndexRoute } from "./routes/_app/projects/index";
@@ -45,10 +48,12 @@ const devRoutes = import.meta.env.PROD
 
 // ITEMTYPES-03: content types and item types admin pages.
 const itemTypesRoutes = [contentTypesIndexRoute, contentTypeDetailRoute, itemTypeEditorRoute] as const;
+// ASSETS-03: the asset tree and register, and the create and edit form.
+const assetsRoutes = [assetsIndexRoute, assetsNewRoute, assetEditRoute] as const;
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, ...itemTypesRoutes]),
+  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, ...itemTypesRoutes, ...assetsRoutes]),
   ...devRoutes,
 ]);
 

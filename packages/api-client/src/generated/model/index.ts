@@ -24,6 +24,8 @@ export * from './assetOut';
 export * from './assetOutAttributes';
 export * from './assetPage';
 export * from './assetsDeleteParams';
+export * from './assetsExportParams';
+export * from './assetsExportSort';
 export * from './assetsListParams';
 export * from './assetsListSort';
 export * from './assetUpdate';
