@@ -358,3 +358,18 @@ def test_the_mock_idp_users_come_from_secrets_before_web_starts(
     script = (IMAGES / "mock-idp-users.sh").read_text()
     assert ': "${MOCK_IDP_ALICE_PASSWORD:?}"' in script
     assert "alice_dev_only_password | bob_dev_only_password | vera_dev_only_password" in script
+
+
+def test_gotenberg_is_sandboxed_on_an_internal_network_only_worker_pdf_joins(
+    services: dict[str, dict[str, Any]],
+) -> None:
+    """REPORTS-02: Chromium has no egress and no route to Postgres, RustFS or Keycloak."""
+    networks = yaml.safe_load(COMPOSE.read_text())["networks"]
+    assert networks["render"]["internal"] is True
+    gotenberg = services["gotenberg"]
+    assert gotenberg["networks"] == ["render"]
+    assert "--chromium-disable-javascript=true" in gotenberg["command"]
+    assert "--chromium-allow-list=^file:///tmp/.*" in gotenberg["command"]
+    joined = sorted(name for name, svc in services.items() if "render" in svc.get("networks", []))
+    assert joined == ["gotenberg", "worker-pdf"]
+    assert services["worker-pdf"]["command"] == ["python", "-m", "aip.worker", "--queues", "pdf"]

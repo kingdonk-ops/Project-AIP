@@ -29,7 +29,16 @@ from botocore.config import Config  # pyright: ignore[reportMissingTypeStubs]
 RUSTFS_IMAGE = os.environ.get("AIP_TEST_RUSTFS_IMAGE", "rustfs/rustfs:1.0.1")
 # 4.x is the last LocalStack line that runs S3 and KMS without an auth token.
 LOCALSTACK_IMAGE = os.environ.get("AIP_TEST_LOCALSTACK_IMAGE", "localstack/localstack:4.4")
-GOTENBERG_IMAGE = os.environ.get("AIP_TEST_GOTENBERG_IMAGE", "gotenberg/gotenberg:8")
+GOTENBERG_IMAGE = os.environ.get("AIP_TEST_GOTENBERG_IMAGE", "gotenberg/gotenberg:8.37.0")
+# REPORTS-02: the same sandbox flags as the compose `gotenberg` service (infra/docker-compose.yml):
+# no JavaScript, Chromium may load only the request's own files, no downloadFrom, no webhooks.
+GOTENBERG_COMMAND = (
+    "gotenberg",
+    "--chromium-disable-javascript=true",
+    "--chromium-allow-list=^file:///tmp/.*",
+    "--api-disable-download-from=true",
+    "--webhook-disable=true",
+)
 MAILPIT_IMAGE = os.environ.get("AIP_TEST_MAILPIT_IMAGE", "axllent/mailpit:v1.31.2")
 
 RUSTFS_KEY = "rustfsadmin"  # test-only default credentials of the RustFS image
@@ -116,7 +125,12 @@ def _wait_until(check: Callable[[], bool], what: str, timeout_s: float = 120) ->
 
 @contextmanager
 def _container(
-    image: str, port: int, env: dict[str, str], ready: Callable[[str], bool], what: str
+    image: str,
+    port: int,
+    env: dict[str, str],
+    ready: Callable[[str], bool],
+    what: str,
+    command: tuple[str, ...] | None = None,
 ) -> Iterator[str]:
     """Run ``image`` and yield its base URL once ``ready(url)`` returns true."""
     from testcontainers.core.container import (  # pyright: ignore[reportMissingTypeStubs]
@@ -125,6 +139,8 @@ def _container(
 
     container: Any = DockerContainer(image)
     container.with_exposed_ports(port)
+    if command is not None:
+        container.with_command(list(command))
     for key, value in env.items():
         container.with_env(key, value)
     with container:
@@ -189,7 +205,9 @@ def gotenberg_url() -> Iterator[str]:
         return
     if not _docker_reachable():
         _unavailable("Gotenberg", "AIP_TEST_GOTENBERG_URL")
-    with _container(GOTENBERG_IMAGE, 3000, {}, _gotenberg_ready, "Gotenberg") as endpoint:
+    with _container(
+        GOTENBERG_IMAGE, 3000, {}, _gotenberg_ready, "Gotenberg", GOTENBERG_COMMAND
+    ) as endpoint:
         yield endpoint
 
 

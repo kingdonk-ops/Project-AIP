@@ -171,9 +171,18 @@ services:
     security_opt: ["no-new-privileges:true"]
 
   gotenberg:
+    # REPORTS-02: sandboxed Chromium (no JavaScript, only the request's own files, no downloadFrom
+    # or webhooks) on the internal `render` network, which only worker-pdf joins.
     image: gotenberg/gotenberg:8.37.0
     user: gotenberg
     restart: unless-stopped
+    command:
+      - gotenberg
+      - --chromium-disable-javascript=true
+      - --chromium-allow-list=^file:///tmp/.*
+      - --api-disable-download-from=true
+      - --webhook-disable=true
+    networks: [render]
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/health"]
       interval: 5s
@@ -456,8 +465,6 @@ services:
         condition: service_healthy
       valkey:
         condition: service_healthy
-      gotenberg:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/v1/health/ready"]
       interval: 10s
@@ -490,6 +497,35 @@ services:
       retries: 3
       start_period: 60s
 
+  worker-pdf:
+    # REPORTS-02: the `pdf` queue (the report render job). The only service on the `render`
+    # network, so the only one that can reach Gotenberg.
+    <<: *app-hardening
+    image: *api-image
+    init: true
+    command: ["python", "-m", "aip.worker", "--queues", "pdf"]
+    stop_grace_period: 70s
+    environment:
+      <<: *app-env
+      WORKER_MEMORY_LIMIT_MB: "1024"
+    networks: [default, render]
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      gotenberg:
+        condition: service_healthy
+      object-store-init:
+        condition: service_completed_successfully
+    healthcheck:
+      # TESTING-13: the worker beats every 10 s only while its aip_jobs login works.
+      test: ["CMD", "python", "-m", "aip.platform.jobs.heartbeat", "--max-age", "60"]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+
   web:
     # The only routed service: give it the demo domain in Coolify, container port 8080.
     <<: *app-hardening
@@ -511,6 +547,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+
+networks:
+  # REPORTS-02: Gotenberg and worker-pdf only. `internal: true` gives it no route out, and nothing
+  # else joins it, so Chromium cannot reach Postgres, RustFS, Keycloak or the internet.
+  render:
+    internal: true
 
 volumes:
   # v2: the first deploy initialised `postgres-data` with a placeholder superuser password (the

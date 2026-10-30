@@ -90,12 +90,36 @@ class ObjectStore(Protocol):
         ...
 
 
+@dataclass(frozen=True)
+class PageOptions:
+    """Paper size, orientation and margins for one PDF (REPORTS-02), all in millimetres.
+
+    ``paper_width_mm`` x ``paper_height_mm`` is the portrait sheet (A4 is 210 x 297, A3 is
+    297 x 420); ``landscape`` turns it.
+    """
+
+    paper_width_mm: float
+    paper_height_mm: float
+    landscape: bool
+    margin_top_mm: float
+    margin_right_mm: float
+    margin_bottom_mm: float
+    margin_left_mm: float
+
+
 @runtime_checkable
 class PdfRenderer(Protocol):
     """HTML to PDF (Gotenberg/Chromium)."""
 
-    async def render_html(self, html: str, *, assets: Mapping[str, bytes] | None = None) -> bytes:
-        """Render ``html`` (as ``index.html``) with optional sibling assets by file name.
+    async def render_html(
+        self,
+        html: str,
+        *,
+        assets: Mapping[str, bytes] | None = None,
+        page: PageOptions | None = None,
+    ) -> bytes:
+        """Render ``html`` (as ``index.html``) with optional sibling assets by file name, on the
+        paper ``page`` describes (the renderer's own defaults when ``None``).
 
         Raises ``RenderTimeoutError``, ``RenderTooLargeError`` or ``RenderError``.
         """
@@ -167,6 +191,7 @@ __all__ = [
     "ObjectStore",
     "Ocr",
     "OcrResult",
+    "PageOptions",
     "PdfRenderer",
     "PresignedPost",
     "PresignedRequest",

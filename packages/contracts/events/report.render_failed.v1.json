@@ -1,0 +1,41 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "errorCode": {
+      "title": "Errorcode",
+      "type": "string"
+    },
+    "recordId": {
+      "format": "uuid",
+      "title": "Recordid",
+      "type": "string"
+    },
+    "recordType": {
+      "title": "Recordtype",
+      "type": "string"
+    },
+    "renderJobId": {
+      "format": "uuid",
+      "title": "Renderjobid",
+      "type": "string"
+    },
+    "templateKey": {
+      "title": "Templatekey",
+      "type": "string"
+    },
+    "variant": {
+      "title": "Variant",
+      "type": "string"
+    }
+  },
+  "required": [
+    "renderJobId",
+    "templateKey",
+    "variant",
+    "recordType",
+    "recordId",
+    "errorCode"
+  ],
+  "title": "RenderFailed",
+  "type": "object"
+}

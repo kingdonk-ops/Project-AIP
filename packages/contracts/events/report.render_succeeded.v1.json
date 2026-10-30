@@ -1,0 +1,57 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "dataHash": {
+      "title": "Datahash",
+      "type": "string"
+    },
+    "fileId": {
+      "format": "uuid",
+      "title": "Fileid",
+      "type": "string"
+    },
+    "pdfSha256": {
+      "title": "Pdfsha256",
+      "type": "string"
+    },
+    "recordId": {
+      "format": "uuid",
+      "title": "Recordid",
+      "type": "string"
+    },
+    "recordType": {
+      "title": "Recordtype",
+      "type": "string"
+    },
+    "renderJobId": {
+      "format": "uuid",
+      "title": "Renderjobid",
+      "type": "string"
+    },
+    "templateKey": {
+      "title": "Templatekey",
+      "type": "string"
+    },
+    "templateVersion": {
+      "title": "Templateversion",
+      "type": "integer"
+    },
+    "variant": {
+      "title": "Variant",
+      "type": "string"
+    }
+  },
+  "required": [
+    "renderJobId",
+    "templateKey",
+    "templateVersion",
+    "variant",
+    "recordType",
+    "recordId",
+    "dataHash",
+    "fileId",
+    "pdfSha256"
+  ],
+  "title": "RenderSucceeded",
+  "type": "object"
+}

@@ -342,7 +342,10 @@ jobs:
           enable-cache: true
       - name: Install
         run: uv sync --all-packages --frozen
-      - name: STACK-02 e2e against the stack (fixture report text contains FX-0001)
+      # REPORTS-02: the whole Gotenberg adapter file (the Chromium sandbox checks run against the
+      # compose service's flags) and the render job end to end (real Postgres from Testcontainers,
+      # the stack's RustFS and Gotenberg, the pdf queue drained in-process).
+      - name: STACK-02/REPORTS-02 render e2e against the stack (sandboxed Gotenberg, render jobs)
         env:
           AIP_TEST_RUSTFS_URL: http://localhost:9000
           AIP_TEST_RUSTFS_ACCESS_KEY: rustfs_dev_only
@@ -350,7 +353,9 @@ jobs:
           AIP_TEST_GOTENBERG_URL: http://localhost:3000
         run: >-
           uv run pytest -q -p no:cacheprovider
-          "apps/api/tests/platform/capabilities/test_gotenberg.py::test_render_store_and_download_report"
+          apps/api/tests/platform/capabilities/test_gotenberg.py
+          apps/api/aip/modules/report_engine/tests/test_render_jobs_db.py
+          apps/api/aip/modules/report_engine/tests/test_render_pdf.py
       - name: IDENTITY-01/04 sign-in flows against the compose Keycloak (SSO, OTP, lockout, invites)
         env:
           AIP_TEST_KEYCLOAK_URL: http://localhost:8180

@@ -25,6 +25,7 @@ ENV_EXAMPLE = ROOT / ".env.example"
 APP_SERVICES = {
     "api",
     "worker",
+    "worker-pdf",
     "migrator",
     "terms-load",
     "tenancy-seed",
@@ -67,6 +68,7 @@ DEFAULT_SERVICES = {
     "object-store-init",
     "api",
     "worker",
+    "worker-pdf",  # REPORTS-02: the `pdf` queue (report renders through Gotenberg)
     "web",
 }
 REQUIRED_ENV = {
@@ -318,3 +320,23 @@ def test_docker_compose_config_accepts_the_file() -> None:
             check=False,
         )
         assert result.returncode == 0, result.stderr
+
+
+# REPORTS-02: the Chromium sandbox flags (checked against `gotenberg --help` of the pinned image).
+GOTENBERG_SANDBOX_FLAGS = (
+    "--chromium-disable-javascript=true",
+    "--chromium-allow-list=^file:///tmp/.*",
+    "--api-disable-download-from=true",
+    "--webhook-disable=true",
+)
+
+
+def test_gotenberg_runs_sandboxed_and_worker_pdf_runs_the_pdf_queue(
+    services: dict[str, dict[str, Any]],
+) -> None:
+    command = services["gotenberg"]["command"]
+    assert command[0] == "gotenberg"
+    assert set(GOTENBERG_SANDBOX_FLAGS) <= set(command)
+    pdf = services["worker-pdf"]
+    assert pdf["command"] == ["python", "-m", "aip.worker", "--queues", "pdf"]
+    assert pdf["depends_on"]["gotenberg"]["condition"] == "service_healthy"

@@ -244,3 +244,9 @@ table = "report_templates"
 
 ["DELETE /api/v1/reports/templates/{template_id}"]
 table = "report_templates"
+
+["GET /api/v1/reports/renders/{render_job_id}"]
+table = "report_render_jobs"
+
+["POST /api/v1/reports/renders/{render_job_id}/rerender"]
+table = "report_render_jobs"
