@@ -56,6 +56,7 @@ const SKELETON = [
   // FORMS-04: the form template register and detail pages need the stack and real sign-in.
   "web/form-templates.spec.ts",
   "web/item-types.spec.ts", // ITEMTYPES-03: needs both tenants signed in for real
+  "web/assets-live.spec.ts", // ASSETS-03: creates assets and checks the other tenant for real
 ];
 const UNIT = "fixtures/*.spec.ts";
 const skeletonProjects: PlaywrightTestConfig["projects"] = process.env.E2E_SKELETON

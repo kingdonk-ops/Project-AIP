@@ -93,6 +93,31 @@ export const AssetsCreateResponse = zod.object({
 })
 
 /**
+ * The same filters and sort as the list, as one CSV file (ASSETS-03, ADR 0033).
+ * @summary Export Assets
+ */
+export const assetsExportQueryParentIdOneMax = 36;
+
+export const assetsExportQueryQOneMax = 100;
+
+export const assetsExportQueryTagNumberOneMax = 64;
+
+export const assetsExportQueryItemTypeIdOneMax = 50;
+
+
+
+export const AssetsExportQueryParams = zod.object({
+  "sort": zod.union([zod.enum(['position', '-position', 'name', '-name', 'tagNumber', '-tagNumber', 'updatedAt', '-updatedAt']),zod.null()]).optional(),
+  "parentId": zod.union([zod.string().max(assetsExportQueryParentIdOneMax),zod.null()]).optional(),
+  "under": zod.union([zod.uuid(),zod.null()]).optional(),
+  "q": zod.union([zod.string().min(1).max(assetsExportQueryQOneMax),zod.null()]).optional(),
+  "tagNumber": zod.union([zod.string().min(1).max(assetsExportQueryTagNumberOneMax),zod.null()]).optional(),
+  "itemTypeId": zod.union([zod.array(zod.uuid()).max(assetsExportQueryItemTypeIdOneMax),zod.null()]).optional()
+})
+
+export const AssetsExportResponse = zod.unknown()
+
+/**
  * @summary Delete Asset
  */
 export const AssetsDeleteParams = zod.object({

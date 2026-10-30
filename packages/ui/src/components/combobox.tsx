@@ -10,6 +10,8 @@ export interface ComboboxProps {
   options: readonly ComboboxOption[];
   value?: string | null;
   onValueChange?: (value: string) => void;
+  /** Called with the typed text, so a caller can fetch matching options from the server. */
+  onInputChange?: (text: string) => void;
   /** Accessible name when no visible <Label htmlFor={id}> is used. */
   "aria-label"?: string;
   id?: string;
@@ -25,6 +27,7 @@ export function Combobox({
   options,
   value = null,
   onValueChange,
+  onInputChange,
   "aria-label": ariaLabel,
   id,
   placeholder,
@@ -87,6 +90,7 @@ export function Combobox({
         value={query ?? selected?.label ?? ""}
         onChange={(e) => {
           setQuery(e.target.value);
+          onInputChange?.(e.target.value);
           setActive(0);
           setOpen(true);
         }}

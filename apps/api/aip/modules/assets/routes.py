@@ -14,6 +14,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, FastAPI, Query, Response, status
+from fastapi.responses import StreamingResponse
 
 from aip.modules.assets.schemas import (
     AssetCreate,
@@ -69,6 +70,40 @@ async def list_assets(
         under=under,
         q=q,
         tag_number=tag_number,
+    )
+
+
+@assets_router.get(
+    "/export.csv",
+    operation_id="assets_export",
+    response_class=StreamingResponse,
+    responses={
+        200: {"content": {"text/csv": {}}, "description": "The filtered assets as CSV"},
+        422: {"model": AssetErrorBody, "description": "Validation error, or EXPORT_TOO_LARGE"},
+    },
+    dependencies=[Depends(requires("asset.view"))],
+)
+async def export_assets(
+    sort: AssetSort | None = None,
+    parent_id: Annotated[str | None, Query(alias="parentId", max_length=36)] = None,
+    under: UUID | None = None,
+    q: Search = None,
+    tag_number: Annotated[str | None, Query(alias="tagNumber", min_length=1, max_length=64)] = None,
+    item_type_id: Annotated[list[UUID] | None, Query(alias="itemTypeId", max_length=50)] = None,
+) -> StreamingResponse:
+    """The same filters and sort as the list, as one CSV file (ASSETS-03, ADR 0033)."""
+    chunks = await AssetService().export_csv(
+        sort=sort,
+        parent_id=parent_id,
+        under=under,
+        q=q,
+        tag_number=tag_number,
+        item_type_ids=item_type_id,
+    )
+    return StreamingResponse(
+        chunks,
+        media_type="text/csv; charset=utf-8",
+        headers={"content-disposition": 'attachment; filename="assets.csv"'},
     )
 
 
