@@ -437,6 +437,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assets/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Assets
+         * @description The same filters and sort as the list, as one CSV file (ASSETS-03, ADR 0033).
+         */
+        get: operations["assets_export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/assets/{asset_id}": {
         parameters: {
             query?: never;
@@ -5980,6 +6000,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    assets_export: {
+        parameters: {
+            query?: {
+                sort?: ("position" | "-position" | "name" | "-name" | "tagNumber" | "-tagNumber" | "updatedAt" | "-updatedAt") | null;
+                parentId?: string | null;
+                under?: string | null;
+                q?: string | null;
+                tagNumber?: string | null;
+                itemTypeId?: string[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The filtered assets as CSV */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation error, or EXPORT_TOO_LARGE */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetErrorBody"];
+                };
             };
         };
     };
