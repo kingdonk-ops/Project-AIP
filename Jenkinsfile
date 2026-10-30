@@ -1,9 +1,11 @@
-// CI for Project AIP, mirroring .github/workflows/ci.yml by running the SAME
-// Makefile gates (make check-py / check-ts / check-docs / check-boundaries /
-// check-client) rather than duplicating the workflow YAML. Each gate runs as a
-// parallel stage in its own container, so the whole run is as wide as the
-// executors allow. Requires the Docker Pipeline plugin and a node with the
-// Docker CLI + daemon access.
+// CI for Project AIP on self-hosted Jenkins (jenkins.bytedock.io).
+// Runs the same gates as .github/workflows/ci.yml, executed directly on the
+// controller (toolchains preinstalled under /var/jenkins_home) against a
+// managed pgvector Postgres — no Docker daemon required. The two long poles
+// (backend + frontend) run as parallel tracks.
+//
+// Not ported here (need Docker/compose): e2e (Playwright), compose stack,
+// sbom, strip-check image builds — those stay on GitHub Actions for now.
 pipeline {
     agent none
 
@@ -11,107 +13,76 @@ pipeline {
         timestamps()
         timeout(time: 40, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '30'))
-        disableConcurrentBuilds()      // per-branch; different branches/PRs still run concurrently
+        disableConcurrentBuilds()
+    }
+
+    environment {
+        PATH                  = "/var/jenkins_home/bin:/var/jenkins_home/tools/node/bin:${PATH}"
+        HOME                  = "/var/jenkins_home"
+        UV_CACHE_DIR          = "/var/jenkins_home/.cache/uv"
+        AIP_TEST_DATABASE_URL = "postgresql://aip_test:aip_test@zaqzezfntsrp0e5lqvpx18mh:5432/aip_test"
     }
 
     stages {
         stage('CI') {
             parallel {
 
-                // ---- Python: ruff, ruff format, pyright, pytest, aip-db lint ----
-                // (make check-py) against a pgvector/pg16 service, as the `python` job does.
-                stage('Python') {
+                // Python gates + docs + boundaries + client drift (uv/pnpm toolchain).
+                stage('Backend & checks') {
                     agent any
-                    environment {
-                        AIP_TEST_DATABASE_URL = 'postgresql://aip_test:aip_test@db:5432/aip_test'
-                    }
                     steps {
-                        script {
-                            def net = "aip-ci-${env.BUILD_NUMBER}-${env.EXECUTOR_NUMBER}"
-                            sh "docker network create ${net}"
-                            def pg = docker.image('pgvector/pgvector:pg16').run(
-                                "--network ${net} --network-alias db " +
-                                "-e POSTGRES_USER=aip_test -e POSTGRES_PASSWORD=aip_test -e POSTGRES_DB=aip_test")
-                            try {
-                                docker.image('ghcr.io/astral-sh/uv:python3.12-bookworm').inside(
-                                        "--network ${net} -u root -e AIP_TEST_DATABASE_URL " +
-                                        "-e UV_CACHE_DIR=${env.WORKSPACE}/.uv-cache -e HOME=${env.WORKSPACE}") {
-                                    sh 'apt-get update -qq && apt-get install -y -qq make git >/dev/null'
-                                    sh 'uv sync --all-packages --frozen'
-                                    sh '''
-                                        for i in $(seq 1 30); do
-                                            uv run python -c "import psycopg; psycopg.connect('postgresql://aip_test:aip_test@db:5432/aip_test')" 2>/dev/null && break
-                                            echo "waiting for postgres ($i/30)"; sleep 2
-                                        done
-                                    '''
-                                    sh 'make check-py'
-                                }
-                            } finally {
-                                pg.stop()
-                                sh "docker network rm ${net} || true"
-                            }
-                        }
+                        sh 'uv --version && node --version && pnpm --version'
+                        sh 'uv sync --all-packages --frozen'
+                        sh 'pnpm install --frozen-lockfile'
+
+                        // make check-py
+                        sh 'uv run ruff check'
+                        sh 'uv run ruff format --check'
+                        sh 'uv run pyright'
+                        sh 'uv run pytest --junitxml=pytest-report.xml'
+                        sh 'uv run aip-db lint'
+
+                        // make check-boundaries
+                        sh 'uv run lint-imports --no-cache'
+                        sh 'uv run python tools/ci/check_manifests.py'
+                        sh 'uv run python tools/gen_permissions.py --check'
+                        sh 'uv run python tools/ci/check_layout.py'
+
+                        // make check-docs (stdlib scripts run under uv's Python)
+                        sh 'uv run python tools/ci/check_adrs.py'
+                        sh 'uv run python -m unittest tools/ci/test_check_adrs.py'
+                        sh 'uv run python tools/ci/check_security_docs.py'
+                        sh 'uv run python -m unittest tools/ci/test_check_security_docs.py'
+                        sh 'uv run python tools/ci/check_generated_header.py'
+                        sh 'uv run python -m unittest tools/ci/test_check_generated_header.py'
+                        sh 'uv run python -m unittest tools/ci/tests/test_check_licences.py tools/ci/tests/test_sbom_fill_licences.py'
+                        sh 'uv run python -m unittest tools/ci/tests/test_check_prod_strip.py tools/ci/tests/test_check_vuln_exceptions.py'
+                        sh 'uv run python tools/ci/check_vuln_exceptions.py'
+                        // lint-tasks
+                        sh 'uv run python tools/next_task.py --check'
+                        sh 'uv run python tools/lint_tasks.py --quiet'
+
+                        // make check-client (needs uv + pnpm; fails on drift under packages/api-client)
+                        sh 'bash tools/ci/check_client_drift.sh'
                     }
                     post {
-                        always { junit allowEmptyResults: true, testResults: '**/pytest-*.xml' }
+                        always { junit allowEmptyResults: true, testResults: 'pytest-report.xml' }
                     }
                 }
 
-                // ---- TypeScript: lint, typecheck, build, test (make check-ts) ----
-                stage('TypeScript') {
-                    agent {
-                        docker {
-                            image 'node:22-bookworm'
-                            args '-u root -e HOME=/tmp -e COREPACK_HOME=/tmp/corepack'
-                        }
-                    }
+                // TypeScript: lint, typecheck, build, test (make check-ts).
+                stage('Frontend') {
+                    agent any
                     steps {
-                        sh 'apt-get update -qq && apt-get install -y -qq make >/dev/null'
-                        sh 'corepack enable && corepack prepare pnpm@10.28.0 --activate'
+                        sh 'node --version && pnpm --version'
                         sh 'pnpm install --frozen-lockfile'
-                        sh 'make check-ts'
-                    }
-                }
-
-                // ---- Docs + import/layout boundaries (make check-docs / check-boundaries) ----
-                stage('Docs & Boundaries') {
-                    agent {
-                        docker {
-                            image 'ghcr.io/astral-sh/uv:python3.12-bookworm'
-                            args '-u root -e UV_CACHE_DIR=/tmp/uv -e HOME=/tmp'
-                        }
-                    }
-                    steps {
-                        sh 'apt-get update -qq && apt-get install -y -qq make git >/dev/null'
-                        sh 'uv sync --all-packages --frozen'
-                        sh 'make check-docs'
-                        sh 'make check-boundaries'
-                    }
-                }
-
-                // ---- Generated API client drift (make check-client) ----
-                stage('API client drift') {
-                    agent {
-                        docker {
-                            image 'node:22-bookworm'
-                            args '-u root -e HOME=/tmp -e COREPACK_HOME=/tmp/corepack'
-                        }
-                    }
-                    steps {
-                        sh 'apt-get update -qq && apt-get install -y -qq make git python3 >/dev/null'
-                        // uv for export_openapi + pnpm for client generate (check_client_drift.sh).
-                        sh 'curl -LsSf https://astral.sh/uv/install.sh | sh && . $HOME/.local/bin/env'
-                        sh 'corepack enable && corepack prepare pnpm@10.28.0 --activate'
-                        sh 'pnpm install --frozen-lockfile'
-                        sh '. $HOME/.local/bin/env && uv sync --all-packages --frozen && make check-client'
+                        sh 'pnpm -r lint'
+                        sh 'pnpm -r typecheck'
+                        sh 'pnpm -r build'
+                        sh 'pnpm -r test'
                     }
                 }
             }
         }
     }
 }
-
-// NOTE: the heavier GitHub jobs — e2e (Playwright/compose), sbom, strip-check
-// (docker image builds) and the full db/compose stacks — are intentionally not
-// ported in this first pass. They need compose + image builds on the node and
-// are best added as their own stages once the core gates are green here.
