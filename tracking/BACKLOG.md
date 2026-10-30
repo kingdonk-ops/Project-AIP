@@ -40,7 +40,7 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | QR, barcode and RFID tags; scan to open (`asset_tags`) | README | ADR 0007 §4–5 |
 | Printable QR/RFID label sheets through the report engine | README | ADR 0007 §4–5 |
 | Asset history merge, split and retag with lineage (`asset_lineage`) | README | ADR 0007 §4–5 |
-| CUI condition model with promoted corrosion grade, criticality, custom status with neutral state, GPS location | README, ASSETS-01 author | Status and neutral state wait on ITEMTYPES-05 (#40); the rest is not in the R1 cut |
+| CUI condition model with promoted corrosion grade, criticality, custom status with neutral state, GPS location | README, ASSETS-01 author | Status and neutral state come with ITEMTYPES-05 (states decided, ADR 0039); the rest is not in the R1 cut |
 | Open-item counts per tree node | README | Needs inspections and issues counts first |
 | Modules vs items vs components rules under item types | README | Not in the R1 cut |
 | Drag-and-drop reparent in the tree (R1 has a keyboard Move dialog) | ASSETS-03 author | Not needed for R1 |
@@ -121,7 +121,7 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 
 | Item | Source | Why it waits |
 |---|---|---|
-| NCR disposition with engineering approval and sealed records | README, ISSUES-03 author | Sealing decided (ADR 0039); immutable storage is open (#49) |
+| NCR disposition with engineering approval and sealed records | README, ISSUES-03 author | Sealing and storage decided (ADR 0039) |
 | Overdue and SLA notifications with escalation, including overdue CAPA | README | No notifications module in R1 |
 | Root-cause trend reports and cost of poor quality | README | QMS is not in R1 |
 | Kanban board view and CAPA board | README | After ISSUES-04 |
@@ -134,7 +134,7 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | Item | Source | Why it waits |
 |---|---|---|
 | Approval adds a KMS-held PAdES signature to PDF reports, plus a verification page for PDFs and files (ADR 0039, #47–#48) | README | Hash-only for now; required before the AWS production go-live |
-| Immutable storage of issued PDFs | README, #49 | Open question |
+| S3 Object Lock (governance) for completed reports, with audited purge for leaving tenants (ADR 0039, #49) | README | AWS production setup |
 | Publishing to a named distribution list with delivery receipts and expiring links (`published_records`, `delivery_receipts`, `delivery_access_log`) | README, data model | Not in the R1 cut |
 | Report QA pre-flight through a rules engine | README | No rules engine in R1 |
 | Domain blocks: thickness map, CUI condition and DFT charts | README | Not in the R1 cut |

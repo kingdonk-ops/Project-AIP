@@ -64,7 +64,7 @@ Decisions and notes
 
 Open questions
 - Sealing and signing (answered 2026-10-30, [ADR 0039](../../../adr/0039-owner-answers-item-types-witness-root-cause.md)): in-app approval adds a PAdES signature with a KMS-held key to PDF reports, over the existing hash and manifest; AIP verifies PDFs and files; no DocuSign or Adobe Sign.
-- Immutable storage: S3 Object Lock for sealed outputs versus MinIO with object lock on Coolify, or hash-and-manifest only.
+- Immutable storage and revisions (answered 2026-10-30, [ADR 0039](../../../adr/0039-owner-answers-item-types-witness-root-cause.md)): S3 Object Lock in governance mode in production, hash only on the demo; completed reports are locked and revised only by superseding (revision number, change explanation, Superseded stamp, template setting to print explanations).
 
 ## Other files in this folder (read only if your task needs them)
 

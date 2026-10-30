@@ -1,15 +1,16 @@
-# ADR 0039: Owner answers on item-type inheritance, schema changes, starter packs, witness notification, root-cause method, report signing and qualification enforcement
+# ADR 0039: Owner answers on item-type inheritance, schema changes, starter packs, witness notification, root-cause method, report signing, qualification enforcement, asset states, locked storage and report revisions
 
 - **Status:** accepted
 - **Date:** 2026-10-30
 - **Affects:** item_types (inheritance after R1, ITEMTYPES-06), inspections (INSPECTIONS-03, PORTAL-06), issues (ISSUES-06), report_engine (sealing and signing after R1), eligibility
-  (ELIGIBILITY-01, ELIGIBILITY-02)
+  (ELIGIBILITY-01, ELIGIBILITY-02),
+  ITEMTYPES-05, uploads and documents (locked storage)
 
 ## Context
 
 [OPEN-QUESTIONS.md](../../tracking/OPEN-QUESTIONS.md) "R1 gate" lists the questions PLAN-R1 copied from the R1 module
-READMEs ([ADR 0036](0036-r1-module-decisions.md)). On 2026-10-30 the owner answered #38, #39, #41, #43, #44, #46, #47
-and #48. #40 and #49 to #54 stay open.
+READMEs ([ADR 0036](0036-r1-module-decisions.md)). On 2026-10-30 the owner answered #38 to #41, #43, #44 and #46 to #49.
+#50 to #54 stay open.
 
 ## Decision
 
@@ -49,6 +50,12 @@ overrides for options and display fields.
 - Moving assets to a newer version is an explicit admin step behind a migration preview with impact counts (assets
   affected, values that fail the new rules). A parent change that a child's override no longer tightens shows as a
   conflict in that preview, not as a silent failure.
+
+### #40 Neutral asset states
+
+The fixed neutral states that custom asset status sets map to are, in order: **draft, scoped, planned, in progress,
+on hold, completed, cancelled**. They are an enum in code; tenants rename and add their own statuses, and each maps to
+exactly one of these. Gates, dashboards and reports use the neutral state. This unblocks ITEMTYPES-05.
 
 ### #41 Starter packs: three ways to start
 
@@ -112,9 +119,24 @@ The system itself signs and verifies PDF reports and files; there is no DocuSign
   has no KMS and needs a software key or a placeholder signer there. A certificate from a trusted provider is needed
   for readers to show a trusted signature without a warning.
 
+### #49 Locked storage, and how reports are revised
+
+- **Production (AWS):** signed and completed reports go to S3 with Object Lock in **governance** mode for the
+  retention period ([ADR 0021](0021-retention-schedule.md)). Nobody can change or delete them in normal use, but a
+  named, audited permission can delete them, so a tenant's files can still be purged when it leaves the service
+  ([ADR 0022](0022-offboarding-lifecycle-and-archive-plan.md)) or under a legal instruction.
+- **Demo (Coolify):** hash and manifest only.
+- **Completed reports are locked** and added to the documents list of their inspection.
+- **Revising a report:** information can still be changed after completion, but only by superseding. The corrected
+  inspection gets a new **revision number**; each change needs a written explanation, which stays part of the
+  inspection. When the revision is completed, its report is either sent out again (emailed) or added as a new version
+  of the same document. The old report stays locked, is stamped **Superseded**, and only the new revision shows as
+  current.
+- The inspection template has a setting for whether the change explanations are printed at the back of the report.
+
 ## Consequences
 
-- ITEMTYPES-06 and ISSUES-06 move from `blocked` to `todo`; their full specs follow these answers.
+- ITEMTYPES-05, ITEMTYPES-06 and ISSUES-06 move from `blocked` to `todo`; their full specs follow these answers.
 - Inheritance and the migration preview stay after R1 ([BACKLOG.md](../../tracking/BACKLOG.md)); when they are pulled
   in, their tasks follow #38 and #39 above.
 - INSPECTIONS-03 and PORTAL-06 record the witness notification on the point; PROJECTS-04 already carries
@@ -123,5 +145,7 @@ The system itself signs and verifies PDF reports and files; there is no DocuSign
 - ELIGIBILITY-01 adds `certificate_types.enforcement`; ELIGIBILITY-02 blocks only on `hard_stop` types. Per-type
   fields and the "Add qualification" selector, the verifier workflow (notify verifiers, 3-day overdue alert to QA)
   and discipline gating are eligibility work after R1.
+- Report revisions (revision number, required change explanation, Superseded stamp, template setting for printing
+  explanations) shape INSPECTIONS and REPORTS work; locked storage is part of the AWS production setup.
 - PAdES signing on approval and the verification page go to the backlog as report_engine work, required before the
   AWS production go-live.

@@ -14,7 +14,7 @@
 
 1. [`docs/blueprint/07-task-conventions.md`](../../docs/blueprint/07-task-conventions.md)
 2. [`docs/blueprint/modules/item_types/README.md`](../../docs/blueprint/modules/item_types/README.md)
-3. ADRs: [0007](../../docs/adr/0007-mvp-scope-and-strangler.md) (R1 scope), [0036](../../docs/adr/0036-r1-module-decisions.md) (R1 module decisions)
+3. ADRs: [0007](../../docs/adr/0007-mvp-scope-and-strangler.md) (R1 scope), [0036](../../docs/adr/0036-r1-module-decisions.md) (R1 module decisions), [0039](../../docs/adr/0039-owner-answers-item-types-witness-root-cause.md) (owner answers)
 
 ## Spec
 
@@ -22,4 +22,4 @@ Let each item type carry a custom status set whose values map to a fixed set of 
 
 Stub: full spec is written when its dependencies are merged (PLAN-R1 pass A).
 
-Blocked: waits on [OPEN-QUESTIONS](../OPEN-QUESTIONS.md) #40. Do not guess the answer; the spec is written once the owner answers.
+Owner answered [OPEN-QUESTIONS](../OPEN-QUESTIONS.md) #40 on 2026-10-30 (neutral states draft, scoped, planned, in progress, on hold, completed, cancelled); write the full spec from [ADR 0039](../../docs/adr/0039-owner-answers-item-types-witness-root-cause.md).
