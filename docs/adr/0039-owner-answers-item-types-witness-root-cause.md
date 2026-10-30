@@ -54,8 +54,9 @@ overrides for options and display fields.
 ### #40 Neutral asset states
 
 The fixed neutral states that custom asset status sets map to are, in order: **draft, scoped, planned, in progress,
-on hold, completed, cancelled**. They are an enum in code; tenants rename and add their own statuses, and each maps to
-exactly one of these. Gates, dashboards and reports use the neutral state. This unblocks ITEMTYPES-05.
+on hold, completed, cancelled, decommissioned**. They are an enum in code; tenants rename and add their own statuses, and each maps to
+exactly one of these. Gates, dashboards and reports use the neutral state. **Decommissioned** (owner, 2026-10-31) is for an asset taken out
+of service: it keeps its history and documents but is no longer planned, inspected or reminded about. This unblocks ITEMTYPES-05.
 
 ### #41 Starter packs: three ways to start
 

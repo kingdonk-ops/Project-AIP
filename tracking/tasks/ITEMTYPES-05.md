@@ -22,4 +22,4 @@ Let each item type carry a custom status set whose values map to a fixed set of 
 
 Stub: full spec is written when its dependencies are merged (PLAN-R1 pass A).
 
-Owner answered [OPEN-QUESTIONS](../OPEN-QUESTIONS.md) #40 on 2026-10-30 (neutral states draft, scoped, planned, in progress, on hold, completed, cancelled); write the full spec from [ADR 0039](../../docs/adr/0039-owner-answers-item-types-witness-root-cause.md).
+Owner answered [OPEN-QUESTIONS](../OPEN-QUESTIONS.md) #40 on 2026-10-30 (neutral states draft, scoped, planned, in progress, on hold, completed, cancelled, decommissioned); write the full spec from [ADR 0039](../../docs/adr/0039-owner-answers-item-types-witness-root-cause.md).

@@ -58,7 +58,7 @@ Decisions and notes
 - Deferred: rules engine per content type, icon upload, drag reordering of content types, editable attribute type with migration (now to be addressed by schema versioning).
 - Owner accepted all six scout suggestions: schema versioning with migration preview, starter packs, sandboxed conditional and calculated attributes, custom status sets mapped to neutral states, units and tolerances, type inheritance.
 - OpenConstructionERP (AGPL-3.0) is a feature reference only.
-- Owner answers 2026-10-30 ([ADR 0039](../../../adr/0039-owner-answers-item-types-witness-root-cause.md)): inheritance is add and tighten only (no removing or loosening inherited attributes); assets stay pinned to their version and move only through a migration preview; starter packs: blank slate, operator-provisioned or self-selected shipped packs; neutral asset states are a fixed enum: draft, scoped, planned, in progress, on hold, completed, cancelled.
+- Owner answers 2026-10-30 ([ADR 0039](../../../adr/0039-owner-answers-item-types-witness-root-cause.md)): inheritance is add and tighten only (no removing or loosening inherited attributes); assets stay pinned to their version and move only through a migration preview; starter packs: blank slate, operator-provisioned or self-selected shipped packs; neutral asset states are a fixed enum: draft, scoped, planned, in progress, on hold, completed, cancelled, decommissioned.
 
 Open questions
 - What is the sandboxed expression language and which functions are allowed?
