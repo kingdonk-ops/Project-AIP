@@ -30,7 +30,9 @@ interface SignedIn {
 async function signIn(browser: Browser, user: TenantUser, options: { userAgent?: string } = {}): Promise<SignedIn> {
   const context = await browser.newContext(options.userAgent ? { userAgent: options.userAgent } : {});
   const page = await context.newPage();
-  const authorize = page.waitForRequest(isAuthorizeRequest);
+  // No own timeout: loginAs may first wait out the login/start rate-limit window (fixtures/login.ts),
+  // so the test timeout bounds this instead.
+  const authorize = page.waitForRequest(isAuthorizeRequest, { timeout: 0 });
   await loginAs(page, user);
   return { context, page, authorize: (await authorize).url() };
 }
