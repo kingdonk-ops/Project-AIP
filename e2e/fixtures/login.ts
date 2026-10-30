@@ -12,7 +12,8 @@ export const CSRF_COOKIE = "__Host-aip_csrf";
 // and try again, instead of loosening the limit for tests (TESTING-12).
 const LOGIN_START_WINDOW_MS = 61_000;
 
-export async function loginAs(page: Page, user: TenantUser): Promise<void> {
+/** Submits the app's /login form for `user`, waiting out a login/start 429 (at most twice). */
+export async function startLogin(page: Page, user: TenantUser): Promise<void> {
   for (let attempt = 0; ; attempt++) {
     await page.goto("/login");
     await page.getByLabel("Work email").fill(user.email);
@@ -27,6 +28,10 @@ export async function loginAs(page: Page, user: TenantUser): Promise<void> {
     }
     await page.waitForTimeout(LOGIN_START_WINDOW_MS);
   }
+}
+
+export async function loginAs(page: Page, user: TenantUser): Promise<void> {
+  await startLogin(page, user);
 
   // The IdP's own form (Keycloak's default theme on the mock IdP realm).
   const username = page.locator("#username");
