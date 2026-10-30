@@ -152,11 +152,11 @@ def _user(row: Mapping[Any, Any]) -> UserRow:
     return UserRow(**{c.name: row[c.name] for c in _USER_COLUMNS})
 
 
-def _users_in_bound_tenant() -> Select[Any]:
+def _users_in_bound_tenant() -> Select[*tuple[Any, ...]]:
     return select(*_USER_COLUMNS).where(app_user.c.tenant_id == _bound_tenant())
 
 
-async def _one_user(conn: AsyncConnection, stmt: Select[Any]) -> UserRow | None:
+async def _one_user(conn: AsyncConnection, stmt: Select[*tuple[Any, ...]]) -> UserRow | None:
     row = (await conn.execute(stmt)).mappings().first()
     return None if row is None else _user(row)
 
@@ -579,7 +579,7 @@ class InviteRow:
 _INVITE_COLUMNS = tuple(user_invite.c[name] for name in InviteRow.__dataclass_fields__)
 
 
-def _invites_in_bound_tenant() -> Select[Any]:
+def _invites_in_bound_tenant() -> Select[*tuple[Any, ...]]:
     return select(*_INVITE_COLUMNS).where(
         user_invite.c.tenant_id == _bound_tenant(), user_invite.c.deleted_at.is_(None)
     )
@@ -724,7 +724,7 @@ _POLICY_COLUMNS = (
 )
 
 
-def _policies_in_bound_tenant() -> Select[Any]:
+def _policies_in_bound_tenant() -> Select[*tuple[Any, ...]]:
     return select(*_POLICY_COLUMNS).where(
         signoff_policy.c.tenant_id == _bound_tenant(), signoff_policy.c.deleted_at.is_(None)
     )
