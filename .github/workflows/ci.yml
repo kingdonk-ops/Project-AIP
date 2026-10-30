@@ -111,14 +111,14 @@ jobs:
         run: uv run pytest -q --junitxml=pytest-${{ matrix.python }}.xml
       - name: Upload the permission-matrix and IDOR results as JUnit XML (TESTING-04)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pytest-junit-${{ matrix.python }}
           path: pytest-${{ matrix.python }}.xml
           if-no-files-found: error
       - name: Upload the per-table isolation results (DATABASE-07)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: isolation-results-${{ matrix.python }}
           path: isolation-results-${{ matrix.python }}.json
@@ -420,7 +420,7 @@ jobs:
         run: python -I apps/api/aip/modules/terms/lint.py --out terms-lint-findings.json
       - name: Upload the findings
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: terms-lint-findings
           path: terms-lint-findings.json
@@ -523,7 +523,7 @@ jobs:
         run: pnpm --filter e2e test:e2e
       - name: Upload Playwright traces
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-traces
           path: e2e/test-results
@@ -590,7 +590,7 @@ jobs:
           $COMPOSE exec -T postgres psql -U postgres -d aip -v ON_ERROR_STOP=1 -f - < infra/docker/check_outbox_audited.sql
       - name: Upload the trace, video and report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-skeleton
           path: e2e/test-results
@@ -675,7 +675,7 @@ jobs:
           exit 1
       - name: Licence policy
         run: python3 tools/ci/check_licences.py dist/sbom/*.cdx.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: sbom
