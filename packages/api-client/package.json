@@ -16,11 +16,11 @@
   },
   "devDependencies": {
     "@aip/config-ts": "workspace:*",
-    "@tanstack/react-query": "^5.104.1",
+    "@tanstack/react-query": "^5.105.0",
     "@types/react": "^19.3.0",
     "openapi-typescript": "^7.13.0",
-    "orval": "^8.40.0",
-    "react": "^19.3.0",
+    "orval": "^8.45.0",
+    "react": "^19.3.1",
     "typescript": "~6.0.3"
   },
   "dependencies": {
