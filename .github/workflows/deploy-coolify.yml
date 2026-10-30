@@ -66,41 +66,13 @@ jobs:
           set -euo pipefail
           registry="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
           echo "REGISTRY=${registry}" >> "$GITHUB_ENV"
-          build() {
-            local name="$1" dockerfile="$2"; shift 2
-            docker build -f "$dockerfile" "$@" \
-              --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
-              --label "org.opencontainers.image.revision=${SHA}" \
-              -t "${registry}/${name}:${SHA}" -t "${registry}/${name}:main" .
-            echo "${name}" >> "$RUNNER_TEMP/images.txt"
-          }
-          build aip-api apps/api/Dockerfile --build-arg "GIT_SHA=${SHA}" --build-arg "BUILD_ID=${RUN_ID}"
-          build aip-migrator infra/docker/migrator.Dockerfile
-          build aip-web-demo apps/web/Dockerfile --build-arg VITE_AIP_DEMO=1 \
-            --build-arg NGINX_CONF=infra/coolify/nginx.conf
-          build aip-postgres-demo infra/coolify/images/postgres.Dockerfile
-          build aip-keycloak-demo infra/coolify/images/keycloak.Dockerfile
+          # tools/ci/scan_images.sh is the single build+scan recipe shared with the security
+          # workflow, so both gates cover the same five images (OPS-11 / SECURITY-08). It records
+          # the built names in $RUNNER_TEMP/images.txt for the push and sign steps below.
+          REGISTRY="${registry}" TAG="${SHA}" EXTRA_TAG=main BUILD_ID="${RUN_ID}" LABELS=1 \
+            bash tools/ci/scan_images.sh build
       - name: Trivy scan of every demo image (fixable HIGH/CRITICAL fail unless excepted)
-        run: |
-          set -u
-          mkdir -p evidence
-          cache="$RUNNER_TEMP/trivy-cache"; mkdir -p "$cache"
-          fail=0
-          while read -r name; do
-            for format in table json; do
-              docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                -v "$cache:/root/.cache" -v "$PWD/config:/cfg:ro" -v "$PWD/evidence:/out" \
-                "$TRIVY_IMAGE" image --quiet --scanners vuln --severity HIGH,CRITICAL \
-                --ignore-unfixed --ignorefile /cfg/vuln-exceptions.txt --exit-code 1 \
-                --format "$format" --output "/out/trivy-$name.$format" "$REGISTRY/$name:$SHA" \
-                || fail=1
-            done
-            cat "evidence/trivy-$name.table"
-          done < "$RUNNER_TEMP/images.txt"
-          if [ "$fail" -ne 0 ]; then
-            echo "::error::a demo image failed the Trivy scan: nothing was pushed or deployed"
-          fi
-          exit $fail
+        run: TAG="${SHA}" bash tools/ci/scan_images.sh scan
       - name: Install syft
         uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:

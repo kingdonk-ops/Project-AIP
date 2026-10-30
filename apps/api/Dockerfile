@@ -12,9 +12,10 @@
 # `dev` adds the dev dependency group; it exists only as the strip test's negative control
 # (`--target dev` must fail tools/ci/check_prod_strip.py) and is never shipped.
 
-ARG PYTHON_IMAGE=python:3.12.15-slim-bookworm
-
-FROM ${PYTHON_IMAGE} AS build
+# The base image is named directly (not via an ARG) so Dependabot's docker updater can bump it:
+# it cannot update a `FROM ${VAR}` line. Keep the `build` and `runtime` FROM lines on the same tag;
+# Dependabot bumps both together.
+FROM python:3.12.15-slim-bookworm AS build
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /usr/local/bin/uv
 
@@ -57,7 +58,7 @@ RUN uv sync --frozen --package aip --no-editable
 ENV PATH="/opt/venv/bin:${PATH}"
 
 
-FROM ${PYTHON_IMAGE} AS runtime
+FROM python:3.12.15-slim-bookworm AS runtime
 
 ARG GIT_SHA=unknown
 ARG BUILD_ID=dev
