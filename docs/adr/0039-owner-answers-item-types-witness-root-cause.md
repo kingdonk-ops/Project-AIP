@@ -1,16 +1,16 @@
-# ADR 0039: Owner answers on item-type inheritance, schema changes, starter packs, witness notification, root-cause method, report signing, qualification enforcement, asset states, locked storage and report revisions
+# ADR 0039: Owner answers on item-type inheritance, schema changes, starter packs, witness notification, root-cause method, report signing, qualification enforcement, asset states, locked storage, report revisions, data correction and exports
 
 - **Status:** accepted
 - **Date:** 2026-10-30
 - **Affects:** item_types (inheritance after R1, ITEMTYPES-06), inspections (INSPECTIONS-03, PORTAL-06), issues (ISSUES-06), report_engine (sealing and signing after R1), eligibility
   (ELIGIBILITY-01, ELIGIBILITY-02),
-  ITEMTYPES-05, uploads and documents (locked storage)
+  ITEMTYPES-05, uploads and documents (locked storage), data_io (#50 to #53)
 
 ## Context
 
 [OPEN-QUESTIONS.md](../../tracking/OPEN-QUESTIONS.md) "R1 gate" lists the questions PLAN-R1 copied from the R1 module
-READMEs ([ADR 0036](0036-r1-module-decisions.md)). On 2026-10-30 the owner answered #38 to #41, #43, #44 and #46 to #49.
-#50 to #54 stay open.
+READMEs ([ADR 0036](0036-r1-module-decisions.md)). On 2026-10-30 the owner answered #38 to #41, #43, #44 and #46 to #53.
+#54 stays open: the owner will supply the sample as Excel rows.
 
 ## Decision
 
@@ -134,6 +134,25 @@ The system itself signs and verifies PDF reports and files; there is no DocuSign
   current.
 - The inspection template has a setting for whether the change explanations are printed at the back of the report.
 
+### #50 No self-service restore; mistakes are corrected, not erased
+
+- Tenants cannot restore an export over live data. If a client imports or changes data wrongly, **they come to us**
+  and the operator fixes or rolls it back (import-batch rollback; database point-in-time recovery only as a last
+  resort, for the whole platform).
+- **Bad first load:** while a tenant is still onboarding and nothing has been signed or issued, it can undo whole import
+  batches, or re-import with update-by-key to overwrite values. A full reset of a tenant's data is an operator action,
+  allowed only while the tenant has no signed or issued records.
+- **After reports are issued:** data is never wiped. A wrong value is corrected by an audited edit that keeps the old
+  value and who changed it. Reports pin a data snapshot (REPORTS-02), so the system lists the issued reports that used
+  the old value; each is fixed by the revision flow in #49 (new revision, explanation, old report stamped Superseded).
+
+### #51 to #53 Exports
+
+- **#51:** a full tenant export needs two approvers (the requester and a second admin); a register or project export
+  needs one.
+- **#52:** no scheduled exports for now; add them when a contract asks.
+- **#53:** project-scoped export is in scope alongside tenant and register exports.
+
 ## Consequences
 
 - ITEMTYPES-05, ITEMTYPES-06 and ISSUES-06 move from `blocked` to `todo`; their full specs follow these answers.
@@ -147,5 +166,7 @@ The system itself signs and verifies PDF reports and files; there is no DocuSign
   and discipline gating are eligibility work after R1.
 - Report revisions (revision number, required change explanation, Superseded stamp, template setting for printing
   explanations) shape INSPECTIONS and REPORTS work; locked storage is part of the AWS production setup.
+- Data correction: the "reports affected by this change" list and the operator-only onboarding reset are data_io and
+  report_engine work after R1; TENANCY-07 and the export pages follow #51 to #53.
 - PAdES signing on approval and the verification page go to the backlog as report_engine work, required before the
   AWS production go-live.

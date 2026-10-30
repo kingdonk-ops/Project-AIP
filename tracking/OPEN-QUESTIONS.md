@@ -68,11 +68,11 @@ marked `blocked` on the board waits for its question; the others only shape late
 47. ~~**report_engine, sealing:** PAdES with AWS KMS-held keys, or hash and manifest only?~~ Answered 2026-10-30: PAdES with a KMS-held key, on top of the sha256 and manifest R1 records (ADR 0039). Hash-only for now; signed PDFs are required once production is live on AWS.
 48. ~~**report_engine, external signing:** DocuSign or Adobe Sign, or in-app attestations only?~~ Answered 2026-10-30: in-app only. Approving a report adds the approver's signature and digital lock to the PDF, and AIP verifies PDFs and files (ADR 0039).
 49. ~~**report_engine, immutable storage:** S3 Object Lock for sealed outputs, or hash and manifest only?~~ Answered 2026-10-30: S3 Object Lock in governance mode in production (a named, audited permission can still purge a leaving tenant's files), hash only on the demo. Completed reports are locked and revised only by superseding, with a revision number and a change explanation (ADR 0039).
-50. **data_io, restore:** is a restore or import-from-export path built at all (with a conflict report), given the hostile-data and cross-tenant risks?
-51. **data_io, full exports:** dual approval for every full export, or a single approval?
-52. **data_io, scheduled exports:** are scheduled exports to storage in scope?
-53. **data_io, project scope:** is project-scoped export in scope alongside tenant scope?
-54. **AIP sample export:** please provide a sample export of Kaefer's current records (format, tables or sheets, typical volumes) on synthetic or approved data, as ADR 0007 plans. Blocks DATAIO-04 (and DATAIO-06 behind it).
+50. ~~**data_io, restore:** is a restore or import-from-export path built at all?~~ Answered 2026-10-30: no self-service restore. The operator fixes or rolls back a client's mistakes; before anything is signed or issued a tenant can undo import batches or re-import, and only the operator can reset its data; after reports are issued, data is corrected by audited edits and the affected reports are revised (ADR 0039).
+51. ~~**data_io, full exports:** dual approval for every full export, or a single approval?~~ Answered 2026-10-30: two approvers for a full export, one for a register or project export (ADR 0039).
+52. ~~**data_io, scheduled exports:** are scheduled exports to storage in scope?~~ Answered 2026-10-30: not now; add when a contract asks (ADR 0039).
+53. ~~**data_io, project scope:** is project-scoped export in scope alongside tenant scope?~~ Answered 2026-10-30: yes (ADR 0039).
+54. **AIP sample export:** please provide a sample export of Kaefer's current records (format, tables or sheets, typical volumes) on synthetic or approved data, as ADR 0007 plans. Blocks DATAIO-04 (and DATAIO-06 behind it). Owner, 2026-10-30: will supply it; it will be an Excel sheet in rows.
 55. ~~**portal, witness notice.**~~ Answered 2026-10-18: the notice period and waiver rule are project settings (PROJECTS-04, PORTAL-06; ADR 0036).
 56. ~~**R1 date with the portal.**~~ Answered 2026-10-18: 2027-03-31 still holds (ADR 0036).
 

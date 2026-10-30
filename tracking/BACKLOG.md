@@ -149,8 +149,9 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | Item | Source | Why it waits |
 |---|---|---|
 | Register and whole-tenant export (Excel, CSV, JSON) with manifests and checksums | README | Tenant export is TENANCY-07; register CSV follows ADR 0033 per module |
-| Restore or import-from-export | README, #50 | Open question |
-| Dual approval for full exports; scheduled exports; project-scoped export | README, #51–#53 | Open questions |
+| Operator-only onboarding reset of a tenant's data, and the "reports affected by this change" list for corrections (ADR 0039, #50) | README, owner | Not in the R1 cut |
+| Two approvers for full exports, one for register or project exports; project-scoped export (ADR 0039, #51, #53) | README | Tenant export is TENANCY-07 |
+| Scheduled exports to storage | README, #52 | Not now; add when a contract asks |
 | Handover data book export per asset subtree | README | After the report engine's data book |
 | Mixed item types in one asset-tree import | DATAIO-02 author | One item type per import in R1 |
 | Legal-hold check on batch rollback | DATAIO-02 author | Needs AUDIT-05 (legal hold) |
