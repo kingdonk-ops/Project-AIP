@@ -1,14 +1,15 @@
-# ADR 0039: Owner answers on item-type inheritance, schema changes, starter packs, witness notification, root-cause method and report signing
+# ADR 0039: Owner answers on item-type inheritance, schema changes, starter packs, witness notification, root-cause method, report signing and qualification enforcement
 
 - **Status:** accepted
 - **Date:** 2026-10-30
-- **Affects:** item_types (inheritance after R1, ITEMTYPES-06), inspections (INSPECTIONS-03, PORTAL-06), issues (ISSUES-06), report_engine (sealing and signing after R1)
+- **Affects:** item_types (inheritance after R1, ITEMTYPES-06), inspections (INSPECTIONS-03, PORTAL-06), issues (ISSUES-06), report_engine (sealing and signing after R1), eligibility
+  (ELIGIBILITY-01, ELIGIBILITY-02)
 
 ## Context
 
 [OPEN-QUESTIONS.md](../../tracking/OPEN-QUESTIONS.md) "R1 gate" lists the questions PLAN-R1 copied from the R1 module
-READMEs ([ADR 0036](0036-r1-module-decisions.md)). On 2026-10-30 the owner answered #38, #39, #41, #43, #46, #47 and
-#48. #40, #44 and #49 to #54 stay open.
+READMEs ([ADR 0036](0036-r1-module-decisions.md)). On 2026-10-30 the owner answered #38, #39, #41, #43, #44, #46, #47
+and #48. #40 and #49 to #54 stay open.
 
 ## Decision
 
@@ -71,6 +72,20 @@ applied. This unblocks ITEMTYPES-06.
   system as today.
 - Other systems (ITPpro and others) notify witnesses too; this is parity plus an audit record, not a differentiator.
 
+### #44 Qualifications: enforcement per type, fields per type
+
+- **Discipline qualifications** (for example RT, MT, PT, UT, welding inspection, QA, QC, painting) gate the
+  inspections and tasks of that discipline: a missing or expired one is a hard stop.
+- **General qualifications** (for example working at heights, confined space, rope access, first aid) are listed on
+  the person's profile with licence number, expiry date and an uploaded copy.
+- Each certificate type has an **enforcement** setting chosen when the type is created: `ignore`, `notify` (warn and
+  record, do not block) or `hard_stop`. This replaces per-type grace periods. Overrides of a hard stop stay with
+  ELIGIBILITY-03.
+- Each certificate type can define **its own extra fields**, the way item types do. On a profile, "Add qualification"
+  opens a selector of types; choosing one shows the standard fields (number, issued, expiry, copy) plus that type's
+  fields. The fields use the item_types field-type registry.
+- Checking licences against issuing registers is not planned.
+
 ### #46 Root-cause method: both, tenant chooses the default
 
 Both 5-why and fishbone are available. The tenant admin sets the default in settings, or is asked on first use (the
@@ -101,4 +116,6 @@ The system itself signs and verifies PDF reports and files; there is no DocuSign
 - INSPECTIONS-03 and PORTAL-06 record the witness notification on the point; PROJECTS-04 already carries
   `witness_notice_hours`.
 - The item_types, inspections, issues and report_engine READMEs mark these questions answered.
+- ELIGIBILITY-01 adds `certificate_types.enforcement`; ELIGIBILITY-02 blocks only on `hard_stop` types. Per-type
+  fields and the "Add qualification" selector, and discipline gating, are eligibility work after R1.
 - PAdES signing on approval and the verification page go to the backlog as report_engine work after R1.

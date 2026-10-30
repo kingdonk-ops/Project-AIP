@@ -99,8 +99,7 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | Crew and work-package eligibility pre-check | README | Not in the R1 cut |
 | Calibration schedule and quarantine status for instruments | README | Not in the R1 cut |
 | Project register of credentials (licences, insurance, bonds, permits) and company, material-batch and project owner kinds | README, ELIGIBILITY-01 author | R1 owners are people and assets |
-| Per-type grace periods; verification of licences against issuing registers | README, #44 | Open question |
-| `required_fields` per certificate type | ELIGIBILITY-01 author | Not in the R1 cut |
+| Extra fields per certificate type and the profile "Add qualification" selector (ADR 0039, #44) | ELIGIBILITY-01 author, owner | Not in the R1 cut; R1 stores `enforcement` only |
 
 ## Scope of work
 

@@ -60,6 +60,11 @@ Publish one eligibility check that answers whether a person or asset holds every
   - 2. `check.py` (pure, no I/O) — reason codes are stable constants:
     `OK`, `CERT_MISSING`, `CERT_EXPIRED`, `CERT_NOT_YET_VALID`, `CERT_SUPERSEDED`, `CERT_REVOKED`, `TYPE_UNKNOWN`,
     `TYPE_OWNER_MISMATCH`, `SUBJECT_NOT_FOUND`.
+    - Enforcement (owner answer #44, [ADR 0039](../../docs/adr/0039-owner-answers-item-types-witness-root-cause.md)): each `Reason` carries the type's `enforcement` and
+      `blocking: bool`. A non-`OK` reason blocks only when the type is `hard_stop`; for `notify` it is recorded
+      with `blocking: false` (the warning ELIGIBILITY-05 and INSPECTIONS-07 show); for `ignore` the type is not
+      evaluated and returns `OK` with `enforcement: "ignore"`. `TYPE_UNKNOWN`, `TYPE_OWNER_MISMATCH` and
+      `SUBJECT_NOT_FOUND` always block.
     - `state_at(cert, at) -> str`: the certificate's state at `at`, using ELIGIBILITY-01's `status_changed_at` so
       history answers correctly: `revoked`/`superseded` only if `status_changed_at <= at`; otherwise `expired` when
       `utc_date(at) > expires_on`; `not_yet_valid` when `utc_date(at) < issued_on`; else `valid`. Dates use
@@ -77,7 +82,7 @@ Publish one eligibility check that answers whether a person or asset holds every
       `aip.modules.assets.api.AssetsApi.assert_asset_exists`); if not, every reason is `SUBJECT_NOT_FOUND`.
     - Load the types by code (ignoring case) and the subject's non-deleted certificates of those types in **one**
       query (no N+1); a type whose `owner_kind` differs from `subject_kind` → `TYPE_OWNER_MISMATCH`.
-    - `result = 'eligible'` when every reason is `OK`, else `'blocked'`. Insert one `eligibility_checks` row
+    - `result = 'eligible'` when no reason has `blocking: true`, else `'blocked'`. Insert one `eligibility_checks` row
       (UUIDv7 id, `checked_at = at`) on the caller's connection and return
       `EligibilityResult(eligible, result, reasons, check_id, checked_at)`.
     - On `blocked`, emit `eligibility.blocked` v1 with `aip.platform.events.outbox.emit` in the same transaction:
@@ -100,7 +105,8 @@ Publish one eligibility check that answers whether a person or asset holds every
 - **acceptance**:
   - One call answers for all required types and writes exactly one `eligibility_checks` row, on the caller's
     transaction; a rollback by the caller leaves no row and no event.
-  - Expired, not-yet-valid, superseded, revoked or missing certificates block; nothing passes on an error.
+  - Expired, not-yet-valid, superseded, revoked or missing certificates block for `hard_stop` types, warn without
+    blocking for `notify` types and are skipped for `ignore` types; nothing passes on an error.
   - A check at a past instant answers as of that instant (a certificate revoked later still counted as valid then).
   - Stored checks cannot be updated or deleted by `aip_app`.
   - Other modules use only `EligibilityApi`; the import contracts test (`apps/api/tests/arch/test_import_contracts.py`) still passes.
@@ -108,6 +114,8 @@ Publish one eligibility check that answers whether a person or asset holds every
   - **unit** (`test_check_unit.py`, no database; `at = 2026-10-31T12:00Z` unless stated):
     - One valid certificate expiring 2026-12-31 → `OK`, `expiryStatus: "green"`.
     - Expiring 2026-11-10 (amber at 30 days) → `OK`, `expiryStatus: "amber"` (amber warns, never blocks).
+    - Same expired certificate on a `notify` type → `CERT_EXPIRED`, `blocking: false`, result `eligible`; on an
+      `ignore` type → `OK`, `enforcement: "ignore"`.
     - Expiring 2026-10-30 → `CERT_EXPIRED`. Expiring 2026-10-31 at `2026-10-31T23:59:59Z` → `OK`; at
       `2026-11-01T00:00:00Z` → `CERT_EXPIRED`.
     - `issued_on = 2026-11-01` → `CERT_NOT_YET_VALID`.
