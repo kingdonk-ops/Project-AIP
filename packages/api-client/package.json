@@ -21,7 +21,7 @@
     "openapi-typescript": "^7.13.0",
     "orval": "^8.40.0",
     "react": "^19.3.0",
-    "typescript": "~6.0.3"
+    "typescript": "~7.0.2"
   },
   "dependencies": {
     "zod": "^4.6.7"
