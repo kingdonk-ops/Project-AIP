@@ -58,7 +58,7 @@ export function Header({ session, navOpen, onToggleNav, onSignOut, menuButtonRef
       <JobsButton />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" aria-label={t("shell.userMenu.label")} className="shell-header__user">
+          <Button variant="ghost" aria-label={t("shell.userMenu.label", { name: session.user.name })} className="shell-header__user">
             <Icon name="user" size={20} />
             <span className="shell-header__user-name">{session.user.name}</span>
           </Button>
