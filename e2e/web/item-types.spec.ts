@@ -101,7 +101,7 @@ function responseFor(page: Page, method: string, path: RegExp) {
       const category = responseFor(pageA, "POST", /^\/api\/v1\/item-categories$/);
       await categoryDialog.getByRole("button", { name: "Add category" }).click();
       expect((await category).status(), "A adds a category").toBe(201);
-      await expect(pageA.getByRole("cell", { name: `Piping ${run}` })).toBeVisible();
+      await expect(pageA.getByRole("cell", { name: `Piping ${run}`, exact: true })).toBeVisible();
       await expectNoSeriousAxe(pageA, "content type detail (categories)");
 
       // Item types → add one, then open its editor.
