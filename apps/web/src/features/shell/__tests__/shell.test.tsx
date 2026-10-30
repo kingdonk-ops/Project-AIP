@@ -68,7 +68,7 @@ describe("app shell", () => {
   it("shows Sign out as a submit button inside a POST form, never a link", async () => {
     const user = userEvent.setup();
     setup(fakePort(alice), "/");
-    await user.click(await screen.findByRole("button", { name: "Account menu" }));
+    await user.click(await screen.findByRole("button", { name: /^Account menu/ }));
     const item = await screen.findByRole("menuitem", { name: "Sign out" });
     expect(item.tagName).toBe("BUTTON");
     expect(item.getAttribute("type")).toBe("submit");
@@ -80,7 +80,7 @@ describe("app shell", () => {
     const user = userEvent.setup();
     const logout = vi.fn(() => Promise.resolve(true));
     const { router } = setup(fakePort(alice, { logout }), "/");
-    await user.click(await screen.findByRole("button", { name: "Account menu" }));
+    await user.click(await screen.findByRole("button", { name: /^Account menu/ }));
     await user.click(await screen.findByRole("menuitem", { name: "Sign out" }));
     await waitFor(() => expect(router.state.location.href).toBe("/login?signed_out=1"));
     expect(logout).toHaveBeenCalledOnce();
@@ -162,7 +162,7 @@ describe("app shell", () => {
     const user = userEvent.setup();
     setup(fakePort(alice), "/");
     await user.click(await screen.findByRole("button", { name: "Menu" }));
-    await user.click(screen.getByRole("button", { name: "Account menu" }));
+    await user.click(screen.getByRole("button", { name: /^Account menu/ }));
     await screen.findByRole("menuitem", { name: "Sign out" });
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
@@ -172,7 +172,7 @@ describe("app shell", () => {
   it("stays signed in and says so when sign out fails", async () => {
     const user = userEvent.setup();
     const { router } = setup(fakePort(alice, { logout: () => Promise.resolve(false) }), "/");
-    await user.click(await screen.findByRole("button", { name: "Account menu" }));
+    await user.click(await screen.findByRole("button", { name: /^Account menu/ }));
     await user.click(await screen.findByRole("menuitem", { name: "Sign out" }));
     expect(await screen.findByText("Sign out failed. Try again.")).toBeTruthy();
     expect(router.state.location.pathname).toBe("/");
