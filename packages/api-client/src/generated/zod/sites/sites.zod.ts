@@ -20,18 +20,14 @@ export const SitesListQueryParams = zod.object({
   "q": zod.union([zod.string().min(1).max(sitesListQueryQOneMax),zod.null()]).optional()
 })
 
-export const sitesListResponseItemsItemLatOneRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$');
-export const sitesListResponseItemsItemLngOneRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$');
-
-
 export const SitesListResponse = zod.object({
   "items": zod.array(zod.object({
   "code": zod.string(),
   "createdAt": zod.iso.datetime({"offset":true}),
   "id": zod.uuid(),
   "isSystem": zod.boolean(),
-  "lat": zod.union([zod.string().regex(sitesListResponseItemsItemLatOneRegExp),zod.null()]),
-  "lng": zod.union([zod.string().regex(sitesListResponseItemsItemLngOneRegExp),zod.null()]),
+  "lat": zod.union([zod.string(),zod.null()]),
+  "lng": zod.union([zod.string(),zod.null()]),
   "name": zod.string(),
   "timezone": zod.union([zod.string(),zod.null()]),
   "updatedAt": zod.iso.datetime({"offset":true})
@@ -46,34 +42,28 @@ export const sitesCreateBodyCodeRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9-]{1,
 export const sitesCreateBodyLatOneMin = -90;
 export const sitesCreateBodyLatOneMax = 90;
 
-export const sitesCreateBodyLatTwoRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,10}0*$)\\d{0,3}\\.\\d{0,6}0*$)');
 export const sitesCreateBodyLngOneMin = -180;
 export const sitesCreateBodyLngOneMax = 180;
 
-export const sitesCreateBodyLngTwoRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,10}0*$)\\d{0,3}\\.\\d{0,6}0*$)');
 export const sitesCreateBodyNameMax = 200;
 
 
 
 export const SitesCreateBody = zod.object({
   "code": zod.string().regex(sitesCreateBodyCodeRegExp),
-  "lat": zod.union([zod.number().min(sitesCreateBodyLatOneMin).max(sitesCreateBodyLatOneMax),zod.string().regex(sitesCreateBodyLatTwoRegExp),zod.null()]).optional(),
-  "lng": zod.union([zod.number().min(sitesCreateBodyLngOneMin).max(sitesCreateBodyLngOneMax),zod.string().regex(sitesCreateBodyLngTwoRegExp),zod.null()]).optional(),
+  "lat": zod.union([zod.number().min(sitesCreateBodyLatOneMin).max(sitesCreateBodyLatOneMax),zod.string(),zod.null()]).optional(),
+  "lng": zod.union([zod.number().min(sitesCreateBodyLngOneMin).max(sitesCreateBodyLngOneMax),zod.string(),zod.null()]).optional(),
   "name": zod.string().min(1).max(sitesCreateBodyNameMax),
   "timezone": zod.union([zod.string(),zod.null()]).optional()
 })
-
-export const sitesCreateResponseLatOneRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$');
-export const sitesCreateResponseLngOneRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$');
-
 
 export const SitesCreateResponse = zod.object({
   "code": zod.string(),
   "createdAt": zod.iso.datetime({"offset":true}),
   "id": zod.uuid(),
   "isSystem": zod.boolean(),
-  "lat": zod.union([zod.string().regex(sitesCreateResponseLatOneRegExp),zod.null()]),
-  "lng": zod.union([zod.string().regex(sitesCreateResponseLngOneRegExp),zod.null()]),
+  "lat": zod.union([zod.string(),zod.null()]),
+  "lng": zod.union([zod.string(),zod.null()]),
   "name": zod.string(),
   "timezone": zod.union([zod.string(),zod.null()]),
   "updatedAt": zod.iso.datetime({"offset":true})
@@ -95,17 +85,13 @@ export const SitesGetParams = zod.object({
   "site_id": zod.uuid()
 })
 
-export const sitesGetResponseLatOneRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$');
-export const sitesGetResponseLngOneRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$');
-
-
 export const SitesGetResponse = zod.object({
   "code": zod.string(),
   "createdAt": zod.iso.datetime({"offset":true}),
   "id": zod.uuid(),
   "isSystem": zod.boolean(),
-  "lat": zod.union([zod.string().regex(sitesGetResponseLatOneRegExp),zod.null()]),
-  "lng": zod.union([zod.string().regex(sitesGetResponseLngOneRegExp),zod.null()]),
+  "lat": zod.union([zod.string(),zod.null()]),
+  "lng": zod.union([zod.string(),zod.null()]),
   "name": zod.string(),
   "timezone": zod.union([zod.string(),zod.null()]),
   "updatedAt": zod.iso.datetime({"offset":true})
@@ -122,34 +108,28 @@ export const sitesUpdateBodyCodeOneRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9-]
 export const sitesUpdateBodyLatOneMin = -90;
 export const sitesUpdateBodyLatOneMax = 90;
 
-export const sitesUpdateBodyLatTwoRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,10}0*$)\\d{0,3}\\.\\d{0,6}0*$)');
 export const sitesUpdateBodyLngOneMin = -180;
 export const sitesUpdateBodyLngOneMax = 180;
 
-export const sitesUpdateBodyLngTwoRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,10}0*$)\\d{0,3}\\.\\d{0,6}0*$)');
 export const sitesUpdateBodyNameOneMax = 200;
 
 
 
 export const SitesUpdateBody = zod.object({
   "code": zod.union([zod.string().regex(sitesUpdateBodyCodeOneRegExp),zod.null()]).optional(),
-  "lat": zod.union([zod.number().min(sitesUpdateBodyLatOneMin).max(sitesUpdateBodyLatOneMax),zod.string().regex(sitesUpdateBodyLatTwoRegExp),zod.null()]).optional(),
-  "lng": zod.union([zod.number().min(sitesUpdateBodyLngOneMin).max(sitesUpdateBodyLngOneMax),zod.string().regex(sitesUpdateBodyLngTwoRegExp),zod.null()]).optional(),
+  "lat": zod.union([zod.number().min(sitesUpdateBodyLatOneMin).max(sitesUpdateBodyLatOneMax),zod.string(),zod.null()]).optional(),
+  "lng": zod.union([zod.number().min(sitesUpdateBodyLngOneMin).max(sitesUpdateBodyLngOneMax),zod.string(),zod.null()]).optional(),
   "name": zod.union([zod.string().min(1).max(sitesUpdateBodyNameOneMax),zod.null()]).optional(),
   "timezone": zod.union([zod.string(),zod.null()]).optional()
 }).describe('Only the fields sent are changed.')
-
-export const sitesUpdateResponseLatOneRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$');
-export const sitesUpdateResponseLngOneRegExp = new RegExp('^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$');
-
 
 export const SitesUpdateResponse = zod.object({
   "code": zod.string(),
   "createdAt": zod.iso.datetime({"offset":true}),
   "id": zod.uuid(),
   "isSystem": zod.boolean(),
-  "lat": zod.union([zod.string().regex(sitesUpdateResponseLatOneRegExp),zod.null()]),
-  "lng": zod.union([zod.string().regex(sitesUpdateResponseLngOneRegExp),zod.null()]),
+  "lat": zod.union([zod.string(),zod.null()]),
+  "lng": zod.union([zod.string(),zod.null()]),
   "name": zod.string(),
   "timezone": zod.union([zod.string(),zod.null()]),
   "updatedAt": zod.iso.datetime({"offset":true})
