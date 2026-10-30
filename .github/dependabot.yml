@@ -3,6 +3,14 @@
 # updates per ecosystem, with minor/patch bumps grouped into one PR each to cut review noise; major
 # bumps still come as their own PRs. See also config/vuln-exceptions.txt and tools/ci/scan_images.sh.
 #
+# Runtime pins: the python base image takes patch bumps only (Dependabot counts 3.12 -> 3.15 as
+# "minor") and node stays on its major line (22.x; its security fixes ship as minors). A runtime
+# upgrade needs the API, CI matrix and every Dockerfile moved together, so it is done by hand, not
+# by a bot PR (#170, #172-#174 all broke CI).
+#
+# Security updates (Dependabot alerts) ignore the schedule and arrive as soon as an advisory lands;
+# the `security` groups put all of one ecosystem's fixes in a single PR.
+#
 # Known gap: none for Docker. apps/api/Dockerfile names its base image directly (not via an ARG), so
 # Dependabot can bump it; the other Dockerfiles already use plain `FROM` lines. Custom filenames
 # (migrator.Dockerfile, postgres.Dockerfile, keycloak.Dockerfile) are picked up — Dependabot's
@@ -14,6 +22,9 @@ updates:
     directory: /apps/api # Dockerfile (aip-api / aip-migrator share this Python base)
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: python
+        update-types: [version-update:semver-major, version-update:semver-minor]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
@@ -22,6 +33,9 @@ updates:
     directory: /apps/web # Dockerfile (node build stage, nginx-unprivileged runtime)
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: node
+        update-types: [version-update:semver-major]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
@@ -30,6 +44,9 @@ updates:
     directory: /infra/docker # migrator.Dockerfile
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: python
+        update-types: [version-update:semver-major, version-update:semver-minor]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
@@ -38,18 +55,22 @@ updates:
     directory: /infra/coolify/images # postgres.Dockerfile, keycloak.Dockerfile
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: python
+        update-types: [version-update:semver-major, version-update:semver-minor]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
 
   # --- Workflow actions ------------------------------------------------------------------------
+  # Every bump, majors included, in one PR: CI on that PR exercises the new actions directly.
   - package-ecosystem: github-actions
     directory: / # .github/workflows/*
     schedule:
       interval: weekly
     groups:
-      minor-and-patch:
-        update-types: [minor, patch]
+      actions:
+        patterns: ["*"]
 
   # --- Python (uv workspace) and the pnpm/npm workspace ----------------------------------------
   - package-ecosystem: uv
@@ -59,6 +80,9 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
 
   - package-ecosystem: npm
     directory: / # package.json + pnpm-lock.yaml (the pnpm workspace; npm ecosystem covers pnpm)
@@ -67,3 +91,6 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+      security:
+        applies-to: security-updates
+        patterns: ["*"]

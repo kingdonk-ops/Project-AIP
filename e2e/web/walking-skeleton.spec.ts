@@ -5,7 +5,7 @@
 // is a web-first assertion, and each assertion names the M0 property it proves.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { CSRF_COOKIE, loginAs } from "../fixtures/login";
+import { CSRF_COOKIE, loginAs, startLogin } from "../fixtures/login";
 import { runId } from "../fixtures/run-id";
 import { tenantUsers } from "../fixtures/tenants";
 
@@ -142,10 +142,11 @@ test("@skeleton @staging each tenant admin reads only their own plan and usage",
 // mock IdP's default theme), so replay that authorize request without the hint to see the realm's
 // themed form. The font must come from the Keycloak origin itself (self-hosted, no font CDN).
 test("@skeleton @staging the Keycloak sign-in page uses IBM Plex Sans and the teal accent", async ({ page }) => {
-  const authorize = page.waitForRequest((r) => /\/realms\/aip\/protocol\/openid-connect\/auth\b/.test(r.url()));
-  await page.goto("/login");
-  await page.getByLabel("Work email").fill(users.a.email);
-  await page.getByRole("button", { name: "Continue" }).click();
+  // No own timeout: startLogin may first wait out the login/start rate-limit window.
+  const authorize = page.waitForRequest((r) => /\/realms\/aip\/protocol\/openid-connect\/auth\b/.test(r.url()), {
+    timeout: 0,
+  });
+  await startLogin(page, users.a);
   const url = new URL((await authorize).url());
   url.searchParams.delete("kc_idp_hint");
   url.searchParams.delete("login_hint");

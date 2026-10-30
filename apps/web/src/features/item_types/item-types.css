@@ -1,0 +1,224 @@
+/* Content types and item types admin pages (ITEMTYPES-03). Tokens from @aip/ui; the register,
+   record header and tabs are RegisterTable's and RecordDetail's own. */
+
+.item-types-page,
+.item-types-form,
+.item-types-tab {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.item-types-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.item-types-page__empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.item-types-mono {
+  font-family: var(--font-mono);
+}
+
+.item-types-select,
+.item-types-summary {
+  min-height: 2.5rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.item-types-select:focus-visible,
+.item-types-summary:focus-visible,
+.item-types-json__text:focus-visible,
+.item-types-json__issue:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.item-types-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.item-types-form__actions,
+.item-types-actions,
+.item-types-json__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.item-types-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.item-types-table {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.item-types-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.item-types-facts {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.item-types-facts__row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr;
+  gap: var(--space-3);
+}
+
+.item-types-facts__row dd {
+  margin: 0;
+}
+
+/* Schema tab: editor and preview side by side, stacked below 768 px. */
+.item-types-schema {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 767px) {
+  .item-types-schema {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.item-types-json,
+.item-types-schema__editor,
+.item-types-schema__preview {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.item-types-json__label {
+  font-weight: 600;
+}
+
+.item-types-json__note {
+  margin: 0;
+  color: var(--foreground-muted);
+}
+
+.item-types-json__text {
+  width: 100%;
+  min-height: 20rem;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  resize: vertical;
+  tab-size: 2;
+}
+
+.item-types-json__text[aria-invalid="true"] {
+  border-color: var(--danger, var(--border));
+}
+
+.item-types-json__hints ul,
+.item-types-json__issues ul {
+  display: grid;
+  gap: var(--space-1, 0.25rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-types-json__hints h3,
+.item-types-json__issues h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.item-types-json__issue {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  color: var(--foreground);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Field preview: a read-only list, no inputs. */
+.item-types-preview {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-types-preview__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.item-types-preview__label {
+  font-weight: 600;
+}
+
+.item-types-preview__type,
+.item-types-preview__detail {
+  color: var(--foreground-muted);
+}
+
+.item-types-preview__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-types-preview__options li {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.item-types-preview__empty {
+  margin: 0;
+  color: var(--foreground-muted);
+}
