@@ -209,7 +209,9 @@ in R1 ([BACKLOG](../BACKLOG.md), "Inspection notifications"), so this task build
    **Update & Return to Pool** syncs the tablet's answers, clears the assignee and returns it to **Assignable**, so
    someone else can be assigned.
 2. **Skipping supervisor review** is an option on the inspection **category or template**, not tied to a plan or
-   tier. A template that sets it overrides its category; otherwise the category's setting applies.
+   tier. The category sets the default; each template can override it **either way** (require review in a category
+   that skips it, for example a template with extra paperwork or audit, or skip it in a category that requires it).
+   A template with no override uses the category's setting.
 3. **Create New** under Performed is a host action that creates a new Draft inspection for the same asset without
    superseding the performed one. It supports repeat inspections of an asset over time for maintenance (for
    example a yearly wall-thickness check).

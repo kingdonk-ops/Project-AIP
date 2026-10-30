@@ -26,8 +26,9 @@ Stub: the full spec is written once APPROVALS-09 and INSPECTIONS-01 have merged.
 - **Guard facts.** The inspections module registers its guard context provider for `inspection` (APPROVALS-02
   Part B) with at least `hasSupervisorReview`, `category.allowConcurrentInspections` and
   `checkout.fromState` (the status before the tablet checkout). `hasSupervisorReview` (default true) is a new
-  field on the inspection category **and** the template (owner, 2026-10-31): the template's value, when set,
-  overrides the category's, and the provider returns the resolved value. `allowConcurrentInspections` (default
+  field on the inspection category **and** the template (owner, 2026-10-31): the category sets the default and a
+  template may override it either way (nullable on the template = use the category); the provider returns the
+  resolved value. `allowConcurrentInspections` (default
   false) is a category field.
 - **Mark as Performed without supervisor review:** `mark_performed` from `in_progress`, `in_progress_go` and
   `inspector_review` → `performed`, critical (`signoffAction: inspection.approve`), guarded on
