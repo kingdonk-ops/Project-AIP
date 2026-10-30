@@ -51,7 +51,7 @@ Decisions and notes
 
 Open questions
 - Reminder scheduling tool: advisor suggested BullMQ, while the repo stack is Python FastAPI; the job mechanism is undecided.
-- Grace periods per type and verification of licences against issuing registers were seen in the market but not decided.
+- Grace periods and register checks (answered 2026-10-30, [ADR 0039](../../../adr/0039-owner-answers-item-types-witness-root-cause.md)): no grace periods; each certificate type is set to ignore, notify or hard stop and can have its own fields; discipline qualifications are hard stops; no register checks. QA owns verification and can name verifiers who are notified of new items; QA is notified when a verification is 3 days overdue.
 
 ## Other files in this folder (read only if your task needs them)
 

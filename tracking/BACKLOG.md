@@ -40,7 +40,7 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | QR, barcode and RFID tags; scan to open (`asset_tags`) | README | ADR 0007 §4–5 |
 | Printable QR/RFID label sheets through the report engine | README | ADR 0007 §4–5 |
 | Asset history merge, split and retag with lineage (`asset_lineage`) | README | ADR 0007 §4–5 |
-| CUI condition model with promoted corrosion grade, criticality, custom status with neutral state, GPS location | README, ASSETS-01 author | Status and neutral state wait on ITEMTYPES-05 (#40); the rest is not in the R1 cut |
+| CUI condition model with promoted corrosion grade, criticality, custom status with neutral state, GPS location | README, ASSETS-01 author | Status and neutral state come with ITEMTYPES-05 (states decided, ADR 0039); the rest is not in the R1 cut |
 | Open-item counts per tree node | README | Needs inspections and issues counts first |
 | Modules vs items vs components rules under item types | README | Not in the R1 cut |
 | Drag-and-drop reparent in the tree (R1 has a keyboard Move dialog) | ASSETS-03 author | Not needed for R1 |
@@ -52,8 +52,8 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 
 | Item | Source | Why it waits |
 |---|---|---|
-| Type inheritance (base and extended types) | README, #38 | Open question |
-| Migration preview with impact counts when a schema changes | README, #39 | Open question; R1 pins versions |
+| Type inheritance (base and extended types), add and tighten only (ADR 0039) | README, #38 | Not in the R1 cut |
+| Migration preview with impact counts when a schema changes (ADR 0039) | README, #39 | Not in the R1 cut; R1 pins versions |
 | Auto-create an ITP or inspection per item type, with default templates | README, ITEMTYPES-01 author | Not in the R1 cut |
 | Units and tolerances on measurements with out-of-range flags for the rules engine | README | No rules engine in R1 |
 | Conditional and calculated item attributes | README | Forms gets calculated fields first (FORMS-07) |
@@ -89,7 +89,6 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | Human-readable inspection reference numbers | INSPECTIONS-01 author | Needs a numbering decision |
 | Editing or deleting ITP steps after creation; one child inspection per step | INSPECTIONS-03 author | Not in the R1 cut |
 | Inspection notifications (assignment, reminders, overdue, eligibility failure) | README | No notifications module in R1 |
-| Which competitors notify customers of witness points | README, #43 | Market research only |
 
 ## Eligibility
 
@@ -100,8 +99,8 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | Crew and work-package eligibility pre-check | README | Not in the R1 cut |
 | Calibration schedule and quarantine status for instruments | README | Not in the R1 cut |
 | Project register of credentials (licences, insurance, bonds, permits) and company, material-batch and project owner kinds | README, ELIGIBILITY-01 author | R1 owners are people and assets |
-| Per-type grace periods; verification of licences against issuing registers | README, #44 | Open question |
-| `required_fields` per certificate type | ELIGIBILITY-01 author | Not in the R1 cut |
+| Extra fields per certificate type and the profile "Add qualification" selector (ADR 0039, #44) | ELIGIBILITY-01 author, owner | Not in the R1 cut; R1 stores `enforcement` only |
+| Verification workflow: QA-named verifiers notified of new qualifications and data, verified-by and date recorded, QA alerted after 3 days unverified (ADR 0039, #44) | owner | No notifications module in R1 |
 
 ## Scope of work
 
@@ -122,9 +121,9 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 
 | Item | Source | Why it waits |
 |---|---|---|
-| NCR disposition with engineering approval and sealed records | README, ISSUES-03 author | Sealing is open (#47–#49) |
+| NCR disposition with engineering approval and sealed records | README, ISSUES-03 author | Sealing and storage decided (ADR 0039) |
 | Overdue and SLA notifications with escalation, including overdue CAPA | README | No notifications module in R1 |
-| Root-cause trend reports and cost of poor quality | README | ISSUES-06 waits on #46; QMS is not in R1 |
+| Root-cause trend reports and cost of poor quality | README | QMS is not in R1 |
 | Kanban board view and CAPA board | README | After ISSUES-04 |
 | Sign-off assurance on `verify` and `close` | ISSUES-01 author | No issue transition is critical in R1 |
 | Subcontractor responses to NCRs and portal scoping by responsible company | README | Portal R1 slice is client sign-off only |
@@ -134,7 +133,8 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 
 | Item | Source | Why it waits |
 |---|---|---|
-| Sealing, external signing and immutable storage of issued PDFs | README, #47–#49 | Open questions; R1 records a sha256 |
+| Approval adds a KMS-held PAdES signature to PDF reports, plus a verification page for PDFs and files (ADR 0039, #47–#48) | README | Hash-only for now; required before the AWS production go-live |
+| S3 Object Lock (governance) for completed reports, with audited purge for leaving tenants (ADR 0039, #49) | README | AWS production setup |
 | Publishing to a named distribution list with delivery receipts and expiring links (`published_records`, `delivery_receipts`, `delivery_access_log`) | README, data model | Not in the R1 cut |
 | Report QA pre-flight through a rules engine | README | No rules engine in R1 |
 | Domain blocks: thickness map, CUI condition and DFT charts | README | Not in the R1 cut |
@@ -149,8 +149,9 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | Item | Source | Why it waits |
 |---|---|---|
 | Register and whole-tenant export (Excel, CSV, JSON) with manifests and checksums | README | Tenant export is TENANCY-07; register CSV follows ADR 0033 per module |
-| Restore or import-from-export | README, #50 | Open question |
-| Dual approval for full exports; scheduled exports; project-scoped export | README, #51–#53 | Open questions |
+| Operator-only onboarding reset of a tenant's data, and the "reports affected by this change" list for corrections (ADR 0039, #50) | README, owner | Not in the R1 cut |
+| Two approvers for full exports, one for register or project exports; project-scoped export (ADR 0039, #51, #53) | README | Tenant export is TENANCY-07 |
+| Scheduled exports to storage | README, #52 | Not now; add when a contract asks |
 | Handover data book export per asset subtree | README | After the report engine's data book |
 | Mixed item types in one asset-tree import | DATAIO-02 author | One item type per import in R1 |
 | Legal-hold check on batch rollback | DATAIO-02 author | Needs AUDIT-05 (legal hold) |

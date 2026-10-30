@@ -56,10 +56,7 @@ Decisions and notes
 - Competitors generally offer export tools or data on request rather than self-service backup, though specifics are unconfirmed.
 
 Open questions
-- Is a restore or import-from-export path built at all? The designer proposed restore preview with conflict report; the other advisors stress hostile-data risk and cross-tenant restore risk. Not decided.
-- Is dual approval required for every full export (security output) or a single approval (accepted suggestion wording)?
-- Are scheduled exports to storage in scope? The scout saw them in the market; not accepted.
-- Is project-scoped export in scope alongside tenant scope?
+- Answered 2026-10-30 ([ADR 0039](../../../adr/0039-owner-answers-item-types-witness-root-cause.md)): no self-service restore (the operator fixes or rolls back mistakes; an onboarding reset is operator-only and only before anything is signed or issued; issued data is corrected by audited edits and affected reports revised); two approvers for a full export, one for a register or project export; no scheduled exports for now; project-scoped export is in scope.
 
 ## Other files in this folder (read only if your task needs them)
 
