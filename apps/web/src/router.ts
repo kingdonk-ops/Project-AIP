@@ -14,6 +14,8 @@ import { projectDetailRoute } from "./routes/_app/projects/$projectId";
 import { projectsIndexRoute } from "./routes/_app/projects/index";
 import { projectsNewRoute } from "./routes/_app/projects/new";
 import { sitesIndexRoute } from "./routes/_app/sites/index";
+import { templateDetailRoute } from "./routes/_app/templates/$templateId";
+import { templatesIndexRoute } from "./routes/_app/templates/index";
 import { billingRoute } from "./routes/_app/settings/billing";
 import { sessionsRoute } from "./routes/_app/settings/profile/sessions";
 import { loginRoute } from "./routes/login";
@@ -46,7 +48,7 @@ const itemTypesRoutes = [contentTypesIndexRoute, contentTypeDetailRoute, itemTyp
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, ...itemTypesRoutes]),
+  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, ...itemTypesRoutes]),
   ...devRoutes,
 ]);
 
