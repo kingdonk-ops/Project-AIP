@@ -1,0 +1,136 @@
+/* FORMS-04: form template register and detail pages. Layout only; colours come from @aip/ui tokens. */
+.forms-register,
+.forms-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  min-width: 0;
+}
+
+.forms-register__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+}
+
+.forms-register__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2, 8px);
+}
+
+.forms-mono {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.forms-dialog {
+  width: min(48rem, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.forms-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+.forms-form__actions,
+.forms-json__check,
+.forms-compare__pickers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.forms-compare__pickers label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+}
+
+.forms-json__text {
+  width: 100%;
+  min-height: 12rem;
+  resize: vertical;
+  white-space: pre;
+}
+
+.forms-select {
+  min-width: 10rem;
+}
+
+.forms-issues {
+  border-inline-start: 3px solid var(--color-danger, #b42318);
+  padding-inline-start: var(--space-3, 12px);
+}
+
+.forms-issues__title {
+  margin: 0 0 var(--space-2, 8px);
+  font-size: inherit;
+}
+
+.forms-issues__list,
+.forms-compare__details {
+  margin: 0;
+  padding-inline-start: var(--space-4, 16px);
+}
+
+.forms-issues__item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+
+.forms-issues__path,
+.forms-outline__hash,
+.forms-compare__details li {
+  overflow-wrap: anywhere;
+}
+
+.forms-detail__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4, 16px);
+  margin: 0 0 var(--space-3, 12px);
+}
+
+.forms-detail__summary dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.forms-history,
+.forms-outline,
+.forms-compare {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+  min-width: 0;
+}
+
+.forms-outline__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.forms-outline__header h3,
+.forms-outline__section-title {
+  margin: 0;
+}
+
+.forms-outline__meta dd {
+  margin: 0;
+}
+
+.forms-outline__json pre {
+  max-height: 24rem;
+  overflow: auto;
+  white-space: pre;
+}

@@ -55,7 +55,6 @@ The compare is a tab of the detail page (`?tab=compare&from=1&to=2`), not a sepa
   - apps/web/src/routes/_app/templates/index.tsx
   - apps/web/src/routes/_app/templates/$templateId.tsx
   - apps/web/src/router.ts
-  - apps/web/src/main.tsx (import `forms.css`)
   - config/terms/en-AU/forms.json (a self-contained `forms.templates.*` block)
   - e2e/web/form-templates.spec.ts
   - e2e/playwright.config.ts (add the spec to the skeleton lane)
