@@ -82,6 +82,8 @@ export default defineConfig({
   use: {
     baseURL: external ?? `http://localhost:${webPort}`,
     trace: "retain-on-failure",
+    // Axe reads a toast mid fade-in as near-invisible text; the app drops the animation under reduced motion.
+    contextOptions: { reducedMotion: "reduce" },
   },
   projects: [
     { name: "unit", testMatch: UNIT },
