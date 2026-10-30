@@ -43,18 +43,43 @@ from aip.modules.assets.schemas import (
 from aip.modules.assets.settings import get_settings
 from aip.modules.assets.tables import assets
 from aip.modules.item_types.api import AttributeValidationError, ItemTypesApi
-from aip.platform.context import get_context, new_request_id
+from aip.platform.context import RequestContext, get_context, new_request_id, use_context
 from aip.platform.db.concurrency import update_with_version
 from aip.platform.db.errors import ConflictError, CycleError, NotFoundError
 from aip.platform.db.idempotency import create_idempotent
 from aip.platform.db.session import with_tenant
 from aip.platform.events import Aggregate, emit
 from aip.platform.http import DomainError
+from aip.platform.http.csv import CsvColumn, csv_header, csv_row
 from aip.platform.http.cursor import CursorCodec, InvalidCursorError
 
-__all__ = ["AssetService", "attribute_errors", "cursor_codec"]
+__all__ = [
+    "EXPORT_COLUMNS",
+    "EXPORT_MAX_ROWS",
+    "AssetService",
+    "attribute_errors",
+    "cursor_codec",
+]
 
 MAX_DEPTH: Final = 15
+
+# The CSV export (ASSETS-03): at most this many rows, read this many per transaction. Headers are
+# the API's field names, so a file reads the same in every tenant and locale (ADR 0033).
+EXPORT_MAX_ROWS: Final = 10_000
+_EXPORT_BATCH: Final = 500
+EXPORT_COLUMNS: Final[tuple[CsvColumn, ...]] = tuple(
+    {"id": name}
+    for name in (
+        "internalTag",
+        "tagNumber",
+        "name",
+        "parentId",
+        "path",
+        "itemTypeId",
+        "itemTypeVersionId",
+        "updatedAt",
+    )
+)
 _TAG_INDEX: Final = "uq_assets_tenant_id_upper_tag_number"
 _COLLISION_INDEXES: Final = frozenset(
     {"uq_assets_tenant_id_internal_tag", "uq_assets_tenant_id_path"}
@@ -514,29 +539,43 @@ class AssetService:
         tag_number: str | None,
         item_type_ids: list[UUID] | None = None,
     ) -> AssetPage:
-        roots_only = parent_id == "root"
-        parent_uuid = _parse_parent(parent_id) if parent_id is not None and not roots_only else None
-        token = sort or ("position" if (roots_only or parent_uuid is not None) else "name")
+        token = _sort_token(sort, parent_id)
         async with _tx() as conn:
-            under_path: str | None = None
-            if under is not None:
-                under_row = await repo.get_asset(conn, under)
-                if under_row is None:
-                    return AssetPage(items=[], next_cursor=None)
-                under_path = under_row["path"]
+            filters = await _filters(conn, parent_id, under, q, tag_number, item_type_ids)
+            if filters is None:
+                return AssetPage(items=[], next_cursor=None)
             page = self._keyset(cursor, token, limit)
-            rows = await repo.list_assets(
-                conn,
-                page,
-                parent_id=parent_uuid,
-                roots_only=roots_only,
-                under_path=under_path,
-                q=q,
-                tag_number=tag_number,
-                item_type_ids=item_type_ids or None,
-            )
+            rows = await repo.list_assets(conn, page, **filters)
         items = [AssetOut.model_validate(r) for r in rows[:limit]]
         return AssetPage(items=items, next_cursor=_next_cursor(rows, token, limit))
+
+    async def export_csv(
+        self,
+        *,
+        sort: AssetSort | None,
+        parent_id: str | None,
+        under: UUID | None,
+        q: str | None,
+        tag_number: str | None,
+        item_type_ids: list[UUID] | None = None,
+    ) -> AsyncIterator[str]:
+        """The rows ``list`` would page through, as CSV chunks (ASSETS-03, ADR 0033).
+
+        Raises ``EXPORT_TOO_LARGE`` (422) up front when more than ``EXPORT_MAX_ROWS`` rows match,
+        so a client never receives a silently truncated file. The chunks are read in keyset
+        batches, each in its own tenant transaction, while the response streams. An unknown (or
+        another tenant's) ``under`` exports the header only, as the list answers an empty page.
+        """
+        token = _sort_token(sort, parent_id)
+        async with _tx() as conn:
+            filters = await _filters(conn, parent_id, under, q, tag_number, item_type_ids)
+            total = 0 if filters is None else await repo.count_assets(conn, **filters)
+        if total > EXPORT_MAX_ROWS:
+            raise DomainError(422, "EXPORT_TOO_LARGE", limit=EXPORT_MAX_ROWS)
+        if filters is None:
+            return _header_only()
+        keyset = self._keyset(None, token, _EXPORT_BATCH)
+        return _csv_chunks(get_context(), keyset, token, filters)
 
     @staticmethod
     def _keyset(cursor: str | None, token: str, limit: int) -> repo.Keyset:
@@ -558,6 +597,77 @@ class AssetService:
             limit=limit,
             after_values=values,
             after_id=after_id,
+        )
+
+
+def _sort_token(sort: AssetSort | None, parent_id: str | None) -> str:
+    """The sort to use: the caller's, else ``position`` for one parent's children, else ``name``."""
+    return sort or ("position" if parent_id is not None else "name")
+
+
+async def _filters(
+    conn: AsyncConnection,
+    parent_id: str | None,
+    under: UUID | None,
+    q: str | None,
+    tag_number: str | None,
+    item_type_ids: list[UUID] | None,
+) -> dict[str, Any] | None:
+    """The repository filters for the list and the export, or ``None`` when ``under`` names no
+    live asset of this tenant (the answer is then empty, never a 404 that would leak existence)."""
+    roots_only = parent_id == "root"
+    parent_uuid = _parse_parent(parent_id) if parent_id is not None and not roots_only else None
+    under_path: str | None = None
+    if under is not None:
+        under_row = await repo.get_asset(conn, under)
+        if under_row is None:
+            return None
+        under_path = under_row["path"]
+    return {
+        "parent_id": parent_uuid,
+        "roots_only": roots_only,
+        "under_path": under_path,
+        "q": q,
+        "tag_number": tag_number,
+        "item_type_ids": item_type_ids or None,
+    }
+
+
+def _export_row(row: dict[str, Any]) -> dict[str, Any]:
+    out = AssetOut.model_validate(row).model_dump(mode="json", by_alias=True)
+    return {**out, "path": row.get("path_names") or ""}
+
+
+async def _header_only() -> AsyncIterator[str]:
+    yield csv_header(EXPORT_COLUMNS)
+
+
+async def _csv_chunks(
+    ctx: RequestContext, keyset: repo.Keyset, token: str, filters: dict[str, Any]
+) -> AsyncIterator[str]:
+    """The header, then one chunk per keyset batch. The response streams after the route has
+    returned, so each batch sets the request's context again for its tenant transaction."""
+    yield csv_header(EXPORT_COLUMNS)
+    sent = 0
+    base = token.removeprefix("-")
+    while sent < EXPORT_MAX_ROWS:
+        with use_context(ctx):
+            async with _tx() as conn:
+                rows = await repo.list_assets(conn, keyset, with_path_names=True, **filters)
+        batch = rows[: min(keyset.limit, EXPORT_MAX_ROWS - sent)]
+        if not batch:
+            return
+        yield "".join(csv_row(EXPORT_COLUMNS, _export_row(row)) for row in batch)
+        sent += len(batch)
+        if len(rows) <= keyset.limit:
+            return
+        last = batch[-1]
+        keyset = repo.Keyset(
+            sort=base,
+            descending=keyset.descending,
+            limit=keyset.limit,
+            after_values=_key_values(base, last),
+            after_id=last["id"],
         )
 
 

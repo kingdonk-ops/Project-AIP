@@ -25,6 +25,7 @@ __all__ = [
     "Keyset",
     "ancestors",
     "child_count",
+    "count_assets",
     "find_live_by_tag_number",
     "get_asset",
     "insert_asset",
@@ -54,6 +55,12 @@ _LOCK = text(
 
 _CHILD_COUNT_EXPR = (
     "(SELECT count(*) FROM assets c WHERE c.parent_id = a.id AND c.deleted_at IS NULL)"
+)
+
+# The live ancestors' names, root first (a node's own name is not part of its path).
+_PATH_NAMES_EXPR = (
+    "(SELECT coalesce(string_agg(p.name, ' > ' ORDER BY nlevel(p.path)), '') FROM assets p"
+    " WHERE p.path @> a.path AND p.path <> a.path AND p.deleted_at IS NULL)"
 )
 
 
@@ -198,22 +205,16 @@ def _escape_like(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
-async def list_assets(
-    conn: AsyncConnection,
-    page: Keyset,
+def _where(
     *,
-    parent_id: UUID | None = None,
-    roots_only: bool = False,
-    under_path: str | None = None,
-    q: str | None = None,
-    tag_number: str | None = None,
-    item_type_ids: list[UUID] | None = None,
-) -> list[dict[str, Any]]:
-    """Up to ``page.limit + 1`` live rows (the extra means "more"), each with ``child_count``.
-
-    ``item_type_ids`` keeps assets typed with any of those item types (ASSETS-02).
-    """
-    columns = SORTS[page.sort]
+    parent_id: UUID | None,
+    roots_only: bool,
+    under_path: str | None,
+    q: str | None,
+    tag_number: str | None,
+    item_type_ids: list[UUID] | None,
+) -> tuple[list[str], dict[str, Any]]:
+    """The WHERE terms and bind parameters shared by the list, the count and the export."""
     params: dict[str, Any] = {}
     where = ["a.deleted_at IS NULL"]
     if roots_only:
@@ -236,6 +237,59 @@ async def list_assets(
     if item_type_ids is not None:
         where.append("a.item_type_id = ANY(CAST(:item_type_ids AS uuid[]))")
         params["item_type_ids"] = item_type_ids
+    return where, params
+
+
+async def count_assets(
+    conn: AsyncConnection,
+    *,
+    parent_id: UUID | None = None,
+    roots_only: bool = False,
+    under_path: str | None = None,
+    q: str | None = None,
+    tag_number: str | None = None,
+    item_type_ids: list[UUID] | None = None,
+) -> int:
+    """How many live rows the list filters keep (the CSV export's size check, ASSETS-03)."""
+    where, params = _where(
+        parent_id=parent_id,
+        roots_only=roots_only,
+        under_path=under_path,
+        q=q,
+        tag_number=tag_number,
+        item_type_ids=item_type_ids,
+    )
+    sql = text(f"SELECT count(*) FROM assets a WHERE {' AND '.join(where)}").bindparams(**params)
+    return int((await conn.execute(sql)).scalar_one())
+
+
+async def list_assets(
+    conn: AsyncConnection,
+    page: Keyset,
+    *,
+    parent_id: UUID | None = None,
+    roots_only: bool = False,
+    under_path: str | None = None,
+    q: str | None = None,
+    tag_number: str | None = None,
+    item_type_ids: list[UUID] | None = None,
+    with_path_names: bool = False,
+) -> list[dict[str, Any]]:
+    """Up to ``page.limit + 1`` live rows (the extra means "more"), each with ``child_count``.
+
+    ``item_type_ids`` keeps assets typed with any of those item types (ASSETS-02).
+    ``with_path_names`` adds ``path_names``: the live ancestors' names, root first, joined with
+    `` > `` (the CSV export's ``path`` column, ASSETS-03).
+    """
+    columns = SORTS[page.sort]
+    where, params = _where(
+        parent_id=parent_id,
+        roots_only=roots_only,
+        under_path=under_path,
+        q=q,
+        tag_number=tag_number,
+        item_type_ids=item_type_ids,
+    )
 
     # Qualify bare column names with the alias; expressions (coalesce(...)) stay as written.
     sort_exprs = [c if "(" in c else f"a.{c}" for c in columns]
@@ -254,8 +308,9 @@ async def list_assets(
         where.append(f"({', '.join(key_exprs)}) {comparator} ({', '.join(placeholders)})")
 
     params["lim"] = page.limit + 1
+    extra = f", {_PATH_NAMES_EXPR} AS path_names" if with_path_names else ""
     sql = text(
-        f"SELECT a.*, {_CHILD_COUNT_EXPR} AS child_count FROM assets a "
+        f"SELECT a.*, {_CHILD_COUNT_EXPR} AS child_count{extra} FROM assets a "
         f"WHERE {' AND '.join(where)} ORDER BY {order_by} LIMIT :lim"
     ).bindparams(**params)
     # Type the JSONB column so the driver's text result is decoded as it is for select(assets).
