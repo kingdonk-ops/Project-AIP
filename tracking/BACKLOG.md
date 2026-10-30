@@ -121,7 +121,7 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 
 | Item | Source | Why it waits |
 |---|---|---|
-| NCR disposition with engineering approval and sealed records | README, ISSUES-03 author | Sealing is open (#47–#49) |
+| NCR disposition with engineering approval and sealed records | README, ISSUES-03 author | Sealing decided (ADR 0039); immutable storage is open (#49) |
 | Overdue and SLA notifications with escalation, including overdue CAPA | README | No notifications module in R1 |
 | Root-cause trend reports and cost of poor quality | README | QMS is not in R1 |
 | Kanban board view and CAPA board | README | After ISSUES-04 |
@@ -133,7 +133,8 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 
 | Item | Source | Why it waits |
 |---|---|---|
-| Sealing, external signing and immutable storage of issued PDFs | README, #47–#49 | Open questions; R1 records a sha256 |
+| Approval adds a KMS-held PAdES signature to PDF reports, plus a verification page for PDFs and files (ADR 0039, #47–#48) | README | Not in the R1 cut; R1 records a sha256 |
+| Immutable storage of issued PDFs | README, #49 | Open question |
 | Publishing to a named distribution list with delivery receipts and expiring links (`published_records`, `delivery_receipts`, `delivery_access_log`) | README, data model | Not in the R1 cut |
 | Report QA pre-flight through a rules engine | README | No rules engine in R1 |
 | Domain blocks: thickness map, CUI condition and DFT charts | README | Not in the R1 cut |

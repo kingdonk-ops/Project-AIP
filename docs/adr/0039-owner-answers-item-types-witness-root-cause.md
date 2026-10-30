@@ -1,14 +1,14 @@
-# ADR 0039: Owner answers on item-type inheritance, schema changes, starter packs, witness notification and root-cause method
+# ADR 0039: Owner answers on item-type inheritance, schema changes, starter packs, witness notification, root-cause method and report signing
 
 - **Status:** accepted
 - **Date:** 2026-10-30
-- **Affects:** item_types (inheritance after R1, ITEMTYPES-06), inspections (INSPECTIONS-03, PORTAL-06), issues (ISSUES-06)
+- **Affects:** item_types (inheritance after R1, ITEMTYPES-06), inspections (INSPECTIONS-03, PORTAL-06), issues (ISSUES-06), report_engine (sealing and signing after R1)
 
 ## Context
 
 [OPEN-QUESTIONS.md](../../tracking/OPEN-QUESTIONS.md) "R1 gate" lists the questions PLAN-R1 copied from the R1 module
-READMEs ([ADR 0036](0036-r1-module-decisions.md)). On 2026-10-30 the owner answered #38, #39, #41, #43 and #46.
-#40, #44 and #47 to #49 stay open.
+READMEs ([ADR 0036](0036-r1-module-decisions.md)). On 2026-10-30 the owner answered #38, #39, #41, #43, #46, #47 and
+#48. #40, #44 and #49 to #54 stay open.
 
 ## Decision
 
@@ -76,6 +76,23 @@ applied. This unblocks ITEMTYPES-06.
 Both 5-why and fishbone are available. The tenant admin sets the default in settings, or is asked on first use (the
 first time a root cause is recorded); the default can be changed later. This unblocks ISSUES-06.
 
+### #47 and #48 Report sealing and signing: in-app approval signs the PDF
+
+The system itself signs and verifies PDF reports and files; there is no DocuSign or Adobe Sign step.
+
+- People do not sign a PDF by hand. They **approve** the report in AIP through the approvals engine (with the step-up
+  authentication it already enforces), and that approval adds their signature block and a digital lock to the PDF.
+- The lock is a PAdES signature made with a key held in AWS KMS (the key never leaves KMS), with a trusted timestamp so
+  it stays valid after the signing certificate expires. Each approver's signature is applied in turn; a change after
+  any signature breaks it visibly in a PDF reader.
+- The sha256 hash and manifest R1 already records stay underneath, so non-PDF files are covered and existing reports
+  stay verifiable.
+- AIP offers verification: upload or open a PDF or file and the system reports whether it matches a sealed original,
+  who approved it and when.
+- R1 keeps hash-only reports ([ADR 0036](0036-r1-module-decisions.md)); signing is a task after R1. The demo on Coolify
+  has no KMS and needs a software key or a placeholder signer there. A certificate from a trusted provider is needed
+  for readers to show a trusted signature without a warning.
+
 ## Consequences
 
 - ITEMTYPES-06 and ISSUES-06 move from `blocked` to `todo`; their full specs follow these answers.
@@ -83,4 +100,5 @@ first time a root cause is recorded); the default can be changed later. This unb
   in, their tasks follow #38 and #39 above.
 - INSPECTIONS-03 and PORTAL-06 record the witness notification on the point; PROJECTS-04 already carries
   `witness_notice_hours`.
-- The item_types, inspections and issues READMEs mark these questions answered.
+- The item_types, inspections, issues and report_engine READMEs mark these questions answered.
+- PAdES signing on approval and the verification page go to the backlog as report_engine work after R1.

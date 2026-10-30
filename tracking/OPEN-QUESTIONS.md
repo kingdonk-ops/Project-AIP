@@ -65,8 +65,8 @@ marked `blocked` on the board waits for its question; the others only shape late
 44. **eligibility, grace periods and verification:** per-type grace periods, and checking licences against issuing registers, were seen in the market but not decided. (No R1 task; R1 is the hard block.)
 45. ~~**scope_work, access methods:** reconcile the access-method list before it is seeded.~~ Already answered in `docs/blueprint/01-decisions.md`: split MEWP and Ladder, tenant-editable list (ADR 0036). SCOPEWORK-06 is not blocked.
 46. ~~**issues, root cause:** is the default root-cause method 5-why or fishbone?~~ Answered 2026-10-30: both are available; the tenant admin picks the default in settings or on first use (ADR 0039). ISSUES-06 is unblocked.
-47. **report_engine, sealing:** PAdES with AWS KMS-held keys, or hash and manifest only? R1 reports record a sha256 only.
-48. **report_engine, external signing:** DocuSign or Adobe Sign, or in-app attestations only?
+47. ~~**report_engine, sealing:** PAdES with AWS KMS-held keys, or hash and manifest only?~~ Answered 2026-10-30: PAdES with a KMS-held key, on top of the sha256 and manifest R1 records (ADR 0039). After R1.
+48. ~~**report_engine, external signing:** DocuSign or Adobe Sign, or in-app attestations only?~~ Answered 2026-10-30: in-app only. Approving a report adds the approver's signature and digital lock to the PDF, and AIP verifies PDFs and files (ADR 0039).
 49. **report_engine, immutable storage:** S3 Object Lock for sealed outputs (MinIO with object lock on Coolify), or hash and manifest only?
 50. **data_io, restore:** is a restore or import-from-export path built at all (with a conflict report), given the hostile-data and cross-tenant risks?
 51. **data_io, full exports:** dual approval for every full export, or a single approval?

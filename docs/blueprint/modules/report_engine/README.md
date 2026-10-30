@@ -63,8 +63,7 @@ Decisions and notes
 - Differentiator versus Procore, Fieldwire, SafetyCulture, Dalux, Sitemate and Autodesk Build: signed, hash-verifiable publishing with manifest and named recipients.
 
 Open questions
-- Sealing approach: PAdES via node-signpdf or AWS KMS-held keys, versus hash and manifest only.
-- External signing (DocuSign or Adobe Sign) versus in-app attestations only.
+- Sealing and signing (answered 2026-10-30, [ADR 0039](../../../adr/0039-owner-answers-item-types-witness-root-cause.md)): in-app approval adds a PAdES signature with a KMS-held key to PDF reports, over the existing hash and manifest; AIP verifies PDFs and files; no DocuSign or Adobe Sign.
 - Immutable storage: S3 Object Lock for sealed outputs versus MinIO with object lock on Coolify, or hash-and-manifest only.
 
 ## Other files in this folder (read only if your task needs them)
