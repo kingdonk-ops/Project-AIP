@@ -88,6 +88,11 @@ updates:
     directory: / # package.json + pnpm-lock.yaml (the pnpm workspace; npm ecosystem covers pnpm)
     schedule:
       interval: weekly
+    # TypeScript 7 (the native compiler) waits until typescript-eslint supports it and
+    # openapi-typescript no longer needs the TS 6 compiler API (#188). Lift this then.
+    ignore:
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
