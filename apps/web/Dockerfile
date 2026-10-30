@@ -21,7 +21,7 @@ RUN pnpm install --frozen-lockfile --filter "@aip/web..." \
     && pnpm --filter "@aip/web..." build
 
 
-FROM nginxinc/nginx-unprivileged:1.30.6-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.31.7-alpine AS runtime
 
 # The base tag carries the vendor's nginx (apk upgrade cannot move nginx within a tag), so bump the
 # tag itself for nginx CVEs: 1.30.6 fixes CVE-2026-15176, CVE-2026-93479, CVE-2026-97205. On top of
