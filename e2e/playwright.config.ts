@@ -53,6 +53,8 @@ const SKELETON = [
   "web/uploads-presign.spec.ts",
   "web/sessions.spec.ts",
   "web/approvals-transition.spec.ts",
+  // FORMS-04: the form template register and detail pages need the stack and real sign-in.
+  "web/form-templates.spec.ts",
   "web/item-types.spec.ts", // ITEMTYPES-03: needs both tenants signed in for real
 ];
 const UNIT = "fixtures/*.spec.ts";
