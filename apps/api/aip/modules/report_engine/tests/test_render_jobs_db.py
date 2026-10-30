@@ -59,7 +59,7 @@ def _json(value: object) -> Any:
 
 
 async def _count(db: TenantDb, table: str, where: str = "true") -> int:
-    rows = await su_fetch(db, f"SELECT count(*) FROM {table} WHERE {where}")  # noqa: S608
+    rows = await su_fetch(db, f"SELECT count(*) FROM {table} WHERE {where}")
     return int(str(rows[0][0]))
 
 

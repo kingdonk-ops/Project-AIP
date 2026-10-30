@@ -145,9 +145,7 @@ async def test_the_worker_renders_stores_and_records_the_pdf(
         db, "SELECT payload FROM domain_events WHERE event_name = 'report.render_succeeded'"
     )
     assert len(events) == 1
-    stored = await su_fetch(
-        db, "SELECT source, purpose, project_id, scan_status FROM stored_files"
-    )
+    stored = await su_fetch(db, "SELECT source, purpose, project_id, scan_status FROM stored_files")
     assert stored == [("generated", "report", project, "clean")]
 
 
