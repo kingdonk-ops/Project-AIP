@@ -46,8 +46,10 @@
                 "project.create",
                 "project.update",
                 "project.view",
+                "report.create",
                 "report.template.manage",
                 "report.template.view",
+                "report.view",
                 "site.manage",
                 "site.view",
                 "tenancy.organisation.manage",
@@ -4904,6 +4906,288 @@
         "title": "PublishBody",
         "type": "object"
       },
+      "RenderJobPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RenderJobView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "title": "RenderJobPage",
+        "type": "object"
+      },
+      "RenderJobView": {
+        "description": "One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot's; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.",
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "dataHash": {
+            "title": "Datahash",
+            "type": "string"
+          },
+          "errorCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errorcode"
+          },
+          "fileId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fileid"
+          },
+          "htmlSha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Htmlsha256"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "opsJobId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opsjobid"
+          },
+          "pdfSha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdfsha256"
+          },
+          "pdfSizeBytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdfsizebytes"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          },
+          "recordId": {
+            "format": "uuid",
+            "title": "Recordid",
+            "type": "string"
+          },
+          "recordType": {
+            "title": "Recordtype",
+            "type": "string"
+          },
+          "renderedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renderedat"
+          },
+          "requestedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requestedby"
+          },
+          "rerenderOf": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rerenderof"
+          },
+          "snapshotId": {
+            "format": "uuid",
+            "title": "Snapshotid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "templateId": {
+            "format": "uuid",
+            "title": "Templateid",
+            "type": "string"
+          },
+          "templateKey": {
+            "title": "Templatekey",
+            "type": "string"
+          },
+          "templateVersion": {
+            "title": "Templateversion",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          },
+          "variant": {
+            "enum": [
+              "internal",
+              "client",
+              "certificate"
+            ],
+            "title": "Variant",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "templateId",
+          "templateKey",
+          "templateVersion",
+          "variant",
+          "recordType",
+          "recordId",
+          "projectId",
+          "snapshotId",
+          "dataHash",
+          "opsJobId",
+          "requestedBy",
+          "rerenderOf",
+          "htmlSha256",
+          "fileId",
+          "pdfSha256",
+          "pdfSizeBytes",
+          "errorCode",
+          "renderedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "RenderJobView",
+        "type": "object"
+      },
+      "RenderRequest": {
+        "additionalProperties": false,
+        "description": "``POST /reports/renders``: render ``recordType``/``recordId`` with the published template.",
+        "properties": {
+          "recordId": {
+            "format": "uuid",
+            "title": "Recordid",
+            "type": "string"
+          },
+          "recordType": {
+            "maxLength": 41,
+            "minLength": 1,
+            "pattern": "^[a-z][a-z_]{1,40}$",
+            "title": "Recordtype",
+            "type": "string"
+          },
+          "templateKey": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "title": "Templatekey",
+            "type": "string"
+          },
+          "variant": {
+            "enum": [
+              "internal",
+              "client",
+              "certificate"
+            ],
+            "title": "Variant",
+            "type": "string"
+          }
+        },
+        "required": [
+          "templateKey",
+          "variant",
+          "recordType",
+          "recordId"
+        ],
+        "title": "RenderRequest",
+        "type": "object"
+      },
       "ReportErrorBody": {
         "description": "A domain error: a stable ``code``; package errors add ``path`` and ``detail``.",
         "properties": {
@@ -5572,8 +5856,10 @@
                 "project.create",
                 "project.update",
                 "project.view",
+                "report.create",
                 "report.template.manage",
                 "report.template.view",
+                "report.view",
                 "site.manage",
                 "site.view",
                 "tenancy.organisation.manage",
@@ -5710,8 +5996,10 @@
                 "project.create",
                 "project.update",
                 "project.view",
+                "report.create",
                 "report.template.manage",
                 "report.template.view",
+                "report.view",
                 "site.manage",
                 "site.view",
                 "tenancy.organisation.manage",
@@ -5815,8 +6103,10 @@
                     "project.create",
                     "project.update",
                     "project.view",
+                    "report.create",
                     "report.template.manage",
                     "report.template.view",
+                    "report.view",
                     "site.manage",
                     "site.view",
                     "tenancy.organisation.manage",
@@ -14279,6 +14569,307 @@
         "summary": "Update Project",
         "tags": [
           "projects"
+        ]
+      }
+    },
+    "/api/v1/reports/renders": {
+      "get": {
+        "operationId": "reports_renders_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "recordType",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[a-z][a-z_]{1,40}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Recordtype"
+            }
+          },
+          {
+            "in": "query",
+            "name": "recordId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Recordid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenderJobPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "List Renders",
+        "tags": [
+          "reports"
+        ]
+      },
+      "post": {
+        "operationId": "reports_renders_create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenderJobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Request Render",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/renders/{render_job_id}": {
+      "get": {
+        "operationId": "reports_renders_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "render_job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Render Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenderJobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Render",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/renders/{render_job_id}/rerender": {
+      "post": {
+        "operationId": "reports_renders_rerender",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "render_job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Render Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenderJobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rerender",
+        "tags": [
+          "reports"
         ]
       }
     },
