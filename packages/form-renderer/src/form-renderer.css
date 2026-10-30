@@ -1,0 +1,163 @@
+/*
+ * @aip/form-renderer styles (FORMS-03). Token variables only (from @aip/ui tokens.css), so tenant
+ * overrides restyle the form too. Import after "@aip/ui/styles.css".
+ */
+
+.aip-form-renderer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 48rem;
+}
+
+.aip-form-renderer__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  min-width: 0;
+}
+.aip-form-renderer__section-title {
+  padding: 0 var(--space-1);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--foreground);
+}
+
+.aip-form-renderer__field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Required marker and fail chip sit on the label row, after the field in reading order. */
+.aip-form-renderer__meta {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.aip-form-renderer__required {
+  font-size: var(--text-xs);
+  color: var(--foreground-muted);
+}
+.aip-form-renderer__fail-message {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--status-danger);
+}
+
+.aip-form-renderer__group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.aip-form-renderer__legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+}
+
+.aip-form-renderer__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+.aip-form-renderer__choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+}
+.aip-form-renderer__radio {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+.aip-form-renderer__radio:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.aip-form-renderer__measure {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.aip-form-renderer__unit {
+  font-size: var(--text-sm);
+  color: var(--foreground-muted);
+  white-space: nowrap;
+}
+
+.aip-form-renderer__thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+.aip-form-renderer__thumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.aip-form-renderer__thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.aip-form-renderer__signed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.aip-form-renderer__value {
+  font-size: var(--text-base);
+  color: var(--foreground);
+}
+.aip-form-renderer__list {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+.aip-form-renderer__empty {
+  color: var(--foreground-muted);
+  font-style: italic;
+}
+
+.aip-form-renderer__summary {
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--status-danger);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.aip-form-renderer__summary-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--foreground);
+}
+.aip-form-renderer__summary ul {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+.aip-form-renderer__summary a {
+  color: var(--status-danger);
+  text-decoration: underline;
+}
+.aip-form-renderer__summary a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

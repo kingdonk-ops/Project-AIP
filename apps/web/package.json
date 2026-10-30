@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@aip/api-client": "workspace:*",
+    "@aip/form-renderer": "workspace:*",
     "@aip/ui": "workspace:*",
     "@hookform/resolvers": "^6.0.0",
     "@tanstack/react-query": "^5.104.1",

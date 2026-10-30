@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sections": [
+    {
+      "key": "preparation",
+      "label": "Surface preparation",
+      "fields": [
+        {
+          "key": "inspection_date",
+          "type": "date",
+          "label": "Inspection date",
+          "required": true
+        },
+        {
+          "key": "surface_prepared",
+          "type": "boolean",
+          "label": "Surface prepared",
+          "required": true
+        },
+        {
+          "key": "remarks",
+          "type": "text",
+          "label": "Remarks",
+          "visibleIf": {"==": [{"var": "answers.surface_prepared"}, false]},
+          "validations": {"maxLength": 500}
+        },
+        {
+          "key": "blast_standard",
+          "type": "dropdown",
+          "label": "Blast standard",
+          "required": true,
+          "options": [
+            {"value": "sa2", "label": "Sa 2"},
+            {"value": "sa2_5", "label": "Sa 2½"},
+            {"value": "sa3", "label": "Sa 3"}
+          ]
+        },
+        {
+          "key": "defects",
+          "type": "multi_select",
+          "label": "Defects found",
+          "options": [
+            {"value": "rust", "label": "Rust"},
+            {"value": "dust", "label": "Dust"},
+            {"value": "oil", "label": "Oil"}
+          ]
+        }
+      ]
+    },
+    {
+      "key": "coating",
+      "label": "Coating",
+      "fields": [
+        {
+          "key": "coats",
+          "type": "number",
+          "label": "Coats applied",
+          "validations": {"min": 1, "max": 5}
+        },
+        {
+          "key": "humidity",
+          "type": "decimal",
+          "label": "Relative humidity",
+          "validations": {"min": 0, "max": 100}
+        },
+        {
+          "key": "steel_temp",
+          "type": "measurement",
+          "label": "Steel temperature",
+          "unit": "degC"
+        },
+        {
+          "key": "dft_avg",
+          "type": "measurement",
+          "label": "Average dry film thickness",
+          "unit": "mm",
+          "required": true,
+          "failWhen": {"<": [{"var": "answers.dft_avg.value"}, 0.25]}
+        },
+        {
+          "key": "photos",
+          "type": "photo",
+          "label": "Coating photos",
+          "validations": {"maxItems": 6}
+        }
+      ]
+    },
+    {
+      "key": "sign_off",
+      "label": "Sign-off",
+      "fields": [
+        {
+          "key": "asset",
+          "type": "asset_ref",
+          "label": "Asset"
+        },
+        {
+          "key": "inspector",
+          "type": "user_ref",
+          "label": "Inspector"
+        },
+        {
+          "key": "signature",
+          "type": "signature",
+          "label": "Inspector signature"
+        }
+      ]
+    }
+  ]
+}

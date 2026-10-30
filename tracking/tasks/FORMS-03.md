@@ -1,6 +1,7 @@
 # FORMS-03 — Form renderer package for the web (sections, field types, conditions)
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
+<!-- hand-edited: delivery notes added (FORMS-03 build) -->
 
 | Field | Value |
 |---|---|
@@ -99,3 +100,17 @@ Add React components to `@aip/form-renderer` that render a frozen form revision 
     - No API surface in this task. The renderer's agreement with the server is covered by FORMS-02's shared vectors (both evaluators) and by INSPECTIONS-02/04, which validate the same answers on the server.
   - **e2e**:
     - `e2e/web/form-renderer.spec.ts` on the `web-dev` project (`/__fixtures/form`, like `ui-fixture.spec.ts`): main journey — answer "Surface prepared: No" → the remarks field appears; choose blast standard `Sa 2½`; enter DFT `0.18` → a "Fail" chip; click Submit → the error summary lists the unanswered required fields; answer them → the summary is gone; toggle Read-only → values shown as text. axe (`@axe-core/playwright`) → 0 serious/critical violations in the editable, all-errors and read-only states, on desktop Chromium and mobile Chrome. The fixture is dev-only design scaffolding with no tenant data, so there is no cross-tenant case here; cross-tenant isolation of templates is checked by FORMS-01 and of answers by INSPECTIONS-04.
+
+## Delivery notes (2026-10-30, branch `claudeK/forms-03-renderer`)
+
+Judgement calls and deviations from the spec above:
+
+- **Exports.** `index.ts` keeps FORMS-02's `truthy` export (removing it would break that published surface); otherwise it exports exactly the list in the tests block. The package also exports `./fixtures/coating-itr.json`, so the web fixture page imports the fixture without a deep relative path.
+- **Group fields.** `@aip/ui` `FormField` labels one control by id, so `boolean`, `multi_select`, `photo` and `signature` render through `GroupFrame` in `fields/FieldFrame.tsx` (an extra file): a `<fieldset>` named by its legend, with the same hint/error wiring and classes. Only the boolean radiogroup carries `aria-required`; ARIA does not allow it on a plain group, so a required multi-select, photo or signature field shows the visible marker only.
+- **Required marker.** The marker is visible text (`forms.renderer.required`) placed after the field, outside the label, so screen readers do not hear "required" twice (`aria-required` already says it).
+- **Extra term keys.** `forms.renderer.error_summary_item` (`{field}: {message}`) builds each summary link without concatenating text in code; `forms.renderer.remove_photo` takes `{name}`, so each remove button has a unique name.
+- **Combobox.** `@aip/ui` `Combobox` takes only `id`/`aria-label` and keeps its query to itself, so `ReferenceFields.tsx` reads the query from the input's bubbling change event and copies `aria-describedby`/`aria-invalid`/`aria-required` onto the input in an effect. `packages/ui` was not changed.
+- **Photo names.** Answers store only `{fileId}` and `MediaAdapter` has no name lookup, so a thumbnail's alt text is the file name only for files picked in this session; otherwise it falls back to the field label. INSPECTIONS-04 may want a `name(fileId)` on its adapter.
+- **Read-only.** Read-only mode shows values and fail chips, but no errors and no error summary (there are no controls to fix or focus).
+- **Tests.** The package's Vitest environment is now jsdom (React components). FORMS-02's two vector suites read files via `import.meta.url`, so they are pinned to `// @vitest-environment node` and are otherwise unchanged (the runtime-exports list in `jsonlogic.test.ts` gains `FormRenderer`). `src/test/{setup,axe,translate}.ts` copy the small `packages/ui` test helpers, which that package does not export.
+- **Fixture page.** `/__fixtures/form` evaluates in `draft` mode until Submit, then in `submit` mode with `showErrors="all"`.
