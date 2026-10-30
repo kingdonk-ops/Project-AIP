@@ -48,6 +48,7 @@ The compare is a tab of the detail page (`?tab=compare&from=1&to=2`), not a sepa
   - apps/web/src/features/forms/RevisionOutline.tsx
   - apps/web/src/features/forms/RevisionCompare.tsx
   - apps/web/src/features/forms/forms.css
+  - apps/web/src/features/forms/__tests__/fixtures.ts
   - apps/web/src/features/forms/__tests__/templateJson.test.ts
   - apps/web/src/features/forms/__tests__/diff.test.ts
   - apps/web/src/features/forms/__tests__/TemplatesRegister.test.tsx
@@ -92,3 +93,14 @@ The compare is a tab of the detail page (`?tab=compare&from=1&to=2`), not a sepa
     - Main journey as the `kaefer-demo` admin (A): open `/templates` → Upload template → code `e2e-tpl-<run>`, kind Inspection, paste a schema with an unknown field type → Upload → the issue list shows `UNKNOWN_FIELD_TYPE` text → fix the type → Upload → the detail page shows the code and "Draft" → Publish v1 → "Published" → New draft with a changed schema (a field moved and one added) → Publish v2 → Compare tab with From v1, To v2 → the summary shows 1 added and 1 moved.
     - Cross-tenant: the `tenant-b` user (B) opens A's `/templates/<id>` → the not-found state; B's `/templates` register with `q=e2e-tpl-<run>` shows no rows.
     - Axe (`@axe-core/playwright`, serious and critical) on the register, the upload dialog showing issues, the detail page on both tabs, and B's not-found page → 0 violations.
+
+## Delivery notes (2026-10-30, ClaudeK)
+
+- Built on branch `claudeK/forms-04-template-pages` as specified; no server change. Every call goes through the generated `@aip/api-client` hooks; every label is a `forms.templates.*` key (one self-contained block in `config/terms/en-AU/forms.json`), plus the existing `forms.kind.*`, `forms.*.status.*`, `forms.lint.*` and ITEMTYPES-01's `item_types.field_type.*`.
+- Routes `/templates` and `/templates/$templateId` (the blueprint paths); the compare is a tab (`?tab=compare&from=&to=`) and the shown revision is `?rev=`. The nav entry sits under Settings (ADR 0018), gated on `form.view`. The CSS is imported by the two route files, so `main.tsx` is unchanged.
+- JSON parse errors report line and column from a small scanner (`jsonErrorOffset`), because V8's `JSON.parse` messages often name no position.
+- The upload dialog also accepts a full upload body (`{code, name, kind, changeNote, schema}`) and pre-fills the fields the user left empty.
+- API gaps recorded as **FORMS-09** (todo): the template list has no cursor or sort (the register asks for one page of 200, the API maximum, in code order), and revision summaries carry no `createdBy` / `publishedBy`.
+- Follow-ups not on the board: embed the FORMS-03 renderer as a read-only preview in the revision view once FORMS-03 merges; "restore as new draft" from the compare (the API already supports it: `POST /templates/{id}/revisions` with the old schema).
+- Tests: 42 Vitest cases in `apps/web/src/features/forms/__tests__` (parse, diff, search, register, upload dialog, detail actions, compare, axe). `e2e/web/form-templates.spec.ts` runs in the skeleton lane (`--project web --grep @skeleton`; added to `SKELETON` in `e2e/playwright.config.ts`). It was not run locally: it needs the compose stack and Keycloak.
+- Noticed, not changed: `e2e/web/forms-templates-api.spec.ts` (FORMS-01) is tagged `@skeleton` but is not in the `SKELETON` list, so the skeleton job never runs it and the default lanes skip it for lack of credentials.
