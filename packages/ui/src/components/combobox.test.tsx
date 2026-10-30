@@ -41,6 +41,14 @@ describe("Combobox", () => {
     expect(input.getAttribute("aria-expanded")).toBe("false");
   });
 
+  it("reports the typed text so the caller can search the server", async () => {
+    const user = userEvent.setup();
+    const typed: string[] = [];
+    render(<Combobox aria-label="Asset" options={options} onInputChange={(text) => typed.push(text)} />);
+    await user.type(screen.getByRole("combobox", { name: "Asset" }), "pu");
+    expect(typed).toEqual(["p", "pu"]);
+  });
+
   it("has no serious or critical axe violations (open and closed)", async () => {
     const { container } = render(<Controlled />);
     expect(await axeBlocking(container)).toEqual([]);
