@@ -40,7 +40,7 @@
   "forms.templates.revision.label": "v{n}",
   "forms.templates.revision.none": "Not published",
   "forms.templates.json.label": "Template JSON",
-  "forms.templates.json.hint": "Paste the template, or choose a .json file. Either the schema ({\"schemaVersion\": 1, \"sections\": [...]}) or an upload body with code, name, kind and schema.",
+  "forms.templates.json.hint": "Paste the template, or choose a .json file. Either the schema itself (schemaVersion and sections) or an upload body with code, name, kind and schema.",
   "forms.templates.json.file": "JSON file",
   "forms.templates.json.empty": "Paste or choose the template JSON.",
   "forms.templates.json.parse_error": "The JSON is not valid at line {line}, column {column}.",
