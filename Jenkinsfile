@@ -17,7 +17,7 @@ pipeline {
     }
 
     environment {
-        PATH                  = "/var/jenkins_home/bin:/var/jenkins_home/tools/node/bin:${PATH}"
+        PATH                  = "/var/jenkins_home/bin:/var/jenkins_home/tools/node/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
         HOME                  = "/var/jenkins_home"
         UV_CACHE_DIR          = "/var/jenkins_home/.cache/uv"
         AIP_TEST_DATABASE_URL = "postgresql://aip_test:aip_test@zaqzezfntsrp0e5lqvpx18mh:5432/aip_test"
