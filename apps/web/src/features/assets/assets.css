@@ -1,0 +1,315 @@
+/* Assets page (ASSETS-03): the tree panel beside the register, the scope chip, the tree drawer on
+   narrow screens, and the create/edit form. Tokens from @aip/ui; the table, filters and pager are
+   RegisterTable's own. */
+
+.assets-page {
+  display: grid;
+  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+  max-width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .assets-page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.assets-page__tree {
+  position: sticky;
+  top: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+  max-height: calc(100vh - 8rem);
+  overflow: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.assets-page__tree-title {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+.assets-page__main {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.assets-page__scope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.assets-page__scope:empty {
+  display: none;
+}
+
+.assets-page__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--foreground);
+}
+
+.assets-page__chip-clear {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.assets-page__chip-clear:hover {
+  background: var(--neutral-200);
+}
+
+.assets-page__chip-clear:focus-visible,
+.assets-tree__item:focus-visible,
+.assets-form__select:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.assets-page__notice,
+.assets-form__notice {
+  margin: 0;
+  padding: var(--space-3);
+  border-left: 3px solid var(--accent);
+  background: var(--surface-muted);
+}
+
+/* The tree. */
+.assets-tree__list,
+.assets-tree__group,
+.assets-tree__node {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.assets-tree__item {
+  border-radius: var(--radius-sm, 4px);
+}
+
+.assets-tree__item:focus-visible {
+  outline-offset: -2px;
+}
+
+.assets-tree__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 2rem;
+  padding-inline-end: var(--space-2);
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+}
+
+.assets-tree__row:hover {
+  background: var(--surface-muted);
+}
+
+.assets-tree__row[aria-selected="true"] {
+  background: var(--neutral-100);
+  font-weight: var(--weight-semibold);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.assets-tree__toggle {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  transform: rotate(-90deg);
+  transition: transform 120ms ease;
+}
+
+.assets-tree__toggle[data-open] {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assets-tree__toggle {
+    transition: none;
+  }
+}
+
+.assets-tree__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assets-tree__tag {
+  margin-inline-start: auto;
+  color: var(--foreground-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.assets-tree__more {
+  color: var(--accent);
+}
+
+.assets-tree__note {
+  margin: 0;
+  color: var(--foreground-muted);
+}
+
+.assets-drawer {
+  display: grid;
+  gap: var(--space-3);
+  max-height: 85vh;
+  overflow: auto;
+}
+
+/* The register. */
+.assets-register {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 100%;
+}
+
+.assets-register__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.assets-register__header h1 {
+  margin: 0;
+}
+
+.assets-register__empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.assets-register__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.assets-register__name {
+  color: inherit;
+  font-weight: var(--weight-medium);
+}
+
+/* The create and edit form. */
+.assets-form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 100%;
+}
+
+.assets-form form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 36rem;
+}
+
+.assets-form__internal-tag {
+  margin: 0;
+  color: var(--foreground-muted);
+  font-family: var(--font-mono);
+}
+
+.assets-form__mono {
+  font-family: var(--font-mono);
+}
+
+.assets-form__select {
+  min-height: 2.5rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.assets-form__checkbox {
+  justify-self: start;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.assets-form__attributes {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.assets-form__attributes > legend {
+  padding: 0 var(--space-1);
+  font-weight: var(--weight-semibold);
+}
+
+.assets-form__choices {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.assets-form__choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.assets-form__note {
+  margin: 0;
+  color: var(--foreground-muted);
+}
+
+.assets-form__warning,
+.assets-form__conflict {
+  margin: 0;
+  padding: var(--space-3);
+  border-left: 3px solid var(--status-warning);
+  background: var(--surface-muted);
+}
+
+.assets-form__conflict {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.assets-form__conflict p {
+  margin: 0;
+}
+
+.assets-form__actions,
+.assets-move .assets-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.assets-move {
+  display: grid;
+  gap: var(--space-4);
+}

@@ -27,6 +27,7 @@ import type {
   AssetPage,
   AssetUpdate,
   AssetsDeleteParams,
+  AssetsExportParams,
   AssetsListParams,
   HTTPValidationError
 } from '../../model';
@@ -303,7 +304,135 @@ export const useAssetsCreate = <TError = AssetErrorBody | void,
       > => {
       return useMutation(getAssetsCreateMutationOptions(options), queryClient);
     }
-    export type assetsDeleteResponse204 = {
+    export type assetsExportResponse422 = {
+  data: AssetErrorBody
+  status: 422
+}
+
+;
+export type assetsExportResponseError = (assetsExportResponse422) & {
+  headers: Headers;
+};
+
+export type assetsExportResponse = (assetsExportResponseError)
+
+export const getAssetsExportUrl = (params?: AssetsExportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["itemTypeId"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? 'null' : String(v));
+      });
+      return;
+    }
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/assets/export.csv?${stringifiedParams}` : `/api/v1/assets/export.csv`
+}
+
+/**
+ * The same filters and sort as the list, as one CSV file (ASSETS-03, ADR 0033).
+ * @summary Export Assets
+ */
+export const assetsExport = async (params?: AssetsExportParams, options?: Parameters<typeof apiFetch>[1]): Promise<assetsExportResponse> => {
+
+  return apiFetch<assetsExportResponse>(getAssetsExportUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAssetsExportQueryKey = (params?: AssetsExportParams,) => {
+    return [
+    `/api/v1/assets/export.csv`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAssetsExportQueryOptions = <TData = Awaited<ReturnType<typeof assetsExport>>, TError = AssetErrorBody>(params?: AssetsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsExport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAssetsExportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof assetsExport>>> = ({ signal }) => assetsExport(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof assetsExport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AssetsExportQueryResult = NonNullable<Awaited<ReturnType<typeof assetsExport>>>
+export type AssetsExportQueryError = AssetErrorBody
+
+
+export function useAssetsExport<TData = Awaited<ReturnType<typeof assetsExport>>, TError = AssetErrorBody>(
+ params: undefined |  AssetsExportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsExport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof assetsExport>>,
+          TError,
+          Awaited<ReturnType<typeof assetsExport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAssetsExport<TData = Awaited<ReturnType<typeof assetsExport>>, TError = AssetErrorBody>(
+ params?: AssetsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsExport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof assetsExport>>,
+          TError,
+          Awaited<ReturnType<typeof assetsExport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAssetsExport<TData = Awaited<ReturnType<typeof assetsExport>>, TError = AssetErrorBody>(
+ params?: AssetsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsExport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export Assets
+ */
+
+export function useAssetsExport<TData = Awaited<ReturnType<typeof assetsExport>>, TError = AssetErrorBody>(
+ params?: AssetsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsExport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAssetsExportQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type assetsDeleteResponse204 = {
   data: void
   status: 204
 }
