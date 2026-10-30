@@ -24,26 +24,31 @@ module, and build the host side of those actions (tag: extend).
 Stub: the full spec is written once APPROVALS-09 and INSPECTIONS-01 have merged. Scope agreed so far:
 
 - **Guard facts.** The inspections module registers its guard context provider for `inspection` (APPROVALS-02
-  Part B) with at least `category.hasSupervisorReview`, `category.allowConcurrentInspections` and
-  `checkout.fromState` (the status before the tablet checkout). Both category settings default to true / false
-  respectively and are new inspection-category fields.
+  Part B) with at least `hasSupervisorReview`, `category.allowConcurrentInspections` and
+  `checkout.fromState` (the status before the tablet checkout). `hasSupervisorReview` (default true) is a new
+  field on the inspection category **and** the template (owner, 2026-10-31): the template's value, when set,
+  overrides the category's, and the provider returns the resolved value. `allowConcurrentInspections` (default
+  false) is a category field.
 - **Mark as Performed without supervisor review:** `mark_performed` from `in_progress`, `in_progress_go` and
   `inspector_review` → `performed`, critical (`signoffAction: inspection.approve`), guarded on
-  `category.hasSupervisorReview == false`, permission `approvals.inspection.approve`.
-- **Return from the tablet:** Abort, Update & Return to Pool and Unlock from `in_progress_go` return to
-  `checkout.fromState` (one of assignable, assigned, in_progress, inspector_review, rework_required). The engine
-  allows one transition per `(from, action)`, so each becomes guarded twins, one per origin state, for example
-  `go_abort_to_assigned` with guard `checkout.fromState == "assigned"`, sharing one label key. Unlock needs
-  `approvals.inspection.unlock` (new) and follows ADR 0024 (token epoch, quarantined uploads). Update & Return to
-  Pool syncs the tablet's answers first; Abort discards them. Owner question 1 in APPROVALS-09 may change the target
-  to Assignable.
+  `hasSupervisorReview == false`, permission `approvals.inspection.approve`.
+- **Return from the tablet** (owner, 2026-10-31):
+  - Abort and Unlock from `in_progress_go` return to `checkout.fromState` (one of assignable, assigned,
+    in_progress, inspector_review, rework_required). The engine allows one transition per `(from, action)`, so
+    each becomes guarded twins, one per origin state, for example `go_abort_to_assigned` with guard
+    `checkout.fromState == "assigned"`, sharing one label key. Abort discards the tablet's changes.
+  - Unlock needs `approvals.inspection.unlock` (new) and follows ADR 0024 (token epoch, quarantined uploads).
+  - **Update & Return to Pool** (`go_return_to_pool`) syncs the tablet's answers, clears the assignee and goes to
+    `assignable`, so someone else can be assigned. No guard.
 - **Reinspect and supersede:** `reinspect` `performed` → `superseded` (permission `approvals.inspection.assign`)
   also creates a new Draft inspection for the same asset in the same transaction, linked to the old one;
   `supersede` `retired` → `superseded`, guarded on `category.allowConcurrentInspections`; when a re-inspection is
   retired, its superseded predecessor returns to `performed` (`restore` `superseded` → `performed`, a system
   transition run by the inspections module). This replaces APPROVALS-05's rule that re-inspection is not a
-  transition. "Create New" from Performed is a host action that creates a new Draft inspection without
-  superseding (owner question 3).
+  transition.
+- **Create New** from Performed (owner, 2026-10-31) is a host action, not a transition. It creates a new Draft
+  inspection for the same asset without superseding the performed one, so an asset can be inspected repeatedly
+  over time for maintenance (for example a yearly wall-thickness check).
 - **Golden cases:** each guarded path both allowed and refused, every Go return twin, and the reinspect →
   retire-the-reinspection → restore loop.
 - **Out of scope:** the email alerts (no notifications module in R1) and the Go app itself.

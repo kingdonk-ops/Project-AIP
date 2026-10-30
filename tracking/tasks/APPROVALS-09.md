@@ -130,9 +130,10 @@ returning to the status before a tablet checkout) are INSPECTIONS-09 (tag: exten
 
   - 4. **Left for INSPECTIONS-09** (each needs facts from the inspections module, so a guard or a host action):
     - Mark as Performed from `in_progress`, `in_progress_go` and `inspector_review`, which skips Supervisor Review
-      when the inspection category has supervisor review turned off (guard on the category fact).
-    - Abort, Update & Return to Pool and Unlock from `in_progress_go`, which return to the status the inspection had
-      before checkout (guarded per origin; see INSPECTIONS-09).
+      when the inspection category or template has supervisor review turned off (guard on the resolved fact).
+    - Abort and Unlock from `in_progress_go`, which return to the status the inspection had before checkout
+      (guarded per origin; see INSPECTIONS-09). Update & Return to Pool goes to `assignable` with the assignee
+      cleared; it needs no guard, but it ships with the other tablet returns in INSPECTIONS-09.
     - Reinspect from `performed` (→ `superseded`, and a new Draft inspection), Supersede from `retired` when the
       category allows concurrent inspections, and restoring `superseded` → `performed` when the re-inspection is
       retired.
@@ -202,14 +203,16 @@ in R1 ([BACKLOG](../BACKLOG.md), "Inspection notifications"), so this task build
 | `supervisor_review` | users with `approvals.inspection.approve` (the owner's "Mark Inspection as Performed" permission) |
 | `rework_required` | the assignee ("Rework Required" email) |
 
-## Questions for the owner (do not block the build; the defaults are in the spec)
+## Owner answers (2026-10-31)
 
-1. Abort and Update & Return to Pool from In Progress (Go) say "Assignable | (previous status before checkout)".
-   Default in INSPECTIONS-09: return to the previous status. Should it always be Assignable instead?
-2. Mark as Performed without supervisor review is tied to the Essentials tier in AIP. Default here: only the
-   inspection category's "has supervisor review" setting decides; plans and tiers do not. Confirm.
-3. The owner's table lists "Create New" under Performed. Default: a host action that creates a new Draft inspection
-   for the same asset without superseding the performed one. Confirm.
+1. **Returning from the tablet:** Abort and Unlock return the inspection to the status it had before checkout.
+   **Update & Return to Pool** syncs the tablet's answers, clears the assignee and returns it to **Assignable**, so
+   someone else can be assigned.
+2. **Skipping supervisor review** is an option on the inspection **category or template**, not tied to a plan or
+   tier. A template that sets it overrides its category; otherwise the category's setting applies.
+3. **Create New** under Performed is a host action that creates a new Draft inspection for the same asset without
+   superseding the performed one. It supports repeat inspections of an asset over time for maintenance (for
+   example a yearly wall-thickness check).
 
 ## Appendix: the owner's tables (2026-10-30)
 
