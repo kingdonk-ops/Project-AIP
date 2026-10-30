@@ -54,7 +54,7 @@ Decisions and notes
 - Notifications cover assignment, bookings, reminders, witness and hold alerts, review, rejection, approval, overdue and eligibility failure.
 
 Open questions
-- Which competitors natively support customer witness notification is unconfirmed.
+- Witness notification: the system notifies the in-system client inspector with the notice period and records it; third-party inspectors outside the system are notified by QA (answered 2026-10-30, [ADR 0039](../../../adr/0039-owner-answers-item-types-witness-root-cause.md)).
 - State machine implementation: advisors suggested XState or a Postgres workflow table, while the architecture output uses the existing workflow definition; not decided.
 
 ## Other files in this folder (read only if your task needs them)
