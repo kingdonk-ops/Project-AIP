@@ -56,15 +56,15 @@ Copied from the R1 modules' README "Open questions". Questions already settled b
 the end and recorded in [ADR 0036](../docs/adr/0036-r1-module-decisions.md); the numbered ones need you. A task
 marked `blocked` on the board waits for its question; the others only shape later stubs.
 
-38. **item_types, inheritance:** can a child item type remove or override inherited attributes, or only add? Advisors suggest add-only, with overrides of required, unit and tolerance. (No R1 task; inheritance is after R1.)
-39. **item_types, schema changes:** how are existing assets and completed inspections handled when a type's schema changes? R1 pins each asset to an item-type version (ITEMTYPES-02, ASSETS-02); advisors propose a migration preview with impact counts for later.
+38. ~~**item_types, inheritance:** can a child item type remove or override inherited attributes, or only add?~~ Answered 2026-10-30: add and tighten only. A child may add attributes, make optional ones required, narrow tolerances and options, convert units within a dimension and change display fields; it may never remove or loosen an inherited attribute ([ADR 0039](../docs/adr/0039-owner-answers-item-types-witness-root-cause.md)). Inheritance stays after R1.
+39. ~~**item_types, schema changes:** how are existing assets and completed inspections handled when a type's schema changes?~~ Answered 2026-10-30: assets stay pinned to their version, completed inspections never migrate, and moving assets is an explicit step behind a migration preview with impact counts and inheritance conflicts (ADR 0039). The preview stays after R1.
 40. **item_types, neutral states:** which fixed set of neutral lifecycle states do custom status sets map to (advisors suggest a fixed enum in code)? Blocks ITEMTYPES-05.
-41. **item_types, starter packs:** ship starter packs with the product, keep them as owner-curated per-tenant imports, or both (advisors suggest both)? Blocks ITEMTYPES-06.
+41. ~~**item_types, starter packs:** ship starter packs with the product, keep them as owner-curated per-tenant imports, or both?~~ Answered 2026-10-30: both. A tenant starts blank, has the operator provision packs for it, or self-selects industry-standard packs shipped with the product (ADR 0039). ITEMTYPES-06 is unblocked.
 42. ~~**Client sign-off route in R1.**~~ Answered 2026-10-18: the client portal is in R1 (ADR 0036). INSPECTIONS-05 is unblocked and the PORTAL rows are on the board.
-43. **inspections, witness notification:** which competitors natively notify customers of witness points is unconfirmed (market research, no task waits on it).
+43. ~~**inspections, witness notification:** which competitors natively notify customers of witness points?~~ Answered 2026-10-30: ITPpro and others do. The system notifies the client inspector (an in-system user) with the notice period and records it as a documented control; third-party inspectors outside the system are notified by QA as today (ADR 0039).
 44. **eligibility, grace periods and verification:** per-type grace periods, and checking licences against issuing registers, were seen in the market but not decided. (No R1 task; R1 is the hard block.)
 45. ~~**scope_work, access methods:** reconcile the access-method list before it is seeded.~~ Already answered in `docs/blueprint/01-decisions.md`: split MEWP and Ladder, tenant-editable list (ADR 0036). SCOPEWORK-06 is not blocked.
-46. **issues, root cause:** is the default root-cause method 5-why or fishbone? Blocks ISSUES-06.
+46. ~~**issues, root cause:** is the default root-cause method 5-why or fishbone?~~ Answered 2026-10-30: both are available; the tenant admin picks the default in settings or on first use (ADR 0039). ISSUES-06 is unblocked.
 47. **report_engine, sealing:** PAdES with AWS KMS-held keys, or hash and manifest only? R1 reports record a sha256 only.
 48. **report_engine, external signing:** DocuSign or Adobe Sign, or in-app attestations only?
 49. **report_engine, immutable storage:** S3 Object Lock for sealed outputs (MinIO with object lock on Coolify), or hash and manifest only?

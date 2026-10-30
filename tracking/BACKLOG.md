@@ -52,8 +52,8 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 
 | Item | Source | Why it waits |
 |---|---|---|
-| Type inheritance (base and extended types) | README, #38 | Open question |
-| Migration preview with impact counts when a schema changes | README, #39 | Open question; R1 pins versions |
+| Type inheritance (base and extended types), add and tighten only (ADR 0039) | README, #38 | Not in the R1 cut |
+| Migration preview with impact counts when a schema changes (ADR 0039) | README, #39 | Not in the R1 cut; R1 pins versions |
 | Auto-create an ITP or inspection per item type, with default templates | README, ITEMTYPES-01 author | Not in the R1 cut |
 | Units and tolerances on measurements with out-of-range flags for the rules engine | README | No rules engine in R1 |
 | Conditional and calculated item attributes | README | Forms gets calculated fields first (FORMS-07) |
@@ -89,7 +89,6 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | Human-readable inspection reference numbers | INSPECTIONS-01 author | Needs a numbering decision |
 | Editing or deleting ITP steps after creation; one child inspection per step | INSPECTIONS-03 author | Not in the R1 cut |
 | Inspection notifications (assignment, reminders, overdue, eligibility failure) | README | No notifications module in R1 |
-| Which competitors notify customers of witness points | README, #43 | Market research only |
 
 ## Eligibility
 
@@ -124,7 +123,7 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 |---|---|---|
 | NCR disposition with engineering approval and sealed records | README, ISSUES-03 author | Sealing is open (#47–#49) |
 | Overdue and SLA notifications with escalation, including overdue CAPA | README | No notifications module in R1 |
-| Root-cause trend reports and cost of poor quality | README | ISSUES-06 waits on #46; QMS is not in R1 |
+| Root-cause trend reports and cost of poor quality | README | QMS is not in R1 |
 | Kanban board view and CAPA board | README | After ISSUES-04 |
 | Sign-off assurance on `verify` and `close` | ISSUES-01 author | No issue transition is critical in R1 |
 | Subcontractor responses to NCRs and portal scoping by responsible company | README | Portal R1 slice is client sign-off only |
