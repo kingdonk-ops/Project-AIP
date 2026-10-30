@@ -51,7 +51,7 @@ Decisions and notes
 - Built in AIP: issues and corrective actions CRUD. Deferred items are now accepted scope.
 
 Open questions
-- Which root-cause method is the default (5-why or fishbone) is not decided.
+- Root-cause method: both 5-why and fishbone; the tenant admin picks the default in settings or on first use (answered 2026-10-30, [ADR 0039](../../../adr/0039-owner-answers-item-types-witness-root-cause.md)).
 - Whether cost impact flows to qms cost-of-poor-quality and to variations in this phase is not decided.
 
 ## Other files in this folder (read only if your task needs them)
