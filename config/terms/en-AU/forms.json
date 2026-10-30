@@ -159,5 +159,21 @@
   "forms.answer.TOO_MANY": "Select at most {maxItems}.",
   "forms.answer.RULE_FAILED": "This value does not meet the rule.",
   "forms.answer.UNKNOWN_FIELD": "This field is not part of the form.",
-  "forms.answer.failed": "Fail"
+  "forms.answer.failed": "Fail",
+  "forms.renderer.required": "Required",
+  "forms.renderer.yes": "Yes",
+  "forms.renderer.no": "No",
+  "forms.renderer.add_photo": "Add photo",
+  "forms.renderer.remove_photo": "Remove photo {name}",
+  "forms.renderer.sign": "Sign",
+  "forms.renderer.clear_signature": "Clear",
+  "forms.renderer.search_placeholder": "Type to search",
+  "forms.renderer.unsupported_field": "This field type ({type}) cannot be shown here.",
+  "forms.renderer.adapter_missing": "This field cannot be edited here.",
+  "forms.renderer.error_summary_title": "There is a problem",
+  "forms.renderer.error_summary_item": "{field}: {message}",
+  "forms.renderer.not_answered": "Not answered",
+  "forms.unit.mm": "mm",
+  "forms.unit.bar": "bar",
+  "forms.unit.degC": "°C"
 }

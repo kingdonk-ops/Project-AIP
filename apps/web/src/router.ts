@@ -32,6 +32,12 @@ const devRoutes = import.meta.env.PROD
         path: "/__fixtures/record",
         component: lazyRouteComponent(() => import("./routes/__fixtures/record"), "RecordFixture"),
       }),
+      // FORMS-03: the form renderer fixture (e2e/web/form-renderer.spec.ts).
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: "/__fixtures/form",
+        component: lazyRouteComponent(() => import("./routes/__fixtures/form"), "FormFixture"),
+      }),
     ];
 
 export const routeTree = rootRoute.addChildren([
