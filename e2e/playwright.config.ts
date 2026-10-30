@@ -55,6 +55,7 @@ const SKELETON = [
   "web/approvals-transition.spec.ts",
   // FORMS-04: the form template register and detail pages need the stack and real sign-in.
   "web/form-templates.spec.ts",
+  "web/item-types.spec.ts", // ITEMTYPES-03: needs both tenants signed in for real
 ];
 const UNIT = "fixtures/*.spec.ts";
 const skeletonProjects: PlaywrightTestConfig["projects"] = process.env.E2E_SKELETON
@@ -84,6 +85,8 @@ export default defineConfig({
   use: {
     baseURL: external ?? `http://localhost:${webPort}`,
     trace: "retain-on-failure",
+    // Axe reads a toast mid fade-in as near-invisible text; the app drops the animation under reduced motion.
+    contextOptions: { reducedMotion: "reduce" },
   },
   projects: [
     { name: "unit", testMatch: UNIT },

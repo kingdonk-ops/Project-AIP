@@ -24,7 +24,7 @@
   "shell.scope.label": "Current scope",
   "shell.scope.tenant": "Organisation",
   "shell.scope.project": "Project",
-  "shell.userMenu.label": "Account menu",
+  "shell.userMenu.label": "Account menu for {name}",
   "shell.userMenu.signOut": "Sign out",
   "shell.userMenu.signOutFailed": "Sign out failed. Try again.",
   "shell.home.title": "Home",

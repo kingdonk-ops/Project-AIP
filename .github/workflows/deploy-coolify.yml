@@ -192,7 +192,7 @@ jobs:
           exit 1
       # TESTING-09: the walking skeleton against the demo once it serves this commit. Credentials
       # come from the coolify-demo environment secrets; a failure fails the deploy job.
-      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         if: steps.trigger.outputs.deployed == 'true' && vars.DEMO_URL != ''
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: steps.trigger.outputs.deployed == 'true' && vars.DEMO_URL != ''
