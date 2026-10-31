@@ -16,7 +16,7 @@ NULLIF policy), plus the ACCESS-03 project-scope policy because it carries ``pro
   service checks existence through their ``api.py``. Deletes are soft, so ``aip_app`` loses DELETE.
 
 Revision ID: 202610311600
-Revises: 202610311200
+Revises: 202610311500
 Create Date: 2026-10-31 16:00:00+00:00
 """
 
@@ -25,7 +25,7 @@ from alembic import op
 from aip.platform.db.templates import render_template
 
 revision: str = "202610311600"
-down_revision: str | None = "202610311200"
+down_revision: str | None = "202610311500"
 branch_labels = None
 depends_on = None
 

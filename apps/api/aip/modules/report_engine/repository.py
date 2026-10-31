@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, func, insert, select, update
+from sqlalchemy import ColumnElement, Select, func, insert, or_, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -172,8 +172,17 @@ async def insert_job(conn: AsyncConnection, values: dict[str, Any]) -> Row:
     return dict((await conn.execute(stmt)).mappings().one())
 
 
+def _job_with_template_name() -> Select[Any]:
+    """The live job with its pinned template's ``name_key`` (REPORTS-04; ``None`` if it is gone)."""
+    return (
+        select(j, t.c.name_key.label("template_name_key"))
+        .select_from(j.outerjoin(t, t.c.id == j.c.template_id))
+        .where(_live_job())
+    )
+
+
 async def get_job(conn: AsyncConnection, id: UUID) -> Row | None:
-    stmt = select(j).where(j.c.id == id, _live_job())
+    stmt = _job_with_template_name().where(j.c.id == id)
     row = (await conn.execute(stmt)).mappings().first()
     return None if row is None else dict(row)
 
@@ -186,7 +195,7 @@ async def lock_job(conn: AsyncConnection, id: UUID) -> Row | None:
 
 
 async def find_job_by_idempotency_key(conn: AsyncConnection, key: str) -> Row | None:
-    stmt = select(j).where(j.c.idempotency_key == key, _live_job())
+    stmt = _job_with_template_name().where(j.c.idempotency_key == key)
     row = (await conn.execute(stmt)).mappings().first()
     return None if row is None else dict(row)
 
@@ -208,9 +217,26 @@ async def list_jobs(
     record_id: UUID | None,
     before: UUID | None,
     limit: int,
+    statuses: tuple[str, ...] = (),
+    q: str | None = None,
 ) -> list[Row]:
-    """Jobs newest first (UUIDv7 ids, so id order is creation order) before ``before``."""
-    stmt = select(j).where(_live_job())
+    """Jobs newest first (UUIDv7 ids, so id order is creation order) before ``before``.
+
+    ``q`` (REPORTS-04) is a case-insensitive substring of the record label or the template key;
+    ``%``, ``_`` and the backslash in it match literally.
+    """
+    stmt = _job_with_template_name()
+    if statuses:
+        stmt = stmt.where(j.c.status.in_(statuses))
+    if q:
+        escaped = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped}%"
+        stmt = stmt.where(
+            or_(
+                j.c.record_label.ilike(pattern, escape="\\"),
+                j.c.template_key.ilike(pattern, escape="\\"),
+            )
+        )
     if record_type is not None:
         stmt = stmt.where(j.c.record_type == record_type)
     if record_id is not None:

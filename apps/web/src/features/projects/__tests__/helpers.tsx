@@ -8,12 +8,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { render } from "@testing-library/react";
 import axe from "axe-core";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { createAppRouter } from "../../../router";
 import type { Session, SessionPort } from "../../shell/session";
 import { SessionPortProvider } from "../../shell/session-context";
 
-export const server = setupServer();
+// DESIGN-15: the shell reads the release flags on every page; by default every flag is off. A test
+// that needs a flag on overrides this with `server.use`.
+export const server = setupServer(
+  http.get("*/api/v1/settings/flags", () =>
+    HttpResponse.json({ flags: [{ flag: "ai", enabled: false }, { flag: "bim", enabled: false }] }),
+  ),
+);
 
 let realFetch: typeof fetch | undefined;
 

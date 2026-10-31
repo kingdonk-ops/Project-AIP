@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { activeNavItem, documentTitle } from "./brand";
+import { useEnabledFlags } from "./flags";
 import { Header } from "./Header";
 import { NavRail } from "./NavRail";
 import { ScopeBar } from "./ScopeBar";
@@ -23,6 +24,7 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
   const port = useSessionPort();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const enabledFlags = useEnabledFlags();
   const [navOpen, setNavOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -112,6 +114,7 @@ export function AppShell({ session, children, navItems, projectName }: AppShellP
         />
         <NavRail
           permissions={session.permissions}
+          flags={enabledFlags}
           items={navItems}
           open={navOpen}
           onNavigate={() => setNavOpen(false)}

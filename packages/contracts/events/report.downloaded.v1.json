@@ -1,0 +1,37 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "fileId": {
+      "format": "uuid",
+      "title": "Fileid",
+      "type": "string"
+    },
+    "pdfSha256": {
+      "title": "Pdfsha256",
+      "type": "string"
+    },
+    "recordId": {
+      "format": "uuid",
+      "title": "Recordid",
+      "type": "string"
+    },
+    "recordType": {
+      "title": "Recordtype",
+      "type": "string"
+    },
+    "renderJobId": {
+      "format": "uuid",
+      "title": "Renderjobid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "renderJobId",
+    "fileId",
+    "recordType",
+    "recordId",
+    "pdfSha256"
+  ],
+  "title": "ReportDownloaded",
+  "type": "object"
+}
