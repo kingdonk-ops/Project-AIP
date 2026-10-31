@@ -12,6 +12,8 @@ tenant's id. ``context`` is the trigger data (``{}`` for a manual render). ``dat
 JSON (strings, numbers, booleans, lists, dicts) and hold no clock value: the snapshot hash is taken
 over it, so unchanged data gives the same hash. ``files`` lists ``{fileId, role}`` stored files the
 template may show; ``time_zone_hint`` is the record's IANA zone (``None`` falls back to UTC).
+``label`` (REPORTS-04) is the record's human label for the report register (a project gives
+``"<code> <name>"``); it is kept on the render job, not in the snapshot.
 
 ``providers/project.py`` registers ``project``; REPORTS-03 adds ``inspection``.
 """
@@ -59,6 +61,7 @@ class ReportSource:
     data: Mapping[str, Any]
     files: tuple[SourceFile, ...] = field(default_factory=tuple[SourceFile, ...])
     time_zone_hint: str | None = None
+    label: str | None = None
 
 
 Provider = Callable[..., Awaitable[ReportSource]]

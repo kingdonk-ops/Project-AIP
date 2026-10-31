@@ -6,6 +6,11 @@ import * as zod from 'zod';
  * @summary List Renders
  */
 export const reportsRendersListQueryRecordTypeOneRegExp = new RegExp('^[a-z][a-z_]{1,40}$');
+export const reportsRendersListQueryStatusDefault = [];
+export const reportsRendersListQueryStatusMax = 4;
+
+export const reportsRendersListQueryQOneMax = 100;
+
 export const reportsRendersListQueryCursorOneMax = 200;
 
 export const reportsRendersListQueryLimitDefault = 50;
@@ -16,6 +21,8 @@ export const reportsRendersListQueryLimitMax = 200;
 export const ReportsRendersListQueryParams = zod.object({
   "recordType": zod.union([zod.string().regex(reportsRendersListQueryRecordTypeOneRegExp),zod.null()]).optional(),
   "recordId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "status": zod.array(zod.enum(['queued', 'running', 'succeeded', 'failed'])).max(reportsRendersListQueryStatusMax).default(reportsRendersListQueryStatusDefault),
+  "q": zod.union([zod.string().min(1).max(reportsRendersListQueryQOneMax),zod.null()]).optional(),
   "cursor": zod.union([zod.string().max(reportsRendersListQueryCursorOneMax),zod.null()]).optional(),
   "limit": zod.int().min(1).max(reportsRendersListQueryLimitMax).default(reportsRendersListQueryLimitDefault)
 })
@@ -33,6 +40,7 @@ export const ReportsRendersListResponse = zod.object({
   "pdfSizeBytes": zod.union([zod.int(),zod.null()]),
   "projectId": zod.union([zod.uuid(),zod.null()]),
   "recordId": zod.uuid(),
+  "recordLabel": zod.union([zod.string(),zod.null()]).optional(),
   "recordType": zod.string(),
   "renderedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
   "requestedBy": zod.union([zod.uuid(),zod.null()]),
@@ -41,10 +49,11 @@ export const ReportsRendersListResponse = zod.object({
   "status": zod.enum(['queued', 'running', 'succeeded', 'failed']),
   "templateId": zod.uuid(),
   "templateKey": zod.string(),
+  "templateNameKey": zod.union([zod.string(),zod.null()]).optional(),
   "templateVersion": zod.int(),
   "updatedAt": zod.iso.datetime({"offset":true}),
   "variant": zod.enum(['internal', 'client', 'certificate'])
-}).describe('One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot\'s; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.')),
+}).describe('One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot\'s; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.\n\nREPORTS-04: ``recordLabel`` is the source record\'s label at request time (``None`` before\nREPORTS-04), ``templateNameKey`` the pinned template\'s terminology key for its name. The PDF is\ndownloaded from ``GET /reports/renders/{id}/file``, never from a storage URL.')),
   "nextCursor": zod.union([zod.string(),zod.null()])
 })
 
@@ -88,6 +97,7 @@ export const ReportsRendersCreateResponse = zod.object({
   "pdfSizeBytes": zod.union([zod.int(),zod.null()]),
   "projectId": zod.union([zod.uuid(),zod.null()]),
   "recordId": zod.uuid(),
+  "recordLabel": zod.union([zod.string(),zod.null()]).optional(),
   "recordType": zod.string(),
   "renderedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
   "requestedBy": zod.union([zod.uuid(),zod.null()]),
@@ -96,10 +106,11 @@ export const ReportsRendersCreateResponse = zod.object({
   "status": zod.enum(['queued', 'running', 'succeeded', 'failed']),
   "templateId": zod.uuid(),
   "templateKey": zod.string(),
+  "templateNameKey": zod.union([zod.string(),zod.null()]).optional(),
   "templateVersion": zod.int(),
   "updatedAt": zod.iso.datetime({"offset":true}),
   "variant": zod.enum(['internal', 'client', 'certificate'])
-}).describe('One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot\'s; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.')
+}).describe('One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot\'s; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.\n\nREPORTS-04: ``recordLabel`` is the source record\'s label at request time (``None`` before\nREPORTS-04), ``templateNameKey`` the pinned template\'s terminology key for its name. The PDF is\ndownloaded from ``GET /reports/renders/{id}/file``, never from a storage URL.')
 
 /**
  * @summary Get Render
@@ -120,6 +131,7 @@ export const ReportsRendersGetResponse = zod.object({
   "pdfSizeBytes": zod.union([zod.int(),zod.null()]),
   "projectId": zod.union([zod.uuid(),zod.null()]),
   "recordId": zod.uuid(),
+  "recordLabel": zod.union([zod.string(),zod.null()]).optional(),
   "recordType": zod.string(),
   "renderedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
   "requestedBy": zod.union([zod.uuid(),zod.null()]),
@@ -128,10 +140,20 @@ export const ReportsRendersGetResponse = zod.object({
   "status": zod.enum(['queued', 'running', 'succeeded', 'failed']),
   "templateId": zod.uuid(),
   "templateKey": zod.string(),
+  "templateNameKey": zod.union([zod.string(),zod.null()]).optional(),
   "templateVersion": zod.int(),
   "updatedAt": zod.iso.datetime({"offset":true}),
   "variant": zod.enum(['internal', 'client', 'certificate'])
-}).describe('One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot\'s; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.')
+}).describe('One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot\'s; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.\n\nREPORTS-04: ``recordLabel`` is the source record\'s label at request time (``None`` before\nREPORTS-04), ``templateNameKey`` the pinned template\'s terminology key for its name. The PDF is\ndownloaded from ``GET /reports/renders/{id}/file``, never from a storage URL.')
+
+/**
+ * @summary Download Render
+ */
+export const ReportsRendersFileParams = zod.object({
+  "render_job_id": zod.uuid()
+})
+
+export const ReportsRendersFileResponse = zod.unknown()
 
 /**
  * @summary Rerender
@@ -152,6 +174,7 @@ export const ReportsRendersRerenderResponse = zod.object({
   "pdfSizeBytes": zod.union([zod.int(),zod.null()]),
   "projectId": zod.union([zod.uuid(),zod.null()]),
   "recordId": zod.uuid(),
+  "recordLabel": zod.union([zod.string(),zod.null()]).optional(),
   "recordType": zod.string(),
   "renderedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
   "requestedBy": zod.union([zod.uuid(),zod.null()]),
@@ -160,10 +183,11 @@ export const ReportsRendersRerenderResponse = zod.object({
   "status": zod.enum(['queued', 'running', 'succeeded', 'failed']),
   "templateId": zod.uuid(),
   "templateKey": zod.string(),
+  "templateNameKey": zod.union([zod.string(),zod.null()]).optional(),
   "templateVersion": zod.int(),
   "updatedAt": zod.iso.datetime({"offset":true}),
   "variant": zod.enum(['internal', 'client', 'certificate'])
-}).describe('One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot\'s; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.')
+}).describe('One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot\'s; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.\n\nREPORTS-04: ``recordLabel`` is the source record\'s label at request time (``None`` before\nREPORTS-04), ``templateNameKey`` the pinned template\'s terminology key for its name. The PDF is\ndownloaded from ``GET /reports/renders/{id}/file``, never from a storage URL.')
 
 /**
  * @summary List Templates

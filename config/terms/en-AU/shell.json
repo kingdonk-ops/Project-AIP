@@ -42,5 +42,17 @@
   "shell.login.rateLimited": "Too many attempts. Wait a moment and try again.",
   "shell.login.unavailable": "Sign-in is not available right now. Try again shortly.",
   "shell.error.sessionUnavailable": "We could not load your session. Reload the page to try again.",
-  "shell.demoBanner": "Demo, synthetic data only"
+  "shell.demoBanner": "Demo, synthetic data only",
+  "shell.flags.nav": "Release flags",
+  "shell.flags.title": "Release flags",
+  "shell.flags.intro": "Turn modules that are still being rolled out on or off for your organisation. A change applies to everyone in the organisation.",
+  "shell.flags.list": "Release flags",
+  "shell.flags.flag.bim": "BIM models",
+  "shell.flags.flag.bim.description": "3D building information models and the model viewer.",
+  "shell.flags.flag.ai": "AI assistant",
+  "shell.flags.flag.ai.description": "The AI assistant and AI-generated suggestions.",
+  "shell.flags.turned_on": "{flag} is now on.",
+  "shell.flags.turned_off": "{flag} is now off.",
+  "shell.flags.change_failed": "The flag could not be changed. Try again.",
+  "shell.flags.fixture_nav": "BIM models (preview)"
 }
