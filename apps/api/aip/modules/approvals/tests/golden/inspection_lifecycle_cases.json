@@ -1,173 +1,572 @@
 {
-  "source": "blueprint (provisional)",
-  "confirmedBy": null,
-  "confirmedOn": null,
-  "derivedFrom": "docs/blueprint/modules/inspections/README.md, Features: draft > assignable > assigned > in progress > inspector review > supervisor review > [client review] > completed; reject/resend; re-inspect (a new inspection, not a transition)",
+  "source": "owner AIP status and action tables (2026-10-30)",
+  "confirmedBy": "owner",
+  "confirmedOn": "2026-10-30",
+  "derivedFrom": "tracking/tasks/APPROVALS-09.md (appendix: the owner's status and action tables). Guarded and host actions (skip supervisor review, tablet Abort/Unlock/Update & Return to Pool, Reinspect, Supersede) are INSPECTIONS-09.",
   "pathsNote": "How each case reaches its start state from draft when run through TransitionService.",
+  "commentNote": "A case with \"comment\": false takes its actions without a comment; every other case sends one.",
   "paths": {
     "standard": {
       "draft": [],
+      "clarification_required": [
+        "request_clarification"
+      ],
+      "assignable": [
+        "ready_unassigned"
+      ],
       "assigned": [
+        "ready"
+      ],
+      "in_progress": [
         "ready",
-        "assign"
+        "inspect"
+      ],
+      "in_progress_go": [
+        "ready",
+        "go_checkout"
       ],
       "inspector_review": [
         "ready",
-        "assign",
-        "start",
-        "submit"
+        "go_checkout",
+        "check_in"
       ],
       "supervisor_review": [
         "ready",
-        "assign",
-        "start",
-        "submit",
-        "review_pass"
+        "inspect",
+        "request_supervisor_review"
       ],
-      "completed": [
+      "rework_required": [
         "ready",
-        "assign",
-        "start",
-        "submit",
-        "review_pass",
-        "approve"
+        "inspect",
+        "request_supervisor_review",
+        "request_rework"
+      ],
+      "performed": [
+        "ready",
+        "inspect",
+        "request_supervisor_review",
+        "mark_performed"
+      ],
+      "retired": [
+        "retire"
       ]
     },
     "client_review": {
       "draft": [],
+      "clarification_required": [
+        "request_clarification"
+      ],
+      "assignable": [
+        "ready_unassigned"
+      ],
       "assigned": [
+        "ready"
+      ],
+      "in_progress": [
         "ready",
-        "assign"
+        "inspect"
+      ],
+      "in_progress_go": [
+        "ready",
+        "go_checkout"
       ],
       "inspector_review": [
         "ready",
-        "assign",
-        "start",
-        "submit"
+        "go_checkout",
+        "check_in"
       ],
       "supervisor_review": [
         "ready",
-        "assign",
-        "start",
-        "submit",
-        "review_pass"
+        "inspect",
+        "request_supervisor_review"
+      ],
+      "rework_required": [
+        "ready",
+        "inspect",
+        "request_supervisor_review",
+        "request_rework"
+      ],
+      "performed": [
+        "ready",
+        "inspect",
+        "request_supervisor_review",
+        "mark_performed",
+        "client_approve"
+      ],
+      "retired": [
+        "retire"
       ],
       "client_review": [
         "ready",
-        "assign",
-        "start",
-        "submit",
-        "review_pass",
-        "approve"
-      ],
-      "completed": [
-        "ready",
-        "assign",
-        "start",
-        "submit",
-        "review_pass",
-        "approve",
-        "client_approve"
+        "inspect",
+        "request_supervisor_review",
+        "mark_performed"
       ]
     }
   },
   "cases": [
     {
-      "name": "standard-happy-path",
+      "name": "happy-path",
       "variant": "standard",
       "start": "draft",
       "actions": [
         "ready",
-        "assign",
-        "start",
-        "submit",
-        "review_pass",
-        "approve"
+        "inspect",
+        "request_supervisor_review",
+        "mark_performed"
       ],
       "expect": {
-        "state": "completed"
+        "state": "performed"
       }
     },
     {
-      "name": "client-happy-path",
-      "variant": "client_review",
+      "name": "ready-unassigned",
+      "variant": "standard",
       "start": "draft",
       "actions": [
-        "ready",
-        "assign",
-        "start",
-        "submit",
-        "review_pass",
-        "approve",
-        "client_approve"
+        "ready_unassigned"
       ],
       "expect": {
-        "state": "completed"
+        "state": "assignable"
       }
     },
     {
-      "name": "client-review-follows-approve",
-      "variant": "client_review",
-      "start": "supervisor_review",
-      "actions": [
-        "approve"
-      ],
-      "expect": {
-        "state": "client_review"
-      }
-    },
-    {
-      "name": "approve-too-early",
+      "name": "unassigned-then-assign-to-me",
       "variant": "standard",
-      "start": "inspector_review",
+      "start": "draft",
       "actions": [
-        "approve"
+        "ready_unassigned",
+        "assign_to_me"
       ],
       "expect": {
-        "error": "INVALID_TRANSITION"
+        "state": "assigned"
       }
     },
     {
-      "name": "reject-at-inspector-review",
+      "name": "schedule-pair",
       "variant": "standard",
-      "start": "inspector_review",
+      "start": "draft",
       "actions": [
-        "reject"
+        "schedule_unassigned",
+        "schedule"
       ],
       "expect": {
-        "state": "rejected"
+        "state": "assigned"
       }
     },
     {
-      "name": "reject-and-resend",
+      "name": "quick-assign-to-me-from-draft",
       "variant": "standard",
-      "start": "supervisor_review",
+      "start": "draft",
       "actions": [
-        "reject",
-        "resend",
-        "start"
+        "assign_to_me"
+      ],
+      "expect": {
+        "state": "assigned"
+      }
+    },
+    {
+      "name": "quick-inspect-from-draft",
+      "variant": "standard",
+      "start": "draft",
+      "actions": [
+        "quick_inspect"
       ],
       "expect": {
         "state": "in_progress"
       }
     },
     {
-      "name": "client-reject",
-      "variant": "client_review",
-      "start": "client_review",
+      "name": "assign-to-me-is-a-self-loop",
+      "variant": "standard",
+      "start": "assigned",
       "actions": [
-        "reject"
+        "assign_to_me"
       ],
       "expect": {
-        "state": "rejected"
+        "state": "assigned"
       }
     },
     {
-      "name": "client-cannot-skip",
-      "variant": "client_review",
-      "start": "client_review",
+      "name": "handover-unassigned",
+      "variant": "standard",
+      "start": "assigned",
       "actions": [
-        "approve"
+        "handover_unassigned"
+      ],
+      "expect": {
+        "state": "assignable"
+      }
+    },
+    {
+      "name": "abort-from-in-progress",
+      "variant": "standard",
+      "start": "in_progress",
+      "actions": [
+        "abort"
+      ],
+      "expect": {
+        "state": "assignable"
+      }
+    },
+    {
+      "name": "abort-from-inspector-review",
+      "variant": "standard",
+      "start": "inspector_review",
+      "actions": [
+        "abort"
+      ],
+      "expect": {
+        "state": "assignable"
+      }
+    },
+    {
+      "name": "assign-unassigned-from-in-progress",
+      "variant": "standard",
+      "start": "in_progress",
+      "actions": [
+        "assign_unassigned"
+      ],
+      "expect": {
+        "state": "assignable"
+      }
+    },
+    {
+      "name": "go-round-trip",
+      "variant": "standard",
+      "start": "assigned",
+      "actions": [
+        "go_checkout",
+        "check_in",
+        "request_supervisor_review"
+      ],
+      "expect": {
+        "state": "supervisor_review"
+      }
+    },
+    {
+      "name": "go-checkout-reaches-in-progress-go",
+      "variant": "standard",
+      "start": "assigned",
+      "actions": [
+        "go_checkout"
+      ],
+      "expect": {
+        "state": "in_progress_go"
+      }
+    },
+    {
+      "name": "check-in-reaches-inspector-review",
+      "variant": "standard",
+      "start": "in_progress_go",
+      "actions": [
+        "check_in"
+      ],
+      "expect": {
+        "state": "inspector_review"
+      }
+    },
+    {
+      "name": "go-checkout-from-assignable",
+      "variant": "standard",
+      "start": "assignable",
+      "actions": [
+        "go_checkout"
+      ],
+      "expect": {
+        "state": "in_progress_go"
+      }
+    },
+    {
+      "name": "rework-loop",
+      "variant": "standard",
+      "start": "supervisor_review",
+      "actions": [
+        "request_rework",
+        "go_checkout",
+        "check_in",
+        "request_supervisor_review",
+        "mark_performed"
+      ],
+      "expect": {
+        "state": "performed"
+      }
+    },
+    {
+      "name": "rework-required-after-request-rework",
+      "variant": "standard",
+      "start": "supervisor_review",
+      "actions": [
+        "request_rework"
+      ],
+      "expect": {
+        "state": "rework_required"
+      }
+    },
+    {
+      "name": "rework-handover",
+      "variant": "standard",
+      "start": "rework_required",
+      "actions": [
+        "handover"
+      ],
+      "expect": {
+        "state": "assigned"
+      }
+    },
+    {
+      "name": "clarification-from-draft",
+      "variant": "standard",
+      "start": "draft",
+      "actions": [
+        "request_clarification"
+      ],
+      "expect": {
+        "state": "clarification_required"
+      }
+    },
+    {
+      "name": "clarification-from-assignable",
+      "variant": "standard",
+      "start": "assignable",
+      "actions": [
+        "request_clarification"
+      ],
+      "expect": {
+        "state": "clarification_required"
+      }
+    },
+    {
+      "name": "clarification-from-assigned",
+      "variant": "standard",
+      "start": "assigned",
+      "actions": [
+        "request_clarification"
+      ],
+      "expect": {
+        "state": "clarification_required"
+      }
+    },
+    {
+      "name": "clarification-from-in-progress",
+      "variant": "standard",
+      "start": "in_progress",
+      "actions": [
+        "request_clarification"
+      ],
+      "expect": {
+        "state": "clarification_required"
+      }
+    },
+    {
+      "name": "clarification-from-in-progress-go",
+      "variant": "standard",
+      "start": "in_progress_go",
+      "actions": [
+        "request_clarification"
+      ],
+      "expect": {
+        "state": "clarification_required"
+      }
+    },
+    {
+      "name": "clarification-from-inspector-review",
+      "variant": "standard",
+      "start": "inspector_review",
+      "actions": [
+        "request_clarification"
+      ],
+      "expect": {
+        "state": "clarification_required"
+      }
+    },
+    {
+      "name": "clarification-from-supervisor-review",
+      "variant": "standard",
+      "start": "supervisor_review",
+      "actions": [
+        "request_clarification"
+      ],
+      "expect": {
+        "state": "clarification_required"
+      }
+    },
+    {
+      "name": "clarification-then-assign-with-comment",
+      "variant": "standard",
+      "start": "draft",
+      "actions": [
+        "request_clarification",
+        "assign_with_comment"
+      ],
+      "expect": {
+        "state": "assigned"
+      }
+    },
+    {
+      "name": "clarification-then-assign-with-comment-unassigned",
+      "variant": "standard",
+      "start": "clarification_required",
+      "actions": [
+        "assign_with_comment_unassigned"
+      ],
+      "expect": {
+        "state": "assignable"
+      }
+    },
+    {
+      "name": "clarification-return-to-draft",
+      "variant": "standard",
+      "start": "clarification_required",
+      "actions": [
+        "return_to_draft"
+      ],
+      "expect": {
+        "state": "draft"
+      }
+    },
+    {
+      "name": "request-clarification-needs-a-comment",
+      "variant": "standard",
+      "start": "assigned",
+      "actions": [
+        "request_clarification"
+      ],
+      "comment": false,
+      "expect": {
+        "error": "COMMENT_REQUIRED"
+      }
+    },
+    {
+      "name": "request-rework-needs-a-comment",
+      "variant": "standard",
+      "start": "supervisor_review",
+      "actions": [
+        "request_rework"
+      ],
+      "comment": false,
+      "expect": {
+        "error": "COMMENT_REQUIRED"
+      }
+    },
+    {
+      "name": "retire-needs-a-comment",
+      "variant": "standard",
+      "start": "draft",
+      "actions": [
+        "retire"
+      ],
+      "comment": false,
+      "expect": {
+        "error": "COMMENT_REQUIRED"
+      }
+    },
+    {
+      "name": "assign-with-comment-needs-a-comment",
+      "variant": "standard",
+      "start": "clarification_required",
+      "actions": [
+        "assign_with_comment"
+      ],
+      "comment": false,
+      "expect": {
+        "error": "COMMENT_REQUIRED"
+      }
+    },
+    {
+      "name": "retire-from-draft",
+      "variant": "standard",
+      "start": "draft",
+      "actions": [
+        "retire"
+      ],
+      "expect": {
+        "state": "retired"
+      }
+    },
+    {
+      "name": "retire-from-clarification-required",
+      "variant": "standard",
+      "start": "clarification_required",
+      "actions": [
+        "retire"
+      ],
+      "expect": {
+        "state": "retired"
+      }
+    },
+    {
+      "name": "retire-from-assignable",
+      "variant": "standard",
+      "start": "assignable",
+      "actions": [
+        "retire"
+      ],
+      "expect": {
+        "state": "retired"
+      }
+    },
+    {
+      "name": "retire-from-assigned",
+      "variant": "standard",
+      "start": "assigned",
+      "actions": [
+        "retire"
+      ],
+      "expect": {
+        "state": "retired"
+      }
+    },
+    {
+      "name": "retire-from-inspector-review",
+      "variant": "standard",
+      "start": "inspector_review",
+      "actions": [
+        "retire"
+      ],
+      "expect": {
+        "state": "retired"
+      }
+    },
+    {
+      "name": "retire-from-supervisor-review",
+      "variant": "standard",
+      "start": "supervisor_review",
+      "actions": [
+        "retire"
+      ],
+      "expect": {
+        "state": "retired"
+      }
+    },
+    {
+      "name": "no-go-checkout-from-draft",
+      "variant": "standard",
+      "start": "draft",
+      "actions": [
+        "go_checkout"
+      ],
+      "expect": {
+        "error": "INVALID_TRANSITION"
+      }
+    },
+    {
+      "name": "no-retire-from-in-progress",
+      "variant": "standard",
+      "start": "in_progress",
+      "actions": [
+        "retire"
+      ],
+      "expect": {
+        "error": "INVALID_TRANSITION"
+      }
+    },
+    {
+      "name": "no-mark-performed-before-supervisor-review",
+      "variant": "standard",
+      "start": "in_progress",
+      "actions": [
+        "mark_performed"
       ],
       "expect": {
         "error": "INVALID_TRANSITION"
@@ -185,24 +584,44 @@
       }
     },
     {
-      "name": "unassign",
+      "name": "no-reinspect-yet",
       "variant": "standard",
-      "start": "assigned",
+      "start": "performed",
       "actions": [
-        "unassign"
+        "reinspect"
       ],
       "expect": {
-        "state": "assignable"
+        "error": "INVALID_TRANSITION"
       }
     },
     {
-      "name": "draft-offers-ready-only",
+      "name": "draft-offers",
       "variant": "standard",
       "start": "draft",
       "actions": [],
       "expect": {
         "available": [
-          "ready"
+          "ready",
+          "ready_unassigned",
+          "schedule",
+          "schedule_unassigned",
+          "request_clarification",
+          "retire",
+          "assign_to_me",
+          "quick_inspect"
+        ]
+      }
+    },
+    {
+      "name": "in-progress-go-offers",
+      "variant": "standard",
+      "start": "in_progress_go",
+      "actions": [],
+      "expect": {
+        "available": [
+          "request_supervisor_review",
+          "check_in",
+          "request_clarification"
         ]
       }
     },
@@ -213,38 +632,102 @@
       "actions": [],
       "expect": {
         "available": [
-          "approve",
-          "reject"
+          "mark_performed",
+          "request_rework",
+          "request_clarification",
+          "retire",
+          "return_to_draft"
         ]
       }
     },
     {
-      "name": "completed-is-final",
+      "name": "performed-offers-nothing-yet",
       "variant": "standard",
-      "start": "completed",
+      "start": "performed",
       "actions": [],
       "expect": {
         "available": []
       }
     },
     {
-      "name": "client-completed-is-final",
+      "name": "retired-offers-nothing-yet",
+      "variant": "standard",
+      "start": "retired",
+      "actions": [],
+      "expect": {
+        "available": []
+      }
+    },
+    {
+      "name": "client-happy-path",
       "variant": "client_review",
-      "start": "completed",
-      "actions": [],
+      "start": "draft",
+      "actions": [
+        "ready",
+        "inspect",
+        "request_supervisor_review",
+        "mark_performed",
+        "client_approve"
+      ],
       "expect": {
-        "available": []
+        "state": "performed"
       }
     },
     {
-      "name": "no-re-inspect-transition",
-      "variant": "standard",
-      "start": "completed",
+      "name": "client-review-follows-mark-performed",
+      "variant": "client_review",
+      "start": "supervisor_review",
       "actions": [
-        "re_inspect"
+        "mark_performed"
+      ],
+      "expect": {
+        "state": "client_review"
+      }
+    },
+    {
+      "name": "client-request-rework",
+      "variant": "client_review",
+      "start": "client_review",
+      "actions": [
+        "request_rework"
+      ],
+      "expect": {
+        "state": "rework_required"
+      }
+    },
+    {
+      "name": "client-request-rework-needs-a-comment",
+      "variant": "client_review",
+      "start": "client_review",
+      "actions": [
+        "request_rework"
+      ],
+      "comment": false,
+      "expect": {
+        "error": "COMMENT_REQUIRED"
+      }
+    },
+    {
+      "name": "client-cannot-skip",
+      "variant": "client_review",
+      "start": "client_review",
+      "actions": [
+        "mark_performed"
       ],
       "expect": {
         "error": "INVALID_TRANSITION"
+      }
+    },
+    {
+      "name": "client-review-offers",
+      "variant": "client_review",
+      "start": "client_review",
+      "actions": [],
+      "expect": {
+        "available": [
+          "client_approve",
+          "request_rework"
+        ]
       }
     }
   ]
