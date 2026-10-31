@@ -28,9 +28,9 @@ from aip.modules.approvals.api import Actor, InstanceView
 from aip.modules.identity.api import Principal, SessionFacts, get_principal
 from aip.modules.inspections import repository as repo
 from aip.modules.inspections.schemas import (
-    AvailableTransition,
-    DecisionOut,
+    InspectionAvailableTransition,
     InspectionCreate,
+    InspectionDecision,
     InspectionDetail,
     InspectionErrorBody,
     InspectionHistory,
@@ -108,7 +108,7 @@ def _detail(row: dict[str, Any], view: InstanceView) -> InspectionDetail:
             "instance_sync_version": instance["sync_version"],
             "pending_countersign": view.pending_countersign,
             "available_transitions": [
-                AvailableTransition(
+                InspectionAvailableTransition(
                     action=a.transition.action,
                     to_state=a.transition.to_state,
                     label_key=a.transition.label_key,
@@ -217,7 +217,7 @@ async def transition(
         response.status_code = status.HTTP_202_ACCEPTED
     return InspectionTransitionOut(
         inspection=_detail(row, result.view),
-        decision=DecisionOut.model_validate(result.decision),
+        decision=InspectionDecision.model_validate(result.decision),
     )
 
 
@@ -233,7 +233,7 @@ async def get_history(
     async with with_tenant(get_context()) as conn:
         history = await _service(request).history(conn, who, inspection_id)
     return InspectionHistory(
-        entries=[DecisionOut.model_validate(e) for e in history.entries],
+        entries=[InspectionDecision.model_validate(e) for e in history.entries],
         chain_valid=history.chain.ok,
         broken_at_seq=getattr(history.chain, "broken_at_seq", None),
     )
@@ -245,7 +245,7 @@ async def get_history(
     response_model=InspectionOut,
     status_code=status.HTTP_201_CREATED,
     responses={
-        **_CREATE_ERRORS,
+        **{code: spec for code, spec in _CREATE_ERRORS.items() if code != 200},
         409: {"model": InspectionErrorBody, "description": "NOT_COMPLETED"},
     },
 )

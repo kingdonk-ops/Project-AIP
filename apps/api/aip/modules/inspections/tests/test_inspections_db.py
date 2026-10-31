@@ -26,6 +26,7 @@ from aip.modules.inspections import service
 from aip.modules.inspections.events import follow_workflow
 from aip.platform.access import AccessPrincipal, Grant, ProjectScope
 from aip.platform.context import RequestContext, use_context
+from aip.platform.db.scope import run_as_system
 from aip.platform.events.dispatcher import DispatchSettings, dispatch_batch
 from aip.platform.events.subscribers import DomainEvent, subscribers
 
@@ -293,8 +294,8 @@ async def test_the_database_refuses_to_change_a_pin(
     db: TenantDb, setup: Setup, client: httpx.AsyncClient
 ) -> None:
     created = await create(client, setup)
-    with pytest.raises(DBAPIError) as caught:
-        async with db.with_tenant(TENANT_A_ID) as conn:
+    with pytest.raises(DBAPIError) as caught:  # system: the project-scope policy shows the row
+        async with run_as_system(TENANT_A_ID, engine=db.engine) as conn:
             await conn.execute(
                 text("UPDATE inspections SET template_revision_id = gen_random_uuid()")
             )
@@ -423,7 +424,7 @@ async def test_a_transition_through_approvals_is_followed_once_by_the_subscriber
     replay = DomainEvent(**values)
     context = RequestContext(tenant_id=TENANT_A_ID, request_id="replay", actor_id=replay.actor_id)
     with use_context(context):
-        async with db.with_tenant(TENANT_A_ID) as conn:
+        async with run_as_system(TENANT_A_ID, engine=db.engine) as conn:
             await follow_workflow(conn, replay)
     assert len(await state_events(db, created["id"])) == 1
 

@@ -18,9 +18,9 @@ from pydantic.alias_generators import to_camel
 __all__ = [
     "KINDS",
     "SOURCES",
-    "AvailableTransition",
-    "DecisionOut",
+    "InspectionAvailableTransition",
     "InspectionCreate",
+    "InspectionDecision",
     "InspectionDetail",
     "InspectionErrorBody",
     "InspectionHistory",
@@ -95,7 +95,7 @@ class InspectionOut(_Out):
     updated_at: datetime
 
 
-class AvailableTransition(_Out):
+class InspectionAvailableTransition(_Out):
     action: str
     to_state: str
     label_key: str
@@ -112,10 +112,10 @@ class InspectionDetail(InspectionOut):
     current_state: str
     instance_sync_version: int
     pending_countersign: str | None
-    available_transitions: list[AvailableTransition]
+    available_transitions: list[InspectionAvailableTransition]
 
 
-class DecisionOut(_Out):
+class InspectionDecision(_Out):
     id: UUID
     seq: int
     from_state: str
@@ -135,11 +135,11 @@ class InspectionTransitionOut(_Out):
     """200 when the transition took effect, 202 when it waits for a countersign."""
 
     inspection: InspectionDetail
-    decision: DecisionOut
+    decision: InspectionDecision
 
 
 class InspectionHistory(_Out):
-    entries: list[DecisionOut]
+    entries: list[InspectionDecision]
     chain_valid: bool
     broken_at_seq: int | None = None
 

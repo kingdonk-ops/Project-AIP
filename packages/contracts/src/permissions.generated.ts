@@ -32,6 +32,8 @@ export type PermissionCode =
   | "identity.signoff_policy.read"
   | "identity.user.manage"
   | "identity.user.read"
+  | "inspection.create"
+  | "inspection.view"
   | "item_type.edit"
   | "item_type.manage"
   | "item_type.publish"
@@ -88,6 +90,8 @@ export const PERMISSIONS = {
   "identity.signoff_policy.read": { module: "identity", privileged: false },
   "identity.user.manage": { module: "identity", privileged: true },
   "identity.user.read": { module: "identity", privileged: false },
+  "inspection.create": { module: "inspections", privileged: false },
+  "inspection.view": { module: "inspections", privileged: false },
   "item_type.edit": { module: "item_types", privileged: false },
   "item_type.manage": { module: "item_types", privileged: false },
   "item_type.publish": { module: "item_types", privileged: false },
