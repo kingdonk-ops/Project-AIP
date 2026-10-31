@@ -24,7 +24,7 @@ from aip.modules.identity.api import step_up
 from aip.modules.portal import policies
 from aip.modules.portal import repository as repo
 from aip.modules.portal.schemas import (
-    ErrorBody,
+    PortalErrorBody,
     GrantIn,
     GrantOut,
     InviteIn,
@@ -40,9 +40,9 @@ from aip.platform.db.session import with_tenant
 
 __all__ = ["router"]
 
-_NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"model": ErrorBody}}
-_CONFLICT: dict[int | str, dict[str, Any]] = {409: {"model": ErrorBody}}
-_INVALID: dict[int | str, dict[str, Any]] = {422: {"model": ErrorBody}}
+_NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"model": PortalErrorBody}}
+_CONFLICT: dict[int | str, dict[str, Any]] = {409: {"model": PortalErrorBody}}
+_INVALID: dict[int | str, dict[str, Any]] = {422: {"model": PortalErrorBody}}
 
 Limit = Annotated[int, Query(ge=1, le=100)]
 Cursor = Annotated[str | None, Query(max_length=1024)]

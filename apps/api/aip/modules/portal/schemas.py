@@ -23,7 +23,7 @@ from aip.modules.portal.policies import (
 )
 
 __all__ = [
-    "ErrorBody",
+    "PortalErrorBody",
     "GrantIn",
     "GrantOut",
     "InviteIn",
@@ -45,7 +45,7 @@ class _Out(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="ignore")
 
 
-class ErrorBody(_Out):
+class PortalErrorBody(_Out):
     """A domain error: a stable ``code`` (``PROJECT_CLOSED``, ``REVOKED``, ``GRANT_EXISTS``)."""
 
     code: str
