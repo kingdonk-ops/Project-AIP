@@ -58,6 +58,8 @@ term_keys = [
   "report.error.SOURCE_FILE_CHANGED",
   "report.error.PDF_TOO_LARGE",
   "report.error.RENDER_UNAVAILABLE",
+  "report.error.REPORT_NOT_READY",
+  "report.error.REPORT_FILE_NOT_FOUND",
 ]
 
 # ADR 0027 verbs: `view` reaches every role with a `view` level (or higher) on "Report engine &
@@ -92,4 +94,9 @@ version = 1
 
 [[events]]
 name = "report.render_failed"
+version = 1
+
+# REPORTS-04: every PDF download through the API, for the audit trail.
+[[events]]
+name = "report.downloaded"
 version = 1

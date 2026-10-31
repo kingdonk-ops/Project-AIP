@@ -16,6 +16,7 @@ import { homeRoute } from "./routes/_app/index";
 import { projectDetailRoute } from "./routes/_app/projects/$projectId";
 import { projectsIndexRoute } from "./routes/_app/projects/index";
 import { projectsNewRoute } from "./routes/_app/projects/new";
+import { reportsRegisterRoute } from "./routes/_app/reports/register";
 import { sitesIndexRoute } from "./routes/_app/sites/index";
 import { templateDetailRoute } from "./routes/_app/templates/$templateId";
 import { templatesIndexRoute } from "./routes/_app/templates/index";
@@ -53,7 +54,7 @@ const assetsRoutes = [assetsIndexRoute, assetsNewRoute, assetEditRoute] as const
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, ...itemTypesRoutes, ...assetsRoutes]),
+  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, ...itemTypesRoutes, ...assetsRoutes, reportsRegisterRoute]),
   ...devRoutes,
 ]);
 

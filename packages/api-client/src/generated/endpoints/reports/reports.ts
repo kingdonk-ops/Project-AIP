@@ -76,6 +76,14 @@ export const getReportsRendersListUrl = (params?: ReportsRendersListParams,) => 
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["status"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? 'null' : String(v));
+      });
+      return;
+    }
 
     if (value !== undefined) {
       normalizedParams.append(key, value === null ? 'null' : String(value))
@@ -413,6 +421,140 @@ export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRe
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getReportsRendersGetQueryOptions(renderJobId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type reportsRendersFileResponse200 = {
+  data: Blob
+  status: 200
+}
+
+export type reportsRendersFileResponse403 = {
+  data: ReportErrorBody
+  status: 403
+}
+
+export type reportsRendersFileResponse404 = {
+  data: ReportErrorBody
+  status: 404
+}
+
+export type reportsRendersFileResponse409 = {
+  data: ReportErrorBody
+  status: 409
+}
+
+export type reportsRendersFileResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type reportsRendersFileResponseSuccess = (reportsRendersFileResponse200) & {
+  headers: Headers;
+};
+export type reportsRendersFileResponseError = (reportsRendersFileResponse403 | reportsRendersFileResponse404 | reportsRendersFileResponse409 | reportsRendersFileResponse422) & {
+  headers: Headers;
+};
+
+export type reportsRendersFileResponse = (reportsRendersFileResponseSuccess | reportsRendersFileResponseError)
+
+export const getReportsRendersFileUrl = (renderJobId: string,) => {
+
+
+
+
+  return `/api/v1/reports/renders/${renderJobId}/file`
+}
+
+/**
+ * @summary Download Render
+ */
+export const reportsRendersFile = async (renderJobId: string, options?: Parameters<typeof apiFetch>[1]): Promise<reportsRendersFileResponse> => {
+
+  return apiFetch<reportsRendersFileResponse>(getReportsRendersFileUrl(renderJobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getReportsRendersFileQueryKey = (renderJobId: string,) => {
+    return [
+    `/api/v1/reports/renders/${renderJobId}/file`
+    ] as const;
+    }
+
+
+export const getReportsRendersFileQueryOptions = <TData = Awaited<ReturnType<typeof reportsRendersFile>>, TError = ReportErrorBody | HTTPValidationError>(renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersFile>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReportsRendersFileQueryKey(renderJobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof reportsRendersFile>>> = ({ signal }) => reportsRendersFile(renderJobId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: renderJobId !== null && renderJobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reportsRendersFile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReportsRendersFileQueryResult = NonNullable<Awaited<ReturnType<typeof reportsRendersFile>>>
+export type ReportsRendersFileQueryError = ReportErrorBody | HTTPValidationError
+
+
+export function useReportsRendersFile<TData = Awaited<ReturnType<typeof reportsRendersFile>>, TError = ReportErrorBody | HTTPValidationError>(
+ renderJobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersFile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportsRendersFile>>,
+          TError,
+          Awaited<ReturnType<typeof reportsRendersFile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReportsRendersFile<TData = Awaited<ReturnType<typeof reportsRendersFile>>, TError = ReportErrorBody | HTTPValidationError>(
+ renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersFile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportsRendersFile>>,
+          TError,
+          Awaited<ReturnType<typeof reportsRendersFile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReportsRendersFile<TData = Awaited<ReturnType<typeof reportsRendersFile>>, TError = ReportErrorBody | HTTPValidationError>(
+ renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersFile>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download Render
+ */
+
+export function useReportsRendersFile<TData = Awaited<ReturnType<typeof reportsRendersFile>>, TError = ReportErrorBody | HTTPValidationError>(
+ renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersFile>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReportsRendersFileQueryOptions(renderJobId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

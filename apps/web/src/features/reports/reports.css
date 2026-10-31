@@ -1,0 +1,31 @@
+/* REPORTS-04: the report register. */
+
+.reports-register {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 100%;
+}
+
+.reports-register__stack {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.reports-register__meta {
+  color: var(--foreground-muted);
+  font-size: var(--text-sm);
+}
+
+.reports-register__mono {
+  font-family: var(--font-mono);
+}
+
+.reports-register__download {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.reports-register__download:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
