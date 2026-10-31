@@ -8,6 +8,10 @@
         "labelKey": "workflow.inspection.state.draft"
       },
       {
+        "code": "clarification_required",
+        "labelKey": "workflow.inspection.state.clarification_required"
+      },
+      {
         "code": "assignable",
         "labelKey": "workflow.inspection.state.assignable"
       },
@@ -18,6 +22,10 @@
       {
         "code": "in_progress",
         "labelKey": "workflow.inspection.state.in_progress"
+      },
+      {
+        "code": "in_progress_go",
+        "labelKey": "workflow.inspection.state.in_progress_go"
       },
       {
         "code": "inspector_review",
@@ -32,13 +40,16 @@
         "labelKey": "workflow.inspection.state.client_review"
       },
       {
-        "code": "rejected",
-        "labelKey": "workflow.inspection.state.rejected"
+        "code": "rework_required",
+        "labelKey": "workflow.inspection.state.rework_required"
       },
       {
-        "code": "completed",
-        "labelKey": "workflow.inspection.state.completed",
-        "terminal": true
+        "code": "performed",
+        "labelKey": "workflow.inspection.state.performed"
+      },
+      {
+        "code": "retired",
+        "labelKey": "workflow.inspection.state.retired"
       }
     ],
     "initial": "draft",
@@ -46,9 +57,98 @@
       {
         "action": "ready",
         "from": "draft",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.ready"
+      },
+      {
+        "action": "ready_unassigned",
+        "from": "draft",
         "to": "assignable",
         "requiredPermission": "approvals.inspection.assign",
         "labelKey": "workflow.inspection.action.ready"
+      },
+      {
+        "action": "schedule",
+        "from": "draft",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.schedule"
+      },
+      {
+        "action": "schedule_unassigned",
+        "from": "draft",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.schedule"
+      },
+      {
+        "action": "request_clarification",
+        "from": "draft",
+        "to": "clarification_required",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_clarification",
+        "requiresComment": true
+      },
+      {
+        "action": "retire",
+        "from": "draft",
+        "to": "retired",
+        "requiredPermission": "approvals.inspection.retire",
+        "labelKey": "workflow.inspection.action.retire",
+        "requiresComment": true
+      },
+      {
+        "action": "assign_to_me",
+        "from": "draft",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.assign_to_me"
+      },
+      {
+        "action": "quick_inspect",
+        "from": "draft",
+        "to": "in_progress",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.quick_inspect"
+      },
+      {
+        "action": "assign_with_comment",
+        "from": "clarification_required",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.assign_with_comment",
+        "requiresComment": true
+      },
+      {
+        "action": "assign_with_comment_unassigned",
+        "from": "clarification_required",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.assign_with_comment",
+        "requiresComment": true
+      },
+      {
+        "action": "retire",
+        "from": "clarification_required",
+        "to": "retired",
+        "requiredPermission": "approvals.inspection.retire",
+        "labelKey": "workflow.inspection.action.retire",
+        "requiresComment": true
+      },
+      {
+        "action": "return_to_draft",
+        "from": "clarification_required",
+        "to": "draft",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.return_to_draft"
+      },
+      {
+        "action": "schedule",
+        "from": "assignable",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.schedule"
       },
       {
         "action": "assign",
@@ -58,79 +158,361 @@
         "labelKey": "workflow.inspection.action.assign"
       },
       {
-        "action": "unassign",
+        "action": "assign_to_me",
+        "from": "assignable",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.assign_to_me"
+      },
+      {
+        "action": "request_clarification",
+        "from": "assignable",
+        "to": "clarification_required",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_clarification",
+        "requiresComment": true
+      },
+      {
+        "action": "retire",
+        "from": "assignable",
+        "to": "retired",
+        "requiredPermission": "approvals.inspection.retire",
+        "labelKey": "workflow.inspection.action.retire",
+        "requiresComment": true
+      },
+      {
+        "action": "return_to_draft",
+        "from": "assignable",
+        "to": "draft",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.return_to_draft"
+      },
+      {
+        "action": "quick_inspect",
+        "from": "assignable",
+        "to": "in_progress",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.quick_inspect"
+      },
+      {
+        "action": "go_checkout",
+        "from": "assignable",
+        "to": "in_progress_go",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.go_checkout"
+      },
+      {
+        "action": "assign",
+        "from": "assigned",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.assign"
+      },
+      {
+        "action": "assign_unassigned",
         "from": "assigned",
         "to": "assignable",
         "requiredPermission": "approvals.inspection.assign",
-        "labelKey": "workflow.inspection.action.unassign"
+        "labelKey": "workflow.inspection.action.assign"
       },
       {
-        "action": "start",
+        "action": "schedule",
+        "from": "assigned",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.schedule"
+      },
+      {
+        "action": "schedule_unassigned",
+        "from": "assigned",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.schedule"
+      },
+      {
+        "action": "handover",
+        "from": "assigned",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.handover"
+      },
+      {
+        "action": "handover_unassigned",
+        "from": "assigned",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.handover"
+      },
+      {
+        "action": "assign_to_me",
+        "from": "assigned",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.assign_to_me"
+      },
+      {
+        "action": "inspect",
         "from": "assigned",
         "to": "in_progress",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.start"
+        "labelKey": "workflow.inspection.action.inspect"
       },
       {
-        "action": "submit",
-        "from": "in_progress",
-        "to": "inspector_review",
+        "action": "quick_inspect",
+        "from": "assigned",
+        "to": "in_progress",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.submit"
+        "labelKey": "workflow.inspection.action.quick_inspect"
       },
       {
-        "action": "review_pass",
-        "from": "inspector_review",
+        "action": "request_supervisor_review",
+        "from": "assigned",
         "to": "supervisor_review",
-        "requiredPermission": "approvals.inspection.review",
-        "labelKey": "workflow.inspection.action.review_pass"
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_supervisor_review"
       },
       {
-        "action": "reject",
-        "from": "inspector_review",
-        "to": "rejected",
-        "requiredPermission": "approvals.inspection.review",
-        "labelKey": "workflow.inspection.action.reject",
+        "action": "request_clarification",
+        "from": "assigned",
+        "to": "clarification_required",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_clarification",
         "requiresComment": true
       },
       {
-        "action": "approve",
+        "action": "retire",
+        "from": "assigned",
+        "to": "retired",
+        "requiredPermission": "approvals.inspection.retire",
+        "labelKey": "workflow.inspection.action.retire",
+        "requiresComment": true
+      },
+      {
+        "action": "return_to_draft",
+        "from": "assigned",
+        "to": "draft",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.return_to_draft"
+      },
+      {
+        "action": "go_checkout",
+        "from": "assigned",
+        "to": "in_progress_go",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.go_checkout"
+      },
+      {
+        "action": "request_supervisor_review",
+        "from": "in_progress",
+        "to": "supervisor_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_supervisor_review"
+      },
+      {
+        "action": "abort",
+        "from": "in_progress",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.abort"
+      },
+      {
+        "action": "request_clarification",
+        "from": "in_progress",
+        "to": "clarification_required",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_clarification",
+        "requiresComment": true
+      },
+      {
+        "action": "assign",
+        "from": "in_progress",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.assign"
+      },
+      {
+        "action": "assign_unassigned",
+        "from": "in_progress",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.assign"
+      },
+      {
+        "action": "go_checkout",
+        "from": "in_progress",
+        "to": "in_progress_go",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.go_checkout"
+      },
+      {
+        "action": "request_supervisor_review",
+        "from": "in_progress_go",
+        "to": "supervisor_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_supervisor_review"
+      },
+      {
+        "action": "check_in",
+        "from": "in_progress_go",
+        "to": "inspector_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.check_in"
+      },
+      {
+        "action": "request_clarification",
+        "from": "in_progress_go",
+        "to": "clarification_required",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_clarification",
+        "requiresComment": true
+      },
+      {
+        "action": "request_supervisor_review",
+        "from": "inspector_review",
+        "to": "supervisor_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_supervisor_review"
+      },
+      {
+        "action": "handover",
+        "from": "inspector_review",
+        "to": "assigned",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.handover"
+      },
+      {
+        "action": "handover_unassigned",
+        "from": "inspector_review",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.handover"
+      },
+      {
+        "action": "abort",
+        "from": "inspector_review",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.abort"
+      },
+      {
+        "action": "request_clarification",
+        "from": "inspector_review",
+        "to": "clarification_required",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_clarification",
+        "requiresComment": true
+      },
+      {
+        "action": "retire",
+        "from": "inspector_review",
+        "to": "retired",
+        "requiredPermission": "approvals.inspection.retire",
+        "labelKey": "workflow.inspection.action.retire",
+        "requiresComment": true
+      },
+      {
+        "action": "return_to_draft",
+        "from": "inspector_review",
+        "to": "draft",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.return_to_draft"
+      },
+      {
+        "action": "go_checkout",
+        "from": "inspector_review",
+        "to": "in_progress_go",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.go_checkout"
+      },
+      {
+        "action": "mark_performed",
         "from": "supervisor_review",
         "to": "client_review",
         "requiredPermission": "approvals.inspection.approve",
-        "labelKey": "workflow.inspection.action.approve"
+        "labelKey": "workflow.inspection.action.mark_performed"
       },
       {
-        "action": "reject",
+        "action": "request_rework",
         "from": "supervisor_review",
-        "to": "rejected",
+        "to": "rework_required",
         "requiredPermission": "approvals.inspection.approve",
-        "labelKey": "workflow.inspection.action.reject",
+        "labelKey": "workflow.inspection.action.request_rework",
         "requiresComment": true
+      },
+      {
+        "action": "request_clarification",
+        "from": "supervisor_review",
+        "to": "clarification_required",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_clarification",
+        "requiresComment": true
+      },
+      {
+        "action": "retire",
+        "from": "supervisor_review",
+        "to": "retired",
+        "requiredPermission": "approvals.inspection.retire",
+        "labelKey": "workflow.inspection.action.retire",
+        "requiresComment": true
+      },
+      {
+        "action": "return_to_draft",
+        "from": "supervisor_review",
+        "to": "draft",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.return_to_draft"
       },
       {
         "action": "client_approve",
         "from": "client_review",
-        "to": "completed",
+        "to": "performed",
         "requiredPermission": "approvals.inspection.client_approve",
         "labelKey": "workflow.inspection.action.client_approve",
         "critical": true,
         "signoffAction": "inspection.client_approve"
       },
       {
-        "action": "reject",
+        "action": "request_rework",
         "from": "client_review",
-        "to": "rejected",
+        "to": "rework_required",
         "requiredPermission": "approvals.inspection.client_approve",
-        "labelKey": "workflow.inspection.action.reject",
+        "labelKey": "workflow.inspection.action.request_rework",
         "requiresComment": true
       },
       {
-        "action": "resend",
-        "from": "rejected",
+        "action": "handover",
+        "from": "rework_required",
         "to": "assigned",
         "requiredPermission": "approvals.inspection.assign",
-        "labelKey": "workflow.inspection.action.resend"
+        "labelKey": "workflow.inspection.action.handover"
+      },
+      {
+        "action": "handover_unassigned",
+        "from": "rework_required",
+        "to": "assignable",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.handover"
+      },
+      {
+        "action": "return_to_draft",
+        "from": "rework_required",
+        "to": "draft",
+        "requiredPermission": "approvals.inspection.assign",
+        "labelKey": "workflow.inspection.action.return_to_draft"
+      },
+      {
+        "action": "request_supervisor_review",
+        "from": "rework_required",
+        "to": "supervisor_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.request_supervisor_review"
+      },
+      {
+        "action": "go_checkout",
+        "from": "rework_required",
+        "to": "in_progress_go",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.go_checkout"
       }
     ]
   }

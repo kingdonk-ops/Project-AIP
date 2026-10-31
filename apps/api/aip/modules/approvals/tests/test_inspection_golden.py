@@ -1,8 +1,10 @@
-"""APPROVALS-05: the inspection lifecycle presets and their golden cases, through the evaluator.
+"""APPROVALS-05/09: the inspection lifecycle presets and their golden cases, through the evaluator.
 
 The same cases run through ``TransitionService`` on Postgres in ``test_inspection_preset_db.py``.
-While the cases file has no ``confirmedBy`` they are blueprint-derived and provisional (the AIP
-lifecycle tests are not in this repo, OPEN-QUESTIONS #4), and the run says so with a warning.
+APPROVALS-09 rewrote both presets and the cases to the owner's AIP status and action tables
+(``confirmedBy: "owner"``); a cases file without ``confirmedBy`` would warn that it is provisional.
+A case with ``"comment": false`` takes its actions without a comment; the evaluator has no comment
+rule, so the runner applies the transition service's (422 ``COMMENT_REQUIRED``).
 """
 
 from __future__ import annotations
@@ -27,7 +29,7 @@ CASES_FILE = Path(__file__).parent / "golden" / "inspection_lifecycle_cases.json
 PRESET_FOR = {"standard": "inspection_standard", "client_review": "inspection_client_review"}
 INSPECTION_PERMISSIONS = frozenset(
     f"approvals.inspection.{verb}"
-    for verb in ("assign", "execute", "review", "approve", "client_approve")
+    for verb in ("assign", "execute", "review", "approve", "client_approve", "retire")
 )
 PROVISIONAL_WARNING = "PROVISIONAL golden cases — owner confirmation pending"
 
@@ -58,6 +60,8 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
         outcome = apply_transition(spec, state, action)
         if isinstance(outcome, TransitionRejected):
             return {"error": outcome.error}
+        if outcome.transition.requires_comment and not case.get("comment", True):
+            return {"error": "COMMENT_REQUIRED"}
         state = outcome.to_state
     if "available" in case["expect"]:
         return {"available": available_transitions(spec, state, INSPECTION_PERMISSIONS)}
@@ -96,7 +100,41 @@ def test_both_presets_are_valid_inspection_workflows() -> None:
         assert presets[key].record_type == "inspection"
         spec = validate_spec(presets[key].spec)  # graph rules: every state is reachable
         assert spec.initial == "draft"
-        assert [s.code for s in spec.states if s.terminal] == ["completed"]
+        # Performed and Retired are not terminal: INSPECTIONS-09 adds reinspect and supersede.
+        assert [s.code for s in spec.states if s.terminal] == []
+
+
+def test_the_standard_preset_has_the_owners_eleven_states() -> None:
+    assert [s.code for s in preset_spec("standard").states] == [
+        "draft",
+        "clarification_required",
+        "assignable",
+        "assigned",
+        "in_progress",
+        "in_progress_go",
+        "inspector_review",
+        "supervisor_review",
+        "rework_required",
+        "performed",
+        "retired",
+    ]
+
+
+def test_assignee_pairs_share_a_label_and_split_on_the_target() -> None:
+    for variant in PRESET_FOR:
+        spec = preset_spec(variant)
+        by_key = {(t.from_state, t.action): t for t in spec.transitions}
+        twins = [t for t in spec.transitions if t.action.endswith("_unassigned")]
+        assert {t.action for t in twins} == {
+            f"{a}_unassigned"
+            for a in ("ready", "schedule", "assign", "assign_with_comment", "handover")
+        }
+        for twin in twins:
+            pair = by_key[(twin.from_state, twin.action.removesuffix("_unassigned"))]
+            assert (pair.to_state, twin.to_state) == ("assigned", "assignable")
+            assert twin.label_key == pair.label_key
+            assert twin.required_permission == pair.required_permission
+            assert twin.requires_comment == pair.requires_comment
 
 
 def test_client_review_exists_only_in_the_client_variant() -> None:
@@ -109,17 +147,35 @@ def test_only_the_final_sign_off_is_critical() -> None:
     def critical(variant: str) -> set[tuple[str, str]]:
         return {(t.from_state, t.action) for t in preset_spec(variant).transitions if t.critical}
 
-    assert critical("standard") == {("supervisor_review", "approve")}
+    assert critical("standard") == {("supervisor_review", "mark_performed")}
     assert critical("client_review") == {("client_review", "client_approve")}
 
 
-def test_every_reject_needs_a_comment() -> None:
+COMMENTED = {
+    "request_clarification",
+    "request_rework",
+    "retire",
+    "assign_with_comment",
+    "assign_with_comment_unassigned",
+}
+
+
+def test_exactly_the_owners_comment_actions_need_a_comment() -> None:
     for variant in PRESET_FOR:
-        rejects = [t for t in preset_spec(variant).transitions if t.action == "reject"]
-        assert rejects
-        assert all(t.requires_comment for t in rejects)
-        others = [t for t in preset_spec(variant).transitions if t.action != "reject"]
-        assert not any(t.requires_comment for t in others)
+        transitions = preset_spec(variant).transitions
+        assert {t.action for t in transitions if t.requires_comment} == COMMENTED
+        assert all(t.requires_comment for t in transitions if t.action in COMMENTED)
+
+
+def test_retire_has_its_own_permission() -> None:
+    for variant in PRESET_FOR:
+        transitions = preset_spec(variant).transitions
+        retires = {t.required_permission for t in transitions if t.action == "retire"}
+        assert retires == {"approvals.inspection.retire"}
+        others = {t.required_permission for t in transitions if t.action != "retire"}
+        # Inspector Review is the inspector's own desk review now: no transition needs `review`.
+        assert "approvals.inspection.retire" not in others
+        assert "approvals.inspection.review" not in others
 
 
 def test_every_transition_uses_an_inspection_permission() -> None:

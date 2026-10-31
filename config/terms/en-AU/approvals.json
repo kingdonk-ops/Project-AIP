@@ -1,79 +1,123 @@
 {
   "workflow.inspection.state.draft": {
     "text": "Draft",
-    "description": "Inspection workflow state 'draft' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+    "description": "Inspection workflow state 'draft' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  },
+  "workflow.inspection.state.clarification_required": {
+    "text": "Clarification Req",
+    "description": "Inspection workflow state 'clarification_required' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
   "workflow.inspection.state.assignable": {
     "text": "Assignable",
-    "description": "Inspection workflow state 'assignable' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+    "description": "Inspection workflow state 'assignable' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
   "workflow.inspection.state.assigned": {
     "text": "Assigned",
-    "description": "Inspection workflow state 'assigned' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+    "description": "Inspection workflow state 'assigned' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
   "workflow.inspection.state.in_progress": {
-    "text": "In progress",
-    "description": "Inspection workflow state 'in_progress' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+    "text": "In Progress",
+    "description": "Inspection workflow state 'in_progress' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  },
+  "workflow.inspection.state.in_progress_go": {
+    "text": "In Progress (Go)",
+    "description": "Inspection workflow state 'in_progress_go' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
   "workflow.inspection.state.inspector_review": {
-    "text": "Inspector review",
-    "description": "Inspection workflow state 'inspector_review' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+    "text": "Inspector Review",
+    "description": "Inspection workflow state 'inspector_review' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
   "workflow.inspection.state.supervisor_review": {
-    "text": "Supervisor review",
-    "description": "Inspection workflow state 'supervisor_review' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+    "text": "Supervisor Review",
+    "description": "Inspection workflow state 'supervisor_review' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
   "workflow.inspection.state.client_review": {
-    "text": "Client review",
-    "description": "Inspection workflow state 'client_review' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+    "text": "Client Review",
+    "description": "Inspection workflow state 'client_review' in the inspection_client_review preset (APPROVALS-09)."
   },
-  "workflow.inspection.state.rejected": {
-    "text": "Rejected",
-    "description": "Inspection workflow state 'rejected' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+  "workflow.inspection.state.rework_required": {
+    "text": "Rework Required",
+    "description": "Inspection workflow state 'rework_required' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
-  "workflow.inspection.state.completed": {
-    "text": "Completed",
-    "description": "Inspection workflow state 'completed' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+  "workflow.inspection.state.performed": {
+    "text": "Performed",
+    "description": "Inspection workflow state 'performed' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  },
+  "workflow.inspection.state.retired": {
+    "text": "Retired",
+    "description": "Inspection workflow state 'retired' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
   "workflow.inspection.action.ready": {
-    "text": "Mark ready",
-    "description": "Button for the inspection workflow action 'ready' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+    "text": "Ready For Inspection",
+    "description": "Button for the inspection workflow action 'ready' in the inspection_standard and inspection_client_review presets (APPROVALS-09). Also labels 'ready_unassigned' (the same action when no assignee is set)."
+  },
+  "workflow.inspection.action.schedule": {
+    "text": "Schedule",
+    "description": "Button for the inspection workflow action 'schedule' in the inspection_standard and inspection_client_review presets (APPROVALS-09). Also labels 'schedule_unassigned' (the same action when no assignee is set)."
+  },
+  "workflow.inspection.action.request_clarification": {
+    "text": "Request Clarification",
+    "description": "Button for the inspection workflow action 'request_clarification' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  },
+  "workflow.inspection.action.retire": {
+    "text": "Retire",
+    "description": "Button for the inspection workflow action 'retire' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  },
+  "workflow.inspection.action.assign_to_me": {
+    "text": "Assign To Me",
+    "description": "Button for the inspection workflow action 'assign_to_me' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  },
+  "workflow.inspection.action.quick_inspect": {
+    "text": "Quick Inspect",
+    "description": "Button for the inspection workflow action 'quick_inspect' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  },
+  "workflow.inspection.action.assign_with_comment": {
+    "text": "Assign With Comment",
+    "description": "Button for the inspection workflow action 'assign_with_comment' in the inspection_standard and inspection_client_review presets (APPROVALS-09). Also labels 'assign_with_comment_unassigned' (the same action when no assignee is set)."
+  },
+  "workflow.inspection.action.return_to_draft": {
+    "text": "Return To Draft",
+    "description": "Button for the inspection workflow action 'return_to_draft' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
   "workflow.inspection.action.assign": {
-    "text": "Assign inspector",
-    "description": "Button for the inspection workflow action 'assign' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+    "text": "Assign",
+    "description": "Button for the inspection workflow action 'assign' in the inspection_standard and inspection_client_review presets (APPROVALS-09). Also labels 'assign_unassigned' (the same action when no assignee is set)."
   },
-  "workflow.inspection.action.unassign": {
-    "text": "Unassign inspector",
-    "description": "Button for the inspection workflow action 'unassign' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+  "workflow.inspection.action.go_checkout": {
+    "text": "Go: Checkout",
+    "description": "Button for the inspection workflow action 'go_checkout' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
-  "workflow.inspection.action.start": {
-    "text": "Start inspection",
-    "description": "Button for the inspection workflow action 'start' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+  "workflow.inspection.action.handover": {
+    "text": "Handover",
+    "description": "Button for the inspection workflow action 'handover' in the inspection_standard and inspection_client_review presets (APPROVALS-09). Also labels 'handover_unassigned' (the same action when no assignee is set)."
   },
-  "workflow.inspection.action.submit": {
-    "text": "Submit for review",
-    "description": "Button for the inspection workflow action 'submit' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+  "workflow.inspection.action.inspect": {
+    "text": "Inspect",
+    "description": "Button for the inspection workflow action 'inspect' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
-  "workflow.inspection.action.review_pass": {
-    "text": "Pass review",
-    "description": "Button for the inspection workflow action 'review_pass' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+  "workflow.inspection.action.request_supervisor_review": {
+    "text": "Request Supervisor Review",
+    "description": "Button for the inspection workflow action 'request_supervisor_review' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
-  "workflow.inspection.action.approve": {
-    "text": "Approve inspection",
-    "description": "Button for the inspection workflow action 'approve' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+  "workflow.inspection.action.abort": {
+    "text": "Abort",
+    "description": "Button for the inspection workflow action 'abort' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
-  "workflow.inspection.action.reject": {
-    "text": "Reject inspection",
-    "description": "Button for the inspection workflow action 'reject' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+  "workflow.inspection.action.check_in": {
+    "text": "Check In",
+    "description": "Button for the inspection workflow action 'check_in' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
-  "workflow.inspection.action.resend": {
-    "text": "Resend to inspector",
-    "description": "Button for the inspection workflow action 'resend' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+  "workflow.inspection.action.mark_performed": {
+    "text": "Mark as Performed",
+    "description": "Button for the inspection workflow action 'mark_performed' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  },
+  "workflow.inspection.action.request_rework": {
+    "text": "Request Rework",
+    "description": "Button for the inspection workflow action 'request_rework' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
   "workflow.inspection.action.client_approve": {
-    "text": "Client approve",
-    "description": "Button for the inspection workflow action 'client_approve' in the inspection_standard and inspection_client_review presets (APPROVALS-05)."
+    "text": "Client Approve",
+    "description": "Button for the inspection workflow action 'client_approve' in the inspection_client_review preset (APPROVALS-09)."
   },
   "workflow.demo.state.draft": {
     "text": "Draft",
