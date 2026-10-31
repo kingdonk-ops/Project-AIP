@@ -15,6 +15,7 @@ export const RoleCreatePermissionsItem = {
   approvalsinspectionassign: 'approvals.inspection.assign',
   approvalsinspectionclient_approve: 'approvals.inspection.client_approve',
   approvalsinspectionexecute: 'approvals.inspection.execute',
+  approvalsinspectionretire: 'approvals.inspection.retire',
   approvalsinspectionreview: 'approvals.inspection.review',
   approvalsstart: 'approvals.start',
   approvalsview: 'approvals.view',
