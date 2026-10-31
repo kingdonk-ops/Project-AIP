@@ -54,7 +54,7 @@ must not change.
    skipped step is 409 `STEP_NOT_PENDING`; another tenant's instance or template is 404.
 10. **Unused columns.** `conditions`, `threshold_bands`, `escalation_hours` and
     `required_discipline_id` are created but unused. Threshold bands, escalation with reminders,
-    and delegation are the stubs APPROVALS-10, APPROVALS-11 and APPROVALS-12.
+    and delegation are the stubs APPROVALS-11, APPROVALS-12 and APPROVALS-13.
 11. **The Playwright API journey is carried to APPROVALS-06** (as ADR 0035 §9 did for
     APPROVALS-02): the deployed `demo` seed has no route template or second approver fixture. The
     integration tests run the same HTTP journey in-process.

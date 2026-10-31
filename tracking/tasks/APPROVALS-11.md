@@ -1,4 +1,4 @@
-# APPROVALS-11 — Escalation and reminders for overdue approval steps
+# APPROVALS-11 — Approval route threshold bands and authority matrix
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
@@ -18,6 +18,6 @@
 
 ## Spec
 
-Use `approval_steps.due_at` and `approval_route_templates.escalation_hours` (created unused by APPROVALS-04): a scheduled job finds overdue `pending` steps, sends reminders through notifications and emits `workflow.escalated`, marking the step `escalated` after the escalation window (tag: extend).
+Choose a route's steps by the record's value: use `approval_route_templates.threshold_bands` (created unused by APPROVALS-04) and an authority matrix (role, entity, limit, currency) so a record's `record_value` picks the band, and the band adds or replaces approver steps (tag: extend).
 
 Stub (found by APPROVALS-04, which left these columns unused): the full spec is written before the task starts.

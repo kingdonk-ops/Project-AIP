@@ -2,6 +2,11 @@
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
+> **Later change ([ADR 0041](../../docs/adr/0041-inspection-completion-locks-and-submit.md), 2026-11-01):** "In Progress (Go)"
+> is renamed "In Progress (SiteSync)" (`in_progress_sitesync`, `sitesync_checkout`, `sitesync_check_in`) by
+> [APPROVALS-10](APPROVALS-10.md). Submit is guarded on a report acknowledgement, and `submit_report` is added for
+> templates without supervisor review, by [INSPECTIONS-10](INSPECTIONS-10.md). The codes below are as merged in PR #213.
+
 | Field | Value |
 |---|---|
 | Module | [`approvals`](../../docs/blueprint/modules/approvals/README.md) |

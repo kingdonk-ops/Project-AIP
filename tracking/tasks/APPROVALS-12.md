@@ -1,4 +1,4 @@
-# APPROVALS-12 — Delegation of approval steps with a date range and audit visibility
+# APPROVALS-12 — Escalation and reminders for overdue approval steps
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 
@@ -6,7 +6,7 @@
 |---|---|
 | Module | [`approvals`](../../docs/blueprint/modules/approvals/README.md) |
 | Phase | P1 |
-| Size | M |
+| Size | S |
 | Depends on | APPROVALS-04 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
@@ -18,6 +18,6 @@
 
 ## Spec
 
-Let an approver delegate their route steps to another user for a date range and scope; a delegate's decision records `on_behalf_of` in the decision history, and the instance timeline shows who acted for whom (tag: extend). Coordinate with the ACCESS-08 team delegation guard.
+Use `approval_steps.due_at` and `approval_route_templates.escalation_hours` (created unused by APPROVALS-04): a scheduled job finds overdue `pending` steps, sends reminders through notifications and emits `workflow.escalated`, marking the step `escalated` after the escalation window (tag: extend).
 
 Stub (found by APPROVALS-04, which left these columns unused): the full spec is written before the task starts.
