@@ -40,9 +40,15 @@ from aip.platform.db.session import with_tenant
 
 __all__ = ["router"]
 
-_NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"model": PortalErrorBody}}
-_CONFLICT: dict[int | str, dict[str, Any]] = {409: {"model": PortalErrorBody}}
-_INVALID: dict[int | str, dict[str, Any]] = {422: {"model": PortalErrorBody}}
+_NOT_FOUND: dict[int | str, dict[str, Any]] = {
+    404: {"model": PortalErrorBody, "description": "Not found"}
+}
+_CONFLICT: dict[int | str, dict[str, Any]] = {
+    409: {"model": PortalErrorBody, "description": "Conflict"}
+}
+_INVALID: dict[int | str, dict[str, Any]] = {
+    422: {"model": PortalErrorBody, "description": "Validation error"}
+}
 
 Limit = Annotated[int, Query(ge=1, le=100)]
 Cursor = Annotated[str | None, Query(max_length=1024)]
