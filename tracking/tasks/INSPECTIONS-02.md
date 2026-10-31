@@ -1,6 +1,13 @@
 # INSPECTIONS-02 — Append-only responses, current-response view and server-side answer validation
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
+<!-- hand-edited 2026-11-01: re-based on the v2 lifecycle (APPROVALS-09) and ADR 0041; the submit guard moved to INSPECTIONS-10 -->
+
+> **Changed 2026-11-01 ([ADR 0041](../../docs/adr/0041-inspection-completion-locks-and-submit.md)).** This spec was
+> written for APPROVALS-05's v1 lifecycle, which had a `submit` action. The v2 lifecycle (APPROVALS-09) has none.
+> This task now covers answers and who may change them in which state (step 3b). The answers-complete guard, the
+> section and report locks, and the preset version move to [INSPECTIONS-10](INSPECTIONS-10.md). Step 5 and the
+> tests below are updated to match.
 
 | Field | Value |
 |---|---|
@@ -36,7 +43,6 @@ Store every answer an inspector gives as an append-only `inspection_responses` r
   - apps/api/aip/modules/inspections/manifest.toml
   - apps/api/aip/modules/inspections/tests/test_responses_unit.py
   - apps/api/aip/modules/inspections/tests/test_responses_db.py
-  - config/workflows/inspection.standard.json
   - config/terms/en-AU/inspections.json
 - **steps**:
   - 1. Migration `<timestamp>_inspections_responses.py`, one revision:
@@ -47,20 +53,29 @@ Store every answer an inspector gives as an append-only `inspection_responses` r
   - 2. `tables.py` declares both; `repository.py` adds `insert_response`, `find_by_client_id(conn, inspection_id, client_id)`, `current_responses(conn, inspection_id)` (from the view) and `field_history(conn, inspection_id, field_key)` (oldest first).
   - 3. `responses.py` `ResponseService.submit(conn, policy, actor, inspection_id, answers)` in one `with_tenant` transaction, where `answers` is a list (1–200) of `{fieldKey, value, clientId}`:
     - (a) `repository.lock_inspection` (`FOR UPDATE`); missing or another tenant's → 404. `policy.assert_can(principal, "inspection.respond", Resource(project))` → 403.
-    - (b) The instance state (`InspectionsApi.get_state`) must be `in_progress` → else 409 `INSPECTION_NOT_EDITABLE` with the current state.
+    - (b) Editing rules by instance state (`InspectionsApi.get_state`; ADR 0041 §6):
+      - `in_progress`, `inspector_review` and `rework_required`: callers with `inspection.respond`.
+      - `supervisor_review`: only callers who also hold `approvals.inspection.review` ("Edit Inspection during
+        Review"). Without it → 403. The row's `responded_by` is the supervisor.
+      - `in_progress_sitesync` (named `in_progress_go` until APPROVALS-10) and every other state → 409
+        `INSPECTION_NOT_EDITABLE`, with the current state.
+
+      INSPECTIONS-10 adds the section and report locks on top of these rules.
+    - (b2) A batch that repeats a `fieldKey` or a `clientId` → 422 `DUPLICATE_ANSWER` (path `answers[i]`). Timestamps
+      are `clock_timestamp()`, taken after the inspection row is locked, so the latest answer always sorts last.
     - (c) Every `clientId` already stored for this inspection is skipped and returned with `created: false` (idempotent retry); nothing else is checked for it.
     - (d) Load the pinned revision with `FormsApi.get_revision(conn, template_revision_id)`. A `fieldKey` not in the revision → 422 `UNKNOWN_FIELD` (path `answers[i].fieldKey`).
     - (e) Merge the current answers (view) with the new ones and call `aip.modules.forms.api.evaluate_answers(revision_schema, merged)`. Any `errors` entry for a submitted field (wrong type, option not in the list, out of range) → 422 `ANSWER_INVALID` with `[{path, code}]`; a submitted field that is not `visible` → 422 `FIELD_NOT_VISIBLE`. Any 422 writes nothing for the whole batch.
     - (f) Insert one row per new answer with `failed` taken from the evaluation (clients cannot send it: the body model forbids unknown keys) and `supersedes_id` = the field's current row id, if any.
     - (g) For each inserted row with `failed = true` whose superseded row was absent or not failed, `emit(conn, "inspection.answer_failed", 1, {inspectionId, responseId, fieldKey, assetId, projectId})`. Re-saving an already failed value emits nothing; a pass followed by a new failure emits again.
   - 4. Read side in `responses.py`: `current(conn, inspection_id)` returns `{answers: {fieldKey: {value, failed, respondedBy, respondedAt, responseId}}, evaluation: {visible, required, missingRequired, failed}}` (the evaluation re-run on the current answers); `history(conn, inspection_id, field_key)` returns every row for the field, oldest first.
-  - 5. Guard facts: extend the `inspection` facts provider in `workflow.py` with `answeredCount`, `missingRequiredCount` (visible required fields with no non-null current value), `invalidCount` and `failedCount`, computed with the same evaluator. Publish the next version of the `inspection.standard` preset (inspections owns later versions of its own record type's preset, ADR 0036 choice 9): add it to `config/workflows/inspection.standard.json` in the APPROVALS-08 versioned envelope, keeping APPROVALS-05's guard-free v1 intact, and install it with `aip.modules.approvals.api.ApprovalsApi.install_preset`. The new version gives the `submit` transition the guard `{"==":[{"var":"record.missingRequiredCount"},0]}` with `guardMessageKey: "inspection.guard.answers_incomplete"`, so a submit with missing required answers is refused by the transition service whichever route takes it.
+  - 5. Guard facts: extend the `inspection` facts provider in `workflow.py` with `answeredCount`, `missingRequiredCount` (visible required fields with no non-null current value), `invalidCount` and `failedCount`, computed with the same evaluator. **No preset change in this task:** the guarded submit transitions are published by INSPECTIONS-10 (ADR 0041 §4–§5).
   - 6. Routes (strict bodies, camelCase, 422 validation errors; another tenant's inspection → 404 first):
     - `POST /api/v1/inspections/{id}/responses {answers: [{fieldKey, value, clientId}]}` (`inspection.respond`) → 200 `{results: [{clientId, responseId, created, failed}]}`;
     - `GET /api/v1/inspections/{id}/responses` (`inspection.view`) → step 4's current view;
     - `GET /api/v1/inspections/{id}/responses/{fieldKey}/history` (`inspection.view`).
   - 7. `api.py`: `InspectionsApi.get_current_responses(conn, inspection_id) -> CurrentResponses` (step 4's shape, used by report_engine and issues). Manifest: permission `inspection.respond` ("Answer inspection questions"), `[[events]]` `inspection.answer_failed` v1 with its pydantic payload in `events.py`.
-  - 8. Terms: `inspection.error.not_editable`, `.unknown_field`, `.answer_invalid`, `.field_not_visible` and `inspection.guard.answers_incomplete` in `config/terms/en-AU/inspections.json`.
+  - 8. Terms: `inspection.error.not_editable`, `.unknown_field`, `.answer_invalid`, `.field_not_visible`, `.duplicate_answer` and `.review_permission_required` in `config/terms/en-AU/inspections.json`.
 - **Out of scope**: checking that `photo` and `signature` answers name a clean stored file needs `aip.modules.uploads.api.get_stored_file` (UPLOADS-08), which is not a dependency; this task stores those values as validated uuids only, and INSPECTIONS-04 adds the uploads check. Offline push (`client_id` from a device queue) is after R1.
 - **acceptance**:
   - Answers are never updated or deleted: `aip_app` has no UPDATE, DELETE or TRUNCATE on `inspection_responses`, and a correction is a new row that supersedes the old one.
@@ -68,7 +83,7 @@ Store every answer an inspector gives as an append-only `inspection_responses` r
   - Answers are validated on the server against the pinned revision with the same evaluator the web uses; an invalid batch writes nothing.
   - `inspection_responses` is in `partition_settings` from the same revision that creates it.
   - A newly failed answer emits one `inspection.answer_failed` v1 in the same transaction.
-  - `submit` is refused with 422 `GUARD_FAILED` while required answers are missing.
+  - Answers can be saved only in the states and by the callers ADR 0041 §6 allows (step 3b).
 - **tests**:
   - **unit** (`test_responses_unit.py`):
     - The failure-transition rule: (previous absent, new failed) → emit; (previous failed, new failed) → no emit; (previous passed, new failed) → emit; (previous failed, new passed) → no emit.
@@ -79,8 +94,11 @@ Store every answer an inspector gives as an append-only `inspection_responses` r
     - Same `clientId` sent twice → second call `created: false`, same `responseId`; `SELECT count(*) FROM inspection_responses` unchanged.
     - `coating_dft = 200` → `failed: true` and 1 `domain_events` row named `inspection.answer_failed` with the payload's `fieldKey: "coating_dft"`; then `coating_dft = 180` → still 1; then 300, then 190 → 2.
     - `surface_prep = "Sa1"` → 422 `ANSWER_INVALID` with path `answers[0].value`; `nozzle_size = 3` → 422 `UNKNOWN_FIELD`; `remarks = "x"` while `surface_prep = "Sa2.5"` → 422 `FIELD_NOT_VISIBLE`. A batch of one valid and one invalid answer → 422 and 0 new `inspection_responses` rows.
-    - Inspection in `assigned` → 409 `INSPECTION_NOT_EDITABLE`; viewer without `inspection.respond` → 403; both write nothing.
-    - `submit` with `surface_prep` unanswered → 422 `GUARD_FAILED` with `messageKey: "inspection.guard.answers_incomplete"`; after answering it → 200 `inspector_review`; then a further answer → 409 `INSPECTION_NOT_EDITABLE`.
+    - Inspection in `assigned` → 409 `INSPECTION_NOT_EDITABLE`. A viewer without `inspection.respond` → 403. Both write nothing.
+    - Editable states: an answer is accepted in `in_progress`, in `inspector_review` (after `go_checkout`/`check_in`, or `sitesync_*` once APPROVALS-10 lands) and in `rework_required`. In `in_progress_go`/`in_progress_sitesync` → 409.
+    - A batch with the same `fieldKey` twice → 422 `DUPLICATE_ANSWER`, and nothing is written.
+    - `request_supervisor_review` → `supervisor_review`. Then the inspector's answer → 403. A supervisor holding `approvals.inspection.review` → 200, with `respondedBy` = the supervisor. After `mark_performed` → 409 `INSPECTION_NOT_EDITABLE` for everyone.
+    - Guard facts: with `surface_prep` unanswered, the facts provider returns `missingRequiredCount: 1`. After answering it, 0.
     - As `aip_app`: `UPDATE inspection_responses SET value = '1'` → permission denied; `DELETE FROM inspection_responses` → permission denied; `TRUNCATE inspection_responses` → permission denied.
     - `SELECT table_name FROM partition_settings` includes `inspection_responses`; after running `ensure_partitions`, the current month's partition exists and the row submitted above is readable through the parent.
     - RLS: as `aip_app` bound to `tenant-b`, `SELECT count(*) FROM inspection_current_responses` → 0; a `tenant-b` user `GET /api/v1/inspections/{kaefer id}/responses` → 404 and `POST` → 404.
