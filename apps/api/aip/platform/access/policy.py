@@ -8,8 +8,12 @@
 4. an ``api_client`` principal (IDENTITY-06) -> allowed exactly when the action is in its scopes;
 5. otherwise the union of the registered ``GrantProvider``s' grants: a tenant grant matches any
    resource in the principal's tenant; a project grant matches only a resource with the same
-   ``project_id`` (so never a resource without one); any other scope never matches. A provider
-   that raises gives ``provider_error`` (logged).
+   ``project_id`` (so never a resource without one); an asset-subtree grant (PORTAL-01) matches
+   only a resource in its project whose ``asset_path`` has the asset's label (so never one without
+   an asset path); any other scope never matches. A provider that raises gives ``provider_error``
+   (logged). An external principal (a portal user, PORTAL-01) is asked of the providers whose
+   class sets ``serves_external = True`` only, an internal one of the others only, so a role
+   assignment can never give a portal user a permission and a portal grant never an internal one.
 
 Grants are memoised for the current request only (keyed on the ARCH-04 request context object,
 so nothing outlives the request). ACCESS-04 adds a cross-request cache, which may only be keyed by
@@ -26,7 +30,13 @@ from typing import Literal
 from uuid import UUID
 
 from aip.platform.access.catalogue import Catalogue
-from aip.platform.access.grants import Grant, GrantProvider, ProjectScope, TenantScope
+from aip.platform.access.grants import (
+    AssetSubtreeScope,
+    Grant,
+    GrantProvider,
+    ProjectScope,
+    TenantScope,
+)
 from aip.platform.context import ContextMissingError, RequestContext, get_context
 
 __all__ = [
@@ -51,7 +61,8 @@ class AccessPrincipal:
     """Who is asking, as the policy sees it. ``scopes`` only matter for ``api_client``.
 
     ``aal`` is the session's authentication assurance level (2 after MFA or step-up); actions
-    that need step-up (ACCESS-02's privileged role assignment) check it.
+    that need step-up (ACCESS-02's privileged role assignment) check it. ``external`` marks a
+    portal user (PORTAL-01): only ``serves_external`` providers are asked for its grants.
     """
 
     tenant_id: UUID
@@ -60,14 +71,19 @@ class AccessPrincipal:
     active: bool = True
     scopes: frozenset[str] = field(default_factory=frozenset[str])
     aal: int = 1
+    external: bool = False
 
 
 @dataclass(frozen=True, slots=True)
 class Resource:
-    """What is acted on. ``tenant_id`` ``None`` means the principal's tenant (RLS-loaded rows)."""
+    """What is acted on. ``tenant_id`` ``None`` means the principal's tenant (RLS-loaded rows).
+
+    ``asset_path`` is the ltree path text of the record's asset, for asset-subtree grants.
+    """
 
     project_id: UUID | str | None = None
     tenant_id: UUID | None = None
+    asset_path: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,7 +105,7 @@ class _ProviderFailedError(Exception):
     pass
 
 
-_GrantKey = tuple["PolicyService", UUID, UUID | None, str]
+_GrantKey = tuple["PolicyService", UUID, UUID | None, str, bool]
 _memo: ContextVar[tuple[RequestContext, dict[_GrantKey, tuple[Grant, ...]]] | None] = ContextVar(
     "aip_access_grant_memo", default=None
 )
@@ -115,11 +131,31 @@ def _matches(grant: Grant, action: str, resource: Resource | None) -> bool:
     scope = grant.scope
     if isinstance(scope, TenantScope):
         return True
-    if isinstance(scope, ProjectScope):  # pyright: ignore[reportUnnecessaryIsInstance]
+    if isinstance(scope, ProjectScope):
         if resource is None or resource.project_id is None:
             return False
         return str(scope.project_id) == str(resource.project_id)
+    if isinstance(scope, AssetSubtreeScope):  # pyright: ignore[reportUnnecessaryIsInstance]
+        if resource is None or resource.project_id is None or not resource.asset_path:
+            return False
+        if str(scope.project_id) != str(resource.project_id):
+            return False
+        return _asset_label(scope.asset_id) in resource.asset_path.split(".")
     return False  # an unknown scope type never matches (fail closed)
+
+
+def _asset_label(asset_id: UUID | str) -> str:
+    """The ltree label of an asset: its id without dashes (ASSETS-01 ``ck_assets_path_leaf``)."""
+    try:
+        return UUID(str(asset_id)).hex
+    except ValueError:
+        return str(asset_id).replace("-", "").lower()
+
+
+def _serves(provider: GrantProvider, principal: AccessPrincipal) -> bool:
+    """External principals are served only by ``serves_external`` providers, internal ones only
+    by the others (PORTAL-01)."""
+    return bool(getattr(type(provider), "serves_external", False)) == principal.external
 
 
 class PolicyService:
@@ -132,11 +168,19 @@ class PolicyService:
 
     async def _grants(self, principal: AccessPrincipal) -> tuple[Grant, ...]:
         memo = _request_memo()
-        key: _GrantKey = (self, principal.tenant_id, principal.actor_id, principal.kind)
+        key: _GrantKey = (
+            self,
+            principal.tenant_id,
+            principal.actor_id,
+            principal.kind,
+            principal.external,
+        )
         if memo is not None and key in memo:
             return memo[key]
         grants: list[Grant] = []
         for provider in self._providers:
+            if not _serves(provider, principal):
+                continue
             try:
                 grants.extend(await provider.grants(principal))
             except Exception as exc:

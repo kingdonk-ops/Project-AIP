@@ -39,6 +39,14 @@ export type PermissionCode =
   | "ops.jobs.admin"
   | "platform.events.manage"
   | "platform.tenants.manage"
+  | "portal.grant.manage"
+  | "portal.record.sign_off"
+  | "portal.record.view"
+  | "portal.record.witness"
+  | "portal.report.download"
+  | "portal.user.invite"
+  | "portal.user.suspend"
+  | "portal.user.view"
   | "project.archive"
   | "project.create"
   | "project.update"
@@ -95,6 +103,14 @@ export const PERMISSIONS = {
   "ops.jobs.admin": { module: "ops", privileged: false },
   "platform.events.manage": { module: "ops", privileged: true },
   "platform.tenants.manage": { module: "ops", privileged: true },
+  "portal.grant.manage": { module: "portal", privileged: false },
+  "portal.record.sign_off": { module: "portal", privileged: false },
+  "portal.record.view": { module: "portal", privileged: false },
+  "portal.record.witness": { module: "portal", privileged: false },
+  "portal.report.download": { module: "portal", privileged: false },
+  "portal.user.invite": { module: "portal", privileged: false },
+  "portal.user.suspend": { module: "portal", privileged: false },
+  "portal.user.view": { module: "portal", privileged: false },
   "project.archive": { module: "projects", privileged: false },
   "project.create": { module: "projects", privileged: false },
   "project.update": { module: "projects", privileged: false },

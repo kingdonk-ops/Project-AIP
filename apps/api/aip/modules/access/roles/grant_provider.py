@@ -25,7 +25,7 @@ from uuid import UUID
 
 from aip.modules.access.policy_cache import GrantRow, PolicyCache, get_policy_cache
 from aip.modules.access.roles import repository as repo
-from aip.modules.access.roles.default_roles import OPERATOR_ONLY_PREFIX
+from aip.modules.access.roles.default_roles import never_role_held
 from aip.platform.access import AccessPrincipal, Grant, ProjectScope, TenantScope
 from aip.platform.db.engine import DATABASE_URL_ENV
 from aip.platform.db.session import with_tenant
@@ -53,7 +53,7 @@ def resolve_grants(
     """
     rows: set[GrantRow] = set()
     for a in assignments:
-        if a.permission.startswith(OPERATOR_ONLY_PREFIX):
+        if never_role_held(a.permission):  # operator-only or external-only (PORTAL-01)
             continue
         if a.scope_type == "tenant":
             rows.add((a.permission, "tenant", None))

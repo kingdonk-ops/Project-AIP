@@ -17,10 +17,11 @@ Regenerate with `uv run python tools/gen_module_map.py`.
 | 8 | `projects` | projects | `tenancy` |
 | 9 | `access` | identity | `identity`, `projects`, `tenancy` |
 | 10 | `approvals` | approvals | `access`, `identity`, `tenancy` |
-| 11 | `terms` | terms | none |
-| 12 | `forms` | forms | `approvals`, `item_types`, `tenancy`, `terms` |
-| 13 | `uploads` | uploads | `projects`, `tenancy` |
-| 14 | `report_engine` | report_engine | `ops`, `projects`, `tenancy`, `terms`, `uploads` |
+| 11 | `portal` | portal | `access`, `assets`, `audit`, `identity`, `projects`, `tenancy` |
+| 12 | `terms` | terms | none |
+| 13 | `forms` | forms | `approvals`, `item_types`, `tenancy`, `terms` |
+| 14 | `uploads` | uploads | `projects`, `tenancy` |
+| 15 | `report_engine` | report_engine | `ops`, `projects`, `tenancy`, `terms`, `uploads` |
 
 ## Dependencies
 
@@ -45,6 +46,12 @@ graph TD
     identity --> tenancy
     item_types --> tenancy
     ops --> tenancy
+    portal --> access
+    portal --> assets
+    portal --> audit
+    portal --> identity
+    portal --> projects
+    portal --> tenancy
     projects --> tenancy
     report_engine --> ops
     report_engine --> projects

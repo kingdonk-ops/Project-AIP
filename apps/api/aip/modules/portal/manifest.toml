@@ -1,0 +1,64 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+id = "portal"
+context = "portal"
+depends_on = ["tenancy", "identity", "access", "projects", "assets", "audit"]
+permission_namespaces = ["portal"]
+subscribes = [{ name = "project.archived", version = 1 }]
+settings = []
+term_keys = []
+
+# Internal permissions: assignable through roles (ACCESS-02); ACCESS-07 maps invite to project admins.
+
+[[permissions]]
+code = "portal.user.view"
+description = "View external portal users and their grants"
+
+[[permissions]]
+code = "portal.user.invite"
+description = "Invite external portal users to a project"
+
+[[permissions]]
+code = "portal.user.suspend"
+description = "Suspend and reinstate external portal users"
+
+[[permissions]]
+code = "portal.grant.manage"
+description = "Add, renew and revoke external portal users' project grants"
+
+# External permissions: given only by portal grants (PortalGrantProvider), never by a role.
+
+[[permissions]]
+code = "portal.record.view"
+description = "Portal users: view the records shared with them"
+
+[[permissions]]
+code = "portal.record.sign_off"
+description = "Portal users: sign off the records shared with them"
+
+[[permissions]]
+code = "portal.record.witness"
+description = "Portal users: witness hold points on the records shared with them"
+
+[[permissions]]
+code = "portal.report.download"
+description = "Portal users: download the reports shared with them"
+
+[[events]]
+name = "portal_user.invited"
+version = 1
+
+[[events]]
+name = "portal_user.status_changed"
+version = 1
+
+[[events]]
+name = "portal_grant.created"
+version = 1
+
+[[events]]
+name = "portal_grant.renewed"
+version = 1
+
+[[events]]
+name = "portal_grant.revoked"
+version = 1

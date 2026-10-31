@@ -1,0 +1,59 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "accessDays": {
+      "title": "Accessdays",
+      "type": "integer"
+    },
+    "actions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Actions",
+      "type": "array"
+    },
+    "assetId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Assetid"
+    },
+    "expiresAt": {
+      "format": "date-time",
+      "title": "Expiresat",
+      "type": "string"
+    },
+    "grantId": {
+      "format": "uuid",
+      "title": "Grantid",
+      "type": "string"
+    },
+    "portalUserId": {
+      "format": "uuid",
+      "title": "Portaluserid",
+      "type": "string"
+    },
+    "projectId": {
+      "format": "uuid",
+      "title": "Projectid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "grantId",
+    "portalUserId",
+    "projectId",
+    "assetId",
+    "actions",
+    "accessDays",
+    "expiresAt"
+  ],
+  "title": "GrantCreated",
+  "type": "object"
+}
