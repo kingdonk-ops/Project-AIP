@@ -222,5 +222,6 @@ def test_the_go_codes_are_renamed_to_sitesync() -> None:
         assert {"in_progress_sitesync", "sitesync_checkout", "sitesync_check_in"} <= codes
         assert set(SITESYNC_LABELS) <= keys
 
+
 def test_the_shipped_presets_live_in_config_workflows() -> None:
     assert workflows_dir() == repo_root() / "config" / "workflows"

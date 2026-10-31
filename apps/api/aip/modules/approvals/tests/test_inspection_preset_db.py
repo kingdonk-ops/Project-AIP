@@ -393,6 +393,7 @@ async def test_the_sitesync_rename_publishes_the_next_version(
     kept = await drive(client, old["id"], ["check_in"], fresh(ALICE_ID))
     assert (kept["version"], kept["currentState"]) == (1, "inspector_review")
 
+
 async def test_installing_twice_leaves_one_active_version(db: TenantDb) -> None:
     first = await install(db, "inspection_standard")
     second = await install(db, "inspection_standard")
