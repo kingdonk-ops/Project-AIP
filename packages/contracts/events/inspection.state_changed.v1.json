@@ -1,0 +1,49 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "title": "Action",
+      "type": "string"
+    },
+    "assetId": {
+      "format": "uuid",
+      "title": "Assetid",
+      "type": "string"
+    },
+    "from": {
+      "title": "From",
+      "type": "string"
+    },
+    "inspectionId": {
+      "format": "uuid",
+      "title": "Inspectionid",
+      "type": "string"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Projectid"
+    },
+    "to": {
+      "title": "To",
+      "type": "string"
+    }
+  },
+  "required": [
+    "inspectionId",
+    "assetId",
+    "projectId",
+    "from",
+    "to",
+    "action"
+  ],
+  "title": "InspectionStateChangedEvent",
+  "type": "object"
+}

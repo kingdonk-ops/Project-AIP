@@ -1,0 +1,50 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assetId": {
+      "format": "uuid",
+      "title": "Assetid",
+      "type": "string"
+    },
+    "inspectionId": {
+      "format": "uuid",
+      "title": "Inspectionid",
+      "type": "string"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Projectid"
+    },
+    "source": {
+      "title": "Source",
+      "type": "string"
+    },
+    "templateRevisionId": {
+      "format": "uuid",
+      "title": "Templaterevisionid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "inspectionId",
+    "assetId",
+    "projectId",
+    "kind",
+    "templateRevisionId",
+    "source"
+  ],
+  "title": "InspectionCreatedEvent",
+  "type": "object"
+}

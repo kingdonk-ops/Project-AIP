@@ -4,6 +4,7 @@ export * from './approvals/approvals';
 export * from './assets/assets';
 export * from './forms/forms';
 export * from './identity/identity';
+export * from './inspections/inspections';
 export * from './item-types/item-types';
 export * from './jobs/jobs';
 export * from './platform/platform';
