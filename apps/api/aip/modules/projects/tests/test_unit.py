@@ -128,7 +128,6 @@ async def test_server_startup_fails_without_a_cursor_key_outside_dev(
                 pass
     finally:
         get_settings.cache_clear()
-    
 
 @pytest.mark.parametrize(
     "code", ["L592", "l592", "KIPS-01", "a1", "ab cd", "-L592", "L", "X" * 33, "L5_92", "L592 "]
