@@ -37,7 +37,8 @@ Request Supervisor Review or Submit Report, depending on the template ([ADR 0041
     `responses.py`, `service.py`, `workflow.py`, `events.py`, `routes.py`, `api.py`, `manifest.toml`)
   - `apps/api/aip/modules/inspections/tests/test_acknowledgements_unit.py`, `test_acknowledgements_db.py`
   - `config/workflows/inspection_standard.json`, `config/workflows/inspection_client_review.json`
-  - `apps/api/aip/modules/approvals/tests/golden/inspection_lifecycle_cases.json` (the new guarded cases)
+  - `apps/api/aip/modules/inspections/tests/test_submit_preset_db.py` (the guarded submit cases, run through
+    `TransitionService` with the real facts provider; approvals' golden file stays APPROVALS-owned)
   - `config/terms/en-AU/inspections.json`, `config/terms/en-AU/approvals.json`
 - **steps**:
   - 1. **Supervisor-review setting on the inspection.** Add `inspections.has_supervisor_review boolean NOT NULL
