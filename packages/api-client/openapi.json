@@ -10203,7 +10203,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Validation error"
           }
         },
         "summary": "List Portal Users",
@@ -10242,7 +10242,7 @@
                 }
               }
             },
-            "description": "Not Found"
+            "description": "Not found"
           },
           "409": {
             "content": {
@@ -10262,7 +10262,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Validation error"
           }
         },
         "summary": "Invite Portal User",
@@ -10305,7 +10305,7 @@
                 }
               }
             },
-            "description": "Not Found"
+            "description": "Not found"
           },
           "422": {
             "content": {
@@ -10368,7 +10368,7 @@
                 }
               }
             },
-            "description": "Not Found"
+            "description": "Not found"
           },
           "409": {
             "content": {
@@ -10388,7 +10388,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Validation error"
           }
         },
         "summary": "Add Portal Grant",
@@ -10434,7 +10434,7 @@
                 }
               }
             },
-            "description": "Not Found"
+            "description": "Not found"
           },
           "422": {
             "content": {
@@ -10497,7 +10497,7 @@
                 }
               }
             },
-            "description": "Not Found"
+            "description": "Not found"
           },
           "409": {
             "content": {
@@ -10517,7 +10517,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Validation error"
           }
         },
         "summary": "Renew Portal Grant",
@@ -10560,7 +10560,7 @@
                 }
               }
             },
-            "description": "Not Found"
+            "description": "Not found"
           },
           "409": {
             "content": {
@@ -10633,7 +10633,7 @@
                 }
               }
             },
-            "description": "Not Found"
+            "description": "Not found"
           },
           "409": {
             "content": {

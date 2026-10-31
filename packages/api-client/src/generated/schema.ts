@@ -6077,7 +6077,7 @@ export interface operations {
                     "application/json": components["schemas"]["PortalUserPage"];
                 };
             };
-            /** @description Unprocessable Entity */
+            /** @description Validation error */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -6110,7 +6110,7 @@ export interface operations {
                     "application/json": components["schemas"]["PortalUserOut"];
                 };
             };
-            /** @description Not Found */
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -6128,7 +6128,7 @@ export interface operations {
                     "application/json": components["schemas"]["PortalErrorBody"];
                 };
             };
-            /** @description Unprocessable Entity */
+            /** @description Validation error */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -6159,7 +6159,7 @@ export interface operations {
                     "application/json": components["schemas"]["PortalUserOut"];
                 };
             };
-            /** @description Not Found */
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -6203,7 +6203,7 @@ export interface operations {
                     "application/json": components["schemas"]["GrantOut"];
                 };
             };
-            /** @description Not Found */
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -6221,7 +6221,7 @@ export interface operations {
                     "application/json": components["schemas"]["PortalErrorBody"];
                 };
             };
-            /** @description Unprocessable Entity */
+            /** @description Validation error */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -6251,7 +6251,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Not Found */
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -6292,7 +6292,7 @@ export interface operations {
                     "application/json": components["schemas"]["GrantOut"];
                 };
             };
-            /** @description Not Found */
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -6310,7 +6310,7 @@ export interface operations {
                     "application/json": components["schemas"]["PortalErrorBody"];
                 };
             };
-            /** @description Unprocessable Entity */
+            /** @description Validation error */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -6341,7 +6341,7 @@ export interface operations {
                     "application/json": components["schemas"]["PortalUserOut"];
                 };
             };
-            /** @description Not Found */
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -6394,7 +6394,7 @@ export interface operations {
                     "application/json": components["schemas"]["PortalUserOut"];
                 };
             };
-            /** @description Not Found */
+            /** @description Not found */
             404: {
                 headers: {
                     [name: string]: unknown;
