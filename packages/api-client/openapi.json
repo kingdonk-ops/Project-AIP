@@ -203,6 +203,13 @@
             "title": "Required",
             "type": "object"
           },
+          "sections": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SectionResultOut"
+            },
+            "title": "Sections",
+            "type": "object"
+          },
           "visible": {
             "additionalProperties": {
               "type": "boolean"
@@ -218,7 +225,8 @@
           "failed",
           "ignored",
           "expressionErrors",
-          "complete"
+          "complete",
+          "sections"
         ],
         "title": "AnswerEvaluationOut",
         "type": "object"
@@ -3865,6 +3873,15 @@
             },
             "title": "Path",
             "type": "array"
+          },
+          "severity": {
+            "default": "error",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "title": "Severity",
+            "type": "string"
           }
         },
         "required": [
@@ -6660,6 +6677,57 @@
         "title": "Scope",
         "type": "object"
       },
+      "SectionResultOut": {
+        "description": "One section's verdict (FORMS-10): complete when visible with no missing required answers,\nno invalid values and no failed section rules.",
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "failed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Failed",
+            "type": "array"
+          },
+          "invalid": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Invalid",
+            "type": "array"
+          },
+          "missingRequired": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missingrequired",
+            "type": "array"
+          },
+          "ruleFailures": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rulefailures",
+            "type": "array"
+          },
+          "visible": {
+            "title": "Visible",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "visible",
+          "missingRequired",
+          "invalid",
+          "failed",
+          "ruleFailures",
+          "complete"
+        ],
+        "title": "SectionResultOut",
+        "type": "object"
+      },
       "SessionCreate": {
         "additionalProperties": false,
         "properties": {
@@ -7818,6 +7886,11 @@
             "title": "Code",
             "type": "string"
           },
+          "hasSupervisorReview": {
+            "default": true,
+            "title": "Hassupervisorreview",
+            "type": "boolean"
+          },
           "kind": {
             "enum": [
               "inspection",
@@ -7884,6 +7957,10 @@
             ],
             "title": "Currentrevisionno"
           },
+          "hasSupervisorReview": {
+            "title": "Hassupervisorreview",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -7936,6 +8013,7 @@
           "name",
           "kind",
           "status",
+          "hasSupervisorReview",
           "currentRevisionId",
           "currentRevisionNo",
           "syncVersion",
@@ -7962,6 +8040,10 @@
               }
             ],
             "title": "Currentrevisionno"
+          },
+          "hasSupervisorReview": {
+            "title": "Hassupervisorreview",
+            "type": "boolean"
           },
           "id": {
             "format": "uuid",
@@ -8004,6 +8086,7 @@
           "name",
           "kind",
           "status",
+          "hasSupervisorReview",
           "currentRevisionNo",
           "updatedAt"
         ],
@@ -8060,6 +8143,10 @@
             ],
             "title": "Currentrevisionno"
           },
+          "hasSupervisorReview": {
+            "title": "Hassupervisorreview",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -8105,6 +8192,7 @@
           "name",
           "kind",
           "status",
+          "hasSupervisorReview",
           "currentRevisionId",
           "currentRevisionNo",
           "syncVersion",
@@ -8112,6 +8200,50 @@
           "updatedAt"
         ],
         "title": "TemplateRecord",
+        "type": "object"
+      },
+      "TemplateUpdate": {
+        "additionalProperties": false,
+        "description": "Template settings (FORMS-10). An omitted field is left as it is. Changing\n``hasSupervisorReview`` never changes inspections that already exist (ADR 0041 §5).",
+        "properties": {
+          "expectedSyncVersion": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedsyncversion"
+          },
+          "hasSupervisorReview": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hassupervisorreview"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "TemplateUpdate",
         "type": "object"
       },
       "TenantErrorBody": {
@@ -12869,6 +13001,77 @@
           }
         },
         "summary": "Get Template",
+        "tags": [
+          "forms"
+        ]
+      },
+      "patch": {
+        "operationId": "forms_templates_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateRecord"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Update Template",
         "tags": [
           "forms"
         ]

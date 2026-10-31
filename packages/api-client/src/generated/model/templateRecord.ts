@@ -7,6 +7,7 @@ export interface TemplateRecord {
   createdAt: string;
   currentRevisionId: string | null;
   currentRevisionNo: number | null;
+  hasSupervisorReview: boolean;
   id: string;
   kind: TemplateRecordKind;
   name: string;
