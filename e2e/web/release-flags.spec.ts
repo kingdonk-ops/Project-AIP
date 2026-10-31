@@ -25,7 +25,8 @@ interface TenantFlags {
   puts: { flag: string; enabled: boolean }[];
 }
 
-/** One tenant's flags API: GET lists the values, PUT changes one (only `canManage` may). */
+/** One tenant's flags API: GET lists the values, PUT changes one (only `canManage` may). Register it after
+ * `signInAsStub`, whose all-off flags route it must override. */
 async function mockFlagsApi(page: Page, store: TenantFlags, canManage: boolean) {
   await page.route(`**${FLAGS}**`, async (route) => {
     const request = route.request();
@@ -68,8 +69,8 @@ test("an admin switches bim on and the gated nav item appears; the other tenant'
 }) => {
   const tenantA: TenantFlags = { values: { ai: false, bim: false }, puts: [] };
   const tenantB: TenantFlags = { values: { ai: false, bim: false }, puts: [] };
-  await mockFlagsApi(page, tenantA, true);
   await signInAsStub(page, ADMIN);
+  await mockFlagsApi(page, tenantA, true);
   await page.goto("/settings/flags");
 
   await expect(page.getByRole("heading", { name: "Release flags", level: 1 })).toBeVisible();
@@ -93,8 +94,8 @@ test("an admin switches bim on and the gated nav item appears; the other tenant'
   const context = await browser.newContext();
   try {
     const other = await context.newPage();
-    await mockFlagsApi(other, tenantB, false);
     await signInAsStub(other, OTHER_TENANT);
+    await mockFlagsApi(other, tenantB, false);
     await other.goto("/");
     await expect(other.getByRole("heading", { name: "Home" })).toBeVisible();
     const otherNav = await openNav(other);
@@ -109,8 +110,8 @@ test("an admin switches bim on and the gated nav item appears; the other tenant'
 
 test("a user without tenant.flags.manage gets the 403 state and no switches", async ({ page }) => {
   const store: TenantFlags = { values: { ai: false, bim: false }, puts: [] };
-  await mockFlagsApi(page, store, false);
   await signInAsStub(page, OTHER_TENANT);
+  await mockFlagsApi(page, store, false);
   await page.goto("/settings/flags");
   await expect(page.getByRole("heading", { name: "Release flags", level: 1 })).toBeVisible();
   await expect(page.getByText("You don’t have access")).toBeVisible();
