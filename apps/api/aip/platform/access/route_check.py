@@ -14,9 +14,9 @@
    later through ``app.include_router`` is converted on inclusion, so a route that declares
    nothing is denied at runtime with 403 even when the startup check never saw it;
 3. the policy, catalogue, principal source and tenant guard go on ``app.state``,
-   ``Forbidden`` renders as 403 ``{"code": "FORBIDDEN", "permission": code}`` and ``RouteHiddenError``
-   (PORTAL-02: an external principal on an internal route, or the reverse) as 404
-   ``{"code": "NOT_FOUND"}``.
+   ``Forbidden`` renders as 403 ``{"code": "FORBIDDEN", "permission": code}`` and
+   ``RouteHiddenError`` (PORTAL-02: an external principal on an internal route, or the reverse)
+   as 404 ``{"code": "NOT_FOUND"}``.
 
 PORTAL-02: ``check_routes`` also refuses a route declared ``external=True`` outside
 ``EXTERNAL_PREFIXES`` (``/api/v1/portal/``), and a route under that prefix with any declaration

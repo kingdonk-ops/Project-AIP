@@ -28,8 +28,8 @@ be served (TENANCY-01: a suspended tenant gets 403 on every tenant-scoped route)
 PORTAL-02 (ADR 0036 choice 7): the routes an external principal (a portal user) may reach are an
 allow-list. ``authenticated(external=True)`` and ``requires(code, external=True)`` accept **only**
 external principals; every other non-``public()`` route refuses an external principal. Both
-refusals are 404 ``{"code": "NOT_FOUND"}`` (``RouteHiddenError``), not 403, so neither audience can map
-the other's API. ``route_check`` keeps external routes under ``EXTERNAL_PREFIXES``.
+refusals are 404 ``{"code": "NOT_FOUND"}`` (``RouteHiddenError``), not 403, so neither audience
+can map the other's API. ``route_check`` keeps external routes under ``EXTERNAL_PREFIXES``.
 """
 
 from __future__ import annotations

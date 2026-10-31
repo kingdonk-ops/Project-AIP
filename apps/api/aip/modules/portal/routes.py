@@ -306,19 +306,23 @@ async def rate_limit(request: Request, response: Response) -> None:
                 source_ip=ip,
                 detail={"limit": kind, "perMinute": limiter.limit},
             )
-        raise DomainError(
-            429,
-            "RATE_LIMITED",
-            headers={"Retry-After": str(hit.retry_after), "Cache-Control": NO_STORE},
-        )
+        refused = DomainError(429, "RATE_LIMITED")
+        refused.headers = {"Retry-After": str(hit.retry_after), "Cache-Control": NO_STORE}
+        raise refused
 
 
 ClientPrincipal = Annotated[Principal, Depends(get_principal)]
 
+# The session first (an ended one answers 401 SESSION_EXPIRED and clears the portal cookies), then
+# the rate limits, then the tenant check the admin routes also make.
 client_router = APIRouter(
     prefix="/portal",
     tags=["portal"],
-    dependencies=[Depends(authenticated(external=True)), Depends(rate_limit)],
+    dependencies=[
+        Depends(authenticated(external=True)),
+        Depends(rate_limit),
+        Depends(require_active_tenant),
+    ],
     responses={404: {"model": PortalErrorBody}, 429: {"model": PortalErrorBody}},
 )
 
@@ -368,6 +372,6 @@ async def portal_logout(principal: ClientPrincipal) -> Response:
     return response
 
 
-router = APIRouter(dependencies=[Depends(require_active_tenant)], lifespan=_check_actions_on_start)
-router.include_router(users_router)
+router = APIRouter(lifespan=_check_actions_on_start)
+router.include_router(users_router, dependencies=[Depends(require_active_tenant)])
 router.include_router(client_router)

@@ -4,7 +4,7 @@
 show a field diff; ``NotFoundError`` becomes 404 ``{"code": "NOT_FOUND"}`` (also what a row of
 another tenant looks like, since RLS hides it); ``CycleError`` becomes 422 ``PATH_CYCLE``.
 ``DomainError`` carries a module's own status and stable code (``PROJECT_CODE_TAKEN``) plus any
-extra fields, and becomes ``{"code": ..., **extra}``; its optional ``headers`` (PORTAL-02:
+extra fields, and becomes ``{"code": ..., **extra}``; ``headers`` set on it (PORTAL-02:
 ``Retry-After`` on 429) go on the response.
 """
 
@@ -24,12 +24,12 @@ __all__ = ["DomainError", "install_error_handlers"]
 class DomainError(Exception):
     """A business rule refused the request: HTTP ``status_code`` with a stable ``code``."""
 
-    def __init__(
-        self, status_code: int, code: str, *, headers: dict[str, str] | None = None, **extra: Any
-    ) -> None:
+    # Response headers (``Retry-After``); set on the instance, since every keyword is a body field.
+    headers: dict[str, str] | None = None
+
+    def __init__(self, status_code: int, code: str, **extra: Any) -> None:
         self.status_code = status_code
         self.code = code
-        self.headers = headers
         self.extra = extra
         super().__init__(code)
 
