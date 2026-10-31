@@ -130,7 +130,7 @@ class _Public:
 
 
 async def _audience_principal(request: Request, external: bool) -> AccessPrincipal:
-    """The caller, refused with ``RouteHiddenError`` unless its kind matches the route's (PORTAL-02)."""
+    """The caller; ``RouteHiddenError`` unless its kind matches the route's (PORTAL-02)."""
     principal = await current_principal(request)
     if principal.external != external:
         raise RouteHiddenError
