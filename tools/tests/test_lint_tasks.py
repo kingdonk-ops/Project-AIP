@@ -218,8 +218,8 @@ def test_r1_waves_become_ready_in_order(tmp_path: Path) -> None:
     # (exactly the in-order opening this test checks) and is no longer a not-yet-ready example.
     # UPLOADS-08 has since merged too (PR #150), so it is consumed rather than ready, and REPORTS-01
     # (PR #154) likewise; REPORTS-02 has opened now that OPS-17, REPORTS-01 and UPLOADS-08 are all
-    # done. ACCESS-07 (PR #158) is done too, so it is consumed rather than ready.
-    assert "REPORTS-02" in ready
+    # done; REPORTS-02 (PR #210) has since merged as well, so it is consumed in turn. ACCESS-07
+    # (PR #158) is done too, so it is consumed rather than ready.
     assert {"TENANCY-06", "OPS-06"} <= ready  # P0-hardening rows
     assert not ready & {
         "TENANCY-04",  # needs PLAN-P2
@@ -230,6 +230,7 @@ def test_r1_waves_become_ready_in_order(tmp_path: Path) -> None:
         "UPLOADS-08",  # merged (done), so consumed rather than ready
         "REPORTS-01",  # done, so consumed rather than ready
         "ACCESS-07",  # done, so consumed rather than ready
+        "REPORTS-02",  # done, so consumed rather than ready
     }
     statuses = dict(
         re.findall(r"\[([A-Z0-9-]+)\][^|]*\|(?:[^|]*\|){4}\s*([a-z-]+)", "\n".join(lines))

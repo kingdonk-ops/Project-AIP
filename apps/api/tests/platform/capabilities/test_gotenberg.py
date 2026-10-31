@@ -1,11 +1,15 @@
-"""Gotenberg PdfRenderer adapter (STACK-02).
+"""Gotenberg PdfRenderer adapter (STACK-02, REPORTS-02).
 
-Integration tests run against a real ``gotenberg/gotenberg:8``. A few edge cases that a real server
-cannot produce on demand (a body without Content-Length, a 5xx) use ``httpx.MockTransport``.
+Integration tests run against a real Gotenberg started with the compose sandbox flags
+(``conftest.GOTENBERG_COMMAND``: no JavaScript, Chromium may load only the request's own files). A
+few edge cases that a real server cannot produce on demand (a body without Content-Length, a 5xx)
+and the exact multipart fields use ``httpx.MockTransport``.
 """
 
 from __future__ import annotations
 
+import email.parser
+import email.policy
 import io
 import uuid
 from collections.abc import AsyncIterator
@@ -16,6 +20,7 @@ import pytest
 from pypdf import PdfReader
 
 from aip.platform.capabilities import (
+    PageOptions,
     RenderError,
     RenderTimeoutError,
     RenderTooLargeError,
@@ -141,3 +146,110 @@ async def test_render_store_and_download_report(
     assert downloaded.startswith(b"%PDF")
     text = "".join(page.extract_text() for page in PdfReader(io.BytesIO(downloaded)).pages)
     assert "FX-0001" in text
+
+
+# --- REPORTS-02: page options -------------------------------------------------------------------
+
+_PAGE_FIELDS = (
+    "paperWidth",
+    "paperHeight",
+    "marginTop",
+    "marginRight",
+    "marginBottom",
+    "marginLeft",
+    "landscape",
+    "printBackground",
+    "preferCssPageSize",
+)
+
+
+def _form_fields(request: httpx.Request) -> dict[str, list[str]]:
+    """The multipart body as ``{name: [value or filename, ...]}``."""
+    raw = f"Content-Type: {request.headers['content-type']}\r\n\r\n".encode() + request.read()
+    message = email.parser.BytesParser(policy=email.policy.HTTP).parsebytes(raw)
+    fields: dict[str, list[str]] = {}
+    for part in message.iter_parts():
+        name = str(part.get_param("name", header="content-disposition"))
+        filename = part.get_filename()
+        value = filename if filename else part.get_content()
+        fields.setdefault(name, []).append(str(value))
+    return fields
+
+
+async def _capture(page: PageOptions | None) -> dict[str, list[str]]:
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, content=b"%PDF-1.4 ok")
+
+    await _renderer(httpx.MockTransport(handler)).render_html("<p>x</p>", page=page)
+    return _form_fields(seen[0])
+
+
+async def test_page_options_become_gotenberg_form_fields() -> None:
+    fields = await _capture(PageOptions(210, 297, True, 12, 10, 12, 10))
+    assert fields["files"] == ["index.html"]
+    assert {name: fields[name] for name in _PAGE_FIELDS} == {
+        "paperWidth": ["210mm"],
+        "paperHeight": ["297mm"],
+        "marginTop": ["12mm"],
+        "marginRight": ["10mm"],
+        "marginBottom": ["12mm"],
+        "marginLeft": ["10mm"],
+        "landscape": ["true"],
+        "printBackground": ["true"],
+        "preferCssPageSize": ["false"],
+    }
+
+
+async def test_fractional_margins_and_portrait() -> None:
+    fields = await _capture(PageOptions(297, 420, False, 12.5, 0, 0, 0))
+    assert (fields["paperWidth"], fields["marginTop"], fields["landscape"]) == (
+        ["297mm"],
+        ["12.5mm"],
+        ["false"],
+    )
+
+
+async def test_without_page_options_only_files_are_sent() -> None:
+    assert await _capture(None) == {"files": ["index.html"]}
+
+
+async def test_a_real_landscape_page(gotenberg_url: str) -> None:
+    renderer = GotenbergPdfRenderer(gotenberg_url)
+    pdf = await renderer.render_html(
+        "<p>wide</p>", page=PageOptions(210, 297, True, 10, 10, 10, 10)
+    )
+    box = PdfReader(io.BytesIO(pdf)).pages[0].mediabox
+    assert abs(float(box.width) - 842) <= 1 and abs(float(box.height) - 595) <= 1
+
+
+# --- REPORTS-02: the sandboxed Chromium (compose flags) -----------------------------------------
+
+
+def _text(pdf: bytes) -> str:
+    return "".join(page.extract_text() for page in PdfReader(io.BytesIO(pdf)).pages)
+
+
+async def test_chromium_runs_no_javascript(gotenberg_url: str) -> None:
+    html = "<p id=\"x\">JS OFF</p><script>document.getElementById('x').textContent='JS ON'</script>"
+    text = _text(await GotenbergPdfRenderer(gotenberg_url).render_html(html))
+    assert "JS OFF" in text
+    assert "JS ON" not in text
+
+
+async def test_chromium_cannot_read_local_files(gotenberg_url: str) -> None:
+    html = '<p>frame</p><iframe src="file:///etc/passwd" width="600" height="400"></iframe>'
+    text = _text(await GotenbergPdfRenderer(gotenberg_url).render_html(html))
+    assert "frame" in text
+    assert "root:" not in text
+
+
+async def test_chromium_cannot_reach_the_network(gotenberg_url: str) -> None:
+    html = (
+        '<p>frame</p><iframe src="http://127.0.0.1:3000/health" width="600" height="400"></iframe>'
+    )
+    text = _text(await GotenbergPdfRenderer(gotenberg_url).render_html(html))
+    assert "frame" in text
+    assert "status" not in text

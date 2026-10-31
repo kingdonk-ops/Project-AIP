@@ -1,14 +1,21 @@
-"""HTTP routes for report templates (REPORTS-01), mounted under ``/api/v1/reports/templates``.
+"""HTTP routes for report templates (REPORTS-01) and render jobs (REPORTS-02).
 
-Every route declares its permission with ``requires(...)`` (deny by default, ACCESS-01) and needs
-an active tenant. Reading and previewing need ``report.template.view``; uploading, publishing,
-retiring and deleting a draft need ``report.template.manage``. Each request runs in one
-``with_tenant`` transaction, so another tenant's id is 404 ``TEMPLATE_NOT_FOUND`` (RLS hides it).
+Every route needs an active tenant and declares its access (deny by default, ACCESS-01). Each
+request runs in one ``with_tenant`` transaction, so another tenant's id is a 404 (RLS hides it).
 Explicit ``operation_id``s keep the generated client's hook names stable, and the ``422``
 description is pinned so the OpenAPI schema does not drift across Python versions.
 
-The preview returns the rendered sample as ``text/html`` under a sandboxing CSP and ``nosniff``,
-with its assets inlined as ``data:`` URIs (a browser has no sibling files).
+``/api/v1/reports/templates``: reading and previewing need ``report.template.view``; uploading,
+publishing, retiring and deleting a draft need ``report.template.manage``. The preview returns the
+rendered sample as ``text/html`` under a sandboxing CSP and ``nosniff``, with its assets inlined as
+``data:`` URIs (a browser has no sibling files).
+
+``/api/v1/reports/renders`` (REPORTS-02): the permission depends on the record's project, which is
+only known once the record is read, so the routes take the signed-in principal and the service
+checks ``PolicyService.can`` with that project as the resource. Requesting and re-rendering need
+``report.create`` plus the record's own view permission (``project.view`` for a project); reading
+needs ``report.view``. A deny is 403 with nothing written; a list leaves out the jobs the caller may
+not view. Bodies are strict (an unknown key is 422); ``Idempotency-Key`` is at most 128 characters.
 """
 
 from __future__ import annotations
@@ -18,10 +25,14 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Any, Final
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from aip.modules.report_engine.render_service import Authorizer, RenderService
 from aip.modules.report_engine.schemas import (
+    RenderJobPage,
+    RenderJobView,
+    RenderRequest,
     ReportErrorBody,
     ReportTemplateDetail,
     ReportTemplatePage,
@@ -30,7 +41,7 @@ from aip.modules.report_engine.schemas import (
 from aip.modules.report_engine.service import TemplateService
 from aip.modules.report_engine.template_package import TemplatePackageError, parse_package
 from aip.modules.tenancy.api import require_active_tenant
-from aip.platform.access import requires
+from aip.platform.access import AccessPrincipal, PolicyService, Resource, authenticated, requires
 from aip.platform.context import get_context
 from aip.platform.db.session import with_tenant
 from aip.platform.http import DomainError
@@ -52,11 +63,8 @@ Status = Annotated[str | None, Query(alias="status", pattern=r"^(draft|published
 Cursor = Annotated[str | None, Query(max_length=200)]
 Limit = Annotated[int, Query(ge=1, le=200)]
 
-router = APIRouter(
-    prefix="/reports/templates",
-    tags=["reports"],
-    dependencies=[Depends(require_active_tenant)],
-)
+router = APIRouter(dependencies=[Depends(require_active_tenant)])
+templates_router = APIRouter(prefix="/reports/templates", tags=["reports"])
 _service = TemplateService()
 
 
@@ -66,7 +74,7 @@ async def _tx() -> AsyncIterator[AsyncConnection]:
         yield conn
 
 
-@router.get(
+@templates_router.get(
     "",
     operation_id="reports_templates_list",
     response_model=ReportTemplatePage,
@@ -85,7 +93,7 @@ async def list_templates(
         )
 
 
-@router.post(
+@templates_router.post(
     "",
     operation_id="reports_templates_create",
     response_model=ReportTemplateDetail,
@@ -103,7 +111,7 @@ async def create_template(body: ReportTemplateUpload) -> ReportTemplateDetail:
     return ReportTemplateDetail.from_row(row)
 
 
-@router.get(
+@templates_router.get(
     "/{template_id}",
     operation_id="reports_templates_get",
     response_model=ReportTemplateDetail,
@@ -115,7 +123,7 @@ async def get_template(template_id: UUID) -> ReportTemplateDetail:
         return await _service.detail(conn, template_id)
 
 
-@router.post(
+@templates_router.post(
     "/{template_id}/publish",
     operation_id="reports_templates_publish",
     response_model=ReportTemplateDetail,
@@ -128,7 +136,7 @@ async def publish_template(template_id: UUID) -> ReportTemplateDetail:
     return ReportTemplateDetail.from_row(row)
 
 
-@router.post(
+@templates_router.post(
     "/{template_id}/retire",
     operation_id="reports_templates_retire",
     response_model=ReportTemplateDetail,
@@ -141,7 +149,7 @@ async def retire_template(template_id: UUID) -> ReportTemplateDetail:
     return ReportTemplateDetail.from_row(row)
 
 
-@router.delete(
+@templates_router.delete(
     "/{template_id}",
     operation_id="reports_templates_delete",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -155,7 +163,7 @@ async def delete_template(template_id: UUID) -> Response:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post(
+@templates_router.post(
     "/{template_id}/preview",
     operation_id="reports_templates_preview",
     response_class=Response,
@@ -175,3 +183,109 @@ async def preview_template(template_id: UUID) -> Response:
         media_type="text/html; charset=utf-8",
         headers={"Content-Security-Policy": PREVIEW_CSP, "X-Content-Type-Options": "nosniff"},
     )
+
+
+# --- REPORTS-02: render jobs ------------------------------------------------------------------
+
+renders_router = APIRouter(prefix="/reports/renders", tags=["reports"])
+_renders = RenderService()
+
+_FORBIDDEN: dict[int | str, dict[str, Any]] = {403: {"model": ReportErrorBody}}
+Principal = Annotated[AccessPrincipal, Depends(authenticated())]
+IdempotencyKey = Annotated[
+    str | None, Header(alias="Idempotency-Key", min_length=1, max_length=128)
+]
+RecordId = Annotated[UUID | None, Query(alias="recordId")]
+
+
+def _authorizer(request: Request, principal: AccessPrincipal) -> Authorizer:
+    """``authorize(code, project_id)`` through the app's policy service (deny without one)."""
+    policy: PolicyService | None = getattr(request.app.state, "access_policy", None)
+
+    async def authorize(code: str, project_id: UUID | None) -> bool:
+        if policy is None:
+            return False
+        resource = Resource(project_id=project_id, tenant_id=principal.tenant_id)
+        return (await policy.can(principal, code, resource)).allowed
+
+    return authorize
+
+
+@renders_router.post(
+    "",
+    operation_id="reports_renders_create",
+    response_model=RenderJobView,
+    status_code=status.HTTP_202_ACCEPTED,
+    responses={**_FORBIDDEN, **_NOT_FOUND, **_INVALID},
+)
+async def request_render(
+    body: RenderRequest,
+    request: Request,
+    principal: Principal,
+    idempotency_key: IdempotencyKey = None,
+) -> RenderJobView:
+    async with _tx() as conn:
+        return await _renders.request_render(
+            conn,
+            template_key=body.template_key,
+            record_type=body.record_type,
+            record_id=body.record_id,
+            variant=body.variant,
+            requested_by=principal.actor_id,
+            idempotency_key=idempotency_key,
+            authorize=_authorizer(request, principal),
+        )
+
+
+@renders_router.get(
+    "",
+    operation_id="reports_renders_list",
+    response_model=RenderJobPage,
+    responses=_INVALID,
+)
+async def list_renders(
+    request: Request,
+    principal: Principal,
+    record_type: RecordType = None,
+    record_id: RecordId = None,
+    cursor: Cursor = None,
+    limit: Limit = 50,
+) -> RenderJobPage:
+    async with _tx() as conn:
+        return await _renders.list(
+            conn,
+            record_type=record_type,
+            record_id=record_id,
+            cursor=cursor,
+            limit=limit,
+            authorize=_authorizer(request, principal),
+        )
+
+
+@renders_router.get(
+    "/{render_job_id}",
+    operation_id="reports_renders_get",
+    response_model=RenderJobView,
+    responses={**_FORBIDDEN, **_NOT_FOUND},
+)
+async def get_render(render_job_id: UUID, request: Request, principal: Principal) -> RenderJobView:
+    async with _tx() as conn:
+        return await _renders.get(conn, render_job_id, authorize=_authorizer(request, principal))
+
+
+@renders_router.post(
+    "/{render_job_id}/rerender",
+    operation_id="reports_renders_rerender",
+    response_model=RenderJobView,
+    status_code=status.HTTP_202_ACCEPTED,
+    responses={**_FORBIDDEN, **_NOT_FOUND},
+)
+async def rerender(render_job_id: UUID, request: Request, principal: Principal) -> RenderJobView:
+    async with _tx() as conn:
+        return await _renders.rerender(
+            conn, principal.actor_id, render_job_id, authorize=_authorizer(request, principal)
+        )
+
+
+router.include_router(templates_router)
+router.include_router(renders_router)

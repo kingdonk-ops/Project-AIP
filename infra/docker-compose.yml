@@ -148,9 +148,18 @@ services:
     security_opt: ["no-new-privileges:true"]
 
   gotenberg:
-    # HTML to PDF (Chromium), the `gotenberg` PdfRenderer adapter (STACK-02).
+    # HTML to PDF (Chromium), the `gotenberg` PdfRenderer adapter (STACK-02). REPORTS-02 sandbox:
+    # Chromium runs no JavaScript and may load only the request's own files (Gotenberg writes them
+    # under /tmp), and the downloadFrom and webhook features are off. The loopback port stays for
+    # the CI capability tests; in production (Coolify) only worker-pdf can reach this service.
     image: gotenberg/gotenberg:8.37.0
     user: gotenberg
+    command:
+      - gotenberg
+      - --chromium-disable-javascript=true
+      - --chromium-allow-list=^file:///tmp/.*
+      - --api-disable-download-from=true
+      - --webhook-disable=true
     ports:
       - "127.0.0.1:${AIP_GOTENBERG_PORT:-3000}:3000"
     healthcheck:
@@ -451,8 +460,8 @@ services:
 
   worker:
     # Same image as the API (OPS-02). Procrastinate worker as aip_jobs; SIGTERM finishes in-flight
-    # jobs. One process per queue group: add a service with `--queues pdf` / `--queues scan` for
-    # Gotenberg and sandbox work.
+    # jobs. One process per queue group: `worker-pdf` (Gotenberg) and `worker-scan` (ClamAV) run
+    # the `pdf` and `scan` queues.
     <<: *app-hardening
     build: *api-build
     image: aip-api:${AIP_IMAGE_TAG:-dev}
@@ -472,6 +481,36 @@ services:
     healthcheck:
       # TESTING-13 (review 11 M10): the worker beats every 10 s only while its database logins work
       # (aip_jobs, plus the audit writer on the outbox queue); stale after 60 s is unhealthy.
+      test: ["CMD", "python", "-m", "aip.platform.jobs.heartbeat", "--max-age", "60"]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+
+  worker-pdf:
+    # REPORTS-02: a worker for the `pdf` queue only (the report render job), the service that
+    # prints through Gotenberg and stores the PDF through the upload pipeline. Separate from the
+    # default worker so a slow render never blocks other queues.
+    <<: *app-hardening
+    build: *api-build
+    image: aip-api:${AIP_IMAGE_TAG:-dev}
+    init: true
+    command: ["python", "-m", "aip.worker", "--queues", "pdf"]
+    stop_grace_period: 70s
+    environment:
+      <<: *app-env
+      WORKER_MEMORY_LIMIT_MB: ${WORKER_MEMORY_LIMIT_MB:-1024}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      gotenberg:
+        condition: service_healthy
+      object-store-init:
+        condition: service_completed_successfully
+    healthcheck:
+      # TESTING-13: the worker beats every 10 s only while its aip_jobs login works.
       test: ["CMD", "python", "-m", "aip.platform.jobs.heartbeat", "--max-age", "60"]
       interval: 10s
       timeout: 30s

@@ -20,10 +20,14 @@ import type {
 
 import type {
   HTTPValidationError,
+  RenderJobPage,
+  RenderJobView,
+  RenderRequest,
   ReportErrorBody,
   ReportTemplateDetail,
   ReportTemplatePage,
   ReportTemplateUpload,
+  ReportsRendersListParams,
   ReportsTemplatesListParams
 } from '../../model';
 
@@ -49,7 +53,480 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export type reportsTemplatesListResponse200 = {
+export type reportsRendersListResponse200 = {
+  data: RenderJobPage
+  status: 200
+}
+
+export type reportsRendersListResponse422 = {
+  data: ReportErrorBody
+  status: 422
+}
+
+export type reportsRendersListResponseSuccess = (reportsRendersListResponse200) & {
+  headers: Headers;
+};
+export type reportsRendersListResponseError = (reportsRendersListResponse422) & {
+  headers: Headers;
+};
+
+export type reportsRendersListResponse = (reportsRendersListResponseSuccess | reportsRendersListResponseError)
+
+export const getReportsRendersListUrl = (params?: ReportsRendersListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/reports/renders?${stringifiedParams}` : `/api/v1/reports/renders`
+}
+
+/**
+ * @summary List Renders
+ */
+export const reportsRendersList = async (params?: ReportsRendersListParams, options?: Parameters<typeof apiFetch>[1]): Promise<reportsRendersListResponse> => {
+
+  return apiFetch<reportsRendersListResponse>(getReportsRendersListUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getReportsRendersListQueryKey = (params?: ReportsRendersListParams,) => {
+    return [
+    `/api/v1/reports/renders`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getReportsRendersListQueryOptions = <TData = Awaited<ReturnType<typeof reportsRendersList>>, TError = ReportErrorBody>(params?: ReportsRendersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReportsRendersListQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof reportsRendersList>>> = ({ signal }) => reportsRendersList(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reportsRendersList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReportsRendersListQueryResult = NonNullable<Awaited<ReturnType<typeof reportsRendersList>>>
+export type ReportsRendersListQueryError = ReportErrorBody
+
+
+export function useReportsRendersList<TData = Awaited<ReturnType<typeof reportsRendersList>>, TError = ReportErrorBody>(
+ params: undefined |  ReportsRendersListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportsRendersList>>,
+          TError,
+          Awaited<ReturnType<typeof reportsRendersList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReportsRendersList<TData = Awaited<ReturnType<typeof reportsRendersList>>, TError = ReportErrorBody>(
+ params?: ReportsRendersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportsRendersList>>,
+          TError,
+          Awaited<ReturnType<typeof reportsRendersList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReportsRendersList<TData = Awaited<ReturnType<typeof reportsRendersList>>, TError = ReportErrorBody>(
+ params?: ReportsRendersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Renders
+ */
+
+export function useReportsRendersList<TData = Awaited<ReturnType<typeof reportsRendersList>>, TError = ReportErrorBody>(
+ params?: ReportsRendersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReportsRendersListQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type reportsRendersCreateResponse202 = {
+  data: RenderJobView
+  status: 202
+}
+
+export type reportsRendersCreateResponse403 = {
+  data: ReportErrorBody
+  status: 403
+}
+
+export type reportsRendersCreateResponse404 = {
+  data: ReportErrorBody
+  status: 404
+}
+
+export type reportsRendersCreateResponse422 = {
+  data: ReportErrorBody
+  status: 422
+}
+
+export type reportsRendersCreateResponseSuccess = (reportsRendersCreateResponse202) & {
+  headers: Headers;
+};
+export type reportsRendersCreateResponseError = (reportsRendersCreateResponse403 | reportsRendersCreateResponse404 | reportsRendersCreateResponse422) & {
+  headers: Headers;
+};
+
+export type reportsRendersCreateResponse = (reportsRendersCreateResponseSuccess | reportsRendersCreateResponseError)
+
+export const getReportsRendersCreateUrl = () => {
+
+
+
+
+  return `/api/v1/reports/renders`
+}
+
+/**
+ * @summary Request Render
+ */
+export const reportsRendersCreate = async (renderRequest: RenderRequest, options?: Parameters<typeof apiFetch>[1]): Promise<reportsRendersCreateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<reportsRendersCreateResponse>(getReportsRendersCreateUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(renderRequest)
+  }
+);}
+
+
+
+
+
+export const getReportsRendersCreateMutationKey = () => ['reportsRendersCreate'] as const;
+
+export const getReportsRendersCreateMutationOptions = <TError = ReportErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsRendersCreate>>, TError,ReportsRendersCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reportsRendersCreate>>, TError,ReportsRendersCreateMutationVariables, TContext> => {
+
+const mutationKey = getReportsRendersCreateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reportsRendersCreate>>, ReportsRendersCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  reportsRendersCreate(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReportsRendersCreateMutationResult = NonNullable<Awaited<ReturnType<typeof reportsRendersCreate>>>
+    export type ReportsRendersCreateMutationBody = RenderRequest
+    export type ReportsRendersCreateMutationError = ReportErrorBody
+    export type ReportsRendersCreateMutationVariables = {data: RenderRequest}
+
+    /**
+ * @summary Request Render
+ */
+export const useReportsRendersCreate = <TError = ReportErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsRendersCreate>>, TError,ReportsRendersCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reportsRendersCreate>>,
+        TError,
+        ReportsRendersCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReportsRendersCreateMutationOptions(options), queryClient);
+    }
+    export type reportsRendersGetResponse200 = {
+  data: RenderJobView
+  status: 200
+}
+
+export type reportsRendersGetResponse403 = {
+  data: ReportErrorBody
+  status: 403
+}
+
+export type reportsRendersGetResponse404 = {
+  data: ReportErrorBody
+  status: 404
+}
+
+export type reportsRendersGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type reportsRendersGetResponseSuccess = (reportsRendersGetResponse200) & {
+  headers: Headers;
+};
+export type reportsRendersGetResponseError = (reportsRendersGetResponse403 | reportsRendersGetResponse404 | reportsRendersGetResponse422) & {
+  headers: Headers;
+};
+
+export type reportsRendersGetResponse = (reportsRendersGetResponseSuccess | reportsRendersGetResponseError)
+
+export const getReportsRendersGetUrl = (renderJobId: string,) => {
+
+
+
+
+  return `/api/v1/reports/renders/${renderJobId}`
+}
+
+/**
+ * @summary Get Render
+ */
+export const reportsRendersGet = async (renderJobId: string, options?: Parameters<typeof apiFetch>[1]): Promise<reportsRendersGetResponse> => {
+
+  return apiFetch<reportsRendersGetResponse>(getReportsRendersGetUrl(renderJobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getReportsRendersGetQueryKey = (renderJobId: string,) => {
+    return [
+    `/api/v1/reports/renders/${renderJobId}`
+    ] as const;
+    }
+
+
+export const getReportsRendersGetQueryOptions = <TData = Awaited<ReturnType<typeof reportsRendersGet>>, TError = ReportErrorBody | HTTPValidationError>(renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReportsRendersGetQueryKey(renderJobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof reportsRendersGet>>> = ({ signal }) => reportsRendersGet(renderJobId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: renderJobId !== null && renderJobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reportsRendersGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReportsRendersGetQueryResult = NonNullable<Awaited<ReturnType<typeof reportsRendersGet>>>
+export type ReportsRendersGetQueryError = ReportErrorBody | HTTPValidationError
+
+
+export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRendersGet>>, TError = ReportErrorBody | HTTPValidationError>(
+ renderJobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportsRendersGet>>,
+          TError,
+          Awaited<ReturnType<typeof reportsRendersGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRendersGet>>, TError = ReportErrorBody | HTTPValidationError>(
+ renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reportsRendersGet>>,
+          TError,
+          Awaited<ReturnType<typeof reportsRendersGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRendersGet>>, TError = ReportErrorBody | HTTPValidationError>(
+ renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Render
+ */
+
+export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRendersGet>>, TError = ReportErrorBody | HTTPValidationError>(
+ renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReportsRendersGetQueryOptions(renderJobId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type reportsRendersRerenderResponse202 = {
+  data: RenderJobView
+  status: 202
+}
+
+export type reportsRendersRerenderResponse403 = {
+  data: ReportErrorBody
+  status: 403
+}
+
+export type reportsRendersRerenderResponse404 = {
+  data: ReportErrorBody
+  status: 404
+}
+
+export type reportsRendersRerenderResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type reportsRendersRerenderResponseSuccess = (reportsRendersRerenderResponse202) & {
+  headers: Headers;
+};
+export type reportsRendersRerenderResponseError = (reportsRendersRerenderResponse403 | reportsRendersRerenderResponse404 | reportsRendersRerenderResponse422) & {
+  headers: Headers;
+};
+
+export type reportsRendersRerenderResponse = (reportsRendersRerenderResponseSuccess | reportsRendersRerenderResponseError)
+
+export const getReportsRendersRerenderUrl = (renderJobId: string,) => {
+
+
+
+
+  return `/api/v1/reports/renders/${renderJobId}/rerender`
+}
+
+/**
+ * @summary Rerender
+ */
+export const reportsRendersRerender = async (renderJobId: string, options?: Parameters<typeof apiFetch>[1]): Promise<reportsRendersRerenderResponse> => {
+
+  return apiFetch<reportsRendersRerenderResponse>(getReportsRendersRerenderUrl(renderJobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReportsRendersRerenderMutationKey = () => ['reportsRendersRerender'] as const;
+
+export const getReportsRendersRerenderMutationOptions = <TError = ReportErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsRendersRerender>>, TError,ReportsRendersRerenderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reportsRendersRerender>>, TError,ReportsRendersRerenderMutationVariables, TContext> => {
+
+const mutationKey = getReportsRendersRerenderMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reportsRendersRerender>>, ReportsRendersRerenderMutationVariables> = (props) => {
+          const {renderJobId} = props ?? {};
+
+          return  reportsRendersRerender(renderJobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReportsRendersRerenderMutationResult = NonNullable<Awaited<ReturnType<typeof reportsRendersRerender>>>
+
+    export type ReportsRendersRerenderMutationError = ReportErrorBody | HTTPValidationError
+    export type ReportsRendersRerenderMutationVariables = {renderJobId: string}
+
+    /**
+ * @summary Rerender
+ */
+export const useReportsRendersRerender = <TError = ReportErrorBody | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsRendersRerender>>, TError,ReportsRendersRerenderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reportsRendersRerender>>,
+        TError,
+        ReportsRendersRerenderMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReportsRendersRerenderMutationOptions(options), queryClient);
+    }
+    export type reportsTemplatesListResponse200 = {
   data: ReportTemplatePage
   status: 200
 }

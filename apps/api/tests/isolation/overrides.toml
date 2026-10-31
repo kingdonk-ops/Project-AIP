@@ -106,6 +106,16 @@ values = { code = "'iso-code-{tag}'" }
 reason = "content_sha256 must be 64 lowercase hex digits (ck_report_templates_content_sha256); the generic text seed is not."
 values = { content_sha256 = "repeat('{tag}', 64)" }
 
+[tables.report_data_snapshots]
+reason = "REPORTS-02: data_hash must be 64 lowercase hex digits and size_bytes at most 5 MB (check constraints). The table carries the ACCESS-03 project-scope policy, so a principal is needed to see any row; a system principal is tenant-wide while tenant isolation still hides tenant B's row."
+principal_kind = "system"
+values = { data_hash = "repeat('{tag}', 64)", size_bytes = "1" }
+
+[tables.report_render_jobs]
+reason = "REPORTS-02: data_hash and the optional sha256 columns must be 64 lowercase hex digits, and a succeeded job needs a file (check constraints), so seed a queued job with a valid hash. The table carries the ACCESS-03 project-scope policy, so a principal is needed to see any row; a system principal is tenant-wide while tenant isolation still hides tenant B's row."
+principal_kind = "system"
+values = { data_hash = "repeat('{tag}', 64)", status = "'queued'", html_sha256 = "NULL", pdf_sha256 = "NULL", idempotency_key = "NULL" }
+
 [tables.role_assignment]
 reason = "ACCESS-04 made user_id nullable for team assignments; ck_role_assignment_scope needs a user_id on every non-team scope, so seed one (FKs are not checked by the generator's superuser seed)."
 values = { user_id = "gen_random_uuid()" }

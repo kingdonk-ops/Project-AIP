@@ -1,6 +1,12 @@
 {
   "report.permission.template_view": "View report templates",
   "report.permission.template_manage": "Manage report templates",
+  "report.permission.view": "View rendered reports",
+  "report.permission.create": "Request a report render",
+  "report.render.status.queued": "Queued",
+  "report.render.status.running": "Rendering",
+  "report.render.status.succeeded": "Ready",
+  "report.render.status.failed": "Failed",
   "report.template.project_summary": "Project summary",
   "report.template.status.draft": "Draft",
   "report.template.status.published": "Published",
@@ -33,5 +39,14 @@
   "report.error.TEMPLATE_NOT_PUBLISHED": "Only a published report template can be retired.",
   "report.error.TEMPLATE_VERSION_CONFLICT": "This version number is not the next version of the template.",
   "report.error.TEMPLATE_VERSION_CHANGED": "A published template version was changed; give the change a new version.",
-  "report.error.INVALID_CURSOR": "The page cursor is not valid."
+  "report.error.INVALID_CURSOR": "The page cursor is not valid.",
+  "report.error.SNAPSHOT_TOO_LARGE": "The report data is too large to render (over 5 MB).",
+  "report.error.TEMPLATE_RECORD_TYPE_MISMATCH": "This report template is for a different kind of record.",
+  "report.error.UNKNOWN_RECORD_TYPE": "Reports cannot be rendered for this kind of record.",
+  "report.error.RECORD_NOT_FOUND": "The record to report on was not found.",
+  "report.error.RENDER_JOB_NOT_FOUND": "The report render was not found.",
+  "report.error.RENDER_CONTRACT_VIOLATION": "The report template could not render this record's data.",
+  "report.error.SOURCE_FILE_CHANGED": "A file shown in the report changed after the report was requested.",
+  "report.error.PDF_TOO_LARGE": "The rendered PDF is too large.",
+  "report.error.RENDER_UNAVAILABLE": "The PDF renderer was not available; try again later."
 }

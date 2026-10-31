@@ -353,6 +353,14 @@ GRANT SELECT ON TABLE public.provenance_entries TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.record_links TO aip_app;
 GRANT SELECT ON TABLE public.record_links TO aip_readonly;
 
+-- Name: TABLE report_data_snapshots; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.report_data_snapshots TO aip_app;
+GRANT SELECT ON TABLE public.report_data_snapshots TO aip_readonly;
+
+-- Name: TABLE report_render_jobs; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.report_render_jobs TO aip_app;
+GRANT SELECT ON TABLE public.report_render_jobs TO aip_readonly;
+
 -- Name: TABLE report_templates; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.report_templates TO aip_app;
 GRANT SELECT ON TABLE public.report_templates TO aip_readonly;
@@ -705,9 +713,37 @@ ALTER TABLE ONLY public.provenance_entries_default
 ALTER TABLE ONLY public.record_links
     ADD CONSTRAINT pk_record_links PRIMARY KEY (id);
 
+-- Name: report_data_snapshots pk_report_data_snapshots; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_data_snapshots
+    ADD CONSTRAINT pk_report_data_snapshots PRIMARY KEY (id);
+
+-- Name: report_data_snapshots uq_report_data_snapshots_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_data_snapshots
+    ADD CONSTRAINT uq_report_data_snapshots_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: report_data_snapshots uq_report_data_snapshots_record_data_hash; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_data_snapshots
+    ADD CONSTRAINT uq_report_data_snapshots_record_data_hash UNIQUE (tenant_id, record_type, record_id, data_hash);
+
+-- Name: report_render_jobs pk_report_render_jobs; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_render_jobs
+    ADD CONSTRAINT pk_report_render_jobs PRIMARY KEY (id);
+
+-- Name: report_render_jobs uq_report_render_jobs_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_render_jobs
+    ADD CONSTRAINT uq_report_render_jobs_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: report_render_jobs uq_report_render_jobs_tenant_id_idempotency_key; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_render_jobs
+    ADD CONSTRAINT uq_report_render_jobs_tenant_id_idempotency_key UNIQUE (tenant_id, idempotency_key);
+
 -- Name: report_templates pk_report_templates; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.report_templates
     ADD CONSTRAINT pk_report_templates PRIMARY KEY (id);
+
+-- Name: report_templates uq_report_templates_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_templates
+    ADD CONSTRAINT uq_report_templates_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: report_templates uq_report_templates_tenant_id_key_variant_version; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.report_templates
@@ -1021,6 +1057,26 @@ ALTER TABLE ONLY public.projects
 -- Name: record_links fk_record_links_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.record_links
     ADD CONSTRAINT fk_record_links_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: report_data_snapshots fk_report_data_snapshots_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_data_snapshots
+    ADD CONSTRAINT fk_report_data_snapshots_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: report_render_jobs fk_report_render_jobs_rerender_of; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_render_jobs
+    ADD CONSTRAINT fk_report_render_jobs_rerender_of FOREIGN KEY (rerender_of, tenant_id) REFERENCES public.report_render_jobs(id, tenant_id);
+
+-- Name: report_render_jobs fk_report_render_jobs_snapshot; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_render_jobs
+    ADD CONSTRAINT fk_report_render_jobs_snapshot FOREIGN KEY (snapshot_id, tenant_id) REFERENCES public.report_data_snapshots(id, tenant_id);
+
+-- Name: report_render_jobs fk_report_render_jobs_template; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_render_jobs
+    ADD CONSTRAINT fk_report_render_jobs_template FOREIGN KEY (template_id, tenant_id) REFERENCES public.report_templates(id, tenant_id);
+
+-- Name: report_render_jobs fk_report_render_jobs_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.report_render_jobs
+    ADD CONSTRAINT fk_report_render_jobs_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 -- Name: report_templates fk_report_templates_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.report_templates
@@ -2454,6 +2510,27 @@ CREATE INDEX ix_record_links_tenant_id ON public.record_links USING btree (tenan
 -- Name: ix_record_links_to; Type: INDEX; Schema: public
 CREATE INDEX ix_record_links_to ON public.record_links USING btree (tenant_id, to_type, to_id) WHERE (deleted_at IS NULL);
 
+-- Name: ix_report_data_snapshots_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_report_data_snapshots_tenant_id ON public.report_data_snapshots USING btree (tenant_id);
+
+-- Name: ix_report_data_snapshots_tenant_id_project_id; Type: INDEX; Schema: public
+CREATE INDEX ix_report_data_snapshots_tenant_id_project_id ON public.report_data_snapshots USING btree (tenant_id, project_id);
+
+-- Name: ix_report_data_snapshots_tenant_id_record_created_at; Type: INDEX; Schema: public
+CREATE INDEX ix_report_data_snapshots_tenant_id_record_created_at ON public.report_data_snapshots USING btree (tenant_id, record_type, record_id, created_at DESC);
+
+-- Name: ix_report_render_jobs_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_report_render_jobs_tenant_id ON public.report_render_jobs USING btree (tenant_id);
+
+-- Name: ix_report_render_jobs_tenant_id_project_id; Type: INDEX; Schema: public
+CREATE INDEX ix_report_render_jobs_tenant_id_project_id ON public.report_render_jobs USING btree (tenant_id, project_id);
+
+-- Name: ix_report_render_jobs_tenant_id_record_created_at; Type: INDEX; Schema: public
+CREATE INDEX ix_report_render_jobs_tenant_id_record_created_at ON public.report_render_jobs USING btree (tenant_id, record_type, record_id, created_at DESC);
+
+-- Name: ix_report_render_jobs_tenant_id_status_created_at; Type: INDEX; Schema: public
+CREATE INDEX ix_report_render_jobs_tenant_id_status_created_at ON public.report_render_jobs USING btree (tenant_id, status, created_at);
+
 -- Name: ix_report_templates_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_report_templates_tenant_id ON public.report_templates USING btree (tenant_id);
 
@@ -2943,6 +3020,18 @@ CREATE POLICY tenant_isolation ON public.provenance_entries USING ((tenant_id = 
 -- Name: record_links tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.record_links USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: report_data_snapshots project_scope; Type: POLICY; Schema: public
+CREATE POLICY project_scope ON public.report_data_snapshots AS RESTRICTIVE TO aip_app USING (public.access_project_visible(project_id)) WITH CHECK (public.access_project_visible(project_id));
+
+-- Name: report_data_snapshots tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.report_data_snapshots USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: report_render_jobs project_scope; Type: POLICY; Schema: public
+CREATE POLICY project_scope ON public.report_render_jobs AS RESTRICTIVE TO aip_app USING (public.access_project_visible(project_id)) WITH CHECK (public.access_project_visible(project_id));
+
+-- Name: report_render_jobs tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.report_render_jobs USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: report_templates tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.report_templates USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
@@ -3146,6 +3235,12 @@ ALTER TABLE public.provenance_entries ENABLE ROW LEVEL SECURITY;
 
 -- Name: record_links; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.record_links ENABLE ROW LEVEL SECURITY;
+
+-- Name: report_data_snapshots; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.report_data_snapshots ENABLE ROW LEVEL SECURITY;
+
+-- Name: report_render_jobs; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.report_render_jobs ENABLE ROW LEVEL SECURITY;
 
 -- Name: report_templates; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.report_templates ENABLE ROW LEVEL SECURITY;
@@ -4125,6 +4220,70 @@ CREATE TABLE public.record_links (
 ALTER TABLE ONLY public.record_links FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.record_links OWNER TO aip_owner;
+
+-- Name: report_data_snapshots; Type: TABLE; Schema: public
+CREATE TABLE public.report_data_snapshots (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    record_type text NOT NULL,
+    record_id uuid NOT NULL,
+    record_version integer,
+    project_id uuid,
+    schema_version integer DEFAULT 1 NOT NULL,
+    data jsonb NOT NULL,
+    data_hash text NOT NULL,
+    size_bytes integer NOT NULL,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_report_data_snapshots_data_hash CHECK ((data_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_report_data_snapshots_schema_version CHECK ((schema_version >= 1)),
+    CONSTRAINT ck_report_data_snapshots_size_bytes CHECK (((size_bytes >= 0) AND (size_bytes <= 5242880)))
+);
+
+ALTER TABLE ONLY public.report_data_snapshots FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.report_data_snapshots OWNER TO aip_owner;
+
+-- Name: report_render_jobs; Type: TABLE; Schema: public
+CREATE TABLE public.report_render_jobs (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    template_id uuid NOT NULL,
+    template_key text NOT NULL,
+    template_version integer NOT NULL,
+    variant text NOT NULL,
+    record_type text NOT NULL,
+    record_id uuid NOT NULL,
+    project_id uuid,
+    snapshot_id uuid NOT NULL,
+    data_hash text NOT NULL,
+    status text DEFAULT 'queued'::text NOT NULL,
+    ops_job_id uuid,
+    idempotency_key text,
+    trigger_event_id uuid,
+    requested_by uuid,
+    rerender_of uuid,
+    html_sha256 text,
+    file_id uuid,
+    pdf_sha256 text,
+    pdf_size_bytes bigint,
+    error_code text,
+    rendered_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_report_render_jobs_data_hash CHECK ((data_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_report_render_jobs_html_sha256 CHECK (((html_sha256 IS NULL) OR (html_sha256 ~ '^[0-9a-f]{64}$'::text))),
+    CONSTRAINT ck_report_render_jobs_idempotency_key CHECK (((idempotency_key IS NULL) OR ((char_length(idempotency_key) >= 1) AND (char_length(idempotency_key) <= 200)))),
+    CONSTRAINT ck_report_render_jobs_pdf_sha256 CHECK (((pdf_sha256 IS NULL) OR (pdf_sha256 ~ '^[0-9a-f]{64}$'::text))),
+    CONSTRAINT ck_report_render_jobs_status CHECK ((status = ANY (ARRAY['queued'::text, 'running'::text, 'succeeded'::text, 'failed'::text]))),
+    CONSTRAINT ck_report_render_jobs_succeeded CHECK (((status <> 'succeeded'::text) OR ((file_id IS NOT NULL) AND (pdf_sha256 IS NOT NULL)))),
+    CONSTRAINT ck_report_render_jobs_variant CHECK ((variant = ANY (ARRAY['internal'::text, 'client'::text, 'certificate'::text])))
+);
+
+ALTER TABLE ONLY public.report_render_jobs FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.report_render_jobs OWNER TO aip_owner;
 
 -- Name: report_templates; Type: TABLE; Schema: public
 CREATE TABLE public.report_templates (

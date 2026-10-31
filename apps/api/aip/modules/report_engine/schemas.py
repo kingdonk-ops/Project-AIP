@@ -20,6 +20,10 @@ from pydantic.alias_generators import to_camel
 
 __all__ = [
     "AssetInfo",
+    "RenderJobPage",
+    "RenderJobStatus",
+    "RenderJobView",
+    "RenderRequest",
     "ReportErrorBody",
     "ReportTemplateDetail",
     "ReportTemplatePage",
@@ -160,3 +164,58 @@ class TemplateRow(_Out):
             name: (asset.content_type, base64.b64decode(asset.data_base64))
             for name, asset in self.assets.items()
         }
+
+
+# --- REPORTS-02: render jobs --------------------------------------------------------------------
+
+RenderJobStatus = Literal["queued", "running", "succeeded", "failed"]
+
+
+class RenderRequest(_Model):
+    """``POST /reports/renders``: render ``recordType``/``recordId`` with the published template."""
+
+    template_key: str = Field(min_length=1, max_length=120, pattern=r"^[a-z0-9][a-z0-9-]*$")
+    variant: TemplateVariant
+    record_type: str = Field(min_length=1, max_length=41, pattern=r"^[a-z][a-z_]{1,40}$")
+    record_id: UUID
+
+
+class RenderJobView(_Out):
+    """One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the
+    snapshot's; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+        serialize_by_alias=True,
+        extra="ignore",
+        frozen=True,
+    )
+
+    id: UUID
+    status: RenderJobStatus
+    template_id: UUID
+    template_key: str
+    template_version: int
+    variant: TemplateVariant
+    record_type: str
+    record_id: UUID
+    project_id: UUID | None
+    snapshot_id: UUID
+    data_hash: str
+    ops_job_id: UUID | None
+    requested_by: UUID | None
+    rerender_of: UUID | None
+    html_sha256: str | None
+    file_id: UUID | None
+    pdf_sha256: str | None
+    pdf_size_bytes: int | None
+    error_code: str | None
+    rendered_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class RenderJobPage(_Out):
+    items: list[RenderJobView]
+    next_cursor: str | None

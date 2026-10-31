@@ -1,13 +1,21 @@
 # Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
 id = "report_engine"
 context = "report_engine"
-depends_on = ["tenancy", "terms"]
+# REPORTS-02: the render job reads a project (projects), pins and stores files (uploads) and
+# queues itself through the job registry (ops).
+depends_on = ["tenancy", "terms", "projects", "uploads", "ops"]
 permission_namespaces = ["report"]
 subscribes = []
 settings = []
 term_keys = [
   "report.permission.template_view",
   "report.permission.template_manage",
+  "report.permission.view",
+  "report.permission.create",
+  "report.render.status.queued",
+  "report.render.status.running",
+  "report.render.status.succeeded",
+  "report.render.status.failed",
   "report.template.project_summary",
   "report.template.status.draft",
   "report.template.status.published",
@@ -41,6 +49,15 @@ term_keys = [
   "report.error.TEMPLATE_VERSION_CONFLICT",
   "report.error.TEMPLATE_VERSION_CHANGED",
   "report.error.INVALID_CURSOR",
+  "report.error.SNAPSHOT_TOO_LARGE",
+  "report.error.TEMPLATE_RECORD_TYPE_MISMATCH",
+  "report.error.UNKNOWN_RECORD_TYPE",
+  "report.error.RECORD_NOT_FOUND",
+  "report.error.RENDER_JOB_NOT_FOUND",
+  "report.error.RENDER_CONTRACT_VIOLATION",
+  "report.error.SOURCE_FILE_CHANGED",
+  "report.error.PDF_TOO_LARGE",
+  "report.error.RENDER_UNAVAILABLE",
 ]
 
 # ADR 0027 verbs: `view` reaches every role with a `view` level (or higher) on "Report engine &
@@ -54,6 +71,25 @@ description = "View report templates"
 code = "report.template.manage"
 description = "Upload, publish and retire report templates"
 
+# REPORTS-02: `view` and `create` follow the same row, so every role with `create` or higher on it
+# may request a render, and every role with `view` may read render jobs. Both are checked against
+# the record's project, together with the record's own view permission.
+[[permissions]]
+code = "report.view"
+description = "View rendered reports"
+
+[[permissions]]
+code = "report.create"
+description = "Request a report render"
+
 [[events]]
 name = "report.template_published"
+version = 1
+
+[[events]]
+name = "report.render_succeeded"
+version = 1
+
+[[events]]
+name = "report.render_failed"
 version = 1

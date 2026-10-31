@@ -6,6 +6,12 @@ loader (which, like production, connects as ``aip_app`` through ``DATABASE_URL``
 fixture points it at the test database). ``report_templates`` is tenant-scoped (plain tenant
 isolation), so the only seed needed is the two active tenants. Permissions come from a test grant
 provider, so these tests do not depend on role seeding.
+
+REPORTS-02: render jobs read projects, which are project-scoped by RLS (ACCESS-03), so
+``scope_users`` gives alice, carol, dave (tenant A) and bob (tenant B) a tenant-scope role
+assignment; permissions still come from the grant table. ``render_env`` adds a real object store
+(RustFS) and Gotenberg (the STACK-02 capability fixtures) and the ``aip_jobs`` URL the in-process
+``pdf`` worker drains the queue with.
 """
 
 from __future__ import annotations
@@ -13,6 +19,7 @@ from __future__ import annotations
 import json
 import uuid
 from collections.abc import AsyncIterator, Iterable
+from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
@@ -21,6 +28,7 @@ import pytest
 from fastapi import FastAPI
 from tests.conftest import ALICE_ID, BOB_ID, TENANT_A_ID, TENANT_B_ID
 from tests.fixtures.postgres import (  # noqa: F401 - re-exported pytest fixtures
+    JOBS,
     TenantDb,
     _execute,  # pyright: ignore[reportPrivateUsage]
     _fetch,  # pyright: ignore[reportPrivateUsage]
@@ -29,6 +37,11 @@ from tests.fixtures.postgres import (  # noqa: F401 - re-exported pytest fixture
     migrated_db,  # pyright: ignore[reportUnusedImport]
     pg_superuser_url,  # pyright: ignore[reportUnusedImport]
     tenant_db,  # pyright: ignore[reportUnusedImport]
+)
+from tests.platform.capabilities.conftest import (  # noqa: F401 - re-exported fixtures
+    S3Backend,
+    gotenberg_url,  # pyright: ignore[reportUnusedImport]
+    rustfs,  # pyright: ignore[reportUnusedImport]
 )
 
 from aip.main import create_app
@@ -128,3 +141,87 @@ async def client(app: FastAPI) -> AsyncIterator[httpx.AsyncClient]:
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
+
+
+# --- REPORTS-02 ---------------------------------------------------------------------------------
+
+ROLE_A_ID = UUID("00000000-0000-4000-8000-00000000e2a0")
+ROLE_B_ID = UUID("00000000-0000-4000-8000-00000000e2b0")
+SCOPED_USERS = (
+    (TENANT_A_ID, ALICE_ID, "alice@kaefer.test", ROLE_A_ID),
+    (TENANT_A_ID, CAROL_ID, "carol@kaefer.test", ROLE_A_ID),
+    (TENANT_A_ID, DAVE_ID, "dave@kaefer.test", ROLE_A_ID),
+    (TENANT_B_ID, BOB_ID, "bob@acme.test", ROLE_B_ID),
+)
+# What the render tests hold: alice and bob may render and view projects; carol may render but not
+# view the project; dave holds nothing.
+RENDER_PERMISSIONS = (*ALL_PERMISSIONS, "report.view", "report.create", "project.view")
+
+
+@pytest.fixture
+async def scope_users(db: TenantDb, grants: GrantTable) -> GrantTable:
+    users = ", ".join(
+        f"('{user}', '{tenant}', 'staff', '{email}', '{email}', 'active')"
+        for tenant, user, email, _ in SCOPED_USERS
+    )
+    assignments = ", ".join(
+        f"(gen_random_uuid(), '{tenant}', '{user}', '{role}', 'tenant')"
+        for tenant, user, _, role in SCOPED_USERS
+    )
+    await su_execute(
+        db,
+        "INSERT INTO app_user (id, tenant_id, user_class, email, display_name, status) "
+        f"VALUES {users};"
+        "INSERT INTO role (id, tenant_id, code, name) VALUES "
+        f"('{ROLE_A_ID}', '{TENANT_A_ID}', 'member', 'Member'), "
+        f"('{ROLE_B_ID}', '{TENANT_B_ID}', 'member', 'Member');"
+        "INSERT INTO role_assignment (id, tenant_id, user_id, role_id, scope_type) "
+        f"VALUES {assignments}",
+    )
+    grants.by_user[ALICE_ID] = set(RENDER_PERMISSIONS)
+    grants.by_user[BOB_ID] = set(RENDER_PERMISSIONS)
+    grants.by_user[CAROL_ID] = {"report.create", "report.view"}
+    grants.by_user.pop(DAVE_ID, None)
+    return grants
+
+
+@dataclass(frozen=True)
+class RenderEnv:
+    jobs_url: str
+    store: S3Backend
+    bucket: str
+
+
+@pytest.fixture
+def render_env(
+    db: TenantDb,
+    rustfs: S3Backend,  # noqa: F811
+    gotenberg_url: str,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+) -> RenderEnv:
+    bucket = rustfs.create_bucket()
+    for name, value in rustfs.env(bucket).items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("PDF_RENDERER", "gotenberg")
+    monkeypatch.setenv("GOTENBERG_URL", gotenberg_url)
+    jobs_url = db.db.role_url(JOBS)
+    monkeypatch.setenv("DATABASE_JOBS_URL", jobs_url)
+    return RenderEnv(jobs_url=jobs_url, store=rustfs, bucket=bucket)
+
+
+async def add_project(
+    db: TenantDb,
+    *,
+    tenant: UUID = TENANT_A_ID,
+    code: str = "KF-01",
+    name: str = "Karratha compressor station",
+    timezone: str | None = "Australia/Perth",
+) -> UUID:
+    project_id = uuid.uuid4()
+    zone = "NULL" if timezone is None else f"'{timezone}'"
+    await su_execute(
+        db,
+        "INSERT INTO projects (id, tenant_id, code, name, status, timezone) VALUES "
+        f"('{project_id}', '{tenant}', '{code}', '{name}', 'active', {zone})",
+    )
+    return project_id

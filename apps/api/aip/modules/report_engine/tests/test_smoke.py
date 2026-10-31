@@ -17,4 +17,6 @@ def test_module_imports_and_manifest_validates() -> None:
     assert {p.code for p in manifest.permissions} == {
         "report.template.view",
         "report.template.manage",
+        "report.view",
+        "report.create",
     }

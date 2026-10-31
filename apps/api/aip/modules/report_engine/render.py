@@ -49,10 +49,12 @@ from aip.modules.terms.api import (
     format_icu,
     to_display,
 )
+from aip.platform.capabilities import PageOptions
 
 __all__ = [
     "DOCUMENT_CSP",
     "OUTPUT_MAX_BYTES",
+    "PAPER_MM",
     "RENDER_ERROR_CODES",
     "Margins",
     "PageSpec",
@@ -61,10 +63,13 @@ __all__ = [
     "RenderedDocument",
     "compile_body",
     "inline_assets",
+    "page_options",
     "render_html",
 ]
 
 OUTPUT_MAX_BYTES: Final = 5 * 1024 * 1024
+# Portrait sheet sizes (width, height) in millimetres; ``landscape`` turns the sheet (REPORTS-02).
+PAPER_MM: Final[Mapping[str, tuple[float, float]]] = {"A4": (210, 297), "A3": (297, 420)}
 DOCUMENT_CSP: Final = (
     "default-src 'none'; img-src data: file:; font-src data: file:; style-src 'unsafe-inline'"
 )
@@ -205,6 +210,21 @@ def page_spec(definition: Mapping[str, Any]) -> PageSpec:
     )
 
 
+def page_options(page: PageSpec) -> PageOptions:
+    """The renderer's paper settings for ``page`` (A4 210 x 297 mm, A3 297 x 420 mm)."""
+    width, height = PAPER_MM[page.paper]
+    m = page.margins_mm
+    return PageOptions(
+        paper_width_mm=width,
+        paper_height_mm=height,
+        landscape=page.orientation == "landscape",
+        margin_top_mm=m.top,
+        margin_right_mm=m.right,
+        margin_bottom_mm=m.bottom,
+        margin_left_mm=m.left,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _Filters:
     term_keys: frozenset[str]
@@ -303,10 +323,20 @@ def render_html(
     locale: str,
     time_zone: str,
     unit_system: UnitSystem,
+    extra_assets: Mapping[str, tuple[str, bytes]] | None = None,
 ) -> RenderedDocument:
-    """Render ``template`` with ``data`` into a whole, checked HTML document."""
+    """Render ``template`` with ``data`` into a whole, checked HTML document.
+
+    ``extra_assets`` (REPORTS-02) are record files the snapshot pins, ``{name: (contentType,
+    bytes)}`` named ``file-<fileId>.<ext>``: the ``asset()`` filter and the HTML policy accept them
+    like the template's declared assets. A name that clashes with a template asset is refused.
+    """
     definition = template.definition
     files = template.asset_files()
+    for name, entry in (extra_assets or {}).items():
+        if name in files:
+            raise RenderContractError("RENDER_FAILED", f"asset name {name[:80]} is taken")
+        files[name] = entry
     filters = _Filters(
         term_keys=frozenset(definition.get("termKeys", ())),
         labels=dict(labels),
