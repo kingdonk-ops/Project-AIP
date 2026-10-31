@@ -4272,10 +4272,12 @@ CREATE TABLE public.report_render_jobs (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    record_label text,
     CONSTRAINT ck_report_render_jobs_data_hash CHECK ((data_hash ~ '^[0-9a-f]{64}$'::text)),
     CONSTRAINT ck_report_render_jobs_html_sha256 CHECK (((html_sha256 IS NULL) OR (html_sha256 ~ '^[0-9a-f]{64}$'::text))),
     CONSTRAINT ck_report_render_jobs_idempotency_key CHECK (((idempotency_key IS NULL) OR ((char_length(idempotency_key) >= 1) AND (char_length(idempotency_key) <= 200)))),
     CONSTRAINT ck_report_render_jobs_pdf_sha256 CHECK (((pdf_sha256 IS NULL) OR (pdf_sha256 ~ '^[0-9a-f]{64}$'::text))),
+    CONSTRAINT ck_report_render_jobs_record_label CHECK (((record_label IS NULL) OR ((char_length(record_label) >= 1) AND (char_length(record_label) <= 300)))),
     CONSTRAINT ck_report_render_jobs_status CHECK ((status = ANY (ARRAY['queued'::text, 'running'::text, 'succeeded'::text, 'failed'::text]))),
     CONSTRAINT ck_report_render_jobs_succeeded CHECK (((status <> 'succeeded'::text) OR ((file_id IS NOT NULL) AND (pdf_sha256 IS NOT NULL)))),
     CONSTRAINT ck_report_render_jobs_variant CHECK ((variant = ANY (ARRAY['internal'::text, 'client'::text, 'certificate'::text])))

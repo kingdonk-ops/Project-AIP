@@ -273,7 +273,7 @@ class RenderService:
         *,
         authorize: Authorizer | None = None,
     ) -> ReportFile:
-        """The PDF of a succeeded job (``report.view`` on its project), and a ``report.downloaded``."""
+        """A succeeded job's PDF (``report.view`` on its project); emits ``report.downloaded``."""
         job = await self.get(conn, render_job_id, authorize=authorize)
         if job.status != "succeeded" or job.file_id is None or job.pdf_sha256 is None:
             raise DomainError(409, "REPORT_NOT_READY", detail=f"render job is {job.status}")
@@ -310,5 +310,6 @@ class RenderService:
             {"renderJobId": str(render_job_id)},
             idempotency_key=f"report-render:{render_job_id}",
         )
-        row = await repo.update_job(conn, render_job_id, {"ops_job_id": job.id})
+        await repo.update_job(conn, render_job_id, {"ops_job_id": job.id})
+        row = await repo.get_job(conn, render_job_id)  # with the template's name (REPORTS-04)
         return RenderJobView.model_validate(row)

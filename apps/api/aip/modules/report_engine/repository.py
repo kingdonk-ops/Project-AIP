@@ -195,7 +195,7 @@ async def lock_job(conn: AsyncConnection, id: UUID) -> Row | None:
 
 
 async def find_job_by_idempotency_key(conn: AsyncConnection, key: str) -> Row | None:
-    stmt = select(j).where(j.c.idempotency_key == key, _live_job())
+    stmt = _job_with_template_name().where(j.c.idempotency_key == key)
     row = (await conn.execute(stmt)).mappings().first()
     return None if row is None else dict(row)
 

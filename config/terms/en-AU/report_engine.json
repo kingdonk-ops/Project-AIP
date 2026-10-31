@@ -73,7 +73,7 @@
   "report.register.column.generated": "Generated",
   "report.register.column.error": "Error",
   "report.register.column.download": "Download",
-  "report.register.template_version": "v{version}",
+  "report.register.template_version": "v{version} · {variant}",
   "report.register.download": "Download PDF",
   "report.register.download_label": "Download PDF for {record}",
   "report.register.variant.internal": "Internal",

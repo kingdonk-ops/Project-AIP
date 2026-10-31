@@ -1412,6 +1412,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports/renders/{render_job_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Render */
+        get: operations["reports_renders_file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports/renders/{render_job_id}/rerender": {
         parameters: {
             query?: never;
@@ -3500,6 +3517,10 @@ export interface components {
          * RenderJobView
          * @description One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the
          *     snapshot's; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.
+         *
+         *     REPORTS-04: ``recordLabel`` is the source record's label at request time (``None`` before
+         *     REPORTS-04), ``templateNameKey`` the pinned template's terminology key for its name. The PDF is
+         *     downloaded from ``GET /reports/renders/{id}/file``, never from a storage URL.
          */
         RenderJobView: {
             /**
@@ -3533,6 +3554,8 @@ export interface components {
              * Format: uuid
              */
             recordId: string;
+            /** Recordlabel */
+            recordLabel?: string | null;
             /** Recordtype */
             recordType: string;
             /** Renderedat */
@@ -3558,6 +3581,8 @@ export interface components {
             templateId: string;
             /** Templatekey */
             templateKey: string;
+            /** Templatenamekey */
+            templateNameKey?: string | null;
             /** Templateversion */
             templateVersion: number;
             /**
@@ -9295,6 +9320,8 @@ export interface operations {
             query?: {
                 recordType?: string | null;
                 recordId?: string | null;
+                status?: ("queued" | "running" | "succeeded" | "failed")[];
+                q?: string | null;
                 cursor?: string | null;
                 limit?: number;
             };
@@ -9408,6 +9435,64 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reports_renders_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                render_job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The report's PDF */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportErrorBody"];
+                };
+            };
+            /** @description REPORT_NOT_READY */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

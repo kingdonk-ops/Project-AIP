@@ -3,8 +3,8 @@
 Reads the project through ``aip.modules.projects.api.ProjectsApi`` on the caller's connection, so
 another tenant's (or an out-of-scope) project is ``RecordNotFound``. The data is
 ``{project: {id, code, name, status, timezone, region, createdAt}}``; ``record_version`` is the
-project's ``sync_version``, the time-zone hint its ``timezone`` and the label ``"<code> <name>"``. Viewing it needs
-``project.view`` on that project.
+project's ``sync_version``, the time-zone hint its ``timezone`` and the label ``"<code> <name>"``.
+Viewing it needs ``project.view`` on that project.
 """
 
 from __future__ import annotations

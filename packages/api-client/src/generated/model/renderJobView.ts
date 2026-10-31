@@ -5,6 +5,10 @@ import type { RenderJobViewVariant } from './renderJobViewVariant';
 /**
  * One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the
  * snapshot's; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.
+ *
+ * REPORTS-04: ``recordLabel`` is the source record's label at request time (``None`` before
+ * REPORTS-04), ``templateNameKey`` the pinned template's terminology key for its name. The PDF is
+ * downloaded from ``GET /reports/renders/{id}/file``, never from a storage URL.
  */
 export interface RenderJobView {
   createdAt: string;
@@ -18,6 +22,7 @@ export interface RenderJobView {
   pdfSizeBytes: number | null;
   projectId: string | null;
   recordId: string;
+  recordLabel?: string | null;
   recordType: string;
   renderedAt: string | null;
   requestedBy: string | null;
@@ -26,6 +31,7 @@ export interface RenderJobView {
   status: RenderJobViewStatus;
   templateId: string;
   templateKey: string;
+  templateNameKey?: string | null;
   templateVersion: number;
   updatedAt: string;
   variant: RenderJobViewVariant;

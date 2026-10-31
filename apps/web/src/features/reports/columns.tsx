@@ -53,8 +53,10 @@ export function reportColumns(): RegisterColumn<RenderJobView>[] {
         <span className="reports-register__stack">
           <span>{templateName(r)}</span>
           <span className="reports-register__meta">
-            {t("report.register.template_version", { version: r.templateVersion })} ·{" "}
-            {t(`report.register.variant.${r.variant}`)}
+            {t("report.register.template_version", {
+              version: r.templateVersion,
+              variant: t(`report.register.variant.${r.variant}`),
+            })}
           </span>
         </span>
       ),
