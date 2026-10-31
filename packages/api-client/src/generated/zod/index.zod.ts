@@ -4,6 +4,7 @@ export * from './approvals/approvals.zod';
 export * from './assets/assets.zod';
 export * from './forms/forms.zod';
 export * from './identity/identity.zod';
+export * from './inspections/inspections.zod';
 export * from './item-types/item-types.zod';
 export * from './jobs/jobs.zod';
 export * from './platform/platform.zod';

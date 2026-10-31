@@ -201,7 +201,34 @@ async function history(page: Page, instanceId: string): Promise<History> {
       expect.arrayContaining(["inspection_standard", "inspection_client_review"]),
     );
 
-    const instance = await startDemo(page, projectId, "inspection");
+    // INSPECTIONS-01: an `inspection` record is a real inspection now (its own resolver, not the
+    // project-backed fallback), so create one on an asset from a published template.
+    const asset = await apiJson(page, "POST", "/api/v1/assets", { name: `Workflow tank ${runId()}` });
+    expect(asset.status, "setup: tenant A's admin creates the asset").toBe(201);
+    const template = await apiJson(page, "POST", "/api/v1/forms/templates", {
+      code: `wf-insp-${runId()}-${Date.now()}`.toLowerCase().slice(0, 63),
+      name: "Workflow inspection (e2e)",
+      kind: "inspection",
+      schema: {
+        schemaVersion: 1,
+        sections: [{ key: "s", label: "S", fields: [{ key: "ok", type: "boolean", label: "OK" }] }],
+      },
+    });
+    expect(template.status, "setup: tenant A's admin uploads a template").toBe(201);
+    const revisionId = (template.json.revision as Json).id as string;
+    const published = await apiJson(page, "POST", `/api/v1/forms/revisions/${revisionId}/publish`, {});
+    expect(published.status, "setup: the template is published").toBe(200);
+    const created = await apiJson(page, "POST", "/api/v1/inspections", {
+      assetId: asset.json.id,
+      projectId,
+      templateId: (template.json.template as Json).id,
+      kind: "inspection",
+    });
+    expect(created.status, "INSPECTIONS-01: tenant A creates an inspection on the project").toBe(201);
+    expect(created.json.templateRevisionId, "INSPECTIONS-01: it pins the published revision").toBe(revisionId);
+    const detail = await page.request.get(`/api/v1/inspections/${created.json.id as string}`);
+    expect(detail.status()).toBe(200);
+    const instance = (await detail.json()) as Instance;
     expect(instance.currentState, "APPROVALS-05: a new inspection starts in draft").toBe("draft");
     expect(instance.availableTransitions[0]).toMatchObject({
       action: "ready",

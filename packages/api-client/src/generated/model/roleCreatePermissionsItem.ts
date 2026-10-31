@@ -34,6 +34,8 @@ export const RoleCreatePermissionsItem = {
   identitysignoff_policyread: 'identity.signoff_policy.read',
   identityusermanage: 'identity.user.manage',
   identityuserread: 'identity.user.read',
+  inspectioncreate: 'inspection.create',
+  inspectionview: 'inspection.view',
   item_typeedit: 'item_type.edit',
   item_typemanage: 'item_type.manage',
   item_typepublish: 'item_type.publish',

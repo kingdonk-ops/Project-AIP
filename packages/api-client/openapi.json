@@ -37,6 +37,8 @@
                 "identity.signoff_policy.read",
                 "identity.user.manage",
                 "identity.user.read",
+                "inspection.create",
+                "inspection.view",
                 "item_type.edit",
                 "item_type.manage",
                 "item_type.publish",
@@ -2679,6 +2681,633 @@
           "chainValid"
         ],
         "title": "HistoryOut",
+        "type": "object"
+      },
+      "InspectionAvailableTransition": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "allowed": {
+            "title": "Allowed",
+            "type": "boolean"
+          },
+          "critical": {
+            "title": "Critical",
+            "type": "boolean"
+          },
+          "labelKey": {
+            "title": "Labelkey",
+            "type": "string"
+          },
+          "reasonKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasonkey"
+          },
+          "requiresComment": {
+            "title": "Requirescomment",
+            "type": "boolean"
+          },
+          "toState": {
+            "title": "Tostate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "toState",
+          "labelKey",
+          "critical",
+          "requiresComment",
+          "allowed",
+          "reasonKey"
+        ],
+        "title": "InspectionAvailableTransition",
+        "type": "object"
+      },
+      "InspectionCreate": {
+        "additionalProperties": false,
+        "description": "``POST /inspections``. Without ``templateRevisionId`` the template's current published\nrevision is pinned; with it, that published revision of ``templateId``.",
+        "properties": {
+          "assetId": {
+            "format": "uuid",
+            "title": "Assetid",
+            "type": "string"
+          },
+          "clientGeneratedId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clientgeneratedid"
+          },
+          "kind": {
+            "enum": [
+              "inspection",
+              "itp",
+              "rfi"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          },
+          "templateId": {
+            "format": "uuid",
+            "title": "Templateid",
+            "type": "string"
+          },
+          "templateRevisionId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Templaterevisionid"
+          }
+        },
+        "required": [
+          "assetId",
+          "templateId",
+          "kind"
+        ],
+        "title": "InspectionCreate",
+        "type": "object"
+      },
+      "InspectionDecision": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "actorId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actorid"
+          },
+          "authStrength": {
+            "title": "Authstrength",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "entryHash": {
+            "title": "Entryhash",
+            "type": "string"
+          },
+          "fromState": {
+            "title": "Fromstate",
+            "type": "string"
+          },
+          "guardResult": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardresult"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "prevHash": {
+            "title": "Prevhash",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "toState": {
+            "title": "Tostate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "seq",
+          "fromState",
+          "toState",
+          "action",
+          "actorId",
+          "comment",
+          "authStrength",
+          "status",
+          "guardResult",
+          "prevHash",
+          "entryHash",
+          "createdAt"
+        ],
+        "title": "InspectionDecision",
+        "type": "object"
+      },
+      "InspectionDetail": {
+        "description": "The record plus its workflow: ``currentState`` is the instance's (the truth), and\n``instanceSyncVersion`` the value a transition may send as ``expectedSyncVersion``.",
+        "properties": {
+          "assetId": {
+            "format": "uuid",
+            "title": "Assetid",
+            "type": "string"
+          },
+          "availableTransitions": {
+            "items": {
+              "$ref": "#/components/schemas/InspectionAvailableTransition"
+            },
+            "title": "Availabletransitions",
+            "type": "array"
+          },
+          "clientGeneratedId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clientgeneratedid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "createdBy": {
+            "format": "uuid",
+            "title": "Createdby",
+            "type": "string"
+          },
+          "currentState": {
+            "title": "Currentstate",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "instanceSyncVersion": {
+            "title": "Instancesyncversion",
+            "type": "integer"
+          },
+          "itpParentId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itpparentid"
+          },
+          "kind": {
+            "enum": [
+              "inspection",
+              "itp",
+              "rfi"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "pendingCountersign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pendingcountersign"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          },
+          "source": {
+            "enum": [
+              "manual",
+              "scope_task",
+              "reinspection",
+              "import"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "sourceRefId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcerefid"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "templateId": {
+            "format": "uuid",
+            "title": "Templateid",
+            "type": "string"
+          },
+          "templateRevisionId": {
+            "format": "uuid",
+            "title": "Templaterevisionid",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          },
+          "workflowInstanceId": {
+            "format": "uuid",
+            "title": "Workflowinstanceid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "assetId",
+          "projectId",
+          "templateId",
+          "templateRevisionId",
+          "kind",
+          "source",
+          "sourceRefId",
+          "itpParentId",
+          "workflowInstanceId",
+          "state",
+          "createdBy",
+          "clientGeneratedId",
+          "syncVersion",
+          "createdAt",
+          "updatedAt",
+          "currentState",
+          "instanceSyncVersion",
+          "pendingCountersign",
+          "availableTransitions"
+        ],
+        "title": "InspectionDetail",
+        "type": "object"
+      },
+      "InspectionErrorBody": {
+        "description": "A domain error: a stable ``code`` (``ASSET_NOT_FOUND``, ``NOT_COMPLETED``, ...) and the\nterm key of its message when there is one.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "messageKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Messagekey"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "InspectionErrorBody",
+        "type": "object"
+      },
+      "InspectionHistory": {
+        "properties": {
+          "brokenAtSeq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brokenatseq"
+          },
+          "chainValid": {
+            "title": "Chainvalid",
+            "type": "boolean"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/InspectionDecision"
+            },
+            "title": "Entries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries",
+          "chainValid"
+        ],
+        "title": "InspectionHistory",
+        "type": "object"
+      },
+      "InspectionOut": {
+        "properties": {
+          "assetId": {
+            "format": "uuid",
+            "title": "Assetid",
+            "type": "string"
+          },
+          "clientGeneratedId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clientgeneratedid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "createdBy": {
+            "format": "uuid",
+            "title": "Createdby",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "itpParentId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itpparentid"
+          },
+          "kind": {
+            "enum": [
+              "inspection",
+              "itp",
+              "rfi"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          },
+          "source": {
+            "enum": [
+              "manual",
+              "scope_task",
+              "reinspection",
+              "import"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "sourceRefId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcerefid"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "templateId": {
+            "format": "uuid",
+            "title": "Templateid",
+            "type": "string"
+          },
+          "templateRevisionId": {
+            "format": "uuid",
+            "title": "Templaterevisionid",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          },
+          "workflowInstanceId": {
+            "format": "uuid",
+            "title": "Workflowinstanceid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "assetId",
+          "projectId",
+          "templateId",
+          "templateRevisionId",
+          "kind",
+          "source",
+          "sourceRefId",
+          "itpParentId",
+          "workflowInstanceId",
+          "state",
+          "createdBy",
+          "clientGeneratedId",
+          "syncVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "InspectionOut",
+        "type": "object"
+      },
+      "InspectionPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InspectionOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "title": "InspectionPage",
+        "type": "object"
+      },
+      "InspectionTransitionOut": {
+        "description": "200 when the transition took effect, 202 when it waits for a countersign.",
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/InspectionDecision"
+          },
+          "inspection": {
+            "$ref": "#/components/schemas/InspectionDetail"
+          }
+        },
+        "required": [
+          "inspection",
+          "decision"
+        ],
+        "title": "InspectionTransitionOut",
         "type": "object"
       },
       "InstanceOut": {
@@ -6302,6 +6931,8 @@
                 "identity.signoff_policy.read",
                 "identity.user.manage",
                 "identity.user.read",
+                "inspection.create",
+                "inspection.view",
                 "item_type.edit",
                 "item_type.manage",
                 "item_type.publish",
@@ -6452,6 +7083,8 @@
                 "identity.signoff_policy.read",
                 "identity.user.manage",
                 "identity.user.read",
+                "inspection.create",
+                "inspection.view",
                 "item_type.edit",
                 "item_type.manage",
                 "item_type.publish",
@@ -6569,6 +7202,8 @@
                     "identity.signoff_policy.read",
                     "identity.user.manage",
                     "identity.user.read",
+                    "inspection.create",
+                    "inspection.view",
                     "item_type.edit",
                     "item_type.manage",
                     "item_type.publish",
@@ -8640,6 +9275,46 @@
           "findings"
         ],
         "title": "TermsCoverage",
+        "type": "object"
+      },
+      "TransitionBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Action",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "expectedSyncVersion": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedsyncversion"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "TransitionBody",
         "type": "object"
       },
       "TransitionOut": {
@@ -14250,6 +14925,582 @@
         "summary": "Reset Mfa Route",
         "tags": [
           "identity"
+        ]
+      }
+    },
+    "/api/v1/inspections": {
+      "get": {
+        "operationId": "inspections_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "assetId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Assetid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "projectId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Projectid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "inspection",
+                    "itp",
+                    "rfi"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 1024,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "INVALID_CURSOR"
+          }
+        },
+        "summary": "List Inspections",
+        "tags": [
+          "inspections"
+        ]
+      },
+      "post": {
+        "operationId": "inspections_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionOut"
+                }
+              }
+            },
+            "description": "An idempotent replay of the same create"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, TEMPLATE_NOT_PUBLISHED, REVISION_MISMATCH or NO_INSPECTION_WORKFLOW"
+          }
+        },
+        "summary": "Create Inspection",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
+    "/api/v1/inspections/{inspection_id}": {
+      "get": {
+        "operationId": "inspections_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Inspection",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
+    "/api/v1/inspections/{inspection_id}/history": {
+      "get": {
+        "operationId": "inspections_history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionHistory"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get History",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
+    "/api/v1/inspections/{inspection_id}/reinspect": {
+      "post": {
+        "operationId": "inspections_reinspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "NOT_COMPLETED"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, TEMPLATE_NOT_PUBLISHED, REVISION_MISMATCH or NO_INSPECTION_WORKFLOW"
+          }
+        },
+        "summary": "Reinspect",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
+    "/api/v1/inspections/{inspection_id}/transition": {
+      "post": {
+        "operationId": "inspections_transition",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionTransitionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionTransitionOut"
+                }
+              }
+            },
+            "description": "Recorded; waits for a countersign"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "INVALID_TRANSITION, VERSION_CONFLICT, countersign"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, COMMENT_REQUIRED, GUARD_FAILED or GUARD_ERROR"
+          }
+        },
+        "summary": "Transition",
+        "tags": [
+          "inspections"
         ]
       }
     },

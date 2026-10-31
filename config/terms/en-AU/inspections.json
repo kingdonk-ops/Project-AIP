@@ -86,5 +86,41 @@
   "itp.step.status.rejected": {
     "text": "Rejected",
     "description": "ITP step status label: the step is rejected (blueprint inspections/README.md, itp_steps status pending/ready/in_progress/released/waived/rejected)."
+  },
+  "inspection.source.manual": {
+    "text": "Manual",
+    "description": "Inspection source: created by a user from the register or the create wizard (INSPECTIONS-01)."
+  },
+  "inspection.source.scope_task": {
+    "text": "Scope task",
+    "description": "Inspection source: spawned by a scope-of-work task (INSPECTIONS-01; SCOPEWORK-03 creates these)."
+  },
+  "inspection.source.reinspection": {
+    "text": "Re-inspection",
+    "description": "Inspection source: a re-inspection of an earlier performed inspection (INSPECTIONS-01)."
+  },
+  "inspection.source.import": {
+    "text": "Import",
+    "description": "Inspection source: brought in by a data import (INSPECTIONS-01)."
+  },
+  "inspection.error.asset_not_found": {
+    "text": "That asset does not exist or is not visible to you.",
+    "description": "Error message for ASSET_NOT_FOUND when creating an inspection (INSPECTIONS-01)."
+  },
+  "inspection.error.template_not_published": {
+    "text": "That form template has no published revision to inspect with.",
+    "description": "Error message for TEMPLATE_NOT_PUBLISHED when creating an inspection (INSPECTIONS-01)."
+  },
+  "inspection.error.no_inspection_workflow": {
+    "text": "No inspection workflow is set up for this tenant or project.",
+    "description": "Error message for NO_INSPECTION_WORKFLOW: no active approvals definition for the inspection record type (INSPECTIONS-01)."
+  },
+  "inspection.error.not_completed": {
+    "text": "Only a performed inspection can be re-inspected.",
+    "description": "Error message for NOT_COMPLETED when re-inspecting an inspection that is not yet performed (INSPECTIONS-01)."
+  },
+  "inspection.error.revision_mismatch": {
+    "text": "That form revision is not a published revision of the chosen template.",
+    "description": "Error message for REVISION_MISMATCH when the named revision is unpublished or belongs to another template (INSPECTIONS-01)."
   }
 }

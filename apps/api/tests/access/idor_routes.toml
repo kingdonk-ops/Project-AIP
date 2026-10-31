@@ -284,3 +284,16 @@ table = "portal_grants"
 
 ["GET /api/v1/reports/renders/{render_job_id}/file"]
 table = "report_render_jobs"
+
+["GET /api/v1/inspections/{inspection_id}"]
+table = "inspections"
+
+["GET /api/v1/inspections/{inspection_id}/history"]
+table = "inspections"
+
+["POST /api/v1/inspections/{inspection_id}/transition"]
+table = "inspections"
+body = '{"action": "ready"}'
+
+["POST /api/v1/inspections/{inspection_id}/reinspect"]
+table = "inspections"
