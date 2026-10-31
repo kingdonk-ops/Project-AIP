@@ -17,11 +17,19 @@
 All of it is one transaction: a rollback leaves no snapshot, no render job, no ``jobs`` row and no
 queue row (ADR 0003). ``rerender`` queues a new job with the same pinned template version and
 snapshot (never the latest version, even if the pinned one is now retired).
+
+REPORTS-04: the job keeps the provider's record ``label`` (``record_label``, at most 300
+characters) for the register, which ``list`` searches (``q``) and filters by ``statuses``.
+``download`` reads a succeeded job's PDF through ``aip.modules.uploads.api.open_stored_file`` on
+the caller's connection (never a storage URL), checks the bytes against the job's ``pdf_sha256``
+and emits ``report.downloaded`` in the same transaction.
 """
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass
 from typing import Any, Final
 from uuid import UUID
 
@@ -30,6 +38,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.ops import api as ops
 from aip.modules.report_engine import repository as repo
+from aip.modules.report_engine.events import REPORT_DOWNLOADED, ReportDownloaded
 from aip.modules.report_engine.jobs import RENDER_JOB_TYPE
 from aip.modules.report_engine.providers import (
     ProviderEntry,
@@ -41,15 +50,22 @@ from aip.modules.report_engine.providers import project as project_provider
 from aip.modules.report_engine.schemas import RenderJobPage, RenderJobView, TemplateRow
 from aip.modules.report_engine.service import TemplateService, decode_cursor, encode_cursor
 from aip.modules.report_engine.snapshots import build_snapshot
+from aip.modules.uploads.api import (
+    StoredFileIntegrityError,
+    StoredFileNotFoundError,
+    open_stored_file,
+)
 from aip.platform.access import Forbidden
 from aip.platform.context import get_context, new_request_id
+from aip.platform.events import Aggregate, emit
 from aip.platform.http import DomainError
 
-__all__ = ["REPORT_CREATE", "REPORT_VIEW", "Authorizer", "RenderService"]
+__all__ = ["REPORT_CREATE", "REPORT_VIEW", "Authorizer", "RenderService", "ReportFile"]
 
 REPORT_VIEW: Final = "report.view"
 REPORT_CREATE: Final = "report.create"
 _UNIQUE_VIOLATION: Final = "23505"
+MAX_LABEL: Final = 300
 
 # ``authorize(permission, project_id)``: whether the caller holds ``permission`` on that project.
 Authorizer = Callable[[str, UUID | None], Awaitable[bool]]
@@ -59,6 +75,24 @@ project_provider.install()
 
 def _job_not_found(render_job_id: UUID) -> DomainError:
     return DomainError(404, "RENDER_JOB_NOT_FOUND", detail=f"render job {render_job_id}")
+
+
+def _label(label: str | None) -> str | None:
+    """The provider's label trimmed and cut to ``MAX_LABEL`` characters (``None`` when blank)."""
+    trimmed = (label or "").strip()[:MAX_LABEL].strip()
+    return trimmed or None
+
+
+@dataclass(frozen=True, slots=True)
+class ReportFile:
+    """A succeeded render's PDF, read through uploads and checked against the job's sha256."""
+
+    job: RenderJobView
+    data: bytes
+
+    @property
+    def filename(self) -> str:
+        return f"{self.job.template_key}-{self.job.variant}-{self.job.record_id}.pdf"
 
 
 async def _require(
@@ -122,6 +156,7 @@ class RenderService:
             "variant": template.variant,
             "record_type": record_type,
             "record_id": record_id,
+            "record_label": _label(source.label),
             "project_id": source.project_id,
             "snapshot_id": snapshot.id,
             "data_hash": snapshot.data_hash,
@@ -169,6 +204,7 @@ class RenderService:
                 "variant",
                 "record_type",
                 "record_id",
+                "record_label",
                 "project_id",
                 "snapshot_id",
                 "data_hash",
@@ -201,6 +237,8 @@ class RenderService:
         *,
         record_type: str | None = None,
         record_id: UUID | None = None,
+        statuses: tuple[str, ...] = (),
+        q: str | None = None,
         cursor: str | None = None,
         limit: int = 50,
         authorize: Authorizer | None = None,
@@ -208,7 +246,13 @@ class RenderService:
         """Newest first; jobs on a project the caller may not view are left out."""
         before = None if cursor is None else decode_cursor(cursor)
         rows = await repo.list_jobs(
-            conn, record_type=record_type, record_id=record_id, before=before, limit=limit + 1
+            conn,
+            record_type=record_type,
+            record_id=record_id,
+            statuses=statuses,
+            q=q,
+            before=before,
+            limit=limit + 1,
         )
         more = len(rows) > limit
         rows = rows[:limit]
@@ -221,6 +265,33 @@ class RenderService:
             items=[RenderJobView.model_validate(row) for row in visible],
             next_cursor=encode_cursor(rows[-1]["id"]) if more else None,
         )
+
+    async def download(
+        self,
+        conn: AsyncConnection,
+        render_job_id: UUID,
+        *,
+        authorize: Authorizer | None = None,
+    ) -> ReportFile:
+        """The PDF of a succeeded job (``report.view`` on its project), and a ``report.downloaded``."""
+        job = await self.get(conn, render_job_id, authorize=authorize)
+        if job.status != "succeeded" or job.file_id is None or job.pdf_sha256 is None:
+            raise DomainError(409, "REPORT_NOT_READY", detail=f"render job is {job.status}")
+        try:
+            data = await open_stored_file(conn, job.file_id)
+        except StoredFileNotFoundError:
+            raise DomainError(404, "REPORT_FILE_NOT_FOUND") from None
+        if hashlib.sha256(data).hexdigest() != job.pdf_sha256:
+            raise StoredFileIntegrityError(f"render job {job.id}: the stored PDF is not the report")
+        payload = ReportDownloaded(
+            render_job_id=job.id,
+            file_id=job.file_id,
+            record_type=job.record_type,
+            record_id=job.record_id,
+            pdf_sha256=job.pdf_sha256,
+        ).model_dump(mode="json")
+        await emit(conn, REPORT_DOWNLOADED, 1, Aggregate("report_render_job", job.id), payload)
+        return ReportFile(job=job, data=data)
 
     async def _queue(self, conn: AsyncConnection, values: dict[str, Any]) -> RenderJobView:
         render_job_id = UUID(new_request_id())

@@ -250,3 +250,6 @@ table = "report_render_jobs"
 
 ["POST /api/v1/reports/renders/{render_job_id}/rerender"]
 table = "report_render_jobs"
+
+["GET /api/v1/reports/renders/{render_job_id}/file"]
+table = "report_render_jobs"

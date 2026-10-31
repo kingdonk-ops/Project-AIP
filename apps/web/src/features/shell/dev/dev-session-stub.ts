@@ -21,7 +21,7 @@ const fixtureSessions: Record<string, Session> = {
     user: { id: "00000000-0000-4000-8000-0000000000a1", name: "Alice Anderson", email: "alice@kaefer.test" },
     tenant: { slug: "kaefer-demo", name: "Kaefer Demo" },
     // PROJECTS-07: the demo admin can drive the project detail and sites register end to end.
-    // ASSETS-03: and the asset tree, register and move dialog.
+    // ASSETS-03: and the asset tree, register and move dialog. REPORTS-04: and the report register.
     permissions: [
       "project.view",
       "project.update",
@@ -34,6 +34,7 @@ const fixtureSessions: Record<string, Session> = {
       "asset.update",
       "asset.move",
       "item_type.view",
+      "report.view",
     ],
   },
   // ARCH-09: a platform operator (ADR 0029). Operator pages move to their own origin with OPS-12.
