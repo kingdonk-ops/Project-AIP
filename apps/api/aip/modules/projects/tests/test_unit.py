@@ -114,9 +114,8 @@ async def test_server_startup_fails_without_a_cursor_key_outside_dev(
 ) -> None:
     """The check runs in the app lifespan, so a deploy fails at startup, not on a list request."""
     from aip.main import create_app
-    from aip.modules.projects.settings import get_settings
-
     from aip.modules.assets.settings import get_settings as get_assets_settings
+    from aip.modules.projects.settings import get_settings
 
     monkeypatch.delenv("PROJECTS_CURSOR_KEY", raising=False)
     # Other modules' startup checks may run first (module order); only the projects key is missing.
