@@ -1,4 +1,4 @@
-"""APPROVALS-05/09/10: the inspection lifecycle presets and their golden cases, through the evaluator.
+"""APPROVALS-05/09/10: the inspection lifecycle presets and golden cases, through the evaluator.
 
 The same cases run through ``TransitionService`` on Postgres in ``test_inspection_preset_db.py``.
 APPROVALS-09 rewrote both presets and the cases to the owner's AIP status and action tables

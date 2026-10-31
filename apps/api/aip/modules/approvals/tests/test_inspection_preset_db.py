@@ -352,7 +352,7 @@ def go_coded(preset_key: str) -> str:
     """The shipped preset with the APPROVALS-09 Go codes and label keys put back (ADR 0041 §1)."""
     text = (workflows_dir() / f"{preset_key}.json").read_text(encoding="utf-8")
     for old, new in GO_RENAMES.items():
-        text = re.sub(rf"{new}", old, text)
+        text = re.sub(rf"\b{new}\b", old, text)
     return text
 
 
