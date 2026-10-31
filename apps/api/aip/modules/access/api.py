@@ -13,6 +13,8 @@ Other modules may import only this file. Keep it small and stable.
   the role tenant-wide or on that project; takes the connection from ``with_tenant``.
 - ``role_codes(conn, user_id, project_id=None)`` (APPROVALS-02): the codes of the roles the user
   actively holds tenant-wide or on that project, sorted (a transition guard's ``actor.roles``).
+- ``role_code_for_id(conn, role_id)`` / ``get_team_ref(conn, team_id)`` (APPROVALS-04): resolve a
+  route step's role or team approver; ``None`` for an unknown, deleted or other tenant's row.
 
 - ``list_team_members(conn, team_id)`` / ``teams_for_user(conn, user_id)`` (ACCESS-04, for
   APPROVALS-04 team approvers): the active users with a live membership of a live team, sorted;
@@ -34,10 +36,10 @@ from aip.modules.access.repository import (
     list_permissions,
 )
 from aip.modules.access.roles.grant_provider import RoleGrantProvider
-from aip.modules.access.roles.repository import has_role, role_codes
+from aip.modules.access.roles.repository import has_role, role_code_for_id, role_codes
 from aip.modules.access.roles.seed import SeedReport, seed_default_roles
 from aip.modules.access.service import sync_catalogue
-from aip.modules.access.teams_api import TeamRef, list_team_members, teams_for_user
+from aip.modules.access.teams_api import TeamRef, get_team_ref, list_team_members, teams_for_user
 
 # ACCESS-03: the project-scope helpers live in the DB-access layer (ADR 0002; aip.platform must not
 # import aip.modules, ARCH-03). Re-exported here so other modules reach them via the access public
@@ -56,9 +58,11 @@ __all__ = [
     "configure_policy_cache",
     "get_access_version",
     "get_api",
+    "get_team_ref",
     "has_role",
     "list_permissions",
     "list_team_members",
+    "role_code_for_id",
     "role_codes",
     "run_as_system",
     "seed_default_roles",

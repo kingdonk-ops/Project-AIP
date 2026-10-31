@@ -27,6 +27,12 @@ import type {
   InstanceStart,
   PresetInstall,
   PresetOut,
+  RouteOut,
+  RouteStart,
+  RouteTemplateCreate,
+  RouteTemplateOut,
+  StepDecisionOut,
+  StepDecisionRequest,
   TransitionOut,
   TransitionRequest
 } from '../../model';
@@ -419,7 +425,134 @@ export function useApprovalsGetInstance<TData = Awaited<ReturnType<typeof approv
 
 
 
-export type approvalsGetHistoryResponse200 = {
+export type approvalsDecideStepResponse200 = {
+  data: StepDecisionOut
+  status: 200
+}
+
+export type approvalsDecideStepResponse401 = {
+  data: ApprovalsErrorBody
+  status: 401
+}
+
+export type approvalsDecideStepResponse403 = {
+  data: ApprovalsErrorBody
+  status: 403
+}
+
+export type approvalsDecideStepResponse404 = {
+  data: ApprovalsErrorBody
+  status: 404
+}
+
+export type approvalsDecideStepResponse409 = {
+  data: ApprovalsErrorBody
+  status: 409
+}
+
+export type approvalsDecideStepResponse422 = {
+  data: ApprovalsErrorBody
+  status: 422
+}
+
+export type approvalsDecideStepResponseSuccess = (approvalsDecideStepResponse200) & {
+  headers: Headers;
+};
+export type approvalsDecideStepResponseError = (approvalsDecideStepResponse401 | approvalsDecideStepResponse403 | approvalsDecideStepResponse404 | approvalsDecideStepResponse409 | approvalsDecideStepResponse422) & {
+  headers: Headers;
+};
+
+export type approvalsDecideStepResponse = (approvalsDecideStepResponseSuccess | approvalsDecideStepResponseError)
+
+export const getApprovalsDecideStepUrl = (instanceId: string,) => {
+
+
+
+
+  return `/api/v1/approvals/instances/${instanceId}/decide`
+}
+
+/**
+ * @summary Decide Step
+ */
+export const approvalsDecideStep = async (instanceId: string,
+    stepDecisionRequest: StepDecisionRequest, options?: Parameters<typeof apiFetch>[1]): Promise<approvalsDecideStepResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<approvalsDecideStepResponse>(getApprovalsDecideStepUrl(instanceId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(stepDecisionRequest)
+  }
+);}
+
+
+
+
+
+export const getApprovalsDecideStepMutationKey = () => ['approvalsDecideStep'] as const;
+
+export const getApprovalsDecideStepMutationOptions = <TError = ApprovalsErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsDecideStep>>, TError,ApprovalsDecideStepMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approvalsDecideStep>>, TError,ApprovalsDecideStepMutationVariables, TContext> => {
+
+const mutationKey = getApprovalsDecideStepMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approvalsDecideStep>>, ApprovalsDecideStepMutationVariables> = (props) => {
+          const {instanceId,data} = props ?? {};
+
+          return  approvalsDecideStep(instanceId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApprovalsDecideStepMutationResult = NonNullable<Awaited<ReturnType<typeof approvalsDecideStep>>>
+    export type ApprovalsDecideStepMutationBody = StepDecisionRequest
+    export type ApprovalsDecideStepMutationError = ApprovalsErrorBody
+    export type ApprovalsDecideStepMutationVariables = {instanceId: string;data: StepDecisionRequest}
+
+    /**
+ * @summary Decide Step
+ */
+export const useApprovalsDecideStep = <TError = ApprovalsErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsDecideStep>>, TError,ApprovalsDecideStepMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approvalsDecideStep>>,
+        TError,
+        ApprovalsDecideStepMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApprovalsDecideStepMutationOptions(options), queryClient);
+    }
+    export type approvalsGetHistoryResponse200 = {
   data: HistoryOut
   status: 200
 }
@@ -542,6 +675,267 @@ export function useApprovalsGetHistory<TData = Awaited<ReturnType<typeof approva
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getApprovalsGetHistoryQueryOptions(instanceId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type approvalsStartRouteResponse201 = {
+  data: RouteOut
+  status: 201
+}
+
+export type approvalsStartRouteResponse401 = {
+  data: ApprovalsErrorBody
+  status: 401
+}
+
+export type approvalsStartRouteResponse403 = {
+  data: ApprovalsErrorBody
+  status: 403
+}
+
+export type approvalsStartRouteResponse404 = {
+  data: ApprovalsErrorBody
+  status: 404
+}
+
+export type approvalsStartRouteResponse409 = {
+  data: ApprovalsErrorBody
+  status: 409
+}
+
+export type approvalsStartRouteResponse422 = {
+  data: ApprovalsErrorBody
+  status: 422
+}
+
+export type approvalsStartRouteResponseSuccess = (approvalsStartRouteResponse201) & {
+  headers: Headers;
+};
+export type approvalsStartRouteResponseError = (approvalsStartRouteResponse401 | approvalsStartRouteResponse403 | approvalsStartRouteResponse404 | approvalsStartRouteResponse409 | approvalsStartRouteResponse422) & {
+  headers: Headers;
+};
+
+export type approvalsStartRouteResponse = (approvalsStartRouteResponseSuccess | approvalsStartRouteResponseError)
+
+export const getApprovalsStartRouteUrl = (instanceId: string,) => {
+
+
+
+
+  return `/api/v1/approvals/instances/${instanceId}/route`
+}
+
+/**
+ * @summary Start Route
+ */
+export const approvalsStartRoute = async (instanceId: string,
+    routeStart: RouteStart, options?: Parameters<typeof apiFetch>[1]): Promise<approvalsStartRouteResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<approvalsStartRouteResponse>(getApprovalsStartRouteUrl(instanceId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(routeStart)
+  }
+);}
+
+
+
+
+
+export const getApprovalsStartRouteMutationKey = () => ['approvalsStartRoute'] as const;
+
+export const getApprovalsStartRouteMutationOptions = <TError = ApprovalsErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsStartRoute>>, TError,ApprovalsStartRouteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approvalsStartRoute>>, TError,ApprovalsStartRouteMutationVariables, TContext> => {
+
+const mutationKey = getApprovalsStartRouteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approvalsStartRoute>>, ApprovalsStartRouteMutationVariables> = (props) => {
+          const {instanceId,data} = props ?? {};
+
+          return  approvalsStartRoute(instanceId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApprovalsStartRouteMutationResult = NonNullable<Awaited<ReturnType<typeof approvalsStartRoute>>>
+    export type ApprovalsStartRouteMutationBody = RouteStart
+    export type ApprovalsStartRouteMutationError = ApprovalsErrorBody
+    export type ApprovalsStartRouteMutationVariables = {instanceId: string;data: RouteStart}
+
+    /**
+ * @summary Start Route
+ */
+export const useApprovalsStartRoute = <TError = ApprovalsErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsStartRoute>>, TError,ApprovalsStartRouteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approvalsStartRoute>>,
+        TError,
+        ApprovalsStartRouteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApprovalsStartRouteMutationOptions(options), queryClient);
+    }
+    export type approvalsGetStepsResponse200 = {
+  data: RouteOut
+  status: 200
+}
+
+export type approvalsGetStepsResponse401 = {
+  data: ApprovalsErrorBody
+  status: 401
+}
+
+export type approvalsGetStepsResponse403 = {
+  data: ApprovalsErrorBody
+  status: 403
+}
+
+export type approvalsGetStepsResponse404 = {
+  data: ApprovalsErrorBody
+  status: 404
+}
+
+export type approvalsGetStepsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type approvalsGetStepsResponseSuccess = (approvalsGetStepsResponse200) & {
+  headers: Headers;
+};
+export type approvalsGetStepsResponseError = (approvalsGetStepsResponse401 | approvalsGetStepsResponse403 | approvalsGetStepsResponse404 | approvalsGetStepsResponse422) & {
+  headers: Headers;
+};
+
+export type approvalsGetStepsResponse = (approvalsGetStepsResponseSuccess | approvalsGetStepsResponseError)
+
+export const getApprovalsGetStepsUrl = (instanceId: string,) => {
+
+
+
+
+  return `/api/v1/approvals/instances/${instanceId}/steps`
+}
+
+/**
+ * @summary Get Steps
+ */
+export const approvalsGetSteps = async (instanceId: string, options?: Parameters<typeof apiFetch>[1]): Promise<approvalsGetStepsResponse> => {
+
+  return apiFetch<approvalsGetStepsResponse>(getApprovalsGetStepsUrl(instanceId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getApprovalsGetStepsQueryKey = (instanceId: string,) => {
+    return [
+    `/api/v1/approvals/instances/${instanceId}/steps`
+    ] as const;
+    }
+
+
+export const getApprovalsGetStepsQueryOptions = <TData = Awaited<ReturnType<typeof approvalsGetSteps>>, TError = ApprovalsErrorBody | HTTPValidationError>(instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetSteps>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getApprovalsGetStepsQueryKey(instanceId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof approvalsGetSteps>>> = ({ signal }) => approvalsGetSteps(instanceId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: instanceId !== null && instanceId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof approvalsGetSteps>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ApprovalsGetStepsQueryResult = NonNullable<Awaited<ReturnType<typeof approvalsGetSteps>>>
+export type ApprovalsGetStepsQueryError = ApprovalsErrorBody | HTTPValidationError
+
+
+export function useApprovalsGetSteps<TData = Awaited<ReturnType<typeof approvalsGetSteps>>, TError = ApprovalsErrorBody | HTTPValidationError>(
+ instanceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetSteps>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof approvalsGetSteps>>,
+          TError,
+          Awaited<ReturnType<typeof approvalsGetSteps>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApprovalsGetSteps<TData = Awaited<ReturnType<typeof approvalsGetSteps>>, TError = ApprovalsErrorBody | HTTPValidationError>(
+ instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetSteps>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof approvalsGetSteps>>,
+          TError,
+          Awaited<ReturnType<typeof approvalsGetSteps>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApprovalsGetSteps<TData = Awaited<ReturnType<typeof approvalsGetSteps>>, TError = ApprovalsErrorBody | HTTPValidationError>(
+ instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetSteps>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Steps
+ */
+
+export function useApprovalsGetSteps<TData = Awaited<ReturnType<typeof approvalsGetSteps>>, TError = ApprovalsErrorBody | HTTPValidationError>(
+ instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetSteps>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getApprovalsGetStepsQueryOptions(instanceId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -797,3 +1191,221 @@ export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approv
 
 
 
+export type approvalsListRouteTemplatesResponse200 = {
+  data: RouteTemplateOut[]
+  status: 200
+}
+
+export type approvalsListRouteTemplatesResponseSuccess = (approvalsListRouteTemplatesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type approvalsListRouteTemplatesResponse = (approvalsListRouteTemplatesResponseSuccess)
+
+export const getApprovalsListRouteTemplatesUrl = () => {
+
+
+
+
+  return `/api/v1/approvals/route-templates`
+}
+
+/**
+ * @summary List Route Templates
+ */
+export const approvalsListRouteTemplates = async ( options?: Parameters<typeof apiFetch>[1]): Promise<approvalsListRouteTemplatesResponse> => {
+
+  return apiFetch<approvalsListRouteTemplatesResponse>(getApprovalsListRouteTemplatesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getApprovalsListRouteTemplatesQueryKey = () => {
+    return [
+    `/api/v1/approvals/route-templates`
+    ] as const;
+    }
+
+
+export const getApprovalsListRouteTemplatesQueryOptions = <TData = Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getApprovalsListRouteTemplatesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof approvalsListRouteTemplates>>> = ({ signal }) => approvalsListRouteTemplates({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ApprovalsListRouteTemplatesQueryResult = NonNullable<Awaited<ReturnType<typeof approvalsListRouteTemplates>>>
+export type ApprovalsListRouteTemplatesQueryError = unknown
+
+
+export function useApprovalsListRouteTemplates<TData = Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof approvalsListRouteTemplates>>,
+          TError,
+          Awaited<ReturnType<typeof approvalsListRouteTemplates>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApprovalsListRouteTemplates<TData = Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof approvalsListRouteTemplates>>,
+          TError,
+          Awaited<ReturnType<typeof approvalsListRouteTemplates>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApprovalsListRouteTemplates<TData = Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Route Templates
+ */
+
+export function useApprovalsListRouteTemplates<TData = Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getApprovalsListRouteTemplatesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type approvalsCreateRouteTemplateResponse201 = {
+  data: RouteTemplateOut
+  status: 201
+}
+
+export type approvalsCreateRouteTemplateResponse422 = {
+  data: ApprovalsErrorBody
+  status: 422
+}
+
+export type approvalsCreateRouteTemplateResponseSuccess = (approvalsCreateRouteTemplateResponse201) & {
+  headers: Headers;
+};
+export type approvalsCreateRouteTemplateResponseError = (approvalsCreateRouteTemplateResponse422) & {
+  headers: Headers;
+};
+
+export type approvalsCreateRouteTemplateResponse = (approvalsCreateRouteTemplateResponseSuccess | approvalsCreateRouteTemplateResponseError)
+
+export const getApprovalsCreateRouteTemplateUrl = () => {
+
+
+
+
+  return `/api/v1/approvals/route-templates`
+}
+
+/**
+ * @summary Create Route Template
+ */
+export const approvalsCreateRouteTemplate = async (routeTemplateCreate: RouteTemplateCreate, options?: Parameters<typeof apiFetch>[1]): Promise<approvalsCreateRouteTemplateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<approvalsCreateRouteTemplateResponse>(getApprovalsCreateRouteTemplateUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(routeTemplateCreate)
+  }
+);}
+
+
+
+
+
+export const getApprovalsCreateRouteTemplateMutationKey = () => ['approvalsCreateRouteTemplate'] as const;
+
+export const getApprovalsCreateRouteTemplateMutationOptions = <TError = ApprovalsErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsCreateRouteTemplate>>, TError,ApprovalsCreateRouteTemplateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approvalsCreateRouteTemplate>>, TError,ApprovalsCreateRouteTemplateMutationVariables, TContext> => {
+
+const mutationKey = getApprovalsCreateRouteTemplateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approvalsCreateRouteTemplate>>, ApprovalsCreateRouteTemplateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  approvalsCreateRouteTemplate(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApprovalsCreateRouteTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof approvalsCreateRouteTemplate>>>
+    export type ApprovalsCreateRouteTemplateMutationBody = RouteTemplateCreate
+    export type ApprovalsCreateRouteTemplateMutationError = ApprovalsErrorBody
+    export type ApprovalsCreateRouteTemplateMutationVariables = {data: RouteTemplateCreate}
+
+    /**
+ * @summary Create Route Template
+ */
+export const useApprovalsCreateRouteTemplate = <TError = ApprovalsErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsCreateRouteTemplate>>, TError,ApprovalsCreateRouteTemplateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approvalsCreateRouteTemplate>>,
+        TError,
+        ApprovalsCreateRouteTemplateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApprovalsCreateRouteTemplateMutationOptions(options), queryClient);
+    }
