@@ -1,0 +1,45 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assetId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Assetid"
+    },
+    "grantId": {
+      "format": "uuid",
+      "title": "Grantid",
+      "type": "string"
+    },
+    "portalUserId": {
+      "format": "uuid",
+      "title": "Portaluserid",
+      "type": "string"
+    },
+    "projectId": {
+      "format": "uuid",
+      "title": "Projectid",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "grantId",
+    "portalUserId",
+    "projectId",
+    "assetId",
+    "reason"
+  ],
+  "title": "GrantRevoked",
+  "type": "object"
+}

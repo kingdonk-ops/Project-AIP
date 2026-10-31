@@ -121,6 +121,10 @@ reason = "REPORTS-02: data_hash and the optional sha256 columns must be 64 lower
 principal_kind = "system"
 values = { data_hash = "repeat('{tag}', 64)", status = "'queued'", html_sha256 = "NULL", pdf_sha256 = "NULL", idempotency_key = "NULL" }
 
+[tables.portal_grants]
+reason = "ck_portal_grants_actions needs 1 to 4 known actions including view (the generic seed is an empty array); ck_portal_grants_access_days needs 1 to 400; ck_portal_grants_revoked_shape needs revoked_at and revoked_reason both null or both set."
+values = { actions = "ARRAY['view']::text[]", access_days = "180", revoked_at = "NULL", revoked_reason = "NULL" }
+
 [tables.role_assignment]
 reason = "ACCESS-04 made user_id nullable for team assignments; ck_role_assignment_scope needs a user_id on every non-team scope, so seed one (FKs are not checked by the generator's superuser seed)."
 values = { user_id = "gen_random_uuid()" }

@@ -1,0 +1,40 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "invitedBy": {
+      "format": "uuid",
+      "title": "Invitedby",
+      "type": "string"
+    },
+    "organisationId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Organisationid"
+    },
+    "portalUserId": {
+      "format": "uuid",
+      "title": "Portaluserid",
+      "type": "string"
+    },
+    "userId": {
+      "format": "uuid",
+      "title": "Userid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "portalUserId",
+    "userId",
+    "organisationId",
+    "invitedBy"
+  ],
+  "title": "PortalUserInvited",
+  "type": "object"
+}

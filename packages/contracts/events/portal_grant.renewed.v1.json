@@ -1,0 +1,39 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "expiresAt": {
+      "format": "date-time",
+      "title": "Expiresat",
+      "type": "string"
+    },
+    "grantId": {
+      "format": "uuid",
+      "title": "Grantid",
+      "type": "string"
+    },
+    "portalUserId": {
+      "format": "uuid",
+      "title": "Portaluserid",
+      "type": "string"
+    },
+    "projectId": {
+      "format": "uuid",
+      "title": "Projectid",
+      "type": "string"
+    },
+    "renewedBy": {
+      "format": "uuid",
+      "title": "Renewedby",
+      "type": "string"
+    }
+  },
+  "required": [
+    "grantId",
+    "portalUserId",
+    "projectId",
+    "expiresAt",
+    "renewedBy"
+  ],
+  "title": "GrantRenewed",
+  "type": "object"
+}

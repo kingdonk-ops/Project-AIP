@@ -1,6 +1,6 @@
 """SQLAlchemy Core declaration for inspections (INSPECTIONS-01, ADR 0002).
 
-Created only by the Alembic revision ``202610311600_inspections_core``; ``aip-db check-schema``
+Created only by the Alembic revision ``202610311800_inspections_core``; ``aip-db check-schema``
 compares this declaration with the migrated database. The table is tenant-scoped with soft delete,
 FORCE ROW LEVEL SECURITY and the ACCESS-03 project-scope policy; ``aip_app`` has no DELETE.
 """
