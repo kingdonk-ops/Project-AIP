@@ -19,7 +19,7 @@ INSERT and UPDATE.
   code (``ck_role_permission_not_external_only``): only portal grants give those.
 
 Revision ID: 202610311700
-Revises: 202610311200
+Revises: 202610311500
 Create Date: 2026-10-31 17:00:00+00:00
 """
 
@@ -28,7 +28,7 @@ from alembic import op
 from aip.platform.db.templates import render_template
 
 revision: str = "202610311700"
-down_revision: str | None = "202610311200"
+down_revision: str | None = "202610311500"
 branch_labels = None
 depends_on = None
 

@@ -213,6 +213,7 @@ export * from './renderRequest';
 export * from './renderRequestVariant';
 export * from './reportErrorBody';
 export * from './reportsRendersListParams';
+export * from './reportsRendersListStatusItem';
 export * from './reportsTemplatesListParams';
 export * from './reportTemplateDetail';
 export * from './reportTemplateDetailDefinition';

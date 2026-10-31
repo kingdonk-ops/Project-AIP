@@ -39,6 +39,29 @@ describe("nav registry", () => {
   it("renders only ungated items when no permission matches", () => {
     expect(visibleNavGroups(items, []).flatMap((g) => g.items.map((i) => i.id))).toEqual(["home"]);
   });
+
+  describe("release flags (DESIGN-15)", () => {
+    const bim: NavItem = { id: "bim", section: "documents", to: "/bim", icon: "folder", termKey: "shell.flags.fixture_nav", flag: "bim" };
+    const ids = (flags?: readonly string[]) => visibleNavGroups([...items, bim], [], flags).flatMap((g) => g.items.map((i) => i.id));
+
+    it("hides an item whose flag is off", () => {
+      expect(ids(["ai"])).toEqual(["home"]);
+    });
+
+    it("hides a flagged item until the flags are known", () => {
+      expect(ids()).toEqual(["home"]);
+    });
+
+    it("shows an item whose flag is on", () => {
+      expect(ids(["bim"])).toEqual(["home", "bim"]);
+    });
+
+    it("needs the permission as well as the flag", () => {
+      const gated: NavItem = { ...bim, permission: "bim.view" };
+      expect(visibleNavGroups([gated], [], ["bim"])).toEqual([]);
+      expect(visibleNavGroups([gated], ["bim.view"], ["bim"]).flatMap((g) => g.items.map((i) => i.id))).toEqual(["bim"]);
+    });
+  });
 });
 
 describe("safeNext", () => {

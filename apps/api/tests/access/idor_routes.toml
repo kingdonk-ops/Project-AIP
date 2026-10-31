@@ -270,3 +270,6 @@ table = "portal_grants"
 
 ["DELETE /api/v1/admin/portal/users/{portal_user_id}/grants/{grant_id}"]
 table = "portal_grants"
+
+["GET /api/v1/reports/renders/{render_job_id}/file"]
+table = "report_render_jobs"
