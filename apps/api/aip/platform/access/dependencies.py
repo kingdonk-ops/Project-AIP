@@ -28,7 +28,7 @@ be served (TENANCY-01: a suspended tenant gets 403 on every tenant-scoped route)
 PORTAL-02 (ADR 0036 choice 7): the routes an external principal (a portal user) may reach are an
 allow-list. ``authenticated(external=True)`` and ``requires(code, external=True)`` accept **only**
 external principals; every other non-``public()`` route refuses an external principal. Both
-refusals are 404 ``{"code": "NOT_FOUND"}`` (``RouteHidden``), not 403, so neither audience can map
+refusals are 404 ``{"code": "NOT_FOUND"}`` (``RouteHiddenError``), not 403, so neither audience can map
 the other's API. ``route_check`` keeps external routes under ``EXTERNAL_PREFIXES``.
 """
 
@@ -55,7 +55,7 @@ __all__ = [
     "AccessDeclaration",
     "PrincipalSource",
     "ResourceResolver",
-    "RouteHidden",
+    "RouteHiddenError",
     "TenantGuard",
     "access_declarations",
     "authenticated",
@@ -80,7 +80,7 @@ class AccessDeclaration:
     external: bool = False
 
 
-class RouteHidden(Exception):
+class RouteHiddenError(Exception):
     """The route is not for this kind of principal (PORTAL-02): rendered as 404 ``NOT_FOUND``."""
 
 
@@ -130,10 +130,10 @@ class _Public:
 
 
 async def _audience_principal(request: Request, external: bool) -> AccessPrincipal:
-    """The caller, refused with ``RouteHidden`` unless its kind matches the route's (PORTAL-02)."""
+    """The caller, refused with ``RouteHiddenError`` unless its kind matches the route's (PORTAL-02)."""
     principal = await current_principal(request)
     if principal.external != external:
-        raise RouteHidden
+        raise RouteHiddenError
     return principal
 
 

@@ -14,7 +14,7 @@
    later through ``app.include_router`` is converted on inclusion, so a route that declares
    nothing is denied at runtime with 403 even when the startup check never saw it;
 3. the policy, catalogue, principal source and tenant guard go on ``app.state``,
-   ``Forbidden`` renders as 403 ``{"code": "FORBIDDEN", "permission": code}`` and ``RouteHidden``
+   ``Forbidden`` renders as 403 ``{"code": "FORBIDDEN", "permission": code}`` and ``RouteHiddenError``
    (PORTAL-02: an external principal on an internal route, or the reverse) as 404
    ``{"code": "NOT_FOUND"}``.
 
@@ -42,7 +42,7 @@ from aip.platform.access.catalogue import Catalogue
 from aip.platform.access.dependencies import (
     AccessCheckedRoute,
     PrincipalSource,
-    RouteHidden,
+    RouteHiddenError,
     TenantGuard,
     access_declarations,
 )
@@ -182,6 +182,6 @@ def install_access(
     async def forbidden(request: Request, exc: Forbidden) -> JSONResponse:  # pyright: ignore[reportUnusedFunction]
         return JSONResponse({"code": "FORBIDDEN", "permission": exc.permission}, status_code=403)
 
-    @app.exception_handler(RouteHidden)
-    async def hidden(request: Request, exc: RouteHidden) -> JSONResponse:  # pyright: ignore[reportUnusedFunction]
+    @app.exception_handler(RouteHiddenError)
+    async def hidden(request: Request, exc: RouteHiddenError) -> JSONResponse:  # pyright: ignore[reportUnusedFunction]
         return JSONResponse({"code": "NOT_FOUND"}, status_code=404)

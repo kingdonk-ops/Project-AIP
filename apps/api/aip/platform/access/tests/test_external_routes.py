@@ -75,7 +75,8 @@ def test_a_portal_route_without_the_flag_refuses_start(declaration: object) -> N
 
 
 def test_flagged_portal_routes_and_unflagged_staff_routes_start() -> None:
-    check_routes(_test_app().router.routes, CATALOGUE)
+    app = _test_app()
+    check_routes(app.router.routes, CATALOGUE, app)
 
 
 async def _principal(request: Request) -> AccessPrincipal | None:

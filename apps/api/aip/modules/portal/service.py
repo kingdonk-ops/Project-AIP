@@ -253,7 +253,7 @@ async def _granted_projects(
             project = await projects.get_project(conn, project_id)
             if project is None:
                 continue
-            ordered = [a for a in policies.ACTIONS if a in codes]
+            ordered: list[policies.Action] = [a for a in policies.ACTIONS if a in codes]
             out.append(
                 PortalProjectOut(
                     id=project.id, code=project.code, name=project.name, actions=ordered
