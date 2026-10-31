@@ -106,6 +106,11 @@ values = { code = "'iso-code-{tag}'" }
 reason = "content_sha256 must be 64 lowercase hex digits (ck_report_templates_content_sha256); the generic text seed is not."
 values = { content_sha256 = "repeat('{tag}', 64)" }
 
+[tables.inspections]
+reason = "INSPECTIONS-01: ck_inspections_source_ref needs a source_ref_id for scope_task/reinspection sources, so seed a manual inspection. The table carries the ACCESS-03 project-scope policy, so a principal is needed to see any row; a system principal is tenant-wide while tenant isolation still hides tenant B's row."
+principal_kind = "system"
+values = { kind = "'inspection'", source = "'manual'", source_ref_id = "NULL" }
+
 [tables.report_data_snapshots]
 reason = "REPORTS-02: data_hash must be 64 lowercase hex digits and size_bytes at most 5 MB (check constraints). The table carries the ACCESS-03 project-scope policy, so a principal is needed to see any row; a system principal is tenant-wide while tenant isolation still hides tenant B's row."
 principal_kind = "system"
