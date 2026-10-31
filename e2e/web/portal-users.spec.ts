@@ -165,8 +165,8 @@ test("the register filters by expiry and status in the URL, and a user's expired
   await expect(dataRows(page).filter({ hasText: "Rio Example" })).toContainText("Expiring soon");
   await expectNoBlockingAxe(page);
 
-  await page.getByRole("combobox", { name: "Expiring within" }).selectOption("30");
-  await expect(page).toHaveURL(/[?&]expiring=30(&|$)/);
+  await page.getByRole("combobox", { name: "Expiring within" }).selectOption("30d");
+  await expect(page).toHaveURL(/[?&]expiring=30d(&|$)/);
   await expect(dataRows(page)).toHaveCount(1);
   await expect(dataRows(page).first()).toContainText("client.a@rio.example");
 

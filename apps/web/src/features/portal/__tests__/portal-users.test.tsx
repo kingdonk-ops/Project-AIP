@@ -96,7 +96,7 @@ describe("external users register", () => {
   it("lists users with status, project count and the next expiry, flagging one that ends soon", async () => {
     const soon = portalUser({ grants: [grant({ expiresAt: inDays(5) }), grant({ projectId: P2.id, expiresAt: inDays(100) })] });
     const invited = portalUser({ email: "new@bhp.example", companyName: "BHP Example", status: "invited", effectiveStatus: "invited", firstSignedInAt: null });
-    const expired = portalUser({ email: "old@fmg.example", effectiveStatus: "expired", grants: [grant({ state: "expired", expiresAt: inDays(-1) })] });
+    const expired = portalUser({ email: "old@fmg.example", companyName: "FMG Example", effectiveStatus: "expired", grants: [grant({ state: "expired", expiresAt: inDays(-1) })] });
     server.use(...lookups(), listUsers([soon, invited, expired]));
     const { container } = renderAt("/admin/portal/users", ADMIN);
 
@@ -124,8 +124,8 @@ describe("external users register", () => {
     const { router } = renderAt("/admin/portal/users", VIEW);
     await screen.findByRole("table");
 
-    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Expiring within" }), "30");
-    await waitFor(() => expect(router.state.location.search).toEqual({ expiring: "30" }));
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Expiring within" }), "30d");
+    await waitFor(() => expect(router.state.location.search).toEqual({ expiring: "30d" }));
     await waitFor(() => expect(seen.at(-1)?.searchParams.get("expiringWithinDays")).toBe("30"));
 
     await userEvent.selectOptions(screen.getByRole("combobox", { name: "Status" }), "active");
@@ -133,7 +133,7 @@ describe("external users register", () => {
 
     await userEvent.type(screen.getByRole("searchbox", { name: "Search email or company" }), "rio");
     await waitFor(() => expect(seen.at(-1)?.searchParams.get("q")).toBe("rio"));
-    expect(router.state.location.search).toEqual({ expiring: "30", status: "active", q: "rio" });
+    expect(router.state.location.search).toEqual({ expiring: "30d", status: "active", q: "rio" });
   });
 
   it("hides the invite link without portal.user.invite, and the nav item without portal.user.view", async () => {
@@ -412,18 +412,18 @@ describe("external user detail", () => {
 describe("register search", () => {
   it("keeps known filters and drops anything else", () => {
     const projectId = "00000000-0000-4000-8000-0000000000a1";
-    expect(validatePortalUsersSearch({ status: "active", expiring: "30", project: projectId, q: "rio", sort: "x" })).toEqual({
+    expect(validatePortalUsersSearch({ status: "active", expiring: "30d", project: projectId, q: "rio", sort: "x" })).toEqual({
       status: "active",
-      expiring: "30",
+      expiring: "30d",
       project: projectId,
       q: "rio",
     });
-    expect(validatePortalUsersSearch({ status: "expired", expiring: "45", project: "not-a-uuid" })).toEqual({});
+    expect(validatePortalUsersSearch({ status: "expired", expiring: "45d", project: "not-a-uuid" })).toEqual({});
   });
 
   it("maps a query to the list parameters", () => {
     const projectId = "00000000-0000-4000-8000-0000000000a1";
-    const query = portalUsersQuery({ status: "invited", expiring: "7", project: projectId, q: "bhp" });
+    const query = portalUsersQuery({ status: "invited", expiring: "7d", project: projectId, q: "bhp" });
     expect(toListParams(query)).toEqual({ status: "invited", expiringWithinDays: 7, projectId, q: "bhp", limit: 50 });
   });
 });

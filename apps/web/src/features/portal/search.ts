@@ -8,8 +8,11 @@ import type { PortalUsersListParams, PortalUsersListStatus } from "@aip/api-clie
 import { decodeRegisterQuery, encodeRegisterQuery, type RegisterQuery, type RegisterSpec } from "@aip/ui";
 
 export const PORTAL_USER_STATUSES = ["invited", "active", "suspended"] as const satisfies readonly PortalUsersListStatus[];
-/** The "expiring soon" windows offered, in days (PORTAL-08 reminds from 30 days out). */
-export const EXPIRING_WINDOWS = ["7", "30", "90"] as const;
+/**
+ * The "expiring soon" windows offered (PORTAL-08 reminds from 30 days out). Not bare numbers: the
+ * router would JSON-quote a numeric-looking search value (`expiring=%2230%22`).
+ */
+export const EXPIRING_WINDOWS = ["7d", "30d", "90d"] as const;
 /** A live grant ending within this many days is flagged "expiring soon" in the register. */
 export const EXPIRING_SOON_DAYS = 30;
 
@@ -36,7 +39,7 @@ export const PORTAL_USERS_SPEC = {
 export function portalUsersQuery(search: Record<string, unknown>): RegisterQuery {
   const query = decodeRegisterQuery(search, PORTAL_USERS_SPEC);
   if (query.filters.project === undefined || isUuid(query.filters.project)) return query;
-  const { project: _dropped, ...filters } = query.filters;
+  const filters = Object.fromEntries(Object.entries(query.filters).filter(([id]) => id !== "project"));
   return { ...query, filters };
 }
 
@@ -55,7 +58,7 @@ function isStatus(value: unknown): value is PortalUsersListStatus {
 /** The list parameters of a register query. */
 export function toListParams(query: RegisterQuery): PortalUsersListParams {
   const { status, expiring, project } = query.filters;
-  const days = Number(expiring);
+  const days = typeof expiring === "string" && /^\d+d$/.test(expiring) ? Number.parseInt(expiring, 10) : NaN;
   return {
     ...(isStatus(status) ? { status } : {}),
     ...(Number.isInteger(days) && days > 0 ? { expiringWithinDays: days } : {}),

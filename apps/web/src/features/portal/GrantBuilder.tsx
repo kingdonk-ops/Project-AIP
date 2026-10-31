@@ -5,7 +5,7 @@
  * its project's access period (`portal_access_days`).
  */
 import type { GrantIn, GrantInActionsItem, ProjectOut } from "@aip/api-client";
-import { Button, Checkbox, FormField } from "@aip/ui";
+import { Button, Checkbox, FormField, Label } from "@aip/ui";
 import { useId } from "react";
 import { ParentPicker } from "../assets/ParentPicker";
 import { t } from "../shell/t";
@@ -110,7 +110,7 @@ export function GrantRow({ index, value, projects, onChange, onRemove, errors }:
                 disabled={action === "view"}
                 onCheckedChange={(checked) => toggle(action, checked === true)}
               />
-              <label htmlFor={id}>{t(`portal.grant.action.${action}`)}</label>
+              <Label htmlFor={id}>{t(`portal.grant.action.${action}`)}</Label>
             </span>
           );
         })}

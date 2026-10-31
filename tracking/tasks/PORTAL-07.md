@@ -58,7 +58,7 @@ share packs, download policy, resend invite, PIN reset and export (not in R1 per
   - 3. Register `/admin/portal/users` on `RegisterTable`: columns email, company, status (`effectiveStatus` chip:
     invited, active, suspended, expired), projects (count of grants that are not revoked), next expiry (the earliest
     live grant's `expiresAt`, with an "expiring soon" chip within 30 days), first sign-in (hidden by default). Filters
-    in the URL: `status` (quick; invited, active, suspended), `expiring` (quick; 7, 30 or 90 days → `expiringWithinDays`),
+    in the URL: `status` (quick; invited, active, suspended), `expiring` (quick; `7d`, `30d` or `90d` → `expiringWithinDays`; not bare numbers, which the router JSON-quotes),
     `project` (select of the tenant's projects → `projectId`), and `q` search (email or company). Cursor paging, column
     chooser. "Invite external user" shows only with `portal.user.invite`. Enter on a row opens the detail.
   - 4. Invite `/admin/portal/users/new` (needs `portal.user.invite`, else a denied panel): email, first name, last name,
@@ -90,7 +90,7 @@ share packs, download policy, resend invite, PIN reset and export (not in R1 per
     `portal.user.invite` / `portal.grant.manage` / `portal.user.suspend` their buttons are hidden.
 - **tests**:
   - **unit** (vitest + MSW, through the real router):
-    - `toListParams` maps `status`, `expiring=30`, `project` and `q`; invalid values are dropped by `validateSearch`.
+    - `toListParams` maps `status`, `expiring=30d`, `project` and `q`; invalid values are dropped by `validateSearch`.
     - Register: rows show company, email, status chip and next expiry; "expiring soon" chip within 30 days; the
       expiring filter sends `expiringWithinDays=30`; the invite link needs `portal.user.invite`; axe has no
       serious or critical violation.
