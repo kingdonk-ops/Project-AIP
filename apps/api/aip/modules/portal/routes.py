@@ -53,6 +53,10 @@ _INVALID: dict[int | str, dict[str, Any]] = {
 Limit = Annotated[int, Query(ge=1, le=100)]
 Cursor = Annotated[str | None, Query(max_length=1024)]
 Search = Annotated[str | None, Query(min_length=1, max_length=100)]
+ExpiringWithin = Annotated[
+    int | None, Query(alias="expiringWithinDays", ge=1, le=policies.MAX_ACCESS_DAYS)
+]
+ProjectFilter = Annotated[UUID | None, Query(alias="projectId")]
 
 
 def _uuid(value: object) -> UUID | None:
@@ -135,8 +139,19 @@ async def list_portal_users(
     q: Search = None,
     cursor: Cursor = None,
     limit: Limit = 50,
+    project_id: ProjectFilter = None,
+    expiring_within_days: ExpiringWithin = None,
 ) -> PortalUserPage:
-    return await _service(request, principal).list(status=status_, q=q, cursor=cursor, limit=limit)
+    """``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+    ``projectId``: users with an unrevoked grant on that project."""
+    return await _service(request, principal).list(
+        status=status_,
+        q=q,
+        cursor=cursor,
+        limit=limit,
+        project_id=project_id,
+        expiring_within_days=expiring_within_days,
+    )
 
 
 @users_router.get(

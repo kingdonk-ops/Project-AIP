@@ -10,4 +10,6 @@ cursor?: string | null;
  * @maximum 100
  */
 limit?: number;
+projectId?: string | null;
+expiringWithinDays?: number | null;
 };

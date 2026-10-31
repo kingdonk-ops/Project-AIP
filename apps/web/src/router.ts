@@ -10,6 +10,9 @@ import { platformEventsRoute } from "./routes/_app/admin/platform/events/index";
 import { contentTypeDetailRoute } from "./routes/_app/admin/content-types/$contentTypeId/index";
 import { itemTypeEditorRoute } from "./routes/_app/admin/content-types/$contentTypeId/item-types/$itemTypeId";
 import { contentTypesIndexRoute } from "./routes/_app/admin/content-types/index";
+import { portalUserDetailRoute } from "./routes/_app/admin/portal/users/$portalUserId";
+import { portalUsersRoute } from "./routes/_app/admin/portal/users/index";
+import { portalUsersNewRoute } from "./routes/_app/admin/portal/users/new";
 import { assetEditRoute } from "./routes/_app/assets/edit";
 import { assetsIndexRoute } from "./routes/_app/assets/index";
 import { assetsNewRoute } from "./routes/_app/assets/new";
@@ -66,10 +69,12 @@ if (!import.meta.env.PROD) {
 const itemTypesRoutes = [contentTypesIndexRoute, contentTypeDetailRoute, itemTypeEditorRoute] as const;
 // ASSETS-03: the asset tree and register, and the create and edit form.
 const assetsRoutes = [assetsIndexRoute, assetsNewRoute, assetEditRoute] as const;
+// PORTAL-07: the external users register, invite form and detail.
+const portalRoutes = [portalUsersRoute, portalUsersNewRoute, portalUserDetailRoute] as const;
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, flagsRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, ...itemTypesRoutes, ...assetsRoutes, reportsRegisterRoute]),
+  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, flagsRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, ...itemTypesRoutes, ...assetsRoutes, reportsRegisterRoute, ...portalRoutes]),
   ...devRoutes,
 ]);
 
