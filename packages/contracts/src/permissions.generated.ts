@@ -14,6 +14,7 @@ export type PermissionCode =
   | "approvals.inspection.assign"
   | "approvals.inspection.client_approve"
   | "approvals.inspection.execute"
+  | "approvals.inspection.retire"
   | "approvals.inspection.review"
   | "approvals.start"
   | "approvals.view"
@@ -69,6 +70,7 @@ export const PERMISSIONS = {
   "approvals.inspection.assign": { module: "approvals", privileged: false },
   "approvals.inspection.client_approve": { module: "approvals", privileged: false },
   "approvals.inspection.execute": { module: "approvals", privileged: false },
+  "approvals.inspection.retire": { module: "approvals", privileged: false },
   "approvals.inspection.review": { module: "approvals", privileged: false },
   "approvals.start": { module: "approvals", privileged: false },
   "approvals.view": { module: "approvals", privileged: false },

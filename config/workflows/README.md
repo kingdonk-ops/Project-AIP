@@ -47,9 +47,9 @@ Each file is one definition:
 
 | Preset | Record type | Scope | Notes |
 |---|---|---|---|
-| `inspection_standard` | `inspection` | tenant-wide | APPROVALS-05. draft → assignable → assigned → in_progress → inspector_review → supervisor_review → completed; `reject` (comment) → rejected → `resend` → assigned. `approve` is critical. Seeded in `kaefer-demo` by `python -m aip.modules.approvals.seeds`. INSPECTIONS-02/03 publish later versions with guards (ADR 0036 §9). |
-| `inspection_client_review` | `inspection` | **project only** | APPROVALS-05. As standard, but `approve` → client_review → `client_approve` (critical) → completed. Install it with a `projectId`: resolution prefers a project's definition, then the tenant-wide one, so a tenant-wide install would compete with `inspection_standard`. |
+| `inspection_standard` | `inspection` | tenant-wide | APPROVALS-09 (v2, from the owner's AIP status and action tables; v1 was APPROVALS-05). 11 states: draft, clarification_required, assignable, assigned, in_progress, in_progress_go, inspector_review, supervisor_review, rework_required, performed, retired (none terminal). Actions that go to "Assigned if an assignee is set, otherwise Assignable" ship as pairs, `<action>` → assigned and `<action>_unassigned` → assignable (ready, schedule, assign, assign_with_comment, handover); the host calls the one that matches. `request_clarification`, `request_rework`, `retire` and `assign_with_comment` need a comment. `mark_performed` is critical. Seeded in `kaefer-demo` by `python -m aip.modules.approvals.seeds`, which publishes v2 over an installed v1. INSPECTIONS-09 adds the guarded and host actions (skip supervisor review, tablet returns, reinspect, supersede, `superseded`). |
+| `inspection_client_review` | `inspection` | **project only** | As standard plus `client_review`: `mark_performed` → client_review (not critical) → `client_approve` (critical) → performed, or `request_rework` (comment) → rework_required. Install it with a `projectId`: resolution prefers a project's definition, then the tenant-wide one, so a tenant-wide install would compete with `inspection_standard`. |
 
-The inspection cases are provisional (blueprint-derived, OPEN-QUESTIONS #4): see
-`apps/api/aip/modules/approvals/tests/golden/inspection_lifecycle_cases.json`. A lifecycle that differs
-from AIP is fixed in these JSON files and the golden cases, never in engine code.
+The inspection cases are owner-confirmed (2026-10-30): see
+`apps/api/aip/modules/approvals/tests/golden/inspection_lifecycle_cases.json`. A lifecycle change is
+made in these JSON files and the golden cases, never in engine code.
