@@ -1,0 +1,69 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "title": "Action",
+      "type": "string"
+    },
+    "actorId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Actorid"
+    },
+    "instanceId": {
+      "format": "uuid",
+      "title": "Instanceid",
+      "type": "string"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Projectid"
+    },
+    "recordId": {
+      "format": "uuid",
+      "title": "Recordid",
+      "type": "string"
+    },
+    "recordType": {
+      "title": "Recordtype",
+      "type": "string"
+    },
+    "routeTemplateId": {
+      "format": "uuid",
+      "title": "Routetemplateid",
+      "type": "string"
+    },
+    "stepId": {
+      "format": "uuid",
+      "title": "Stepid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "instanceId",
+    "recordType",
+    "recordId",
+    "projectId",
+    "routeTemplateId",
+    "stepId",
+    "actorId",
+    "action"
+  ],
+  "title": "ApprovalOutcome",
+  "type": "object"
+}
