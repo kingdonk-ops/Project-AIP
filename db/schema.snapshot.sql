@@ -288,6 +288,10 @@ GRANT SELECT ON TABLE public.form_templates TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.glossary_entry TO aip_app;
 GRANT SELECT ON TABLE public.glossary_entry TO aip_readonly;
 
+-- Name: TABLE inspections; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.inspections TO aip_app;
+GRANT SELECT ON TABLE public.inspections TO aip_readonly;
+
 -- Name: TABLE item_categories; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.item_categories TO aip_app;
 GRANT SELECT ON TABLE public.item_categories TO aip_readonly;
@@ -608,6 +612,14 @@ ALTER TABLE ONLY public.form_templates
 -- Name: glossary_entry pk_glossary_entry; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.glossary_entry
     ADD CONSTRAINT pk_glossary_entry PRIMARY KEY (id);
+
+-- Name: inspections pk_inspections; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.inspections
+    ADD CONSTRAINT pk_inspections PRIMARY KEY (id);
+
+-- Name: inspections uq_inspections_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.inspections
+    ADD CONSTRAINT uq_inspections_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: item_categories pk_item_categories; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.item_categories
@@ -1029,6 +1041,10 @@ ALTER TABLE ONLY public.form_templates
 -- Name: form_templates fk_form_templates_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.form_templates
     ADD CONSTRAINT fk_form_templates_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: inspections fk_inspections_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.inspections
+    ADD CONSTRAINT fk_inspections_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 -- Name: item_categories fk_item_categories_content_type; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.item_categories
@@ -1701,6 +1717,23 @@ CREATE FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) RETURNS TABLE(
     $$;
 
 ALTER FUNCTION public.identity_sessions_by_kc_sid(p_kc_sid text) OWNER TO aip_owner;
+
+-- Name: inspections_pinned_immutable(); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.inspections_pinned_immutable() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      BEGIN
+        IF NEW.template_revision_id IS DISTINCT FROM OLD.template_revision_id
+           OR NEW.template_id IS DISTINCT FROM OLD.template_id
+           OR NEW.asset_id IS DISTINCT FROM OLD.asset_id
+           OR NEW.workflow_instance_id IS DISTINCT FROM OLD.workflow_instance_id THEN
+          RAISE EXCEPTION 'inspection pin is immutable' USING ERRCODE = 'P0001';
+        END IF;
+        RETURN NEW;
+      END;
+      $$;
+
+ALTER FUNCTION public.inspections_pinned_immutable() OWNER TO aip_owner;
 
 -- Name: item_type_versions_freeze(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.item_type_versions_freeze() RETURNS trigger
@@ -2465,6 +2498,21 @@ CREATE INDEX ix_glossary_entry_tenant_id_abbreviation ON public.glossary_entry U
 -- Name: ix_glossary_entry_tenant_id_neutral_concept_code; Type: INDEX; Schema: public
 CREATE INDEX ix_glossary_entry_tenant_id_neutral_concept_code ON public.glossary_entry USING btree (tenant_id, neutral_concept_code);
 
+-- Name: ix_inspections_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_inspections_tenant_id ON public.inspections USING btree (tenant_id);
+
+-- Name: ix_inspections_tenant_id_asset_id; Type: INDEX; Schema: public
+CREATE INDEX ix_inspections_tenant_id_asset_id ON public.inspections USING btree (tenant_id, asset_id);
+
+-- Name: ix_inspections_tenant_id_project_id; Type: INDEX; Schema: public
+CREATE INDEX ix_inspections_tenant_id_project_id ON public.inspections USING btree (tenant_id, project_id);
+
+-- Name: ix_inspections_tenant_id_project_id_state; Type: INDEX; Schema: public
+CREATE INDEX ix_inspections_tenant_id_project_id_state ON public.inspections USING btree (tenant_id, project_id, state);
+
+-- Name: ix_inspections_tenant_id_template_revision_id; Type: INDEX; Schema: public
+CREATE INDEX ix_inspections_tenant_id_template_revision_id ON public.inspections USING btree (tenant_id, template_revision_id);
+
 -- Name: ix_item_categories_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_item_categories_tenant_id ON public.item_categories USING btree (tenant_id);
 
@@ -2813,6 +2861,9 @@ CREATE UNIQUE INDEX uq_form_revisions_one_published ON public.form_revisions USI
 -- Name: uq_form_templates_tenant_id_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_form_templates_tenant_id_code ON public.form_templates USING btree (tenant_id, code) WHERE (deleted_at IS NULL);
 
+-- Name: uq_inspections_tenant_id_workflow_instance_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_inspections_tenant_id_workflow_instance_id ON public.inspections USING btree (tenant_id, workflow_instance_id);
+
 -- Name: uq_item_categories_tenant_id_content_type_id_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_item_categories_tenant_id_content_type_id_key ON public.item_categories USING btree (tenant_id, content_type_id, key) WHERE (deleted_at IS NULL);
 
@@ -2899,6 +2950,9 @@ CREATE UNIQUE INDEX ux_assets_client_generated_id ON public.assets USING btree (
 
 -- Name: ux_form_templates_client_generated_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_form_templates_client_generated_id ON public.form_templates USING btree (tenant_id, client_generated_id);
+
+-- Name: ux_inspections_client_generated_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_inspections_client_generated_id ON public.inspections USING btree (tenant_id, client_generated_id);
 
 -- Name: ux_record_links_live; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_record_links_live ON public.record_links USING btree (tenant_id, from_type, from_id, to_type, to_id, link_kind) WHERE (deleted_at IS NULL);
@@ -3031,6 +3085,12 @@ CREATE POLICY platform_read ON public.glossary_entry FOR SELECT USING ((tenant_i
 
 -- Name: glossary_entry tenant_write; Type: POLICY; Schema: public
 CREATE POLICY tenant_write ON public.glossary_entry USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
+
+-- Name: inspections project_scope; Type: POLICY; Schema: public
+CREATE POLICY project_scope ON public.inspections AS RESTRICTIVE TO aip_app USING (public.access_project_visible(project_id)) WITH CHECK (public.access_project_visible(project_id));
+
+-- Name: inspections tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.inspections USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: item_categories tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.item_categories USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -3259,6 +3319,9 @@ ALTER TABLE public.form_templates ENABLE ROW LEVEL SECURITY;
 
 -- Name: glossary_entry; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.glossary_entry ENABLE ROW LEVEL SECURITY;
+
+-- Name: inspections; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.inspections ENABLE ROW LEVEL SECURITY;
 
 -- Name: item_categories; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.item_categories ENABLE ROW LEVEL SECURITY;
@@ -3917,6 +3980,35 @@ CREATE TABLE public.glossary_entry (
 ALTER TABLE ONLY public.glossary_entry FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.glossary_entry OWNER TO aip_owner;
+
+-- Name: inspections; Type: TABLE; Schema: public
+CREATE TABLE public.inspections (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    asset_id uuid NOT NULL,
+    project_id uuid,
+    template_id uuid NOT NULL,
+    template_revision_id uuid NOT NULL,
+    kind text NOT NULL,
+    source text NOT NULL,
+    source_ref_id uuid,
+    itp_parent_id uuid,
+    workflow_instance_id uuid NOT NULL,
+    state text NOT NULL,
+    created_by uuid NOT NULL,
+    client_generated_id uuid,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_inspections_kind CHECK ((kind = ANY (ARRAY['inspection'::text, 'itp'::text, 'rfi'::text]))),
+    CONSTRAINT ck_inspections_source CHECK ((source = ANY (ARRAY['manual'::text, 'scope_task'::text, 'reinspection'::text, 'import'::text]))),
+    CONSTRAINT ck_inspections_source_ref CHECK (((source <> ALL (ARRAY['scope_task'::text, 'reinspection'::text])) OR (source_ref_id IS NOT NULL)))
+);
+
+ALTER TABLE ONLY public.inspections FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.inspections OWNER TO aip_owner;
 
 -- Name: item_categories; Type: TABLE; Schema: public
 CREATE TABLE public.item_categories (
@@ -5230,6 +5322,9 @@ CREATE TRIGGER domain_events_write_once BEFORE UPDATE ON public.domain_events FO
 
 -- Name: form_revisions form_revisions_freeze; Type: TRIGGER; Schema: public
 CREATE TRIGGER form_revisions_freeze BEFORE DELETE OR UPDATE ON public.form_revisions FOR EACH ROW EXECUTE FUNCTION public.form_revisions_freeze();
+
+-- Name: inspections inspections_pinned_immutable; Type: TRIGGER; Schema: public
+CREATE TRIGGER inspections_pinned_immutable BEFORE UPDATE ON public.inspections FOR EACH ROW EXECUTE FUNCTION public.inspections_pinned_immutable();
 
 -- Name: item_type_versions item_type_versions_freeze; Type: TRIGGER; Schema: public
 CREATE TRIGGER item_type_versions_freeze BEFORE UPDATE ON public.item_type_versions FOR EACH ROW EXECUTE FUNCTION public.item_type_versions_freeze();

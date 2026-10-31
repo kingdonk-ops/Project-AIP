@@ -1,0 +1,30 @@
+# Module manifest, validated by aip.platform.modules.manifest.ModuleManifest.
+# INSPECTIONS-01: an inspection is filled in against one asset from one pinned, published form
+#   revision; its lifecycle is a workflow instance of the approvals `inspection` definition. The
+#   lifecycle permissions stay the `approvals.inspection.*` codes approvals declares.
+id = "inspections"
+context = "inspections"
+depends_on = ["approvals", "assets", "forms", "projects", "access", "identity", "tenancy"]
+permission_namespaces = ["inspection"]
+settings = []
+term_keys = []
+
+[[permissions]]
+code = "inspection.view"
+description = "View inspections"
+
+[[permissions]]
+code = "inspection.create"
+description = "Create inspections and re-inspections"
+
+[[events]]
+name = "inspection.created"
+version = 1
+
+[[events]]
+name = "inspection.state_changed"
+version = 1
+
+[[subscribes]]
+name = "workflow.transitioned"
+version = 1

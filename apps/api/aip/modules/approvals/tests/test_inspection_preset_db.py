@@ -1,9 +1,10 @@
 """APPROVALS-05/09: the inspection presets through the real app and ``TransitionService``.
 
 Every golden case runs here as it does through the evaluator in ``test_inspection_golden.py``.
-The inspections module (INSPECTIONS-01) does not exist yet, so a test resolver stands in for the
-``inspection`` record type, and the fixture grant table plays the roles: supervisor (assign,
-approve), inspector (execute), quality manager (retire) and client reviewer (client_approve).
+A test resolver stands in for the inspections module's own (INSPECTIONS-01) for the ``inspection``
+record type, so these cases need no inspection rows, and the fixture grant table plays the roles:
+supervisor (assign, approve), inspector (execute), quality manager (retire) and client reviewer
+(client_approve).
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from aip.modules.approvals.api import (
     register_record_resolver,
     unregister_record_resolver,
 )
+from aip.modules.approvals.guards.context_providers import resolver_for
 from aip.modules.approvals.seeds import SeedRefusedError, seed
 from aip.modules.approvals.tests.conftest import (
     BOB,
@@ -76,12 +78,17 @@ class Inspections:
 
 @pytest.fixture(autouse=True)
 def inspections() -> Iterator[Inspections]:
+    # Stands in for the inspections module's own resolver (registered at import), then restores it.
+    real = resolver_for("inspection")
     records = Inspections()
+    unregister_record_resolver("inspection")
     register_record_resolver("inspection", records)  # pyright: ignore[reportArgumentType]
     try:
         yield records
     finally:
         unregister_record_resolver("inspection")
+        if real is not None:
+            register_record_resolver("inspection", real)
 
 
 @pytest.fixture(autouse=True)
