@@ -24,10 +24,10 @@ from aip.modules.identity.api import step_up
 from aip.modules.portal import policies
 from aip.modules.portal import repository as repo
 from aip.modules.portal.schemas import (
-    PortalErrorBody,
     GrantIn,
     GrantOut,
     InviteIn,
+    PortalErrorBody,
     PortalUserOut,
     PortalUserPage,
     SuspendIn,

@@ -114,7 +114,6 @@ async def test_server_startup_fails_without_a_cursor_key_outside_dev(
 ) -> None:
     """The check runs in the app lifespan, so a deploy fails at startup, not on a list request."""
     from aip.main import create_app
-    from aip.modules.assets.settings import get_settings as get_assets_settings
     from aip.modules.projects.settings import get_settings
 
     monkeypatch.delenv("PROJECTS_CURSOR_KEY", raising=False)
@@ -122,7 +121,6 @@ async def test_server_startup_fails_without_a_cursor_key_outside_dev(
     monkeypatch.setenv("ASSETS_CURSOR_KEY", "a-real-secret-from-the-store-123")
     monkeypatch.setenv("AIP_ENV", "staging")
     get_settings.cache_clear()
-    get_assets_settings.cache_clear()
     app = create_app(env="test", tracing=False)
     try:
         with pytest.raises(ValidationError, match="PROJECTS_CURSOR_KEY"):
@@ -130,8 +128,7 @@ async def test_server_startup_fails_without_a_cursor_key_outside_dev(
                 pass
     finally:
         get_settings.cache_clear()
-        get_assets_settings.cache_clear()
-
+    
 
 @pytest.mark.parametrize(
     "code", ["L592", "l592", "KIPS-01", "a1", "ab cd", "-L592", "L", "X" * 33, "L5_92", "L592 "]

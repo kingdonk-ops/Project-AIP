@@ -23,10 +23,10 @@ from aip.modules.portal.policies import (
 )
 
 __all__ = [
-    "PortalErrorBody",
     "GrantIn",
     "GrantOut",
     "InviteIn",
+    "PortalErrorBody",
     "PortalUserOut",
     "PortalUserPage",
     "SuspendIn",
