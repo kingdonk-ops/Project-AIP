@@ -12,3 +12,6 @@ CVE-2026-84782 exp:2027-01-24
 
 # why: com.google.guava:guava HIGH (DoS via unthrottled memory allocation during deserialization) bundled as guava 33.6.0-jre inside the stock quay.io/keycloak/keycloak:26.8.1 image (aip-keycloak-demo), not our code. Fixed in guava 33.7.2, which lands when Keycloak ships a release bundling it; a "fixed" finding so --ignore-unfixed does not suppress it, and it fails every demo deploy. Demo Keycloak only. Time-boxed until a Keycloak bump is available. Accepted by the owner, SECURITY-08, 2026-10-29.
 CVE-2026-102554 exp:2027-01-27
+
+# why: java-21-openjdk-headless HIGH (CVE-2026-91415, Oracle CPU 2026-10 font rendering) bundled as 21.0.12.1.1-1.2.el9 inside the stock quay.io/keycloak/keycloak:26.8.1 image (aip-keycloak-demo), not our code. Fixed in 21.0.13.0.9-1.2.el9; the image is ubi9-micro with no package manager and 26.8.1 is the latest Keycloak, so the fix lands when Keycloak ships a release on a rebuilt base. Demo Keycloak only. Time-boxed until a Keycloak bump is available. Accepted by the owner (issue #211), 2026-10-31.
+CVE-2026-91415 exp:2027-01-29
