@@ -8,6 +8,7 @@ an undocumented variable, and ``docker compose config`` rejecting the file.
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import subprocess
@@ -234,6 +235,32 @@ def test_keycloak_imports_the_realms_theme_and_blocklist(
         assert (ROOT / "infra" / source).exists(), source
     assert keycloak["depends_on"]["mailpit"]["condition"] == "service_healthy"
     assert keycloak["environment"]["KC_SMTP_HOST"] == "mailpit"
+
+
+def test_the_portal_client_signs_in_only_on_the_portal_host(
+    services: dict[str, dict[str, Any]],
+) -> None:
+    """PORTAL-02: `aip-portal`, code flow only, one redirect URI on PORTAL_ORIGIN, always aal2."""
+    realm = json.loads((ROOT / "infra" / "keycloak" / "realm-aip.json").read_text("utf-8"))
+    portal = next(c for c in realm["clients"] if c["clientId"] == "aip-portal")
+    origin = "${PORTAL_ORIGIN:http://portal.localhost:8081}"
+    assert portal["redirectUris"] == [f"{origin}/api/v1/auth/portal/oidc/callback"]
+    assert portal["rootUrl"] == origin
+    assert portal["webOrigins"] == []
+    assert portal["standardFlowEnabled"] is True
+    assert portal["directAccessGrantsEnabled"] is False
+    assert portal["implicitFlowEnabled"] is False
+    assert portal["serviceAccountsEnabled"] is False
+    assert portal["publicClient"] is False
+    assert portal["attributes"]["minimum.acr.value"] == "aal2"
+    assert portal["attributes"]["default.acr.values"] == "aal2"
+    assert portal["attributes"]["pkce.code.challenge.method"] == "S256"
+    # Local accounts only: no IdP broker claim for this client.
+    assert "identity_provider" not in {m["name"] for m in portal["protocolMappers"]}
+    for service in ("keycloak", "api"):
+        env = services[service]["environment"]
+        assert env["PORTAL_ORIGIN"] == "${PORTAL_ORIGIN:-http://portal.localhost:8081}", service
+        assert "PORTAL_OIDC_CLIENT_SECRET" in env, service
 
 
 def test_api_runs_uvicorn_factory(services: dict[str, dict[str, Any]]) -> None:

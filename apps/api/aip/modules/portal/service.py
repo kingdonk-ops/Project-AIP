@@ -17,6 +17,9 @@ writes nothing. Rows of another tenant are invisible under RLS and come back as 
   ``revoke_all_for_user``; ``reinstate`` returns a user who has signed in to ``active``, else to
   ``invited``. Grants are kept: the provider gives a suspended user nothing.
 - ``mark_signed_in`` (PORTAL-02): ``invited`` -> ``active`` and ``first_signed_in_at``; idempotent.
+- ``client_me`` (PORTAL-02): the signed-in client's own view, marking the first sign-in. Its
+  projects come from its live grants only; their names are read as the ``system`` principal,
+  because project-scope RLS knows role assignments, not portal grants (the grants decided first).
 
 ``read_access_days`` reads the project setting through ``ProjectsApi.get_setting`` (PROJECTS-04).
 Until that task ships ``get_setting``, every project has the default period of 180 days.
@@ -52,11 +55,20 @@ from aip.modules.portal.events import (
     PortalUserStatusChanged,
     emit_grant_revoked,
 )
-from aip.modules.portal.schemas import GrantIn, GrantOut, InviteIn, PortalUserOut, PortalUserPage
+from aip.modules.portal.schemas import (
+    GrantIn,
+    GrantOut,
+    InviteIn,
+    PortalMeOut,
+    PortalProjectOut,
+    PortalUserOut,
+    PortalUserPage,
+)
 from aip.modules.projects.api import ProjectsApi
 from aip.platform.access import AccessPrincipal, PolicyService, Resource
 from aip.platform.context import get_context, new_request_id
 from aip.platform.db.errors import NotFoundError
+from aip.platform.db.scope import run_as_system
 from aip.platform.db.session import with_tenant
 from aip.platform.events import Aggregate, emit
 from aip.platform.http import DomainError
@@ -64,6 +76,7 @@ from aip.platform.http import DomainError
 __all__ = [
     "OPEN_PROJECT_STATUSES",
     "PortalService",
+    "client_me",
     "grant_out",
     "live_grants",
     "mark_signed_in",
@@ -198,6 +211,55 @@ async def live_grants(conn: AsyncConnection, user_id: UUID) -> list[GrantOut]:
     now = _now()
     rows = await repo.unrevoked_grants(conn, [row["id"]])
     return [grant_out(g, now) for g in rows if policies.grant_state(g, now) == "live"]
+
+
+async def client_me(conn: AsyncConnection, tenant_id: UUID, user_id: UUID) -> PortalMeOut | None:
+    """The signed-in client ``user_id`` as it sees itself; the first call activates an invited
+    client (``mark_signed_in``). ``None`` when the user is not a portal user here."""
+    row = await mark_signed_in(conn, user_id)
+    if row is None:
+        return None
+    now = _now()
+    grants = await repo.unrevoked_grants(conn, [row["id"]])
+    status = policies.effective_status(row["status"], (policies.grant_state(g, now) for g in grants))
+    user = await identity.get_user(conn, user_id)
+    projects: list[PortalProjectOut] = []
+    if status == "active":
+        actions: dict[UUID, set[str]] = {}
+        for grant in grants:
+            if policies.grant_state(grant, now) == "live":
+                actions.setdefault(grant["project_id"], set()).update(grant["actions"])
+        projects = await _granted_projects(tenant_id, actions)
+    return PortalMeOut(
+        user_id=user_id,
+        display_name=None if user is None else user.display_name or None,
+        company_name=row["company_name"],
+        effective_status=status,
+        projects=projects,
+    )
+
+
+async def _granted_projects(
+    tenant_id: UUID, actions: dict[UUID, set[str]]
+) -> list[PortalProjectOut]:
+    """The live projects among the granted ones, by code, each with its actions in ``ACTIONS``
+    order. Only ids the client's grants name are ever read."""
+    if not actions:
+        return []
+    projects = ProjectsApi()
+    out: list[PortalProjectOut] = []
+    async with run_as_system(tenant_id) as conn:
+        for project_id, codes in actions.items():
+            project = await projects.get_project(conn, project_id)
+            if project is None:
+                continue
+            ordered = [a for a in policies.ACTIONS if a in codes]
+            out.append(
+                PortalProjectOut(
+                    id=project.id, code=project.code, name=project.name, actions=ordered
+                )
+            )
+    return sorted(out, key=lambda p: p.code)
 
 
 class PortalService:

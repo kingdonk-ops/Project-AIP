@@ -27,6 +27,7 @@ SECRETS = {
     "KEYCLOAK_DB_PASSWORD",
     "KEYCLOAK_ADMIN_PASSWORD",
     "AIP_API_CLIENT_SECRET",
+    "PORTAL_OIDC_CLIENT_SECRET",
     "AIP_ADMIN_CLIENT_SECRET",
     "MOCK_IDP_CLIENT_SECRET",
     "MOCK_IDP_ALICE_PASSWORD",
@@ -306,6 +307,7 @@ def test_the_deployed_realms_have_no_client_secret_defaults(
     aip = {c["clientId"]: c for c in deployed["realm-aip.json"]["clients"]}
     assert aip["aip-api"]["secret"] == "${AIP_API_CLIENT_SECRET}"
     assert aip["aip-admin"]["secret"] == "${AIP_ADMIN_CLIENT_SECRET}"
+    assert aip["aip-portal"]["secret"] == "${PORTAL_OIDC_CLIENT_SECRET}"
     # Non-secret defaults (URLs, SMTP host) stay.
     assert "${APP_ORIGIN:http://localhost:8080}" in json.dumps(deployed["realm-aip.json"])
 

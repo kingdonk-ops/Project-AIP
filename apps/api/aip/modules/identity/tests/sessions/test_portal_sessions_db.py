@@ -166,10 +166,14 @@ async def test_a_portal_user_signs_in_with_only_portal_cookies(
     invite = await su_fetch(db, "SELECT status FROM user_invite WHERE user_id = $1", user_id)
     assert invite == [("accepted",)]
 
+    # PORTAL-02: the session resolves (a dead one is 401 SESSION_EXPIRED), and a portal session
+    # reaches no staff route: GET /api/v1/me hides itself with 404.
     me = await portal_client.get(ME, headers={"cookie": f"__Host-aip_portal_sid={sid}"})
-    assert me.status_code == 200, me.text
-    assert me.json()["user"]["userClass"] == "portal"
-    assert [m["membershipType"] for m in me.json()["memberships"]] == ["client"]
+    assert (me.status_code, me.json()) == (404, {"code": "NOT_FOUND"}), me.text
+    memberships = await su_fetch(
+        db, "SELECT membership_type FROM tenant_membership WHERE user_id = $1", user_id
+    )
+    assert memberships == [("client",)]
 
 
 async def test_each_callback_refuses_the_other_class(
@@ -245,8 +249,9 @@ async def test_a_session_under_the_other_audiences_cookie_is_refused(
 ) -> None:
     portal = await _portal_session(dave)
     staff = await new_session(TENANT_A_ID, ALICE_ID)
+    # Resolved, so not cleared; PORTAL-02 hides the staff route from it (404, not 401).
     ok = await client.get(ME, headers={"cookie": f"__Host-aip_portal_sid={portal.sid}"})
-    assert ok.status_code == 200, ok.text
+    assert (ok.status_code, ok.json()) == (404, {"code": "NOT_FOUND"}), ok.text
     _cleared(await client.get(ME, headers={"cookie": f"__Host-aip_sid={portal.sid}"}), "app")
     _cleared(
         await client.get(ME, headers={"cookie": f"__Host-aip_portal_sid={staff.sid}"}), "portal"

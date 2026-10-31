@@ -117,7 +117,8 @@ async def test_a_portal_user_is_refused_on_internal_routes(
     for method, path in INTERNAL_ROUTES:
         body = invite_body(email="other@rio.example") if path == USERS else bodies.get(method)
         res = await client.request(method, path, json=body, headers=portal)
-        assert res.status_code == 403, (method, path, res.text)
+        # PORTAL-02: an internal route hides itself from a portal user (404, not 403).
+        assert (res.status_code, res.json()) == (404, {"code": "NOT_FOUND"}), (method, path)
     assert await su_count(db, "SELECT count(*) FROM portal_users") == 1
 
 

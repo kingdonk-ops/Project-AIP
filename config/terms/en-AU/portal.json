@@ -25,5 +25,14 @@
   "portal.error.email_in_other_tenant": "This email address cannot be invited here.",
   "portal.error.email_domain_sso": "People with this email domain sign in with company SSO.",
   "portal.error.invalid_email": "Enter a valid email address.",
-  "portal.error.step_up_required": "Confirm it is you with your second factor to continue."
+  "portal.error.step_up_required": "Confirm it is you with your second factor to continue.",
+  "portal.signin.title": "Sign in to the client portal",
+  "portal.signin.email": "Email address",
+  "portal.signin.continue": "Continue",
+  "portal.signin.second_factor": "Enter the code from your authenticator app",
+  "portal.signin.signed_out": "You have signed out.",
+  "portal.signin.session_ended": "Your session has ended. Sign in again to continue.",
+  "portal.status.expired": "Your access has expired",
+  "portal.error.rate_limited": "Too many requests. Wait a moment and try again.",
+  "portal.error.not_found": "This page or record could not be found."
 }

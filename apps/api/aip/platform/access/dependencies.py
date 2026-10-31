@@ -24,6 +24,12 @@ Every non-``public()`` route also checks the caller's tenant: when the app sets
 ``app.state.access_tenant_guard`` (tenancy's active-tenant check, wired in ``aip.main``), it runs
 once per request right after the principal resolves and raises 401/403 for a tenant that may not
 be served (TENANCY-01: a suspended tenant gets 403 on every tenant-scoped route).
+
+PORTAL-02 (ADR 0036 choice 7): the routes an external principal (a portal user) may reach are an
+allow-list. ``authenticated(external=True)`` and ``requires(code, external=True)`` accept **only**
+external principals; every other non-``public()`` route refuses an external principal. Both
+refusals are 404 ``{"code": "NOT_FOUND"}`` (``RouteHidden``), not 403, so neither audience can map
+the other's API. ``route_check`` keeps external routes under ``EXTERNAL_PREFIXES``.
 """
 
 from __future__ import annotations
@@ -49,6 +55,7 @@ __all__ = [
     "AccessDeclaration",
     "PrincipalSource",
     "ResourceResolver",
+    "RouteHidden",
     "TenantGuard",
     "access_declarations",
     "authenticated",
@@ -70,6 +77,11 @@ TenantGuard = Callable[[Request, AccessPrincipal], Awaitable[None]]
 class AccessDeclaration:
     kind: AccessKind
     permission: str | None = None
+    external: bool = False
+
+
+class RouteHidden(Exception):
+    """The route is not for this kind of principal (PORTAL-02): rendered as 404 ``NOT_FOUND``."""
 
 
 def _not_authenticated() -> HTTPException:
@@ -117,18 +129,30 @@ class _Public:
         return None
 
 
+async def _audience_principal(request: Request, external: bool) -> AccessPrincipal:
+    """The caller, refused with ``RouteHidden`` unless its kind matches the route's (PORTAL-02)."""
+    principal = await current_principal(request)
+    if principal.external != external:
+        raise RouteHidden
+    return principal
+
+
 class _Authenticated:
+    def __init__(self, external: bool) -> None:
+        self.external = external
+
     async def __call__(self, request: Request) -> AccessPrincipal:
-        return await current_principal(request)
+        return await _audience_principal(request, self.external)
 
 
 class _Requires:
-    def __init__(self, code: str, resource: ResourceResolver | None) -> None:
+    def __init__(self, code: str, resource: ResourceResolver | None, external: bool) -> None:
         self.code = code
         self.resource = resource
+        self.external = external
 
     async def __call__(self, request: Request) -> AccessPrincipal:
-        principal = await current_principal(request)
+        principal = await _audience_principal(request, self.external)
         policy = policy_of(request)
         if policy is None:  # access not installed on this app: deny
             raise Forbidden(self.code)
@@ -150,16 +174,23 @@ def public() -> Callable[[], Awaitable[None]]:
     return _mark(_Public(), AccessDeclaration("public"))
 
 
-def authenticated() -> Callable[[Request], Awaitable[AccessPrincipal]]:
-    """Any verified principal; no permission is checked."""
-    return _mark(_Authenticated(), AccessDeclaration("authenticated"))
+def authenticated(external: bool = False) -> Callable[[Request], Awaitable[AccessPrincipal]]:
+    """Any verified principal of the route's kind (internal, or external with ``external=True``);
+    no permission is checked."""
+    return _mark(
+        _Authenticated(external), AccessDeclaration("authenticated", external=external)
+    )
 
 
 def requires(
-    code: str, resource: ResourceResolver | None = None
+    code: str, resource: ResourceResolver | None = None, external: bool = False
 ) -> Callable[[Request], Awaitable[AccessPrincipal]]:
-    """A principal the policy allows ``code`` (on ``resource(request)`` when given)."""
-    return _mark(_Requires(code, resource), AccessDeclaration("requires", code))
+    """A principal of the route's kind the policy allows ``code`` (on ``resource(request)`` when
+    given)."""
+    return _mark(
+        _Requires(code, resource, external),
+        AccessDeclaration("requires", code, external=external),
+    )
 
 
 def access_declarations(dependant: Dependant | None) -> tuple[AccessDeclaration, ...]:

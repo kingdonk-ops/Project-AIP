@@ -4,8 +4,24 @@ context = "portal"
 depends_on = ["tenancy", "identity", "access", "projects", "assets", "audit"]
 permission_namespaces = ["portal"]
 subscribes = [{ name = "project.archived", version = 1 }]
-settings = []
-term_keys = []
+# PORTAL-02: the client routes' rate limits (rate_limit.py; 120 and 300 per minute by default).
+settings = ["PORTAL_RATE_LIMIT_SESSION_PER_MIN", "PORTAL_RATE_LIMIT_IP_PER_MIN"]
+term_keys = [
+  "portal.signin.title",
+  "portal.signin.email",
+  "portal.signin.continue",
+  "portal.signin.second_factor",
+  "portal.signin.signed_out",
+  "portal.signin.session_ended",
+  "portal.status.expired",
+  "portal.error.rate_limited",
+  "portal.error.not_found",
+]
+
+# PORTAL-02 session policy: a portal session is identity's `portal` audience with its own cookies
+# (__Host-aip_portal_sid / __Host-aip_portal_csrf) and the tenant's `portal` session policy,
+# tenant_auth_policy.session_policy.portal = {"idleMin": 15, "absoluteH": 8} by default (staff: 30
+# min / 12 h). The portal idle timeout is capped at the staff one. Nothing of it is stored here.
 
 # Internal permissions: assignable through roles (ACCESS-02); ACCESS-07 maps invite to project admins.
 
