@@ -177,9 +177,7 @@ def public() -> Callable[[], Awaitable[None]]:
 def authenticated(external: bool = False) -> Callable[[Request], Awaitable[AccessPrincipal]]:
     """Any verified principal of the route's kind (internal, or external with ``external=True``);
     no permission is checked."""
-    return _mark(
-        _Authenticated(external), AccessDeclaration("authenticated", external=external)
-    )
+    return _mark(_Authenticated(external), AccessDeclaration("authenticated", external=external))
 
 
 def requires(

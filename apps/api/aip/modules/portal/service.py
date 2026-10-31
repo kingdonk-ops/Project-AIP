@@ -221,7 +221,9 @@ async def client_me(conn: AsyncConnection, tenant_id: UUID, user_id: UUID) -> Po
         return None
     now = _now()
     grants = await repo.unrevoked_grants(conn, [row["id"]])
-    status = policies.effective_status(row["status"], (policies.grant_state(g, now) for g in grants))
+    status = policies.effective_status(
+        row["status"], (policies.grant_state(g, now) for g in grants)
+    )
     user = await identity.get_user(conn, user_id)
     projects: list[PortalProjectOut] = []
     if status == "active":

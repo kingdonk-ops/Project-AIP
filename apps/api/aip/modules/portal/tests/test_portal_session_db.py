@@ -57,9 +57,7 @@ async def _invited(
     return user_id
 
 
-async def _session(
-    user_id: UUID, *, tenant: UUID = TENANT_A_ID, portal: bool = True
-) -> Any:
+async def _session(user_id: UUID, *, tenant: UUID = TENANT_A_ID, portal: bool = True) -> Any:
     async with with_tenant(tenant) as conn:
         return await identity.issue_session(
             conn,
@@ -204,7 +202,9 @@ async def test_no_session_is_401(client: httpx.AsyncClient) -> None:
     assert "NOT_AUTHENTICATED" in res.text
 
 
-async def test_a_tenant_b_client_sees_only_tenant_b(app: FastAPI, client: httpx.AsyncClient) -> None:
+async def test_a_tenant_b_client_sees_only_tenant_b(
+    app: FastAPI, client: httpx.AsyncClient
+) -> None:
     user_id = await _invited(
         client,
         who=BOB,

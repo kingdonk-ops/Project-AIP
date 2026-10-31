@@ -48,9 +48,7 @@ def test_the_portal_prefix_is_the_only_external_prefix() -> None:
 def test_an_external_route_outside_the_portal_prefix_refuses_start() -> None:
     router = APIRouter()
 
-    @router.get(
-        "/api/v1/projects", dependencies=[Depends(requires("project.view", external=True))]
-    )
+    @router.get("/api/v1/projects", dependencies=[Depends(requires("project.view", external=True))])
     async def projects() -> None:  # pyright: ignore[reportUnusedFunction]
         return None
 

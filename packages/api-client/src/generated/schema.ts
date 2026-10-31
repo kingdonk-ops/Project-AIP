@@ -1527,6 +1527,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/portal/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Portal Logout
+         * @description End this portal session and clear the portal cookies (never the staff ones).
+         */
+        post: operations["portal_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portal/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Portal Me
+         * @description The signed-in client, its access status and the projects it may act on now.
+         */
+        get: operations["portal_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects": {
         parameters: {
             query?: never;
@@ -3917,6 +3957,46 @@ export interface components {
         PortalErrorBody: {
             /** Code */
             code: string;
+        };
+        /**
+         * PortalMeOut
+         * @description The signed-in client (PORTAL-02): ``projects`` is empty unless ``effectiveStatus`` is
+         *     ``active``.
+         */
+        PortalMeOut: {
+            /** Companyname */
+            companyName: string;
+            /** Displayname */
+            displayName: string | null;
+            /**
+             * Effectivestatus
+             * @enum {string}
+             */
+            effectiveStatus: "invited" | "active" | "suspended" | "expired";
+            /** Projects */
+            projects: components["schemas"]["PortalProjectOut"][];
+            /**
+             * Userid
+             * Format: uuid
+             */
+            userId: string;
+        };
+        /**
+         * PortalProjectOut
+         * @description A project the client may act on now, with the grant actions it holds there.
+         */
+        PortalProjectOut: {
+            /** Actions */
+            actions: ("view" | "sign_off" | "witness" | "download")[];
+            /** Code */
+            code: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
         /**
          * PortalUserOut
@@ -10505,6 +10585,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Dependencies"];
+                };
+            };
+        };
+    };
+    portal_logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortalErrorBody"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortalErrorBody"];
+                };
+            };
+        };
+    };
+    portal_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortalMeOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortalErrorBody"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortalErrorBody"];
                 };
             };
         };

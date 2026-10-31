@@ -5259,6 +5259,96 @@
         "title": "PortalErrorBody",
         "type": "object"
       },
+      "PortalMeOut": {
+        "description": "The signed-in client (PORTAL-02): ``projects`` is empty unless ``effectiveStatus`` is\n``active``.",
+        "properties": {
+          "companyName": {
+            "title": "Companyname",
+            "type": "string"
+          },
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Displayname"
+          },
+          "effectiveStatus": {
+            "enum": [
+              "invited",
+              "active",
+              "suspended",
+              "expired"
+            ],
+            "title": "Effectivestatus",
+            "type": "string"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/PortalProjectOut"
+            },
+            "title": "Projects",
+            "type": "array"
+          },
+          "userId": {
+            "format": "uuid",
+            "title": "Userid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "displayName",
+          "companyName",
+          "effectiveStatus",
+          "projects"
+        ],
+        "title": "PortalMeOut",
+        "type": "object"
+      },
+      "PortalProjectOut": {
+        "description": "A project the client may act on now, with the grant actions it holds there.",
+        "properties": {
+          "actions": {
+            "items": {
+              "enum": [
+                "view",
+                "sign_off",
+                "witness",
+                "download"
+              ],
+              "type": "string"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "actions"
+        ],
+        "title": "PortalProjectOut",
+        "type": "object"
+      },
       "PortalUserOut": {
         "description": "A portal user with their grants that are not revoked (live and expired).\n\n``expiresAt`` is the latest expiry among the live grants (``null`` with none).",
         "properties": {
@@ -16480,6 +16570,83 @@
         "summary": "Version Dependencies",
         "tags": [
           "platform"
+        ]
+      }
+    },
+    "/api/v1/portal/logout": {
+      "post": {
+        "description": "End this portal session and clear the portal cookies (never the staff ones).",
+        "operationId": "portal_logout",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Portal Logout",
+        "tags": [
+          "portal"
+        ]
+      }
+    },
+    "/api/v1/portal/me": {
+      "get": {
+        "description": "The signed-in client, its access status and the projects it may act on now.",
+        "operationId": "portal_me",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalMeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Portal Me",
+        "tags": [
+          "portal"
         ]
       }
     },
