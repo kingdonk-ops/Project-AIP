@@ -102,11 +102,12 @@ async def test_update_needs_form_manage_and_another_tenant_gets_404(
 ) -> None:
     created = await _create(client)
     template_id = created["template"]["id"]
+    url = f"{TEMPLATES}/{template_id}"
     body = {"hasSupervisorReview": False}
 
-    assert (await client.patch(f"{TEMPLATES}/{template_id}", json=body, headers=CAROL)).status_code == 403
-    assert (await client.patch(f"{TEMPLATES}/{template_id}", json=body, headers=BOB)).status_code == 404
-    assert (await client.get(f"{TEMPLATES}/{template_id}", headers=BOB)).status_code == 404
+    assert (await client.patch(url, json=body, headers=CAROL)).status_code == 403
+    assert (await client.patch(url, json=body, headers=BOB)).status_code == 404
+    assert (await client.get(url, headers=BOB)).status_code == 404
     unknown = await client.patch(
         f"{TEMPLATES}/{template_id}", json={"supervisorReview": False}, headers=ALICE
     )
@@ -123,9 +124,10 @@ async def test_a_version_2_revision_with_rules_publishes_and_evaluates_per_secti
     revision_id = created["revision"]["id"]
     published = await client.post(f"{REVISIONS}/{revision_id}/publish", headers=ALICE)
     assert published.status_code == 200, published.text
-    assert published.json()["revision"]["schema"]["sections"][0]["rules"] == SCHEMA_V2[
-        "sections"
-    ][0]["rules"]
+    assert (
+        published.json()["revision"]["schema"]["sections"][0]["rules"]
+        == SCHEMA_V2["sections"][0]["rules"]
+    )
 
     async with db.with_tenant(TENANT_A_ID) as conn:
         frozen = await api.get_revision(conn, UUID(revision_id))

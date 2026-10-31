@@ -4,9 +4,9 @@ Given a frozen revision ``schema`` and a set of ``answers`` it decides which fie
 required, which answers are invalid and which answers fail, and whether each section is complete.
 It is pure — no database, no I/O — and reaches JSONLogic only through the approvals published
 interface (``aip.modules.approvals.api.evaluate_guard``/``truthy`` and ``GuardError``), never a
-copy of the evaluator. The TypeScript twin in ``packages/form-renderer`` follows the same semantics on the same
-golden vectors (``packages/contracts/jsonlogic-vectors/forms``); see that folder's README for the
-authoritative spec.
+copy of the evaluator. The TypeScript twin in ``packages/form-renderer`` follows the same
+semantics on the same golden vectors (``packages/contracts/jsonlogic-vectors/forms``); see that
+folder's README for the authoritative spec.
 """
 
 from __future__ import annotations
@@ -390,8 +390,16 @@ def evaluate_answers(
 
     # Pass 3: per-section results and section rules, in document order.
     results = _section_results(
-        sections, fields, answers, section_visible, visible, required, errors, failed,
-        data(), expression_errors,
+        sections,
+        fields,
+        answers,
+        section_visible,
+        visible,
+        required,
+        errors,
+        failed,
+        data(),
+        expression_errors,
     )
     rules_pass = all(not r.rule_failures for r in results.values())
 
