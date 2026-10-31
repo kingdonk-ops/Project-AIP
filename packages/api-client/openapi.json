@@ -4936,7 +4936,7 @@
         "type": "object"
       },
       "RenderJobView": {
-        "description": "One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot's; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.",
+        "description": "One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the\nsnapshot's; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.\n\nREPORTS-04: ``recordLabel`` is the source record's label at request time (``None`` before\nREPORTS-04), ``templateNameKey`` the pinned template's terminology key for its name. The PDF is\ndownloaded from ``GET /reports/renders/{id}/file``, never from a storage URL.",
         "properties": {
           "createdAt": {
             "format": "date-time",
@@ -5037,6 +5037,17 @@
             "title": "Recordid",
             "type": "string"
           },
+          "recordLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recordlabel"
+          },
           "recordType": {
             "title": "Recordtype",
             "type": "string"
@@ -5100,6 +5111,17 @@
           "templateKey": {
             "title": "Templatekey",
             "type": "string"
+          },
+          "templateNameKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Templatenamekey"
           },
           "templateVersion": {
             "title": "Templateversion",
@@ -14616,6 +14638,44 @@
           },
           {
             "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": [],
+              "items": {
+                "enum": [
+                  "queued",
+                  "running",
+                  "succeeded",
+                  "failed"
+                ],
+                "type": "string"
+              },
+              "maxItems": 4,
+              "title": "Status",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
             "name": "cursor",
             "required": false,
             "schema": {
@@ -14809,6 +14869,75 @@
           }
         },
         "summary": "Get Render",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/renders/{render_job_id}/file": {
+      "get": {
+        "operationId": "reports_renders_file",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "render_job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Render Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {}
+            },
+            "description": "The report's PDF"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportErrorBody"
+                }
+              }
+            },
+            "description": "REPORT_NOT_READY"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Render",
         "tags": [
           "reports"
         ]

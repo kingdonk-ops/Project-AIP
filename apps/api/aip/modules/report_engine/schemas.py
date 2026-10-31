@@ -182,7 +182,11 @@ class RenderRequest(_Model):
 
 class RenderJobView(_Out):
     """One render job. ``templateId``/``templateVersion`` are the pinned version, ``dataHash`` the
-    snapshot's; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``."""
+    snapshot's; ``fileId``, ``pdfSha256`` and ``pdfSizeBytes`` are set once it has ``succeeded``.
+
+    REPORTS-04: ``recordLabel`` is the source record's label at request time (``None`` before
+    REPORTS-04), ``templateNameKey`` the pinned template's terminology key for its name. The PDF is
+    downloaded from ``GET /reports/renders/{id}/file``, never from a storage URL."""
 
     model_config = ConfigDict(
         alias_generator=to_camel,
@@ -200,6 +204,7 @@ class RenderJobView(_Out):
     variant: TemplateVariant
     record_type: str
     record_id: UUID
+    record_label: str | None = None
     project_id: UUID | None
     snapshot_id: UUID
     data_hash: str
@@ -214,6 +219,7 @@ class RenderJobView(_Out):
     rendered_at: datetime | None
     created_at: datetime
     updated_at: datetime
+    template_name_key: str | None = None
 
 
 class RenderJobPage(_Out):

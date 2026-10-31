@@ -21,7 +21,8 @@ const fixtureSessions: Record<string, Session> = {
     user: { id: "00000000-0000-4000-8000-0000000000a1", name: "Alice Anderson", email: "alice@kaefer.test" },
     tenant: { slug: "kaefer-demo", name: "Kaefer Demo" },
     // PROJECTS-07: the demo admin can drive the project detail and sites register end to end.
-    // ASSETS-03: and the asset tree, register and move dialog. DESIGN-15: and switch release flags.
+    // ASSETS-03: and the asset tree, register and move dialog. REPORTS-04: and the report register.
+    // DESIGN-15: and switch release flags.
     permissions: [
       "project.view",
       "project.update",
@@ -34,6 +35,7 @@ const fixtureSessions: Record<string, Session> = {
       "asset.update",
       "asset.move",
       "item_type.view",
+      "report.view",
       "tenant.flags.manage",
     ],
   },

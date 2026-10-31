@@ -1,8 +1,9 @@
 """SQLAlchemy Core declarations for report_engine (REPORTS-01, REPORTS-02, ADR 0002).
 
-Created only by the Alembic revisions ``202610281500_report_engine_templates`` and
-``202610311200_report_engine_render_jobs``; ``aip-db check-schema`` compares these declarations
-with the migrated database. Every table has FORCE ROW LEVEL SECURITY.
+Created only by the Alembic revisions ``202610281500_report_engine_templates``,
+``202610311200_report_engine_render_jobs`` and ``202610311500_report_engine_record_label``;
+``aip-db check-schema`` compares these declarations with the migrated database. Every table has
+FORCE ROW LEVEL SECURITY.
 
 - ``report_templates``: tenant-scoped with soft delete; ``aip_app`` has no DELETE on it, and the
   ``report_templates_published_immutable`` trigger freezes a row once it leaves ``draft``.
@@ -94,4 +95,6 @@ report_render_jobs = Table(
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", TIMESTAMP(timezone=True), nullable=True),
+    # REPORTS-04: the source record's label at request time, for the register.
+    Column("record_label", Text, nullable=True),
 )
