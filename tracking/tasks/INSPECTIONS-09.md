@@ -1,13 +1,14 @@
-# INSPECTIONS-09 — Guarded lifecycle actions: skip supervisor review, tablet return, reinspect and supersede
+# INSPECTIONS-09 — Guarded lifecycle actions: inspection categories, SiteSync tablet return, reinspect and supersede
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
+<!-- hand-edited 2026-11-01: ADR 0041 moved "skip supervisor review" to INSPECTIONS-10 (Submit Report) and renamed Go to SiteSync -->
 
 | Field | Value |
 |---|---|
 | Module | [`inspections`](../../docs/blueprint/modules/inspections/README.md) |
 | Phase | R1 |
 | Size | M |
-| Depends on | APPROVALS-09, INSPECTIONS-01 |
+| Depends on | APPROVALS-10, INSPECTIONS-10 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
@@ -30,16 +31,18 @@ Stub: the full spec is written once APPROVALS-09 and INSPECTIONS-01 have merged.
   template may override it either way (nullable on the template = use the category); the provider returns the
   resolved value. `allowConcurrentInspections` (default
   false) is a category field.
-- **Mark as Performed without supervisor review:** `mark_performed` from `in_progress`, `in_progress_go` and
-  `inspector_review` → `performed`, critical (`signoffAction: inspection.approve`), guarded on
-  `hasSupervisorReview == false`, permission `approvals.inspection.approve`.
+- **Skipping supervisor review is now INSPECTIONS-10** ([ADR 0041](../../docs/adr/0041-inspection-completion-locks-and-submit.md) §5):
+  `submit_report`, guarded on `hasSupervisorReview == false` and by the person doing the work (`execute`), replaces the
+  earlier "Mark as Performed from in_progress / Go / inspector_review with `approve`". INSPECTIONS-10 copies the
+  setting from the form template. This task adds inspection **categories** with a `hasSupervisorReview` default, and
+  changes the copy to resolve as template override, else category default, else `true`.
 - **Return from the tablet** (owner, 2026-10-31):
-  - Abort and Unlock from `in_progress_go` return to `checkout.fromState` (one of assignable, assigned,
+  - Abort and Unlock from `in_progress_sitesync` return to `checkout.fromState` (one of assignable, assigned,
     in_progress, inspector_review, rework_required). The engine allows one transition per `(from, action)`, so
-    each becomes guarded twins, one per origin state, for example `go_abort_to_assigned` with guard
+    each becomes guarded twins, one per origin state, for example `sitesync_abort_to_assigned` with guard
     `checkout.fromState == "assigned"`, sharing one label key. Abort discards the tablet's changes.
   - Unlock needs `approvals.inspection.unlock` (new) and follows ADR 0024 (token epoch, quarantined uploads).
-  - **Update & Return to Pool** (`go_return_to_pool`) syncs the tablet's answers, clears the assignee and goes to
+  - **Update & Return to Pool** (`sitesync_return_to_pool`) syncs the tablet's answers, clears the assignee and goes to
     `assignable`, so someone else can be assigned. No guard.
 - **Reinspect and supersede:** `reinspect` `performed` → `superseded` (permission `approvals.inspection.assign`)
   also creates a new Draft inspection for the same asset in the same transaction, linked to the old one;
@@ -50,6 +53,6 @@ Stub: the full spec is written once APPROVALS-09 and INSPECTIONS-01 have merged.
 - **Create New** from Performed (owner, 2026-10-31) is a host action, not a transition. It creates a new Draft
   inspection for the same asset without superseding the performed one, so an asset can be inspected repeatedly
   over time for maintenance (for example a yearly wall-thickness check).
-- **Golden cases:** each guarded path both allowed and refused, every Go return twin, and the reinspect →
+- **Golden cases:** each guarded path both allowed and refused, every SiteSync return twin, and the reinspect →
   retire-the-reinspection → restore loop.
-- **Out of scope:** the email alerts (no notifications module in R1) and the Go app itself.
+- **Out of scope:** the email alerts (no notifications module in R1) and the SiteSync app itself.
