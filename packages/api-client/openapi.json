@@ -13,6 +13,7 @@
                 "access.role_assignment.manage",
                 "access.role_assignment.read",
                 "access.team.manage",
+                "approvals.approve",
                 "approvals.design",
                 "approvals.inspection.approve",
                 "approvals.inspection.assign",
@@ -6996,6 +6997,7 @@
                 "access.role_assignment.manage",
                 "access.role_assignment.read",
                 "access.team.manage",
+                "approvals.approve",
                 "approvals.design",
                 "approvals.inspection.approve",
                 "approvals.inspection.assign",
@@ -7147,6 +7149,7 @@
                 "access.role_assignment.manage",
                 "access.role_assignment.read",
                 "access.team.manage",
+                "approvals.approve",
                 "approvals.design",
                 "approvals.inspection.approve",
                 "approvals.inspection.assign",
@@ -7265,6 +7268,7 @@
                     "access.role_assignment.manage",
                     "access.role_assignment.read",
                     "access.team.manage",
+                    "approvals.approve",
                     "approvals.design",
                     "approvals.inspection.approve",
                     "approvals.inspection.assign",
@@ -7338,6 +7342,352 @@
           }
         },
         "title": "RoleUpdate",
+        "type": "object"
+      },
+      "RouteOut": {
+        "additionalProperties": false,
+        "description": "An instance's current route: the latest round's steps (none before the first route).",
+        "properties": {
+          "currentStepId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentstepid"
+          },
+          "instance": {
+            "$ref": "#/components/schemas/InstanceOut"
+          },
+          "routeRound": {
+            "title": "Routeround",
+            "type": "integer"
+          },
+          "routeTemplateId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routetemplateid"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/RouteStepOut"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "instance",
+          "routeTemplateId",
+          "routeRound",
+          "currentStepId",
+          "steps"
+        ],
+        "title": "RouteOut",
+        "type": "object"
+      },
+      "RouteStart": {
+        "additionalProperties": false,
+        "properties": {
+          "routeTemplateId": {
+            "format": "uuid",
+            "title": "Routetemplateid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "routeTemplateId"
+        ],
+        "title": "RouteStart",
+        "type": "object"
+      },
+      "RouteStepIn": {
+        "additionalProperties": false,
+        "properties": {
+          "approverRef": {
+            "format": "uuid",
+            "title": "Approverref",
+            "type": "string"
+          },
+          "approverType": {
+            "enum": [
+              "user",
+              "role",
+              "team"
+            ],
+            "title": "Approvertype",
+            "type": "string"
+          },
+          "dueHours": {
+            "anyOf": [
+              {
+                "maximum": 8760.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duehours"
+          },
+          "mode": {
+            "default": "serial",
+            "enum": [
+              "serial",
+              "parallel"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "stepOrder": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Steporder",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "stepOrder",
+          "approverType",
+          "approverRef"
+        ],
+        "title": "RouteStepIn",
+        "type": "object"
+      },
+      "RouteStepOut": {
+        "additionalProperties": false,
+        "description": "A template step (no status) or an instance step with its status and decision.",
+        "properties": {
+          "approverRef": {
+            "format": "uuid",
+            "title": "Approverref",
+            "type": "string"
+          },
+          "approverType": {
+            "enum": [
+              "user",
+              "role",
+              "team"
+            ],
+            "title": "Approvertype",
+            "type": "string"
+          },
+          "decidedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decidedat"
+          },
+          "decidedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decidedby"
+          },
+          "dueAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dueat"
+          },
+          "dueHours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duehours"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "serial",
+              "parallel"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "waiting",
+                  "pending",
+                  "approved",
+                  "rejected",
+                  "skipped"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "stepOrder": {
+            "title": "Steporder",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "stepOrder",
+          "mode",
+          "approverType",
+          "approverRef",
+          "dueHours"
+        ],
+        "title": "RouteStepOut",
+        "type": "object"
+      },
+      "RouteTemplateCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "allowSelfApproval": {
+            "default": false,
+            "title": "Allowselfapproval",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Name",
+            "type": "string"
+          },
+          "onApprovedAction": {
+            "maxLength": 63,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Onapprovedaction",
+            "type": "string"
+          },
+          "onRejectedAction": {
+            "maxLength": 63,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Onrejectedaction",
+            "type": "string"
+          },
+          "recordType": {
+            "maxLength": 63,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Recordtype",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/RouteStepIn"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "recordType",
+          "onApprovedAction",
+          "onRejectedAction",
+          "steps"
+        ],
+        "title": "RouteTemplateCreate",
+        "type": "object"
+      },
+      "RouteTemplateOut": {
+        "additionalProperties": false,
+        "properties": {
+          "allowSelfApproval": {
+            "title": "Allowselfapproval",
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "onApprovedAction": {
+            "title": "Onapprovedaction",
+            "type": "string"
+          },
+          "onRejectedAction": {
+            "title": "Onrejectedaction",
+            "type": "string"
+          },
+          "recordType": {
+            "title": "Recordtype",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/RouteStepOut"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "recordType",
+          "version",
+          "onApprovedAction",
+          "onRejectedAction",
+          "allowSelfApproval",
+          "steps",
+          "createdAt"
+        ],
+        "title": "RouteTemplateOut",
         "type": "object"
       },
       "Scope": {
@@ -7946,6 +8296,74 @@
           }
         },
         "title": "SiteUpdate",
+        "type": "object"
+      },
+      "StepDecisionOut": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/DecisionOut"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "enum": [
+                  "approved",
+                  "rejected"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "route": {
+            "$ref": "#/components/schemas/RouteOut"
+          }
+        },
+        "required": [
+          "route",
+          "decision"
+        ],
+        "title": "StepDecisionOut",
+        "type": "object"
+      },
+      "StepDecisionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "stepId": {
+            "format": "uuid",
+            "title": "Stepid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stepId",
+          "decision"
+        ],
+        "title": "StepDecisionRequest",
         "type": "object"
       },
       "StepUpErrorBody": {
@@ -11622,6 +12040,99 @@
         ]
       }
     },
+    "/api/v1/approvals/instances/{instance_id}/decide": {
+      "post": {
+        "operationId": "approvals_decide_step",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instance Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepDecisionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "STEP_NOT_PENDING, INVALID_TRANSITION, COUNTERSIGN_PENDING"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, COMMENT_REQUIRED, GUARD_FAILED or GUARD_ERROR"
+          }
+        },
+        "summary": "Decide Step",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
     "/api/v1/approvals/instances/{instance_id}/history": {
       "get": {
         "operationId": "approvals_get_history",
@@ -11690,6 +12201,172 @@
           }
         },
         "summary": "Get History",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/instances/{instance_id}/route": {
+      "post": {
+        "operationId": "approvals_start_route",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instance Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "ROUTE_ACTIVE, COUNTERSIGN_PENDING"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, ROUTE_TEMPLATE_MISMATCH or ROUTE_ACTION_INVALID"
+          }
+        },
+        "summary": "Start Route",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/instances/{instance_id}/steps": {
+      "get": {
+        "operationId": "approvals_get_steps",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Instance Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Steps",
         "tags": [
           "approvals"
         ]
@@ -11818,6 +12495,70 @@
           }
         },
         "summary": "Get Presets",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/route-templates": {
+      "get": {
+        "operationId": "approvals_list_route_templates",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RouteTemplateOut"
+                  },
+                  "title": "Response Approvals List Route Templates",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Route Templates",
+        "tags": [
+          "approvals"
+        ]
+      },
+      "post": {
+        "operationId": "approvals_create_route_template",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteTemplateCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteTemplateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalsErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, ROUTE_SHAPE_INVALID or UNKNOWN_APPROVER"
+          }
+        },
+        "summary": "Create Route Template",
         "tags": [
           "approvals"
         ]

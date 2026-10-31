@@ -5,7 +5,9 @@ compares these declarations with the migrated database. ``workflow_definitions``
 ``workflow_instances`` are tenant-scoped with soft delete; ``workflow_definition_audit`` is
 append-only (monthly partitions, PK ``(id, created_at)``). ``workflow_decision_history``
 (APPROVALS-02, revision ``202610181200``) is append-only and hash-chained, not partitioned. All
-four have FORCE ROW LEVEL SECURITY.
+four have FORCE ROW LEVEL SECURITY. APPROVALS-04 (revision ``202610311900``) adds
+``approval_route_templates`` and ``approval_steps`` (tenant-scoped, soft delete, FORCE RLS) and the
+route columns of ``workflow_instances``.
 """
 
 from __future__ import annotations
@@ -16,6 +18,8 @@ from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from aip.platform.db.metadata import metadata
 
 __all__ = [
+    "approval_route_templates",
+    "approval_steps",
     "workflow_decision_history",
     "workflow_definition_audit",
     "workflow_definitions",
@@ -62,6 +66,10 @@ workflow_instances = Table(
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", TIMESTAMP(timezone=True), nullable=True),
+    Column("route_template_id", UUID(as_uuid=True), nullable=True),
+    Column("current_step_id", UUID(as_uuid=True), nullable=True),
+    Column("route_round", Integer, nullable=False, server_default=text("0")),
+    Column("route_submitted_by", UUID(as_uuid=True), nullable=True),
 )
 
 workflow_definition_audit = Table(
@@ -109,4 +117,48 @@ workflow_decision_history = Table(
     Column("prev_hash", Text, nullable=False),
     Column("entry_hash", Text, nullable=False),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+)
+
+
+approval_route_templates = Table(
+    "approval_route_templates",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("tenant_id", UUID(as_uuid=True), nullable=False),
+    Column("name", Text, nullable=False),
+    Column("record_type", Text, nullable=False),
+    Column("conditions", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+    Column("threshold_bands", JSONB, nullable=True),
+    Column("escalation_hours", Integer, nullable=True),
+    Column("version", Integer, nullable=False, server_default=text("1")),
+    Column("on_approved_action", Text, nullable=False),
+    Column("on_rejected_action", Text, nullable=False),
+    Column("allow_self_approval", Boolean, nullable=False, server_default=text("false")),
+    Column("created_by", UUID(as_uuid=True), nullable=True),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", TIMESTAMP(timezone=True), nullable=True),
+)
+
+approval_steps = Table(
+    "approval_steps",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("tenant_id", UUID(as_uuid=True), nullable=False),
+    Column("route_template_id", UUID(as_uuid=True), nullable=False),
+    Column("instance_id", UUID(as_uuid=True), nullable=True),
+    Column("route_round", Integer, nullable=True),
+    Column("step_order", Integer, nullable=False),
+    Column("mode", Text, nullable=False),
+    Column("approver_type", Text, nullable=False),
+    Column("approver_ref", UUID(as_uuid=True), nullable=False),
+    Column("required_discipline_id", UUID(as_uuid=True), nullable=True),
+    Column("due_hours", Integer, nullable=True),
+    Column("due_at", TIMESTAMP(timezone=True), nullable=True),
+    Column("status", Text, nullable=True),
+    Column("decided_by", UUID(as_uuid=True), nullable=True),
+    Column("decided_at", TIMESTAMP(timezone=True), nullable=True),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", TIMESTAMP(timezone=True), nullable=True),
 )

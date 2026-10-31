@@ -9,6 +9,7 @@ export type PermissionCode =
   | "access.role_assignment.manage"
   | "access.role_assignment.read"
   | "access.team.manage"
+  | "approvals.approve"
   | "approvals.design"
   | "approvals.inspection.approve"
   | "approvals.inspection.assign"
@@ -75,6 +76,7 @@ export const PERMISSIONS = {
   "access.role_assignment.manage": { module: "access", privileged: true },
   "access.role_assignment.read": { module: "access", privileged: false },
   "access.team.manage": { module: "access", privileged: false },
+  "approvals.approve": { module: "approvals", privileged: false },
   "approvals.design": { module: "approvals", privileged: false },
   "approvals.inspection.approve": { module: "approvals", privileged: false },
   "approvals.inspection.assign": { module: "approvals", privileged: false },
