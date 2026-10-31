@@ -1,6 +1,6 @@
-"""FORMS-02: the Python evaluator on the shared golden vectors, plus the acceptance examples.
+"""FORMS-02/10: the Python evaluator on the shared golden vectors, plus the acceptance examples.
 
-The two vector files drive both this suite and the Vitest twin
+The three vector files drive both this suite and the Vitest twin
 (``packages/form-renderer/src/logic``); a case that one passes and the other fails breaks CI in both
 languages. No database here — the evaluator is pure.
 """
@@ -16,13 +16,14 @@ import pytest
 
 from aip.modules.approvals.api import GuardError, evaluate_guard
 from aip.modules.forms.evaluator import EVALUATOR_VERSION, evaluate_answers, evaluation_as_json
-from aip.modules.forms.lint import lint_template
+from aip.modules.forms.lint import is_error, lint_template
 from aip.modules.item_types.api import field_types
 from aip.modules.terms.api import UnknownUnitError, to_si
 
 _VECTORS = Path(__file__).resolve().parents[6] / "packages/contracts/jsonlogic-vectors/forms"
 EXPRESSIONS = json.loads((_VECTORS / "expressions-v1.json").read_text(encoding="utf-8"))
 EVALUATE = json.loads((_VECTORS / "evaluate-v1.json").read_text(encoding="utf-8"))
+EVALUATE_V2 = json.loads((_VECTORS / "evaluate-v2.json").read_text(encoding="utf-8"))
 
 _FIXTURES = Path(__file__).resolve().parent / "fixtures"
 COATING = json.loads((_FIXTURES / "coating-itr-min.json").read_text(encoding="utf-8"))
@@ -62,13 +63,17 @@ def _evaluate(case: dict[str, Any]) -> dict[str, Any]:
 
 
 def test_vector_versions_match_the_evaluator() -> None:
-    assert str(EXPRESSIONS["version"]) == EVALUATOR_VERSION
-    assert str(EVALUATE["version"]) == EVALUATOR_VERSION
+    # The v1 files are frozen at version 1; evaluate-v2 is the evaluator's current version.
+    assert str(EXPRESSIONS["version"]) == "1"
+    assert str(EVALUATE["version"]) == "1"
+    assert str(EVALUATE_V2["version"]) == EVALUATOR_VERSION
 
 
 def test_vector_counts_meet_the_floor() -> None:
     assert len(EXPRESSIONS["cases"]) >= 80
     assert len(EVALUATE["cases"]) >= 30
+    assert len(EVALUATE_V2["cases"]) >= 10
+    assert set(EVALUATE_V2["v1Sections"]) == {c["name"] for c in EVALUATE["cases"]}
 
 
 # --- expression vectors ------------------------------------------------------------------------
@@ -96,6 +101,24 @@ def test_evaluate_vector_schema_lints_clean(case: dict[str, Any]) -> None:
 
 @pytest.mark.parametrize("case", EVALUATE["cases"], ids=[c["name"] for c in EVALUATE["cases"]])
 def test_evaluate_vectors(case: dict[str, Any]) -> None:
+    # A v1 case is unchanged; FORMS-10's per-section result is checked against evaluate-v2.
+    result = _evaluate(case)
+    sections = result.pop("sections")
+    assert result == case["expected"]
+    assert sections == EVALUATE_V2["v1Sections"][case["name"]]
+
+
+@pytest.mark.parametrize(
+    "case", EVALUATE_V2["cases"], ids=[c["name"] for c in EVALUATE_V2["cases"]]
+)
+def test_evaluate_v2_vector_schema_has_no_lint_errors(case: dict[str, Any]) -> None:
+    assert [issue for issue in _lint(case["schema"]) if is_error(issue)] == []
+
+
+@pytest.mark.parametrize(
+    "case", EVALUATE_V2["cases"], ids=[c["name"] for c in EVALUATE_V2["cases"]]
+)
+def test_evaluate_v2_vectors(case: dict[str, Any]) -> None:
     assert _evaluate(case) == case["expected"]
 
 

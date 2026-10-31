@@ -47,7 +47,7 @@ async def test_evaluate_a_published_revision(client: httpx.AsyncClient, db: Tena
     row = await su_fetch(
         db, "SELECT evaluator_version FROM form_revisions WHERE id = $1::uuid", rev1
     )
-    assert row[0][0] == "1"
+    assert row[0][0] == "2"  # FORMS-10 added per-section results
 
     response = await client.post(f"{REVISIONS}/{rev1}/evaluate", json=FAILING, headers=ALICE)
     assert response.status_code == 200, response.text

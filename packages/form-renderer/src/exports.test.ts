@@ -63,6 +63,8 @@ describe("@aip/form-renderer public surface", () => {
         "FormSchema",
         "FormSection",
         "Json",
+        "SectionResult",
+        "SectionRule",
       ].sort(),
     );
   });
