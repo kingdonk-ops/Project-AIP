@@ -117,6 +117,8 @@ async def test_server_startup_fails_without_a_cursor_key_outside_dev(
     from aip.modules.projects.settings import get_settings
 
     monkeypatch.delenv("PROJECTS_CURSOR_KEY", raising=False)
+    # Other modules' startup checks may run first (module order); only the projects key is missing.
+    monkeypatch.setenv("ASSETS_CURSOR_KEY", "a-real-secret-from-the-store-123")
     monkeypatch.setenv("AIP_ENV", "staging")
     get_settings.cache_clear()
     app = create_app(env="test", tracing=False)

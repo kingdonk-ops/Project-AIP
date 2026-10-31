@@ -5,7 +5,7 @@ compares these declarations with the migrated database. ``workflow_definitions``
 ``workflow_instances`` are tenant-scoped with soft delete; ``workflow_definition_audit`` is
 append-only (monthly partitions, PK ``(id, created_at)``). ``workflow_decision_history``
 (APPROVALS-02, revision ``202610181200``) is append-only and hash-chained, not partitioned. All
-four have FORCE ROW LEVEL SECURITY. APPROVALS-04 (revision ``202610311700``) adds
+four have FORCE ROW LEVEL SECURITY. APPROVALS-04 (revision ``202610311800``) adds
 ``approval_route_templates`` and ``approval_steps`` (tenant-scoped, soft delete, FORCE RLS) and the
 route columns of ``workflow_instances``.
 """

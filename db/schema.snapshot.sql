@@ -337,6 +337,14 @@ GRANT SELECT ON TABLE public.permission TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.platform_event_status TO aip_app;
 GRANT SELECT ON TABLE public.platform_event_status TO aip_readonly;
 
+-- Name: TABLE portal_grants; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.portal_grants TO aip_app;
+GRANT SELECT ON TABLE public.portal_grants TO aip_readonly;
+
+-- Name: TABLE portal_users; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.portal_users TO aip_app;
+GRANT SELECT ON TABLE public.portal_users TO aip_readonly;
+
 -- Name: TABLE procrastinate_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.procrastinate_events TO aip_jobs;
 
@@ -692,6 +700,18 @@ ALTER TABLE ONLY public.permission
 -- Name: platform_event_status pk_platform_event_status; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.platform_event_status
     ADD CONSTRAINT pk_platform_event_status PRIMARY KEY (event_name, event_version);
+
+-- Name: portal_grants pk_portal_grants; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.portal_grants
+    ADD CONSTRAINT pk_portal_grants PRIMARY KEY (id);
+
+-- Name: portal_users pk_portal_users; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.portal_users
+    ADD CONSTRAINT pk_portal_users PRIMARY KEY (id);
+
+-- Name: portal_users uq_portal_users_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.portal_users
+    ADD CONSTRAINT uq_portal_users_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: procrastinate_events procrastinate_events_pkey; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.procrastinate_events
@@ -1069,6 +1089,10 @@ ALTER TABLE ONLY public.job_events
 -- Name: login_directory fk_login_directory_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.login_directory
     ADD CONSTRAINT fk_login_directory_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: portal_grants fk_portal_grants_portal_user; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.portal_grants
+    ADD CONSTRAINT fk_portal_grants_portal_user FOREIGN KEY (portal_user_id, tenant_id) REFERENCES public.portal_users(id, tenant_id);
 
 -- Name: procrastinate_events procrastinate_events_job_id_fkey; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.procrastinate_events
@@ -2547,6 +2571,24 @@ CREATE INDEX ix_organisations_tenant_id_org_type ON public.organisations USING b
 -- Name: ix_permission_module_id; Type: INDEX; Schema: public
 CREATE INDEX ix_permission_module_id ON public.permission USING btree (module_id);
 
+-- Name: ix_portal_grants_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_portal_grants_tenant_id ON public.portal_grants USING btree (tenant_id);
+
+-- Name: ix_portal_grants_tenant_id_expires_at_live; Type: INDEX; Schema: public
+CREATE INDEX ix_portal_grants_tenant_id_expires_at_live ON public.portal_grants USING btree (tenant_id, expires_at) WHERE ((revoked_at IS NULL) AND (deleted_at IS NULL));
+
+-- Name: ix_portal_grants_tenant_id_portal_user_id_live; Type: INDEX; Schema: public
+CREATE INDEX ix_portal_grants_tenant_id_portal_user_id_live ON public.portal_grants USING btree (tenant_id, portal_user_id) WHERE ((revoked_at IS NULL) AND (deleted_at IS NULL));
+
+-- Name: ix_portal_grants_tenant_id_project_id; Type: INDEX; Schema: public
+CREATE INDEX ix_portal_grants_tenant_id_project_id ON public.portal_grants USING btree (tenant_id, project_id);
+
+-- Name: ix_portal_users_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_portal_users_tenant_id ON public.portal_users USING btree (tenant_id);
+
+-- Name: ix_portal_users_tenant_id_status; Type: INDEX; Schema: public
+CREATE INDEX ix_portal_users_tenant_id_status ON public.portal_users USING btree (tenant_id, status);
+
 -- Name: ix_projects_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_projects_tenant_id ON public.projects USING btree (tenant_id);
 
@@ -2856,6 +2898,12 @@ CREATE UNIQUE INDEX uq_locale_settings_tenant_id_project_id ON public.locale_set
 -- Name: uq_organisations_tenant_id_lower_name; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_organisations_tenant_id_lower_name ON public.organisations USING btree (tenant_id, lower(name)) WHERE (deleted_at IS NULL);
 
+-- Name: uq_portal_grants_live_user_project_asset; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_portal_grants_live_user_project_asset ON public.portal_grants USING btree (tenant_id, portal_user_id, project_id, COALESCE(asset_id, '00000000-0000-0000-0000-000000000000'::uuid)) WHERE ((revoked_at IS NULL) AND (deleted_at IS NULL));
+
+-- Name: uq_portal_users_tenant_id_user_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_portal_users_tenant_id_user_id ON public.portal_users USING btree (tenant_id, user_id) WHERE (deleted_at IS NULL);
+
 -- Name: uq_projects_tenant_id_upper_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_projects_tenant_id_upper_code ON public.projects USING btree (tenant_id, upper(code)) WHERE (deleted_at IS NULL);
 
@@ -3077,6 +3125,12 @@ CREATE POLICY tenant_write ON public.locale_settings USING (((tenant_id = (NULLI
 
 -- Name: organisations tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.organisations USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: portal_grants tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.portal_grants USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: portal_users tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.portal_users USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: projects project_scope; Type: POLICY; Schema: public
 CREATE POLICY project_scope ON public.projects AS RESTRICTIVE TO aip_app USING (public.access_project_visible(id)) WITH CHECK (public.access_project_visible(id));
@@ -3302,6 +3356,12 @@ ALTER TABLE public.locale_settings ENABLE ROW LEVEL SECURITY;
 
 -- Name: organisations; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.organisations ENABLE ROW LEVEL SECURITY;
+
+-- Name: portal_grants; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.portal_grants ENABLE ROW LEVEL SECURITY;
+
+-- Name: portal_users; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.portal_users ENABLE ROW LEVEL SECURITY;
 
 -- Name: projects; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
@@ -4217,6 +4277,61 @@ CREATE TABLE public.platform_event_status (
 
 ALTER TABLE public.platform_event_status OWNER TO aip_owner;
 
+-- Name: portal_grants; Type: TABLE; Schema: public
+CREATE TABLE public.portal_grants (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    portal_user_id uuid NOT NULL,
+    project_id uuid NOT NULL,
+    asset_id uuid,
+    actions text[] NOT NULL,
+    access_days integer NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    renewed_at timestamp with time zone,
+    renewed_by uuid,
+    revoked_at timestamp with time zone,
+    revoked_by uuid,
+    revoked_reason text,
+    created_by uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_portal_grants_access_days CHECK (((access_days >= 1) AND (access_days <= 400))),
+    CONSTRAINT ck_portal_grants_actions CHECK ((((cardinality(actions) >= 1) AND (cardinality(actions) <= 4)) AND (actions <@ ARRAY['view'::text, 'sign_off'::text, 'witness'::text, 'download'::text]) AND ('view'::text = ANY (actions)))),
+    CONSTRAINT ck_portal_grants_revoked_reason CHECK ((revoked_reason = ANY (ARRAY['manual'::text, 'project_closed'::text, 'user_suspended'::text]))),
+    CONSTRAINT ck_portal_grants_revoked_shape CHECK (((revoked_at IS NULL) = (revoked_reason IS NULL)))
+);
+
+ALTER TABLE ONLY public.portal_grants FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.portal_grants OWNER TO aip_owner;
+
+-- Name: portal_users; Type: TABLE; Schema: public
+CREATE TABLE public.portal_users (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    company_name text NOT NULL,
+    organisation_id uuid,
+    status text DEFAULT 'invited'::text NOT NULL,
+    invited_by uuid NOT NULL,
+    first_signed_in_at timestamp with time zone,
+    suspended_at timestamp with time zone,
+    suspended_reason text,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_portal_users_company_name CHECK (((btrim(company_name) <> ''::text) AND (length(company_name) <= 200))),
+    CONSTRAINT ck_portal_users_status CHECK ((status = ANY (ARRAY['invited'::text, 'active'::text, 'suspended'::text]))),
+    CONSTRAINT ck_portal_users_suspended_reason CHECK (((suspended_reason IS NULL) OR ((btrim(suspended_reason) <> ''::text) AND (length(suspended_reason) <= 500)))),
+    CONSTRAINT ck_portal_users_sync_version CHECK ((sync_version >= 1))
+);
+
+ALTER TABLE ONLY public.portal_users FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.portal_users OWNER TO aip_owner;
+
 -- Name: procrastinate_events; Type: TABLE; Schema: public
 CREATE TABLE public.procrastinate_events (
     id bigint NOT NULL,
@@ -4566,6 +4681,7 @@ CREATE TABLE public.role_permission (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    CONSTRAINT ck_role_permission_not_external_only CHECK (((permission_code !~~ 'portal.record.%'::text) AND (permission_code !~~ 'portal.report.%'::text))),
     CONSTRAINT ck_role_permission_not_operator_only CHECK ((permission_code !~~ 'platform.%'::text))
 );
 

@@ -9,6 +9,7 @@ import pytest
 
 from aip.platform.access import (
     AccessPrincipal,
+    AssetSubtreeScope,
     Catalogue,
     Forbidden,
     Grant,
@@ -18,6 +19,7 @@ from aip.platform.access import (
     Resource,
     TenantScope,
 )
+from aip.platform.access.policy import _matches  # pyright: ignore[reportPrivateUsage]
 from aip.platform.context import RequestContext, use_context
 
 TENANT = UUID("00000000-0000-4000-8000-00000000000a")
@@ -200,3 +202,86 @@ async def test_allowed_permissions_for_an_api_client_are_its_known_scopes() -> N
         tenant_id=TENANT, kind="api_client", scopes=frozenset({"project.view", "ghost.thing.read"})
     )
     assert await policy().allowed_permissions(client) == ["project.view"]
+
+
+# --- PORTAL-01: asset-subtree scope and external principals --------------------------------------
+
+P1 = UUID("00000000-0000-4000-8000-0000000000a1")
+P2 = UUID("00000000-0000-4000-8000-0000000000b2")
+ROOT = UUID("0192f3c4-0000-7000-8000-000000000001")
+NODE = UUID("0192f3c4-0000-7000-8000-000000000002")
+CHILD = UUID("0192f3c4-0000-7000-8000-000000000003")
+SIBLING = UUID("0192f3c4-0000-7000-8000-000000000004")
+SUBTREE = Grant("project.view", AssetSubtreeScope(P1, NODE))
+
+
+@pytest.mark.parametrize(
+    ("resource", "allowed"),
+    [
+        (Resource(project_id=P1, asset_path=f"{ROOT.hex}.{NODE.hex}.{CHILD.hex}"), True),
+        (Resource(project_id=P1, asset_path=f"{ROOT.hex}.{NODE.hex}"), True),
+        (Resource(project_id=P1, asset_path=f"{ROOT.hex}.{SIBLING.hex}"), False),
+        (Resource(project_id=P1, asset_path=ROOT.hex), False),
+        (Resource(project_id=P1, asset_path=None), False),
+        (Resource(project_id=P1), False),
+        (Resource(project_id=P2, asset_path=f"{ROOT.hex}.{NODE.hex}.{CHILD.hex}"), False),
+        (None, False),
+    ],
+    ids=[
+        "child",
+        "node",
+        "sibling",
+        "parent",
+        "no-path",
+        "no-path-default",
+        "other-project",
+        "none",
+    ],
+)
+def test_asset_subtree_scope_matches_only_its_subtree_in_its_project(
+    resource: Resource | None, allowed: bool
+) -> None:
+    assert _matches(SUBTREE, "project.view", resource) is allowed
+
+
+def test_asset_subtree_scope_accepts_string_ids() -> None:
+    grant = Grant("project.view", AssetSubtreeScope(str(P1), str(NODE)))
+    resource = Resource(project_id=str(P1), asset_path=f"{ROOT.hex}.{NODE.hex}")
+    assert _matches(grant, "project.view", resource)
+
+
+class ExternalGrants(FixedGrants):
+    serves_external = True
+
+
+async def test_an_external_principal_sees_only_external_providers_grants() -> None:
+    internal = FixedGrants(Grant("assets.asset.read"))
+    external = ExternalGrants(Grant("project.view"))
+    service = PolicyService(CATALOGUE, [internal, external])
+    portal_user = AccessPrincipal(tenant_id=TENANT, actor_id=ALICE, external=True)
+
+    assert (await service.can(portal_user, "project.view")).allowed
+    assert not (await service.can(portal_user, "assets.asset.read")).allowed
+    assert await service.allowed_permissions(portal_user) == ["project.view"]
+    assert internal.calls == 0
+
+
+async def test_an_internal_principal_sees_only_internal_providers_grants() -> None:
+    internal = FixedGrants(Grant("assets.asset.read"))
+    external = ExternalGrants(Grant("project.view"))
+    service = PolicyService(CATALOGUE, [internal, external])
+
+    assert (await service.can(USER, "assets.asset.read")).allowed
+    assert not (await service.can(USER, "project.view")).allowed
+    assert external.calls == 0
+
+
+async def test_the_request_memo_keeps_internal_and_external_grants_apart() -> None:
+    internal = FixedGrants(Grant("assets.asset.read"))
+    external = ExternalGrants(Grant("project.view"))
+    service = PolicyService(CATALOGUE, [internal, external])
+    portal_user = AccessPrincipal(tenant_id=TENANT, actor_id=ALICE, external=True)
+    with use_context(RequestContext(tenant_id=TENANT, request_id="r-portal")):
+        assert (await service.can(USER, "assets.asset.read")).allowed
+        assert not (await service.can(portal_user, "assets.asset.read")).allowed
+        assert (await service.can(portal_user, "project.view")).allowed

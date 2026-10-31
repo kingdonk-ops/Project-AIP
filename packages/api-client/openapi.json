@@ -44,6 +44,14 @@
                 "ops.jobs.admin",
                 "platform.events.manage",
                 "platform.tenants.manage",
+                "portal.grant.manage",
+                "portal.record.sign_off",
+                "portal.record.view",
+                "portal.record.witness",
+                "portal.report.download",
+                "portal.user.invite",
+                "portal.user.suspend",
+                "portal.user.view",
                 "project.archive",
                 "project.create",
                 "project.update",
@@ -2445,6 +2453,174 @@
         "title": "FormErrorBody",
         "type": "object"
       },
+      "GrantIn": {
+        "additionalProperties": false,
+        "properties": {
+          "actions": {
+            "items": {
+              "enum": [
+                "view",
+                "sign_off",
+                "witness",
+                "download"
+              ],
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Actions",
+            "type": "array"
+          },
+          "assetId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assetid"
+          },
+          "projectId": {
+            "format": "uuid",
+            "title": "Projectid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectId",
+          "actions"
+        ],
+        "title": "GrantIn",
+        "type": "object"
+      },
+      "GrantOut": {
+        "properties": {
+          "accessDays": {
+            "title": "Accessdays",
+            "type": "integer"
+          },
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "assetId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assetid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "createdBy": {
+            "format": "uuid",
+            "title": "Createdby",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "title": "Expiresat",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "projectId": {
+            "format": "uuid",
+            "title": "Projectid",
+            "type": "string"
+          },
+          "renewedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewedat"
+          },
+          "renewedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewedby"
+          },
+          "revokedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revokedat"
+          },
+          "revokedReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revokedreason"
+          },
+          "state": {
+            "enum": [
+              "live",
+              "expired",
+              "revoked"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "assetId",
+          "actions",
+          "accessDays",
+          "expiresAt",
+          "state",
+          "renewedAt",
+          "renewedBy",
+          "revokedAt",
+          "revokedReason",
+          "createdBy",
+          "createdAt"
+        ],
+        "title": "GrantOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2697,6 +2873,65 @@
           "method"
         ],
         "title": "InviteCreated",
+        "type": "object"
+      },
+      "InviteIn": {
+        "additionalProperties": false,
+        "properties": {
+          "companyName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Companyname",
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 320,
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          },
+          "firstName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Firstname",
+            "type": "string"
+          },
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/GrantIn"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Grants",
+            "type": "array"
+          },
+          "lastName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Lastname",
+            "type": "string"
+          },
+          "organisationId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organisationid"
+          }
+        },
+        "required": [
+          "email",
+          "firstName",
+          "lastName",
+          "companyName",
+          "grants"
+        ],
+        "title": "InviteIn",
         "type": "object"
       },
       "InviteList": {
@@ -4382,6 +4617,202 @@
         "title": "PlanAndUsage",
         "type": "object"
       },
+      "PortalErrorBody": {
+        "description": "A domain error: a stable ``code`` (``PROJECT_CLOSED``, ``REVOKED``, ``GRANT_EXISTS``).",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "PortalErrorBody",
+        "type": "object"
+      },
+      "PortalUserOut": {
+        "description": "A portal user with their grants that are not revoked (live and expired).\n\n``expiresAt`` is the latest expiry among the live grants (``null`` with none).",
+        "properties": {
+          "companyName": {
+            "title": "Companyname",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "effectiveStatus": {
+            "enum": [
+              "invited",
+              "active",
+              "suspended",
+              "expired"
+            ],
+            "title": "Effectivestatus",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiresat"
+          },
+          "firstSignedInAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Firstsignedinat"
+          },
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/GrantOut"
+            },
+            "title": "Grants",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invitedBy": {
+            "format": "uuid",
+            "title": "Invitedby",
+            "type": "string"
+          },
+          "organisationId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organisationid"
+          },
+          "status": {
+            "enum": [
+              "invited",
+              "active",
+              "suspended"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "suspendedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suspendedat"
+          },
+          "suspendedReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suspendedreason"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          },
+          "userId": {
+            "format": "uuid",
+            "title": "Userid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "email",
+          "companyName",
+          "organisationId",
+          "status",
+          "effectiveStatus",
+          "invitedBy",
+          "firstSignedInAt",
+          "suspendedAt",
+          "suspendedReason",
+          "expiresAt",
+          "grants",
+          "syncVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "PortalUserOut",
+        "type": "object"
+      },
+      "PortalUserPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PortalUserOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "title": "PortalUserPage",
+        "type": "object"
+      },
       "PresetInstall": {
         "additionalProperties": false,
         "properties": {
@@ -5878,6 +6309,14 @@
                 "ops.jobs.admin",
                 "platform.events.manage",
                 "platform.tenants.manage",
+                "portal.grant.manage",
+                "portal.record.sign_off",
+                "portal.record.view",
+                "portal.record.witness",
+                "portal.report.download",
+                "portal.user.invite",
+                "portal.user.suspend",
+                "portal.user.view",
                 "project.archive",
                 "project.create",
                 "project.update",
@@ -6020,6 +6459,14 @@
                 "ops.jobs.admin",
                 "platform.events.manage",
                 "platform.tenants.manage",
+                "portal.grant.manage",
+                "portal.record.sign_off",
+                "portal.record.view",
+                "portal.record.witness",
+                "portal.report.download",
+                "portal.user.invite",
+                "portal.user.suspend",
+                "portal.user.view",
                 "project.archive",
                 "project.create",
                 "project.update",
@@ -6129,6 +6576,14 @@
                     "ops.jobs.admin",
                     "platform.events.manage",
                     "platform.tenants.manage",
+                    "portal.grant.manage",
+                    "portal.record.sign_off",
+                    "portal.record.view",
+                    "portal.record.witness",
+                    "portal.report.download",
+                    "portal.user.invite",
+                    "portal.user.suspend",
+                    "portal.user.view",
                     "project.archive",
                     "project.create",
                     "project.update",
@@ -7495,6 +7950,22 @@
           "reason"
         ],
         "title": "SubscriptionPut",
+        "type": "object"
+      },
+      "SuspendIn": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "SuspendIn",
         "type": "object"
       },
       "TeamCreate": {
@@ -10055,6 +10526,557 @@
         "summary": "Deprecate Event Version",
         "tags": [
           "platform"
+        ]
+      }
+    },
+    "/api/v1/admin/portal/users": {
+      "get": {
+        "operationId": "portal_users_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "invited",
+                    "active",
+                    "suspended"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 1024,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalUserPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Validation error"
+          }
+        },
+        "summary": "List Portal Users",
+        "tags": [
+          "portal"
+        ]
+      },
+      "post": {
+        "operationId": "portal_users_invite",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalUserOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Validation error"
+          }
+        },
+        "summary": "Invite Portal User",
+        "tags": [
+          "portal"
+        ]
+      }
+    },
+    "/api/v1/admin/portal/users/{portal_user_id}": {
+      "get": {
+        "operationId": "portal_users_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "portal_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Portal User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalUserOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Portal User",
+        "tags": [
+          "portal"
+        ]
+      }
+    },
+    "/api/v1/admin/portal/users/{portal_user_id}/grants": {
+      "post": {
+        "operationId": "portal_grants_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "portal_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Portal User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrantOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Validation error"
+          }
+        },
+        "summary": "Add Portal Grant",
+        "tags": [
+          "portal"
+        ]
+      }
+    },
+    "/api/v1/admin/portal/users/{portal_user_id}/grants/{grant_id}": {
+      "delete": {
+        "operationId": "portal_grants_revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "portal_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Portal User Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Grant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Portal Grant",
+        "tags": [
+          "portal"
+        ]
+      }
+    },
+    "/api/v1/admin/portal/users/{portal_user_id}/grants/{grant_id}/renew": {
+      "post": {
+        "operationId": "portal_grants_renew",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "portal_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Portal User Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Grant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrantOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Validation error"
+          }
+        },
+        "summary": "Renew Portal Grant",
+        "tags": [
+          "portal"
+        ]
+      }
+    },
+    "/api/v1/admin/portal/users/{portal_user_id}/reinstate": {
+      "post": {
+        "operationId": "portal_users_reinstate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "portal_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Portal User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalUserOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reinstate Portal User",
+        "tags": [
+          "portal"
+        ]
+      }
+    },
+    "/api/v1/admin/portal/users/{portal_user_id}/suspend": {
+      "post": {
+        "operationId": "portal_users_suspend",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "portal_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Portal User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalUserOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Suspend Portal User",
+        "tags": [
+          "portal"
         ]
       }
     },

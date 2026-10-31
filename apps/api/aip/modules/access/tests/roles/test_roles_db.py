@@ -347,6 +347,7 @@ async def test_editing_a_system_role_customises_it_and_takes_effect(
         "approvals.inspection.approve",  # APPROVALS-05: sign-off at the approve level
         "approvals.view",
         "asset.view",
+        "portal.user.view",
         "project.view",
         "report.template.view",
         "report.view",
@@ -441,6 +442,7 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
         "approvals.inspection.approve",  # APPROVALS-05: sign-off at the approve level
         "approvals.view",
         "asset.view",
+        "portal.user.view",
         "project.view",
         "report.template.view",
         "report.view",
@@ -455,6 +457,7 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
             "approvals.inspection.approve",
             "approvals.view",
             "asset.view",
+            "portal.user.view",
             "project.view",
             "report.template.view",
             "report.view",
@@ -670,6 +673,39 @@ async def test_no_tenant_role_can_hold_an_operator_permission(
         headers=ALICE,
     )
     assert (patched.status_code, patched.json()["code"]) == (422, "OPERATOR_ONLY_PERMISSION")
+
+
+EXTERNAL_CODES = [
+    "portal.record.view",
+    "portal.record.sign_off",
+    "portal.record.witness",
+    "portal.report.download",
+]
+
+
+@pytest.mark.parametrize("code", EXTERNAL_CODES)
+async def test_no_tenant_role_can_hold_an_external_portal_permission(
+    app: FastAPI, client: httpx.AsyncClient, code: str
+) -> None:
+    # PORTAL-01 review: only portal grants give external codes; staff never act as the client.
+    roles = {r["code"]: r for r in (await client.get(ROLES, headers=ALICE)).json()["items"]}
+    for role in roles.values():
+        assert not [c for c in role["permissions"] if c in EXTERNAL_CODES], role["code"]
+    assert not await can(app, ALICE_ID, code)  # a tenant admin, at tenant scope
+
+    body = {"code": "client_wannabe", "name": "Client", "permissions": ["access.role.read", code]}
+    created = await client.post(ROLES, json=body, headers=ALICE)
+    assert (created.status_code, created.json()) == (
+        422,
+        {"code": "EXTERNAL_ONLY_PERMISSION", "field": "permissions", "permissions": [code]},
+    )
+    admin = roles["tenant_admin"]
+    patched = await client.patch(
+        f"{ROLES}/{admin['id']}",
+        json={"permissions": [*admin["permissions"], code]},
+        headers=ALICE,
+    )
+    assert (patched.status_code, patched.json()["code"]) == (422, "EXTERNAL_ONLY_PERMISSION")
 
 
 # --- TENANCY-03: has_role and the organisation permissions ------------------------------------

@@ -16,17 +16,17 @@ serially or in parallel groups (``docs/blueprint/modules/approvals/data-model.md
   runs), ``route_round`` (0 until the first route) and ``route_submitted_by`` (the
   separation-of-duties subject).
 
-Revision ID: 202610311700
-Revises: 202610311500
-Create Date: 2026-10-31 17:00:00+00:00
+Revision ID: 202610311800
+Revises: 202610311700
+Create Date: 2026-10-31 18:00:00+00:00
 """
 
 from alembic import op
 
 from aip.platform.db.templates import render_template
 
-revision: str = "202610311700"
-down_revision: str | None = "202610311500"
+revision: str = "202610311800"
+down_revision: str | None = "202610311700"
 branch_labels = None
 depends_on = None
 

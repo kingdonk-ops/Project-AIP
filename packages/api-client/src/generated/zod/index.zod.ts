@@ -7,6 +7,7 @@ export * from './identity/identity.zod';
 export * from './item-types/item-types.zod';
 export * from './jobs/jobs.zod';
 export * from './platform/platform.zod';
+export * from './portal/portal.zod';
 export * from './projects/projects.zod';
 export * from './reports/reports.zod';
 export * from './sites/sites.zod';
