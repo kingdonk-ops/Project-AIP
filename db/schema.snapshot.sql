@@ -226,6 +226,14 @@ GRANT SELECT ON TABLE public.access_user_scope TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.app_user TO aip_app;
 GRANT SELECT ON TABLE public.app_user TO aip_jobs;
 
+-- Name: TABLE approval_route_templates; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.approval_route_templates TO aip_app;
+GRANT SELECT ON TABLE public.approval_route_templates TO aip_readonly;
+
+-- Name: TABLE approval_steps; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.approval_steps TO aip_app;
+GRANT SELECT ON TABLE public.approval_steps TO aip_readonly;
+
 -- Name: TABLE assets; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.assets TO aip_app;
 GRANT SELECT ON TABLE public.assets TO aip_readonly;
@@ -508,6 +516,18 @@ ALTER TABLE ONLY public.app_user
 -- Name: app_user uq_app_user_id_tenant_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.app_user
     ADD CONSTRAINT uq_app_user_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: approval_route_templates pk_approval_route_templates; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.approval_route_templates
+    ADD CONSTRAINT pk_approval_route_templates PRIMARY KEY (id);
+
+-- Name: approval_route_templates uq_approval_route_templates_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.approval_route_templates
+    ADD CONSTRAINT uq_approval_route_templates_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: approval_steps pk_approval_steps; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.approval_steps
+    ADD CONSTRAINT pk_approval_steps PRIMARY KEY (id);
 
 -- Name: assets pk_assets; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.assets
@@ -974,6 +994,22 @@ ALTER TABLE ONLY public.access_user_scope
 ALTER TABLE ONLY public.app_user
     ADD CONSTRAINT fk_app_user_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
+-- Name: approval_route_templates fk_approval_route_templates_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.approval_route_templates
+    ADD CONSTRAINT fk_approval_route_templates_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
+-- Name: approval_steps fk_approval_steps_instance; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.approval_steps
+    ADD CONSTRAINT fk_approval_steps_instance FOREIGN KEY (instance_id, tenant_id) REFERENCES public.workflow_instances(id, tenant_id);
+
+-- Name: approval_steps fk_approval_steps_route_template; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.approval_steps
+    ADD CONSTRAINT fk_approval_steps_route_template FOREIGN KEY (route_template_id, tenant_id) REFERENCES public.approval_route_templates(id, tenant_id);
+
+-- Name: approval_steps fk_approval_steps_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.approval_steps
+    ADD CONSTRAINT fk_approval_steps_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
 -- Name: assets fk_assets_item_type; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.assets
     ADD CONSTRAINT fk_assets_item_type FOREIGN KEY (item_type_id, tenant_id) REFERENCES public.item_types(id, tenant_id);
@@ -1221,6 +1257,10 @@ ALTER TABLE ONLY public.workflow_definitions
 -- Name: workflow_instances fk_workflow_instances_definition; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.workflow_instances
     ADD CONSTRAINT fk_workflow_instances_definition FOREIGN KEY (definition_id, tenant_id) REFERENCES public.workflow_definitions(id, tenant_id);
+
+-- Name: workflow_instances fk_workflow_instances_route_template; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.workflow_instances
+    ADD CONSTRAINT fk_workflow_instances_route_template FOREIGN KEY (route_template_id, tenant_id) REFERENCES public.approval_route_templates(id, tenant_id);
 
 -- Name: workflow_instances fk_workflow_instances_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.workflow_instances
@@ -2336,6 +2376,27 @@ CREATE INDEX ix_app_user_tenant_id_organisation_id ON public.app_user USING btre
 -- Name: ix_app_user_tenant_id_status; Type: INDEX; Schema: public
 CREATE INDEX ix_app_user_tenant_id_status ON public.app_user USING btree (tenant_id, status) WHERE (deleted_at IS NULL);
 
+-- Name: ix_approval_route_templates_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_approval_route_templates_tenant_id ON public.approval_route_templates USING btree (tenant_id);
+
+-- Name: ix_approval_route_templates_tenant_id_record_type; Type: INDEX; Schema: public
+CREATE INDEX ix_approval_route_templates_tenant_id_record_type ON public.approval_route_templates USING btree (tenant_id, record_type);
+
+-- Name: ix_approval_steps_inbox; Type: INDEX; Schema: public
+CREATE INDEX ix_approval_steps_inbox ON public.approval_steps USING btree (tenant_id, approver_type, approver_ref, status);
+
+-- Name: ix_approval_steps_route_template_id; Type: INDEX; Schema: public
+CREATE INDEX ix_approval_steps_route_template_id ON public.approval_steps USING btree (route_template_id) WHERE (instance_id IS NULL);
+
+-- Name: ix_approval_steps_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_approval_steps_tenant_id ON public.approval_steps USING btree (tenant_id);
+
+-- Name: ix_approval_steps_tenant_id_due_at; Type: INDEX; Schema: public
+CREATE INDEX ix_approval_steps_tenant_id_due_at ON public.approval_steps USING btree (tenant_id, due_at) WHERE (status = 'pending'::text);
+
+-- Name: ix_approval_steps_tenant_id_instance_id_step_order; Type: INDEX; Schema: public
+CREATE INDEX ix_approval_steps_tenant_id_instance_id_step_order ON public.approval_steps USING btree (tenant_id, instance_id, step_order);
+
 -- Name: ix_assets_attributes; Type: INDEX; Schema: public
 CREATE INDEX ix_assets_attributes ON public.assets USING gin (attributes jsonb_path_ops);
 
@@ -2699,6 +2760,9 @@ CREATE INDEX ix_workflow_instances_definition_id ON public.workflow_instances US
 -- Name: ix_workflow_instances_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_workflow_instances_tenant_id ON public.workflow_instances USING btree (tenant_id);
 
+-- Name: ix_workflow_instances_tenant_id_current_step_id; Type: INDEX; Schema: public
+CREATE INDEX ix_workflow_instances_tenant_id_current_step_id ON public.workflow_instances USING btree (tenant_id, current_step_id);
+
 -- Name: procrastinate_events_job_id_fkey_v1; Type: INDEX; Schema: public
 CREATE INDEX procrastinate_events_job_id_fkey_v1 ON public.procrastinate_events USING btree (job_id);
 
@@ -2926,6 +2990,12 @@ CREATE POLICY tenant_isolation ON public.access_user_scope USING ((tenant_id = (
 
 -- Name: app_user tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.app_user USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: approval_route_templates tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.approval_route_templates USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: approval_steps tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.approval_steps USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: assets tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.assets USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -3163,6 +3233,12 @@ ALTER TABLE public.access_user_scope ENABLE ROW LEVEL SECURITY;
 
 -- Name: app_user; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.app_user ENABLE ROW LEVEL SECURITY;
+
+-- Name: approval_route_templates; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.approval_route_templates ENABLE ROW LEVEL SECURITY;
+
+-- Name: approval_steps; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.approval_steps ENABLE ROW LEVEL SECURITY;
 
 -- Name: assets; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.assets ENABLE ROW LEVEL SECURITY;
@@ -3478,6 +3554,64 @@ CREATE TABLE public.app_user (
 ALTER TABLE ONLY public.app_user FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.app_user OWNER TO aip_owner;
+
+-- Name: approval_route_templates; Type: TABLE; Schema: public
+CREATE TABLE public.approval_route_templates (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    name text NOT NULL,
+    record_type text NOT NULL,
+    conditions jsonb DEFAULT '{}'::jsonb NOT NULL,
+    threshold_bands jsonb,
+    escalation_hours integer,
+    version integer DEFAULT 1 NOT NULL,
+    on_approved_action text NOT NULL,
+    on_rejected_action text NOT NULL,
+    allow_self_approval boolean DEFAULT false NOT NULL,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_approval_route_templates_conditions CHECK ((jsonb_typeof(conditions) = 'object'::text)),
+    CONSTRAINT ck_approval_route_templates_escalation_hours CHECK (((escalation_hours IS NULL) OR (escalation_hours >= 1))),
+    CONSTRAINT ck_approval_route_templates_name CHECK (((length(btrim(name)) >= 1) AND (length(btrim(name)) <= 120))),
+    CONSTRAINT ck_approval_route_templates_version CHECK ((version >= 1))
+);
+
+ALTER TABLE ONLY public.approval_route_templates FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.approval_route_templates OWNER TO aip_owner;
+
+-- Name: approval_steps; Type: TABLE; Schema: public
+CREATE TABLE public.approval_steps (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    route_template_id uuid NOT NULL,
+    instance_id uuid,
+    route_round integer,
+    step_order integer NOT NULL,
+    mode text NOT NULL,
+    approver_type text NOT NULL,
+    approver_ref uuid NOT NULL,
+    required_discipline_id uuid,
+    due_hours integer,
+    due_at timestamp with time zone,
+    status text,
+    decided_by uuid,
+    decided_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_approval_steps_approver_type CHECK ((approver_type = ANY (ARRAY['user'::text, 'role'::text, 'team'::text]))),
+    CONSTRAINT ck_approval_steps_due_hours CHECK (((due_hours IS NULL) OR ((due_hours >= 1) AND (due_hours <= 8760)))),
+    CONSTRAINT ck_approval_steps_kind CHECK ((((instance_id IS NULL) AND (route_round IS NULL) AND (status IS NULL) AND (due_at IS NULL) AND (decided_by IS NULL) AND (decided_at IS NULL)) OR ((instance_id IS NOT NULL) AND (route_round >= 1) AND (status = ANY (ARRAY['waiting'::text, 'pending'::text, 'approved'::text, 'rejected'::text, 'skipped'::text]))))),
+    CONSTRAINT ck_approval_steps_mode CHECK ((mode = ANY (ARRAY['serial'::text, 'parallel'::text]))),
+    CONSTRAINT ck_approval_steps_step_order CHECK ((step_order >= 1))
+);
+
+ALTER TABLE ONLY public.approval_steps FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.approval_steps OWNER TO aip_owner;
 
 -- Name: assets; Type: TABLE; Schema: public
 CREATE TABLE public.assets (
@@ -5080,8 +5214,13 @@ CREATE TABLE public.workflow_instances (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    route_template_id uuid,
+    current_step_id uuid,
+    route_round integer DEFAULT 0 NOT NULL,
+    route_submitted_by uuid,
     CONSTRAINT ck_workflow_instances_current_state CHECK ((current_state ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
-    CONSTRAINT ck_workflow_instances_record_type CHECK ((record_type ~ '^[a-z][a-z0-9_]{0,62}$'::text))
+    CONSTRAINT ck_workflow_instances_record_type CHECK ((record_type ~ '^[a-z][a-z0-9_]{0,62}$'::text)),
+    CONSTRAINT ck_workflow_instances_route_round CHECK ((route_round >= 0))
 );
 
 ALTER TABLE ONLY public.workflow_instances FORCE ROW LEVEL SECURITY;
