@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { createRoute, createRouter, lazyRouteComponent, type RouterHistory } from "@tanstack/react-router";
+import { registerNavItem } from "./features/shell/nav-registry";
 import type { SessionPort } from "./features/shell/session";
 import { rootRoute } from "./routes/__root";
 import { appRoute } from "./routes/_app";
@@ -20,6 +21,7 @@ import { sitesIndexRoute } from "./routes/_app/sites/index";
 import { templateDetailRoute } from "./routes/_app/templates/$templateId";
 import { templatesIndexRoute } from "./routes/_app/templates/index";
 import { billingRoute } from "./routes/_app/settings/billing";
+import { flagsRoute } from "./routes/_app/settings/flags";
 import { sessionsRoute } from "./routes/_app/settings/profile/sessions";
 import { loginRoute } from "./routes/login";
 
@@ -46,6 +48,19 @@ const devRoutes = import.meta.env.PROD
       }),
     ];
 
+// DESIGN-15: no BIM page exists yet, so outside production a fixture nav item behind the `bim`
+// release flag shows the gate working (e2e/web/release-flags.spec.ts). Dead code in a production build.
+if (!import.meta.env.PROD) {
+  registerNavItem({
+    id: "bim-fixture",
+    section: "documents",
+    to: "/__fixtures/ui",
+    icon: "folder",
+    termKey: "shell.flags.fixture_nav",
+    flag: "bim",
+  });
+}
+
 // ITEMTYPES-03: content types and item types admin pages.
 const itemTypesRoutes = [contentTypesIndexRoute, contentTypeDetailRoute, itemTypeEditorRoute] as const;
 // ASSETS-03: the asset tree and register, and the create and edit form.
@@ -53,7 +68,7 @@ const assetsRoutes = [assetsIndexRoute, assetsNewRoute, assetEditRoute] as const
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, ...itemTypesRoutes, ...assetsRoutes]),
+  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, flagsRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, ...itemTypesRoutes, ...assetsRoutes]),
   ...devRoutes,
 ]);
 

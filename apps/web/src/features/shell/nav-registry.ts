@@ -19,6 +19,8 @@ export interface NavItem {
   termKey: string;
   /** Permission the principal needs to see the item. Omit for items every signed-in user sees. */
   permission?: string;
+  /** Release flag (ARCH-08) that must be on for the tenant. Omit for items that are always released. */
+  flag?: string;
 }
 
 const items: NavItem[] = [
@@ -42,10 +44,22 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-/** Items the principal may see, grouped by section in site-hierarchy order; empty sections are dropped. */
-export function visibleNavGroups(all: readonly NavItem[], permissions: readonly string[]): NavGroup[] {
+/**
+ * Items the principal may see, grouped by section in site-hierarchy order; empty sections are dropped.
+ * A flagged item needs its flag in `enabledFlags` (DESIGN-15): until the flags load, it stays hidden.
+ */
+export function visibleNavGroups(
+  all: readonly NavItem[],
+  permissions: readonly string[],
+  enabledFlags: readonly string[] = [],
+): NavGroup[] {
   const allowed = new Set(permissions);
-  const visible = all.filter((item) => item.permission === undefined || allowed.has(item.permission));
+  const released = new Set(enabledFlags);
+  const visible = all.filter(
+    (item) =>
+      (item.permission === undefined || allowed.has(item.permission)) &&
+      (item.flag === undefined || released.has(item.flag)),
+  );
   return NAV_SECTIONS.map((section) => ({ section, items: visible.filter((item) => item.section === section) })).filter(
     (group) => group.items.length > 0,
   );

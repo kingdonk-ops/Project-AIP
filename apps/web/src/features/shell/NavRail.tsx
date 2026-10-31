@@ -6,6 +6,8 @@ import { t } from "./t";
 
 export interface NavRailProps {
   permissions: readonly string[];
+  /** The tenant's release flags that are on (DESIGN-15); flagged items need theirs. */
+  flags?: readonly string[] | undefined;
   /** Defaults to the module registry; tests pass their own list. */
   items?: readonly NavItem[] | undefined;
   /** Mobile: whether the collapsed rail is showing. */
@@ -13,9 +15,9 @@ export interface NavRailProps {
   onNavigate?: () => void;
 }
 
-export function NavRail({ permissions, items = registeredNavItems(), open, onNavigate }: NavRailProps) {
+export function NavRail({ permissions, flags = [], items = registeredNavItems(), open, onNavigate }: NavRailProps) {
   const listRef = useRef<HTMLDivElement>(null);
-  const groups = visibleNavGroups(items, permissions);
+  const groups = visibleNavGroups(items, permissions, flags);
 
   // Arrow keys, Home and End move focus between rail links; Tab still leaves the rail, except from the
   // open mobile drawer, where AppShell traps it (DESIGN-16).
