@@ -17,6 +17,8 @@ from tests.conftest import ALICE_ID, BOB_ID, TENANT_A_ID, TENANT_B_ID
 from tests.fixtures.postgres import TenantDb
 
 from aip.modules.approvals.api import (
+    register_guard_context_provider,
+    register_record_resolver,
     unregister_guard_context_provider,
     unregister_record_resolver,
 )
@@ -28,6 +30,7 @@ from aip.modules.approvals.demo import (
     demo_spec,
     install_demo_records,
 )
+from aip.modules.approvals.guards.context_providers import provider_for, resolver_for
 from aip.modules.approvals.seeds import seed
 from aip.modules.approvals.service import DefinitionsService
 from aip.modules.approvals.tests.conftest import (
@@ -73,12 +76,19 @@ def demo_records(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Replaces the conftest's in-memory ``demo`` records with the real project-backed ones."""
     monkeypatch.setenv(DEMO_RECORDS_ENV, "1")
     unregister_record_resolver(DEMO_RECORD_TYPE)
+    # The inspections module registers the real ``inspection`` hooks at import; put them back.
+    resolver, provider = resolver_for("inspection"), provider_for("inspection")
     try:
         yield
     finally:
         unregister_record_resolver(DEMO_RECORD_TYPE)
         unregister_guard_context_provider(DEMO_RECORD_TYPE)
         unregister_record_resolver("inspection")
+        unregister_guard_context_provider("inspection")
+        if resolver is not None:
+            register_record_resolver("inspection", resolver)
+        if provider is not None:
+            register_guard_context_provider("inspection", provider)
 
 
 @pytest.fixture(autouse=True)
@@ -126,8 +136,12 @@ def test_the_record_type_needs_the_switch_and_a_non_production_env(
     for env in ("production", "staging", ""):
         with pytest.raises(DemoRecordsRefusedError):
             install_demo_records(env)
-    assert install_demo_records("demo") == [DEMO_RECORD_TYPE, "inspection"]
+    # INSPECTIONS-01 registered the real ``inspection`` resolver, so only ``demo`` is added...
+    assert install_demo_records("demo") == [DEMO_RECORD_TYPE]
     assert install_demo_records("demo") == []  # a second call registers nothing twice
+    # ...and without it the project-backed fallback still serves ``inspection``.
+    unregister_record_resolver("inspection")
+    assert install_demo_records("demo") == ["inspection"]
 
 
 @pytest.mark.usefixtures("demo_definition")
