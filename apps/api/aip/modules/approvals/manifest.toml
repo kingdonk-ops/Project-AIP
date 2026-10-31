@@ -33,7 +33,7 @@ description = "Ready, schedule, assign and hand over inspections, assign with co
 
 [[permissions]]
 code = "approvals.inspection.execute"
-description = "Assign to me, inspect, check out to and in from Go, request supervisor review or clarification, and abort inspections"
+description = "Assign to me, inspect, check out to and in from SiteSync, request supervisor review or clarification, and abort inspections"
 
 [[permissions]]
 code = "approvals.inspection.review"

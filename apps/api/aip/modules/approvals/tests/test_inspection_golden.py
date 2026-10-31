@@ -1,8 +1,9 @@
-"""APPROVALS-05/09: the inspection lifecycle presets and their golden cases, through the evaluator.
+"""APPROVALS-05/09/10: the inspection lifecycle presets and golden cases, through the evaluator.
 
 The same cases run through ``TransitionService`` on Postgres in ``test_inspection_preset_db.py``.
 APPROVALS-09 rewrote both presets and the cases to the owner's AIP status and action tables
-(``confirmedBy: "owner"``); a cases file without ``confirmedBy`` would warn that it is provisional.
+(``confirmedBy: "owner"``); APPROVALS-10 renamed the tablet state and its actions from Go to
+SiteSync (ADR 0041 §1). A cases file without ``confirmedBy`` would warn that it is provisional.
 A case with ``"comment": false`` takes its actions without a comment; the evaluator has no comment
 rule, so the runner applies the transition service's (422 ``COMMENT_REQUIRED``).
 """
@@ -111,7 +112,7 @@ def test_the_standard_preset_has_the_owners_eleven_states() -> None:
         "assignable",
         "assigned",
         "in_progress",
-        "in_progress_go",
+        "in_progress_sitesync",
         "inspector_review",
         "supervisor_review",
         "rework_required",
@@ -195,6 +196,31 @@ def test_every_label_key_is_in_the_en_au_dictionary() -> None:
         keys = [s.label_key for s in spec.states] + [t.label_key for t in spec.transitions]
         missing += [key for key in keys if key not in known]
     assert missing == []
+
+
+GO_CODES = {"in_progress_go": "state", "go_checkout": "action", "check_in": "action"}
+SITESYNC_LABELS = {
+    "workflow.inspection.state.in_progress_sitesync": "In Progress (SiteSync)",
+    "workflow.inspection.action.sitesync_checkout": "SiteSync: Checkout",
+    "workflow.inspection.action.sitesync_check_in": "SiteSync: Check In",
+}
+
+
+def test_the_go_codes_are_renamed_to_sitesync() -> None:
+    terms = json.loads(
+        (repo_root() / "config" / "terms" / "en-AU" / "approvals.json").read_text(encoding="utf-8")
+    )
+    assert {key: terms[key]["text"] for key in SITESYNC_LABELS} == SITESYNC_LABELS
+    removed = {f"workflow.inspection.{kind}.{code}" for code, kind in GO_CODES.items()}
+    assert removed.isdisjoint(terms)
+    for variant in PRESET_FOR:
+        spec = preset_spec(variant)
+        codes = {s.code for s in spec.states} | {t.action for t in spec.transitions}
+        keys = {s.label_key for s in spec.states} | {t.label_key for t in spec.transitions}
+        assert codes.isdisjoint(GO_CODES)
+        assert keys.isdisjoint(removed)
+        assert {"in_progress_sitesync", "sitesync_checkout", "sitesync_check_in"} <= codes
+        assert set(SITESYNC_LABELS) <= keys
 
 
 def test_the_shipped_presets_live_in_config_workflows() -> None:
