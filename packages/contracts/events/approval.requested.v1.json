@@ -1,0 +1,74 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "approverRef": {
+      "format": "uuid",
+      "title": "Approverref",
+      "type": "string"
+    },
+    "approverType": {
+      "enum": [
+        "user",
+        "role",
+        "team"
+      ],
+      "title": "Approvertype",
+      "type": "string"
+    },
+    "dueAt": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Dueat"
+    },
+    "instanceId": {
+      "format": "uuid",
+      "title": "Instanceid",
+      "type": "string"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Projectid"
+    },
+    "recordId": {
+      "format": "uuid",
+      "title": "Recordid",
+      "type": "string"
+    },
+    "recordType": {
+      "title": "Recordtype",
+      "type": "string"
+    },
+    "stepId": {
+      "format": "uuid",
+      "title": "Stepid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "instanceId",
+    "stepId",
+    "recordType",
+    "recordId",
+    "projectId",
+    "approverType",
+    "approverRef",
+    "dueAt"
+  ],
+  "title": "ApprovalRequested",
+  "type": "object"
+}

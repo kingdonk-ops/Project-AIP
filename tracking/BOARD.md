@@ -252,7 +252,10 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 |---|---|---|---|---|---|---|
 | [ACCESS-05](tasks/ACCESS-05.md) | Users & Roles UI, permission matrix page and export | access | M | ACCESS-02, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting; step-up is now a full redirect to Keycloak (`stepUpUrl`); map `mfaEnrolled` to `app_user.mfa_enrolled_at` (ADR 0005 rev 2) |
 | [ACCESS-06](tasks/ACCESS-06.md) | Project permission overrides, operator support-access gate, lockout on user removal | access | M | ACCESS-02, PROJECTS-03, TENANCY-06 | todo | split from ACCESS-02 (2026-10-13) |
-| [APPROVALS-04](tasks/APPROVALS-04.md) | Approval routes: sequential/parallel steps, user/role/team approvers | approvals | M | ACCESS-04, APPROVALS-02 | todo | convert to Python backend per ADR 0001 before starting  |
+| [APPROVALS-04](tasks/APPROVALS-04.md) | Approval routes: sequential/parallel steps, user/role/team approvers | approvals | M | ACCESS-04, APPROVALS-02 | done | ClaudeK: PR #217; branch claudeK/approvals-04-routes-2bd107; converted per ADR 0001; decide permission `approvals.approve`, deviations in ADR 0040; e2e carried to APPROVALS-06 |
+| [APPROVALS-11](tasks/APPROVALS-11.md) | Approval route threshold bands and authority matrix | approvals | S | APPROVALS-04 | todo | stub; found by APPROVALS-04 (ADR 0040 §10) |
+| [APPROVALS-12](tasks/APPROVALS-12.md) | Escalation and reminders for overdue approval steps | approvals | S | APPROVALS-04 | todo | stub; found by APPROVALS-04 (ADR 0040 §10) |
+| [APPROVALS-13](tasks/APPROVALS-13.md) | Delegation of approval steps with a date range and audit visibility | approvals | M | APPROVALS-04 | todo | stub; found by APPROVALS-04 (ADR 0040 §10) |
 | [APPROVALS-05](tasks/APPROVALS-05.md) | Inspection lifecycle preset + golden tests (needs AIP lifecycle spec) | approvals | M | APPROVALS-02, TERMS-01 | done | ClaudeK: PR #153 (merged 2026-10-28); branch claudeK/approvals-05-inspection-preset-04f48d; converted per ADR 0001; presets `inspection_standard` + `inspection_client_review` (project-scoped); golden cases **provisional** (blueprint-derived, OPEN-QUESTIONS #4: owner to confirm `confirmedBy`); e2e carried to TESTING-13 |
 | [UPLOADS-04](tasks/UPLOADS-04.md) | EXIF/GPS policy, thumbnails, per-file-type policy + quota counters | uploads | M | UPLOADS-02 | todo | **merges UPLOADS-05**; sandboxed derive (GPS strip + thumbnails) and the platform/tenant/project policy table with atomic quota reservation |
 | [IDENTITY-05](tasks/IDENTITY-05.md) | SCIM 2.0 server; deprovision revokes everything in one transaction | identity | M | ACCESS-01, ARCH-05, IDENTITY-03 | todo |  |
@@ -271,7 +274,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [APPROVALS-06](tasks/APPROVALS-06.md) | Approvals inbox API + page | approvals | M | APPROVALS-04, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting  |
+| [APPROVALS-06](tasks/APPROVALS-06.md) | Approvals inbox API + page | approvals | M | APPROVALS-04, DESIGN-03 | todo | convert to Python backend per ADR 0001 before starting; carries the APPROVALS-04 e2e journey (ADR 0040 §11) |
 | [UPLOADS-06](tasks/UPLOADS-06.md) | Upload tray + scan status chip | uploads | M | DESIGN-03, UPLOADS-02 | todo | convert to Python backend per ADR 0001 before starting; review 11 M17: check `uploads.view` on list and status, or remove the permission |
 | [UPLOADS-07](tasks/UPLOADS-07.md) | Enforce per-tenant SSE-KMS on the presigned upload (ADR 0006) | uploads | S | TENANCY-05, UPLOADS-01 | todo | found in UPLOADS-01: presign policy built, key source awaits TENANCY-05 exposing it via the tenancy interface  |
 | [IDENTITY-06](tasks/IDENTITY-06.md) | OAuth2 client-credentials API clients (ES256, scoped, expiring) | identity | S | ACCESS-01, IDENTITY-02 | todo |  |

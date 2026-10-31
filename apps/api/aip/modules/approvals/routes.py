@@ -8,7 +8,11 @@
 - ``GET /instances/{id}/history`` returns the decisions and ``chainValid`` (``approvals.view``);
 - ``GET /presets`` lists the ``config/workflows`` presets (``approvals.view``) and
   ``POST /definitions/from-preset`` installs one, tenant-wide or for a project, idempotently
-  (``approvals.design``; 404 ``PRESET_NOT_FOUND``) (APPROVALS-05).
+  (``approvals.design``; 404 ``PRESET_NOT_FOUND``) (APPROVALS-05);
+- approval routes (APPROVALS-04): ``POST``/``GET /route-templates`` (``approvals.design``),
+  ``POST /instances/{id}/route`` starts one (``approvals.start``), ``POST /instances/{id}/decide``
+  decides a step (``approvals.approve`` and eligibility) and ``GET /instances/{id}/steps``
+  returns the latest round (``approvals.view``).
 
 Every route is ``authenticated()`` and the service checks each permission against the instance's
 project, which is known only once the instance is loaded (deny by default either way). Another
@@ -25,6 +29,7 @@ from fastapi import APIRouter, Depends, Request, Response, status
 
 from aip.modules.approvals.decision_chain import ChainBroken
 from aip.modules.approvals.presets import list_presets
+from aip.modules.approvals.routes_engine.service import RoutesService, RouteTemplate, RouteView
 from aip.modules.approvals.schemas import (
     ApprovalsErrorBody,
     AssuranceOut,
@@ -36,6 +41,13 @@ from aip.modules.approvals.schemas import (
     InstanceStart,
     PresetInstall,
     PresetOut,
+    RouteOut,
+    RouteStart,
+    RouteStepOut,
+    RouteTemplateCreate,
+    RouteTemplateOut,
+    StepDecisionOut,
+    StepDecisionRequest,
     TransitionOut,
     TransitionRequest,
 )
@@ -99,6 +111,11 @@ def _service(request: Request) -> TransitionService:
     return TransitionService(policy)
 
 
+def _routes(request: Request) -> RoutesService:
+    policy: PolicyService = request.app.state.access_policy
+    return RoutesService(policy)
+
+
 def _instance_out(view: InstanceView) -> InstanceOut:
     row = view.instance
     return InstanceOut(
@@ -151,6 +168,47 @@ def _decision_out(entry: dict[str, Any]) -> DecisionOut:
         prev_hash=entry["prev_hash"],
         entry_hash=entry["entry_hash"],
         created_at=entry["created_at"],
+    )
+
+
+def _step_out(step: dict[str, Any]) -> RouteStepOut:
+    return RouteStepOut(
+        id=step["id"],
+        step_order=step["step_order"],
+        mode=step["mode"],
+        approver_type=step["approver_type"],
+        approver_ref=step["approver_ref"],
+        due_hours=step["due_hours"],
+        status=step["status"],
+        due_at=step["due_at"],
+        decided_by=step["decided_by"],
+        decided_at=step["decided_at"],
+    )
+
+
+def _route_out(route: RouteView) -> RouteOut:
+    row = route.view.instance
+    return RouteOut(
+        instance=_instance_out(route.view),
+        route_template_id=row["route_template_id"],
+        route_round=row["route_round"],
+        current_step_id=row["current_step_id"],
+        steps=[_step_out(s) for s in route.steps],
+    )
+
+
+def _template_out(found: RouteTemplate) -> RouteTemplateOut:
+    t = found.template
+    return RouteTemplateOut(
+        id=t["id"],
+        name=t["name"],
+        record_type=t["record_type"],
+        version=t["version"],
+        on_approved_action=t["on_approved_action"],
+        on_rejected_action=t["on_rejected_action"],
+        allow_self_approval=t["allow_self_approval"],
+        steps=[_step_out(s) for s in found.steps],
+        created_at=t["created_at"],
     )
 
 
@@ -236,6 +294,108 @@ async def get_history(instance_id: UUID, request: Request, who: CurrentActor) ->
     )
 
 
+@instances_router.post(
+    "/{instance_id}/route",
+    operation_id="approvals_start_route",
+    response_model=RouteOut,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        **_ERRORS,
+        409: {"model": ApprovalsErrorBody, "description": "ROUTE_ACTIVE, COUNTERSIGN_PENDING"},
+        422: {
+            "model": ApprovalsErrorBody,
+            "description": "Validation error, ROUTE_TEMPLATE_MISMATCH or ROUTE_ACTION_INVALID",
+        },
+    },
+)
+async def start_route(
+    instance_id: UUID, body: RouteStart, request: Request, who: CurrentActor
+) -> RouteOut:
+    async with with_tenant(get_context()) as conn:
+        route = await _routes(request).start_route(conn, who, instance_id, body.route_template_id)
+    return _route_out(route)
+
+
+@instances_router.post(
+    "/{instance_id}/decide",
+    operation_id="approvals_decide_step",
+    response_model=StepDecisionOut,
+    responses={
+        **_ERRORS,
+        409: {
+            "model": ApprovalsErrorBody,
+            "description": "STEP_NOT_PENDING, INVALID_TRANSITION, COUNTERSIGN_PENDING",
+        },
+        422: {
+            "model": ApprovalsErrorBody,
+            "description": "Validation error, COMMENT_REQUIRED, GUARD_FAILED or GUARD_ERROR",
+        },
+    },
+)
+async def decide_step(
+    instance_id: UUID, body: StepDecisionRequest, request: Request, who: CurrentActor
+) -> StepDecisionOut:
+    async with with_tenant(get_context()) as conn:
+        result = await _routes(request).decide(
+            conn, who, instance_id, body.step_id, body.decision, body.comment
+        )
+    return StepDecisionOut(
+        route=_route_out(result.route),
+        decision=_decision_out(result.decision),
+        outcome=result.outcome,
+    )
+
+
+@instances_router.get(
+    "/{instance_id}/steps",
+    operation_id="approvals_get_steps",
+    response_model=RouteOut,
+    responses=_ERRORS,
+)
+async def get_steps(instance_id: UUID, request: Request, who: CurrentActor) -> RouteOut:
+    async with with_tenant(get_context()) as conn:
+        route = await _routes(request).route(conn, who, instance_id)
+    return _route_out(route)
+
+
+templates_router = APIRouter(
+    prefix="/approvals/route-templates",
+    tags=["approvals"],
+    dependencies=[Depends(requires("approvals.design"))],
+)
+
+
+@templates_router.post(
+    "",
+    operation_id="approvals_create_route_template",
+    response_model=RouteTemplateOut,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        422: {
+            "model": ApprovalsErrorBody,
+            "description": "Validation error, ROUTE_SHAPE_INVALID or UNKNOWN_APPROVER",
+        }
+    },
+)
+async def create_route_template(
+    body: RouteTemplateCreate, request: Request, who: CurrentActor
+) -> RouteTemplateOut:
+    async with with_tenant(get_context()) as conn:
+        created = await _routes(request).create_template(conn, who, body)
+    return _template_out(created)
+
+
+@templates_router.get(
+    "",
+    operation_id="approvals_list_route_templates",
+    response_model=list[RouteTemplateOut],
+)
+async def list_route_templates(request: Request, who: CurrentActor) -> list[RouteTemplateOut]:
+    async with with_tenant(get_context()) as conn:
+        found = await _routes(request).list_templates(conn, who)
+    return [_template_out(t) for t in found]
+
+
 presets_router = APIRouter(prefix="/approvals", tags=["approvals"])
 
 
@@ -285,3 +445,4 @@ async def install_preset(body: PresetInstall) -> DefinitionOut:
 router = APIRouter(dependencies=[Depends(require_active_tenant)])
 router.include_router(instances_router)
 router.include_router(presets_router)
+router.include_router(templates_router)

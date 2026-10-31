@@ -11,6 +11,9 @@ module supply the read-only ``record`` facts its record type's guards see, and
 ``register_record_resolver`` tells approvals which project a record belongs to (required before
 ``POST /approvals/instances`` accepts that record type).
 
+APPROVALS-04: ``start_route``, ``decide``, ``route`` and ``pending_steps`` (the inbox query
+APPROVALS-06 uses) run approval routes with the same checks as the ``/api/v1/approvals`` routes.
+
 TESTING-13: ``install_demo_records`` registers the dev and demo ``demo`` record type (see
 ``demo.py``); ``create_app`` calls it.
 """
@@ -41,6 +44,13 @@ from aip.modules.approvals.guards.jsonlogic import (
     validate_guard,
 )
 from aip.modules.approvals.presets import Preset, PresetError, list_presets
+from aip.modules.approvals.routes_engine.route_plan import Decision
+from aip.modules.approvals.routes_engine.service import (
+    DecideResult,
+    PendingStep,
+    RoutesService,
+    RouteView,
+)
 from aip.modules.approvals.schemas import (
     StateSpec,
     TransitionSpec,
@@ -64,15 +74,19 @@ __all__ = [
     "Actor",
     "ApprovalsApi",
     "Availability",
+    "DecideResult",
+    "Decision",
     "GuardContextProvider",
     "GuardError",
     "History",
     "InstanceView",
     "NoActiveDefinitionError",
+    "PendingStep",
     "Preset",
     "PresetError",
     "RecordRef",
     "RecordResolver",
+    "RouteView",
     "StateSpec",
     "TransitionResult",
     "TransitionSpec",
@@ -168,3 +182,44 @@ class ApprovalsApi:
     ) -> History:
         """Every decision on the instance and whether its hash chain holds."""
         return await TransitionService(policy, _instances).history(conn, actor, instance_id)
+
+    async def start_route(
+        self,
+        conn: AsyncConnection,
+        policy: PolicyService,
+        actor: Actor,
+        instance_id: UUID,
+        route_template_id: UUID,
+    ) -> RouteView:
+        """Start an approval route on the instance: ``POST /instances/{id}/route``."""
+        service = RoutesService(policy, TransitionService(policy, _instances))
+        return await service.start_route(conn, actor, instance_id, route_template_id)
+
+    async def decide(
+        self,
+        conn: AsyncConnection,
+        policy: PolicyService,
+        actor: Actor,
+        instance_id: UUID,
+        step_id: UUID,
+        decision: Decision,
+        comment: str | None = None,
+    ) -> DecideResult:
+        """Approve or reject a route step: ``POST /instances/{id}/decide``."""
+        service = RoutesService(policy, TransitionService(policy, _instances))
+        return await service.decide(conn, actor, instance_id, step_id, decision, comment)
+
+    async def route(
+        self, conn: AsyncConnection, policy: PolicyService, actor: Actor, instance_id: UUID
+    ) -> RouteView:
+        """The instance's latest round of route steps: ``GET /instances/{id}/steps``."""
+        return await RoutesService(policy, TransitionService(policy, _instances)).route(
+            conn, actor, instance_id
+        )
+
+    async def pending_steps(
+        self, conn: AsyncConnection, policy: PolicyService, actor: Actor, *, limit: int = 200
+    ) -> list[PendingStep]:
+        """The pending route steps ``actor`` may decide now (the APPROVALS-06 inbox query)."""
+        service = RoutesService(policy, TransitionService(policy, _instances))
+        return await service.pending_steps(conn, actor, limit=limit)
