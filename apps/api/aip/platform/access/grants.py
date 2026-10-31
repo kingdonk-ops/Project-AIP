@@ -1,9 +1,13 @@
 """Grants and the ``GrantProvider`` port the policy service reads them from (ACCESS-01).
 
-A ``Grant`` gives one permission at one scope: the whole tenant (``TenantScope``) or one project
-(``ProjectScope``). Providers are registered on the ``PolicyService``; the principal's grants are
-the union of what every provider returns. ACCESS-02 adds the role-assignment provider; until then
-no provider is registered and every ``requires()`` route is denied.
+A ``Grant`` gives one permission at one scope: the whole tenant (``TenantScope``), one project
+(``ProjectScope``) or one asset subtree inside a project (``AssetSubtreeScope``, PORTAL-01).
+Providers are registered on the ``PolicyService``; the principal's grants are the union of what
+every provider returns. ACCESS-02 adds the role-assignment provider; until then no provider is
+registered and every ``requires()`` route is denied.
+
+A provider class that sets ``serves_external = True`` (PORTAL-01's portal grants) is asked only for
+external principals (``AccessPrincipal.external``); every other provider only for internal ones.
 """
 
 from __future__ import annotations
@@ -16,7 +20,14 @@ from uuid import UUID
 if TYPE_CHECKING:
     from aip.platform.access.policy import AccessPrincipal
 
-__all__ = ["Grant", "GrantProvider", "GrantScope", "ProjectScope", "TenantScope"]
+__all__ = [
+    "AssetSubtreeScope",
+    "Grant",
+    "GrantProvider",
+    "GrantScope",
+    "ProjectScope",
+    "TenantScope",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,7 +42,20 @@ class ProjectScope:
     project_id: UUID | str
 
 
-GrantScope = TenantScope | ProjectScope
+@dataclass(frozen=True, slots=True)
+class AssetSubtreeScope:
+    """Matches only resources in ``project_id`` whose asset path runs through ``asset_id``.
+
+    The resource's ``asset_path`` (ltree text) must contain a label equal to ``asset_id`` without
+    dashes (ASSETS-01 labels each node by its id), so the node and its descendants match and its
+    siblings and ancestors do not. A resource without an asset path never matches (fail closed).
+    """
+
+    project_id: UUID | str
+    asset_id: UUID | str
+
+
+GrantScope = TenantScope | ProjectScope | AssetSubtreeScope
 
 
 @dataclass(frozen=True, slots=True)

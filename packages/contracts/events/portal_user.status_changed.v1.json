@@ -1,0 +1,31 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "after": {
+      "title": "After",
+      "type": "string"
+    },
+    "before": {
+      "title": "Before",
+      "type": "string"
+    },
+    "portalUserId": {
+      "format": "uuid",
+      "title": "Portaluserid",
+      "type": "string"
+    },
+    "userId": {
+      "format": "uuid",
+      "title": "Userid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "portalUserId",
+    "userId",
+    "before",
+    "after"
+  ],
+  "title": "PortalUserStatusChanged",
+  "type": "object"
+}

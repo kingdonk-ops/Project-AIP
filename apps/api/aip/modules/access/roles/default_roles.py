@@ -25,6 +25,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Final, Literal
 
 __all__ = [
+    "EXTERNAL_ONLY_PREFIXES",
     "LEVELS",
     "LEVEL_VERBS",
     "MATRIX",
@@ -36,6 +37,7 @@ __all__ = [
     "default_permissions",
     "expand_level",
     "level_of_verb",
+    "never_role_held",
     "role_name_key",
 ]
 
@@ -47,6 +49,16 @@ LEVELS: Final[tuple[Level, ...]] = ("none", "view", "create", "edit", "approve",
 # Operator-only permission codes (ADR 0029: the ops module's platform namespace). Tenant roles,
 # default or custom, can never hold them: they act across tenants.
 OPERATOR_ONLY_PREFIX: Final = "platform."
+
+# External permission codes (PORTAL-01): given only by portal grants (PortalGrantProvider),
+# never by a role, so a staff role can never act as the client (sign off, witness, download).
+EXTERNAL_ONLY_PREFIXES: Final = ("portal.record.", "portal.report.")
+
+
+def never_role_held(code: str) -> bool:
+    """A code no tenant role may hold: operator-only or external-only."""
+    return code.startswith((OPERATOR_ONLY_PREFIX, *EXTERNAL_ONLY_PREFIXES))
+
 
 # The verbs each level adds on top of the levels below it.
 LEVEL_VERBS: Final[Mapping[Level, frozenset[str]]] = {
@@ -937,7 +949,7 @@ def default_permissions(
     """Each default role's permission codes, from ``(code, module_id)`` catalogue pairs."""
     by_module: dict[str, list[str]] = {}
     for code, module_id in catalogue:
-        if code.startswith(OPERATOR_ONLY_PREFIX):
+        if never_role_held(code):
             continue
         by_module.setdefault(module_id, []).append(code)
     granted: dict[str, set[str]] = {role: set() for role in ROLE_CODES}

@@ -24,7 +24,9 @@ invalid or duplicate code stops startup), every route must declare ``public()``,
 ``authenticated()`` or ``requires()`` (``install_access`` refuses to start otherwise), and the
 lifespan startup hook syncs the catalogue into the ``permission`` table. When the access module is
 enabled, ``RoleGrantProvider`` (ACCESS-02) turns role assignments into grants; without it every
-``requires()`` route answers 403.
+``requires()`` route answers 403. When the portal module is enabled, ``PortalGrantProvider``
+(PORTAL-01) turns portal grants into the only grants of a portal user (``user_class = 'portal'``
+makes the policy principal ``external``).
 """
 
 import os
@@ -48,6 +50,7 @@ from aip.modules.identity.api import (
 )
 from aip.modules.ops.health import ReadinessChecker
 from aip.modules.ops.health import router as health_router
+from aip.modules.portal.api import PortalGrantProvider
 from aip.modules.tenancy.api import (
     DEMO_ENV,
     FlagEntitlements,
@@ -122,7 +125,11 @@ async def identity_access_principal(request: Request) -> AccessPrincipal:
     """The identity principal (401 when absent or inconsistent) as the policy's principal."""
     principal = await get_principal(request)
     return AccessPrincipal(
-        tenant_id=principal.tenant_id, actor_id=principal.user_id, kind="user", aal=principal.aal
+        tenant_id=principal.tenant_id,
+        actor_id=principal.user_id,
+        kind="user",
+        aal=principal.aal,
+        external=principal.user_class == "portal",  # PORTAL-01: only portal grants apply
     )
 
 
@@ -152,6 +159,8 @@ def create_app(
     policy = PolicyService(catalogue)
     if any(module.manifest.id == "access" for module in modules):
         policy.register(RoleGrantProvider())  # ACCESS-02: role assignments are the grants
+    if any(module.manifest.id == "portal" for module in modules):
+        policy.register(PortalGrantProvider())  # PORTAL-01: a portal user's only grants
     env = os.environ.get("AIP_ENV", "") if env is None else env
 
     @asynccontextmanager
