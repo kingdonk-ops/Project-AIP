@@ -16,6 +16,11 @@ checks ``PolicyService.can`` with that project as the resource. Requesting and r
 ``report.create`` plus the record's own view permission (``project.view`` for a project); reading
 needs ``report.view``. A deny is 403 with nothing written; a list leaves out the jobs the caller may
 not view. Bodies are strict (an unknown key is 422); ``Idempotency-Key`` is at most 128 characters.
+
+REPORTS-04: the list filters by ``status`` (repeatable) and searches ``q`` (record label or template
+key) for the report register. ``GET /{id}/file`` streams a succeeded job's PDF from uploads as an
+attachment (``report.view``; 409 ``REPORT_NOT_READY`` before it has succeeded); no response ever
+carries a storage key or presigned URL.
 """
 
 from __future__ import annotations
@@ -31,6 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from aip.modules.report_engine.render_service import Authorizer, RenderService
 from aip.modules.report_engine.schemas import (
     RenderJobPage,
+    RenderJobStatus,
     RenderJobView,
     RenderRequest,
     ReportErrorBody,
@@ -62,6 +68,8 @@ RecordType = Annotated[str | None, Query(alias="recordType", pattern=r"^[a-z][a-
 Status = Annotated[str | None, Query(alias="status", pattern=r"^(draft|published|retired)$")]
 Cursor = Annotated[str | None, Query(max_length=200)]
 Limit = Annotated[int, Query(ge=1, le=200)]
+RenderStatuses = Annotated[list[RenderJobStatus], Query(alias="status", max_length=4)]
+Search = Annotated[str | None, Query(min_length=1, max_length=100)]
 
 router = APIRouter(dependencies=[Depends(require_active_tenant)])
 templates_router = APIRouter(prefix="/reports/templates", tags=["reports"])
@@ -248,6 +256,8 @@ async def list_renders(
     principal: Principal,
     record_type: RecordType = None,
     record_id: RecordId = None,
+    status_: RenderStatuses = [],  # noqa: B006 - FastAPI copies it
+    q: Search = None,
     cursor: Cursor = None,
     limit: Limit = 50,
 ) -> RenderJobPage:
@@ -256,6 +266,8 @@ async def list_renders(
             conn,
             record_type=record_type,
             record_id=record_id,
+            statuses=tuple(status_),
+            q=q,
             cursor=cursor,
             limit=limit,
             authorize=_authorizer(request, principal),
@@ -271,6 +283,33 @@ async def list_renders(
 async def get_render(render_job_id: UUID, request: Request, principal: Principal) -> RenderJobView:
     async with _tx() as conn:
         return await _renders.get(conn, render_job_id, authorize=_authorizer(request, principal))
+
+
+@renders_router.get(
+    "/{render_job_id}/file",
+    operation_id="reports_renders_file",
+    response_class=Response,
+    responses={
+        200: {"content": {"application/pdf": {}}, "description": "The report's PDF"},
+        **_FORBIDDEN,
+        **_NOT_FOUND,
+        409: {"model": ReportErrorBody, "description": "REPORT_NOT_READY"},
+    },
+)
+async def download_render(render_job_id: UUID, request: Request, principal: Principal) -> Response:
+    async with _tx() as conn:
+        report = await _renders.download(
+            conn, render_job_id, authorize=_authorizer(request, principal)
+        )
+    return Response(
+        content=report.data,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{report.filename}"',
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @renders_router.post(
