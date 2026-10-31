@@ -1,4 +1,4 @@
-"""APPROVALS-05/09: the inspection presets through the real app and ``TransitionService`` on Postgres.
+"""APPROVALS-05/09: the inspection presets through the real app and ``TransitionService``.
 
 Every golden case runs here as it does through the evaluator in ``test_inspection_golden.py``.
 The inspections module (INSPECTIONS-01) does not exist yet, so a test resolver stands in for the
