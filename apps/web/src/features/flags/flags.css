@@ -1,0 +1,23 @@
+/* DESIGN-15: release flags settings page. Tokens only (DESIGN-01). */
+.aip-flags {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 40rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aip-flags__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.aip-flags__hint {
+  margin: var(--space-1) 0 0;
+  color: var(--foreground-muted);
+  font-size: var(--text-base);
+}
