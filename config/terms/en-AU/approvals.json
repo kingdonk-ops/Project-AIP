@@ -19,9 +19,9 @@
     "text": "In Progress",
     "description": "Inspection workflow state 'in_progress' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
-  "workflow.inspection.state.in_progress_go": {
-    "text": "In Progress (Go)",
-    "description": "Inspection workflow state 'in_progress_go' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  "workflow.inspection.state.in_progress_sitesync": {
+    "text": "In Progress (SiteSync)",
+    "description": "Inspection workflow state 'in_progress_sitesync' in the inspection_standard and inspection_client_review presets (APPROVALS-09; renamed from Go to SiteSync by APPROVALS-10, ADR 0041)."
   },
   "workflow.inspection.state.inspector_review": {
     "text": "Inspector Review",
@@ -83,9 +83,9 @@
     "text": "Assign",
     "description": "Button for the inspection workflow action 'assign' in the inspection_standard and inspection_client_review presets (APPROVALS-09). Also labels 'assign_unassigned' (the same action when no assignee is set)."
   },
-  "workflow.inspection.action.go_checkout": {
-    "text": "Go: Checkout",
-    "description": "Button for the inspection workflow action 'go_checkout' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  "workflow.inspection.action.sitesync_checkout": {
+    "text": "SiteSync: Checkout",
+    "description": "Button for the inspection workflow action 'sitesync_checkout' in the inspection_standard and inspection_client_review presets (APPROVALS-09; renamed from Go to SiteSync by APPROVALS-10, ADR 0041)."
   },
   "workflow.inspection.action.handover": {
     "text": "Handover",
@@ -103,9 +103,9 @@
     "text": "Abort",
     "description": "Button for the inspection workflow action 'abort' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
   },
-  "workflow.inspection.action.check_in": {
-    "text": "Check In",
-    "description": "Button for the inspection workflow action 'check_in' in the inspection_standard and inspection_client_review presets (APPROVALS-09)."
+  "workflow.inspection.action.sitesync_check_in": {
+    "text": "SiteSync: Check In",
+    "description": "Button for the inspection workflow action 'sitesync_check_in' in the inspection_standard and inspection_client_review presets (APPROVALS-09; renamed from Go to SiteSync by APPROVALS-10, ADR 0041)."
   },
   "workflow.inspection.action.mark_performed": {
     "text": "Mark as Performed",

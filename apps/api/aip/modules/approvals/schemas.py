@@ -20,7 +20,9 @@ non-blank comment (422 ``COMMENT_REQUIRED``).
 The HTTP models (``InstanceStart``, ``TransitionRequest``, ``InstanceOut``, ``TransitionOut``,
 ``HistoryOut``, and the APPROVALS-05 preset models ``PresetOut``, ``PresetInstall`` and
 ``DefinitionOut``) use camelCase JSON and forbid unknown keys, so a client can never send a guard
-outcome or any other server-decided field.
+outcome or any other server-decided field. APPROVALS-04 adds the approval route models
+(``RouteTemplateCreate``, ``RouteTemplateOut``, ``RouteStart``, ``StepDecisionRequest``,
+``RouteOut``, ``StepDecisionOut``).
 """
 
 from __future__ import annotations
@@ -49,7 +51,15 @@ __all__ = [
     "InstanceStart",
     "PresetInstall",
     "PresetOut",
+    "RouteOut",
+    "RouteStart",
+    "RouteStepIn",
+    "RouteStepOut",
+    "RouteTemplateCreate",
+    "RouteTemplateOut",
     "StateSpec",
+    "StepDecisionOut",
+    "StepDecisionRequest",
     "TransitionOut",
     "TransitionRequest",
     "TransitionSpec",
@@ -320,3 +330,80 @@ class DefinitionOut(_Http):
     project_id: UUID | None
     version: int
     status: DefinitionStatus
+
+
+# --- approval routes (APPROVALS-04) -----------------------------------------------------------
+
+StepMode = Literal["serial", "parallel"]
+ApproverType = Literal["user", "role", "team"]
+StepStatus = Literal["waiting", "pending", "approved", "rejected", "skipped"]
+
+
+class RouteStepIn(_Http):
+    step_order: int = Field(ge=1, le=100)
+    mode: StepMode = "serial"
+    approver_type: ApproverType
+    approver_ref: UUID
+    due_hours: int | None = Field(default=None, ge=1, le=8760)
+
+
+class RouteTemplateCreate(_Http):
+    name: str = Field(min_length=1, max_length=120, pattern=r"\S")
+    record_type: Code
+    on_approved_action: Code
+    on_rejected_action: Code
+    allow_self_approval: bool = False
+    steps: list[RouteStepIn] = Field(min_length=1, max_length=50)
+
+
+class RouteStepOut(_Http):
+    """A template step (no status) or an instance step with its status and decision."""
+
+    id: UUID
+    step_order: int
+    mode: StepMode
+    approver_type: ApproverType
+    approver_ref: UUID
+    due_hours: int | None
+    status: StepStatus | None = None
+    due_at: datetime | None = None
+    decided_by: UUID | None = None
+    decided_at: datetime | None = None
+
+
+class RouteTemplateOut(_Http):
+    id: UUID
+    name: str
+    record_type: str
+    version: int
+    on_approved_action: str
+    on_rejected_action: str
+    allow_self_approval: bool
+    steps: list[RouteStepOut]
+    created_at: datetime
+
+
+class RouteStart(_Http):
+    route_template_id: UUID
+
+
+class StepDecisionRequest(_Http):
+    step_id: UUID
+    decision: Literal["approve", "reject"]
+    comment: str | None = Field(default=None, max_length=2000)
+
+
+class RouteOut(_Http):
+    """An instance's current route: the latest round's steps (none before the first route)."""
+
+    instance: InstanceOut
+    route_template_id: UUID | None
+    route_round: int
+    current_step_id: UUID | None
+    steps: list[RouteStepOut]
+
+
+class StepDecisionOut(_Http):
+    route: RouteOut
+    decision: DecisionOut
+    outcome: Literal["approved", "rejected"] | None = None

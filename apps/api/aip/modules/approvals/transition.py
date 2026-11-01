@@ -27,6 +27,15 @@ Nothing is written before every check has passed. ``describe`` returns the insta
 transition from its state and whether this caller may take it (``allowed``/``reasonKey``),
 computed with the same permission, countersign and guard rules; it is a hint, ``transition``
 decides.
+
+Approval routes (APPROVALS-04, ADR 0040): while a route runs on the instance, its
+``on_approved_action`` and ``on_rejected_action`` are refused here (409 ``ROUTE_PENDING``), and
+any other transition that takes effect cancels the route (its open steps become ``skipped``).
+``complete_route`` is the route's own way in: the route's decisions stand in for the transition's
+``requiredPermission``, and steps (b), (c) and (e) to (h) run unchanged for the last decider,
+except that a ``countersign_required`` sign-off is 403 ``COUNTERSIGN_ASSURANCE_REQUIRED`` (route
+decisions are never countersigned). ``record_step_decision`` appends a non-moving row for every
+other step decision.
 """
 
 from __future__ import annotations
@@ -53,11 +62,16 @@ from aip.modules.approvals.decision_chain import (
     sha256_hex,
     verify_chain,
 )
-from aip.modules.approvals.engine.evaluator import TransitionRejected, apply_transition
+from aip.modules.approvals.engine.evaluator import (
+    TransitionApplied,
+    TransitionRejected,
+    apply_transition,
+)
 from aip.modules.approvals.errors import NoActiveDefinitionError
 from aip.modules.approvals.events import WORKFLOW_TRANSITIONED, WorkflowTransitioned
 from aip.modules.approvals.guards.context_providers import provider_for, resolver_for
 from aip.modules.approvals.guards.jsonlogic import GuardError, evaluate_guard, truthy
+from aip.modules.approvals.routes_engine import repository as route_repo
 from aip.modules.approvals.schemas import TransitionSpec, WorkflowDefinition
 from aip.modules.approvals.service import InstancesService, definition_from_row, new_id
 from aip.modules.approvals.tables import workflow_instances
@@ -97,6 +111,7 @@ NO_PERMISSION_KEY: Final = "approvals.permission.denied"
 COUNTERSIGN_PENDING_KEY: Final = "approvals.countersign.pending"
 SELF_COUNTERSIGN_KEY: Final = "approvals.countersign.self"
 COMMENT_REQUIRED_KEY: Final = "approvals.comment.required"
+ROUTE_PENDING_KEY: Final = "approvals.route.pending"
 
 # How the signer authenticated, in the data model's ``auth_strength`` vocabulary.
 _AUTH_STRENGTH: Final = {
@@ -184,6 +199,18 @@ def _pending(last: RowMapping | None) -> RowMapping | None:
     return last if last is not None and last["status"] == "pending_countersign" else None
 
 
+async def _route_actions(
+    conn: AsyncConnection, instance: RowMapping | dict[str, Any]
+) -> frozenset[str]:
+    """The two actions of the route running on the instance (none when no route runs)."""
+    if instance["current_step_id"] is None or instance["route_template_id"] is None:
+        return frozenset()
+    template = await route_repo.get_template(conn, instance["route_template_id"])
+    if template is None:
+        return frozenset()
+    return frozenset({template["on_approved_action"], template["on_rejected_action"]})
+
+
 class TransitionService:
     """Stateless apart from the policy service; the connection carries the tenant."""
 
@@ -235,6 +262,7 @@ class TransitionService:
     ) -> InstanceView:
         definition = definition_from_row(await repo.get_definition(conn, instance["definition_id"]))
         pending = _pending(await repo.last_decision(conn, instance["id"]))
+        route_actions = await _route_actions(conn, instance)
         candidates = [
             t for t in definition.spec.transitions if t.from_state == instance["current_state"]
         ]
@@ -247,6 +275,9 @@ class TransitionService:
                 facts_failed = True
         available: list[Availability] = []
         for t in candidates:
+            if t.action in route_actions:
+                available.append(Availability(t, False, ROUTE_PENDING_KEY))
+                continue
             available.append(
                 Availability(
                     t, *await self._why_not(actor, instance, t, pending, data, facts_failed)
@@ -418,17 +449,75 @@ class TransitionService:
                 raise DomainError(409, "COUNTERSIGN_PENDING")
             if pending["actor_id"] == actor.principal.actor_id:
                 raise DomainError(409, "SELF_COUNTERSIGN")
+        if action in await _route_actions(conn, instance):
+            raise DomainError(409, "ROUTE_PENDING", messageKey=ROUTE_PENDING_KEY)
         guard_result = await self._check_guard(conn, actor, instance, t)  # (e)
         assurance, status = await self._signoff(conn, actor, t, pending)  # (f)
 
-        entry: dict[str, Any] = {  # (g)
+        entry = await self._append_decision(  # (g)
+            conn,
+            actor,
+            instance_id,
+            last,
+            from_state=outcome.from_state,
+            to_state=outcome.to_state,
+            action=action,
+            comment=comment,
+            guard_result=guard_result,
+            assurance=assurance,
+            status=status,
+            countersigns_id=None if pending is None else pending["id"],
+        )
+
+        # (h) A pending decision still bumps sync_version: the instance now waits for a countersign.
+        # A transition that takes effect while a route runs cancels the route.
+        patch: dict[str, Any] = {}
+        if status == "applied":
+            patch["current_state"] = outcome.to_state
+            if instance["current_step_id"] is not None:
+                await route_repo.skip_open_steps(conn, instance_id, int(instance["route_round"]))
+                patch["current_step_id"] = None
+        updated = await update_with_version(
+            conn, workflow_instances, instance_id, int(instance["sync_version"]), patch
+        )
+        if status == "applied":
+            await self._emit_transitioned(conn, actor, instance, definition, outcome)
+        current = {
+            **dict(instance),
+            "current_state": updated["current_state"],
+            "sync_version": updated["sync_version"],
+            "current_step_id": updated["current_step_id"],
+        }
+        return TransitionResult(view=await self._view(conn, actor, current), decision=entry)
+
+    # --- shared write steps -------------------------------------------------------------------
+
+    async def _append_decision(
+        self,
+        conn: AsyncConnection,
+        actor: Actor,
+        instance_id: UUID,
+        last: RowMapping | None,
+        *,
+        from_state: str,
+        to_state: str,
+        action: str,
+        comment: str | None,
+        guard_result: dict[str, Any] | None,
+        assurance: Assurance,
+        status: str,
+        countersigns_id: UUID | None = None,
+        step_id: UUID | None = None,
+    ) -> dict[str, Any]:
+        """(g) Append the hash-chained decision (``seq = last + 1``) with the signer's assurance."""
+        entry: dict[str, Any] = {
             "id": new_id(),
             "tenant_id": actor.principal.tenant_id,
             "instance_id": instance_id,
-            "step_id": None,
+            "step_id": step_id,
             "seq": 1 if last is None else int(last["seq"]) + 1,
-            "from_state": outcome.from_state,
-            "to_state": outcome.to_state,
+            "from_state": from_state,
+            "to_state": to_state,
             "action": action,
             "actor_id": actor.principal.actor_id,
             "on_behalf_of": None,
@@ -437,7 +526,7 @@ class TransitionService:
             "ip_address": actor.ip_address,
             "guard_result": guard_result,
             "status": status,
-            "countersigns_id": None if pending is None else pending["id"],
+            "countersigns_id": countersigns_id,
             "assurance_level": assurance.level,
             "assurance_method": assurance.method,
             "authenticated_at": assurance.authenticated_at,
@@ -447,33 +536,138 @@ class TransitionService:
         }
         entry["entry_hash"] = entry_hash(entry)
         await repo.insert_decision(conn, entry)
+        return entry
 
-        # (h) A pending decision still bumps sync_version: the instance now waits for a countersign.
-        patch = {"current_state": outcome.to_state} if status == "applied" else {}
+    async def _emit_transitioned(
+        self,
+        conn: AsyncConnection,
+        actor: Actor,
+        instance: RowMapping | dict[str, Any],
+        definition: WorkflowDefinition,
+        outcome: TransitionApplied,
+    ) -> None:
+        """(h) ``workflow.transitioned`` v1 for a transition that took effect."""
+        payload = WorkflowTransitioned.model_validate(
+            {
+                "instanceId": instance["id"],
+                "recordType": instance["record_type"],
+                "recordId": instance["record_id"],
+                "projectId": instance["project_id"],
+                "from": outcome.from_state,
+                "to": outcome.to_state,
+                "action": outcome.transition.action,
+                "actorId": actor.principal.actor_id,
+                "definitionKey": definition.key,
+                "definitionVersion": definition.version,
+            }
+        ).model_dump(mode="json")
+        await emit(
+            conn, WORKFLOW_TRANSITIONED, 1, Aggregate("workflow_instance", instance["id"]), payload
+        )
+
+    # --- approval routes (APPROVALS-04) -------------------------------------------------------
+
+    async def load(
+        self, conn: AsyncConnection, actor: Actor, instance_id: UUID, *, for_update: bool = False
+    ) -> RowMapping:
+        """The live instance (404) that the caller may view (403), optionally locked."""
+        return await self._load(conn, actor, instance_id, for_update=for_update)
+
+    async def view(
+        self, conn: AsyncConnection, actor: Actor, instance: RowMapping | dict[str, Any]
+    ) -> InstanceView:
+        """``describe`` for an instance row already loaded (and maybe just updated)."""
+        return await self._view(conn, actor, instance)
+
+    async def pinned_definition(
+        self, conn: AsyncConnection, instance: RowMapping | dict[str, Any]
+    ) -> WorkflowDefinition:
+        """The definition version the instance is pinned to."""
+        return definition_from_row(await repo.get_definition(conn, instance["definition_id"]))
+
+    async def complete_route(
+        self,
+        conn: AsyncConnection,
+        actor: Actor,
+        instance: RowMapping,
+        action: str,
+        *,
+        comment: str | None,
+        step_id: UUID,
+        patch: dict[str, Any],
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Take the finished route's ``action`` for its last decider on the locked ``instance``.
+
+        Steps (b), (c) and (e) to (h) of ``transition``; ``patch`` (the route columns) is applied
+        with the state change. Returns the decision entry and the updated instance row.
+        """
+        instance_id: UUID = instance["id"]
+        definition = await self.pinned_definition(conn, instance)
+        outcome = apply_transition(definition.spec, instance["current_state"], action)
+        if isinstance(outcome, TransitionRejected):
+            raise DomainError(409, outcome.error)
+        last = await repo.last_decision(conn, instance_id)
+        if _pending(last) is not None:
+            raise DomainError(409, "COUNTERSIGN_PENDING")
+        t = outcome.transition
+        guard_result = await self._check_guard(conn, actor, instance, t)
+        assurance, status = await self._signoff(conn, actor, t, None)
+        if status != "applied":
+            raise DomainError(403, "COUNTERSIGN_ASSURANCE_REQUIRED")
+        entry = await self._append_decision(
+            conn,
+            actor,
+            instance_id,
+            last,
+            from_state=outcome.from_state,
+            to_state=outcome.to_state,
+            action=action,
+            comment=comment,
+            guard_result=guard_result,
+            assurance=assurance,
+            status=status,
+            step_id=step_id,
+        )
+        updated = await update_with_version(
+            conn,
+            workflow_instances,
+            instance_id,
+            int(instance["sync_version"]),
+            {**patch, "current_state": outcome.to_state},
+        )
+        await self._emit_transitioned(conn, actor, instance, definition, outcome)
+        return entry, updated
+
+    async def record_step_decision(
+        self,
+        conn: AsyncConnection,
+        actor: Actor,
+        instance: RowMapping,
+        action: str,
+        *,
+        comment: str | None,
+        step_id: UUID,
+        patch: dict[str, Any],
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """A step decision that does not finish the route: a non-moving hash-chained row
+        (``from_state == to_state``) and the route columns in ``patch``."""
+        instance_id: UUID = instance["id"]
+        state = str(instance["current_state"])
+        entry = await self._append_decision(
+            conn,
+            actor,
+            instance_id,
+            await repo.last_decision(conn, instance_id),
+            from_state=state,
+            to_state=state,
+            action=action,
+            comment=comment,
+            guard_result=None,
+            assurance=derive_assurance(actor.session),
+            status="applied",
+            step_id=step_id,
+        )
         updated = await update_with_version(
             conn, workflow_instances, instance_id, int(instance["sync_version"]), patch
         )
-        if status == "applied":
-            payload = WorkflowTransitioned.model_validate(
-                {
-                    "instanceId": instance_id,
-                    "recordType": instance["record_type"],
-                    "recordId": instance["record_id"],
-                    "projectId": instance["project_id"],
-                    "from": outcome.from_state,
-                    "to": outcome.to_state,
-                    "action": action,
-                    "actorId": actor.principal.actor_id,
-                    "definitionKey": definition.key,
-                    "definitionVersion": definition.version,
-                }
-            ).model_dump(mode="json")
-            await emit(
-                conn, WORKFLOW_TRANSITIONED, 1, Aggregate("workflow_instance", instance_id), payload
-            )
-        current = {
-            **dict(instance),
-            "current_state": updated["current_state"],
-            "sync_version": updated["sync_version"],
-        }
-        return TransitionResult(view=await self._view(conn, actor, current), decision=entry)
+        return entry, updated

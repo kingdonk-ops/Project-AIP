@@ -24,8 +24,8 @@
         "labelKey": "workflow.inspection.state.in_progress"
       },
       {
-        "code": "in_progress_go",
-        "labelKey": "workflow.inspection.state.in_progress_go"
+        "code": "in_progress_sitesync",
+        "labelKey": "workflow.inspection.state.in_progress_sitesync"
       },
       {
         "code": "inspector_review",
@@ -195,11 +195,11 @@
         "labelKey": "workflow.inspection.action.quick_inspect"
       },
       {
-        "action": "go_checkout",
+        "action": "sitesync_checkout",
         "from": "assignable",
-        "to": "in_progress_go",
+        "to": "in_progress_sitesync",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.go_checkout"
+        "labelKey": "workflow.inspection.action.sitesync_checkout"
       },
       {
         "action": "assign",
@@ -295,11 +295,11 @@
         "labelKey": "workflow.inspection.action.return_to_draft"
       },
       {
-        "action": "go_checkout",
+        "action": "sitesync_checkout",
         "from": "assigned",
-        "to": "in_progress_go",
+        "to": "in_progress_sitesync",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.go_checkout"
+        "labelKey": "workflow.inspection.action.sitesync_checkout"
       },
       {
         "action": "request_supervisor_review",
@@ -338,29 +338,29 @@
         "labelKey": "workflow.inspection.action.assign"
       },
       {
-        "action": "go_checkout",
+        "action": "sitesync_checkout",
         "from": "in_progress",
-        "to": "in_progress_go",
+        "to": "in_progress_sitesync",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.go_checkout"
+        "labelKey": "workflow.inspection.action.sitesync_checkout"
       },
       {
         "action": "request_supervisor_review",
-        "from": "in_progress_go",
+        "from": "in_progress_sitesync",
         "to": "supervisor_review",
         "requiredPermission": "approvals.inspection.execute",
         "labelKey": "workflow.inspection.action.request_supervisor_review"
       },
       {
-        "action": "check_in",
-        "from": "in_progress_go",
+        "action": "sitesync_check_in",
+        "from": "in_progress_sitesync",
         "to": "inspector_review",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.check_in"
+        "labelKey": "workflow.inspection.action.sitesync_check_in"
       },
       {
         "action": "request_clarification",
-        "from": "in_progress_go",
+        "from": "in_progress_sitesync",
         "to": "clarification_required",
         "requiredPermission": "approvals.inspection.execute",
         "labelKey": "workflow.inspection.action.request_clarification",
@@ -418,11 +418,11 @@
         "labelKey": "workflow.inspection.action.return_to_draft"
       },
       {
-        "action": "go_checkout",
+        "action": "sitesync_checkout",
         "from": "inspector_review",
-        "to": "in_progress_go",
+        "to": "in_progress_sitesync",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.go_checkout"
+        "labelKey": "workflow.inspection.action.sitesync_checkout"
       },
       {
         "action": "mark_performed",
@@ -508,11 +508,11 @@
         "labelKey": "workflow.inspection.action.request_supervisor_review"
       },
       {
-        "action": "go_checkout",
+        "action": "sitesync_checkout",
         "from": "rework_required",
-        "to": "in_progress_go",
+        "to": "in_progress_sitesync",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.go_checkout"
+        "labelKey": "workflow.inspection.action.sitesync_checkout"
       }
     ]
   }

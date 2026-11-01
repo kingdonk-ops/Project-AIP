@@ -36,6 +36,7 @@ __all__ = [
     "lock_tenant_roles",
     "member_teams",
     "privileged_codes",
+    "role_code_for_id",
     "role_codes",
     "role_in_use",
     "role_permissions",
@@ -298,6 +299,18 @@ async def has_role(
         {"user": user_id, "code": role_code, "project": project_id},
     )
     return bool(row.scalar_one())
+
+
+async def role_code_for_id(conn: AsyncConnection, role_id: UUID) -> str | None:
+    """The code of live role ``role_id`` in the connection's tenant, else ``None``. Matches only
+    the connection's tenant, also on a connection that bypasses RLS."""
+    row = await conn.execute(
+        text(
+            f"SELECT code FROM role WHERE id = :id AND deleted_at IS NULL AND tenant_id = {_TENANT}"
+        ),
+        {"id": role_id},
+    )
+    return row.scalar_one_or_none()
 
 
 async def role_codes(
