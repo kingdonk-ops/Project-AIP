@@ -324,7 +324,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Portal Users */
+        /**
+         * List Portal Users
+         * @description ``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+         *     ``projectId``: users with an unrevoked grant on that project.
+         */
         get: operations["portal_users_list"];
         put?: never;
         /** Invite Portal User */
@@ -6689,6 +6693,8 @@ export interface operations {
                 q?: string | null;
                 cursor?: string | null;
                 limit?: number;
+                projectId?: string | null;
+                expiringWithinDays?: number | null;
             };
             header?: never;
             path?: never;
