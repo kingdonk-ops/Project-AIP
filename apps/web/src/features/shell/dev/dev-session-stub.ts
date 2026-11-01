@@ -22,7 +22,7 @@ const fixtureSessions: Record<string, Session> = {
     tenant: { slug: "kaefer-demo", name: "Kaefer Demo" },
     // PROJECTS-07: the demo admin can drive the project detail and sites register end to end.
     // ASSETS-03: and the asset tree, register and move dialog. REPORTS-04: and the report register.
-    // DESIGN-15: and switch release flags.
+    // DESIGN-15: and switch release flags. PORTAL-07: and manage external (portal) users.
     permissions: [
       "project.view",
       "project.update",
@@ -37,6 +37,10 @@ const fixtureSessions: Record<string, Session> = {
       "item_type.view",
       "report.view",
       "tenant.flags.manage",
+      "portal.user.view",
+      "portal.user.invite",
+      "portal.user.suspend",
+      "portal.grant.manage",
     ],
   },
   // ARCH-09: a platform operator (ADR 0029). Operator pages move to their own origin with OPS-12.

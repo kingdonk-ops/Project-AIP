@@ -119,7 +119,7 @@ def test_schema_errors_are_reported_alone_with_a_path() -> None:
     assert issues[0].path == ["script"]
 
     wrong_version = _coating()
-    wrong_version["schemaVersion"] = 2
+    wrong_version["schemaVersion"] = 3  # 1 and 2 are valid (FORMS-10)
     assert _codes(wrong_version) == ["SCHEMA_INVALID"]
 
 

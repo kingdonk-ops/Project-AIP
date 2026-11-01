@@ -324,7 +324,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Portal Users */
+        /**
+         * List Portal Users
+         * @description ``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+         *     ``projectId``: users with an unrevoked grant on that project.
+         */
         get: operations["portal_users_list"];
         put?: never;
         /** Invite Portal User */
@@ -983,7 +987,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update Template */
+        patch: operations["forms_templates_update"];
         trace?: never;
     };
     "/api/v1/forms/templates/{template_id}/revisions": {
@@ -1204,41 +1209,6 @@ export interface paths {
         put?: never;
         /** Reinspect */
         post: operations["inspections_reinspect"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inspections/{inspection_id}/responses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Responses */
-        get: operations["inspections_responses"];
-        put?: never;
-        /** Respond */
-        post: operations["inspections_respond"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inspections/{inspection_id}/responses/{fieldKey}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Response History */
-        get: operations["inspections_response_history"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2062,7 +2032,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -2112,59 +2082,9 @@ export interface components {
             required: {
                 [key: string]: boolean;
             };
-            /** Visible */
-            visible: {
-                [key: string]: boolean;
-            };
-        };
-        /**
-         * AnswerIn
-         * @description One answer; ``value`` ``null`` clears it. ``clientId`` makes a retry idempotent.
-         */
-        AnswerIn: {
-            /**
-             * Clientid
-             * Format: uuid
-             */
-            clientId: string;
-            /** Fieldkey */
-            fieldKey: string;
-            value: components["schemas"]["JsonValue"];
-        };
-        /** AnswerOut */
-        AnswerOut: {
-            /** Failed */
-            failed: boolean;
-            /**
-             * Respondedat
-             * Format: date-time
-             */
-            respondedAt: string;
-            /**
-             * Respondedby
-             * Format: uuid
-             */
-            respondedBy: string;
-            /**
-             * Responseid
-             * Format: uuid
-             */
-            responseId: string;
-            value: components["schemas"]["JsonValue"];
-        };
-        /**
-         * AnswersEvaluation
-         * @description The FORMS-02 evaluation of the current answers: ``missingRequired`` lists the visible
-         *     required fields with no answer, ``failed`` the fields whose answer fails.
-         */
-        AnswersEvaluation: {
-            /** Failed */
-            failed: string[];
-            /** Missingrequired */
-            missingRequired: string[];
-            /** Required */
-            required: {
-                [key: string]: boolean;
+            /** Sections */
+            sections: {
+                [key: string]: components["schemas"]["SectionResultOut"];
             };
             /** Visible */
             visible: {
@@ -2657,17 +2577,6 @@ export interface components {
             sortOrder?: number | null;
             /** Syncversion */
             syncVersion: number;
-        };
-        /**
-         * CurrentResponses
-         * @description The current answer per field and the evaluation of those answers.
-         */
-        CurrentResponses: {
-            /** Answers */
-            answers: {
-                [key: string]: components["schemas"]["AnswerOut"];
-            };
-            evaluation: components["schemas"]["AnswersEvaluation"];
         };
         /** DbEstimate */
         DbEstimate: {
@@ -3772,7 +3681,6 @@ export interface components {
          * @enum {string}
          */
         JobStatus: "queued" | "running" | "succeeded" | "failed" | "cancelled";
-        JsonValue: unknown;
         /**
          * LimitOut
          * @description ``limit`` null is unlimited; ``used`` null means nothing measures it yet.
@@ -3826,6 +3734,12 @@ export interface components {
             message: string;
             /** Path */
             path: (string | number)[];
+            /**
+             * Severity
+             * @default error
+             * @enum {string}
+             */
+            severity: "error" | "warning";
         };
         /** LintResult */
         LintResult: {
@@ -4563,82 +4477,6 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /** ResponseEntry */
-        ResponseEntry: {
-            /**
-             * Clientid
-             * Format: uuid
-             */
-            clientId: string;
-            /** Failed */
-            failed: boolean;
-            /** Fieldkey */
-            fieldKey: string;
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Respondedat
-             * Format: date-time
-             */
-            respondedAt: string;
-            /**
-             * Respondedby
-             * Format: uuid
-             */
-            respondedBy: string;
-            /**
-             * Revisionid
-             * Format: uuid
-             */
-            revisionId: string;
-            /** Supersedesid */
-            supersedesId: string | null;
-            value: components["schemas"]["JsonValue"];
-        };
-        /**
-         * ResponseHistory
-         * @description Every response for one field, oldest first.
-         */
-        ResponseHistory: {
-            /** Entries */
-            entries: components["schemas"]["ResponseEntry"][];
-        };
-        /**
-         * ResponseResult
-         * @description ``created`` is false for a ``clientId`` already stored (the first response is returned).
-         */
-        ResponseResult: {
-            /**
-             * Clientid
-             * Format: uuid
-             */
-            clientId: string;
-            /** Created */
-            created: boolean;
-            /** Failed */
-            failed: boolean;
-            /**
-             * Responseid
-             * Format: uuid
-             */
-            responseId: string;
-        };
-        /**
-         * ResponsesIn
-         * @description ``POST /inspections/{id}/responses``: 1 to 200 answers, each field and client id once.
-         */
-        ResponsesIn: {
-            /** Answers */
-            answers: components["schemas"]["AnswerIn"][];
-        };
-        /** ResponsesOut */
-        ResponsesOut: {
-            /** Results */
-            results: components["schemas"]["ResponseResult"][];
-        };
         /**
          * RevisionCreate
          * @description A new draft revision. ``schema`` omitted copies the current published schema.
@@ -4747,7 +4585,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -4772,7 +4610,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -4784,7 +4622,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * RouteOut
@@ -4930,6 +4768,25 @@ export interface components {
              * @enum {string}
              */
             type: "tenant" | "project" | "team" | "asset_subtree";
+        };
+        /**
+         * SectionResultOut
+         * @description One section's verdict (FORMS-10): complete when visible with no missing required answers,
+         *     no invalid values and no failed section rules.
+         */
+        SectionResultOut: {
+            /** Complete */
+            complete: boolean;
+            /** Failed */
+            failed: string[];
+            /** Invalid */
+            invalid: string[];
+            /** Missingrequired */
+            missingRequired: string[];
+            /** Rulefailures */
+            ruleFailures: string[];
+            /** Visible */
+            visible: boolean;
         };
         /** SessionCreate */
         SessionCreate: {
@@ -5352,6 +5209,11 @@ export interface components {
             /** Code */
             code: string;
             /**
+             * Hassupervisorreview
+             * @default true
+             */
+            hasSupervisorReview: boolean;
+            /**
              * Kind
              * @enum {string}
              */
@@ -5376,6 +5238,8 @@ export interface components {
             currentRevisionId: string | null;
             /** Currentrevisionno */
             currentRevisionNo: number | null;
+            /** Hassupervisorreview */
+            hasSupervisorReview: boolean;
             /**
              * Id
              * Format: uuid
@@ -5409,6 +5273,8 @@ export interface components {
             code: string;
             /** Currentrevisionno */
             currentRevisionNo: number | null;
+            /** Hassupervisorreview */
+            hasSupervisorReview: boolean;
             /**
              * Id
              * Format: uuid
@@ -5450,6 +5316,8 @@ export interface components {
             currentRevisionId: string | null;
             /** Currentrevisionno */
             currentRevisionNo: number | null;
+            /** Hassupervisorreview */
+            hasSupervisorReview: boolean;
             /**
              * Id
              * Format: uuid
@@ -5474,6 +5342,19 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+        };
+        /**
+         * TemplateUpdate
+         * @description Template settings (FORMS-10). An omitted field is left as it is. Changing
+         *     ``hasSupervisorReview`` never changes inspections that already exist (ADR 0041 §5).
+         */
+        TemplateUpdate: {
+            /** Expectedsyncversion */
+            expectedSyncVersion?: number | null;
+            /** Hassupervisorreview */
+            hasSupervisorReview?: boolean | null;
+            /** Name */
+            name?: string | null;
         };
         /** TenantErrorBody */
         TenantErrorBody: {
@@ -6812,6 +6693,8 @@ export interface operations {
                 q?: string | null;
                 cursor?: string | null;
                 limit?: number;
+                projectId?: string | null;
+                expiringWithinDays?: number | null;
             };
             header?: never;
             path?: never;
@@ -8972,6 +8855,59 @@ export interface operations {
             };
         };
     };
+    forms_templates_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateRecord"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormErrorBody"];
+                };
+            };
+        };
+    };
     forms_templates_add_revision: {
         parameters: {
             query?: never;
@@ -9811,194 +9747,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-        };
-    };
-    inspections_responses: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                inspection_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CurrentResponses"];
-                };
-            };
-            /** @description Not signed in, or STEP_UP_REQUIRED */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    inspections_respond: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                inspection_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResponsesIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResponsesOut"];
-                };
-            };
-            /** @description Not signed in, or STEP_UP_REQUIRED */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-            /** @description INSPECTION_NOT_EDITABLE */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-            /** @description Validation error, DUPLICATE_ANSWER, UNKNOWN_FIELD, FIELD_NOT_VISIBLE or ANSWER_INVALID */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-        };
-    };
-    inspections_response_history: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                inspection_id: string;
-                fieldKey: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResponseHistory"];
-                };
-            };
-            /** @description Not signed in, or STEP_UP_REQUIRED */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InspectionErrorBody"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

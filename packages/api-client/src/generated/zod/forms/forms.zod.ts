@@ -9,11 +9,14 @@ export const FormsLintBody = zod.object({
   "schema": zod.record(zod.string(), zod.unknown())
 })
 
+export const formsLintResponseIssuesItemSeverityDefault = `error`;
+
 export const FormsLintResponse = zod.object({
   "issues": zod.array(zod.object({
   "code": zod.string(),
   "message": zod.string(),
-  "path": zod.array(zod.union([zod.string(),zod.int()]))
+  "path": zod.array(zod.union([zod.string(),zod.int()])),
+  "severity": zod.enum(['error', 'warning']).default(formsLintResponseIssuesItemSeverityDefault)
 }))
 })
 
@@ -112,6 +115,14 @@ export const FormsRevisionsEvaluateResponse = zod.object({
   "failed": zod.array(zod.string()),
   "ignored": zod.array(zod.string()),
   "required": zod.record(zod.string(), zod.boolean()),
+  "sections": zod.record(zod.string(), zod.object({
+  "complete": zod.boolean(),
+  "failed": zod.array(zod.string()),
+  "invalid": zod.array(zod.string()),
+  "missingRequired": zod.array(zod.string()),
+  "ruleFailures": zod.array(zod.string()),
+  "visible": zod.boolean()
+}).describe('One section\'s verdict (FORMS-10): complete when visible with no missing required answers,\nno invalid values and no failed section rules.')),
   "visible": zod.record(zod.string(), zod.boolean())
 })
 
@@ -148,6 +159,7 @@ export const FormsRevisionsPublishResponse = zod.object({
   "createdAt": zod.iso.datetime({"offset":true}),
   "currentRevisionId": zod.union([zod.uuid(),zod.null()]),
   "currentRevisionNo": zod.union([zod.int(),zod.null()]),
+  "hasSupervisorReview": zod.boolean(),
   "id": zod.uuid(),
   "kind": zod.enum(['inspection', 'itp', 'rfi', 'permit', 'test_report']),
   "name": zod.string(),
@@ -180,6 +192,7 @@ export const FormsTemplatesListResponse = zod.object({
   "items": zod.array(zod.object({
   "code": zod.string(),
   "currentRevisionNo": zod.union([zod.int(),zod.null()]),
+  "hasSupervisorReview": zod.boolean(),
   "id": zod.uuid(),
   "kind": zod.enum(['inspection', 'itp', 'rfi', 'permit', 'test_report']),
   "name": zod.string(),
@@ -194,6 +207,7 @@ export const FormsTemplatesListResponse = zod.object({
 export const formsTemplatesCreateBodyChangeNoteOneMax = 2000;
 
 export const formsTemplatesCreateBodyCodeRegExp = new RegExp('^[a-z][a-z0-9-]{1,62}$');
+export const formsTemplatesCreateBodyHasSupervisorReviewDefault = true;
 export const formsTemplatesCreateBodyNameMax = 200;
 
 
@@ -201,6 +215,7 @@ export const formsTemplatesCreateBodyNameMax = 200;
 export const FormsTemplatesCreateBody = zod.object({
   "changeNote": zod.union([zod.string().max(formsTemplatesCreateBodyChangeNoteOneMax),zod.null()]).optional(),
   "code": zod.string().regex(formsTemplatesCreateBodyCodeRegExp),
+  "hasSupervisorReview": zod.boolean().default(formsTemplatesCreateBodyHasSupervisorReviewDefault),
   "kind": zod.enum(['inspection', 'itp', 'rfi', 'permit', 'test_report']),
   "name": zod.string().min(1).max(formsTemplatesCreateBodyNameMax),
   "schema": zod.record(zod.string(), zod.unknown())
@@ -225,6 +240,7 @@ export const FormsTemplatesCreateResponse = zod.object({
   "createdAt": zod.iso.datetime({"offset":true}),
   "currentRevisionId": zod.union([zod.uuid(),zod.null()]),
   "currentRevisionNo": zod.union([zod.int(),zod.null()]),
+  "hasSupervisorReview": zod.boolean(),
   "id": zod.uuid(),
   "kind": zod.enum(['inspection', 'itp', 'rfi', 'permit', 'test_report']),
   "name": zod.string(),
@@ -246,6 +262,7 @@ export const FormsTemplatesGetResponse = zod.object({
   "createdAt": zod.iso.datetime({"offset":true}),
   "currentRevisionId": zod.union([zod.uuid(),zod.null()]),
   "currentRevisionNo": zod.union([zod.int(),zod.null()]),
+  "hasSupervisorReview": zod.boolean(),
   "id": zod.uuid(),
   "kind": zod.enum(['inspection', 'itp', 'rfi', 'permit', 'test_report']),
   "name": zod.string(),
@@ -259,6 +276,38 @@ export const FormsTemplatesGetResponse = zod.object({
   "status": zod.enum(['draft', 'published', 'superseded']),
   "updatedAt": zod.iso.datetime({"offset":true})
 })),
+  "status": zod.enum(['draft', 'active', 'retired']),
+  "syncVersion": zod.int(),
+  "updatedAt": zod.iso.datetime({"offset":true})
+})
+
+/**
+ * @summary Update Template
+ */
+export const FormsTemplatesUpdateParams = zod.object({
+  "template_id": zod.uuid()
+})
+
+
+export const formsTemplatesUpdateBodyNameOneMax = 200;
+
+
+
+export const FormsTemplatesUpdateBody = zod.object({
+  "expectedSyncVersion": zod.union([zod.int().min(1),zod.null()]).optional(),
+  "hasSupervisorReview": zod.union([zod.boolean(),zod.null()]).optional(),
+  "name": zod.union([zod.string().min(1).max(formsTemplatesUpdateBodyNameOneMax),zod.null()]).optional()
+}).describe('Template settings (FORMS-10). An omitted field is left as it is. Changing\n``hasSupervisorReview`` never changes inspections that already exist (ADR 0041 §5).')
+
+export const FormsTemplatesUpdateResponse = zod.object({
+  "code": zod.string(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "currentRevisionId": zod.union([zod.uuid(),zod.null()]),
+  "currentRevisionNo": zod.union([zod.int(),zod.null()]),
+  "hasSupervisorReview": zod.boolean(),
+  "id": zod.uuid(),
+  "kind": zod.enum(['inspection', 'itp', 'rfi', 'permit', 'test_report']),
+  "name": zod.string(),
   "status": zod.enum(['draft', 'active', 'retired']),
   "syncVersion": zod.int(),
   "updatedAt": zod.iso.datetime({"offset":true})

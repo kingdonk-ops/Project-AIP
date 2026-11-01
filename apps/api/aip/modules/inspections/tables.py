@@ -1,7 +1,7 @@
 """SQLAlchemy Core declarations for inspections (INSPECTIONS-01, INSPECTIONS-02, ADR 0002).
 
 Created only by the Alembic revisions ``202610311800_inspections_core`` and
-``202611011000_inspections_responses``; ``aip-db check-schema`` compares these declarations with the
+``202611011400_inspections_responses``; ``aip-db check-schema`` compares these declarations with the
 migrated database.
 
 - ``inspections`` is tenant-scoped with soft delete, FORCE ROW LEVEL SECURITY and the ACCESS-03

@@ -5,6 +5,7 @@ import type { TemplateListItemStatus } from './templateListItemStatus';
 export interface TemplateListItem {
   code: string;
   currentRevisionNo: number | null;
+  hasSupervisorReview: boolean;
   id: string;
   kind: TemplateListItemKind;
   name: string;

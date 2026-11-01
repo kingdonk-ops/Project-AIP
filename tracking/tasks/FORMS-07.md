@@ -21,3 +21,8 @@
 Add calculated fields: a forms-only arithmetic extension (`+ - * / min max round`) layered on the approvals guard allow-list, in the Python and TypeScript evaluators with shared golden vectors, cycle-checked by the FORMS-01 lint, for values such as a DFT average or a corrosion rate (tag: extend).
 
 Stub: full spec is written when its dependencies are merged (PLAN-R1 pass A).
+
+Found by FORMS-10 (2026-11-01): the extension must also apply to section `rules[].expr` (template
+`schemaVersion: 2`). Then add the FORMS-10 spec's `avg_dft_ok` example (`{">=":[{"/":[{"+":[dft_1,
+dft_2]},2]},250]}`; 300/300 passes, 200/250 fails) to `evaluate-v2.json` (or a v3 file). FORMS-10
+could only cover it with the arithmetic-free `dft_ok` rule.

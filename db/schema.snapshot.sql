@@ -4139,6 +4139,7 @@ CREATE TABLE public.form_templates (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
+    has_supervisor_review boolean DEFAULT true NOT NULL,
     CONSTRAINT ck_form_templates_code CHECK ((code ~ '^[a-z][a-z0-9-]{1,62}$'::text)),
     CONSTRAINT ck_form_templates_kind CHECK ((kind = ANY (ARRAY['inspection'::text, 'itp'::text, 'rfi'::text, 'permit'::text, 'test_report'::text]))),
     CONSTRAINT ck_form_templates_status CHECK ((status = ANY (ARRAY['draft'::text, 'active'::text, 'retired'::text])))

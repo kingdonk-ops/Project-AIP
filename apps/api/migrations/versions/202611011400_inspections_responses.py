@@ -18,17 +18,17 @@ only). A correction is a new row whose ``supersedes_id`` names the row that was 
   (UUIDv7) only breaks a tie.
 - Registered in ``partition_settings`` here, so ``ensure_partitions`` keeps partitions ahead.
 
-Revision ID: 202611011000
-Revises: 202610311900
-Create Date: 2026-11-01 10:00:00+00:00
+Revision ID: 202611011400
+Revises: 202611011300
+Create Date: 2026-11-01 14:00:00+00:00
 """
 
 from alembic import op
 
 from aip.platform.db.templates import render_template
 
-revision: str = "202611011000"
-down_revision: str | None = "202610311900"
+revision: str = "202611011400"
+down_revision: str | None = "202611011300"
 branch_labels = None
 depends_on = None
 
