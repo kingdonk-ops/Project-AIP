@@ -24,10 +24,9 @@ from tests.fixtures.postgres import JOBS, TenantDb
 
 from aip.modules.inspections import workflow
 from aip.modules.inspections.api import InspectionsApi
-from aip.platform.context import use_context
 from aip.platform.db.engine import EngineSettings, create_app_engine
-from aip.platform.db.jobs import ensure_all_partitions
 from aip.platform.db.partitions import partition_name
+from aip.platform.db.scope import run_as_system
 
 from .conftest import (
     ALICE,
@@ -41,7 +40,6 @@ from .conftest import (
     GrantTable,
     count,
     create_asset,
-    ctx,
     install_preset,
     publish,
     signed,
@@ -378,10 +376,9 @@ async def test_the_lifecycle_decides_who_may_answer(
 async def test_the_facts_provider_counts_the_answers(
     client: httpx.AsyncClient, db: TenantDb, inspection: str
 ) -> None:
-    async def facts() -> dict[str, Any]:
-        with use_context(ctx()):
-            async with db.with_tenant(TENANT_A_ID) as conn:
-                return await workflow.facts(conn, UUID(inspection))
+    async def facts() -> dict[str, Any]:  # system: the project-scope policy shows the row
+        async with run_as_system(TENANT_A_ID, engine=db.engine) as conn:
+            return await workflow.facts(conn, UUID(inspection))
 
     await answer_ok(client, inspection, item("coating_dft", 200))
     found = await facts()
@@ -402,9 +399,8 @@ async def test_the_published_interface_matches_the_route(
 ) -> None:
     await answer_ok(client, inspection, item("coating_dft", 260), item("surface_prep", "sa3"))
     route = (await client.get(f"{INSPECTIONS}/{inspection}/responses", headers=VIEWER)).json()
-    with use_context(ctx()):
-        async with db.with_tenant(TENANT_A_ID) as conn:
-            current = await InspectionsApi().get_current_responses(conn, UUID(inspection))
+    async with run_as_system(TENANT_A_ID, engine=db.engine) as conn:
+        current = await InspectionsApi().get_current_responses(conn, UUID(inspection))
     assert current is not None
     assert current.model_dump(mode="json", by_alias=True) == route
 
@@ -438,11 +434,15 @@ async def test_partitions_are_kept_ahead_and_rows_stay_readable(
     assert ("inspection_responses",) in [tuple(r) for r in settings]
     result = (await answer_ok(client, inspection, item("coating_dft", 300)))[0]
 
+    # The job's per-table step, as aip_jobs, for this table only.
     engine = create_app_engine(
         EngineSettings(url=db.db.role_url(JOBS), pool_size=2, max_overflow=0)
     )
     try:
-        await ensure_all_partitions(engine)
+        async with engine.begin() as conn:
+            await conn.execute(
+                text("SELECT aip_ensure_partitions('inspection_responses', 3)")
+            )
     finally:
         await engine.dispose()
 

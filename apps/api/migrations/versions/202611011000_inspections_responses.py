@@ -8,8 +8,10 @@ only). A correction is a new row whose ``supersedes_id`` names the row that was 
 - ``client_id`` makes a retried push idempotent. It cannot be unique table-wide on a partitioned
   table (ADR 0031), so the service serialises writes per inspection (``FOR UPDATE`` on the
   inspection) and looks it up through ``ix_inspection_responses_client_id``.
-- ``(inspection_id, tenant_id)`` references ``inspections (id, tenant_id)``: an answer belongs to an
-  inspection in its own tenant.
+- No foreign key to ``inspections``: ``aip_ensure_partitions`` attaches each new month by
+  validating a cloned foreign key under FORCE RLS without a tenant, which sees no parent rows and
+  fails once the default partition holds answers. The service writes only for an inspection it
+  has locked in the caller's tenant.
 - The view ``inspection_current_responses`` is the latest row per field. It is
   ``security_invoker`` so the caller's RLS applies. The service writes ``created_at`` as
   ``clock_timestamp()`` after the row lock, so the latest answer always sorts last; ``id DESC``
@@ -47,8 +49,6 @@ def upgrade() -> None:
     )
     op.execute("""
     ALTER TABLE inspection_responses
-      ADD CONSTRAINT fk_inspection_responses_inspection
-        FOREIGN KEY (inspection_id, tenant_id) REFERENCES inspections (id, tenant_id),
       ADD CONSTRAINT ck_inspection_responses_field_key
         CHECK (field_key ~ '^[a-z][a-z0-9_]{0,62}$');
 
