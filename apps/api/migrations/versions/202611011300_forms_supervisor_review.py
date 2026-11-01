@@ -6,14 +6,14 @@ the template go to supervisor review before Performed. Existing templates keep t
 later never changes inspections that already exist.
 
 Revision ID: 202611011300
-Revises: 202610311800
+Revises: 202610311900
 Create Date: 2026-11-01 13:00:00+00:00
 """
 
 from alembic import op
 
 revision: str = "202611011300"
-down_revision: str | None = "202610311800"
+down_revision: str | None = "202610311900"
 branch_labels = None
 depends_on = None
 
