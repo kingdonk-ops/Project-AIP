@@ -18,21 +18,21 @@ for the moved rows; no append-only table has one.
 Also hardened: ``pg_temp`` is now last in the function's ``search_path`` and catalog names are
 schema-qualified, so a temporary table the caller made cannot stand in for a catalog.
 
-Revision ID: 202611011400
-Revises: 202611011300
-Create Date: 2026-11-01 14:00:00+00:00
+Revision ID: 202611011500
+Revises: 202611011400
+Create Date: 2026-11-01 15:00:00+00:00
 """
 
 from alembic import op
 
-revision: str = "202611011400"
-down_revision: str | None = "202611011300"
+revision: str = "202611011500"
+down_revision: str | None = "202611011400"
 branch_labels = None
 depends_on = None
 
 
 def upgrade() -> None:
-    # contract: 202611011400 SECURITY DEFINER on purpose, as in 202610141100: partitions must
+    # contract: 202611011500 SECURITY DEFINER on purpose, as in 202610141100: partitions must
     # belong to the table owner, and aip_jobs has no CREATE. Owned by aip_owner, search_path fixed
     # with pg_temp last, accepts only a partitioned table listed in partition_settings, bounded
     # months_ahead, identifiers through format(%I) and bounds through %L; EXECUTE for aip_jobs
