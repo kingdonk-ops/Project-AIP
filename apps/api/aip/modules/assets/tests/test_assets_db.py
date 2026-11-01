@@ -446,3 +446,38 @@ async def test_root_paging_has_no_gaps_and_rejects_a_tampered_cursor(
     )
     assert tampered.status_code == 422
     assert tampered.json() == {"code": "INVALID_CURSOR", "field": "cursor"}
+
+
+async def test_list_rows_carry_their_live_ancestor_names_root_first(
+    client: httpx.AsyncClient,
+) -> None:
+    site = await mk(client, ALICE, "Site A")
+    unit = await mk(client, ALICE, "Unit 1", parentId=site["id"])
+    pump = await mk(client, ALICE, "Pump", parentId=unit["id"])
+    await mk(client, ALICE, "Valve", parentId=pump["id"])
+    await mk(client, ALICE, "Site B")
+
+    page = (await client.get(ASSETS, params={"under": site["id"]}, headers=ALICE)).json()
+    names = {a["name"]: a["ancestorNames"] for a in page["items"]}
+    assert names == {
+        "Unit 1": ["Site A"],
+        "Pump": ["Site A", "Unit 1"],
+        "Valve": ["Site A", "Unit 1", "Pump"],
+    }
+    roots = (await client.get(ASSETS, params={"parentId": "root"}, headers=ALICE)).json()
+    assert [a["ancestorNames"] for a in roots["items"]] == [[], []]
+
+    # A renamed ancestor reads live.
+    renamed = await client.patch(
+        f"{ASSETS}/{unit['id']}", json={"syncVersion": 1, "name": "Unit 9"}, headers=ALICE
+    )
+    assert renamed.status_code == 200, renamed.text
+    page = (await client.get(ASSETS, params={"under": site["id"]}, headers=ALICE)).json()
+    assert {a["name"]: a["ancestorNames"] for a in page["items"]}["Valve"] == [
+        "Site A",
+        "Unit 9",
+        "Pump",
+    ]
+
+    other = await client.get(ASSETS, params={"under": site["id"]}, headers=BOB)
+    assert other.json() == {"items": [], "nextCursor": None}

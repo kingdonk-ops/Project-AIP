@@ -25,6 +25,8 @@ export * from './assetDetail';
 export * from './assetDetailAttributes';
 export * from './assetErrorBody';
 export * from './assetInfo';
+export * from './assetListItem';
+export * from './assetListItemAttributes';
 export * from './assetMove';
 export * from './assetOut';
 export * from './assetOutAttributes';

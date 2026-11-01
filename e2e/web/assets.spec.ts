@@ -86,7 +86,9 @@ async function serveAssets(page: Page) {
       else if (parentId) rows = rows.filter((r) => r.parentId === parentId);
       const sort = params.get("sort") ?? "name";
       if (sort !== "position") rows.sort((a, b) => a.name.localeCompare(b.name) * (sort === "-name" ? -1 : 1));
-      return route.fulfill(json({ items: rows.map(out), nextCursor: null }));
+      return route.fulfill(
+        json({ items: rows.map((r) => ({ ...out(r), ancestorNames: ancestors(r).map((a) => a.name) })), nextCursor: null }),
+      );
     },
   );
   await page.route(

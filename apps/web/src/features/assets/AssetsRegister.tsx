@@ -10,7 +10,7 @@ import { Link } from "@tanstack/react-router";
 import { createContext, useContext, useMemo } from "react";
 import { t } from "../shell/t";
 import { assetColumns, type AssetRow } from "./columns";
-import { useCrumbs, useItemTypes } from "./data";
+import { crumb, useItemTypes } from "./data";
 import { toExportParams, toListParams } from "./search";
 import { assetsTranslate, ITEM_TYPE_OPTION_PREFIX } from "./terms";
 
@@ -27,8 +27,6 @@ function useAssetsPage(query: RegisterQuery): RegisterQueryResult<AssetRow> {
   const list = useAssetsList(toListParams(query, under));
   const response = list.data;
   const page = response?.status === 200 ? response.data : undefined;
-  const parentIds = useMemo(() => (page?.items ?? []).flatMap((a) => (a.parentId ? [a.parentId] : [])), [page]);
-  const crumbs = useCrumbs(parentIds);
   const data = useMemo(
     () =>
       page && {
@@ -36,12 +34,12 @@ function useAssetsPage(query: RegisterQuery): RegisterQueryResult<AssetRow> {
         items: page.items.map(
           (a): AssetRow => ({
             ...a,
-            parentCrumb: a.parentId ? (crumbs[a.parentId] ?? "") : "",
+            parentCrumb: crumb(a.ancestorNames),
             itemTypeName: a.itemTypeId ? (itemTypeNames.get(a.itemTypeId) ?? "") : "",
           }),
         ),
       },
-    [page, crumbs, itemTypeNames],
+    [page, itemTypeNames],
   );
   const failed = response !== undefined && response.status !== 200;
   return {
