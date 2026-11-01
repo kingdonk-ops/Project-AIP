@@ -1,8 +1,9 @@
-"""Data access for inspections (INSPECTIONS-01).
+"""Data access for inspections (INSPECTIONS-01) and their responses (INSPECTIONS-02).
 
 Every function takes the tenant-bound connection from ``with_tenant`` and never creates its own
 (ADR 0002). RLS limits every statement to the caller's tenant (and, through the ACCESS-03
 project-scope policy, to projects the caller holds); reads skip soft-deleted rows.
+``inspection_responses`` is append-only: there is an insert and reads, never an update or delete.
 """
 
 from __future__ import annotations
@@ -16,15 +17,24 @@ from uuid import UUID
 from sqlalchemy import ColumnElement, func, insert, select, tuple_, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from aip.modules.inspections.tables import inspections
+from aip.modules.inspections.tables import (
+    inspection_current_responses,
+    inspection_responses,
+    inspections,
+)
 from aip.platform.db.idempotency import IdempotentResult, create_idempotent
 
 __all__ = [
     "Filters",
     "Row",
+    "clock_timestamp",
+    "current_responses",
+    "field_history",
     "find_by_client_generated_id",
+    "find_by_client_id",
     "get_inspection",
     "insert_inspection",
+    "insert_response",
     "list_inspections",
     "lock_inspection",
     "set_state",
@@ -105,3 +115,48 @@ async def set_state(conn: AsyncConnection, inspection_id: UUID, state: str) -> R
         .returning(*inspections.c)
     )
     return dict((await conn.execute(stmt)).mappings().one())
+
+
+# --- responses (INSPECTIONS-02) ----------------------------------------------------------------
+
+
+async def clock_timestamp(conn: AsyncConnection) -> datetime:
+    """The server clock now (not the transaction start), for ordering responses."""
+    return (await conn.execute(select(func.clock_timestamp()))).scalar_one()
+
+
+async def insert_response(conn: AsyncConnection, values: dict[str, Any]) -> Row:
+    stmt = insert(inspection_responses).values(**values).returning(*inspection_responses.c)
+    return dict((await conn.execute(stmt)).mappings().one())
+
+
+async def find_by_client_id(
+    conn: AsyncConnection, inspection_id: UUID, client_id: UUID
+) -> Row | None:
+    t = inspection_responses
+    stmt = (
+        select(t)
+        .where(t.c.inspection_id == inspection_id, t.c.client_id == client_id)
+        .order_by(t.c.created_at, t.c.id)
+        .limit(1)
+    )
+    row = (await conn.execute(stmt)).mappings().first()
+    return None if row is None else dict(row)
+
+
+async def current_responses(conn: AsyncConnection, inspection_id: UUID) -> dict[str, Row]:
+    """The current row per field (from the view), keyed by ``field_key``."""
+    v = inspection_current_responses
+    stmt = select(v).where(v.c.inspection_id == inspection_id)
+    return {r["field_key"]: dict(r) for r in (await conn.execute(stmt)).mappings()}
+
+
+async def field_history(conn: AsyncConnection, inspection_id: UUID, field_key: str) -> list[Row]:
+    """Every row for one field, oldest first."""
+    t = inspection_responses
+    stmt = (
+        select(t)
+        .where(t.c.inspection_id == inspection_id, t.c.field_key == field_key)
+        .order_by(t.c.created_at, t.c.id)
+    )
+    return [dict(r) for r in (await conn.execute(stmt)).mappings()]

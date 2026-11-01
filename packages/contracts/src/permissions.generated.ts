@@ -34,6 +34,7 @@ export type PermissionCode =
   | "identity.user.manage"
   | "identity.user.read"
   | "inspection.create"
+  | "inspection.respond"
   | "inspection.view"
   | "item_type.edit"
   | "item_type.manage"
@@ -101,6 +102,7 @@ export const PERMISSIONS = {
   "identity.user.manage": { module: "identity", privileged: true },
   "identity.user.read": { module: "identity", privileged: false },
   "inspection.create": { module: "inspections", privileged: false },
+  "inspection.respond": { module: "inspections", privileged: false },
   "inspection.view": { module: "inspections", privileged: false },
   "item_type.edit": { module: "item_types", privileged: false },
   "item_type.manage": { module: "item_types", privileged: false },

@@ -38,6 +38,7 @@
                 "identity.user.manage",
                 "identity.user.read",
                 "inspection.create",
+                "inspection.respond",
                 "inspection.view",
                 "item_type.edit",
                 "item_type.manage",
@@ -232,6 +233,108 @@
           "sections"
         ],
         "title": "AnswerEvaluationOut",
+        "type": "object"
+      },
+      "AnswerIn": {
+        "additionalProperties": false,
+        "description": "One answer; ``value`` ``null`` clears it. ``clientId`` makes a retry idempotent.",
+        "properties": {
+          "clientId": {
+            "format": "uuid",
+            "title": "Clientid",
+            "type": "string"
+          },
+          "fieldKey": {
+            "pattern": "^[a-z][a-z0-9_]{0,62}$",
+            "title": "Fieldkey",
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonValue"
+          }
+        },
+        "required": [
+          "fieldKey",
+          "value",
+          "clientId"
+        ],
+        "title": "AnswerIn",
+        "type": "object"
+      },
+      "AnswerOut": {
+        "properties": {
+          "failed": {
+            "title": "Failed",
+            "type": "boolean"
+          },
+          "respondedAt": {
+            "format": "date-time",
+            "title": "Respondedat",
+            "type": "string"
+          },
+          "respondedBy": {
+            "format": "uuid",
+            "title": "Respondedby",
+            "type": "string"
+          },
+          "responseId": {
+            "format": "uuid",
+            "title": "Responseid",
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonValue"
+          }
+        },
+        "required": [
+          "value",
+          "failed",
+          "respondedBy",
+          "respondedAt",
+          "responseId"
+        ],
+        "title": "AnswerOut",
+        "type": "object"
+      },
+      "AnswersEvaluation": {
+        "description": "The FORMS-02 evaluation of the current answers: ``missingRequired`` lists the visible\nrequired fields with no answer, ``failed`` the fields whose answer fails.",
+        "properties": {
+          "failed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Failed",
+            "type": "array"
+          },
+          "missingRequired": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missingrequired",
+            "type": "array"
+          },
+          "required": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Required",
+            "type": "object"
+          },
+          "visible": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Visible",
+            "type": "object"
+          }
+        },
+        "required": [
+          "visible",
+          "required",
+          "missingRequired",
+          "failed"
+        ],
+        "title": "AnswersEvaluation",
         "type": "object"
       },
       "ApprovalsErrorBody": {
@@ -1574,6 +1677,27 @@
           "syncVersion"
         ],
         "title": "ContentTypeUpdate",
+        "type": "object"
+      },
+      "CurrentResponses": {
+        "description": "The current answer per field and the evaluation of those answers.",
+        "properties": {
+          "answers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnswerOut"
+            },
+            "title": "Answers",
+            "type": "object"
+          },
+          "evaluation": {
+            "$ref": "#/components/schemas/AnswersEvaluation"
+          }
+        },
+        "required": [
+          "answers",
+          "evaluation"
+        ],
+        "title": "CurrentResponses",
         "type": "object"
       },
       "DbEstimate": {
@@ -4363,6 +4487,7 @@
         "title": "JobStatus",
         "type": "string"
       },
+      "JsonValue": {},
       "LimitOut": {
         "additionalProperties": false,
         "description": "``limit`` null is unlimited; ``used`` null means nothing measures it yet.",
@@ -6640,6 +6765,155 @@
         "title": "ReportTemplateUpload",
         "type": "object"
       },
+      "ResponseEntry": {
+        "properties": {
+          "clientId": {
+            "format": "uuid",
+            "title": "Clientid",
+            "type": "string"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "boolean"
+          },
+          "fieldKey": {
+            "title": "Fieldkey",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "respondedAt": {
+            "format": "date-time",
+            "title": "Respondedat",
+            "type": "string"
+          },
+          "respondedBy": {
+            "format": "uuid",
+            "title": "Respondedby",
+            "type": "string"
+          },
+          "revisionId": {
+            "format": "uuid",
+            "title": "Revisionid",
+            "type": "string"
+          },
+          "supersedesId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedesid"
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonValue"
+          }
+        },
+        "required": [
+          "id",
+          "fieldKey",
+          "value",
+          "failed",
+          "revisionId",
+          "clientId",
+          "supersedesId",
+          "respondedBy",
+          "respondedAt"
+        ],
+        "title": "ResponseEntry",
+        "type": "object"
+      },
+      "ResponseHistory": {
+        "description": "Every response for one field, oldest first.",
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ResponseEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries"
+        ],
+        "title": "ResponseHistory",
+        "type": "object"
+      },
+      "ResponseResult": {
+        "description": "``created`` is false for a ``clientId`` already stored (the first response is returned).",
+        "properties": {
+          "clientId": {
+            "format": "uuid",
+            "title": "Clientid",
+            "type": "string"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "boolean"
+          },
+          "responseId": {
+            "format": "uuid",
+            "title": "Responseid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientId",
+          "responseId",
+          "created",
+          "failed"
+        ],
+        "title": "ResponseResult",
+        "type": "object"
+      },
+      "ResponsesIn": {
+        "additionalProperties": false,
+        "description": "``POST /inspections/{id}/responses``: 1 to 200 answers, each field and client id once.",
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerIn"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Answers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "answers"
+        ],
+        "title": "ResponsesIn",
+        "type": "object"
+      },
+      "ResponsesOut": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ResponseResult"
+            },
+            "title": "Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "ResponsesOut",
+        "type": "object"
+      },
       "RevisionCreate": {
         "additionalProperties": false,
         "description": "A new draft revision. ``schema`` omitted copies the current published schema.",
@@ -6949,6 +7223,7 @@
                 "identity.user.manage",
                 "identity.user.read",
                 "inspection.create",
+                "inspection.respond",
                 "inspection.view",
                 "item_type.edit",
                 "item_type.manage",
@@ -7101,6 +7376,7 @@
                 "identity.user.manage",
                 "identity.user.read",
                 "inspection.create",
+                "inspection.respond",
                 "inspection.view",
                 "item_type.edit",
                 "item_type.manage",
@@ -7220,6 +7496,7 @@
                     "identity.user.manage",
                     "identity.user.read",
                     "inspection.create",
+                    "inspection.respond",
                     "inspection.view",
                     "item_type.edit",
                     "item_type.manage",
@@ -15635,6 +15912,253 @@
           }
         },
         "summary": "Reinspect",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
+    "/api/v1/inspections/{inspection_id}/responses": {
+      "get": {
+        "operationId": "inspections_responses",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentResponses"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Responses",
+        "tags": [
+          "inspections"
+        ]
+      },
+      "post": {
+        "operationId": "inspections_respond",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponsesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "INSPECTION_NOT_EDITABLE"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, DUPLICATE_ANSWER, UNKNOWN_FIELD, FIELD_NOT_VISIBLE or ANSWER_INVALID"
+          }
+        },
+        "summary": "Respond",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
+    "/api/v1/inspections/{inspection_id}/responses/{fieldKey}/history": {
+      "get": {
+        "operationId": "inspections_response_history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "fieldKey",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z][a-z0-9_]{0,62}$",
+              "title": "Fieldkey",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseHistory"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Response History",
         "tags": [
           "inspections"
         ]
