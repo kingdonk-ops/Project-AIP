@@ -58,8 +58,8 @@ _CHILD_COUNT_EXPR = (
 )
 
 # The live ancestors' names, root first (a node's own name is not part of its path).
-_PATH_NAMES_EXPR = (
-    "(SELECT coalesce(string_agg(p.name, ' > ' ORDER BY nlevel(p.path)), '') FROM assets p"
+_ANCESTOR_NAMES_EXPR = (
+    "(SELECT coalesce(array_agg(p.name ORDER BY nlevel(p.path)), '{}') FROM assets p"
     " WHERE p.path @> a.path AND p.path <> a.path AND p.deleted_at IS NULL)"
 )
 
@@ -273,13 +273,12 @@ async def list_assets(
     q: str | None = None,
     tag_number: str | None = None,
     item_type_ids: list[UUID] | None = None,
-    with_path_names: bool = False,
 ) -> list[dict[str, Any]]:
-    """Up to ``page.limit + 1`` live rows (the extra means "more"), each with ``child_count``.
+    """Up to ``page.limit + 1`` live rows (the extra means "more"), each with ``child_count`` and
+    ``ancestor_names``: the live ancestors' names, root first (the register's breadcrumbs and the
+    CSV export's ``path`` column, ASSETS-08).
 
     ``item_type_ids`` keeps assets typed with any of those item types (ASSETS-02).
-    ``with_path_names`` adds ``path_names``: the live ancestors' names, root first, joined with
-    `` > `` (the CSV export's ``path`` column, ASSETS-03).
     """
     columns = SORTS[page.sort]
     where, params = _where(
@@ -308,9 +307,9 @@ async def list_assets(
         where.append(f"({', '.join(key_exprs)}) {comparator} ({', '.join(placeholders)})")
 
     params["lim"] = page.limit + 1
-    extra = f", {_PATH_NAMES_EXPR} AS path_names" if with_path_names else ""
     sql = text(
-        f"SELECT a.*, {_CHILD_COUNT_EXPR} AS child_count{extra} FROM assets a "
+        f"SELECT a.*, {_CHILD_COUNT_EXPR} AS child_count,"
+        f" {_ANCESTOR_NAMES_EXPR} AS ancestor_names FROM assets a "
         f"WHERE {' AND '.join(where)} ORDER BY {order_by} LIMIT :lim"
     ).bindparams(**params)
     # Type the JSONB column so the driver's text result is decoded as it is for select(assets).

@@ -1,15 +1,15 @@
 /**
  * Column definitions of the assets register (ASSETS-03). Name, Tag Number and Updated sort both ways
- * on the server. Item type and Parent are looked up for the page's rows (see `AssetsRegister`).
+ * on the server. Parent is the row's `ancestorNames`; item type names are looked up (see `AssetsRegister`).
  * Row actions are shown only with their permission; the server refuses them regardless.
  */
-import type { AssetOut } from "@aip/api-client";
+import type { AssetListItem } from "@aip/api-client";
 import { Button, type RegisterColumn } from "@aip/ui";
 import { Link } from "@tanstack/react-router";
 import { t } from "../shell/t";
 
 /** A register row: the asset plus the names looked up for it. */
-export type AssetRow = AssetOut & {
+export type AssetRow = AssetListItem & {
   /** The parent's breadcrumb (`Site A > Unit 1`), empty for a top-level asset. */
   parentCrumb: string;
   itemTypeName: string;

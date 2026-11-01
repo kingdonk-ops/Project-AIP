@@ -1,39 +1,23 @@
 /**
- * Shared reads of the assets page (ASSETS-03), all through the generated `@aip/api-client`:
- * breadcrumbs of parent assets (from `GET /assets/{id}`'s ancestors), the tenant's item types and
- * the cache keys a write invalidates. The generated calls resolve 4xx/5xx as data, so callers
+ * Shared reads of the assets page (ASSETS-03), all through the generated `@aip/api-client`: the
+ * tenant's item types and the cache keys a write invalidates. Breadcrumbs come with each list row
+ * (`ancestorNames`, ASSETS-08), so no parent is fetched on its own. The generated calls resolve 4xx/5xx as data, so callers
  * branch on `status`.
  */
 import {
   getAssetsGetQueryKey,
-  getAssetsGetQueryOptions,
   getAssetsListQueryKey,
   useItemTypesItemTypesList,
   type ItemTypeOut,
 } from "@aip/api-client";
-import { useQueries, type QueryClient } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-const CRUMB_STALE_MS = 30_000;
 export const CRUMB_SEPARATOR = " > ";
 
-/** Breadcrumbs (`Site A > Unit 1`) of the given assets, by id; ids still loading are absent. */
-export function useCrumbs(ids: readonly string[]): Readonly<Record<string, string>> {
-  const unique = [...new Set(ids)].sort();
-  // `combine` output is structurally shared, so the record keeps its identity until a crumb changes.
-  return useQueries({
-    queries: unique.map((id) => getAssetsGetQueryOptions(id, { query: { retry: false, staleTime: CRUMB_STALE_MS } })),
-    combine: (results) => {
-      const crumbs: Record<string, string> = {};
-      for (const result of results) {
-        const response = result.data;
-        if (response?.status !== 200) continue;
-        const names = [...response.data.ancestors.map((a) => a.name), response.data.name];
-        crumbs[response.data.id] = names.join(CRUMB_SEPARATOR);
-      }
-      return crumbs;
-    },
-  });
+/** A breadcrumb (`Site A > Unit 1`) from names, root first. */
+export function crumb(names: readonly string[]): string {
+  return names.join(CRUMB_SEPARATOR);
 }
 
 export interface ItemTypes {
