@@ -322,3 +322,26 @@ export const PortalUsersSuspendResponse = zod.object({
   "userId": zod.uuid()
 }).describe('A portal user with their grants that are not revoked (live and expired).\n\n``expiresAt`` is the latest expiry among the live grants (``null`` with none).')
 
+/**
+ * End this portal session and clear the portal cookies (never the staff ones).
+ * @summary Portal Logout
+ */
+export const PortalLogoutResponse = zod.void()
+
+/**
+ * The signed-in client, its access status and the projects it may act on now.
+ * @summary Portal Me
+ */
+export const PortalMeResponse = zod.object({
+  "companyName": zod.string(),
+  "displayName": zod.union([zod.string(),zod.null()]),
+  "effectiveStatus": zod.enum(['invited', 'active', 'suspended', 'expired']),
+  "projects": zod.array(zod.object({
+  "actions": zod.array(zod.enum(['view', 'sign_off', 'witness', 'download'])),
+  "code": zod.string(),
+  "id": zod.uuid(),
+  "name": zod.string()
+}).describe('A project the client may act on now, with the grant actions it holds there.')),
+  "userId": zod.uuid()
+}).describe('The signed-in client (PORTAL-02): ``projects`` is empty unless ``effectiveStatus`` is\n``active``.')
+

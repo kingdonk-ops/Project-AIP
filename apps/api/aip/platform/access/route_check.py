@@ -13,8 +13,15 @@
    are converted here). Every router in the tree defaults to that class, and a router included
    later through ``app.include_router`` is converted on inclusion, so a route that declares
    nothing is denied at runtime with 403 even when the startup check never saw it;
-3. the policy, catalogue, principal source and tenant guard go on ``app.state`` and
-   ``Forbidden`` renders as 403 ``{"code": "FORBIDDEN", "permission": code}``.
+3. the policy, catalogue, principal source and tenant guard go on ``app.state``,
+   ``Forbidden`` renders as 403 ``{"code": "FORBIDDEN", "permission": code}`` and
+   ``RouteHiddenError`` (PORTAL-02: an external principal on an internal route, or the reverse)
+   as 404 ``{"code": "NOT_FOUND"}``.
+
+PORTAL-02: ``check_routes`` also refuses a route declared ``external=True`` outside
+``EXTERNAL_PREFIXES`` (``/api/v1/portal/``), and a route under that prefix with any declaration
+that is not ``external=True`` (``public()`` included), so the portal's surface is exactly that
+prefix.
 
 ``aip.main`` runs ``check_routes`` and ``enforce_routes`` again in the lifespan startup, so routes
 added between ``create_app()`` and serving fail startup too.
@@ -35,12 +42,22 @@ from aip.platform.access.catalogue import Catalogue
 from aip.platform.access.dependencies import (
     AccessCheckedRoute,
     PrincipalSource,
+    RouteHiddenError,
     TenantGuard,
     access_declarations,
 )
 from aip.platform.access.policy import Forbidden, PolicyService
 
-__all__ = ["RouteAccessError", "check_routes", "enforce_routes", "install_access"]
+__all__ = [
+    "EXTERNAL_PREFIXES",
+    "RouteAccessError",
+    "check_routes",
+    "enforce_routes",
+    "install_access",
+]
+
+# The only paths an external (portal) principal may reach (PORTAL-02, ADR 0036 choice 7).
+EXTERNAL_PREFIXES: tuple[str, ...] = ("/api/v1/portal/",)
 
 
 class RouteAccessError(RuntimeError):
@@ -74,6 +91,8 @@ def check_routes(
     undeclared: list[str] = []
     unknown: list[str] = []
     foreign: list[str] = []
+    misplaced: list[str] = []
+    unflagged: list[str] = []
     for context in iter_route_contexts(routes):
         if not isinstance(context.original_route, APIRoute):
             if _path(context) not in allowed_foreign:
@@ -82,6 +101,11 @@ def check_routes(
         declarations = access_declarations(context.dependant)
         if not declarations:
             undeclared.extend(_labels(context))
+        on_portal = _path(context).startswith(EXTERNAL_PREFIXES)
+        if any(d.external for d in declarations) and not on_portal:
+            misplaced.extend(_labels(context))
+        if on_portal and declarations and not all(d.external for d in declarations):
+            unflagged.extend(_labels(context))
         for declaration in declarations:
             code = declaration.permission
             if code is not None and code not in catalogue:
@@ -93,6 +117,12 @@ def check_routes(
         )
     if unknown:
         problems.append("permissions missing from the catalogue: " + ", ".join(unknown))
+    if misplaced:
+        problems.append(
+            "external routes outside " + ", ".join(EXTERNAL_PREFIXES) + ": " + ", ".join(misplaced)
+        )
+    if unflagged:
+        problems.append("portal routes not declared external=True: " + ", ".join(unflagged))
     if foreign:
         problems.append(
             "routes the access check cannot see (websocket, mount or add_route): "
@@ -151,3 +181,7 @@ def install_access(
     @app.exception_handler(Forbidden)
     async def forbidden(request: Request, exc: Forbidden) -> JSONResponse:  # pyright: ignore[reportUnusedFunction]
         return JSONResponse({"code": "FORBIDDEN", "permission": exc.permission}, status_code=403)
+
+    @app.exception_handler(RouteHiddenError)
+    async def hidden(request: Request, exc: RouteHiddenError) -> JSONResponse:  # pyright: ignore[reportUnusedFunction]
+        return JSONResponse({"code": "NOT_FOUND"}, status_code=404)

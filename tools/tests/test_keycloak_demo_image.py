@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DOCKERFILE = ROOT / "infra" / "coolify" / "images" / "keycloak.Dockerfile"
 SECRETS = {
     "AIP_API_CLIENT_SECRET": "test-api-client-secret",
+    "PORTAL_OIDC_CLIENT_SECRET": "test-portal-client-secret",
     "AIP_ADMIN_CLIENT_SECRET": "test-admin-client-secret",
     "MOCK_IDP_CLIENT_SECRET": "test-mock-idp-secret",
 }

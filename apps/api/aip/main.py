@@ -26,7 +26,9 @@ lifespan startup hook syncs the catalogue into the ``permission`` table. When th
 enabled, ``RoleGrantProvider`` (ACCESS-02) turns role assignments into grants; without it every
 ``requires()`` route answers 403. When the portal module is enabled, ``PortalGrantProvider``
 (PORTAL-01) turns portal grants into the only grants of a portal user (``user_class = 'portal'``
-makes the policy principal ``external``).
+makes the policy principal ``external``). PORTAL-02: a ``portal``-audience session is external
+too, whatever its user class, and an external principal reaches only the routes declared
+``external=True`` under ``/api/v1/portal/`` (every other route answers 404).
 """
 
 import os
@@ -129,7 +131,8 @@ async def identity_access_principal(request: Request) -> AccessPrincipal:
         actor_id=principal.user_id,
         kind="user",
         aal=principal.aal,
-        external=principal.user_class == "portal",  # PORTAL-01: only portal grants apply
+        # PORTAL-01: only portal grants apply; PORTAL-02: and only the portal routes answer.
+        external=principal.user_class == "portal" or principal.audience == "portal",
     )
 
 

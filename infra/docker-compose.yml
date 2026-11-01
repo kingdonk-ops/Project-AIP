@@ -75,6 +75,10 @@ x-app-env: &app-env
   KEYCLOAK_ADMIN_CLIENT_ID: aip-admin
   KEYCLOAK_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:-aip_admin_dev_only_secret}
   APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8080}
+  # PORTAL-02 (ADR 0026 §3): the client portal signs in on its own host through `aip-portal`.
+  PORTAL_ORIGIN: ${PORTAL_ORIGIN:-http://portal.localhost:8081}
+  PORTAL_OIDC_CLIENT_ID: aip-portal
+  PORTAL_OIDC_CLIENT_SECRET: ${PORTAL_OIDC_CLIENT_SECRET:-aip_portal_dev_only_secret}
   PREAUTH_COOKIE_KEY: ${PREAUTH_COOKIE_KEY:-ZGV2LW9ubHktcHJlYXV0aC1jb29raWUta2V5LWZha2U}
   PROJECTS_CURSOR_KEY: ${PROJECTS_CURSOR_KEY:-dev-only-projects-cursor-key-not-secret}
   ASSETS_CURSOR_KEY: ${ASSETS_CURSOR_KEY:-dev-only-assets-cursor-key-not-secret}
@@ -212,6 +216,9 @@ services:
       APP_BACKCHANNEL_ORIGIN: http://api:8000
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
       AIP_API_CLIENT_SECRET: ${AIP_API_CLIENT_SECRET:-aip_api_dev_only_secret}
+      # PORTAL-02: the `aip-portal` client's redirect URI and secret.
+      PORTAL_ORIGIN: ${PORTAL_ORIGIN:-http://portal.localhost:8081}
+      PORTAL_OIDC_CLIENT_SECRET: ${PORTAL_OIDC_CLIENT_SECRET:-aip_portal_dev_only_secret}
       AIP_ADMIN_CLIENT_SECRET: ${AIP_ADMIN_CLIENT_SECRET:-aip_admin_dev_only_secret}
       MOCK_IDP_CLIENT_SECRET: ${MOCK_IDP_CLIENT_SECRET:-mock_idp_dev_only_secret}
       # Keycloak sends its own verify and reset mails (ADR 0005). In AWS point it at SES SMTP:

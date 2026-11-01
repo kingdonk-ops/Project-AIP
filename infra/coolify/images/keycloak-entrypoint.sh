@@ -7,6 +7,7 @@ set -euo pipefail
 
 declare -A dev_values=(
   [AIP_API_CLIENT_SECRET]=aip_api_dev_only_secret
+  [PORTAL_OIDC_CLIENT_SECRET]=aip_portal_dev_only_secret
   [AIP_ADMIN_CLIENT_SECRET]=aip_admin_dev_only_secret
   [MOCK_IDP_CLIENT_SECRET]=mock_idp_dev_only_secret
 )

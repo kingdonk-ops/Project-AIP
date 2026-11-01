@@ -710,6 +710,59 @@
       ]
     },
     {
+      "clientId": "aip-portal",
+      "name": "AIP client portal (OIDC code flow + PKCE on the portal host; local accounts, always aal2)",
+      "baseUrl": "${PORTAL_ORIGIN:http://portal.localhost:8081}/signin",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${PORTAL_OIDC_CLIENT_SECRET:aip_portal_dev_only_secret}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": false,
+      "consentRequired": false,
+      "fullScopeAllowed": false,
+      "rootUrl": "${PORTAL_ORIGIN:http://portal.localhost:8081}",
+      "redirectUris": [
+        "${PORTAL_ORIGIN:http://portal.localhost:8081}/api/v1/auth/portal/oidc/callback"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "backchannel.logout.url": "${APP_BACKCHANNEL_ORIGIN:http://localhost:8080}/api/v1/auth/oidc/backchannel-logout",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "default.acr.values": "aal2",
+        "minimum.acr.value": "aal2",
+        "post.logout.redirect.uris": "${PORTAL_ORIGIN:http://portal.localhost:8081}/signin",
+        "use.refresh.tokens": "false"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr",
+        "email",
+        "profile"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "amr",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-amr-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "introspection.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
       "clientId": "aip-admin",
       "name": "AIP backend admin API client (python-keycloak; users only)",
       "enabled": true,

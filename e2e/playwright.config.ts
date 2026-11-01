@@ -57,6 +57,7 @@ const SKELETON = [
   "web/form-templates.spec.ts",
   "web/item-types.spec.ts", // ITEMTYPES-03: needs both tenants signed in for real
   "web/assets-live.spec.ts", // ASSETS-03: creates assets and checks the other tenant for real
+  "web/portal-auth.spec.ts", // PORTAL-02: the portal sign-in contract needs the stack and Keycloak
 ];
 const UNIT = "fixtures/*.spec.ts";
 const skeletonProjects: PlaywrightTestConfig["projects"] = process.env.E2E_SKELETON
