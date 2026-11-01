@@ -1,6 +1,13 @@
 # INSPECTIONS-03 — ITP steps with hold and witness points, release-to-proceed and sign-off assurance
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
+<!-- hand-edited 2026-11-01: step 5 re-based on the v2 lifecycle (ADR 0041) -->
+
+> **Changed 2026-11-01 ([ADR 0041](../../docs/adr/0041-inspection-completion-locks-and-submit.md)).** Step 5 was
+> written for the v1 lifecycle's `submit`. The v2 lifecycle hands in with `request_supervisor_review`, so the
+> open-steps guard `{"==":[{"var":"record.openStepCount"},0]}` goes on every `request_supervisor_review` in both
+> inspection presets. The answers-complete part of the guard belongs to INSPECTIONS-10 (the report tick), which
+> keeps this clause when it publishes its guarded version.
 
 | Field | Value |
 |---|---|

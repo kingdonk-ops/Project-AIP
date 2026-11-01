@@ -3,10 +3,12 @@
 #   revision; its lifecycle is a workflow instance of the approvals `inspection` definition. The
 #   lifecycle permissions stay the `approvals.inspection.*` codes approvals declares.
 # INSPECTIONS-02: append-only answers (`inspection.respond`), `inspection.answer_failed` v1.
+# INSPECTIONS-03: ITP steps and hash-chained sign-offs (`itp.*`), `itp_step.released` v1 and
+#   `itp_step.hold_changed` v1.
 id = "inspections"
 context = "inspections"
 depends_on = ["approvals", "assets", "forms", "projects", "access", "identity", "tenancy"]
-permission_namespaces = ["inspection"]
+permission_namespaces = ["inspection", "itp"]
 settings = []
 term_keys = []
 
@@ -22,6 +24,18 @@ description = "Create inspections and re-inspections"
 code = "inspection.respond"
 description = "Answer inspection questions"
 
+[[permissions]]
+code = "itp.manage"
+description = "Set up ITP steps"
+
+[[permissions]]
+code = "itp.sign"
+description = "Sign ITP steps: release holds, witness, reject"
+
+[[permissions]]
+code = "itp.waive"
+description = "Waive a witness point after its notice period"
+
 [[events]]
 name = "inspection.created"
 version = 1
@@ -32,6 +46,14 @@ version = 1
 
 [[events]]
 name = "inspection.state_changed"
+version = 1
+
+[[events]]
+name = "itp_step.released"
+version = 1
+
+[[events]]
+name = "itp_step.hold_changed"
 version = 1
 
 [[subscribes]]

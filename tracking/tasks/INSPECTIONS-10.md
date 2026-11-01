@@ -89,6 +89,8 @@ Request Supervisor Review or Submit Report, depending on the template ([ADR 0041
       - Standard preset → `performed`. Client-review variant → `client_review`.
       - Permission `approvals.inspection.execute`, `critical: true`, `signoffAction: inspection.submit_report`.
       - Guard: the same expression, with `hasSupervisorReview == false`.
+    - INSPECTIONS-03 already guards every `request_supervisor_review` on `{"==":[{"var":"record.openStepCount"},0]}`
+      (an ITP with open steps cannot be handed in). Keep that clause in both submit guards (`and` it in).
     - Both guards use `guardMessageKey: "inspection.guard.submit_not_ready"`. A record must never offer both submits
       at once: `GET .../transitions` leaves out the transition whose `hasSupervisorReview` clause is false. If the
       engine can't do that, add the smallest host-side filter in inspections and say so in the PR.
