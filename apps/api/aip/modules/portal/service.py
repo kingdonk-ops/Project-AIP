@@ -31,7 +31,7 @@ import base64
 import binascii
 from collections.abc import AsyncIterator, Awaitable, Callable, Iterable
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Final, cast
 from uuid import UUID
 
@@ -391,7 +391,14 @@ class PortalService:
     # --- reads ----------------------------------------------------------------------------------
 
     async def list(
-        self, *, status: str | None, q: str | None, cursor: str | None, limit: int
+        self,
+        *,
+        status: str | None,
+        q: str | None,
+        cursor: str | None,
+        limit: int,
+        project_id: UUID | None = None,
+        expiring_within_days: int | None = None,
     ) -> PortalUserPage:
         after = None if cursor is None else _decode_cursor(cursor)
         async with _tx() as conn:
@@ -399,7 +406,16 @@ class PortalService:
             if q:
                 user_ids = await self._email_matches(conn, q)
             rows = await repo.list_users(
-                conn, limit=limit, after=after, status=status, q=q, user_ids=user_ids
+                conn,
+                limit=limit,
+                after=after,
+                status=status,
+                q=q,
+                user_ids=user_ids,
+                project_id=project_id,
+                expiring_within=None
+                if expiring_within_days is None
+                else timedelta(days=expiring_within_days),
             )
             page = rows[:limit]
             grants = await repo.unrevoked_grants(conn, [r["id"] for r in page])

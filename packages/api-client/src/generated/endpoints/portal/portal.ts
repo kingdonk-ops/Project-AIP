@@ -88,6 +88,8 @@ export const getPortalUsersListUrl = (params?: PortalUsersListParams,) => {
 }
 
 /**
+ * ``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+ * ``projectId``: users with an unrevoked grant on that project.
  * @summary List Portal Users
  */
 export const portalUsersList = async (params?: PortalUsersListParams, options?: Parameters<typeof apiFetch>[1]): Promise<portalUsersListResponse> => {

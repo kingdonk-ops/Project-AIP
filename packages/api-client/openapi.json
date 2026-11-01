@@ -11296,6 +11296,7 @@
     },
     "/api/v1/admin/portal/users": {
       "get": {
+        "description": "``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);\n``projectId``: users with an unrevoked grant on that project.",
         "operationId": "portal_users_list",
         "parameters": [
           {
@@ -11364,6 +11365,41 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "projectId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Projectid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "expiringWithinDays",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 400,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expiringwithindays"
             }
           }
         ],

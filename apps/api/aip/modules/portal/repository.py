@@ -7,11 +7,11 @@ Every function takes the tenant-bound connection from ``with_tenant`` and never 
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, func, insert, or_, select, update
+from sqlalchemy import ColumnElement, exists, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.portal.tables import portal_grants, portal_users
@@ -93,15 +93,28 @@ async def list_users(
     status: str | None = None,
     q: str | None = None,
     user_ids: Iterable[UUID] = (),
+    project_id: UUID | None = None,
+    expiring_within: timedelta | None = None,
 ) -> list[Row]:
     """Up to ``limit + 1`` live portal users after ``after``, oldest first (UUIDv7 ids).
 
     ``q`` matches a substring of the company name (case-insensitive), or the row's ``user_id`` is
-    one of ``user_ids`` (the identity users whose email matched).
+    one of ``user_ids`` (the identity users whose email matched). ``project_id`` keeps users with an
+    unrevoked grant on that project; ``expiring_within`` keeps users with a live grant whose
+    ``expires_at`` is in ``(now, now + expiring_within]`` (PORTAL-07).
     """
     stmt = select(portal_users).where(_live_user())
     if status is not None:
         stmt = stmt.where(portal_users.c.status == status)
+    if project_id is not None:
+        stmt = stmt.where(_has_grant(portal_grants.c.project_id == project_id))
+    if expiring_within is not None:
+        stmt = stmt.where(
+            _has_grant(
+                portal_grants.c.expires_at > func.now(),
+                portal_grants.c.expires_at <= func.now() + expiring_within,
+            )
+        )
     if q:
         pattern = "%" + q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
         matches: list[ColumnElement[bool]] = [
@@ -115,6 +128,13 @@ async def list_users(
         stmt = stmt.where(portal_users.c.id > after)
     stmt = stmt.order_by(portal_users.c.id).limit(limit + 1)
     return [dict(r) for r in (await conn.execute(stmt)).mappings()]
+
+
+def _has_grant(*conditions: ColumnElement[bool]) -> ColumnElement[bool]:
+    """The portal user has an unrevoked grant matching ``conditions``."""
+    return exists().where(
+        portal_grants.c.portal_user_id == portal_users.c.id, _unrevoked(), *conditions
+    )
 
 
 # --- portal grants ----------------------------------------------------------------------------
