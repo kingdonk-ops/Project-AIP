@@ -3,6 +3,8 @@ import * as zod from 'zod';
 
 
 /**
+ * ``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+ * ``projectId``: users with an unrevoked grant on that project.
  * @summary List Portal Users
  */
 export const portalUsersListQueryQOneMax = 100;
@@ -12,13 +14,17 @@ export const portalUsersListQueryCursorOneMax = 1024;
 export const portalUsersListQueryLimitDefault = 50;
 export const portalUsersListQueryLimitMax = 100;
 
+export const portalUsersListQueryExpiringWithinDaysOneMax = 400;
+
 
 
 export const PortalUsersListQueryParams = zod.object({
   "status": zod.union([zod.enum(['invited', 'active', 'suspended']),zod.null()]).optional(),
   "q": zod.union([zod.string().min(1).max(portalUsersListQueryQOneMax),zod.null()]).optional(),
   "cursor": zod.union([zod.string().max(portalUsersListQueryCursorOneMax),zod.null()]).optional(),
-  "limit": zod.int().min(1).max(portalUsersListQueryLimitMax).default(portalUsersListQueryLimitDefault)
+  "limit": zod.int().min(1).max(portalUsersListQueryLimitMax).default(portalUsersListQueryLimitDefault),
+  "projectId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "expiringWithinDays": zod.union([zod.int().min(1).max(portalUsersListQueryExpiringWithinDaysOneMax),zod.null()]).optional()
 })
 
 export const PortalUsersListResponse = zod.object({

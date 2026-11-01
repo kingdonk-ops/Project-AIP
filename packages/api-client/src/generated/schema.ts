@@ -324,7 +324,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Portal Users */
+        /**
+         * List Portal Users
+         * @description ``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+         *     ``projectId``: users with an unrevoked grant on that project.
+         */
         get: operations["portal_users_list"];
         put?: never;
         /** Invite Portal User */
@@ -488,6 +492,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/approvals/instances/{instance_id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide Step */
+        post: operations["approvals_decide_step"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/approvals/instances/{instance_id}/history": {
         parameters: {
             query?: never;
@@ -497,6 +518,40 @@ export interface paths {
         };
         /** Get History */
         get: operations["approvals_get_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/instances/{instance_id}/route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Route */
+        post: operations["approvals_start_route"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/instances/{instance_id}/steps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Steps */
+        get: operations["approvals_get_steps"];
         put?: never;
         post?: never;
         delete?: never;
@@ -533,6 +588,24 @@ export interface paths {
         get: operations["approvals_list_presets"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/route-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Route Templates */
+        get: operations["approvals_list_route_templates"];
+        put?: never;
+        /** Create Route Template */
+        post: operations["approvals_create_route_template"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1958,7 +2031,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -4501,7 +4574,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -4526,7 +4599,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -4538,7 +4611,136 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+        };
+        /**
+         * RouteOut
+         * @description An instance's current route: the latest round's steps (none before the first route).
+         */
+        RouteOut: {
+            /** Currentstepid */
+            currentStepId: string | null;
+            instance: components["schemas"]["InstanceOut"];
+            /** Routeround */
+            routeRound: number;
+            /** Routetemplateid */
+            routeTemplateId: string | null;
+            /** Steps */
+            steps: components["schemas"]["RouteStepOut"][];
+        };
+        /** RouteStart */
+        RouteStart: {
+            /**
+             * Routetemplateid
+             * Format: uuid
+             */
+            routeTemplateId: string;
+        };
+        /** RouteStepIn */
+        RouteStepIn: {
+            /**
+             * Approverref
+             * Format: uuid
+             */
+            approverRef: string;
+            /**
+             * Approvertype
+             * @enum {string}
+             */
+            approverType: "user" | "role" | "team";
+            /** Duehours */
+            dueHours?: number | null;
+            /**
+             * Mode
+             * @default serial
+             * @enum {string}
+             */
+            mode: "serial" | "parallel";
+            /** Steporder */
+            stepOrder: number;
+        };
+        /**
+         * RouteStepOut
+         * @description A template step (no status) or an instance step with its status and decision.
+         */
+        RouteStepOut: {
+            /**
+             * Approverref
+             * Format: uuid
+             */
+            approverRef: string;
+            /**
+             * Approvertype
+             * @enum {string}
+             */
+            approverType: "user" | "role" | "team";
+            /** Decidedat */
+            decidedAt?: string | null;
+            /** Decidedby */
+            decidedBy?: string | null;
+            /** Dueat */
+            dueAt?: string | null;
+            /** Duehours */
+            dueHours: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "serial" | "parallel";
+            /** Status */
+            status?: ("waiting" | "pending" | "approved" | "rejected" | "skipped") | null;
+            /** Steporder */
+            stepOrder: number;
+        };
+        /** RouteTemplateCreate */
+        RouteTemplateCreate: {
+            /**
+             * Allowselfapproval
+             * @default false
+             */
+            allowSelfApproval: boolean;
+            /** Name */
+            name: string;
+            /** Onapprovedaction */
+            onApprovedAction: string;
+            /** Onrejectedaction */
+            onRejectedAction: string;
+            /** Recordtype */
+            recordType: string;
+            /** Steps */
+            steps: components["schemas"]["RouteStepIn"][];
+        };
+        /** RouteTemplateOut */
+        RouteTemplateOut: {
+            /** Allowselfapproval */
+            allowSelfApproval: boolean;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Onapprovedaction */
+            onApprovedAction: string;
+            /** Onrejectedaction */
+            onRejectedAction: string;
+            /** Recordtype */
+            recordType: string;
+            /** Steps */
+            steps: components["schemas"]["RouteStepOut"][];
+            /** Version */
+            version: number;
         };
         /**
          * Scope
@@ -4745,6 +4947,28 @@ export interface components {
             name?: string | null;
             /** Timezone */
             timezone?: string | null;
+        };
+        /** StepDecisionOut */
+        StepDecisionOut: {
+            decision: components["schemas"]["DecisionOut"];
+            /** Outcome */
+            outcome?: ("approved" | "rejected") | null;
+            route: components["schemas"]["RouteOut"];
+        };
+        /** StepDecisionRequest */
+        StepDecisionRequest: {
+            /** Comment */
+            comment?: string | null;
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /**
+             * Stepid
+             * Format: uuid
+             */
+            stepId: string;
         };
         /** StepUpErrorBody */
         StepUpErrorBody: {
@@ -6415,6 +6639,8 @@ export interface operations {
                 q?: string | null;
                 cursor?: string | null;
                 limit?: number;
+                projectId?: string | null;
+                expiringWithinDays?: number | null;
             };
             header?: never;
             path?: never;
@@ -6937,6 +7163,77 @@ export interface operations {
             };
         };
     };
+    approvals_decide_step: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instance_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StepDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StepDecisionOut"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description STEP_NOT_PENDING, INVALID_TRANSITION, COUNTERSIGN_PENDING */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description Validation error, COMMENT_REQUIRED, GUARD_FAILED or GUARD_ERROR */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+        };
+    };
     approvals_get_history: {
         parameters: {
             query?: never;
@@ -6955,6 +7252,135 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HistoryOut"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approvals_start_route: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instance_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RouteStart"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteOut"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description ROUTE_ACTIVE, COUNTERSIGN_PENDING */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+            /** @description Validation error, ROUTE_TEMPLATE_MISMATCH or ROUTE_ACTION_INVALID */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
+                };
+            };
+        };
+    };
+    approvals_get_steps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instance_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteOut"];
                 };
             };
             /** @description Not signed in, or STEP_UP_REQUIRED */
@@ -7091,6 +7517,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PresetOut"][];
+                };
+            };
+        };
+    };
+    approvals_list_route_templates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteTemplateOut"][];
+                };
+            };
+        };
+    };
+    approvals_create_route_template: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RouteTemplateCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RouteTemplateOut"];
+                };
+            };
+            /** @description Validation error, ROUTE_SHAPE_INVALID or UNKNOWN_APPROVER */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsErrorBody"];
                 };
             };
         };
