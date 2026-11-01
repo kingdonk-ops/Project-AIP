@@ -6,6 +6,7 @@ export interface TemplateCreate {
   changeNote?: string | null;
   /** @pattern ^[a-z][a-z0-9-]{1,62}$ */
   code: string;
+  hasSupervisorReview?: boolean;
   kind: TemplateCreateKind;
   /**
      * @minLength 1

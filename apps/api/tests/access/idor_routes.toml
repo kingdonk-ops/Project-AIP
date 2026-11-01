@@ -220,6 +220,10 @@ table = "app_user"
 ["GET /api/v1/forms/templates/{template_id}"]
 table = "form_templates"
 
+["PATCH /api/v1/forms/templates/{template_id}"]
+table = "form_templates"
+body = '{"hasSupervisorReview": false}'
+
 ["POST /api/v1/forms/templates/{template_id}/revisions"]
 table = "form_templates"
 body = '{}'

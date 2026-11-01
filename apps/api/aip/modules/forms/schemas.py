@@ -24,6 +24,7 @@ __all__ = [
     "ExpressionErrorOut",
     "FormErrorBody",
     "FormRevisionOut",
+    "FormTemplateOut",
     "LintBody",
     "LintIssueOut",
     "LintResult",
@@ -32,11 +33,13 @@ __all__ = [
     "RevisionOut",
     "RevisionReplace",
     "RevisionSummary",
+    "SectionResultOut",
     "TemplateCreate",
     "TemplateDetail",
     "TemplateListItem",
     "TemplatePage",
     "TemplateRecord",
+    "TemplateUpdate",
     "UploadResult",
 ]
 
@@ -79,6 +82,16 @@ class TemplateCreate(_In):
     kind: Kind
     schema_: SchemaObject = Field(alias="schema")
     change_note: ChangeNote | None = None
+    has_supervisor_review: bool = True
+
+
+class TemplateUpdate(_In):
+    """Template settings (FORMS-10). An omitted field is left as it is. Changing
+    ``hasSupervisorReview`` never changes inspections that already exist (ADR 0041 §5)."""
+
+    name: Name | None = None
+    has_supervisor_review: bool | None = None
+    expected_sync_version: int | None = Field(default=None, ge=1)
 
 
 class RevisionCreate(_In):
@@ -134,6 +147,18 @@ class ExpressionErrorOut(_Out):
     message: str
 
 
+class SectionResultOut(_Out):
+    """One section's verdict (FORMS-10): complete when visible with no missing required answers,
+    no invalid values and no failed section rules."""
+
+    visible: bool
+    missing_required: list[str]
+    invalid: list[str]
+    failed: list[str]
+    rule_failures: list[str]
+    complete: bool
+
+
 class AnswerEvaluationOut(_Out):
     visible: dict[str, bool]
     required: dict[str, bool]
@@ -142,6 +167,7 @@ class AnswerEvaluationOut(_Out):
     ignored: list[str]
     expression_errors: list[ExpressionErrorOut]
     complete: bool
+    sections: dict[str, SectionResultOut]
 
 
 # --- lint -------------------------------------------------------------------------------------
@@ -151,6 +177,7 @@ class LintIssueOut(_Out):
     path: list[str | int]
     code: str
     message: str
+    severity: Literal["error", "warning"] = "error"
 
 
 class LintResult(_Out):
@@ -191,6 +218,7 @@ class TemplateRecord(_Out):
     name: str
     kind: Kind
     status: TemplateStatus
+    has_supervisor_review: bool
     current_revision_id: UUID | None
     current_revision_no: int | None
     sync_version: int
@@ -204,6 +232,7 @@ class TemplateListItem(_Out):
     name: str
     kind: Kind
     status: TemplateStatus
+    has_supervisor_review: bool
     current_revision_no: int | None
     updated_at: datetime
 
@@ -219,6 +248,34 @@ class TemplateDetail(TemplateRecord):
 class UploadResult(_Out):
     template: TemplateRecord
     revision: RevisionOut
+
+
+@dataclass(frozen=True, slots=True)
+class FormTemplateOut:
+    """A live template as the forms published interface returns it to other modules (FORMS-10).
+
+    INSPECTIONS-10 copies ``has_supervisor_review`` onto an inspection when it is created.
+    """
+
+    id: UUID
+    code: str
+    name: str
+    kind: str
+    status: str
+    has_supervisor_review: bool
+    current_revision_id: UUID | None
+
+    @classmethod
+    def from_row(cls, row: dict[str, Any]) -> FormTemplateOut:
+        return cls(
+            id=row["id"],
+            code=row["code"],
+            name=row["name"],
+            kind=row["kind"],
+            status=row["status"],
+            has_supervisor_review=row["has_supervisor_review"],
+            current_revision_id=row["current_revision_id"],
+        )
 
 
 @dataclass(frozen=True, slots=True)

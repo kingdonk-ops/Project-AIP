@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import * as pkg from "../index";
 import { ALLOWED_OPERATORS, evaluateGuard, GuardError, truthy, validateGuard } from "./jsonlogic";
 import type { Json } from "./types";
-import { EVALUATOR_VERSION } from "./evaluate";
 
 interface ValueCase {
   name: string;
@@ -29,8 +28,8 @@ const vectors = JSON.parse(
 const isError = (c: Case): c is ErrorCase => "error" in c;
 
 describe("expressions-v1 vectors", () => {
-  it("the vector file matches the evaluator version and the case floor", () => {
-    expect(String(vectors.version)).toBe(EVALUATOR_VERSION);
+  it("the vector file is frozen at version 1 and meets the case floor", () => {
+    expect(String(vectors.version)).toBe("1");
     expect(vectors.cases.length).toBeGreaterThanOrEqual(80);
   });
 

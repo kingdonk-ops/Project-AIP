@@ -34,6 +34,7 @@ term_keys = [
   "forms.lint.EXPRESSION_INVALID",
   "forms.lint.UNKNOWN_REFERENCE",
   "forms.lint.CONDITION_CYCLE",
+  "forms.lint.RULE_READS_HIDDEN_FIELD",
   "forms.answer.REQUIRED",
   "forms.answer.WRONG_TYPE",
   "forms.answer.NOT_AN_OPTION",
