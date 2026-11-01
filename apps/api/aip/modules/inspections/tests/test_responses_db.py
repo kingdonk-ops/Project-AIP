@@ -342,12 +342,12 @@ async def test_the_lifecycle_decides_who_may_answer(
 ) -> None:
     await answer_ok(client, inspection, item("coating_dft", 300))  # in_progress
 
-    await move(client, inspection, "go_checkout", INSPECTOR_ID)  # checked out to SiteSync
+    await move(client, inspection, "sitesync_checkout", INSPECTOR_ID)  # checked out to SiteSync
     sitesync = await answer(client, inspection, item("coating_dft", 301))
     assert sitesync.status_code == 409, sitesync.text
-    assert sitesync.json()["state"] == "in_progress_go"
+    assert sitesync.json()["state"] == "in_progress_sitesync"
 
-    await move(client, inspection, "check_in", INSPECTOR_ID)
+    await move(client, inspection, "sitesync_check_in", INSPECTOR_ID)
     await answer_ok(client, inspection, item("coating_dft", 302))  # inspector_review
 
     await move(client, inspection, "request_supervisor_review", INSPECTOR_ID)

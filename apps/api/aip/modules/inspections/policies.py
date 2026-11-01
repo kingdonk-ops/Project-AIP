@@ -42,8 +42,7 @@ def can_reinspect(state: str) -> bool:
 # ADR 0041 §6: the person doing the inspection answers in these states (``inspection.respond``) ...
 RESPOND_STATES: Final = frozenset({"in_progress", "inspector_review", "rework_required"})
 # ... and in supervisor review only a supervisor who may edit during review. Every other state,
-# including ``in_progress_go`` (checked out to SiteSync; ``in_progress_sitesync`` after
-# APPROVALS-10), takes no answers on the web.
+# including ``in_progress_sitesync`` (checked out to SiteSync), takes no answers on the web.
 REVIEW_EDIT_STATES: Final = frozenset({"supervisor_review"})
 
 
