@@ -8,6 +8,7 @@ export interface TemplateDetail {
   createdAt: string;
   currentRevisionId: string | null;
   currentRevisionNo: number | null;
+  hasSupervisorReview: boolean;
   id: string;
   kind: TemplateDetailKind;
   name: string;

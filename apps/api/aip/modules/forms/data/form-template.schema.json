@@ -2,12 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aip/contracts/forms/form-template.schema.json",
   "title": "Form template revision schema",
-  "description": "The frozen JSON a form_revisions.schema holds (FORMS-01). Structural shape only: field-type names, units, option uniqueness, validation/type agreement, JSONLogic operators and reference/cycle checks are enforced by the forms lint, not here, so that e.g. an unknown field type surfaces as UNKNOWN_FIELD_TYPE rather than a schema error.",
+  "description": "The frozen JSON a form_revisions.schema holds (FORMS-01; schemaVersion 2 adds section rules, FORMS-10). Structural shape only: field-type names, units, option uniqueness, validation/type agreement, JSONLogic operators and reference/cycle checks are enforced by the forms lint, not here, so that e.g. an unknown field type surfaces as UNKNOWN_FIELD_TYPE rather than a schema error.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "sections"],
   "properties": {
-    "schemaVersion": {"const": 1},
+    "schemaVersion": {"enum": [1, 2]},
     "sections": {
       "type": "array",
       "minItems": 1,
@@ -15,6 +15,13 @@
       "items": {"$ref": "#/$defs/section"}
     }
   },
+  "allOf": [
+    {
+      "description": "Section rules arrive with schemaVersion 2; a version 1 template has none.",
+      "if": {"properties": {"schemaVersion": {"const": 1}}},
+      "then": {"properties": {"sections": {"items": {"not": {"required": ["rules"]}}}}}
+    }
+  ],
   "$defs": {
     "key": {
       "type": "string",
@@ -48,7 +55,25 @@
           "minItems": 1,
           "maxItems": 100,
           "items": {"$ref": "#/$defs/field"}
+        },
+        "rules": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {"$ref": "#/$defs/sectionRule"}
         }
+      }
+    },
+    "sectionRule": {
+      "description": "A check across a section's answers (FORMS-10): expr must be true for the section to pass; label (or labelKey) is the message shown when it is false. Its key shares the section and field key namespace.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "expr"],
+      "anyOf": [{"required": ["label"]}, {"required": ["labelKey"]}],
+      "properties": {
+        "key": {"$ref": "#/$defs/key"},
+        "expr": {"$ref": "#/$defs/expression"},
+        "label": {"type": "string", "minLength": 1, "maxLength": 1000},
+        "labelKey": {"$ref": "#/$defs/termKey"}
       }
     },
     "field": {

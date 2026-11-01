@@ -6,6 +6,8 @@ from ``with_tenant``, so the read joins their transaction and RLS applies.
 ``get_revision`` returns a frozen revision (``published`` or ``superseded``) so inspections keep the
 exact form they pinned even after a newer revision is published; it never returns a draft or an
 unknown id. ``get_current_revision`` returns a template's current published revision.
+``get_template`` returns a live template's settings, including ``has_supervisor_review`` (FORMS-10),
+which INSPECTIONS-10 copies onto an inspection when it is created.
 ``lint_template`` and ``LintIssue`` are re-exported for the register/designer and seed tasks
 (FORMS-04/05/06) to reuse the same checks.
 """
@@ -22,10 +24,11 @@ from aip.modules.forms.evaluator import (
     AnswerError,
     AnswerEvaluation,
     ExpressionError,
+    SectionResult,
     evaluate_answers,
 )
 from aip.modules.forms.lint import LintIssue, lint_template
-from aip.modules.forms.schemas import FormRevisionOut
+from aip.modules.forms.schemas import FormRevisionOut, FormTemplateOut
 
 __all__ = [
     "EVALUATOR_VERSION",
@@ -33,8 +36,10 @@ __all__ = [
     "AnswerEvaluation",
     "ExpressionError",
     "FormRevisionOut",
+    "FormTemplateOut",
     "FormsApi",
     "LintIssue",
+    "SectionResult",
     "evaluate_answers",
     "lint_template",
 ]
@@ -44,6 +49,13 @@ _FROZEN = ("published", "superseded")
 
 class FormsApi:
     """The operations the forms module offers to other modules."""
+
+    async def get_template(
+        self, conn: AsyncConnection, template_id: UUID
+    ) -> FormTemplateOut | None:
+        """A live template in this tenant (any status), else ``None``."""
+        row = await repo.get_template(conn, template_id)
+        return None if row is None else FormTemplateOut.from_row(row)
 
     async def get_revision(
         self, conn: AsyncConnection, revision_id: UUID

@@ -27,6 +27,8 @@ from aip.modules.forms.schemas import (
     TemplateCreate,
     TemplateDetail,
     TemplatePage,
+    TemplateRecord,
+    TemplateUpdate,
     UploadResult,
 )
 from aip.modules.forms.service import FormsService
@@ -85,6 +87,17 @@ async def create_template(body: TemplateCreate) -> UploadResult:
 )
 async def get_template(template_id: UUID) -> TemplateDetail:
     return await FormsService().get_template(template_id)
+
+
+@router.patch(
+    "/templates/{template_id}",
+    operation_id="forms_templates_update",
+    response_model=TemplateRecord,
+    responses={**_NOT_FOUND, **_CONFLICT, **_INVALID},
+    dependencies=[Depends(requires("form.manage"))],
+)
+async def update_template(template_id: UUID, body: TemplateUpdate) -> TemplateRecord:
+    return await FormsService().update_template(template_id, body)
 
 
 @router.post(
