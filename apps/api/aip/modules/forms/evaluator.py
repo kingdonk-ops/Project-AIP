@@ -1,12 +1,12 @@
-"""The shared form answer evaluator (FORMS-02).
+"""The shared form answer evaluator (FORMS-02; per-section results and section rules, FORMS-10).
 
 Given a frozen revision ``schema`` and a set of ``answers`` it decides which fields are visible and
-required, which answers are invalid and which answers fail. It is pure — no database, no I/O — and
-reaches JSONLogic only through the approvals published interface
-(``aip.modules.approvals.api.evaluate_guard``/``truthy`` and ``GuardError``), never a copy of the
-evaluator. The TypeScript twin in ``packages/form-renderer`` follows the same semantics on the same
-golden vectors (``packages/contracts/jsonlogic-vectors/forms``); see that folder's README for the
-authoritative spec.
+required, which answers are invalid and which answers fail, and whether each section is complete.
+It is pure — no database, no I/O — and reaches JSONLogic only through the approvals published
+interface (``aip.modules.approvals.api.evaluate_guard``/``truthy`` and ``GuardError``), never a
+copy of the evaluator. The TypeScript twin in ``packages/form-renderer`` follows the same
+semantics on the same golden vectors (``packages/contracts/jsonlogic-vectors/forms``); see that
+folder's README for the authoritative spec.
 """
 
 from __future__ import annotations
@@ -24,11 +24,12 @@ __all__ = [
     "AnswerError",
     "AnswerEvaluation",
     "ExpressionError",
+    "SectionResult",
     "evaluate_answers",
     "evaluation_as_json",
 ]
 
-EVALUATOR_VERSION: Final = "1"
+EVALUATOR_VERSION: Final = "2"
 
 _MISSING: Final = object()  # a sentinel: an answer key that is absent, distinct from ``None``
 
@@ -59,6 +60,22 @@ class ExpressionError:
 
 
 @dataclass(frozen=True, slots=True)
+class SectionResult:
+    """One section's verdict (FORMS-10): what stops it being ticked as complete.
+
+    ``failed`` (``failWhen`` outcomes) is reported but never makes a section incomplete: a failed
+    reading is a valid answer.
+    """
+
+    visible: bool
+    missing_required: list[str]
+    invalid: list[str]
+    failed: list[str]
+    rule_failures: list[str]
+    complete: bool
+
+
+@dataclass(frozen=True, slots=True)
 class AnswerEvaluation:
     """The verdict for one set of answers against one revision schema."""
 
@@ -69,6 +86,7 @@ class AnswerEvaluation:
     ignored: list[str]
     expression_errors: list[ExpressionError]
     complete: bool
+    sections: dict[str, SectionResult]
 
 
 def evaluation_as_json(evaluation: AnswerEvaluation) -> dict[str, Any]:
@@ -92,6 +110,17 @@ def evaluation_as_json(evaluation: AnswerEvaluation) -> dict[str, Any]:
             for e in evaluation.expression_errors
         ],
         "complete": evaluation.complete,
+        "sections": {
+            key: {
+                "visible": r.visible,
+                "missingRequired": r.missing_required,
+                "invalid": r.invalid,
+                "failed": r.failed,
+                "ruleFailures": r.rule_failures,
+                "complete": r.complete,
+            }
+            for key, r in evaluation.sections.items()
+        },
     }
 
 
@@ -359,6 +388,21 @@ def evaluate_answers(
     for key in sorted(k for k in answers if k not in field_keys):
         errors.append(AnswerError(key, "UNKNOWN_FIELD", "forms.answer.UNKNOWN_FIELD"))
 
+    # Pass 3: per-section results and section rules, in document order.
+    results = _section_results(
+        sections,
+        fields,
+        answers,
+        section_visible,
+        visible,
+        required,
+        errors,
+        failed,
+        data(),
+        expression_errors,
+    )
+    rules_pass = all(not r.rule_failures for r in results.values())
+
     return AnswerEvaluation(
         visible=visible,
         required=required,
@@ -366,8 +410,56 @@ def evaluate_answers(
         failed=failed,
         ignored=ignored,
         expression_errors=expression_errors,
-        complete=len(errors) == 0,
+        complete=len(errors) == 0 and rules_pass,
+        sections=results,
     )
+
+
+def _section_results(
+    sections: Mapping[str, Any],
+    fields: Mapping[str, _Field],
+    answers: Mapping[str, Any],
+    section_visible: Mapping[str, bool],
+    visible: Mapping[str, bool],
+    required: Mapping[str, bool],
+    errors: list[AnswerError],
+    failed: list[str],
+    data: Mapping[str, Any],
+    expression_errors: list[ExpressionError],
+) -> dict[str, SectionResult]:
+    """Each section's result. ``missingRequired`` ignores ``mode`` (a section tick always checks
+    required answers); a rule runs only in a visible section and fails closed on a ``GuardError``.
+    """
+    invalid_keys = {e.field_key for e in errors if e.code not in ("REQUIRED", "UNKNOWN_FIELD")}
+    failed_keys = set(failed)
+    results: dict[str, SectionResult] = {}
+    for skey, section in sections.items():
+        keys = [spec["key"] for spec in section["fields"]]
+        is_visible = section_visible[skey]
+        missing = [
+            k
+            for k in keys
+            if visible[k] and required[k] and _is_empty(answers.get(k, _MISSING), fields[k].type)
+        ]
+        rule_failures: list[str] = []
+        if is_visible:
+            for rule in section.get("rules", []):
+                passing, message = _guard(rule["expr"], data)
+                if message is not None:  # a GuardError: fail closed and report the expression
+                    expression_errors.append(ExpressionError(rule["key"], "rule", message))
+                    rule_failures.append(rule["key"])
+                elif not passing:
+                    rule_failures.append(rule["key"])
+        invalid = [k for k in keys if k in invalid_keys]
+        results[skey] = SectionResult(
+            visible=is_visible,
+            missing_required=missing,
+            invalid=invalid,
+            failed=[k for k in keys if k in failed_keys],
+            rule_failures=rule_failures,
+            complete=is_visible and not missing and not invalid and not rule_failures,
+        )
+    return results
 
 
 def _field_error(

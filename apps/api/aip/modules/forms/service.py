@@ -6,7 +6,8 @@ replacing a schema lints it first (any issue → 422 ``TEMPLATE_INVALID`` with `
 locks the template ``FOR UPDATE``, re-lints, hashes the canonical JSON, retires the current
 published revision, freezes this one and bumps the template's ``sync_version`` — all in the one
 transaction that also writes the ``form.revision_published`` outbox event, so a failure (a stale
-``expectedSyncVersion``, a failed emit) leaves template, revisions and events untouched.
+``expectedSyncVersion``, a failed emit) leaves template, revisions and events untouched. Lint
+warnings (``RULE_READS_HIDDEN_FIELD``) never block; ``POST /lint`` reports them.
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from aip.modules.forms import repository as repo
 from aip.modules.forms.evaluator import EVALUATOR_VERSION, evaluate_answers, evaluation_as_json
 from aip.modules.forms.events import FORM_REVISION_PUBLISHED, RevisionPublished
-from aip.modules.forms.lint import LintIssue, lint_template
+from aip.modules.forms.lint import LintIssue, is_error, lint_template
 from aip.modules.forms.schemas import (
     EvaluateBody,
     LintIssueOut,
@@ -38,6 +39,7 @@ from aip.modules.forms.schemas import (
     TemplateListItem,
     TemplatePage,
     TemplateRecord,
+    TemplateUpdate,
     UploadResult,
 )
 from aip.modules.item_types.api import field_types
@@ -83,7 +85,7 @@ def _lint(schema: Mapping[str, Any]) -> list[LintIssue]:
 
 
 def _lint_or_raise(schema: Mapping[str, Any]) -> None:
-    issues = _lint(schema)
+    issues = [issue for issue in _lint(schema) if is_error(issue)]
     if issues:
         raise DomainError(422, "TEMPLATE_INVALID", issues=[issue.as_dict() for issue in issues])
 
@@ -133,6 +135,24 @@ class FormsService:
             {**template, "current_revision_no": current_no, "revisions": revisions}
         )
 
+    async def update_template(self, template_id: UUID, body: TemplateUpdate) -> TemplateRecord:
+        """Change a template's name or supervisor-review setting. A stale ``expectedSyncVersion`` is
+        409 ``VERSION_CONFLICT``; existing inspections keep the value they copied."""
+        patch = body.model_dump(include={"name", "has_supervisor_review"}, exclude_none=True)
+        async with _tx() as conn:
+            template = await repo.get_template(conn, template_id)
+            if template is None:
+                raise NotFoundError(f"form template {template_id} not found")
+            if patch:
+                expected = (
+                    template["sync_version"]
+                    if body.expected_sync_version is None
+                    else body.expected_sync_version
+                )
+                template = await repo.update_template(conn, template_id, expected, patch)
+            current_no = await repo.template_current_revision_no(conn, template_id)
+        return _template_record(template, current_no)
+
     async def lint(self, schema: Mapping[str, Any]) -> LintResult:
         return LintResult(
             issues=[LintIssueOut.model_validate(issue.as_dict()) for issue in _lint(schema)]
@@ -153,6 +173,7 @@ class FormsService:
                     "name": body.name,
                     "kind": body.kind,
                     "status": "draft",
+                    "has_supervisor_review": body.has_supervisor_review,
                     "created_by": actor,
                 },
             )

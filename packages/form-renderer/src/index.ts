@@ -35,4 +35,6 @@ export type {
   FormSchema,
   FormSection,
   Json,
+  SectionResult,
+  SectionRule,
 } from "./logic/types";

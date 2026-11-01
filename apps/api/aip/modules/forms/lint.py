@@ -2,15 +2,17 @@
 
 ``lint_template`` is pure: it takes the field-type keys and a unit predicate, so it runs without a
 database (the service wires in ``item_types`` and ``terms``). It returns every problem as a
-:class:`LintIssue` ``{path, code, message}``, sorted by path, with stable codes the terms
-dictionary renders (``forms.lint.<CODE>``).
+:class:`LintIssue` ``{path, code, message, severity}``, sorted by path, with stable codes the terms
+dictionary renders (``forms.lint.<CODE>``). Every issue is an ``error`` (it blocks upload and
+publish) except ``RULE_READS_HIDDEN_FIELD``, a ``warning`` the ``/lint`` route reports but publish
+allows.
 
 Check order (``SCHEMA_INVALID`` gates the rest; everything after it is collected together):
 
 1. ``SCHEMA_INVALID`` — the JSON Schema contract (``contract.py``). When any fire, only these are
    returned, because the later checks assume a well-shaped document.
 2. ``TEMPLATE_TOO_LARGE`` — over 256 KB serialised or over 500 fields.
-3. ``DUPLICATE_KEY`` — a key reused (section and field keys share one namespace).
+3. ``DUPLICATE_KEY`` — a key reused (section, field and section-rule keys share one namespace).
 4. ``UNKNOWN_FIELD_TYPE`` — a ``type`` not in the field-type registry (its config checks then skip).
 5. ``OPTIONS_REQUIRED`` / ``OPTIONS_NOT_ALLOWED`` / ``DUPLICATE_OPTION``.
 6. ``UNIT_REQUIRED`` / ``UNKNOWN_UNIT`` — a ``measurement``'s unit.
@@ -18,6 +20,9 @@ Check order (``SCHEMA_INVALID`` gates the rest; everything after it is collected
 8. ``EXPRESSION_INVALID`` — a guard the approvals allow-list refuses (message is the guard error).
 9. ``UNKNOWN_REFERENCE`` — a ``var`` reading a non-field answer or an unknown context key.
 10. ``CONDITION_CYCLE`` — a cycle among ``visibleIf``/``requiredIf`` references (self included).
+11. ``RULE_READS_HIDDEN_FIELD`` (warning, FORMS-10) — a section rule reads a field of another
+    section that has a ``visibleIf``, so the field can be hidden (and read as ``null``) while the
+    rule's own section is visible.
 """
 
 from __future__ import annotations
@@ -30,7 +35,7 @@ from typing import Any
 from aip.modules.approvals.api import GuardError, validate_guard
 from aip.modules.forms.contract import validator
 
-__all__ = ["LintIssue", "lint_template"]
+__all__ = ["LintIssue", "is_error", "lint_template"]
 
 MAX_BYTES = 256 * 1024
 MAX_FIELDS = 500
@@ -56,14 +61,26 @@ Path = list[str | int]
 
 @dataclass(frozen=True, slots=True)
 class LintIssue:
-    """One problem with a template: ``path`` into the schema, a stable ``code`` and a message."""
+    """One problem with a template: ``path`` into the schema, a stable ``code``, a message and a
+    ``severity`` (``error`` blocks upload and publish, ``warning`` does not)."""
 
     path: Path = field(default_factory=list)
     code: str = ""
     message: str = ""
+    severity: str = "error"
 
     def as_dict(self) -> dict[str, Any]:
-        return {"path": list(self.path), "code": self.code, "message": self.message}
+        return {
+            "path": list(self.path),
+            "code": self.code,
+            "message": self.message,
+            "severity": self.severity,
+        }
+
+
+def is_error(issue: LintIssue) -> bool:
+    """Whether ``issue`` blocks upload and publish (every severity but ``warning``)."""
+    return issue.severity != "warning"
 
 
 def _sort_key(issue: LintIssue) -> tuple[Any, ...]:
@@ -100,8 +117,13 @@ def lint_template(
                 _expression_issues(
                     rule.get("rule"), [*base, "rules", ri, "rule"], field_keys, issues
                 )
+        for ri, rule in enumerate(section.get("rules", [])):
+            _expression_issues(
+                rule.get("expr"), ["sections", s, "rules", ri, "expr"], field_keys, issues
+            )
 
     issues += _cycle_issues(schema, field_keys)
+    issues += _hidden_read_issues(schema, field_keys)
     return sorted(issues, key=_sort_key)
 
 
@@ -158,6 +180,17 @@ def _duplicate_key_issues(schema: Mapping[str, Any]) -> list[LintIssue]:
                     )
                 )
             seen.add(fkey)
+        for ri, rule in enumerate(section.get("rules", [])):
+            rkey = rule["key"]
+            if rkey in seen:
+                issues.append(
+                    LintIssue(
+                        ["sections", s, "rules", ri, "key"],
+                        "DUPLICATE_KEY",
+                        f"duplicate key {rkey!r}",
+                    )
+                )
+            seen.add(rkey)
     return issues
 
 
@@ -336,3 +369,35 @@ def _has_cycle(graph: dict[str, set[str]]) -> bool:
         return False
 
     return any(node not in done and visit(node) for node in graph)
+
+
+# --- 11. section rules reading a field that can be hidden --------------------------------------
+
+
+def _hidden_read_issues(schema: Mapping[str, Any], field_keys: set[str]) -> list[LintIssue]:
+    """A warning per section rule that reads a field of another, conditionally visible, section.
+
+    That field can be hidden while the rule's own section is visible; the rule then reads it as
+    ``null``. Authors may mean it (a rule that tolerates the absence), so it does not block publish.
+    """
+    hideable: dict[str, str] = {}  # field key -> its section key, for sections with a visibleIf
+    for section in schema["sections"]:
+        if section.get("visibleIf") is not None:
+            for fld in section["fields"]:
+                hideable[fld["key"]] = section["key"]
+
+    issues: list[LintIssue] = []
+    for s, section in enumerate(schema["sections"]):
+        for ri, rule in enumerate(section.get("rules", [])):
+            for key in sorted(_reads(rule.get("expr"), field_keys)):
+                other = hideable.get(key)
+                if other is not None and other != section["key"]:
+                    issues.append(
+                        LintIssue(
+                            ["sections", s, "rules", ri, "expr"],
+                            "RULE_READS_HIDDEN_FIELD",
+                            f"rule reads {key!r} in section {other!r}, which can be hidden",
+                            "warning",
+                        )
+                    )
+    return issues
