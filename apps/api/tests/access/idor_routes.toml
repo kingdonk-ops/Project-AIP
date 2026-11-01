@@ -54,6 +54,17 @@ table = "workflow_instances"
 table = "workflow_instances"
 body = '{"action": "submit"}'
 
+["POST /api/v1/approvals/instances/{instance_id}/route"]
+table = "workflow_instances"
+body = '{"routeTemplateId": "00000000-0000-4000-8000-0000000000ff"}'
+
+["POST /api/v1/approvals/instances/{instance_id}/decide"]
+table = "workflow_instances"
+body = '{"stepId": "00000000-0000-4000-8000-0000000000ff", "decision": "approve"}'
+
+["GET /api/v1/approvals/instances/{instance_id}/steps"]
+table = "workflow_instances"
+
 ["GET /api/v1/assets/{asset_id}"]
 table = "assets"
 

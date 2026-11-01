@@ -1,4 +1,4 @@
-"""APPROVALS-05/09: the inspection presets through the real app and ``TransitionService``.
+"""APPROVALS-05/09/10: the inspection presets through the real app and ``TransitionService``.
 
 Every golden case runs here as it does through the evaluator in ``test_inspection_golden.py``.
 A test resolver stands in for the inspections module's own (INSPECTIONS-01) for the ``inspection``
@@ -10,6 +10,7 @@ supervisor (assign, approve), inspector (execute), quality manager (retire) and 
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
@@ -29,6 +30,7 @@ from aip.modules.approvals.api import (
     unregister_record_resolver,
 )
 from aip.modules.approvals.guards.context_providers import resolver_for
+from aip.modules.approvals.presets import workflows_dir
 from aip.modules.approvals.seeds import SeedRefusedError, seed
 from aip.modules.approvals.tests.conftest import (
     BOB,
@@ -344,6 +346,59 @@ async def test_v2_publishes_over_an_installed_v1_and_retires_it(
     instance = await new_inspection(client, inspections)
     assert (instance["definitionId"], instance["version"]) == (str(second.id), 2)
     assert "ready_unassigned" in [t["action"] for t in instance["availableTransitions"]]
+
+
+GO_RENAMES = {
+    "in_progress_go": "in_progress_sitesync",
+    "go_checkout": "sitesync_checkout",
+    "check_in": "sitesync_check_in",
+}
+
+
+def go_coded(preset_key: str) -> str:
+    """The shipped preset with the APPROVALS-09 Go codes and label keys put back (ADR 0041 §1)."""
+    text = (workflows_dir() / f"{preset_key}.json").read_text(encoding="utf-8")
+    for old, new in GO_RENAMES.items():
+        text = re.sub(rf"\b{new}\b", old, text)
+    return text
+
+
+@pytest.mark.parametrize("variant", sorted(PRESET_FOR))
+async def test_the_sitesync_rename_publishes_the_next_version(
+    variant: str,
+    client: httpx.AsyncClient,
+    db: TenantDb,
+    inspections: Inspections,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    key = PRESET_FOR[variant]
+    project = RT_01 if variant == "client_review" else None
+    go_dir = tmp_path / "workflows"
+    go_dir.mkdir()
+    (go_dir / f"{key}.json").write_text(go_coded(key), encoding="utf-8")
+    monkeypatch.setenv("AIP_WORKFLOWS_DIR", str(go_dir))
+    first = await install(db, key, project)
+    old = await new_inspection(client, inspections, project)
+    await drive(client, old["id"], ["ready", "go_checkout"], fresh(ALICE_ID))
+    monkeypatch.delenv("AIP_WORKFLOWS_DIR")
+
+    second = await install(db, key, project)
+    again = await install(db, key, project)
+    assert (first.version, second.version, again.id) == (1, 2, second.id)
+    instance = await new_inspection(client, inspections, project)
+    assert (instance["definitionId"], instance["version"]) == (str(second.id), 2)
+    walked = await drive(client, instance["id"], ["ready", "sitesync_checkout"], fresh(ALICE_ID))
+    assert walked["currentState"] == "in_progress_sitesync"
+    walked = await drive(client, instance["id"], ["sitesync_check_in"], fresh(ALICE_ID))
+    assert walked["currentState"] == "inspector_review"
+    refused = await act(client, instance["id"], "go_checkout", fresh(ALICE_ID))
+    assert refused.status_code == 409, refused.text
+    assert refused.json()["code"] == "INVALID_TRANSITION"
+
+    # A record already on the Go version keeps it (dev and demo data only; no data migration).
+    kept = await drive(client, old["id"], ["check_in"], fresh(ALICE_ID))
+    assert (kept["version"], kept["currentState"]) == (1, "inspector_review")
 
 
 async def test_installing_twice_leaves_one_active_version(db: TenantDb) -> None:
