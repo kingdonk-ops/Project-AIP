@@ -19,6 +19,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CurrentResponses,
   HTTPValidationError,
   InspectionCreate,
   InspectionDetail,
@@ -28,6 +29,9 @@ import type {
   InspectionPage,
   InspectionTransitionOut,
   InspectionsListParams,
+  ResponseHistory,
+  ResponsesIn,
+  ResponsesOut,
   TransitionBody
 } from '../../model';
 
@@ -700,7 +704,410 @@ export const useInspectionsReinspect = <TError = InspectionErrorBody,
       > => {
       return useMutation(getInspectionsReinspectMutationOptions(options), queryClient);
     }
-    export type inspectionsTransitionResponse200 = {
+    export type inspectionsResponsesResponse200 = {
+  data: CurrentResponses
+  status: 200
+}
+
+export type inspectionsResponsesResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsResponsesResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsResponsesResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsResponsesResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type inspectionsResponsesResponseSuccess = (inspectionsResponsesResponse200) & {
+  headers: Headers;
+};
+export type inspectionsResponsesResponseError = (inspectionsResponsesResponse401 | inspectionsResponsesResponse403 | inspectionsResponsesResponse404 | inspectionsResponsesResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsResponsesResponse = (inspectionsResponsesResponseSuccess | inspectionsResponsesResponseError)
+
+export const getInspectionsResponsesUrl = (inspectionId: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/responses`
+}
+
+/**
+ * @summary Get Responses
+ */
+export const inspectionsResponses = async (inspectionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsResponsesResponse> => {
+
+  return apiFetch<inspectionsResponsesResponse>(getInspectionsResponsesUrl(inspectionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getInspectionsResponsesQueryKey = (inspectionId: string,) => {
+    return [
+    `/api/v1/inspections/${inspectionId}/responses`
+    ] as const;
+    }
+
+
+export const getInspectionsResponsesQueryOptions = <TData = Awaited<ReturnType<typeof inspectionsResponses>>, TError = InspectionErrorBody | HTTPValidationError>(inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponses>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getInspectionsResponsesQueryKey(inspectionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof inspectionsResponses>>> = ({ signal }) => inspectionsResponses(inspectionId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: inspectionId !== null && inspectionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponses>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type InspectionsResponsesQueryResult = NonNullable<Awaited<ReturnType<typeof inspectionsResponses>>>
+export type InspectionsResponsesQueryError = InspectionErrorBody | HTTPValidationError
+
+
+export function useInspectionsResponses<TData = Awaited<ReturnType<typeof inspectionsResponses>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponses>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof inspectionsResponses>>,
+          TError,
+          Awaited<ReturnType<typeof inspectionsResponses>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInspectionsResponses<TData = Awaited<ReturnType<typeof inspectionsResponses>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponses>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof inspectionsResponses>>,
+          TError,
+          Awaited<ReturnType<typeof inspectionsResponses>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInspectionsResponses<TData = Awaited<ReturnType<typeof inspectionsResponses>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponses>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Responses
+ */
+
+export function useInspectionsResponses<TData = Awaited<ReturnType<typeof inspectionsResponses>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponses>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getInspectionsResponsesQueryOptions(inspectionId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type inspectionsRespondResponse200 = {
+  data: ResponsesOut
+  status: 200
+}
+
+export type inspectionsRespondResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsRespondResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsRespondResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsRespondResponse409 = {
+  data: InspectionErrorBody
+  status: 409
+}
+
+export type inspectionsRespondResponse422 = {
+  data: InspectionErrorBody
+  status: 422
+}
+
+export type inspectionsRespondResponseSuccess = (inspectionsRespondResponse200) & {
+  headers: Headers;
+};
+export type inspectionsRespondResponseError = (inspectionsRespondResponse401 | inspectionsRespondResponse403 | inspectionsRespondResponse404 | inspectionsRespondResponse409 | inspectionsRespondResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsRespondResponse = (inspectionsRespondResponseSuccess | inspectionsRespondResponseError)
+
+export const getInspectionsRespondUrl = (inspectionId: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/responses`
+}
+
+/**
+ * @summary Respond
+ */
+export const inspectionsRespond = async (inspectionId: string,
+    responsesIn: ResponsesIn, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsRespondResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<inspectionsRespondResponse>(getInspectionsRespondUrl(inspectionId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(responsesIn)
+  }
+);}
+
+
+
+
+
+export const getInspectionsRespondMutationKey = () => ['inspectionsRespond'] as const;
+
+export const getInspectionsRespondMutationOptions = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsRespond>>, TError,InspectionsRespondMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inspectionsRespond>>, TError,InspectionsRespondMutationVariables, TContext> => {
+
+const mutationKey = getInspectionsRespondMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inspectionsRespond>>, InspectionsRespondMutationVariables> = (props) => {
+          const {inspectionId,data} = props ?? {};
+
+          return  inspectionsRespond(inspectionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InspectionsRespondMutationResult = NonNullable<Awaited<ReturnType<typeof inspectionsRespond>>>
+    export type InspectionsRespondMutationBody = ResponsesIn
+    export type InspectionsRespondMutationError = InspectionErrorBody
+    export type InspectionsRespondMutationVariables = {inspectionId: string;data: ResponsesIn}
+
+    /**
+ * @summary Respond
+ */
+export const useInspectionsRespond = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsRespond>>, TError,InspectionsRespondMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inspectionsRespond>>,
+        TError,
+        InspectionsRespondMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInspectionsRespondMutationOptions(options), queryClient);
+    }
+    export type inspectionsResponseHistoryResponse200 = {
+  data: ResponseHistory
+  status: 200
+}
+
+export type inspectionsResponseHistoryResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsResponseHistoryResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsResponseHistoryResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsResponseHistoryResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type inspectionsResponseHistoryResponseSuccess = (inspectionsResponseHistoryResponse200) & {
+  headers: Headers;
+};
+export type inspectionsResponseHistoryResponseError = (inspectionsResponseHistoryResponse401 | inspectionsResponseHistoryResponse403 | inspectionsResponseHistoryResponse404 | inspectionsResponseHistoryResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsResponseHistoryResponse = (inspectionsResponseHistoryResponseSuccess | inspectionsResponseHistoryResponseError)
+
+export const getInspectionsResponseHistoryUrl = (inspectionId: string,
+    fieldKey: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/responses/${fieldKey}/history`
+}
+
+/**
+ * @summary Get Response History
+ */
+export const inspectionsResponseHistory = async (inspectionId: string,
+    fieldKey: string, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsResponseHistoryResponse> => {
+
+  return apiFetch<inspectionsResponseHistoryResponse>(getInspectionsResponseHistoryUrl(inspectionId,fieldKey),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getInspectionsResponseHistoryQueryKey = (inspectionId: string,
+    fieldKey: string,) => {
+    return [
+    `/api/v1/inspections/${inspectionId}/responses/${fieldKey}/history`
+    ] as const;
+    }
+
+
+export const getInspectionsResponseHistoryQueryOptions = <TData = Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError = InspectionErrorBody | HTTPValidationError>(inspectionId: string,
+    fieldKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getInspectionsResponseHistoryQueryKey(inspectionId,fieldKey);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof inspectionsResponseHistory>>> = ({ signal }) => inspectionsResponseHistory(inspectionId,fieldKey, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: inspectionId !== null && inspectionId !== undefined && fieldKey !== null && fieldKey !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type InspectionsResponseHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof inspectionsResponseHistory>>>
+export type InspectionsResponseHistoryQueryError = InspectionErrorBody | HTTPValidationError
+
+
+export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string,
+    fieldKey: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof inspectionsResponseHistory>>,
+          TError,
+          Awaited<ReturnType<typeof inspectionsResponseHistory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string,
+    fieldKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof inspectionsResponseHistory>>,
+          TError,
+          Awaited<ReturnType<typeof inspectionsResponseHistory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string,
+    fieldKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Response History
+ */
+
+export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string,
+    fieldKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getInspectionsResponseHistoryQueryOptions(inspectionId,fieldKey,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type inspectionsTransitionResponse200 = {
   data: InspectionTransitionOut
   status: 200
 }

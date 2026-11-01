@@ -301,3 +301,14 @@ body = '{"action": "ready"}'
 
 ["POST /api/v1/inspections/{inspection_id}/reinspect"]
 table = "inspections"
+
+["POST /api/v1/inspections/{inspection_id}/responses"]
+table = "inspections"
+body = '{"answers": [{"fieldKey": "iso", "value": 1, "clientId": "00000000-0000-4000-8000-0000000000ff"}]}'
+
+["GET /api/v1/inspections/{inspection_id}/responses"]
+table = "inspections"
+
+["GET /api/v1/inspections/{inspection_id}/responses/{fieldKey}/history"]
+skip = true
+reason = "The last parameter is a field key, not a record id, so the probe cannot put tenant B's id there. Cross-tenant reads of an inspection's answers are covered by GET /responses here and by INSPECTIONS-02's tenant test of this route."

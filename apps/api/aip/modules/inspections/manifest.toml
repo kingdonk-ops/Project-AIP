@@ -2,6 +2,7 @@
 # INSPECTIONS-01: an inspection is filled in against one asset from one pinned, published form
 #   revision; its lifecycle is a workflow instance of the approvals `inspection` definition. The
 #   lifecycle permissions stay the `approvals.inspection.*` codes approvals declares.
+# INSPECTIONS-02: append-only answers (`inspection.respond`), `inspection.answer_failed` v1.
 id = "inspections"
 context = "inspections"
 depends_on = ["approvals", "assets", "forms", "projects", "access", "identity", "tenancy"]
@@ -17,8 +18,16 @@ description = "View inspections"
 code = "inspection.create"
 description = "Create inspections and re-inspections"
 
+[[permissions]]
+code = "inspection.respond"
+description = "Answer inspection questions"
+
 [[events]]
 name = "inspection.created"
+version = 1
+
+[[events]]
+name = "inspection.answer_failed"
 version = 1
 
 [[events]]

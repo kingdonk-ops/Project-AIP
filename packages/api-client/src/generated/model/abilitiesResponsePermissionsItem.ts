@@ -35,6 +35,7 @@ export const AbilitiesResponsePermissionsItem = {
   identityusermanage: 'identity.user.manage',
   identityuserread: 'identity.user.read',
   inspectioncreate: 'inspection.create',
+  inspectionrespond: 'inspection.respond',
   inspectionview: 'inspection.view',
   item_typeedit: 'item_type.edit',
   item_typemanage: 'item_type.manage',

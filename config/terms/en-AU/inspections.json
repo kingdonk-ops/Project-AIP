@@ -122,5 +122,29 @@
   "inspection.error.revision_mismatch": {
     "text": "That form revision is not a published revision of the chosen template.",
     "description": "Error message for REVISION_MISMATCH when the named revision is unpublished or belongs to another template (INSPECTIONS-01)."
+  },
+  "inspection.error.not_editable": {
+    "text": "Answers cannot be changed while the inspection is in this state.",
+    "description": "Error message for INSPECTION_NOT_EDITABLE: answers are saved only in the states ADR 0041 §6 allows (INSPECTIONS-02)."
+  },
+  "inspection.error.unknown_field": {
+    "text": "That question is not on this inspection's form.",
+    "description": "Error message for UNKNOWN_FIELD: an answer names a field key the pinned form revision does not have (INSPECTIONS-02)."
+  },
+  "inspection.error.answer_invalid": {
+    "text": "One or more answers are not valid for their questions.",
+    "description": "Error message for ANSWER_INVALID: an answer has the wrong type, is not one of the options or is out of range (INSPECTIONS-02)."
+  },
+  "inspection.error.field_not_visible": {
+    "text": "That question is hidden by an earlier answer, so it cannot be answered.",
+    "description": "Error message for FIELD_NOT_VISIBLE: an answer names a field that the current answers hide (INSPECTIONS-02)."
+  },
+  "inspection.error.duplicate_answer": {
+    "text": "The same question or answer id appears more than once in this save.",
+    "description": "Error message for DUPLICATE_ANSWER: one save repeats a field key or a client id (INSPECTIONS-02)."
+  },
+  "inspection.error.review_permission_required": {
+    "text": "Only a supervisor allowed to edit during review can change answers now.",
+    "description": "Error message when answers are saved in supervisor review without approvals.inspection.review, 'Edit Inspection during Review' (INSPECTIONS-02, ADR 0041 §6)."
   }
 }
