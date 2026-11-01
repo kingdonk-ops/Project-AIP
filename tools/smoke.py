@@ -51,7 +51,9 @@ def run(
     expect_commit: str | None = None,
 ) -> list[str]:
     """Every failed check as a message; an empty list means the stack is healthy."""
-    base = base_url.rstrip("/")
+    # A repository variable pasted with a trailing space or newline made every request fail with
+    # InvalidURL before reaching the host (deploys from 2026-10-31), so whitespace is dropped.
+    base = base_url.strip().rstrip("/")
     if not base.startswith(("http://", "https://")):
         return [f"base URL must start with http:// or https://, got {base_url!r}"]
     failures: list[str] = []
@@ -59,7 +61,7 @@ def run(
     def check(path: str, expect: int, what: str) -> Reply | None:
         try:
             reply = fetch(base + path, timeout)
-        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        except (urllib.error.URLError, TimeoutError, OSError, ValueError) as exc:
             failures.append(f"{what}: GET {path} failed: {exc}")
             return None
         if reply.status != expect:
