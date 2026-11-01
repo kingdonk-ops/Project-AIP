@@ -1,4 +1,4 @@
-"""Data access for approvals (APPROVALS-01, APPROVALS-02).
+"""Data access for approvals (APPROVALS-01, APPROVALS-02; route steps are ``routes_engine``).
 
 Repositories receive the tenant-bound connection from ``with_tenant`` and never create their own
 (ADR 0002). ``tenant_id`` on new rows is the connection's ``app.tenant_id``, never a parameter.
@@ -84,7 +84,8 @@ LIMIT 1
 
 _INSTANCE_COLUMNS = (
     "i.id, i.definition_id, d.version, i.record_type, i.record_id, i.project_id, "
-    "i.current_state, i.sync_version"
+    "i.current_state, i.sync_version, i.route_template_id, i.current_step_id, i.route_round, "
+    "i.route_submitted_by"
 )
 
 _GET_DEFINITION = text(f"""

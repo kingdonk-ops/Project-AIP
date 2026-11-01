@@ -92,6 +92,88 @@ export const ApprovalsGetInstanceResponse = zod.object({
 })
 
 /**
+ * @summary Decide Step
+ */
+export const ApprovalsDecideStepParams = zod.object({
+  "instance_id": zod.uuid()
+})
+
+export const approvalsDecideStepBodyCommentOneMax = 2000;
+
+
+
+export const ApprovalsDecideStepBody = zod.object({
+  "comment": zod.union([zod.string().max(approvalsDecideStepBodyCommentOneMax),zod.null()]).optional(),
+  "decision": zod.enum(['approve', 'reject']),
+  "stepId": zod.uuid()
+})
+
+export const ApprovalsDecideStepResponse = zod.object({
+  "decision": zod.object({
+  "action": zod.string(),
+  "actorId": zod.union([zod.uuid(),zod.null()]),
+  "assurance": zod.object({
+  "authenticatedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "deviceId": zod.union([zod.uuid(),zod.null()]),
+  "level": zod.union([zod.int(),zod.null()]),
+  "method": zod.union([zod.string(),zod.null()])
+}),
+  "authStrength": zod.union([zod.string(),zod.null()]),
+  "comment": zod.union([zod.string(),zod.null()]),
+  "countersignsId": zod.union([zod.uuid(),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "entryHash": zod.string(),
+  "fromState": zod.string(),
+  "guardResult": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "id": zod.uuid(),
+  "onBehalfOf": zod.union([zod.uuid(),zod.null()]),
+  "prevHash": zod.string(),
+  "seq": zod.int(),
+  "status": zod.enum(['applied', 'pending_countersign']),
+  "toState": zod.string()
+}),
+  "outcome": zod.union([zod.enum(['approved', 'rejected']),zod.null()]).optional(),
+  "route": zod.object({
+  "currentStepId": zod.union([zod.uuid(),zod.null()]),
+  "instance": zod.object({
+  "availableTransitions": zod.array(zod.object({
+  "action": zod.string(),
+  "allowed": zod.boolean(),
+  "critical": zod.boolean(),
+  "labelKey": zod.string(),
+  "reasonKey": zod.union([zod.string(),zod.null()]).optional(),
+  "requiresComment": zod.boolean(),
+  "toState": zod.string()
+})),
+  "currentState": zod.string(),
+  "definitionId": zod.uuid(),
+  "definitionKey": zod.string(),
+  "id": zod.uuid(),
+  "pendingCountersign": zod.union([zod.string(),zod.null()]).optional(),
+  "projectId": zod.union([zod.uuid(),zod.null()]),
+  "recordId": zod.uuid(),
+  "recordType": zod.string(),
+  "syncVersion": zod.int(),
+  "version": zod.int()
+}),
+  "routeRound": zod.int(),
+  "routeTemplateId": zod.union([zod.uuid(),zod.null()]),
+  "steps": zod.array(zod.object({
+  "approverRef": zod.uuid(),
+  "approverType": zod.enum(['user', 'role', 'team']),
+  "decidedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "decidedBy": zod.union([zod.uuid(),zod.null()]).optional(),
+  "dueAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "dueHours": zod.union([zod.int(),zod.null()]),
+  "id": zod.uuid(),
+  "mode": zod.enum(['serial', 'parallel']),
+  "status": zod.union([zod.enum(['waiting', 'pending', 'approved', 'rejected', 'skipped']),zod.null()]).optional(),
+  "stepOrder": zod.int()
+}).describe('A template step (no status) or an instance step with its status and decision.'))
+}).describe('An instance\'s current route: the latest round\'s steps (none before the first route).')
+})
+
+/**
  * @summary Get History
  */
 export const ApprovalsGetHistoryParams = zod.object({
@@ -125,6 +207,102 @@ export const ApprovalsGetHistoryResponse = zod.object({
   "toState": zod.string()
 }))
 })
+
+/**
+ * @summary Start Route
+ */
+export const ApprovalsStartRouteParams = zod.object({
+  "instance_id": zod.uuid()
+})
+
+export const ApprovalsStartRouteBody = zod.object({
+  "routeTemplateId": zod.uuid()
+})
+
+export const ApprovalsStartRouteResponse = zod.object({
+  "currentStepId": zod.union([zod.uuid(),zod.null()]),
+  "instance": zod.object({
+  "availableTransitions": zod.array(zod.object({
+  "action": zod.string(),
+  "allowed": zod.boolean(),
+  "critical": zod.boolean(),
+  "labelKey": zod.string(),
+  "reasonKey": zod.union([zod.string(),zod.null()]).optional(),
+  "requiresComment": zod.boolean(),
+  "toState": zod.string()
+})),
+  "currentState": zod.string(),
+  "definitionId": zod.uuid(),
+  "definitionKey": zod.string(),
+  "id": zod.uuid(),
+  "pendingCountersign": zod.union([zod.string(),zod.null()]).optional(),
+  "projectId": zod.union([zod.uuid(),zod.null()]),
+  "recordId": zod.uuid(),
+  "recordType": zod.string(),
+  "syncVersion": zod.int(),
+  "version": zod.int()
+}),
+  "routeRound": zod.int(),
+  "routeTemplateId": zod.union([zod.uuid(),zod.null()]),
+  "steps": zod.array(zod.object({
+  "approverRef": zod.uuid(),
+  "approverType": zod.enum(['user', 'role', 'team']),
+  "decidedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "decidedBy": zod.union([zod.uuid(),zod.null()]).optional(),
+  "dueAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "dueHours": zod.union([zod.int(),zod.null()]),
+  "id": zod.uuid(),
+  "mode": zod.enum(['serial', 'parallel']),
+  "status": zod.union([zod.enum(['waiting', 'pending', 'approved', 'rejected', 'skipped']),zod.null()]).optional(),
+  "stepOrder": zod.int()
+}).describe('A template step (no status) or an instance step with its status and decision.'))
+}).describe('An instance\'s current route: the latest round\'s steps (none before the first route).')
+
+/**
+ * @summary Get Steps
+ */
+export const ApprovalsGetStepsParams = zod.object({
+  "instance_id": zod.uuid()
+})
+
+export const ApprovalsGetStepsResponse = zod.object({
+  "currentStepId": zod.union([zod.uuid(),zod.null()]),
+  "instance": zod.object({
+  "availableTransitions": zod.array(zod.object({
+  "action": zod.string(),
+  "allowed": zod.boolean(),
+  "critical": zod.boolean(),
+  "labelKey": zod.string(),
+  "reasonKey": zod.union([zod.string(),zod.null()]).optional(),
+  "requiresComment": zod.boolean(),
+  "toState": zod.string()
+})),
+  "currentState": zod.string(),
+  "definitionId": zod.uuid(),
+  "definitionKey": zod.string(),
+  "id": zod.uuid(),
+  "pendingCountersign": zod.union([zod.string(),zod.null()]).optional(),
+  "projectId": zod.union([zod.uuid(),zod.null()]),
+  "recordId": zod.uuid(),
+  "recordType": zod.string(),
+  "syncVersion": zod.int(),
+  "version": zod.int()
+}),
+  "routeRound": zod.int(),
+  "routeTemplateId": zod.union([zod.uuid(),zod.null()]),
+  "steps": zod.array(zod.object({
+  "approverRef": zod.uuid(),
+  "approverType": zod.enum(['user', 'role', 'team']),
+  "decidedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "decidedBy": zod.union([zod.uuid(),zod.null()]).optional(),
+  "dueAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "dueHours": zod.union([zod.int(),zod.null()]),
+  "id": zod.uuid(),
+  "mode": zod.enum(['serial', 'parallel']),
+  "status": zod.union([zod.enum(['waiting', 'pending', 'approved', 'rejected', 'skipped']),zod.null()]).optional(),
+  "stepOrder": zod.int()
+}).describe('A template step (no status) or an instance step with its status and decision.'))
+}).describe('An instance\'s current route: the latest round\'s steps (none before the first route).')
 
 /**
  * @summary Transition
@@ -206,4 +384,98 @@ export const ApprovalsListPresetsResponseItem = zod.object({
   "states": zod.array(zod.string())
 }).describe('A ``config/workflows`` preset: its key, record type and neutral codes (no display text).')
 export const ApprovalsListPresetsResponse = zod.array(ApprovalsListPresetsResponseItem)
+
+/**
+ * @summary List Route Templates
+ */
+export const ApprovalsListRouteTemplatesResponseItem = zod.object({
+  "allowSelfApproval": zod.boolean(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "onApprovedAction": zod.string(),
+  "onRejectedAction": zod.string(),
+  "recordType": zod.string(),
+  "steps": zod.array(zod.object({
+  "approverRef": zod.uuid(),
+  "approverType": zod.enum(['user', 'role', 'team']),
+  "decidedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "decidedBy": zod.union([zod.uuid(),zod.null()]).optional(),
+  "dueAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "dueHours": zod.union([zod.int(),zod.null()]),
+  "id": zod.uuid(),
+  "mode": zod.enum(['serial', 'parallel']),
+  "status": zod.union([zod.enum(['waiting', 'pending', 'approved', 'rejected', 'skipped']),zod.null()]).optional(),
+  "stepOrder": zod.int()
+}).describe('A template step (no status) or an instance step with its status and decision.')),
+  "version": zod.int()
+})
+export const ApprovalsListRouteTemplatesResponse = zod.array(ApprovalsListRouteTemplatesResponseItem)
+
+/**
+ * @summary Create Route Template
+ */
+export const approvalsCreateRouteTemplateBodyAllowSelfApprovalDefault = false;
+export const approvalsCreateRouteTemplateBodyNameMax = 120;
+
+
+export const approvalsCreateRouteTemplateBodyNameRegExp = new RegExp('\\S');
+export const approvalsCreateRouteTemplateBodyOnApprovedActionMax = 63;
+
+
+export const approvalsCreateRouteTemplateBodyOnApprovedActionRegExp = new RegExp('^[a-z][a-z0-9_]*$');
+export const approvalsCreateRouteTemplateBodyOnRejectedActionMax = 63;
+
+
+export const approvalsCreateRouteTemplateBodyOnRejectedActionRegExp = new RegExp('^[a-z][a-z0-9_]*$');
+export const approvalsCreateRouteTemplateBodyRecordTypeMax = 63;
+
+
+export const approvalsCreateRouteTemplateBodyRecordTypeRegExp = new RegExp('^[a-z][a-z0-9_]*$');
+export const approvalsCreateRouteTemplateBodyStepsItemDueHoursOneMax = 8760;
+
+export const approvalsCreateRouteTemplateBodyStepsItemModeDefault = `serial`;
+export const approvalsCreateRouteTemplateBodyStepsItemStepOrderMax = 100;
+
+export const approvalsCreateRouteTemplateBodyStepsMax = 50;
+
+
+
+export const ApprovalsCreateRouteTemplateBody = zod.object({
+  "allowSelfApproval": zod.boolean().default(approvalsCreateRouteTemplateBodyAllowSelfApprovalDefault),
+  "name": zod.string().min(1).max(approvalsCreateRouteTemplateBodyNameMax).regex(approvalsCreateRouteTemplateBodyNameRegExp),
+  "onApprovedAction": zod.string().max(approvalsCreateRouteTemplateBodyOnApprovedActionMax).regex(approvalsCreateRouteTemplateBodyOnApprovedActionRegExp),
+  "onRejectedAction": zod.string().max(approvalsCreateRouteTemplateBodyOnRejectedActionMax).regex(approvalsCreateRouteTemplateBodyOnRejectedActionRegExp),
+  "recordType": zod.string().max(approvalsCreateRouteTemplateBodyRecordTypeMax).regex(approvalsCreateRouteTemplateBodyRecordTypeRegExp),
+  "steps": zod.array(zod.object({
+  "approverRef": zod.uuid(),
+  "approverType": zod.enum(['user', 'role', 'team']),
+  "dueHours": zod.union([zod.int().min(1).max(approvalsCreateRouteTemplateBodyStepsItemDueHoursOneMax),zod.null()]).optional(),
+  "mode": zod.enum(['serial', 'parallel']).default(approvalsCreateRouteTemplateBodyStepsItemModeDefault),
+  "stepOrder": zod.int().min(1).max(approvalsCreateRouteTemplateBodyStepsItemStepOrderMax)
+})).min(1).max(approvalsCreateRouteTemplateBodyStepsMax)
+})
+
+export const ApprovalsCreateRouteTemplateResponse = zod.object({
+  "allowSelfApproval": zod.boolean(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "onApprovedAction": zod.string(),
+  "onRejectedAction": zod.string(),
+  "recordType": zod.string(),
+  "steps": zod.array(zod.object({
+  "approverRef": zod.uuid(),
+  "approverType": zod.enum(['user', 'role', 'team']),
+  "decidedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "decidedBy": zod.union([zod.uuid(),zod.null()]).optional(),
+  "dueAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "dueHours": zod.union([zod.int(),zod.null()]),
+  "id": zod.uuid(),
+  "mode": zod.enum(['serial', 'parallel']),
+  "status": zod.union([zod.enum(['waiting', 'pending', 'approved', 'rejected', 'skipped']),zod.null()]).optional(),
+  "stepOrder": zod.int()
+}).describe('A template step (no status) or an instance step with its status and decision.')),
+  "version": zod.int()
+})
 

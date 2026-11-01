@@ -4,6 +4,7 @@
   "confirmedOn": "2026-10-30",
   "derivedFrom": "tracking/tasks/APPROVALS-09.md (appendix: the owner's status and action tables). Guarded and host actions (skip supervisor review, tablet Abort/Unlock/Update & Return to Pool, Reinspect, Supersede) are INSPECTIONS-09.",
   "pathsNote": "How each case reaches its start state from draft when run through TransitionService.",
+  "notes": "ADR 0041 §1 (APPROVALS-10, 2026-11-01): the tablet state and its actions are renamed from Go to SiteSync (in_progress_go → in_progress_sitesync, go_checkout → sitesync_checkout, check_in → sitesync_check_in). The owner-confirmed cases are otherwise unchanged.",
   "commentNote": "A case with \"comment\": false takes its actions without a comment; every other case sends one.",
   "paths": {
     "standard": {
@@ -21,14 +22,14 @@
         "ready",
         "inspect"
       ],
-      "in_progress_go": [
+      "in_progress_sitesync": [
         "ready",
-        "go_checkout"
+        "sitesync_checkout"
       ],
       "inspector_review": [
         "ready",
-        "go_checkout",
-        "check_in"
+        "sitesync_checkout",
+        "sitesync_check_in"
       ],
       "supervisor_review": [
         "ready",
@@ -66,14 +67,14 @@
         "ready",
         "inspect"
       ],
-      "in_progress_go": [
+      "in_progress_sitesync": [
         "ready",
-        "go_checkout"
+        "sitesync_checkout"
       ],
       "inspector_review": [
         "ready",
-        "go_checkout",
-        "check_in"
+        "sitesync_checkout",
+        "sitesync_check_in"
       ],
       "supervisor_review": [
         "ready",
@@ -232,12 +233,12 @@
       }
     },
     {
-      "name": "go-round-trip",
+      "name": "sitesync-round-trip",
       "variant": "standard",
       "start": "assigned",
       "actions": [
-        "go_checkout",
-        "check_in",
+        "sitesync_checkout",
+        "sitesync_check_in",
         "request_supervisor_review"
       ],
       "expect": {
@@ -245,36 +246,36 @@
       }
     },
     {
-      "name": "go-checkout-reaches-in-progress-go",
+      "name": "sitesync-checkout-reaches-in-progress-sitesync",
       "variant": "standard",
       "start": "assigned",
       "actions": [
-        "go_checkout"
+        "sitesync_checkout"
       ],
       "expect": {
-        "state": "in_progress_go"
+        "state": "in_progress_sitesync"
       }
     },
     {
-      "name": "check-in-reaches-inspector-review",
+      "name": "sitesync-check-in-reaches-inspector-review",
       "variant": "standard",
-      "start": "in_progress_go",
+      "start": "in_progress_sitesync",
       "actions": [
-        "check_in"
+        "sitesync_check_in"
       ],
       "expect": {
         "state": "inspector_review"
       }
     },
     {
-      "name": "go-checkout-from-assignable",
+      "name": "sitesync-checkout-from-assignable",
       "variant": "standard",
       "start": "assignable",
       "actions": [
-        "go_checkout"
+        "sitesync_checkout"
       ],
       "expect": {
-        "state": "in_progress_go"
+        "state": "in_progress_sitesync"
       }
     },
     {
@@ -283,8 +284,8 @@
       "start": "supervisor_review",
       "actions": [
         "request_rework",
-        "go_checkout",
-        "check_in",
+        "sitesync_checkout",
+        "sitesync_check_in",
         "request_supervisor_review",
         "mark_performed"
       ],
@@ -359,9 +360,9 @@
       }
     },
     {
-      "name": "clarification-from-in-progress-go",
+      "name": "clarification-from-in-progress-sitesync",
       "variant": "standard",
-      "start": "in_progress_go",
+      "start": "in_progress_sitesync",
       "actions": [
         "request_clarification"
       ],
@@ -540,11 +541,11 @@
       }
     },
     {
-      "name": "no-go-checkout-from-draft",
+      "name": "no-sitesync-checkout-from-draft",
       "variant": "standard",
       "start": "draft",
       "actions": [
-        "go_checkout"
+        "sitesync_checkout"
       ],
       "expect": {
         "error": "INVALID_TRANSITION"
@@ -613,14 +614,14 @@
       }
     },
     {
-      "name": "in-progress-go-offers",
+      "name": "in-progress-sitesync-offers",
       "variant": "standard",
-      "start": "in_progress_go",
+      "start": "in_progress_sitesync",
       "actions": [],
       "expect": {
         "available": [
           "request_supervisor_review",
-          "check_in",
+          "sitesync_check_in",
           "request_clarification"
         ]
       }
