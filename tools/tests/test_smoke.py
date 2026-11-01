@@ -94,6 +94,10 @@ def test_an_unreachable_host_and_a_bad_url_fail() -> None:
     assert len(failures) == 3 and all("failed" in f for f in failures)
 
 
+def test_whitespace_around_the_base_url_is_ignored(healthy: str) -> None:
+    assert smoke.run(f" {healthy}/ \n") == []
+
+
 def test_expect_commit_checks_the_running_version() -> None:
     routes = {**HEALTHY, "/api/v1/platform/version": (200, '{"commit":"abc123"}')}
     gen = serve(routes)
