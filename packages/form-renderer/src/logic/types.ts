@@ -56,12 +56,21 @@ export interface FormField {
   rules?: FormRule[];
 }
 
+/** A check across a section's answers (FORMS-10, schemaVersion 2): `expr` must be true to pass. */
+export interface SectionRule {
+  key: string;
+  expr: Json;
+  label?: string;
+  labelKey?: string;
+}
+
 export interface FormSection {
   key: string;
   label: string;
   labelKey?: string;
   visibleIf?: Json;
   fields: FormField[];
+  rules?: SectionRule[];
 }
 
 export interface FormSchema {
@@ -95,6 +104,19 @@ export interface ExpressionError {
   message: string;
 }
 
+/**
+ * One section's verdict (FORMS-10). `failed` (failWhen outcomes) never makes a section incomplete:
+ * a failed reading is a valid answer.
+ */
+export interface SectionResult {
+  visible: boolean;
+  missingRequired: string[];
+  invalid: string[];
+  failed: string[];
+  ruleFailures: string[];
+  complete: boolean;
+}
+
 export interface AnswerEvaluation {
   visible: Record<string, boolean>;
   required: Record<string, boolean>;
@@ -103,4 +125,5 @@ export interface AnswerEvaluation {
   ignored: string[];
   expressionErrors: ExpressionError[];
   complete: boolean;
+  sections: Record<string, SectionResult>;
 }

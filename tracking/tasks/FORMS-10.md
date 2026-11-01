@@ -1,6 +1,7 @@
 # FORMS-10 — Section rules and the supervisor-review setting in form templates
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
+<!-- hand-edited: FORMS-10 as-built notes (arithmetic, lint code, routes) -->
 
 | Field | Value |
 |---|---|
@@ -75,3 +76,24 @@ TypeScript, and let a template say whether its inspections go to supervisor revi
       `POST /api/v1/forms/evaluate` returns the per-section result.
   - **e2e**:
     - API and evaluator only: covered above. The template editor UI for rules is a later forms UI task.
+
+## As built (2026-11-01)
+
+- **No arithmetic yet.** The `avg_dft_ok` example needs `+` and `/`. The shared allow-list refuses
+  them (the `expressions-v1` vectors pin `operator not allowed: +`), and ADR 0036 §11 gives
+  arithmetic to FORMS-07. The vectors and tests use `dft_ok` instead ("every reading is at least
+  250"), with the same readings and outcomes. The spec's average lints as `EXPRESSION_INVALID`.
+  FORMS-07 adds `avg_dft_ok` to the vectors.
+- **Lint code.** A rule that reads an unknown field gets `UNKNOWN_REFERENCE`, the code `visibleIf`
+  already uses for the same `_reads` check. There is no new `UNKNOWN_FIELD` code. The hidden-field
+  warning is `RULE_READS_HIDDEN_FIELD`. Lint issues now carry `severity` (`error` | `warning`).
+  Warnings do not block upload or publish.
+- **Routes.** Evaluation stays at `POST /api/v1/forms/revisions/{id}/evaluate`.
+  `PATCH /api/v1/forms/templates/{id}` (`name`, `hasSupervisorReview`, `expectedSyncVersion`) is
+  the update body. `FormsApi.get_template(conn, id)` returns `FormTemplateOut`.
+- **Semantics** (vectors README §3):
+  - `missingRequired` ignores `mode`.
+  - The top-level `complete` also requires no section rule failures.
+  - A rule error is reported as `expressionErrors[{fieldKey: <rule key>, expression: "rule"}]`.
+  - `EVALUATOR_VERSION` is now `"2"`. The v1 vector files are frozen at version 1, and
+    `evaluate-v2.json` holds the expected `sections` for every v1 case (`v1Sections`).

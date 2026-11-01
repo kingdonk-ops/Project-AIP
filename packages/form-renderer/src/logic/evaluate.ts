@@ -1,6 +1,7 @@
-// The shared form answer evaluator (FORMS-02): the TypeScript twin of
-// apps/api/aip/modules/forms/evaluator.py. Given a frozen revision schema and a set of answers it
-// decides which fields are visible and required, which answers are invalid and which fail. It is
+// The shared form answer evaluator (FORMS-02; per-section results and section rules, FORMS-10): the
+// TypeScript twin of apps/api/aip/modules/forms/evaluator.py. Given a frozen revision schema and a
+// set of answers it decides which fields are visible and required, which answers are invalid and
+// which fail, and whether each section is complete. It is
 // pure (no I/O) and reaches JSONLogic only through ./jsonlogic. The golden vectors in
 // packages/contracts/jsonlogic-vectors/forms prove it identical to the Python evaluator; that
 // folder's README is the authoritative spec.
@@ -20,9 +21,10 @@ import type {
   FormSchema,
   FormSection,
   Json,
+  SectionResult,
 } from "./types";
 
-export const EVALUATOR_VERSION = "1";
+export const EVALUATOR_VERSION = "2";
 
 const MISSING = Symbol("missing");
 type Answer = AnswerValue | typeof MISSING;
@@ -319,6 +321,17 @@ export function evaluateAnswers(
     errors.push({ fieldKey: key, code: "UNKNOWN_FIELD", messageKey: "forms.answer.UNKNOWN_FIELD", params: {} });
   }
 
+  // Pass 3: per-section results and section rules, in document order.
+  const sectionResults = buildSectionResults(
+    sections,
+    fields,
+    answers,
+    { sectionVisible, visible, required, errors, failed },
+    data(),
+    recordExpr,
+  );
+  const rulesPass = Object.values(sectionResults).every((r) => r.ruleFailures.length === 0);
+
   return {
     visible,
     required,
@@ -326,8 +339,72 @@ export function evaluateAnswers(
     failed,
     ignored,
     expressionErrors,
-    complete: errors.length === 0,
+    complete: errors.length === 0 && rulesPass,
+    sections: sectionResults,
   };
+}
+
+interface FieldVerdicts {
+  sectionVisible: Record<string, boolean>;
+  visible: Record<string, boolean>;
+  required: Record<string, boolean>;
+  errors: AnswerError[];
+  failed: string[];
+}
+
+/**
+ * Each section's result. `missingRequired` ignores `mode` (a section tick always checks required
+ * answers); a rule runs only in a visible section and fails closed on a GuardError.
+ */
+function buildSectionResults(
+  sections: Map<string, FormSection>,
+  fields: Map<string, FieldNode>,
+  answers: Answers,
+  verdicts: FieldVerdicts,
+  data: Record<string, Json>,
+  recordExpr: (fieldKey: string, expression: ExpressionKind, message: string) => void,
+): Record<string, SectionResult> {
+  const invalidKeys = new Set(
+    verdicts.errors
+      .filter((e) => e.code !== "REQUIRED" && e.code !== "UNKNOWN_FIELD")
+      .map((e) => e.fieldKey),
+  );
+  const failedKeys = new Set(verdicts.failed);
+  const results: Record<string, SectionResult> = {};
+  for (const [sectionKey, section] of sections) {
+    const keys = section.fields.map((spec) => spec.key);
+    const isVisible = verdicts.sectionVisible[sectionKey] ?? true;
+    const missingRequired = keys.filter((k) => {
+      const answer: Answer = Object.hasOwn(answers, k) ? (answers[k] as Json) : MISSING;
+      return (
+        verdicts.visible[k] === true &&
+        verdicts.required[k] === true &&
+        isEmpty(answer, (fields.get(k) as FieldNode).type)
+      );
+    });
+    const ruleFailures: string[] = [];
+    if (isVisible) {
+      for (const rule of section.rules ?? []) {
+        const [passing, message] = guard(rule.expr, data);
+        if (message !== null) {
+          recordExpr(rule.key, "rule", message);
+          ruleFailures.push(rule.key);
+        } else if (!passing) {
+          ruleFailures.push(rule.key);
+        }
+      }
+    }
+    const invalid = keys.filter((k) => invalidKeys.has(k));
+    results[sectionKey] = {
+      visible: isVisible,
+      missingRequired,
+      invalid,
+      failed: keys.filter((k) => failedKeys.has(k)),
+      ruleFailures,
+      complete: isVisible && missingRequired.length === 0 && invalid.length === 0 && ruleFailures.length === 0,
+    };
+  }
+  return results;
 }
 
 function fieldError(

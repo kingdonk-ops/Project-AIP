@@ -324,7 +324,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Portal Users */
+        /**
+         * List Portal Users
+         * @description ``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+         *     ``projectId``: users with an unrevoked grant on that project.
+         */
         get: operations["portal_users_list"];
         put?: never;
         /** Invite Portal User */
@@ -983,7 +987,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update Template */
+        patch: operations["forms_templates_update"];
         trace?: never;
     };
     "/api/v1/forms/templates/{template_id}/revisions": {
@@ -2076,6 +2081,10 @@ export interface components {
             /** Required */
             required: {
                 [key: string]: boolean;
+            };
+            /** Sections */
+            sections: {
+                [key: string]: components["schemas"]["SectionResultOut"];
             };
             /** Visible */
             visible: {
@@ -3725,6 +3734,12 @@ export interface components {
             message: string;
             /** Path */
             path: (string | number)[];
+            /**
+             * Severity
+             * @default error
+             * @enum {string}
+             */
+            severity: "error" | "warning";
         };
         /** LintResult */
         LintResult: {
@@ -4754,6 +4769,25 @@ export interface components {
              */
             type: "tenant" | "project" | "team" | "asset_subtree";
         };
+        /**
+         * SectionResultOut
+         * @description One section's verdict (FORMS-10): complete when visible with no missing required answers,
+         *     no invalid values and no failed section rules.
+         */
+        SectionResultOut: {
+            /** Complete */
+            complete: boolean;
+            /** Failed */
+            failed: string[];
+            /** Invalid */
+            invalid: string[];
+            /** Missingrequired */
+            missingRequired: string[];
+            /** Rulefailures */
+            ruleFailures: string[];
+            /** Visible */
+            visible: boolean;
+        };
         /** SessionCreate */
         SessionCreate: {
             /** Clientrequestid */
@@ -5175,6 +5209,11 @@ export interface components {
             /** Code */
             code: string;
             /**
+             * Hassupervisorreview
+             * @default true
+             */
+            hasSupervisorReview: boolean;
+            /**
              * Kind
              * @enum {string}
              */
@@ -5199,6 +5238,8 @@ export interface components {
             currentRevisionId: string | null;
             /** Currentrevisionno */
             currentRevisionNo: number | null;
+            /** Hassupervisorreview */
+            hasSupervisorReview: boolean;
             /**
              * Id
              * Format: uuid
@@ -5232,6 +5273,8 @@ export interface components {
             code: string;
             /** Currentrevisionno */
             currentRevisionNo: number | null;
+            /** Hassupervisorreview */
+            hasSupervisorReview: boolean;
             /**
              * Id
              * Format: uuid
@@ -5273,6 +5316,8 @@ export interface components {
             currentRevisionId: string | null;
             /** Currentrevisionno */
             currentRevisionNo: number | null;
+            /** Hassupervisorreview */
+            hasSupervisorReview: boolean;
             /**
              * Id
              * Format: uuid
@@ -5297,6 +5342,19 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+        };
+        /**
+         * TemplateUpdate
+         * @description Template settings (FORMS-10). An omitted field is left as it is. Changing
+         *     ``hasSupervisorReview`` never changes inspections that already exist (ADR 0041 §5).
+         */
+        TemplateUpdate: {
+            /** Expectedsyncversion */
+            expectedSyncVersion?: number | null;
+            /** Hassupervisorreview */
+            hasSupervisorReview?: boolean | null;
+            /** Name */
+            name?: string | null;
         };
         /** TenantErrorBody */
         TenantErrorBody: {
@@ -6635,6 +6693,8 @@ export interface operations {
                 q?: string | null;
                 cursor?: string | null;
                 limit?: number;
+                projectId?: string | null;
+                expiringWithinDays?: number | null;
             };
             header?: never;
             path?: never;
@@ -8791,6 +8851,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    forms_templates_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateRecord"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormErrorBody"];
                 };
             };
         };

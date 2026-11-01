@@ -1,0 +1,2626 @@
+{
+  "version": 2,
+  "description": "Shared form answer evaluator golden vectors, schemaVersion 2 (FORMS-10): section rules and per-section results. `cases` are full evaluations; `v1Sections` holds the expected `sections` result for every evaluate-v1.json case, by name.",
+  "cases": [
+    {
+      "name": "passing section rule: dft 300/300 completes the coating section",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ],
+            "rules": [
+              {
+                "key": "dft_ok",
+                "expr": {
+                  "and": [
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_2"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "Every DFT reading must be at least 250 µm"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": true,
+        "dft_1": 300,
+        "dft_2": 300
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "required": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          }
+        }
+      }
+    },
+    {
+      "name": "failing section rule: dft 200/250 lists the rule and leaves the section incomplete",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ],
+            "rules": [
+              {
+                "key": "dft_ok",
+                "expr": {
+                  "and": [
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_2"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "Every DFT reading must be at least 250 µm"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": true,
+        "dft_1": 200,
+        "dft_2": 250
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "required": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [
+              "dft_ok"
+            ],
+            "complete": false
+          }
+        }
+      }
+    },
+    {
+      "name": "failing section rule also fails in draft mode",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ],
+            "rules": [
+              {
+                "key": "dft_ok",
+                "expr": {
+                  "and": [
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_2"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "Every DFT reading must be at least 250 µm"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": true,
+        "dft_1": 200,
+        "dft_2": 250
+      },
+      "mode": "draft",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "required": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [
+              "dft_ok"
+            ],
+            "complete": false
+          }
+        }
+      }
+    },
+    {
+      "name": "hidden section: its rule is not evaluated and it is not complete",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ],
+            "rules": [
+              {
+                "key": "dft_ok",
+                "expr": {
+                  "and": [
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_2"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "Every DFT reading must be at least 250 µm"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": false,
+        "dft_1": 100,
+        "dft_2": 100
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "dft_1": false,
+          "dft_2": false
+        },
+        "required": {
+          "surface_prepared": true,
+          "dft_1": false,
+          "dft_2": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [
+          "dft_1",
+          "dft_2"
+        ],
+        "expressionErrors": [],
+        "complete": true,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": false,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": false
+          }
+        }
+      }
+    },
+    {
+      "name": "missing required answers are listed per section even in draft mode",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ],
+            "rules": [
+              {
+                "key": "dft_ok",
+                "expr": {
+                  "and": [
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_2"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "Every DFT reading must be at least 250 µm"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": true,
+        "dft_1": 300
+      },
+      "mode": "draft",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "required": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": true,
+            "missingRequired": [
+              "dft_2"
+            ],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [
+              "dft_ok"
+            ],
+            "complete": false
+          }
+        }
+      }
+    },
+    {
+      "name": "missing required answers in submit mode; the rule reads a missing answer as null",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ],
+            "rules": [
+              {
+                "key": "dft_ok",
+                "expr": {
+                  "and": [
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_2"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "Every DFT reading must be at least 250 µm"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": true,
+        "dft_1": 300
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "required": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "errors": [
+          {
+            "fieldKey": "dft_2",
+            "code": "REQUIRED",
+            "messageKey": "forms.answer.REQUIRED",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": true,
+            "missingRequired": [
+              "dft_2"
+            ],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [
+              "dft_ok"
+            ],
+            "complete": false
+          }
+        }
+      }
+    },
+    {
+      "name": "an invalid value marks the section invalid and the rule fails on it",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ],
+            "rules": [
+              {
+                "key": "dft_ok",
+                "expr": {
+                  "and": [
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_2"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "Every DFT reading must be at least 250 µm"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": true,
+        "dft_1": "thick",
+        "dft_2": 300
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "required": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "errors": [
+          {
+            "fieldKey": "dft_1",
+            "code": "WRONG_TYPE",
+            "messageKey": "forms.answer.WRONG_TYPE",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [
+              "dft_1"
+            ],
+            "failed": [],
+            "ruleFailures": [
+              "dft_ok"
+            ],
+            "complete": false
+          }
+        }
+      }
+    },
+    {
+      "name": "rule reading a hidden field of another section reads null and fails",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ],
+            "rules": [
+              {
+                "key": "dft_ok",
+                "expr": {
+                  "and": [
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_2"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "Every DFT reading must be at least 250 µm"
+              }
+            ]
+          },
+          {
+            "key": "summary",
+            "label": "Summary",
+            "fields": [
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks"
+              }
+            ],
+            "rules": [
+              {
+                "key": "summary_dft_ok",
+                "expr": {
+                  ">=": [
+                    {
+                      "var": "answers.dft_1"
+                    },
+                    250
+                  ]
+                },
+                "labelKey": "forms.rule.summary_dft_ok"
+              },
+              {
+                "key": "summary_dft_tolerant",
+                "expr": {
+                  "or": [
+                    {
+                      "!": {
+                        "var": "answers.surface_prepared"
+                      }
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "DFT 1 must be at least 250 µm when the surface was prepared"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": false,
+        "dft_1": 300,
+        "remarks": "ok"
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "remarks": true,
+          "dft_1": false,
+          "dft_2": false
+        },
+        "required": {
+          "surface_prepared": true,
+          "remarks": false,
+          "dft_1": false,
+          "dft_2": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [
+          "dft_1"
+        ],
+        "expressionErrors": [],
+        "complete": false,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": false,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": false
+          },
+          "summary": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [
+              "summary_dft_ok"
+            ],
+            "complete": false
+          }
+        }
+      }
+    },
+    {
+      "name": "rule reading another section's field passes when that section is visible",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ],
+            "rules": [
+              {
+                "key": "dft_ok",
+                "expr": {
+                  "and": [
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_2"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "Every DFT reading must be at least 250 µm"
+              }
+            ]
+          },
+          {
+            "key": "summary",
+            "label": "Summary",
+            "fields": [
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks"
+              }
+            ],
+            "rules": [
+              {
+                "key": "summary_dft_ok",
+                "expr": {
+                  ">=": [
+                    {
+                      "var": "answers.dft_1"
+                    },
+                    250
+                  ]
+                },
+                "labelKey": "forms.rule.summary_dft_ok"
+              },
+              {
+                "key": "summary_dft_tolerant",
+                "expr": {
+                  "or": [
+                    {
+                      "!": {
+                        "var": "answers.surface_prepared"
+                      }
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "DFT 1 must be at least 250 µm when the surface was prepared"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": true,
+        "dft_1": 300,
+        "dft_2": 260
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "remarks": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "required": {
+          "surface_prepared": true,
+          "remarks": false,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "summary": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          }
+        }
+      }
+    },
+    {
+      "name": "a rule whose expression raises fails closed and is reported by rule key",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ],
+            "rules": [
+              {
+                "key": "dft_ok",
+                "expr": {
+                  "and": [
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_1"
+                        },
+                        250
+                      ]
+                    },
+                    {
+                      ">=": [
+                        {
+                          "var": "answers.dft_2"
+                        },
+                        250
+                      ]
+                    }
+                  ]
+                },
+                "label": "Every DFT reading must be at least 250 µm"
+              }
+            ]
+          },
+          {
+            "key": "summary",
+            "label": "Summary",
+            "fields": [
+              {
+                "key": "remarks",
+                "type": "text",
+                "label": "Remarks"
+              }
+            ],
+            "rules": [
+              {
+                "key": "broken_rule",
+                "expr": {
+                  "missing_some": [
+                    "x",
+                    []
+                  ]
+                },
+                "label": "Never evaluable"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": true,
+        "dft_1": 300,
+        "dft_2": 300
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "remarks": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "required": {
+          "surface_prepared": true,
+          "remarks": false,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [
+          {
+            "fieldKey": "broken_rule",
+            "expression": "rule",
+            "message": "missing_some needs [minimum, [keys]]"
+          }
+        ],
+        "complete": false,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "summary": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [
+              "broken_rule"
+            ],
+            "complete": false
+          }
+        }
+      }
+    },
+    {
+      "name": "context rule, failWhen and a conditionally required field: a failed reading still completes",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "checks",
+            "label": "Checks",
+            "fields": [
+              {
+                "key": "pressure",
+                "type": "number",
+                "label": "Pressure",
+                "validations": {
+                  "max": 100
+                }
+              },
+              {
+                "key": "result",
+                "type": "dropdown",
+                "label": "Result",
+                "options": [
+                  {
+                    "value": "pass",
+                    "label": "Pass"
+                  },
+                  {
+                    "value": "fail",
+                    "label": "Fail"
+                  }
+                ],
+                "failWhen": {
+                  "==": [
+                    {
+                      "var": "answers.result"
+                    },
+                    "fail"
+                  ]
+                }
+              },
+              {
+                "key": "note",
+                "type": "text",
+                "label": "Note",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.result"
+                    },
+                    "fail"
+                  ]
+                },
+                "required": true
+              },
+              {
+                "key": "code",
+                "type": "text",
+                "label": "Code",
+                "rules": [
+                  {
+                    "rule": {
+                      "!=": [
+                        {
+                          "var": "answers.code"
+                        },
+                        "bad"
+                      ]
+                    },
+                    "messageKey": "forms.rule.code_not_bad",
+                    "message": "Code must not be bad"
+                  }
+                ]
+              }
+            ],
+            "rules": [
+              {
+                "key": "is_inspection",
+                "expr": {
+                  "==": [
+                    {
+                      "var": "context.kind"
+                    },
+                    "inspection"
+                  ]
+                },
+                "label": "Only for inspections"
+              },
+              {
+                "key": "pressure_given",
+                "expr": {
+                  "!": {
+                    "missing": [
+                      "answers.pressure"
+                    ]
+                  }
+                },
+                "label": "Give the pressure"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "pressure": 50,
+        "result": "fail",
+        "note": "seal leak",
+        "code": "ok"
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "pressure": true,
+          "result": true,
+          "code": true,
+          "note": true
+        },
+        "required": {
+          "pressure": false,
+          "result": false,
+          "code": false,
+          "note": true
+        },
+        "errors": [],
+        "failed": [
+          "result"
+        ],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true,
+        "sections": {
+          "checks": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [
+              "result"
+            ],
+            "ruleFailures": [],
+            "complete": true
+          }
+        }
+      }
+    },
+    {
+      "name": "context rule fails outside an inspection; rules are listed in order",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "checks",
+            "label": "Checks",
+            "fields": [
+              {
+                "key": "pressure",
+                "type": "number",
+                "label": "Pressure",
+                "validations": {
+                  "max": 100
+                }
+              },
+              {
+                "key": "result",
+                "type": "dropdown",
+                "label": "Result",
+                "options": [
+                  {
+                    "value": "pass",
+                    "label": "Pass"
+                  },
+                  {
+                    "value": "fail",
+                    "label": "Fail"
+                  }
+                ],
+                "failWhen": {
+                  "==": [
+                    {
+                      "var": "answers.result"
+                    },
+                    "fail"
+                  ]
+                }
+              },
+              {
+                "key": "note",
+                "type": "text",
+                "label": "Note",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.result"
+                    },
+                    "fail"
+                  ]
+                },
+                "required": true
+              },
+              {
+                "key": "code",
+                "type": "text",
+                "label": "Code",
+                "rules": [
+                  {
+                    "rule": {
+                      "!=": [
+                        {
+                          "var": "answers.code"
+                        },
+                        "bad"
+                      ]
+                    },
+                    "messageKey": "forms.rule.code_not_bad",
+                    "message": "Code must not be bad"
+                  }
+                ]
+              }
+            ],
+            "rules": [
+              {
+                "key": "is_inspection",
+                "expr": {
+                  "==": [
+                    {
+                      "var": "context.kind"
+                    },
+                    "inspection"
+                  ]
+                },
+                "label": "Only for inspections"
+              },
+              {
+                "key": "pressure_given",
+                "expr": {
+                  "!": {
+                    "missing": [
+                      "answers.pressure"
+                    ]
+                  }
+                },
+                "label": "Give the pressure"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "result": "pass"
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "permit"
+      },
+      "expected": {
+        "visible": {
+          "pressure": true,
+          "result": true,
+          "code": true,
+          "note": false
+        },
+        "required": {
+          "pressure": false,
+          "result": false,
+          "code": false,
+          "note": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false,
+        "sections": {
+          "checks": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [
+              "is_inspection",
+              "pressure_given"
+            ],
+            "complete": false
+          }
+        }
+      }
+    },
+    {
+      "name": "field rule failure and bound error count as invalid; unknown answers do not",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "checks",
+            "label": "Checks",
+            "fields": [
+              {
+                "key": "pressure",
+                "type": "number",
+                "label": "Pressure",
+                "validations": {
+                  "max": 100
+                }
+              },
+              {
+                "key": "result",
+                "type": "dropdown",
+                "label": "Result",
+                "options": [
+                  {
+                    "value": "pass",
+                    "label": "Pass"
+                  },
+                  {
+                    "value": "fail",
+                    "label": "Fail"
+                  }
+                ],
+                "failWhen": {
+                  "==": [
+                    {
+                      "var": "answers.result"
+                    },
+                    "fail"
+                  ]
+                }
+              },
+              {
+                "key": "note",
+                "type": "text",
+                "label": "Note",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.result"
+                    },
+                    "fail"
+                  ]
+                },
+                "required": true
+              },
+              {
+                "key": "code",
+                "type": "text",
+                "label": "Code",
+                "rules": [
+                  {
+                    "rule": {
+                      "!=": [
+                        {
+                          "var": "answers.code"
+                        },
+                        "bad"
+                      ]
+                    },
+                    "messageKey": "forms.rule.code_not_bad",
+                    "message": "Code must not be bad"
+                  }
+                ]
+              }
+            ],
+            "rules": [
+              {
+                "key": "is_inspection",
+                "expr": {
+                  "==": [
+                    {
+                      "var": "context.kind"
+                    },
+                    "inspection"
+                  ]
+                },
+                "label": "Only for inspections"
+              },
+              {
+                "key": "pressure_given",
+                "expr": {
+                  "!": {
+                    "missing": [
+                      "answers.pressure"
+                    ]
+                  }
+                },
+                "label": "Give the pressure"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "pressure": 150,
+        "result": "pass",
+        "code": "bad",
+        "stray": 1
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "pressure": true,
+          "result": true,
+          "code": true,
+          "note": false
+        },
+        "required": {
+          "pressure": false,
+          "result": false,
+          "code": false,
+          "note": false
+        },
+        "errors": [
+          {
+            "fieldKey": "pressure",
+            "code": "ABOVE_MAX",
+            "messageKey": "forms.answer.ABOVE_MAX",
+            "params": {
+              "max": 100
+            }
+          },
+          {
+            "fieldKey": "code",
+            "code": "RULE_FAILED",
+            "messageKey": "forms.rule.code_not_bad",
+            "params": {}
+          },
+          {
+            "fieldKey": "stray",
+            "code": "UNKNOWN_FIELD",
+            "messageKey": "forms.answer.UNKNOWN_FIELD",
+            "params": {}
+          }
+        ],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": false,
+        "sections": {
+          "checks": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [
+              "pressure",
+              "code"
+            ],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": false
+          }
+        }
+      }
+    },
+    {
+      "name": "a hidden required field is not missing",
+      "schema": {
+        "schemaVersion": 2,
+        "sections": [
+          {
+            "key": "checks",
+            "label": "Checks",
+            "fields": [
+              {
+                "key": "pressure",
+                "type": "number",
+                "label": "Pressure",
+                "validations": {
+                  "max": 100
+                }
+              },
+              {
+                "key": "result",
+                "type": "dropdown",
+                "label": "Result",
+                "options": [
+                  {
+                    "value": "pass",
+                    "label": "Pass"
+                  },
+                  {
+                    "value": "fail",
+                    "label": "Fail"
+                  }
+                ],
+                "failWhen": {
+                  "==": [
+                    {
+                      "var": "answers.result"
+                    },
+                    "fail"
+                  ]
+                }
+              },
+              {
+                "key": "note",
+                "type": "text",
+                "label": "Note",
+                "visibleIf": {
+                  "==": [
+                    {
+                      "var": "answers.result"
+                    },
+                    "fail"
+                  ]
+                },
+                "required": true
+              },
+              {
+                "key": "code",
+                "type": "text",
+                "label": "Code",
+                "rules": [
+                  {
+                    "rule": {
+                      "!=": [
+                        {
+                          "var": "answers.code"
+                        },
+                        "bad"
+                      ]
+                    },
+                    "messageKey": "forms.rule.code_not_bad",
+                    "message": "Code must not be bad"
+                  }
+                ]
+              }
+            ],
+            "rules": [
+              {
+                "key": "is_inspection",
+                "expr": {
+                  "==": [
+                    {
+                      "var": "context.kind"
+                    },
+                    "inspection"
+                  ]
+                },
+                "label": "Only for inspections"
+              },
+              {
+                "key": "pressure_given",
+                "expr": {
+                  "!": {
+                    "missing": [
+                      "answers.pressure"
+                    ]
+                  }
+                },
+                "label": "Give the pressure"
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "pressure": 10,
+        "result": "pass",
+        "note": "stale"
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "pressure": true,
+          "result": true,
+          "code": true,
+          "note": false
+        },
+        "required": {
+          "pressure": false,
+          "result": false,
+          "code": false,
+          "note": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [
+          "note"
+        ],
+        "expressionErrors": [],
+        "complete": true,
+        "sections": {
+          "checks": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          }
+        }
+      }
+    },
+    {
+      "name": "a version 1 template evaluates as before with per-section results",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": true,
+        "dft_1": 200,
+        "dft_2": 250
+      },
+      "mode": "submit",
+      "context": {
+        "kind": "inspection"
+      },
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "required": {
+          "surface_prepared": true,
+          "dft_1": true,
+          "dft_2": true
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          }
+        }
+      }
+    },
+    {
+      "name": "a version 1 template with a hidden section",
+      "schema": {
+        "schemaVersion": 1,
+        "sections": [
+          {
+            "key": "prep",
+            "label": "Surface preparation",
+            "fields": [
+              {
+                "key": "surface_prepared",
+                "type": "boolean",
+                "label": "Surface prepared",
+                "required": true
+              }
+            ]
+          },
+          {
+            "key": "coating",
+            "label": "Coating",
+            "visibleIf": {
+              "==": [
+                {
+                  "var": "answers.surface_prepared"
+                },
+                true
+              ]
+            },
+            "fields": [
+              {
+                "key": "dft_1",
+                "type": "decimal",
+                "label": "DFT 1 (µm)",
+                "required": true
+              },
+              {
+                "key": "dft_2",
+                "type": "decimal",
+                "label": "DFT 2 (µm)",
+                "required": true
+              }
+            ]
+          }
+        ]
+      },
+      "answers": {
+        "surface_prepared": false
+      },
+      "mode": "submit",
+      "context": null,
+      "expected": {
+        "visible": {
+          "surface_prepared": true,
+          "dft_1": false,
+          "dft_2": false
+        },
+        "required": {
+          "surface_prepared": true,
+          "dft_1": false,
+          "dft_2": false
+        },
+        "errors": [],
+        "failed": [],
+        "ignored": [],
+        "expressionErrors": [],
+        "complete": true,
+        "sections": {
+          "prep": {
+            "visible": true,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": true
+          },
+          "coating": {
+            "visible": false,
+            "missingRequired": [],
+            "invalid": [],
+            "failed": [],
+            "ruleFailures": [],
+            "complete": false
+          }
+        }
+      }
+    }
+  ],
+  "v1Sections": {
+    "coating submit: required and failing dft": {
+      "preparation": {
+        "visible": true,
+        "missingRequired": [
+          "blast_standard"
+        ],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      },
+      "coating": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [
+          "dft_avg"
+        ],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "coating draft: no required error": {
+      "preparation": {
+        "visible": true,
+        "missingRequired": [
+          "blast_standard"
+        ],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      },
+      "coating": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [
+          "dft_avg"
+        ],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "coating surface not prepared shows remarks": {
+      "preparation": {
+        "visible": true,
+        "missingRequired": [
+          "blast_standard"
+        ],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      },
+      "coating": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "coating surface prepared hides remarks (ignored)": {
+      "preparation": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      },
+      "coating": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "coating dft passes threshold": {
+      "preparation": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      },
+      "coating": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "coating dft wrong unit": {
+      "preparation": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      },
+      "coating": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "dft_avg"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "coating blast not an option": {
+      "preparation": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "blast_standard"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      },
+      "coating": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "coating unknown field": {
+      "preparation": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      },
+      "coating": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "all types valid": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "all types wrong": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "f_text",
+          "f_number",
+          "f_decimal",
+          "f_date",
+          "f_dropdown",
+          "f_multi",
+          "f_meas",
+          "f_bool",
+          "f_photo",
+          "f_sig",
+          "f_asset",
+          "f_user"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "text too long": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "code"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "text too short": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "code"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "number below min": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "n"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "number above max": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "n"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "number in range": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "decimal below min": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "d"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "measurement above max": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "m"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "multi_select too few": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "picks"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "multi_select too many": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "picks"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "photo too few empty is required-free": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "photo too many": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "pics"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "dropdown not an option": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "choice"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "rule failed": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "temp"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "rule passes": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "chain hides c when a false even with stale b": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "chain shows c when a and b true": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "section hidden hides its fields": {
+      "s1": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      },
+      "s2": {
+        "visible": false,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "section shown shows its fields": {
+      "s1": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      },
+      "s2": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "requiredIf triggers required": {
+      "s": {
+        "visible": true,
+        "missingRequired": [
+          "defect_note"
+        ],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "requiredIf not triggered": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "fail closed visibleIf": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "fail closed requiredIf": {
+      "s": {
+        "visible": true,
+        "missingRequired": [
+          "x"
+        ],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "fail closed failWhen": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [
+          "x"
+        ],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "fail closed rule": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [
+          "x"
+        ],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": false
+      }
+    },
+    "context readable in expression": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    },
+    "a key named like an Object.prototype member is just a key": {
+      "s": {
+        "visible": true,
+        "missingRequired": [],
+        "invalid": [],
+        "failed": [],
+        "ruleFailures": [],
+        "complete": true
+      }
+    }
+  }
+}

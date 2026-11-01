@@ -12,7 +12,7 @@ export interface Issue {
   message: string;
 }
 
-/** Every FORMS-01 lint code; each has a `forms.lint.<CODE>` term. */
+/** Every FORMS-01 (and FORMS-10) lint code; each has a `forms.lint.<CODE>` term. */
 export const LINT_CODES = [
   "SCHEMA_INVALID",
   "TEMPLATE_TOO_LARGE",
@@ -28,6 +28,7 @@ export const LINT_CODES = [
   "EXPRESSION_INVALID",
   "UNKNOWN_REFERENCE",
   "CONDITION_CYCLE",
+  "RULE_READS_HIDDEN_FIELD",
 ] as const;
 
 export function isLintCode(code: string): boolean {
