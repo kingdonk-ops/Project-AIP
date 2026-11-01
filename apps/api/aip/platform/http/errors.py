@@ -4,7 +4,8 @@
 show a field diff; ``NotFoundError`` becomes 404 ``{"code": "NOT_FOUND"}`` (also what a row of
 another tenant looks like, since RLS hides it); ``CycleError`` becomes 422 ``PATH_CYCLE``.
 ``DomainError`` carries a module's own status and stable code (``PROJECT_CODE_TAKEN``) plus any
-extra fields, and becomes ``{"code": ..., **extra}``.
+extra fields, and becomes ``{"code": ..., **extra}``; ``headers`` set on it (PORTAL-02:
+``Retry-After`` on 429) go on the response.
 """
 
 from __future__ import annotations
@@ -22,6 +23,9 @@ __all__ = ["DomainError", "install_error_handlers"]
 
 class DomainError(Exception):
     """A business rule refused the request: HTTP ``status_code`` with a stable ``code``."""
+
+    # Response headers (``Retry-After``); set on the instance, since every keyword is a body field.
+    headers: dict[str, str] | None = None
 
     def __init__(self, status_code: int, code: str, **extra: Any) -> None:
         self.status_code = status_code
@@ -43,7 +47,9 @@ def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
     async def domain(request: Request, exc: DomainError) -> JSONResponse:  # pyright: ignore[reportUnusedFunction]
         body = {"code": exc.code, **exc.extra}
-        return JSONResponse(jsonable_encoder(body), status_code=exc.status_code)
+        return JSONResponse(
+            jsonable_encoder(body), status_code=exc.status_code, headers=exc.headers
+        )
 
     @app.exception_handler(CycleError)
     async def cycle(request: Request, exc: CycleError) -> JSONResponse:  # pyright: ignore[reportUnusedFunction]

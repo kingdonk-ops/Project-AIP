@@ -122,5 +122,14 @@
   "portal.admin.suspend_reason_error": "Enter a reason of up to {max} characters.",
   "portal.admin.suspended": "External user suspended.",
   "portal.admin.reinstate": "Reinstate",
-  "portal.admin.reinstated": "External user reinstated."
+  "portal.admin.reinstated": "External user reinstated.",
+  "portal.signin.title": "Sign in to the client portal",
+  "portal.signin.email": "Email address",
+  "portal.signin.continue": "Continue",
+  "portal.signin.second_factor": "Enter the code from your authenticator app",
+  "portal.signin.signed_out": "You have signed out.",
+  "portal.signin.session_ended": "Your session has ended. Sign in again to continue.",
+  "portal.status.expired": "Your access has expired",
+  "portal.error.rate_limited": "Too many requests. Wait a moment and try again.",
+  "portal.error.not_found": "This page or record could not be found."
 }

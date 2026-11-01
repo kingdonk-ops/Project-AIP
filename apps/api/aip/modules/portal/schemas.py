@@ -3,6 +3,8 @@
 JSON uses camelCase (``companyName``). Request bodies are strict (``extra="forbid"``),
 so a client can never set an expiry, a status or a role. A grant's ``actions`` are 1 to 4 distinct
 codes of ``view``/``sign_off``/``witness``/``download`` and always include ``view``.
+
+PORTAL-02: ``PortalMeOut`` is what a signed-in client sees of itself (``GET /api/v1/portal/me``).
 """
 
 from __future__ import annotations
@@ -27,6 +29,8 @@ __all__ = [
     "GrantOut",
     "InviteIn",
     "PortalErrorBody",
+    "PortalMeOut",
+    "PortalProjectOut",
     "PortalUserOut",
     "PortalUserPage",
     "SuspendIn",
@@ -123,3 +127,23 @@ class PortalUserOut(_Out):
 class PortalUserPage(_Out):
     items: list[PortalUserOut]
     next_cursor: str | None
+
+
+class PortalProjectOut(_Out):
+    """A project the client may act on now, with the grant actions it holds there."""
+
+    id: UUID
+    code: str
+    name: str
+    actions: list[Action]
+
+
+class PortalMeOut(_Out):
+    """The signed-in client (PORTAL-02): ``projects`` is empty unless ``effectiveStatus`` is
+    ``active``."""
+
+    user_id: UUID
+    display_name: str | None
+    company_name: str
+    effective_status: EffectiveStatus
+    projects: list[PortalProjectOut]

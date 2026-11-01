@@ -16,6 +16,7 @@ from aip.platform.access.dependencies import (
     AccessCheckedRoute,
     AccessDeclaration,
     PrincipalSource,
+    RouteHiddenError,
     TenantGuard,
     access_declarations,
     authenticated,
@@ -40,6 +41,7 @@ from aip.platform.access.policy import (
     Resource,
 )
 from aip.platform.access.route_check import (
+    EXTERNAL_PREFIXES,
     RouteAccessError,
     check_routes,
     enforce_routes,
@@ -47,6 +49,7 @@ from aip.platform.access.route_check import (
 )
 
 __all__ = [
+    "EXTERNAL_PREFIXES",
     "AccessCheckedRoute",
     "AccessDeclaration",
     "AccessPrincipal",
@@ -65,6 +68,7 @@ __all__ = [
     "ProjectScope",
     "Resource",
     "RouteAccessError",
+    "RouteHiddenError",
     "TenantGuard",
     "TenantScope",
     "access_declarations",

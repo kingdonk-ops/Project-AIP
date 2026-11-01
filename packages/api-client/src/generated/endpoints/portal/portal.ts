@@ -24,6 +24,7 @@ import type {
   HTTPValidationError,
   InviteIn,
   PortalErrorBody,
+  PortalMeOut,
   PortalUserOut,
   PortalUserPage,
   PortalUsersListParams,
@@ -959,3 +960,226 @@ export const usePortalUsersSuspend = <TError = PortalErrorBody | HTTPValidationE
       > => {
       return useMutation(getPortalUsersSuspendMutationOptions(options), queryClient);
     }
+    export type portalLogoutResponse204 = {
+  data: void
+  status: 204
+}
+
+export type portalLogoutResponse404 = {
+  data: PortalErrorBody
+  status: 404
+}
+
+export type portalLogoutResponse429 = {
+  data: PortalErrorBody
+  status: 429
+}
+
+export type portalLogoutResponseSuccess = (portalLogoutResponse204) & {
+  headers: Headers;
+};
+export type portalLogoutResponseError = (portalLogoutResponse404 | portalLogoutResponse429) & {
+  headers: Headers;
+};
+
+export type portalLogoutResponse = (portalLogoutResponseSuccess | portalLogoutResponseError)
+
+export const getPortalLogoutUrl = () => {
+
+
+
+
+  return `/api/v1/portal/logout`
+}
+
+/**
+ * End this portal session and clear the portal cookies (never the staff ones).
+ * @summary Portal Logout
+ */
+export const portalLogout = async ( options?: Parameters<typeof apiFetch>[1]): Promise<portalLogoutResponse> => {
+
+  return apiFetch<portalLogoutResponse>(getPortalLogoutUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPortalLogoutMutationKey = () => ['portalLogout'] as const;
+
+export const getPortalLogoutMutationOptions = <TError = PortalErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof portalLogout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof portalLogout>>, TError,void, TContext> => {
+
+const mutationKey = getPortalLogoutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof portalLogout>>, void> = () => {
+
+
+          return  portalLogout(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PortalLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof portalLogout>>>
+
+    export type PortalLogoutMutationError = PortalErrorBody
+
+
+    /**
+ * @summary Portal Logout
+ */
+export const usePortalLogout = <TError = PortalErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof portalLogout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof portalLogout>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getPortalLogoutMutationOptions(options), queryClient);
+    }
+    export type portalMeResponse200 = {
+  data: PortalMeOut
+  status: 200
+}
+
+export type portalMeResponse404 = {
+  data: PortalErrorBody
+  status: 404
+}
+
+export type portalMeResponse429 = {
+  data: PortalErrorBody
+  status: 429
+}
+
+export type portalMeResponseSuccess = (portalMeResponse200) & {
+  headers: Headers;
+};
+export type portalMeResponseError = (portalMeResponse404 | portalMeResponse429) & {
+  headers: Headers;
+};
+
+export type portalMeResponse = (portalMeResponseSuccess | portalMeResponseError)
+
+export const getPortalMeUrl = () => {
+
+
+
+
+  return `/api/v1/portal/me`
+}
+
+/**
+ * The signed-in client, its access status and the projects it may act on now.
+ * @summary Portal Me
+ */
+export const portalMe = async ( options?: Parameters<typeof apiFetch>[1]): Promise<portalMeResponse> => {
+
+  return apiFetch<portalMeResponse>(getPortalMeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPortalMeQueryKey = () => {
+    return [
+    `/api/v1/portal/me`
+    ] as const;
+    }
+
+
+export const getPortalMeQueryOptions = <TData = Awaited<ReturnType<typeof portalMe>>, TError = PortalErrorBody>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPortalMeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof portalMe>>> = ({ signal }) => portalMe({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof portalMe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PortalMeQueryResult = NonNullable<Awaited<ReturnType<typeof portalMe>>>
+export type PortalMeQueryError = PortalErrorBody
+
+
+export function usePortalMe<TData = Awaited<ReturnType<typeof portalMe>>, TError = PortalErrorBody>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalMe>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof portalMe>>,
+          TError,
+          Awaited<ReturnType<typeof portalMe>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePortalMe<TData = Awaited<ReturnType<typeof portalMe>>, TError = PortalErrorBody>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalMe>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof portalMe>>,
+          TError,
+          Awaited<ReturnType<typeof portalMe>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePortalMe<TData = Awaited<ReturnType<typeof portalMe>>, TError = PortalErrorBody>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Portal Me
+ */
+
+export function usePortalMe<TData = Awaited<ReturnType<typeof portalMe>>, TError = PortalErrorBody>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPortalMeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
