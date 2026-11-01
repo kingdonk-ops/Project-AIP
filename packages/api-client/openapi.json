@@ -607,6 +607,141 @@
         "title": "AssetInfo",
         "type": "object"
       },
+      "AssetListItem": {
+        "description": "A list row: also the live ancestors' names, root first, the asset itself excluded, so the\nregister and the parent picker draw breadcrumbs without fetching each parent (ASSETS-08).",
+        "properties": {
+          "ancestorNames": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Ancestornames",
+            "type": "array"
+          },
+          "attributes": {
+            "additionalProperties": true,
+            "title": "Attributes",
+            "type": "object"
+          },
+          "childCount": {
+            "default": 0,
+            "title": "Childcount",
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "createdBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdby"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "internalTag": {
+            "title": "Internaltag",
+            "type": "string"
+          },
+          "itemTypeId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemtypeid"
+          },
+          "itemTypeVersionId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemtypeversionid"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parentId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parentid"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "sortOrder": {
+            "title": "Sortorder",
+            "type": "integer"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "tagNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tagnumber"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "parentId",
+          "path",
+          "internalTag",
+          "tagNumber",
+          "name",
+          "sortOrder",
+          "itemTypeId",
+          "itemTypeVersionId",
+          "attributes",
+          "createdBy",
+          "syncVersion",
+          "createdAt",
+          "updatedAt",
+          "ancestorNames"
+        ],
+        "title": "AssetListItem",
+        "type": "object"
+      },
       "AssetMove": {
         "additionalProperties": false,
         "properties": {
@@ -764,7 +899,7 @@
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/AssetOut"
+              "$ref": "#/components/schemas/AssetListItem"
             },
             "title": "Items",
             "type": "array"

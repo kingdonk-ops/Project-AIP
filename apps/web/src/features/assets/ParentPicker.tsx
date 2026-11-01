@@ -4,10 +4,10 @@
  * is "top level" (no parent). In the move dialog `exclude` is the moving asset: it and its subtree
  * (`GET /assets?under=<id>`) are left out; the server still refuses a cycle.
  */
-import { useAssetsGet, useAssetsList, type AssetOut } from "@aip/api-client";
+import { useAssetsGet, useAssetsList, type AssetListItem } from "@aip/api-client";
 import { Combobox, type ComboboxOption } from "@aip/ui";
 import { useEffect, useMemo, useState } from "react";
-import { CRUMB_SEPARATOR, useCrumbs } from "./data";
+import { crumb } from "./data";
 
 export const PARENT_SEARCH_LIMIT = 20;
 const SEARCH_DELAY_MS = 300;
@@ -53,11 +53,10 @@ export function ParentPicker({ id, label, value, onChange, topLevelLabel, exclud
     return ids;
   }, [exclude, subtree.data]);
 
-  const found: readonly AssetOut[] = useMemo(
+  const found: readonly AssetListItem[] = useMemo(
     () => (search.data?.status === 200 ? search.data.data.items.filter((a) => !excluded.has(a.id)) : []),
     [search.data, excluded],
   );
-  const crumbs = useCrumbs(found.flatMap((a) => (a.parentId ? [a.parentId] : [])));
 
   const options = useMemo<ComboboxOption[]>(() => {
     const out: ComboboxOption[] = [{ value: "", label: topLevelLabel }];
@@ -69,14 +68,13 @@ export function ParentPicker({ id, label, value, onChange, topLevelLabel, exclud
     };
     if (value && selected.data?.status === 200) {
       const detail = selected.data.data;
-      add({ value: detail.id, label: [...detail.ancestors.map((a) => a.name), detail.name].join(CRUMB_SEPARATOR) });
+      add({ value: detail.id, label: crumb([...detail.ancestors.map((a) => a.name), detail.name]) });
     }
     for (const asset of found) {
-      const parent = asset.parentId ? crumbs[asset.parentId] : undefined;
-      add({ value: asset.id, label: parent ? `${parent}${CRUMB_SEPARATOR}${asset.name}` : asset.name });
+      add({ value: asset.id, label: crumb([...asset.ancestorNames, asset.name]) });
     }
     return out;
-  }, [topLevelLabel, value, selected.data, found, crumbs]);
+  }, [topLevelLabel, value, selected.data, found]);
 
   return (
     <Combobox

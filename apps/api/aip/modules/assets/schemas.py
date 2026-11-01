@@ -24,6 +24,7 @@ __all__ = [
     "AssetCreate",
     "AssetDetail",
     "AssetErrorBody",
+    "AssetListItem",
     "AssetMove",
     "AssetOut",
     "AssetPage",
@@ -144,6 +145,13 @@ class AssetDetail(AssetOut):
     ancestors: list[Ancestor]
 
 
+class AssetListItem(AssetOut):
+    """A list row: also the live ancestors' names, root first, the asset itself excluded, so the
+    register and the parent picker draw breadcrumbs without fetching each parent (ASSETS-08)."""
+
+    ancestor_names: list[str]
+
+
 class AssetPage(_Out):
-    items: list[AssetOut]
+    items: list[AssetListItem]
     next_cursor: str | None

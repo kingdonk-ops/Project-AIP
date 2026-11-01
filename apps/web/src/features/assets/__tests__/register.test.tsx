@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { assetsIndexRoute } from "../../../routes/_app/assets/index";
 import { validateAssetsSearch } from "../search";
-import { asset, assetsApi, blocking, itemType, itemTypesApi, renderAt, resolveRelativeFetch, restoreFetch, server } from "./helpers";
+import { asset, assetsApi, assetsListApi, blocking, itemType, itemTypesApi, renderAt, resolveRelativeFetch, restoreFetch, server } from "./helpers";
 
 const VIEW = ["asset.view", "item_type.view"];
 const EDIT = [...VIEW, "asset.update", "asset.create"];
@@ -56,6 +56,25 @@ describe("assets register", () => {
     );
     expect(screen.queryByRole("button", { name: /^Move/ })).toBeNull(); // no asset.move
     expect(await blocking(container)).toEqual([]);
+  });
+
+  it("builds the parent breadcrumb from the list row, fetching no parent (ASSETS-08)", async () => {
+    const gets: string[] = [];
+    const record = ({ request }: { request: Request }) => {
+      const path = new URL(request.url).pathname;
+      if (/^\/api\/v1\/assets\/[^/]+$/.test(path)) gets.push(path);
+    };
+    server.events.on("request:start", record);
+    try {
+      // No `GET /assets/{id}` handler is registered: the register must not need one.
+      server.use(assetsListApi(ALL), ...itemTypesApi([pump]));
+      renderAt("/assets", EDIT);
+      const row = (await screen.findByText("P-101 feed pump")).closest("tr")!;
+      expect(within(row).getByText("Site A > Unit 1")).toBeTruthy();
+      expect(gets).toEqual([]);
+    } finally {
+      server.events.removeListener("request:start", record);
+    }
   });
 
   it("a viewer sees no row actions and no Create asset", async () => {

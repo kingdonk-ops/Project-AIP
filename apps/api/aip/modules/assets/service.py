@@ -34,6 +34,7 @@ from aip.modules.assets.schemas import (
     Ancestor,
     AssetCreate,
     AssetDetail,
+    AssetListItem,
     AssetMove,
     AssetOut,
     AssetPage,
@@ -546,7 +547,7 @@ class AssetService:
                 return AssetPage(items=[], next_cursor=None)
             page = self._keyset(cursor, token, limit)
             rows = await repo.list_assets(conn, page, **filters)
-        items = [AssetOut.model_validate(r) for r in rows[:limit]]
+        items = [AssetListItem.model_validate(r) for r in rows[:limit]]
         return AssetPage(items=items, next_cursor=_next_cursor(rows, token, limit))
 
     async def export_csv(
@@ -635,7 +636,7 @@ async def _filters(
 
 def _export_row(row: dict[str, Any]) -> dict[str, Any]:
     out = AssetOut.model_validate(row).model_dump(mode="json", by_alias=True)
-    return {**out, "path": row.get("path_names") or ""}
+    return {**out, "path": " > ".join(row["ancestor_names"])}
 
 
 async def _header_only() -> AsyncIterator[str]:
@@ -653,7 +654,7 @@ async def _csv_chunks(
     while sent < EXPORT_MAX_ROWS:
         with use_context(ctx):
             async with _tx() as conn:
-                rows = await repo.list_assets(conn, keyset, with_path_names=True, **filters)
+                rows = await repo.list_assets(conn, keyset, **filters)
         batch = rows[: min(keyset.limit, EXPORT_MAX_ROWS - sent)]
         if not batch:
             return

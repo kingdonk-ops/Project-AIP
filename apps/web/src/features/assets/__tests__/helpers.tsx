@@ -4,7 +4,7 @@
  * MSW handlers that answer the assets list like the server does for `parentId`, `under`, `q` and
  * `tagNumber`.
  */
-import type { AssetDetail, AssetOut, ItemTypeOut, ItemTypeVersionOut } from "@aip/api-client";
+import type { AssetDetail, AssetListItem, AssetOut, ItemTypeOut, ItemTypeVersionOut } from "@aip/api-client";
 import { http, HttpResponse } from "msw";
 import { api } from "../../projects/__tests__/helpers";
 
@@ -100,28 +100,38 @@ function under(all: readonly AssetOut[], rootId: string): AssetOut[] {
   return out;
 }
 
+/** A list row: the asset with its ancestors' names, root first (ASSETS-08). */
+export function listItem(all: readonly AssetOut[], target: AssetOut): AssetListItem {
+  return { ...target, ancestorNames: detail(all, target).ancestors.map((a) => a.name) };
+}
+
+/** The assets list over a fixed set; `seen` records each list request. */
+export function assetsListApi(all: readonly AssetOut[], seen?: URL[]) {
+  return http.get(api("/api/v1/assets"), ({ request }) => {
+    const url = new URL(request.url);
+    seen?.push(url);
+    const params = url.searchParams;
+    let items = [...all];
+    const parentId = params.get("parentId");
+    if (parentId === "root") items = items.filter((a) => a.parentId === null);
+    else if (parentId) items = items.filter((a) => a.parentId === parentId);
+    const scope = params.get("under");
+    if (scope) items = under(all, scope);
+    const q = params.get("q")?.toLowerCase();
+    if (q) items = items.filter((a) => a.name.toLowerCase().includes(q));
+    const tag = params.get("tagNumber")?.toUpperCase();
+    if (tag) items = items.filter((a) => a.tagNumber?.toUpperCase() === tag);
+    const sort = params.get("sort") ?? "name";
+    if (sort.endsWith("name")) items.sort((a, b) => a.name.localeCompare(b.name) * (sort.startsWith("-") ? -1 : 1));
+    const limit = Number(params.get("limit") ?? 50);
+    return HttpResponse.json({ items: items.slice(0, limit).map((a) => listItem(all, a)), nextCursor: null });
+  });
+}
+
 /** Handlers for the assets list and get, over a fixed set; `seen` records each list request. */
 export function assetsApi(all: readonly AssetOut[], seen?: URL[]) {
   return [
-    http.get(api("/api/v1/assets"), ({ request }) => {
-      const url = new URL(request.url);
-      seen?.push(url);
-      const params = url.searchParams;
-      let items = [...all];
-      const parentId = params.get("parentId");
-      if (parentId === "root") items = items.filter((a) => a.parentId === null);
-      else if (parentId) items = items.filter((a) => a.parentId === parentId);
-      const scope = params.get("under");
-      if (scope) items = under(all, scope);
-      const q = params.get("q")?.toLowerCase();
-      if (q) items = items.filter((a) => a.name.toLowerCase().includes(q));
-      const tag = params.get("tagNumber")?.toUpperCase();
-      if (tag) items = items.filter((a) => a.tagNumber?.toUpperCase() === tag);
-      const sort = params.get("sort") ?? "name";
-      if (sort.endsWith("name")) items.sort((a, b) => a.name.localeCompare(b.name) * (sort.startsWith("-") ? -1 : 1));
-      const limit = Number(params.get("limit") ?? 50);
-      return HttpResponse.json({ items: items.slice(0, limit), nextCursor: null });
-    }),
+    assetsListApi(all, seen),
     http.get(api("/api/v1/assets/:assetId"), ({ params }) => {
       const target = all.find((a) => a.id === params.assetId);
       return target ? HttpResponse.json(detail(all, target)) : HttpResponse.json({ code: "NOT_FOUND" }, { status: 404 });

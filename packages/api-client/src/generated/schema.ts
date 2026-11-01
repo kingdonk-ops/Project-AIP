@@ -2312,6 +2312,59 @@ export interface components {
             /** Sizebytes */
             sizeBytes: number;
         };
+        /**
+         * AssetListItem
+         * @description A list row: also the live ancestors' names, root first, the asset itself excluded, so the
+         *     register and the parent picker draw breadcrumbs without fetching each parent (ASSETS-08).
+         */
+        AssetListItem: {
+            /** Ancestornames */
+            ancestorNames: string[];
+            /** Attributes */
+            attributes: {
+                [key: string]: unknown;
+            };
+            /**
+             * Childcount
+             * @default 0
+             */
+            childCount: number;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Createdby */
+            createdBy: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Internaltag */
+            internalTag: string;
+            /** Itemtypeid */
+            itemTypeId: string | null;
+            /** Itemtypeversionid */
+            itemTypeVersionId: string | null;
+            /** Name */
+            name: string;
+            /** Parentid */
+            parentId: string | null;
+            /** Path */
+            path: string;
+            /** Sortorder */
+            sortOrder: number;
+            /** Syncversion */
+            syncVersion: number;
+            /** Tagnumber */
+            tagNumber: string | null;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
         /** AssetMove */
         AssetMove: {
             /** Parentid */
@@ -2369,7 +2422,7 @@ export interface components {
         /** AssetPage */
         AssetPage: {
             /** Items */
-            items: components["schemas"]["AssetOut"][];
+            items: components["schemas"]["AssetListItem"][];
             /** Nextcursor */
             nextCursor: string | null;
         };

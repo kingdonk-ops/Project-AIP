@@ -35,6 +35,7 @@ export const assetsListResponseItemsItemChildCountDefault = 0;
 
 export const AssetsListResponse = zod.object({
   "items": zod.array(zod.object({
+  "ancestorNames": zod.array(zod.string()),
   "attributes": zod.record(zod.string(), zod.unknown()),
   "childCount": zod.int().default(assetsListResponseItemsItemChildCountDefault),
   "createdAt": zod.iso.datetime({"offset":true}),
@@ -50,7 +51,7 @@ export const AssetsListResponse = zod.object({
   "syncVersion": zod.int(),
   "tagNumber": zod.union([zod.string(),zod.null()]),
   "updatedAt": zod.iso.datetime({"offset":true})
-})),
+}).describe('A list row: also the live ancestors\' names, root first, the asset itself excluded, so the\nregister and the parent picker draw breadcrumbs without fetching each parent (ASSETS-08).')),
   "nextCursor": zod.union([zod.string(),zod.null()])
 })
 
