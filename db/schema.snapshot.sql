@@ -296,6 +296,14 @@ GRANT SELECT ON TABLE public.form_templates TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.glossary_entry TO aip_app;
 GRANT SELECT ON TABLE public.glossary_entry TO aip_readonly;
 
+-- Name: TABLE inspection_current_responses; Type: ACL; Schema: public
+GRANT SELECT ON TABLE public.inspection_current_responses TO aip_app;
+GRANT SELECT ON TABLE public.inspection_current_responses TO aip_readonly;
+
+-- Name: TABLE inspection_responses; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.inspection_responses TO aip_app;
+GRANT SELECT ON TABLE public.inspection_responses TO aip_readonly;
+
 -- Name: TABLE inspections; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.inspections TO aip_app;
 GRANT SELECT ON TABLE public.inspections TO aip_readonly;
@@ -632,6 +640,14 @@ ALTER TABLE ONLY public.form_templates
 -- Name: glossary_entry pk_glossary_entry; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.glossary_entry
     ADD CONSTRAINT pk_glossary_entry PRIMARY KEY (id);
+
+-- Name: inspection_responses pk_inspection_responses; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.inspection_responses
+    ADD CONSTRAINT pk_inspection_responses PRIMARY KEY (id, created_at);
+
+-- Name: inspection_responses_default inspection_responses_default_pkey; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.inspection_responses_default
+    ADD CONSTRAINT inspection_responses_default_pkey PRIMARY KEY (id, created_at);
 
 -- Name: inspections pk_inspections; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.inspections
@@ -2409,6 +2425,15 @@ CREATE INDEX idx_procrastinate_jobs_worker_not_null ON public.procrastinate_jobs
 -- Name: idx_procrastinate_workers_last_heartbeat; Type: INDEX; Schema: public
 CREATE INDEX idx_procrastinate_workers_last_heartbeat ON public.procrastinate_workers USING btree (last_heartbeat);
 
+-- Name: inspection_responses_default_tenant_id_idx; Type: INDEX; Schema: public
+CREATE INDEX inspection_responses_default_tenant_id_idx ON public.inspection_responses_default USING btree (tenant_id);
+
+-- Name: inspection_responses_default_tenant_id_inspection_id_client_idx; Type: INDEX; Schema: public
+CREATE INDEX inspection_responses_default_tenant_id_inspection_id_client_idx ON public.inspection_responses_default USING btree (tenant_id, inspection_id, client_id);
+
+-- Name: inspection_responses_default_tenant_id_inspection_id_field__idx; Type: INDEX; Schema: public
+CREATE INDEX inspection_responses_default_tenant_id_inspection_id_field__idx ON public.inspection_responses_default USING btree (tenant_id, inspection_id, field_key, created_at DESC, id DESC);
+
 -- Name: ix_access_reviews_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_access_reviews_tenant_id ON public.access_reviews USING btree (tenant_id);
 
@@ -2558,6 +2583,15 @@ CREATE INDEX ix_glossary_entry_tenant_id_abbreviation ON public.glossary_entry U
 
 -- Name: ix_glossary_entry_tenant_id_neutral_concept_code; Type: INDEX; Schema: public
 CREATE INDEX ix_glossary_entry_tenant_id_neutral_concept_code ON public.glossary_entry USING btree (tenant_id, neutral_concept_code);
+
+-- Name: ix_inspection_responses_client_id; Type: INDEX; Schema: public
+CREATE INDEX ix_inspection_responses_client_id ON ONLY public.inspection_responses USING btree (tenant_id, inspection_id, client_id);
+
+-- Name: ix_inspection_responses_current; Type: INDEX; Schema: public
+CREATE INDEX ix_inspection_responses_current ON ONLY public.inspection_responses USING btree (tenant_id, inspection_id, field_key, created_at DESC, id DESC);
+
+-- Name: ix_inspection_responses_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_inspection_responses_tenant_id ON ONLY public.inspection_responses USING btree (tenant_id);
 
 -- Name: ix_inspections_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_inspections_tenant_id ON public.inspections USING btree (tenant_id);
@@ -3054,6 +3088,18 @@ ALTER INDEX public.ix_evidence_items_tenant_id_control_id_collected_at ATTACH PA
 -- Name: evidence_items_default_tenant_id_idx; Type: INDEX ATTACH; Schema: public
 ALTER INDEX public.ix_evidence_items_tenant_id ATTACH PARTITION public.evidence_items_default_tenant_id_idx;
 
+-- Name: inspection_responses_default_pkey; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.pk_inspection_responses ATTACH PARTITION public.inspection_responses_default_pkey;
+
+-- Name: inspection_responses_default_tenant_id_idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_inspection_responses_tenant_id ATTACH PARTITION public.inspection_responses_default_tenant_id_idx;
+
+-- Name: inspection_responses_default_tenant_id_inspection_id_client_idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_inspection_responses_client_id ATTACH PARTITION public.inspection_responses_default_tenant_id_inspection_id_client_idx;
+
+-- Name: inspection_responses_default_tenant_id_inspection_id_field__idx; Type: INDEX ATTACH; Schema: public
+ALTER INDEX public.ix_inspection_responses_current ATTACH PARTITION public.inspection_responses_default_tenant_id_inspection_id_field__idx;
+
 -- Name: provenance_entries_default_pkey; Type: INDEX ATTACH; Schema: public
 ALTER INDEX public.pk_provenance_entries ATTACH PARTITION public.provenance_entries_default_pkey;
 
@@ -3155,6 +3201,9 @@ CREATE POLICY platform_read ON public.glossary_entry FOR SELECT USING ((tenant_i
 
 -- Name: glossary_entry tenant_write; Type: POLICY; Schema: public
 CREATE POLICY tenant_write ON public.glossary_entry USING (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name)))) WITH CHECK (((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND ((tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid) OR (CURRENT_USER = 'aip_owner'::name))));
+
+-- Name: inspection_responses tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.inspection_responses USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: inspections project_scope; Type: POLICY; Schema: public
 CREATE POLICY project_scope ON public.inspections AS RESTRICTIVE TO aip_app USING (public.access_project_visible(project_id)) WITH CHECK (public.access_project_visible(project_id));
@@ -3395,6 +3444,9 @@ ALTER TABLE public.form_templates ENABLE ROW LEVEL SECURITY;
 
 -- Name: glossary_entry; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.glossary_entry ENABLE ROW LEVEL SECURITY;
+
+-- Name: inspection_responses; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.inspection_responses ENABLE ROW LEVEL SECURITY;
 
 -- Name: inspections; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.inspections ENABLE ROW LEVEL SECURITY;
@@ -4114,6 +4166,47 @@ CREATE TABLE public.glossary_entry (
 ALTER TABLE ONLY public.glossary_entry FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.glossary_entry OWNER TO aip_owner;
+
+-- Name: inspection_responses; Type: TABLE; Schema: public
+CREATE TABLE public.inspection_responses (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    inspection_id uuid NOT NULL,
+    field_key text NOT NULL,
+    value jsonb,
+    failed boolean NOT NULL,
+    revision_id uuid NOT NULL,
+    client_id uuid NOT NULL,
+    supersedes_id uuid,
+    responded_by uuid NOT NULL,
+    responded_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_inspection_responses_field_key CHECK ((field_key ~ '^[a-z][a-z0-9_]{0,62}$'::text))
+)
+PARTITION BY RANGE (created_at);
+
+ALTER TABLE ONLY public.inspection_responses FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.inspection_responses OWNER TO aip_owner;
+
+-- Name: inspection_responses_default; Type: TABLE; Schema: public
+CREATE TABLE public.inspection_responses_default (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    inspection_id uuid NOT NULL,
+    field_key text NOT NULL,
+    value jsonb,
+    failed boolean NOT NULL,
+    revision_id uuid NOT NULL,
+    client_id uuid NOT NULL,
+    supersedes_id uuid,
+    responded_by uuid NOT NULL,
+    responded_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_inspection_responses_field_key CHECK ((field_key ~ '^[a-z][a-z0-9_]{0,62}$'::text))
+);
+
+ALTER TABLE public.inspection_responses_default OWNER TO aip_owner;
 
 -- Name: inspections; Type: TABLE; Schema: public
 CREATE TABLE public.inspections (
@@ -5438,6 +5531,9 @@ ALTER TABLE public.workflow_instances OWNER TO aip_owner;
 -- Name: evidence_items_default; Type: TABLE ATTACH; Schema: public
 ALTER TABLE ONLY public.evidence_items ATTACH PARTITION public.evidence_items_default DEFAULT;
 
+-- Name: inspection_responses_default; Type: TABLE ATTACH; Schema: public
+ALTER TABLE ONLY public.inspection_responses ATTACH PARTITION public.inspection_responses_default DEFAULT;
+
 -- Name: provenance_entries_default; Type: TABLE ATTACH; Schema: public
 ALTER TABLE ONLY public.provenance_entries ATTACH PARTITION public.provenance_entries_default DEFAULT;
 
@@ -5542,6 +5638,23 @@ CREATE TYPE public.procrastinate_job_to_defer_v1 AS (
 );
 
 ALTER TYPE public.procrastinate_job_to_defer_v1 OWNER TO aip_owner;
+
+-- Name: inspection_current_responses; Type: VIEW; Schema: public
+CREATE VIEW public.inspection_current_responses WITH (security_invoker='true') AS
+ SELECT DISTINCT ON (inspection_id, field_key) id,
+    tenant_id,
+    inspection_id,
+    field_key,
+    value,
+    failed,
+    revision_id,
+    responded_by,
+    responded_at,
+    created_at
+   FROM public.inspection_responses
+  ORDER BY inspection_id, field_key, created_at DESC, id DESC;
+
+ALTER VIEW public.inspection_current_responses OWNER TO aip_owner;
 
 -- Name: TABLE app_user; Type: ACL; Schema: reporting
 GRANT SELECT ON TABLE reporting.app_user TO aip_readonly;

@@ -440,9 +440,7 @@ async def test_partitions_are_kept_ahead_and_rows_stay_readable(
     )
     try:
         async with engine.begin() as conn:
-            await conn.execute(
-                text("SELECT aip_ensure_partitions('inspection_responses', 3)")
-            )
+            await conn.execute(text("SELECT aip_ensure_partitions('inspection_responses', 3)"))
     finally:
         await engine.dispose()
 
