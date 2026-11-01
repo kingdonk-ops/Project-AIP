@@ -414,9 +414,9 @@ async def test_workflow_definition_audit_gets_its_partitions_with_rows_in_defaul
 
     next_month = partition_name("workflow_definition_audit", month_start(_today(), 1))
     assert next_month in created["workflow_definition_audit"]
-    assert await _db_fetch(
-        migrated_db, f"SELECT definition_id FROM {next_month}"
-    ) == [(definition,)]
+    assert await _db_fetch(migrated_db, f"SELECT definition_id FROM {next_month}") == [
+        (definition,)
+    ]
     assert await _db_fetch(
         migrated_db, "SELECT count(*) FROM workflow_definition_audit_default"
     ) == [(0,)]
