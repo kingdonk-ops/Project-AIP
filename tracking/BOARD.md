@@ -300,7 +300,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [ENT-03](tasks/ENT-03.md) | Billing state (good standing, past due, restricted, suspended) and enforcement (ADR 0023) | tenancy | M | ENT-01, PLAN-R1, TENANCY-05 | todo | an operator moves the state, never a payment event |
 | [ENT-04](tasks/ENT-04.md) | Operator console pages: entitlement overrides and billing state (ADR 0023) | tenancy | M | ENT-03, OPS-12, PLAN-R1 | todo | on the operator origin |
 | [ENT-05](tasks/ENT-05.md) | Usage sources (identity seats, uploads storage) and project toggles for entitlements | tenancy | S | ENT-01, UPLOADS-02 | todo | found in ENT-01: the registries exist but nothing plugs in yet |
-| [DATABASE-09](tasks/DATABASE-09.md) | Partition maintenance works for append-only tables with a foreign key | database | S | DATABASE-05 | todo | found in INSPECTIONS-02: ATTACH validates the cloned FK under FORCE RLS and fails (`workflow_definition_audit` already hits it) |
+| [DATABASE-09](tasks/DATABASE-09.md) | Partition maintenance works for append-only tables with a foreign key | database | S | DATABASE-05 | in-progress | ClaudeK: branch claudeK/distracted-goldstine-63519e; found in INSPECTIONS-02: ATTACH validates the cloned FK under FORCE RLS and fails (`workflow_definition_audit` already hits it) |
 | [DESIGN-12](tasks/DESIGN-12.md) | Home / My Work page (`/`) with work-item providers | design | M | APPROVALS-06, AUDIT-04, DESIGN-05, DESIGN-09, PLAN-R1 | todo | UI modernization guide (docs/reviews/10); P0 sources are approvals and activity, R1 modules add providers |
 
 ### Moved out of P0: re-homed by PLAN-R1 (ADR 0007)

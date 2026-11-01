@@ -43,7 +43,7 @@ INSPECTIONS-02 left the FK off `inspection_responses` to avoid it.
   - `ensure_all_partitions` creates the partitions of an append-only table whose foreign key
     points at a FORCE-RLS table, with rows already in its default partition, and moves the rows.
   - `workflow_definition_audit` with a row in its default partition gets its partitions.
-  - A row whose parent does not exist still cannot be moved into a partition (the FK still holds).
+  - The new partition carries the cloned foreign key and the referenced table keeps FORCE RLS.
 - **tests**:
   - **integration**:
     - probe append-only table with a FK to a FORCE-RLS parent, a row in the default partition →

@@ -316,6 +316,112 @@ async def test_function_refuses_tables_not_in_partition_settings(
             await conn.execute(text("SELECT aip_ensure_partitions('unregistered', 3)"))
 
 
+# --- integration: foreign keys to FORCE-RLS tables (DATABASE-09) ------------------------------
+
+_FK_PARENT_DDL = """
+CREATE TABLE evidence_probe_parent (
+  id uuid NOT NULL,
+  tenant_id uuid NOT NULL,
+  CONSTRAINT pk_evidence_probe_parent PRIMARY KEY (id),
+  CONSTRAINT uq_evidence_probe_parent_id_tenant_id UNIQUE (id, tenant_id)
+);
+ALTER TABLE evidence_probe_parent ENABLE ROW LEVEL SECURITY;
+ALTER TABLE evidence_probe_parent FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON evidence_probe_parent FOR ALL
+  USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)
+  WITH CHECK (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid);
+"""
+
+_FK_CHILD = """
+ALTER TABLE evidence_probe_child
+  ADD CONSTRAINT fk_evidence_probe_child_parent
+    FOREIGN KEY (parent_id, tenant_id) REFERENCES evidence_probe_parent (id, tenant_id);
+INSERT INTO partition_settings (table_name, months_ahead) VALUES ('evidence_probe_child', 2);
+"""
+
+
+async def test_ensure_partitions_moves_default_rows_with_a_foreign_key_to_a_force_rls_table(
+    owner_conn_for_seeding_only: OwnerSeeder, jobs_engine: AsyncEngine
+) -> None:
+    seeder = owner_conn_for_seeding_only
+    await _ddl(seeder, _FK_PARENT_DDL)
+    await _ddl(
+        seeder,
+        render_template(
+            "append_only_table",
+            table="evidence_probe_child",
+            columns=f"{PROBE_COLUMNS}, parent_id uuid NOT NULL",
+            partition_column="created_at",
+        ),
+    )
+    await _ddl(seeder, _FK_CHILD)
+    parent, child = uuid4(), uuid4()
+    await asyncio.to_thread(
+        seeder.insert,
+        TENANT,
+        f"INSERT INTO evidence_probe_parent (id, tenant_id) VALUES ('{parent}', '{TENANT}');"
+        "INSERT INTO evidence_probe_child (id, tenant_id, body, parent_id, created_at) "
+        f"VALUES ('{child}', '{TENANT}', 'x', '{parent}', '{_next_month_ts().isoformat()}');",
+    )
+    db = seeder.db
+    assert await _db_fetch(db, "SELECT count(*) FROM evidence_probe_child_default") == [(1,)]
+
+    created = await partition_jobs.ensure_all_partitions(jobs_engine, today=_today())
+
+    expected = [partition_name("evidence_probe_child", month_start(_today(), n)) for n in range(3)]
+    assert created["evidence_probe_child"] == expected
+    next_month = expected[1]
+    assert await _db_fetch(db, "SELECT count(*) FROM evidence_probe_child_default") == [(0,)]
+    # Superuser read: the moved row is whole and still joins its parent.
+    assert await _db_fetch(
+        db,
+        f"SELECT c.id, c.parent_id FROM {next_month} AS c "
+        "JOIN evidence_probe_parent AS p ON p.id = c.parent_id AND p.tenant_id = c.tenant_id",
+    ) == [(child, parent)]
+    # The partition carries the foreign key, and the parent table still forces RLS.
+    assert await _db_fetch(
+        db,
+        "SELECT conname::text FROM pg_constraint WHERE conrelid = $1::regclass AND contype = 'f'",
+        next_month,
+    ) == [("fk_evidence_probe_child_parent",)]
+    assert await _db_fetch(
+        db,
+        "SELECT relforcerowsecurity FROM pg_class WHERE oid = 'evidence_probe_parent'::regclass",
+    ) == [(True,)]
+
+
+async def test_workflow_definition_audit_gets_its_partitions_with_rows_in_default(
+    migrated_db: FreshDb, owner_conn_for_seeding_only: OwnerSeeder, jobs_engine: AsyncEngine
+) -> None:
+    await asyncio.to_thread(
+        migrated_db.execute,
+        "INSERT INTO tenants (id, name, slug, region_code, status) VALUES "
+        f"('{TENANT}', 'Kaefer Demo', 'kaefer-demo', 'ap-southeast-2', 'active');",
+    )
+    definition = uuid4()
+    await asyncio.to_thread(
+        owner_conn_for_seeding_only.insert,
+        TENANT,
+        "INSERT INTO workflow_definitions (id, tenant_id, record_type, key, version, status, "
+        "states, transitions, initial_state) VALUES "
+        f"('{definition}', '{TENANT}', 'probe', 'probe', 1, 'active', '[]', '[]', 'draft');"
+        "INSERT INTO workflow_definition_audit (id, tenant_id, definition_id, change, created_at) "
+        f"VALUES ('{uuid4()}', '{TENANT}', '{definition}', '{{}}', "
+        f"'{_next_month_ts().isoformat()}');",
+    )
+
+    created = await partition_jobs.ensure_all_partitions(jobs_engine, today=_today())
+
+    next_month = partition_name("workflow_definition_audit", month_start(_today(), 1))
+    assert next_month in created["workflow_definition_audit"]
+    assert await _db_fetch(
+        migrated_db, f"SELECT definition_id FROM {next_month}"
+    ) == [(definition,)]
+    assert await _db_fetch(
+        migrated_db, "SELECT count(*) FROM workflow_definition_audit_default"
+    ) == [(0,)]
+
+
 # --- integration: expand/contract conversion ---------------------------------------------------
 
 _LEGACY_DDL = """
