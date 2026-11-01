@@ -7,6 +7,9 @@ join their transaction and RLS applies.
 ``create_inspection`` is the cross-module contract plus ``source_ref_id``, which a scope task
 (SCOPEWORK-03) or a re-inspection needs. It checks ``inspection.create`` on the project, the asset,
 the project and the template's current published revision exactly as ``POST /inspections`` does.
+
+``get_current_responses`` (INSPECTIONS-02) is the current answer per field and their evaluation,
+the same shape as ``GET /inspections/{id}/responses``, for report_engine and issues.
 """
 
 from __future__ import annotations
@@ -17,11 +20,12 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.approvals.api import Actor
 from aip.modules.inspections import repository as repo
-from aip.modules.inspections.schemas import InspectionOut
+from aip.modules.inspections.responses import current_responses
+from aip.modules.inspections.schemas import CurrentResponses, InspectionOut
 from aip.modules.inspections.service import InspectionService, NewInspection, current_state
 from aip.platform.access import PolicyService
 
-__all__ = ["InspectionOut", "InspectionsApi"]
+__all__ = ["CurrentResponses", "InspectionOut", "InspectionsApi"]
 
 
 class InspectionsApi:
@@ -66,3 +70,11 @@ class InspectionsApi:
         """The inspection's workflow ``current_state`` (the truth), or ``None`` when not visible."""
         row = await repo.get_inspection(conn, inspection_id)
         return None if row is None else await current_state(conn, row)
+
+    async def get_current_responses(
+        self, conn: AsyncConnection, inspection_id: UUID
+    ) -> CurrentResponses | None:
+        """The current answers of the inspection visible on ``conn`` and their evaluation, or
+        ``None``. No permission check."""
+        row = await repo.get_inspection(conn, inspection_id)
+        return None if row is None else await current_responses(conn, row)

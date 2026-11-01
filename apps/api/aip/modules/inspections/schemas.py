@@ -1,9 +1,9 @@
-"""Pydantic request/response models for inspections (INSPECTIONS-01).
+"""Pydantic request/response models for inspections (INSPECTIONS-01) and responses (INSPECTIONS-02).
 
 JSON is camelCase (``assetId``, ``templateRevisionId``). Requests forbid unknown keys, so a client
 cannot send ``state``, ``source`` or ``sourceRefId`` (422): the server sets them. Responses carry
 codes and term keys, never display text; a kind's label is ``inspection.kind.<code>`` and a
-source's ``inspection.source.<code>``.
+source's ``inspection.source.<code>``. An answer body has no ``failed``: the server decides it.
 """
 
 from __future__ import annotations
@@ -12,12 +12,17 @@ from datetime import datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, JsonValue
 from pydantic.alias_generators import to_camel
 
 __all__ = [
+    "FIELD_KEY_PATTERN",
     "KINDS",
     "SOURCES",
+    "AnswerIn",
+    "AnswerOut",
+    "AnswersEvaluation",
+    "CurrentResponses",
     "InspectionAvailableTransition",
     "InspectionCreate",
     "InspectionDecision",
@@ -29,6 +34,11 @@ __all__ = [
     "InspectionPage",
     "InspectionSource",
     "InspectionTransitionOut",
+    "ResponseEntry",
+    "ResponseHistory",
+    "ResponseResult",
+    "ResponsesIn",
+    "ResponsesOut",
     "TransitionBody",
 ]
 
@@ -38,6 +48,9 @@ KINDS: tuple[str, ...] = ("inspection", "itp", "rfi")
 SOURCES: tuple[str, ...] = ("manual", "scope_task", "reinspection", "import")
 
 Comment = Annotated[str, Field(max_length=4000)]
+
+FIELD_KEY_PATTERN = r"^[a-z][a-z0-9_]{0,62}$"  # the form field key rule (and the column CHECK)
+FieldKey = Annotated[str, Field(pattern=FIELD_KEY_PATTERN)]
 
 
 class _Model(BaseModel):
@@ -147,3 +160,76 @@ class InspectionHistory(_Out):
 class InspectionPage(_Out):
     items: list[InspectionOut]
     next_cursor: str | None
+
+
+# --- responses (INSPECTIONS-02) ----------------------------------------------------------------
+
+
+class AnswerIn(_Model):
+    """One answer; ``value`` ``null`` clears it. ``clientId`` makes a retry idempotent."""
+
+    field_key: FieldKey
+    value: JsonValue
+    client_id: UUID
+
+
+class ResponsesIn(_Model):
+    """``POST /inspections/{id}/responses``: 1 to 200 answers, each field and client id once."""
+
+    answers: Annotated[list[AnswerIn], Field(min_length=1, max_length=200)]
+
+
+class ResponseResult(_Out):
+    """``created`` is false for a ``clientId`` already stored (the first response is returned)."""
+
+    client_id: UUID
+    response_id: UUID
+    created: bool
+    failed: bool
+
+
+class ResponsesOut(_Out):
+    results: list[ResponseResult]
+
+
+class AnswerOut(_Out):
+    value: JsonValue
+    failed: bool
+    responded_by: UUID
+    responded_at: datetime
+    response_id: UUID
+
+
+class AnswersEvaluation(_Out):
+    """The FORMS-02 evaluation of the current answers: ``missingRequired`` lists the visible
+    required fields with no answer, ``failed`` the fields whose answer fails."""
+
+    visible: dict[str, bool]
+    required: dict[str, bool]
+    missing_required: list[str]
+    failed: list[str]
+
+
+class CurrentResponses(_Out):
+    """The current answer per field and the evaluation of those answers."""
+
+    answers: dict[str, AnswerOut]
+    evaluation: AnswersEvaluation
+
+
+class ResponseEntry(_Out):
+    id: UUID
+    field_key: str
+    value: JsonValue
+    failed: bool
+    revision_id: UUID
+    client_id: UUID
+    supersedes_id: UUID | None
+    responded_by: UUID
+    responded_at: datetime
+
+
+class ResponseHistory(_Out):
+    """Every response for one field, oldest first."""
+
+    entries: list[ResponseEntry]
