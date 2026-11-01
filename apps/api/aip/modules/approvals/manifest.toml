@@ -17,7 +17,13 @@ description = "Create, edit and publish workflow definitions"
 
 [[permissions]]
 code = "approvals.start"
-description = "Start the workflow of a record"
+description = "Start the workflow of a record, or an approval route on it"
+
+# APPROVALS-04: decide an approval route step you are an approver of (ADR 0040: the verb `approve`
+# reaches the approve level, Client Reviewer included).
+[[permissions]]
+code = "approvals.approve"
+description = "Approve or reject approval route steps you are an approver of"
 
 # APPROVALS-05/09: the inspection lifecycle presets (config/workflows/inspection_*.json). The R1
 # inspections tasks may move these to the inspections manifest.
@@ -27,7 +33,7 @@ description = "Ready, schedule, assign and hand over inspections, assign with co
 
 [[permissions]]
 code = "approvals.inspection.execute"
-description = "Assign to me, inspect, check out to and in from Go, request supervisor review or clarification, and abort inspections"
+description = "Assign to me, inspect, check out to and in from SiteSync, request supervisor review or clarification, and abort inspections"
 
 [[permissions]]
 code = "approvals.inspection.review"
@@ -51,4 +57,20 @@ version = 1
 
 [[events]]
 name = "workflow.definition_published"
+version = 1
+
+[[events]]
+name = "approval.requested"
+version = 1
+
+[[events]]
+name = "approval.approved"
+version = 1
+
+[[events]]
+name = "approval.rejected"
+version = 1
+
+[[events]]
+name = "approval.completed"
 version = 1
