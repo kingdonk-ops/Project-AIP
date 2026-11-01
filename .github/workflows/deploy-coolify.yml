@@ -180,6 +180,9 @@ jobs:
         env:
           DEMO_URL: ${{ vars.DEMO_URL }}
         run: |
+          # DEMO_URL carried a trailing space, so every smoke attempt failed with InvalidURL
+          # before reaching the demo (deploys from 2026-10-31). A URL contains no whitespace.
+          DEMO_URL="$(printf '%s' "${DEMO_URL}" | tr -d '[:space:]')"
           # Up to 10 minutes for the rollout (OPS-11 acceptance), then the final smoke result.
           for attempt in $(seq 1 40); do
             if python3 tools/smoke.py "$DEMO_URL" --expect-commit "$SHA" > smoke.log 2>&1; then
@@ -212,6 +215,8 @@ jobs:
           E2E_PASS_VIEWER: ${{ secrets.E2E_PASS_VIEWER }}
         run: |
           set -euo pipefail
+          E2E_BASE_URL="$(printf '%s' "${E2E_BASE_URL}" | tr -d '[:space:]')"
+          export E2E_BASE_URL
           if [ -z "${E2E_USER_A}" ] || [ -z "${E2E_USER_B}" ]; then
             echo "::notice::E2E_USER_A/B secrets are not set on coolify-demo: demo journey skipped"
             exit 0

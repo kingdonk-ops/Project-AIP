@@ -2,6 +2,9 @@
 
 - ``inspection.created`` v1 ``{inspectionId, assetId, projectId, kind, templateRevisionId,
   source}``: emitted in the create's transaction.
+- ``inspection.answer_failed`` v1 ``{inspectionId, responseId, fieldKey, assetId, projectId}``
+  (INSPECTIONS-02): an answer newly failed its field's ``failWhen`` (the field's previous answer was
+  absent or passed). Emitted in the submit's transaction; ISSUES-02 raises issues from it.
 - ``inspection.state_changed`` v1 ``{inspectionId, assetId, projectId, from, to, action}``: an
   applied transition moved the inspection's lifecycle. Emitted in the transition's transaction when
   it went through ``/api/v1/inspections``, else by :func:`follow_workflow` below.
@@ -25,14 +28,17 @@ from aip.platform.events import register_event
 from aip.platform.events.subscribers import DomainEvent, subscriber
 
 __all__ = [
+    "INSPECTION_ANSWER_FAILED",
     "INSPECTION_CREATED",
     "INSPECTION_STATE_CHANGED",
     "WORKFLOW_TRANSITIONED",
+    "InspectionAnswerFailedEvent",
     "InspectionCreatedEvent",
     "InspectionStateChangedEvent",
     "follow_workflow",
 ]
 
+INSPECTION_ANSWER_FAILED: Final = "inspection.answer_failed"
 INSPECTION_CREATED: Final = "inspection.created"
 INSPECTION_STATE_CHANGED: Final = "inspection.state_changed"
 WORKFLOW_TRANSITIONED: Final = "workflow.transitioned"
@@ -64,6 +70,17 @@ class InspectionStateChangedEvent(BaseModel):
     action: str
 
 
+class InspectionAnswerFailedEvent(BaseModel):
+    model_config = _CONFIG
+
+    inspection_id: UUID
+    response_id: UUID
+    field_key: str
+    asset_id: UUID
+    project_id: UUID | None
+
+
+register_event(INSPECTION_ANSWER_FAILED, 1, InspectionAnswerFailedEvent, "inspections")
 register_event(INSPECTION_CREATED, 1, InspectionCreatedEvent, "inspections")
 register_event(INSPECTION_STATE_CHANGED, 1, InspectionStateChangedEvent, "inspections")
 

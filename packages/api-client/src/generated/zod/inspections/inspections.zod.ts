@@ -168,6 +168,83 @@ export const InspectionsReinspectResponse = zod.object({
 })
 
 /**
+ * @summary Get Responses
+ */
+export const InspectionsResponsesParams = zod.object({
+  "inspection_id": zod.uuid()
+})
+
+export const InspectionsResponsesResponse = zod.object({
+  "answers": zod.record(zod.string(), zod.object({
+  "failed": zod.boolean(),
+  "respondedAt": zod.iso.datetime({"offset":true}),
+  "respondedBy": zod.uuid(),
+  "responseId": zod.uuid(),
+  "value": zod.unknown()
+})),
+  "evaluation": zod.object({
+  "failed": zod.array(zod.string()),
+  "missingRequired": zod.array(zod.string()),
+  "required": zod.record(zod.string(), zod.boolean()),
+  "visible": zod.record(zod.string(), zod.boolean())
+}).describe('The FORMS-02 evaluation of the current answers: ``missingRequired`` lists the visible\nrequired fields with no answer, ``failed`` the fields whose answer fails.')
+}).describe('The current answer per field and the evaluation of those answers.')
+
+/**
+ * @summary Respond
+ */
+export const InspectionsRespondParams = zod.object({
+  "inspection_id": zod.uuid()
+})
+
+export const inspectionsRespondBodyAnswersItemFieldKeyRegExp = new RegExp('^[a-z][a-z0-9_]{0,62}$');
+export const inspectionsRespondBodyAnswersMax = 200;
+
+
+
+export const InspectionsRespondBody = zod.object({
+  "answers": zod.array(zod.object({
+  "clientId": zod.uuid(),
+  "fieldKey": zod.string().regex(inspectionsRespondBodyAnswersItemFieldKeyRegExp),
+  "value": zod.unknown()
+}).describe('One answer; ``value`` ``null`` clears it. ``clientId`` makes a retry idempotent.')).min(1).max(inspectionsRespondBodyAnswersMax)
+}).describe('``POST /inspections/{id}/responses``: 1 to 200 answers, each field and client id once.')
+
+export const InspectionsRespondResponse = zod.object({
+  "results": zod.array(zod.object({
+  "clientId": zod.uuid(),
+  "created": zod.boolean(),
+  "failed": zod.boolean(),
+  "responseId": zod.uuid()
+}).describe('``created`` is false for a ``clientId`` already stored (the first response is returned).'))
+})
+
+/**
+ * @summary Get Response History
+ */
+export const inspectionsResponseHistoryPathFieldKeyRegExp = new RegExp('^[a-z][a-z0-9_]{0,62}$');
+
+
+export const InspectionsResponseHistoryParams = zod.object({
+  "inspection_id": zod.uuid(),
+  "fieldKey": zod.string().regex(inspectionsResponseHistoryPathFieldKeyRegExp)
+})
+
+export const InspectionsResponseHistoryResponse = zod.object({
+  "entries": zod.array(zod.object({
+  "clientId": zod.uuid(),
+  "failed": zod.boolean(),
+  "fieldKey": zod.string(),
+  "id": zod.uuid(),
+  "respondedAt": zod.iso.datetime({"offset":true}),
+  "respondedBy": zod.uuid(),
+  "revisionId": zod.uuid(),
+  "supersedesId": zod.union([zod.uuid(),zod.null()]),
+  "value": zod.unknown()
+}))
+}).describe('Every response for one field, oldest first.')
+
+/**
  * @summary Transition
  */
 export const InspectionsTransitionParams = zod.object({

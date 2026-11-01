@@ -11,6 +11,14 @@
   countersign; approvals' errors pass through (409, 403, 401 ``STEP_UP_REQUIRED``, 422).
 - ``GET /inspections/{id}/history`` returns the decisions and ``chainValid`` (``inspection.view``).
 - ``POST /inspections/{id}/reinspect`` creates the re-inspection of a performed one (201).
+- ``POST /inspections/{id}/responses`` stores answers (``inspection.respond``; in supervisor review
+  also ``approvals.inspection.review``): 200 with one result per answer, ``created: false`` for a
+  ``clientId`` already stored. 409 ``INSPECTION_NOT_EDITABLE`` outside the editable states; 422
+  ``DUPLICATE_ANSWER``, ``UNKNOWN_FIELD``, ``FIELD_NOT_VISIBLE`` or ``ANSWER_INVALID`` with
+  ``errors: [{path, code}]``, and then nothing is written (INSPECTIONS-02).
+- ``GET /inspections/{id}/responses`` returns the current answers and their evaluation, and
+  ``GET /inspections/{id}/responses/{fieldKey}/history`` every answer to one field, oldest first
+  (``inspection.view``).
 
 Every route is ``authenticated()`` with an active tenant, and the service checks each permission
 against the inspection's project (ADR 0035 §6), deny by default. Another tenant's id is 404 before
@@ -22,12 +30,15 @@ from __future__ import annotations
 from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Request, Response, status
+from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
 
 from aip.modules.approvals.api import Actor, InstanceView
 from aip.modules.identity.api import Principal, SessionFacts, get_principal
 from aip.modules.inspections import repository as repo
+from aip.modules.inspections.responses import ResponseService
 from aip.modules.inspections.schemas import (
+    FIELD_KEY_PATTERN,
+    CurrentResponses,
     InspectionAvailableTransition,
     InspectionCreate,
     InspectionDecision,
@@ -38,6 +49,9 @@ from aip.modules.inspections.schemas import (
     InspectionOut,
     InspectionPage,
     InspectionTransitionOut,
+    ResponseHistory,
+    ResponsesIn,
+    ResponsesOut,
     TransitionBody,
 )
 from aip.modules.inspections.service import InspectionService, NewInspection
@@ -75,7 +89,18 @@ _TRANSITION_ERRORS: dict[int | str, dict[str, Any]] = {
     },
 }
 
+_RESPOND_ERRORS: dict[int | str, dict[str, Any]] = {
+    **_ERRORS,
+    409: {"model": InspectionErrorBody, "description": "INSPECTION_NOT_EDITABLE"},
+    422: {
+        "model": InspectionErrorBody,
+        "description": "Validation error, DUPLICATE_ANSWER, UNKNOWN_FIELD, FIELD_NOT_VISIBLE or "
+        "ANSWER_INVALID",
+    },
+}
+
 Limit = Annotated[int, Query(ge=1, le=200)]
+FieldKeyPath = Annotated[str, Path(alias="fieldKey", pattern=FIELD_KEY_PATTERN)]
 Cursor = Annotated[str | None, Query(max_length=1024)]
 
 
@@ -97,6 +122,11 @@ CurrentActor = Annotated[Actor, Depends(actor)]
 def _service(request: Request) -> InspectionService:
     policy: PolicyService = request.app.state.access_policy
     return InspectionService(policy)
+
+
+def _responses(request: Request) -> ResponseService:
+    policy: PolicyService = request.app.state.access_policy
+    return ResponseService(policy)
 
 
 def _detail(row: dict[str, Any], view: InstanceView) -> InspectionDetail:
@@ -253,6 +283,47 @@ async def reinspect(inspection_id: UUID, request: Request, who: CurrentActor) ->
     async with with_tenant(get_context()) as conn:
         row = await _service(request).reinspect(conn, who, inspection_id)
     return InspectionOut.model_validate(row)
+
+
+@inspections_router.post(
+    "/{inspection_id}/responses",
+    operation_id="inspections_respond",
+    response_model=ResponsesOut,
+    responses=_RESPOND_ERRORS,
+)
+async def respond(
+    inspection_id: UUID, body: ResponsesIn, request: Request, who: CurrentActor
+) -> ResponsesOut:
+    async with with_tenant(get_context()) as conn:
+        results = await _responses(request).submit(conn, who, inspection_id, body.answers)
+    return ResponsesOut(results=results)
+
+
+@inspections_router.get(
+    "/{inspection_id}/responses",
+    operation_id="inspections_responses",
+    response_model=CurrentResponses,
+    responses=_ERRORS,
+)
+async def get_responses(
+    inspection_id: UUID, request: Request, who: CurrentActor
+) -> CurrentResponses:
+    async with with_tenant(get_context()) as conn:
+        return await _responses(request).current(conn, who, inspection_id)
+
+
+@inspections_router.get(
+    "/{inspection_id}/responses/{fieldKey}/history",
+    operation_id="inspections_response_history",
+    response_model=ResponseHistory,
+    responses=_ERRORS,
+)
+async def get_response_history(
+    inspection_id: UUID, field_key: FieldKeyPath, request: Request, who: CurrentActor
+) -> ResponseHistory:
+    async with with_tenant(get_context()) as conn:
+        entries = await _responses(request).history(conn, who, inspection_id, field_key)
+    return ResponseHistory(entries=entries)
 
 
 router = APIRouter(dependencies=[Depends(require_active_tenant)])
