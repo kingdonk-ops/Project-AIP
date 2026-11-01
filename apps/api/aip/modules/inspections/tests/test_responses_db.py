@@ -4,7 +4,7 @@ The app connects as ``aip_app`` (RLS on); users and grants come from the INSPECT
 Here the inspector also holds ``inspection.respond``, and the supervisor holds it plus
 ``approvals.inspection.review`` ("Edit Inspection during Review", ADR 0041 §6). Each test answers a
 published coating form: ``coating_dft`` (number, required, fails below 250), ``surface_prep``
-(dropdown ``Sa2.5``/``Sa3``, required) and ``remarks`` (text, visible only for ``Sa3``).
+(dropdown ``sa2_5``/``sa3``, required) and ``remarks`` (text, visible only for ``sa3``).
 """
 
 from __future__ import annotations
@@ -71,15 +71,15 @@ COATING_FORM: dict[str, Any] = {
                     "label": "Surface preparation",
                     "required": True,
                     "options": [
-                        {"value": "Sa2.5", "label": "Sa 2.5"},
-                        {"value": "Sa3", "label": "Sa 3"},
+                        {"value": "sa2_5", "label": "Sa 2.5"},
+                        {"value": "sa3", "label": "Sa 3"},
                     ],
                 },
                 {
                     "key": "remarks",
                     "type": "text",
                     "label": "Remarks",
-                    "visibleIf": {"==": [{"var": "answers.surface_prep"}, "Sa3"]},
+                    "visibleIf": {"==": [{"var": "answers.surface_prep"}, "sa3"]},
                 },
             ],
         }
@@ -254,7 +254,7 @@ async def test_only_a_newly_failed_answer_is_announced(
 async def test_invalid_answers_are_refused_with_their_paths(
     client: httpx.AsyncClient, db: TenantDb, inspection: str
 ) -> None:
-    not_an_option = await answer(client, inspection, item("surface_prep", "Sa1"))
+    not_an_option = await answer(client, inspection, item("surface_prep", "sa1"))
     assert not_an_option.status_code == 422, not_an_option.text
     assert not_an_option.json()["code"] == "ANSWER_INVALID"
     assert not_an_option.json()["messageKey"] == "inspection.error.answer_invalid"
@@ -269,13 +269,13 @@ async def test_invalid_answers_are_refused_with_their_paths(
     assert unknown.json()["code"] == "UNKNOWN_FIELD"
     assert unknown.json()["errors"] == [{"path": "answers[0].fieldKey", "code": "UNKNOWN_FIELD"}]
 
-    await answer_ok(client, inspection, item("surface_prep", "Sa2.5"))
+    await answer_ok(client, inspection, item("surface_prep", "sa2_5"))
     hidden = await answer(client, inspection, item("remarks", "x"))
     assert hidden.status_code == 422, hidden.text
     assert hidden.json()["code"] == "FIELD_NOT_VISIBLE"
 
     before = await responses(db)
-    mixed = await answer(client, inspection, item("coating_dft", 300), item("surface_prep", "Sa1"))
+    mixed = await answer(client, inspection, item("coating_dft", 300), item("surface_prep", "sa1"))
     assert mixed.status_code == 422
     assert mixed.json()["errors"] == [{"path": "answers[1].value", "code": "NOT_AN_OPTION"}]
     assert await responses(db) == before
@@ -285,7 +285,7 @@ async def test_an_answer_in_the_same_batch_can_make_a_field_visible(
     client: httpx.AsyncClient, inspection: str
 ) -> None:
     results = await answer_ok(
-        client, inspection, item("surface_prep", "Sa3"), item("remarks", "blasted twice")
+        client, inspection, item("surface_prep", "sa3"), item("remarks", "blasted twice")
     )
     assert [r["created"] for r in results] == [True, True]
 
@@ -299,14 +299,14 @@ async def test_a_batch_repeating_a_field_or_client_id_is_refused(
     assert twice.json()["errors"] == [{"path": "answers[1]", "code": "DUPLICATE_ANSWER"}]
     same_id = uuid.uuid4()
     reused = await answer(
-        client, inspection, item("coating_dft", 300, same_id), item("surface_prep", "Sa3", same_id)
+        client, inspection, item("coating_dft", 300, same_id), item("surface_prep", "sa3", same_id)
     )
     assert reused.status_code == 422 and reused.json()["code"] == "DUPLICATE_ANSWER"
     assert await responses(db) == 0
 
 
 async def test_an_answer_can_be_cleared(client: httpx.AsyncClient, inspection: str) -> None:
-    await answer_ok(client, inspection, item("surface_prep", "Sa3"))
+    await answer_ok(client, inspection, item("surface_prep", "sa3"))
     cleared = (await answer_ok(client, inspection, item("surface_prep", None)))[0]
     assert cleared["failed"] is False
     body = (await client.get(f"{INSPECTIONS}/{inspection}/responses", headers=VIEWER)).json()
@@ -354,7 +354,7 @@ async def test_the_lifecycle_decides_who_may_answer(
     inspector = await answer(client, inspection, item("coating_dft", 303))
     assert inspector.status_code == 403, inspector.text
     assert inspector.json()["code"] == "REVIEW_PERMISSION_REQUIRED"
-    supervisor = await answer(client, inspection, item("surface_prep", "Sa3"), headers=SUPERVISOR)
+    supervisor = await answer(client, inspection, item("surface_prep", "sa3"), headers=SUPERVISOR)
     assert supervisor.status_code == 200, supervisor.text
     body = (await client.get(f"{INSPECTIONS}/{inspection}/responses", headers=VIEWER)).json()
     assert body["answers"]["surface_prep"]["respondedBy"] == str(SUPERVISOR_ID)
@@ -391,7 +391,7 @@ async def test_the_facts_provider_counts_the_answers(
     assert found["invalidCount"] == 0
     assert found["kind"] == "inspection"
 
-    await answer_ok(client, inspection, item("surface_prep", "Sa2.5"))
+    await answer_ok(client, inspection, item("surface_prep", "sa2_5"))
     found = await facts()
     assert found["missingRequiredCount"] == 0
     assert found["answeredCount"] == 2
@@ -400,7 +400,7 @@ async def test_the_facts_provider_counts_the_answers(
 async def test_the_published_interface_matches_the_route(
     client: httpx.AsyncClient, db: TenantDb, inspection: str
 ) -> None:
-    await answer_ok(client, inspection, item("coating_dft", 260), item("surface_prep", "Sa3"))
+    await answer_ok(client, inspection, item("coating_dft", 260), item("surface_prep", "sa3"))
     route = (await client.get(f"{INSPECTIONS}/{inspection}/responses", headers=VIEWER)).json()
     with use_context(ctx()):
         async with db.with_tenant(TENANT_A_ID) as conn:
