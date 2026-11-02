@@ -351,6 +351,7 @@ async def test_editing_a_system_role_customises_it_and_takes_effect(
         "approvals.view",
         "asset.view",
         "inspection.view",
+        "itp.sign",  # INSPECTIONS-03: ITP sign-off at the approve level
         "portal.user.view",
         "project.view",
         "report.template.view",
@@ -447,6 +448,7 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
         "approvals.view",
         "asset.view",
         "inspection.view",
+        "itp.sign",  # INSPECTIONS-03: ITP sign-off at the approve level
         "portal.user.view",
         "project.view",
         "report.template.view",
@@ -463,6 +465,7 @@ async def test_reset_restores_the_defaults(client: httpx.AsyncClient, db: Tenant
             "approvals.view",
             "asset.view",
             "inspection.view",
+            "itp.sign",  # INSPECTIONS-03: ITP sign-off at the approve level
             "portal.user.view",
             "project.view",
             "report.template.view",

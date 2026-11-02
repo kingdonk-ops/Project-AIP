@@ -40,6 +40,9 @@ export type PermissionCode =
   | "item_type.manage"
   | "item_type.publish"
   | "item_type.view"
+  | "itp.manage"
+  | "itp.sign"
+  | "itp.waive"
   | "ops.jobs.admin"
   | "platform.events.manage"
   | "platform.tenants.manage"
@@ -108,6 +111,9 @@ export const PERMISSIONS = {
   "item_type.manage": { module: "item_types", privileged: false },
   "item_type.publish": { module: "item_types", privileged: false },
   "item_type.view": { module: "item_types", privileged: false },
+  "itp.manage": { module: "inspections", privileged: false },
+  "itp.sign": { module: "inspections", privileged: false },
+  "itp.waive": { module: "inspections", privileged: false },
   "ops.jobs.admin": { module: "ops", privileged: false },
   "platform.events.manage": { module: "ops", privileged: true },
   "platform.tenants.manage": { module: "ops", privileged: true },
