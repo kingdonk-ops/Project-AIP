@@ -72,6 +72,7 @@ class TemplateCell:
     role: str
     level: Level
     shipped: Level
+    overridden: bool  # a row exists, even one that now equals the shipped level
     updated_by: UUID | None
     updated_at: datetime | None
 
@@ -118,6 +119,7 @@ async def list_cells(conn: AsyncConnection) -> list[TemplateCell]:
                     role=role,
                     level=shipped if row is None else cast(Level, row["level"]),
                     shipped=shipped,
+                    overridden=row is not None,
                     updated_by=None if row is None else row["updated_by"],
                     updated_at=None if row is None else row["updated_at"],
                 )
@@ -162,15 +164,16 @@ async def apply_changes(
         cell = (change.module, change.role)
         shipped = shipped_level(*cell)
         before = overrides[cell]["level"] if cell in overrides else shipped
-        if before == change.level:
-            continue
         params = {"module": change.module, "role": change.role, "level": change.level}
-        if change.level == shipped:
+        if change.level == shipped and cell in overrides:
+            # Also clears a row the shipped matrix has since caught up with (no level change).
             await conn.execute(
                 text("DELETE FROM default_role_level WHERE module_id = :module AND role_code = :role"),
                 params,
             )
-        else:
+        if before == change.level:
+            continue
+        if change.level != shipped:
             await conn.execute(
                 text("""
                 INSERT INTO default_role_level (module_id, role_code, level, updated_by)

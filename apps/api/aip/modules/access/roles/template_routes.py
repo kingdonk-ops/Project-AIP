@@ -149,7 +149,7 @@ async def get_template() -> DefaultRoleTemplate:
                 role=c.role,
                 level=c.level,
                 shipped_level=c.shipped,
-                overridden=c.level != c.shipped,
+                overridden=c.overridden,
                 updated_by=c.updated_by,
                 updated_at=c.updated_at,
             )

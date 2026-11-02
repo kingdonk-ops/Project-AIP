@@ -148,6 +148,17 @@ async def test_setting_a_cell_back_to_its_shipped_level_resets_it(
     # A no-op change writes no history.
     response = await patch(client, [{"module": "projects", "role": "auditor", "level": "view"}])
     assert response.json()["items"] == []
+    # A row the shipped matrix has caught up with shows as overridden and resets without history.
+    await su_execute(
+        db,
+        "INSERT INTO default_role_level (module_id, role_code, level)"
+        " VALUES ('projects', 'inspector', 'view')",
+    )
+    c = cell((await client.get(TEMPLATE, headers=OPERATOR)).json(), "projects", "inspector")
+    assert (c["level"], c["shippedLevel"], c["overridden"]) == ("view", "view", True)
+    response = await patch(client, [{"module": "projects", "role": "inspector", "level": "view"}])
+    assert response.json()["items"] == []
+    assert await su_fetch(db, "SELECT 1 FROM default_role_level") == []
     history = (await client.get(f"{TEMPLATE}/history", headers=OPERATOR)).json()["items"]
     assert [(h["levelBefore"], h["levelAfter"]) for h in history] == [
         ("edit", "view"),
