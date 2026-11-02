@@ -168,7 +168,9 @@ async def apply_changes(
         if change.level == shipped and cell in overrides:
             # Also clears a row the shipped matrix has since caught up with (no level change).
             await conn.execute(
-                text("DELETE FROM default_role_level WHERE module_id = :module AND role_code = :role"),
+                text(
+                    "DELETE FROM default_role_level WHERE module_id = :module AND role_code = :role"
+                ),
                 params,
             )
         if before == change.level:
@@ -184,17 +186,21 @@ async def apply_changes(
                 {**params, "actor": actor},
             )
         row = (
-            await conn.execute(
-                text("""
+            (
+                await conn.execute(
+                    text("""
                 INSERT INTO default_role_level_change
                   (id, module_id, role_code, level_before, level_after, changed_by, reason)
                 VALUES (:id, :module, :role, :before, :level, :actor, :reason)
                 RETURNING id, module_id, role_code, level_before, level_after, changed_by, reason,
                           changed_at
                 """),
-                {**params, "id": uuid4(), "before": before, "actor": actor, "reason": reason},
+                    {**params, "id": uuid4(), "before": before, "actor": actor, "reason": reason},
+                )
             )
-        ).mappings().one()
+            .mappings()
+            .one()
+        )
         written.append(dict(row))
     return written
 

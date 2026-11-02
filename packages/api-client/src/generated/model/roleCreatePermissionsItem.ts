@@ -43,6 +43,7 @@ export const RoleCreatePermissionsItem = {
   item_typeview: 'item_type.view',
   opsjobsadmin: 'ops.jobs.admin',
   platformeventsmanage: 'platform.events.manage',
+  platformrolesmanage: 'platform.roles.manage',
   platformtenantsmanage: 'platform.tenants.manage',
   portalgrantmanage: 'portal.grant.manage',
   portalrecordsign_off: 'portal.record.sign_off',

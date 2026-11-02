@@ -42,6 +42,7 @@ export type PermissionCode =
   | "item_type.view"
   | "ops.jobs.admin"
   | "platform.events.manage"
+  | "platform.roles.manage"
   | "platform.tenants.manage"
   | "portal.grant.manage"
   | "portal.record.sign_off"
@@ -110,6 +111,7 @@ export const PERMISSIONS = {
   "item_type.view": { module: "item_types", privileged: false },
   "ops.jobs.admin": { module: "ops", privileged: false },
   "platform.events.manage": { module: "ops", privileged: true },
+  "platform.roles.manage": { module: "ops", privileged: true },
   "platform.tenants.manage": { module: "ops", privileged: true },
   "portal.grant.manage": { module: "portal", privileged: false },
   "portal.record.sign_off": { module: "portal", privileged: false },

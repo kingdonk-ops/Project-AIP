@@ -46,6 +46,7 @@
                 "item_type.view",
                 "ops.jobs.admin",
                 "platform.events.manage",
+                "platform.roles.manage",
                 "platform.tenants.manage",
                 "portal.grant.manage",
                 "portal.record.sign_off",
@@ -1608,6 +1609,42 @@
         "title": "CategoryUpdate",
         "type": "object"
       },
+      "CellChange": {
+        "additionalProperties": false,
+        "properties": {
+          "level": {
+            "enum": [
+              "none",
+              "view",
+              "create",
+              "edit",
+              "approve",
+              "admin"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "module": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Module",
+            "type": "string"
+          },
+          "role": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "module",
+          "role",
+          "level"
+        ],
+        "title": "CellChange",
+        "type": "object"
+      },
       "ContentTypeCreate": {
         "additionalProperties": false,
         "properties": {
@@ -2112,6 +2149,47 @@
           "createdAt"
         ],
         "title": "DecisionOut",
+        "type": "object"
+      },
+      "DefaultRoleTemplate": {
+        "additionalProperties": false,
+        "properties": {
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateCellOut"
+            },
+            "title": "Cells",
+            "type": "array"
+          },
+          "levels": {
+            "items": {
+              "enum": [
+                "none",
+                "view",
+                "create",
+                "edit",
+                "approve",
+                "admin"
+              ],
+              "type": "string"
+            },
+            "title": "Levels",
+            "type": "array"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "roles",
+          "levels",
+          "cells"
+        ],
+        "title": "DefaultRoleTemplate",
         "type": "object"
       },
       "DefinitionOut": {
@@ -7456,6 +7534,7 @@
                 "item_type.view",
                 "ops.jobs.admin",
                 "platform.events.manage",
+                "platform.roles.manage",
                 "platform.tenants.manage",
                 "portal.grant.manage",
                 "portal.record.sign_off",
@@ -7609,6 +7688,7 @@
                 "item_type.view",
                 "ops.jobs.admin",
                 "platform.events.manage",
+                "platform.roles.manage",
                 "platform.tenants.manage",
                 "portal.grant.manage",
                 "portal.record.sign_off",
@@ -7729,6 +7809,7 @@
                     "item_type.view",
                     "ops.jobs.admin",
                     "platform.events.manage",
+                    "platform.roles.manage",
                     "platform.tenants.manage",
                     "portal.grant.manage",
                     "portal.record.sign_off",
@@ -9173,6 +9254,47 @@
         "title": "SuspendIn",
         "type": "object"
       },
+      "SyncRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "tenantIds": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "maxItems": 1000,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenantids"
+          }
+        },
+        "title": "SyncRequest",
+        "type": "object"
+      },
+      "SyncResult": {
+        "additionalProperties": false,
+        "properties": {
+          "tenants": {
+            "items": {
+              "$ref": "#/components/schemas/TenantSyncOut"
+            },
+            "title": "Tenants",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tenants"
+        ],
+        "title": "SyncResult",
+        "type": "object"
+      },
       "TeamCreate": {
         "additionalProperties": false,
         "properties": {
@@ -9421,6 +9543,174 @@
         "title": "TeamUpdate",
         "type": "object"
       },
+      "TemplateCellOut": {
+        "additionalProperties": false,
+        "properties": {
+          "level": {
+            "enum": [
+              "none",
+              "view",
+              "create",
+              "edit",
+              "approve",
+              "admin"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "module": {
+            "title": "Module",
+            "type": "string"
+          },
+          "overridden": {
+            "title": "Overridden",
+            "type": "boolean"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "shippedLevel": {
+            "enum": [
+              "none",
+              "view",
+              "create",
+              "edit",
+              "approve",
+              "admin"
+            ],
+            "title": "Shippedlevel",
+            "type": "string"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          },
+          "updatedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedby"
+          }
+        },
+        "required": [
+          "module",
+          "role",
+          "level",
+          "shippedLevel",
+          "overridden",
+          "updatedBy",
+          "updatedAt"
+        ],
+        "title": "TemplateCellOut",
+        "type": "object"
+      },
+      "TemplateChangeList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateChangeOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TemplateChangeList",
+        "type": "object"
+      },
+      "TemplateChangeOut": {
+        "additionalProperties": false,
+        "properties": {
+          "changedAt": {
+            "format": "date-time",
+            "title": "Changedat",
+            "type": "string"
+          },
+          "changedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changedby"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "levelAfter": {
+            "enum": [
+              "none",
+              "view",
+              "create",
+              "edit",
+              "approve",
+              "admin"
+            ],
+            "title": "Levelafter",
+            "type": "string"
+          },
+          "levelBefore": {
+            "enum": [
+              "none",
+              "view",
+              "create",
+              "edit",
+              "approve",
+              "admin"
+            ],
+            "title": "Levelbefore",
+            "type": "string"
+          },
+          "module": {
+            "title": "Module",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "module",
+          "role",
+          "levelBefore",
+          "levelAfter",
+          "changedBy",
+          "reason",
+          "changedAt"
+        ],
+        "title": "TemplateChangeOut",
+        "type": "object"
+      },
       "TemplateCreate": {
         "additionalProperties": false,
         "properties": {
@@ -9664,6 +9954,33 @@
         "title": "TemplatePage",
         "type": "object"
       },
+      "TemplatePatch": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/CellChange"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Changes",
+            "type": "array"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changes",
+          "reason"
+        ],
+        "title": "TemplatePatch",
+        "type": "object"
+      },
       "TemplateRecord": {
         "properties": {
           "code": {
@@ -9830,6 +10147,59 @@
           "detail"
         ],
         "title": "TenantErrorResponse",
+        "type": "object"
+      },
+      "TenantSyncOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Created",
+            "type": "array"
+          },
+          "excess": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Excess",
+            "type": "object"
+          },
+          "pending": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Pending",
+            "type": "object"
+          },
+          "tenantId": {
+            "format": "uuid",
+            "title": "Tenantid",
+            "type": "string"
+          },
+          "updated": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Updated",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tenantId",
+          "created",
+          "updated",
+          "pending",
+          "excess"
+        ],
+        "title": "TenantSyncOut",
         "type": "object"
       },
       "TenantView": {
@@ -17948,6 +18318,172 @@
         "summary": "Get My Tenant",
         "tags": [
           "tenancy"
+        ]
+      }
+    },
+    "/api/v1/platform/default-roles": {
+      "get": {
+        "operationId": "platform_get_default_role_template",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultRoleTemplate"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Template",
+        "tags": [
+          "platform"
+        ]
+      },
+      "patch": {
+        "operationId": "platform_patch_default_role_template",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplatePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateChangeList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Unknown role, module, level or tenant, or a guardrail refused it."
+          }
+        },
+        "summary": "Patch Template",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/default-roles/history": {
+      "get": {
+        "operationId": "platform_list_default_role_history",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Module"
+            }
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateChangeList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get History",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/default-roles/sync": {
+      "post": {
+        "operationId": "platform_sync_default_roles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Unknown role, module, level or tenant, or a guardrail refused it."
+          }
+        },
+        "summary": "Sync Tenants",
+        "tags": [
+          "platform"
         ]
       }
     },

@@ -164,9 +164,7 @@ async def test_setting_a_cell_back_to_its_shipped_level_resets_it(
         ("edit", "view"),
         ("view", "edit"),
     ]
-    one = await client.get(
-        f"{TEMPLATE}/history", params={"role": "inspector"}, headers=OPERATOR
-    )
+    one = await client.get(f"{TEMPLATE}/history", params={"role": "inspector"}, headers=OPERATOR)
     assert one.json()["items"] == []
 
 
@@ -174,7 +172,10 @@ async def test_setting_a_cell_back_to_its_shipped_level_resets_it(
 @pytest.mark.parametrize(
     ("change", "code"),
     [
-        ({"module": "inspections", "role": "client_reviewer", "level": "edit"}, "SIGN_OFF_ONLY_ROLE"),
+        (
+            {"module": "inspections", "role": "client_reviewer", "level": "edit"},
+            "SIGN_OFF_ONLY_ROLE",
+        ),
         ({"module": "projects", "role": "client_reviewer", "level": "admin"}, "SIGN_OFF_ONLY_ROLE"),
         ({"module": "access", "role": "tenant_admin", "level": "edit"}, "TENANT_ADMIN_LOCKOUT"),
         ({"module": "projects", "role": "super_admin", "level": "view"}, "UNKNOWN_ROLE"),
@@ -267,7 +268,9 @@ async def test_sync_defaults_to_every_active_tenant_and_refuses_unknown_ones(
     other = "00000000-0000-4000-8000-00000000ffff"
     for target in (other, str(TENANT_B_ID)):
         response = await client.post(
-            f"{TEMPLATE}/sync", json={"tenantIds": [target]}, headers=headers(TENANT_A_ID, OPERATOR_ID)
+            f"{TEMPLATE}/sync",
+            json={"tenantIds": [target]},
+            headers=headers(TENANT_A_ID, OPERATOR_ID),
         )
         assert (response.status_code, response.json()["code"]) == (422, "UNKNOWN_TENANT")
     response = await client.post(

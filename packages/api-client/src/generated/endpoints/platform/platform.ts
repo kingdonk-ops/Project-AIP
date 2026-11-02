@@ -21,6 +21,7 @@ import type {
 import type {
   DeadLetterAction,
   DeadLetterPage,
+  DefaultRoleTemplate,
   Dependencies,
   DeprecateResult,
   DiscardRequest,
@@ -36,11 +37,16 @@ import type {
   OverrideCreate,
   OverrideOut,
   PlatformListDeadLettersParams,
+  PlatformListDefaultRoleHistoryParams,
   PlatformListEventsParams,
   PlatformLive200,
   PlatformRemoveEntitlementOverrideParams,
   SubscriptionOut,
   SubscriptionPut,
+  SyncRequest,
+  SyncResult,
+  TemplateChangeList,
+  TemplatePatch,
   VersionResponse
 } from '../../model';
 
@@ -1073,7 +1079,457 @@ export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady
 
 
 
-export type platformListModulesResponse200 = {
+export type platformGetDefaultRoleTemplateResponse200 = {
+  data: DefaultRoleTemplate
+  status: 200
+}
+
+export type platformGetDefaultRoleTemplateResponseSuccess = (platformGetDefaultRoleTemplateResponse200) & {
+  headers: Headers;
+};
+;
+
+export type platformGetDefaultRoleTemplateResponse = (platformGetDefaultRoleTemplateResponseSuccess)
+
+export const getPlatformGetDefaultRoleTemplateUrl = () => {
+
+
+
+
+  return `/api/v1/platform/default-roles`
+}
+
+/**
+ * @summary Get Template
+ */
+export const platformGetDefaultRoleTemplate = async ( options?: Parameters<typeof apiFetch>[1]): Promise<platformGetDefaultRoleTemplateResponse> => {
+
+  return apiFetch<platformGetDefaultRoleTemplateResponse>(getPlatformGetDefaultRoleTemplateUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPlatformGetDefaultRoleTemplateQueryKey = () => {
+    return [
+    `/api/v1/platform/default-roles`
+    ] as const;
+    }
+
+
+export const getPlatformGetDefaultRoleTemplateQueryOptions = <TData = Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPlatformGetDefaultRoleTemplateQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>> = ({ signal }) => platformGetDefaultRoleTemplate({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PlatformGetDefaultRoleTemplateQueryResult = NonNullable<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>>
+export type PlatformGetDefaultRoleTemplateQueryError = unknown
+
+
+export function usePlatformGetDefaultRoleTemplate<TData = Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformGetDefaultRoleTemplate<TData = Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformGetDefaultRoleTemplate<TData = Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Template
+ */
+
+export function usePlatformGetDefaultRoleTemplate<TData = Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPlatformGetDefaultRoleTemplateQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type platformPatchDefaultRoleTemplateResponse200 = {
+  data: TemplateChangeList
+  status: 200
+}
+
+export type platformPatchDefaultRoleTemplateResponse422 = {
+  data: void
+  status: 422
+}
+
+export type platformPatchDefaultRoleTemplateResponseSuccess = (platformPatchDefaultRoleTemplateResponse200) & {
+  headers: Headers;
+};
+export type platformPatchDefaultRoleTemplateResponseError = (platformPatchDefaultRoleTemplateResponse422) & {
+  headers: Headers;
+};
+
+export type platformPatchDefaultRoleTemplateResponse = (platformPatchDefaultRoleTemplateResponseSuccess | platformPatchDefaultRoleTemplateResponseError)
+
+export const getPlatformPatchDefaultRoleTemplateUrl = () => {
+
+
+
+
+  return `/api/v1/platform/default-roles`
+}
+
+/**
+ * @summary Patch Template
+ */
+export const platformPatchDefaultRoleTemplate = async (templatePatch: TemplatePatch, options?: Parameters<typeof apiFetch>[1]): Promise<platformPatchDefaultRoleTemplateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<platformPatchDefaultRoleTemplateResponse>(getPlatformPatchDefaultRoleTemplateUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(templatePatch)
+  }
+);}
+
+
+
+
+
+export const getPlatformPatchDefaultRoleTemplateMutationKey = () => ['platformPatchDefaultRoleTemplate'] as const;
+
+export const getPlatformPatchDefaultRoleTemplateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformPatchDefaultRoleTemplate>>, TError,PlatformPatchDefaultRoleTemplateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof platformPatchDefaultRoleTemplate>>, TError,PlatformPatchDefaultRoleTemplateMutationVariables, TContext> => {
+
+const mutationKey = getPlatformPatchDefaultRoleTemplateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof platformPatchDefaultRoleTemplate>>, PlatformPatchDefaultRoleTemplateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  platformPatchDefaultRoleTemplate(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlatformPatchDefaultRoleTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof platformPatchDefaultRoleTemplate>>>
+    export type PlatformPatchDefaultRoleTemplateMutationBody = TemplatePatch
+    export type PlatformPatchDefaultRoleTemplateMutationError = void
+    export type PlatformPatchDefaultRoleTemplateMutationVariables = {data: TemplatePatch}
+
+    /**
+ * @summary Patch Template
+ */
+export const usePlatformPatchDefaultRoleTemplate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformPatchDefaultRoleTemplate>>, TError,PlatformPatchDefaultRoleTemplateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof platformPatchDefaultRoleTemplate>>,
+        TError,
+        PlatformPatchDefaultRoleTemplateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPlatformPatchDefaultRoleTemplateMutationOptions(options), queryClient);
+    }
+    export type platformListDefaultRoleHistoryResponse200 = {
+  data: TemplateChangeList
+  status: 200
+}
+
+export type platformListDefaultRoleHistoryResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type platformListDefaultRoleHistoryResponseSuccess = (platformListDefaultRoleHistoryResponse200) & {
+  headers: Headers;
+};
+export type platformListDefaultRoleHistoryResponseError = (platformListDefaultRoleHistoryResponse422) & {
+  headers: Headers;
+};
+
+export type platformListDefaultRoleHistoryResponse = (platformListDefaultRoleHistoryResponseSuccess | platformListDefaultRoleHistoryResponseError)
+
+export const getPlatformListDefaultRoleHistoryUrl = (params?: PlatformListDefaultRoleHistoryParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/platform/default-roles/history?${stringifiedParams}` : `/api/v1/platform/default-roles/history`
+}
+
+/**
+ * @summary Get History
+ */
+export const platformListDefaultRoleHistory = async (params?: PlatformListDefaultRoleHistoryParams, options?: Parameters<typeof apiFetch>[1]): Promise<platformListDefaultRoleHistoryResponse> => {
+
+  return apiFetch<platformListDefaultRoleHistoryResponse>(getPlatformListDefaultRoleHistoryUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPlatformListDefaultRoleHistoryQueryKey = (params?: PlatformListDefaultRoleHistoryParams,) => {
+    return [
+    `/api/v1/platform/default-roles/history`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getPlatformListDefaultRoleHistoryQueryOptions = <TData = Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError = HTTPValidationError>(params?: PlatformListDefaultRoleHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPlatformListDefaultRoleHistoryQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>> = ({ signal }) => platformListDefaultRoleHistory(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PlatformListDefaultRoleHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>>
+export type PlatformListDefaultRoleHistoryQueryError = HTTPValidationError
+
+
+export function usePlatformListDefaultRoleHistory<TData = Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError = HTTPValidationError>(
+ params: undefined |  PlatformListDefaultRoleHistoryParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformListDefaultRoleHistory>>,
+          TError,
+          Awaited<ReturnType<typeof platformListDefaultRoleHistory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformListDefaultRoleHistory<TData = Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError = HTTPValidationError>(
+ params?: PlatformListDefaultRoleHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof platformListDefaultRoleHistory>>,
+          TError,
+          Awaited<ReturnType<typeof platformListDefaultRoleHistory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePlatformListDefaultRoleHistory<TData = Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError = HTTPValidationError>(
+ params?: PlatformListDefaultRoleHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get History
+ */
+
+export function usePlatformListDefaultRoleHistory<TData = Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError = HTTPValidationError>(
+ params?: PlatformListDefaultRoleHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPlatformListDefaultRoleHistoryQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type platformSyncDefaultRolesResponse200 = {
+  data: SyncResult
+  status: 200
+}
+
+export type platformSyncDefaultRolesResponse422 = {
+  data: void
+  status: 422
+}
+
+export type platformSyncDefaultRolesResponseSuccess = (platformSyncDefaultRolesResponse200) & {
+  headers: Headers;
+};
+export type platformSyncDefaultRolesResponseError = (platformSyncDefaultRolesResponse422) & {
+  headers: Headers;
+};
+
+export type platformSyncDefaultRolesResponse = (platformSyncDefaultRolesResponseSuccess | platformSyncDefaultRolesResponseError)
+
+export const getPlatformSyncDefaultRolesUrl = () => {
+
+
+
+
+  return `/api/v1/platform/default-roles/sync`
+}
+
+/**
+ * @summary Sync Tenants
+ */
+export const platformSyncDefaultRoles = async (syncRequest: SyncRequest, options?: Parameters<typeof apiFetch>[1]): Promise<platformSyncDefaultRolesResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<platformSyncDefaultRolesResponse>(getPlatformSyncDefaultRolesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(syncRequest)
+  }
+);}
+
+
+
+
+
+export const getPlatformSyncDefaultRolesMutationKey = () => ['platformSyncDefaultRoles'] as const;
+
+export const getPlatformSyncDefaultRolesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformSyncDefaultRoles>>, TError,PlatformSyncDefaultRolesMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof platformSyncDefaultRoles>>, TError,PlatformSyncDefaultRolesMutationVariables, TContext> => {
+
+const mutationKey = getPlatformSyncDefaultRolesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof platformSyncDefaultRoles>>, PlatformSyncDefaultRolesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  platformSyncDefaultRoles(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlatformSyncDefaultRolesMutationResult = NonNullable<Awaited<ReturnType<typeof platformSyncDefaultRoles>>>
+    export type PlatformSyncDefaultRolesMutationBody = SyncRequest
+    export type PlatformSyncDefaultRolesMutationError = void
+    export type PlatformSyncDefaultRolesMutationVariables = {data: SyncRequest}
+
+    /**
+ * @summary Sync Tenants
+ */
+export const usePlatformSyncDefaultRoles = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformSyncDefaultRoles>>, TError,PlatformSyncDefaultRolesMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof platformSyncDefaultRoles>>,
+        TError,
+        PlatformSyncDefaultRolesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPlatformSyncDefaultRolesMutationOptions(options), queryClient);
+    }
+    export type platformListModulesResponse200 = {
   data: ModuleInfo[]
   status: 200
 }

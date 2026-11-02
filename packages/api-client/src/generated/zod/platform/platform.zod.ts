@@ -142,6 +142,112 @@ export const PlatformLiveResponse = zod.record(zod.string(), zod.string())
 export const PlatformReadyResponse = zod.unknown()
 
 /**
+ * @summary Get Template
+ */
+export const PlatformGetDefaultRoleTemplateResponse = zod.object({
+  "cells": zod.array(zod.object({
+  "level": zod.enum(['none', 'view', 'create', 'edit', 'approve', 'admin']),
+  "module": zod.string(),
+  "overridden": zod.boolean(),
+  "role": zod.string(),
+  "shippedLevel": zod.enum(['none', 'view', 'create', 'edit', 'approve', 'admin']),
+  "updatedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "updatedBy": zod.union([zod.uuid(),zod.null()])
+})),
+  "levels": zod.array(zod.enum(['none', 'view', 'create', 'edit', 'approve', 'admin'])),
+  "roles": zod.array(zod.string())
+})
+
+/**
+ * @summary Patch Template
+ */
+export const platformPatchDefaultRoleTemplateBodyChangesItemModuleMax = 64;
+
+export const platformPatchDefaultRoleTemplateBodyChangesItemRoleMax = 64;
+
+export const platformPatchDefaultRoleTemplateBodyChangesMax = 500;
+
+export const platformPatchDefaultRoleTemplateBodyReasonMax = 500;
+
+
+export const platformPatchDefaultRoleTemplateBodyReasonRegExp = new RegExp('\\S');
+
+
+export const PlatformPatchDefaultRoleTemplateBody = zod.object({
+  "changes": zod.array(zod.object({
+  "level": zod.enum(['none', 'view', 'create', 'edit', 'approve', 'admin']),
+  "module": zod.string().min(1).max(platformPatchDefaultRoleTemplateBodyChangesItemModuleMax),
+  "role": zod.string().min(1).max(platformPatchDefaultRoleTemplateBodyChangesItemRoleMax)
+})).min(1).max(platformPatchDefaultRoleTemplateBodyChangesMax),
+  "reason": zod.string().min(1).max(platformPatchDefaultRoleTemplateBodyReasonMax).regex(platformPatchDefaultRoleTemplateBodyReasonRegExp)
+})
+
+export const PlatformPatchDefaultRoleTemplateResponse = zod.object({
+  "items": zod.array(zod.object({
+  "changedAt": zod.iso.datetime({"offset":true}),
+  "changedBy": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "levelAfter": zod.enum(['none', 'view', 'create', 'edit', 'approve', 'admin']),
+  "levelBefore": zod.enum(['none', 'view', 'create', 'edit', 'approve', 'admin']),
+  "module": zod.string(),
+  "reason": zod.string(),
+  "role": zod.string()
+}))
+})
+
+/**
+ * @summary Get History
+ */
+export const platformListDefaultRoleHistoryQueryModuleOneMax = 64;
+
+export const platformListDefaultRoleHistoryQueryRoleOneMax = 64;
+
+export const platformListDefaultRoleHistoryQueryLimitDefault = 100;
+export const platformListDefaultRoleHistoryQueryLimitMax = 500;
+
+
+
+export const PlatformListDefaultRoleHistoryQueryParams = zod.object({
+  "module": zod.union([zod.string().max(platformListDefaultRoleHistoryQueryModuleOneMax),zod.null()]).optional(),
+  "role": zod.union([zod.string().max(platformListDefaultRoleHistoryQueryRoleOneMax),zod.null()]).optional(),
+  "limit": zod.int().min(1).max(platformListDefaultRoleHistoryQueryLimitMax).default(platformListDefaultRoleHistoryQueryLimitDefault)
+})
+
+export const PlatformListDefaultRoleHistoryResponse = zod.object({
+  "items": zod.array(zod.object({
+  "changedAt": zod.iso.datetime({"offset":true}),
+  "changedBy": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "levelAfter": zod.enum(['none', 'view', 'create', 'edit', 'approve', 'admin']),
+  "levelBefore": zod.enum(['none', 'view', 'create', 'edit', 'approve', 'admin']),
+  "module": zod.string(),
+  "reason": zod.string(),
+  "role": zod.string()
+}))
+})
+
+/**
+ * @summary Sync Tenants
+ */
+export const platformSyncDefaultRolesBodyTenantIdsOneMax = 1000;
+
+
+
+export const PlatformSyncDefaultRolesBody = zod.object({
+  "tenantIds": zod.union([zod.array(zod.uuid()).min(1).max(platformSyncDefaultRolesBodyTenantIdsOneMax),zod.null()]).optional()
+})
+
+export const PlatformSyncDefaultRolesResponse = zod.object({
+  "tenants": zod.array(zod.object({
+  "created": zod.array(zod.string()),
+  "excess": zod.record(zod.string(), zod.array(zod.string())),
+  "pending": zod.record(zod.string(), zod.array(zod.string())),
+  "tenantId": zod.uuid(),
+  "updated": zod.array(zod.string())
+}))
+})
+
+/**
  * @summary List Modules
  */
 export const PlatformListModulesResponseItem = zod.object({

@@ -62,10 +62,10 @@ from aip.platform.db.scope import ScopePrincipal, run_as_system, with_principal
 
 __all__ = [
     "LEVELS",
+    "ROLES_MANAGE_PERMISSION",
     "ROLE_CODES",
     "Level",
     "LevelChange",
-    "ROLES_MANAGE_PERMISSION",
     "ModuleApi",
     "PermissionRow",
     "RoleGrantProvider",
@@ -82,9 +82,9 @@ __all__ = [
     "get_team_ref",
     "has_role",
     "list_permissions",
+    "list_team_members",
     "list_template_cells",
     "list_template_history",
-    "list_team_members",
     "role_code_for_id",
     "role_codes",
     "run_as_system",
