@@ -1,0 +1,82 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assetId": {
+      "format": "uuid",
+      "title": "Assetid",
+      "type": "string"
+    },
+    "blocksTaskId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Blockstaskid"
+    },
+    "decision": {
+      "title": "Decision",
+      "type": "string"
+    },
+    "inspectionId": {
+      "format": "uuid",
+      "title": "Inspectionid",
+      "type": "string"
+    },
+    "pointType": {
+      "title": "Pointtype",
+      "type": "string"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Projectid"
+    },
+    "releasedAt": {
+      "format": "date-time",
+      "title": "Releasedat",
+      "type": "string"
+    },
+    "stepId": {
+      "format": "uuid",
+      "title": "Stepid",
+      "type": "string"
+    },
+    "taskId": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Taskid"
+    }
+  },
+  "required": [
+    "stepId",
+    "inspectionId",
+    "assetId",
+    "projectId",
+    "pointType",
+    "decision",
+    "taskId",
+    "blocksTaskId",
+    "releasedAt"
+  ],
+  "title": "ItpStepReleasedEvent",
+  "type": "object"
+}

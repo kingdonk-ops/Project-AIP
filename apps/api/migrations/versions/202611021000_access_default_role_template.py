@@ -16,14 +16,14 @@ role codes, the six levels, Client Reviewer only ``none``/``view``/``approve`` (
 ADR 0027) and Tenant Admin always ``admin`` on ``access`` (no tenant lockout, ADR 0020).
 
 Revision ID: 202611021000
-Revises: 202611011500
+Revises: 202611011600
 Create Date: 2026-11-02 10:00:00+00:00
 """
 
 from alembic import op
 
 revision: str = "202611021000"
-down_revision: str | None = "202611011500"
+down_revision: str | None = "202611011600"
 branch_labels = None
 depends_on = None
 

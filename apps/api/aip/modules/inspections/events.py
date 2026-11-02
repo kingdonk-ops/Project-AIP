@@ -8,6 +8,11 @@
 - ``inspection.state_changed`` v1 ``{inspectionId, assetId, projectId, from, to, action}``: an
   applied transition moved the inspection's lifecycle. Emitted in the transition's transaction when
   it went through ``/api/v1/inspections``, else by :func:`follow_workflow` below.
+- ``itp_step.released`` v1 ``{stepId, inspectionId, assetId, projectId, pointType, decision,
+  taskId, blocksTaskId, releasedAt}`` (INSPECTIONS-03): an ITP step was released or waived, in the
+  sign-off's transaction. SCOPEWORK-03 unblocks the step's ``blocksTaskId`` from it.
+- ``itp_step.hold_changed`` v1 ``{stepId, inspectionId, issueId, held}`` (INSPECTIONS-03): an
+  issues NCR placed or cleared its hold on a step.
 
 ``follow_workflow`` subscribes to approvals' ``workflow.transitioned`` v1: for an ``inspection``
 record whose cached ``state`` differs from its instance's ``current_state`` it updates the cache and
@@ -17,6 +22,7 @@ both, so the subscriber finds the state equal and does nothing; a replayed event
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Final
 from uuid import UUID
 
@@ -31,16 +37,22 @@ __all__ = [
     "INSPECTION_ANSWER_FAILED",
     "INSPECTION_CREATED",
     "INSPECTION_STATE_CHANGED",
+    "ITP_STEP_HOLD_CHANGED",
+    "ITP_STEP_RELEASED",
     "WORKFLOW_TRANSITIONED",
     "InspectionAnswerFailedEvent",
     "InspectionCreatedEvent",
     "InspectionStateChangedEvent",
+    "ItpStepHoldChangedEvent",
+    "ItpStepReleasedEvent",
     "follow_workflow",
 ]
 
 INSPECTION_ANSWER_FAILED: Final = "inspection.answer_failed"
 INSPECTION_CREATED: Final = "inspection.created"
 INSPECTION_STATE_CHANGED: Final = "inspection.state_changed"
+ITP_STEP_HOLD_CHANGED: Final = "itp_step.hold_changed"
+ITP_STEP_RELEASED: Final = "itp_step.released"
 WORKFLOW_TRANSITIONED: Final = "workflow.transitioned"
 
 _CONFIG = ConfigDict(
@@ -80,9 +92,34 @@ class InspectionAnswerFailedEvent(BaseModel):
     project_id: UUID | None
 
 
+class ItpStepReleasedEvent(BaseModel):
+    model_config = _CONFIG
+
+    step_id: UUID
+    inspection_id: UUID
+    asset_id: UUID
+    project_id: UUID | None
+    point_type: str
+    decision: str
+    task_id: UUID | None
+    blocks_task_id: UUID | None
+    released_at: datetime
+
+
+class ItpStepHoldChangedEvent(BaseModel):
+    model_config = _CONFIG
+
+    step_id: UUID
+    inspection_id: UUID
+    issue_id: UUID
+    held: bool
+
+
 register_event(INSPECTION_ANSWER_FAILED, 1, InspectionAnswerFailedEvent, "inspections")
 register_event(INSPECTION_CREATED, 1, InspectionCreatedEvent, "inspections")
 register_event(INSPECTION_STATE_CHANGED, 1, InspectionStateChangedEvent, "inspections")
+register_event(ITP_STEP_HOLD_CHANGED, 1, ItpStepHoldChangedEvent, "inspections")
+register_event(ITP_STEP_RELEASED, 1, ItpStepReleasedEvent, "inspections")
 
 
 @subscriber(WORKFLOW_TRANSITIONED, 1)

@@ -5,8 +5,10 @@
   only to its own project (ADR 0035 §6).
 - The guard facts provider returns read-only JSON facts ``{kind, assetId, projectId, source}`` plus
   the answer facts (INSPECTIONS-02) ``{answeredCount, missingRequiredCount, invalidCount,
-  failedCount}``, computed on the current answers with the FORMS-02 evaluator. INSPECTIONS-10
-  guards the submit transitions with them; INSPECTIONS-03 adds step facts.
+  failedCount}``, computed on the current answers with the FORMS-02 evaluator, and the ITP step
+  facts (INSPECTIONS-03) ``{openStepCount, heldStepCount}`` (both 0 for kinds other than ``itp``).
+  The ``inspection_standard`` and ``inspection_client_review`` presets guard every
+  ``request_supervisor_review`` on ``openStepCount == 0``; INSPECTIONS-10 adds the answer guards.
 
 ``install`` registers both, replacing any stand-in (approvals' dev ``demo`` fallback, or a test's);
 ``__init__`` calls it at import, before ``create_app`` runs.
@@ -27,6 +29,7 @@ from aip.modules.approvals.api import (
     unregister_record_resolver,
 )
 from aip.modules.inspections import repository as repo
+from aip.modules.inspections.itp import step_facts
 from aip.modules.inspections.policies import RECORD_TYPE
 from aip.modules.inspections.responses import answer_facts
 
@@ -53,7 +56,7 @@ async def facts(conn: AsyncConnection, record_id: UUID) -> dict[str, Any]:
     row = await repo.get_inspection(conn, record_id)
     if row is None:
         return {}
-    return {**facts_of(row), **await answer_facts(conn, row)}
+    return {**facts_of(row), **await answer_facts(conn, row), **await step_facts(conn, row)}
 
 
 def install() -> None:

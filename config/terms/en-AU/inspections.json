@@ -146,5 +146,109 @@
   "inspection.error.review_permission_required": {
     "text": "Only a supervisor allowed to edit during review can change answers now.",
     "description": "Error message when answers are saved in supervisor review without approvals.inspection.review, 'Edit Inspection during Review' (INSPECTIONS-02, ADR 0041 §6)."
+  },
+  "itp.action.ready": {
+    "text": "Mark ready",
+    "description": "ITP step action label: 'ready' moves a step from pending to ready (for a witness point, notice is given) (INSPECTIONS-03)."
+  },
+  "itp.action.start": {
+    "text": "Start",
+    "description": "ITP step action label: 'start' moves a step from ready to in progress (INSPECTIONS-03)."
+  },
+  "itp.action.reopen": {
+    "text": "Reopen",
+    "description": "ITP step action label: 'reopen' moves a step from rejected back to in progress (INSPECTIONS-03)."
+  },
+  "itp.decision.approve": {
+    "text": "Release",
+    "description": "ITP sign-off decision label: approve releases a hold, review or surveillance point (INSPECTIONS-03)."
+  },
+  "itp.decision.witnessed": {
+    "text": "Witnessed",
+    "description": "ITP sign-off decision label: witnessed releases a witness point (INSPECTIONS-03)."
+  },
+  "itp.decision.waived": {
+    "text": "Waive",
+    "description": "ITP sign-off decision label: waived skips a witness point after its notice period (INSPECTIONS-03)."
+  },
+  "itp.decision.reject": {
+    "text": "Reject",
+    "description": "ITP sign-off decision label: reject sends the step back with a comment (INSPECTIONS-03)."
+  },
+  "itp.signatory_role.inspector": {
+    "text": "Inspector",
+    "description": "ITP sign-off signatory role label: the signer signs as inspector (INSPECTIONS-03)."
+  },
+  "itp.signatory_role.supervisor": {
+    "text": "Supervisor",
+    "description": "ITP sign-off signatory role label: the signer signs as supervisor (INSPECTIONS-03)."
+  },
+  "itp.signatory_role.third_party": {
+    "text": "Third party",
+    "description": "ITP sign-off signatory role label: the signer signs as third party (INSPECTIONS-03)."
+  },
+  "itp.error.not_an_itp": {
+    "text": "Steps can only be added to an ITP.",
+    "description": "Error message for NOT_AN_ITP: steps were posted to an inspection whose kind is not itp (INSPECTIONS-03)."
+  },
+  "itp.error.itp_locked": {
+    "text": "Steps can no longer be changed: this ITP has started.",
+    "description": "Error message for ITP_LOCKED: steps are set up only while the ITP is draft, assignable or assigned (INSPECTIONS-03)."
+  },
+  "itp.error.duplicate_seq": {
+    "text": "Another step already has that number.",
+    "description": "Error message for DUPLICATE_SEQ: two steps of one ITP share a seq (INSPECTIONS-03)."
+  },
+  "itp.error.itp_not_in_progress": {
+    "text": "A step can only be started while its ITP is in progress.",
+    "description": "Error message for ITP_NOT_IN_PROGRESS: start was taken while the ITP is not in_progress (INSPECTIONS-03)."
+  },
+  "itp.error.invalid_step_action": {
+    "text": "That cannot be done to the step in its current status.",
+    "description": "Error message for INVALID_STEP_ACTION: the action or decision does not apply to the step's status or point type (INSPECTIONS-03)."
+  },
+  "itp.error.blocked_by_hold": {
+    "text": "An earlier hold point must be released first.",
+    "description": "Error message for BLOCKED_BY_HOLD: a lower-seq hold point is not released or waived (INSPECTIONS-03)."
+  },
+  "itp.error.step_on_hold": {
+    "text": "This step is on hold for a non-conformance and cannot be released.",
+    "description": "Error message for STEP_ON_HOLD: an NCR hold flag is set on the step (INSPECTIONS-03)."
+  },
+  "itp.error.notice_not_elapsed": {
+    "text": "The witness notice period has not passed yet.",
+    "description": "Error message for NOTICE_NOT_ELAPSED: a witness point is waived before ready_at plus notice_hours (INSPECTIONS-03)."
+  },
+  "itp.error.comment_required": {
+    "text": "Add a comment to waive or reject a step.",
+    "description": "Error message for COMMENT_REQUIRED: waive and reject need a comment (INSPECTIONS-03)."
+  },
+  "itp.error.countersign_pending": {
+    "text": "A sign-off on this step is waiting for a countersign.",
+    "description": "Error message for COUNTERSIGN_PENDING: only the pending decision may be countersigned (INSPECTIONS-03)."
+  },
+  "itp.error.self_countersign": {
+    "text": "Someone else must countersign your sign-off.",
+    "description": "Error message for SELF_COUNTERSIGN: the signer of a pending sign-off tried to countersign it (INSPECTIONS-03)."
+  },
+  "itp.error.countersign_assurance_required": {
+    "text": "A countersign needs a stronger sign-in than yours.",
+    "description": "Error message for COUNTERSIGN_ASSURANCE_REQUIRED: the countersigner's assurance is below the tenant's minimum (INSPECTIONS-03)."
+  },
+  "itp.error.step_already_released": {
+    "text": "The step is already released, so it cannot be put on hold.",
+    "description": "Error message for STEP_ALREADY_RELEASED: an NCR hold was placed on a released or waived step (INSPECTIONS-03)."
+  },
+  "itp.error.step_already_held": {
+    "text": "Another non-conformance already holds this step.",
+    "description": "Error message for STEP_ALREADY_HELD: a second issue tried to hold the step (INSPECTIONS-03)."
+  },
+  "itp.error.hold_mismatch": {
+    "text": "Only the non-conformance that holds this step can release the hold.",
+    "description": "Error message for HOLD_MISMATCH: the hold was cleared with a different issue (INSPECTIONS-03)."
+  },
+  "inspection.guard.not_ready_to_submit": {
+    "text": "Release or waive every ITP step before handing in.",
+    "description": "Guard message when Request Supervisor Review is refused because ITP steps are still open (openStepCount > 0) (INSPECTIONS-03)."
   }
 }
