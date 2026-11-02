@@ -309,6 +309,24 @@ body = '{"answers": [{"fieldKey": "iso", "value": 1, "clientId": "00000000-0000-
 ["GET /api/v1/inspections/{inspection_id}/responses"]
 table = "inspections"
 
+["POST /api/v1/inspections/{inspection_id}/itp-steps"]
+table = "inspections"
+body = '{"steps": [{"seq": 1, "title": "Isolation probe", "pointType": "hold"}]}'
+
+["GET /api/v1/inspections/{inspection_id}/itp-steps"]
+table = "inspections"
+
+["GET /api/v1/inspections/{inspection_id}/signoffs"]
+table = "inspections"
+
+["POST /api/v1/itp-steps/{step_id}/actions"]
+table = "itp_steps"
+body = '{"action": "ready"}'
+
+["POST /api/v1/itp-steps/{step_id}/signoffs"]
+table = "itp_steps"
+body = '{"decision": "approve", "signatoryRole": "inspector"}'
+
 ["GET /api/v1/inspections/{inspection_id}/responses/{fieldKey}/history"]
 skip = true
 reason = "The last parameter is a field key, not a record id, so the probe cannot put tenant B's id there. Cross-tenant reads of an inspection's answers are covered by GET /responses here and by INSPECTIONS-02's tenant test of this route."
