@@ -259,7 +259,8 @@ async def test_one_rejection_in_a_parallel_group_ends_the_route(
         },
     ]
     instance, route = await started(client, demo_records, group)
-    qa, client_step = route["steps"]
+    by_type = {s["approverType"]: s for s in route["steps"]}
+    qa, client_step = by_type["role"], by_type["team"]
     assert {qa["status"], client_step["status"]} == {"pending"}
     assert len(await events(db, instance["id"], "approval.requested")) == 2
 
@@ -299,7 +300,9 @@ async def test_a_parallel_group_needs_every_step(
         },
     ]
     instance, route = await started(client, demo_records, group)
-    qa, client_step = route["steps"]
+    # A group's steps are ordered by id, and two ids from the same millisecond can sort either way.
+    by_type = {s["approverType"]: s for s in route["steps"]}
+    qa, client_step = by_type["role"], by_type["team"]
     response = await decide(client, instance["id"], qa["id"], "approve", as_(Q1))
     assert response.status_code == 200, response.text
     assert response.json()["route"]["instance"]["currentState"] == "submitted"
