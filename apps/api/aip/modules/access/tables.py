@@ -16,6 +16,11 @@ project/tenant scope maintained by a trigger on ``role_assignment`` and read by 
 ACCESS-04 (revision ``202610291000_access_teams``): ``team`` and ``team_member`` (FORCE RLS, soft
 delete); ``role_assignment.user_id`` is nullable (a ``team`` assignment names a team, not a user);
 ``access_user_scope.team_member_id`` links a scope row to the membership it came from.
+
+ACCESS-09 (revision ``202611021000_access_default_role_template``, ADR 0042): the operator's default
+role template, ``default_role_level`` (cells moved away from the shipped ``MATRIX``) and its
+append-only history ``default_role_level_change``. Both are global (no ``tenant_id``, no RLS; on
+the schema-guard allow-list).
 """
 
 from typing import Any
@@ -151,4 +156,30 @@ team_member = Table(
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", DateTime(timezone=True), nullable=True),
+)
+
+# ACCESS-09: the operator's overrides of the shipped access matrix, and their history. Global.
+default_role_level = Table(
+    "default_role_level",
+    metadata,
+    Column("module_id", Text, primary_key=True),
+    Column("role_code", Text, primary_key=True),
+    Column("level", Text, nullable=False),
+    Column("updated_by", Uuid, nullable=True),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+)
+
+default_role_level_change = Table(
+    "default_role_level_change",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("module_id", Text, nullable=False),
+    Column("role_code", Text, nullable=False),
+    Column("level_before", Text, nullable=False),
+    Column("level_after", Text, nullable=False),
+    Column("changed_by", Uuid, nullable=True),
+    Column("reason", Text, nullable=False),
+    Column("changed_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
 )

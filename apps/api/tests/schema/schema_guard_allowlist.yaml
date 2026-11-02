@@ -34,6 +34,20 @@ tables:
       the registry. Holds no tenant data. aip_app may SELECT/INSERT/UPDATE it through the
       platform.events.manage-gated deprecate endpoint; aip_readonly may SELECT.
     checks_skipped: [tenant_id, rls, force_rls, policy]
+  - table: default_role_level
+    reason: >-
+      Global default role template (ACCESS-09, ADR 0042): the access-matrix cells the platform
+      operator moved away from the shipped MATRIX (module, system role code, level). Holds no
+      tenant data. aip_app may SELECT/INSERT/UPDATE/DELETE it through the
+      platform.roles.manage-gated operator API and reads it when seeding a tenant's system roles;
+      aip_readonly may SELECT.
+    checks_skipped: [tenant_id, rls, force_rls, policy]
+  - table: default_role_level_change
+    reason: >-
+      Append-only history of default role template changes (ACCESS-09, ADR 0042): cell, level
+      before and after, operator id, reason. Holds no tenant data. aip_app may only SELECT and
+      INSERT; aip_readonly may SELECT.
+    checks_skipped: [tenant_id, rls, force_rls, policy]
   - table: procrastinate_*
     reason: >-
       Procrastinate queue internals (ADR 0003). Payloads carry tenant_id; the worker restores

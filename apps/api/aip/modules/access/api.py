@@ -20,6 +20,12 @@ Other modules may import only this file. Keep it small and stable.
   APPROVALS-04 team approvers): the active users with a live membership of a live team, sorted;
   and the live teams a user belongs to as ``TeamRef``s. Both take the ``with_tenant`` connection.
 - ``configure_policy_cache`` (ACCESS-04): swap the process grant cache (tests, wiring).
+- The operator's default role template (ACCESS-09, ADR 0042), for the ops module's
+  ``platform.roles.manage`` API: ``list_template_cells``, ``apply_template_changes`` (with
+  ``LevelChange``) and ``list_template_history``. All take any ``with_tenant`` connection (the
+  tables are global). ``ROLE_CODES`` / ``LEVELS``: the system roles and levels.
+  ``default_role_template_router`` / ``ROLES_MANAGE_PERMISSION``: the operator API, which
+  ``aip.main`` mounts only when ops has put ``platform.roles.manage`` in the catalogue.
 
 The authorisation runtime itself (``PolicyService``, ``requires``) is ``aip.platform.access``.
 """
@@ -35,9 +41,16 @@ from aip.modules.access.repository import (
     get_access_version,
     list_permissions,
 )
+from aip.modules.access.roles.default_roles import LEVELS, ROLE_CODES, Level
 from aip.modules.access.roles.grant_provider import RoleGrantProvider
 from aip.modules.access.roles.repository import has_role, role_code_for_id, role_codes
 from aip.modules.access.roles.seed import SeedReport, seed_default_roles
+from aip.modules.access.roles.template_routes import ROLES_MANAGE_PERMISSION
+from aip.modules.access.roles.template_routes import router as default_role_template_router
+from aip.modules.access.roles.templates import LevelChange, TemplateCell
+from aip.modules.access.roles.templates import apply_changes as apply_template_changes
+from aip.modules.access.roles.templates import list_cells as list_template_cells
+from aip.modules.access.roles.templates import list_history as list_template_history
 from aip.modules.access.service import sync_catalogue
 from aip.modules.access.teams_api import TeamRef, get_team_ref, list_team_members, teams_for_user
 
@@ -48,19 +61,29 @@ from aip.modules.access.teams_api import TeamRef, get_team_ref, list_team_member
 from aip.platform.db.scope import ScopePrincipal, run_as_system, with_principal
 
 __all__ = [
+    "LEVELS",
+    "ROLE_CODES",
+    "Level",
+    "LevelChange",
+    "ROLES_MANAGE_PERMISSION",
     "ModuleApi",
     "PermissionRow",
     "RoleGrantProvider",
     "ScopePrincipal",
     "SeedReport",
     "TeamRef",
+    "TemplateCell",
+    "apply_template_changes",
     "bump_access_version",
     "configure_policy_cache",
+    "default_role_template_router",
     "get_access_version",
     "get_api",
     "get_team_ref",
     "has_role",
     "list_permissions",
+    "list_template_cells",
+    "list_template_history",
     "list_team_members",
     "role_code_for_id",
     "role_codes",

@@ -6,7 +6,8 @@ Connects as ``aip_app`` through ``DATABASE_URL`` (RLS applies), syncs the permis
 from the module manifests, then runs ``seed_default_roles`` for each tenant in its own transaction.
 Idempotent. Tenants are named explicitly: under FORCE RLS no application role can list every
 tenant, and new tenants are seeded by provisioning (TENANCY-05). Customised roles are reported,
-not changed.
+not changed. The levels come from the operator's default role template (ACCESS-09, ADR 0042),
+which the operator can also push through ``POST /api/v1/platform/default-roles/sync``.
 
 ``bootstrap-admin --admin <tenant-id>,<email>,<idp-alias> [...]`` (TESTING-09; runs only when
 ``AIP_ENV`` is development, demo or test): make each email its tenant's ``tenant_admin`` before
@@ -56,6 +57,10 @@ async def _seed(tenants: Sequence[UUID]) -> int:
                 + "".join(
                     f"; {role} customised, not given {codes}"
                     for role, codes in report.pending.items()
+                )
+                + "".join(
+                    f"; {role} customised, still holds {codes}"
+                    for role, codes in report.excess.items()
                 )
             )
     finally:

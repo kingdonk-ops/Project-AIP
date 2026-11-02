@@ -6,10 +6,11 @@
 # ACCESS-02: role, role_permission, role_assignment; the roles and role-assignments API; the
 #   RoleGrantProvider behind PolicyService; outbox events below.
 # depends_on tenancy: access_settings and role reference tenants. identity: assignments reference
-#   app_user. projects: project-scope assignments reference projects.
+#   app_user. projects: project-scope assignments reference projects. ops: ACCESS-09's default-role
+#   sync lists the active tenants (ops_active_tenant_ids, ADR 0032).
 id = "access"
 context = "identity"
-depends_on = ["tenancy", "identity", "projects"]
+depends_on = ["tenancy", "identity", "projects", "ops"]
 # ACCESS-04: teams, membership, team role assignments and the policy cache. The cache-bump
 #   subscribers listen to access's own invalidation events; user.deactivated comes from identity
 #   (IDENTITY-05) and revokes the user's memberships and assignments.
