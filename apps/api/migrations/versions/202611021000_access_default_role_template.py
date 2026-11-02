@@ -27,15 +27,9 @@ down_revision: str | None = "202611011500"
 branch_labels = None
 depends_on = None
 
-_ROLES = (
-    "'tenant_admin', 'project_manager', 'qaqc_manager', 'hse_officer', 'supervisor', 'inspector',"
-    " 'field_worker', 'document_controller', 'client_reviewer', 'subcontractor', 'auditor'"
-)
-_LEVELS = "'none', 'view', 'create', 'edit', 'approve', 'admin'"
-
 
 def upgrade() -> None:
-    op.execute(f"""
+    op.execute("""
     CREATE TABLE default_role_level (
       module_id text NOT NULL,
       role_code text NOT NULL,
@@ -45,8 +39,14 @@ def upgrade() -> None:
       updated_at timestamptz NOT NULL DEFAULT now(),
       CONSTRAINT pk_default_role_level PRIMARY KEY (module_id, role_code),
       CONSTRAINT ck_default_role_level_module_id CHECK (module_id ~ '^[a-z][a-z0-9_]*$'),
-      CONSTRAINT ck_default_role_level_role_code CHECK (role_code IN ({_ROLES})),
-      CONSTRAINT ck_default_role_level_level CHECK (level IN ({_LEVELS})),
+      CONSTRAINT ck_default_role_level_role_code CHECK (role_code IN (
+        'tenant_admin', 'project_manager', 'qaqc_manager', 'hse_officer', 'supervisor',
+        'inspector', 'field_worker', 'document_controller', 'client_reviewer', 'subcontractor',
+        'auditor'
+      )),
+      CONSTRAINT ck_default_role_level_level CHECK (
+        level IN ('none', 'view', 'create', 'edit', 'approve', 'admin')
+      ),
       CONSTRAINT ck_default_role_level_sign_off_only CHECK (
         role_code <> 'client_reviewer' OR level IN ('none', 'view', 'approve')
       ),
@@ -69,9 +69,17 @@ def upgrade() -> None:
       changed_at timestamptz NOT NULL DEFAULT now(),
       created_at timestamptz NOT NULL DEFAULT now(),
       CONSTRAINT pk_default_role_level_change PRIMARY KEY (id),
-      CONSTRAINT ck_default_role_level_change_role_code CHECK (role_code IN ({_ROLES})),
-      CONSTRAINT ck_default_role_level_change_level_before CHECK (level_before IN ({_LEVELS})),
-      CONSTRAINT ck_default_role_level_change_level_after CHECK (level_after IN ({_LEVELS})),
+      CONSTRAINT ck_default_role_level_change_role_code CHECK (role_code IN (
+        'tenant_admin', 'project_manager', 'qaqc_manager', 'hse_officer', 'supervisor',
+        'inspector', 'field_worker', 'document_controller', 'client_reviewer', 'subcontractor',
+        'auditor'
+      )),
+      CONSTRAINT ck_default_role_level_change_level_before CHECK (
+        level_before IN ('none', 'view', 'create', 'edit', 'approve', 'admin')
+      ),
+      CONSTRAINT ck_default_role_level_change_level_after CHECK (
+        level_after IN ('none', 'view', 'create', 'edit', 'approve', 'admin')
+      ),
       CONSTRAINT ck_default_role_level_change_changed CHECK (level_before <> level_after),
       CONSTRAINT ck_default_role_level_change_reason CHECK (btrim(reason) <> '')
     );

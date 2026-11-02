@@ -19,7 +19,8 @@
 ## Spec
 
 Give the platform operator a page to edit the default role template that ACCESS-09's API serves. Split from
-ACCESS-09: the operator console (OPS-12) does not exist yet, and ADR 0017 keeps operator pages off the tenant app.
+ACCESS-09: the operator console (OPS-12) does not exist yet, and ADR 0017 keeps operator pages off the tenant
+app (tag: extend).
 
 - **files**:
   - the operator console app from OPS-12 (`/platform/default-roles`)

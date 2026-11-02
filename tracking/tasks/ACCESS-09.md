@@ -20,7 +20,7 @@
 
 Let the platform operator view and change the default role levels (module × the 11 tenant roles → none, view,
 create, edit, approve, admin) without a code change, with an audit trail, and push them to tenants (owner request,
-2026-11-02).
+2026-11-02; tag: extend).
 
 - **files**:
   - apps/api/migrations/versions/202611021000_access_default_role_template.py
