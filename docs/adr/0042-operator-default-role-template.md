@@ -21,7 +21,8 @@ codes by verb. Tenant admins can already edit, clone, create and reset roles in 
    `seed_default_roles` expands it, so provisioning (TENANCY-05), `aip-access seed-roles` and the role "Reset to
    default" (ADR 0020 point 1) all use the operator's template. The code stays the fallback: with an empty table
    nothing changes. The table holds no tenant data, so it is global (no `tenant_id`, no RLS), like `permission` and
-   `platform_event_status`, and is on the schema-guard allow-list.
+   `platform_event_status`, and is on the schema-guard allow-list. ADR 0028's nil-UUID platform tenant does not
+   fit: its rows are written only at deploy time by `aip_owner`, and these change at runtime.
 2. **The template stores levels, never codes.** ADR 0027 still turns levels into codes, so its guards hold without
    new code: `platform.*` and portal-only codes are never granted (`never_role_held`), an unknown verb needs `admin`,
    and a Client Reviewer `approve` is view plus sign-off only.
@@ -32,11 +33,17 @@ codes by verb. Tenant admins can already edit, clone, create and reset roles in 
    - Tenant Admin keeps `admin` on `access` (`TENANT_ADMIN_LOCKOUT`), so a new tenant always has someone who can
      manage roles (ADR 0020 "no lockout");
    - each cell once per request (`DUPLICATE_CELL`), and every change carries a `reason`.
-4. **Audit.** Every moved cell writes one row to the append-only `default_role_level_change` (cell, level before and
-   after, operator id, reason, time) in the same transaction, under one advisory lock. `aip_app` may only SELECT and
-   INSERT it. No domain event is emitted for the template itself: it is platform data, and `domain_events` rows
-   belong to a tenant. A push does emit, in each tenant, the usual `access.role.changed` (`action: seeded`) with the
-   operator as actor, and `access.grants_changed`.
+4. **Audit, and one write path.** `aip_app` may only SELECT both tables. The only way to change the template is
+   the `SECURITY DEFINER` function `access_set_default_role_level(module, role, level, shipped, actor, reason)`
+   (owned by `aip_owner`, fixed `search_path`, `EXECUTE` to `aip_app` only, like `access_sync_permissions` for
+   the catalogue). In one call it moves the cell (the shipped level deletes the row) and appends a row to
+   `default_role_level_change` (cell, level before and after, operator id, reason, time). So a bug or an
+   injection anywhere in the app cannot change every tenant's defaults without a history row, and cannot edit or
+   forge history. The table CHECKs still apply inside the function. The database cannot tell an operator from
+   any other `aip_app` caller: the `platform.roles.manage` check stays in the API, and the caller passes the
+   shipped level because `MATRIX` lives in code. No domain event is emitted for the template itself: it is
+   platform data, and `domain_events` rows belong to a tenant. A push does emit, in each tenant, the usual
+   `access.role.changed` (`action: seeded`) with the operator as actor, and `access.grants_changed`.
 5. **How changes reach tenants.** Nothing changes in a tenant until the template is pushed:
    `POST /api/v1/platform/default-roles/sync` runs `seed_default_roles` in each named active tenant (every active
    tenant from `ops_active_tenant_ids()`, ADR 0032, when none is named), each in its own `with_tenant` transaction

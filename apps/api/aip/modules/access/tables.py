@@ -20,7 +20,8 @@ delete); ``role_assignment.user_id`` is nullable (a ``team`` assignment names a 
 ACCESS-09 (revision ``202611021000_access_default_role_template``, ADR 0042): the operator's default
 role template, ``default_role_level`` (cells moved away from the shipped ``MATRIX``) and its
 append-only history ``default_role_level_change``. Both are global (no ``tenant_id``, no RLS; on
-the schema-guard allow-list).
+the schema-guard allow-list); ``aip_app`` only reads them and writes through the SECURITY DEFINER
+function ``access_set_default_role_level``.
 """
 
 from typing import Any

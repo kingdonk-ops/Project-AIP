@@ -8,8 +8,12 @@ is what ``seed_default_roles`` expands, in every tenant and at provisioning.
 
 Every change is written to the append-only ``default_role_level_change`` (who, when, cell, level
 before and after, reason) in the same transaction, under one advisory lock so concurrent edits
-serialise. The template holds levels only, never permission codes, so ADR 0027's expansion still
-decides the codes: ``platform.*`` and portal-only codes are never granted (``never_role_held``)
+serialise. ``aip_app`` can only read both tables: its one write path is the SECURITY DEFINER
+function ``access_set_default_role_level``, which moves a cell and appends its history row in the
+same call, so no change can skip the audit and no history row can be edited.
+
+The template holds levels only, never permission codes, so ADR 0027's expansion still decides
+the codes: ``platform.*`` and portal-only codes are never granted (``never_role_held``)
 and an unknown verb still needs ``admin``. Guards (error codes in brackets, all 422):
 
 - the role must be one of the 11 system roles [UNKNOWN_ROLE] and the module one the matrix or the
@@ -19,7 +23,7 @@ and an unknown verb still needs ``admin``. Guards (error codes in brackets, all 
   [TENANT_ADMIN_LOCKOUT];
 - a cell may appear once per request [DUPLICATE_CELL].
 
-The tables are global (no tenant data), so any ``with_tenant`` connection reads and writes them.
+The tables are global (no tenant data), so any ``with_tenant`` connection reads them.
 """
 
 from __future__ import annotations
@@ -28,7 +32,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Final, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -147,7 +151,12 @@ async def apply_changes(
     actor: UUID | None,
     reason: str,
 ) -> list[dict[str, Any]]:
-    """Move cells, all or none; returns the history rows written (a no-op cell writes none)."""
+    """Move cells, all or none; returns the history rows written (a no-op cell writes none).
+
+    Every cell goes through ``access_set_default_role_level``, the only write path ``aip_app`` has
+    to the template, which also appends the history row. Setting a cell to its shipped level
+    deletes its row, also one the shipped matrix has since caught up with (no history then).
+    """
     await conn.execute(
         text("SELECT pg_advisory_xact_lock(hashtextextended('access.default_role_template', 0))")
     )
@@ -158,50 +167,24 @@ async def apply_changes(
         if (change.module, change.role) in seen:
             raise DomainError(422, "DUPLICATE_CELL", key=f"{change.module}.{change.role}")
         seen.add((change.module, change.role))
-    overrides = await _overrides(conn)
     written: list[dict[str, Any]] = []
     for change in changes:
-        cell = (change.module, change.role)
-        shipped = shipped_level(*cell)
-        before = overrides[cell]["level"] if cell in overrides else shipped
-        params = {"module": change.module, "role": change.role, "level": change.level}
-        if change.level == shipped and cell in overrides:
-            # Also clears a row the shipped matrix has since caught up with (no level change).
-            await conn.execute(
-                text(
-                    "DELETE FROM default_role_level WHERE module_id = :module AND role_code = :role"
-                ),
-                params,
-            )
-        if before == change.level:
-            continue
-        if change.level != shipped:
-            await conn.execute(
-                text("""
-                INSERT INTO default_role_level (module_id, role_code, level, updated_by)
-                VALUES (:module, :role, :level, :actor)
-                ON CONFLICT (module_id, role_code) DO UPDATE
-                  SET level = excluded.level, updated_by = excluded.updated_by, updated_at = now()
-                """),
-                {**params, "actor": actor},
-            )
-        row = (
-            (
-                await conn.execute(
-                    text("""
-                INSERT INTO default_role_level_change
-                  (id, module_id, role_code, level_before, level_after, changed_by, reason)
-                VALUES (:id, :module, :role, :before, :level, :actor, :reason)
-                RETURNING id, module_id, role_code, level_before, level_after, changed_by, reason,
-                          changed_at
-                """),
-                    {**params, "id": uuid4(), "before": before, "actor": actor, "reason": reason},
-                )
-            )
-            .mappings()
-            .one()
+        rows = await conn.execute(
+            text("""
+            SELECT id, module_id, role_code, level_before, level_after, changed_by, reason,
+                   changed_at
+            FROM access_set_default_role_level(:module, :role, :level, :shipped, :actor, :reason)
+            """),
+            {
+                "module": change.module,
+                "role": change.role,
+                "level": change.level,
+                "shipped": shipped_level(change.module, change.role),
+                "actor": actor,
+                "reason": reason,
+            },
         )
-        written.append(dict(row))
+        written.extend(dict(row) for row in rows.mappings())
     return written
 
 

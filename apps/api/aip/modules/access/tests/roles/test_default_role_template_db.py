@@ -19,6 +19,7 @@ from tests.conftest import TENANT_A_ID, TENANT_B_ID
 from tests.fixtures.postgres import (
     TenantDb,
     _execute,  # pyright: ignore[reportPrivateUsage]
+    _fetch,  # pyright: ignore[reportPrivateUsage]
 )
 
 from aip.modules.access.roles.default_roles import MATRIX, ROLE_CODES
@@ -304,28 +305,69 @@ async def test_a_new_tenant_is_seeded_from_the_template(
     assert len(rows) == 1
 
 
-async def test_the_database_keeps_the_history_append_only_and_the_guardrails(
+async def test_aip_app_writes_the_template_only_through_the_audited_function(
     app: FastAPI, db: TenantDb
 ) -> None:
     await su_execute(
         db,
         "INSERT INTO default_role_level_change"
         " (id, module_id, role_code, level_before, level_after, reason)"
-        " VALUES (gen_random_uuid(), 'projects', 'auditor', 'view', 'edit', 'seeded')",
+        " VALUES (gen_random_uuid(), 'projects', 'auditor', 'view', 'edit', 'seeded');"
+        "INSERT INTO default_role_level (module_id, role_code, level)"
+        " VALUES ('projects', 'auditor', 'edit')",
     )
+    # No direct write to either table: a change can never skip or rewrite its history.
     for sql in (
+        "INSERT INTO default_role_level (module_id, role_code, level)"
+        " VALUES ('projects', 'inspector', 'edit')",
+        "UPDATE default_role_level SET level = 'admin'",
+        "DELETE FROM default_role_level",
+        "INSERT INTO default_role_level_change"
+        " (id, module_id, role_code, level_before, level_after, reason)"
+        " VALUES (gen_random_uuid(), 'projects', 'auditor', 'edit', 'view', 'forged')",
         "UPDATE default_role_level_change SET reason = 'changed'",
         "DELETE FROM default_role_level_change",
     ):
         with pytest.raises(asyncpg.InsufficientPrivilegeError):
             await _execute(db.db.app_url, sql)
-    for values in (
-        "('inspections', 'client_reviewer', 'edit')",
-        "('access', 'tenant_admin', 'view')",
-        "('projects', 'super_admin', 'view')",
+
+    # The function moves the cell and appends its history row in the same call.
+    rows = await _fetch(
+        db.db.app_url,
+        "SELECT level_before, level_after, reason FROM"
+        " access_set_default_role_level('projects', 'auditor', 'admin', 'view', NULL, 'why')",
+    )
+    assert rows == [("edit", "admin", "why")]
+    # The shipped level deletes the row; a blank reason or an invalid shipped level is refused.
+    rows = await _fetch(
+        db.db.app_url,
+        "SELECT level_after FROM"
+        " access_set_default_role_level('projects', 'auditor', 'view', 'view', NULL, 'reset')",
+    )
+    assert rows == [("view",)]
+    assert await su_fetch(db, "SELECT 1 FROM default_role_level") == []
+    for call in (
+        "('projects', 'auditor', 'edit', 'view', NULL, '  ')",
+        "('projects', 'auditor', 'edit', 'owner', NULL, 'why')",
+    ):
+        with pytest.raises(asyncpg.InvalidParameterValueError):
+            await _fetch(db.db.app_url, f"SELECT * FROM access_set_default_role_level{call}")
+    # The table CHECKs still hold inside the definer function.
+    for call in (
+        "('inspections', 'client_reviewer', 'edit', 'approve', NULL, 'why')",
+        "('access', 'tenant_admin', 'view', 'admin', NULL, 'why')",
+        "('projects', 'super_admin', 'edit', 'view', NULL, 'why')",
     ):
         with pytest.raises(asyncpg.CheckViolationError):
-            await _execute(
-                db.db.app_url,
-                f"INSERT INTO default_role_level (module_id, role_code, level) VALUES {values}",
-            )
+            await _fetch(db.db.app_url, f"SELECT * FROM access_set_default_role_level{call}")
+    history = await su_fetch(db, "SELECT count(*) FROM default_role_level_change")
+    assert history == [(3,)]
+    # Only aip_app may call it.
+    grantees = await su_fetch(
+        db,
+        "SELECT r.rolname FROM pg_roles r WHERE has_function_privilege(r.oid,"
+        " 'access_set_default_role_level(text, text, text, text, uuid, text)', 'EXECUTE')"
+        r" AND r.rolname LIKE 'aip\_%'"
+        " AND NOT r.rolsuper ORDER BY 1",  # a superuser (CI's aip_test) can execute anything
+    )
+    assert [g[0] for g in grantees] == ["aip_app", "aip_owner"]
