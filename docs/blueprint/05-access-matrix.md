@@ -38,7 +38,7 @@
 | Scopes of work (RSW), disciplines & tasks | none | admin | approve | edit | view | edit | view | view | view | view | view | view | create |
 | Offline field app & sync | none | admin | view | view | view | create | create | create | none | none | create | none | none |
 | Form & template designer | none | admin | view | admin | edit | view | view | view | view | none | none | view | none |
-| Inspections, ITPs & hold points | none | admin | approve | approve | view | approve | create | create | view | approve | create | view | create |
+| Inspections, ITPs & hold points | none | admin | approve | admin | view | create | approve | create | view | approve | create | view | create |
 | Certificates, competency & calibration gate | none | admin | edit | approve | edit | edit | view | view | edit | view | create | view | create |
 | Issues, NCRs & corrective actions | none | admin | approve | approve | approve | approve | create | create | view | view | edit | view | create |
 | Punch list & defects liability | none | admin | approve | approve | view | edit | create | create | view | view | edit | view | none |

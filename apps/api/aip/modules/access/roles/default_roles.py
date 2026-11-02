@@ -5,9 +5,9 @@ Super Admin is the operator realm (ADR 0017) and API Client is IDENTITY-06 scope
 here. ``default_permissions`` expands each level over the permission catalogue:
 
 - a permission's verb is the last segment of its code (``project.view`` -> ``view``);
-- levels are cumulative: view gives read; create adds create; edit adds update, delete and move;
-  approve adds approve, sign and invite; admin adds manage and export (``LEVEL_VERBS``; ``move``
-  and ``invite`` are the ACCESS-07 amendment to ADR 0027);
+- levels are cumulative: view gives read; create adds create and respond; edit adds update, delete
+  and move; approve adds approve, sign and invite; admin adds manage and export (``LEVEL_VERBS``;
+  ``move`` and ``invite`` are the ACCESS-07 amendment to ADR 0027, ``respond`` the 2026-11-02 one);
 - a verb no level names is granted only at ``admin`` (fail closed), and a matrix module with no
   catalogue entries is skipped with a log line;
 - ``platform.*`` codes (operator-only, ADR 0029) are never granted to a tenant role;
@@ -64,7 +64,7 @@ def never_role_held(code: str) -> bool:
 LEVEL_VERBS: Final[Mapping[Level, frozenset[str]]] = {
     "none": frozenset(),
     "view": frozenset({"read", "view"}),
-    "create": frozenset({"create"}),
+    "create": frozenset({"create", "respond"}),
     "edit": frozenset({"update", "delete", "edit", "archive", "move"}),
     "approve": frozenset({"approve", "sign", "invite"}),
     "admin": frozenset({"manage", "export"}),
@@ -353,10 +353,10 @@ MATRIX: Final[Mapping[str, tuple[Level, ...]]] = {
     "inspections": (
         "admin",
         "approve",
-        "approve",
+        "admin",
         "view",
-        "approve",
         "create",
+        "approve",
         "create",
         "view",
         "approve",

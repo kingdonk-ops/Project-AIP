@@ -44,3 +44,20 @@ Owner, 2026-10-18 (ADR 0036 §10, PORTAL-01):
 
 Existing tenants pick the new codes up with `aip-access seed-roles`: uncustomised system roles are extended in place;
 a customised role is left alone and its new codes are reported as pending (§5, ADR 0020).
+
+## Amendment (2026-11-02): `respond` at `create`, and the quality hierarchy on Inspections
+
+Owner, 2026-11-02:
+
+- `create` also adds `respond`. `inspection.respond` (INSPECTIONS-02, answering inspection questions) fell under
+  §3 and went to `admin` only, so by default only Tenant Admin could fill in an inspection. Every role at `create` or
+  above on Inspections now answers them; Client Reviewer's `approve` still adds only `SIGN_OFF_VERBS` (§4).
+- The Inspections row follows the quality hierarchy: the QA/QC Manager (lead inspector) creates, changes and manages
+  ITPs, so it moves to `admin` (`itp.manage`, and `itp.waive`, an unnamed verb that stays admin-only); the Inspector
+  signs ITP steps, so it moves to `approve` (`itp.sign`); the Supervisor (a trade lead, e.g. painting or mechanical)
+  ranks below the inspector, so it moves to `create` (create and answer inspections, no sign-off). Project Manager
+  stays at `approve`. Other modules keep their levels.
+
+Existing tenants pick the new codes up with `aip-access seed-roles` (§5). A system role that loses codes
+(Supervisor's `approve`-level Inspections codes) is changed only when it is uncustomised; a customised one is left
+as the tenant admin set it.
