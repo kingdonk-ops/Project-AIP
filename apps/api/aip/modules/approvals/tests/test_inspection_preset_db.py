@@ -1,10 +1,12 @@
 """APPROVALS-05/09/10: the inspection presets through the real app and ``TransitionService``.
 
 Every golden case runs here as it does through the evaluator in ``test_inspection_golden.py``.
-A test resolver stands in for the inspections module's own (INSPECTIONS-01) for the ``inspection``
-record type, so these cases need no inspection rows, and the fixture grant table plays the roles:
-supervisor (assign, approve), inspector (execute), quality manager (retire) and client reviewer
-(client_approve).
+A test resolver and facts provider stand in for the inspections module's own (INSPECTIONS-01) for
+the ``inspection`` record type, so these cases need no inspection rows. The facts report an
+inspection with no open ITP steps, which passes the ``request_supervisor_review`` guard
+(INSPECTIONS-03); the inspections module tests the guard itself. The fixture grant table plays
+the roles: supervisor (assign, approve), inspector (execute), quality manager (retire) and client
+reviewer (client_approve).
 """
 
 from __future__ import annotations
@@ -26,10 +28,12 @@ from tests.fixtures.postgres import TenantDb
 from aip.modules.approvals.api import (
     ApprovalsApi,
     RecordRef,
+    register_guard_context_provider,
     register_record_resolver,
+    unregister_guard_context_provider,
     unregister_record_resolver,
 )
-from aip.modules.approvals.guards.context_providers import resolver_for
+from aip.modules.approvals.guards.context_providers import provider_for, resolver_for
 from aip.modules.approvals.presets import workflows_dir
 from aip.modules.approvals.seeds import SeedRefusedError, seed
 from aip.modules.approvals.tests.conftest import (
@@ -78,19 +82,31 @@ class Inspections:
         return RecordRef(project_id=self.projects.get(record_id))
 
 
+async def ready_facts(conn: object, record_id: UUID) -> dict[str, Any]:
+    """An inspection whose ITP steps (if any) are all released."""
+    return {"openStepCount": 0, "heldStepCount": 0}
+
+
 @pytest.fixture(autouse=True)
 def inspections() -> Iterator[Inspections]:
-    # Stands in for the inspections module's own resolver (registered at import), then restores it.
+    # Stands in for the inspections module's own resolver and facts provider (registered at
+    # import), then restores them.
     real = resolver_for("inspection")
+    real_facts = provider_for("inspection")
     records = Inspections()
     unregister_record_resolver("inspection")
+    unregister_guard_context_provider("inspection")
     register_record_resolver("inspection", records)  # pyright: ignore[reportArgumentType]
+    register_guard_context_provider("inspection", ready_facts)  # pyright: ignore[reportArgumentType]
     try:
         yield records
     finally:
         unregister_record_resolver("inspection")
+        unregister_guard_context_provider("inspection")
         if real is not None:
             register_record_resolver("inspection", real)
+        if real_facts is not None:
+            register_guard_context_provider("inspection", real_facts)
 
 
 @pytest.fixture(autouse=True)

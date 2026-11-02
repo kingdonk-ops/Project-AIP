@@ -1,0 +1,32 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "held": {
+      "title": "Held",
+      "type": "boolean"
+    },
+    "inspectionId": {
+      "format": "uuid",
+      "title": "Inspectionid",
+      "type": "string"
+    },
+    "issueId": {
+      "format": "uuid",
+      "title": "Issueid",
+      "type": "string"
+    },
+    "stepId": {
+      "format": "uuid",
+      "title": "Stepid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "stepId",
+    "inspectionId",
+    "issueId",
+    "held"
+  ],
+  "title": "ItpStepHoldChangedEvent",
+  "type": "object"
+}
