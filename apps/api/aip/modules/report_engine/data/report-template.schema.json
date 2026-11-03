@@ -65,7 +65,22 @@
       "minItems": 1,
       "items": { "const": "OFL-1.1" }
     },
-    "dataSchemaVersion": { "const": 1 }
+    "dataSchemaVersion": { "const": 1 },
+    "autoRender": {
+      "description": "REPORTS-03: render this template automatically when its record enters one of these workflow states. Only record types with an auto-render trigger may use it (R1: inspection).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["onStates"],
+      "properties": {
+        "onStates": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z][a-z_]{1,40}$" }
+        }
+      }
+    }
   },
   "$defs": {
     "termKey": {

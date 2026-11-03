@@ -1,5 +1,7 @@
 """Data access for report templates (REPORTS-01), snapshots and render jobs (REPORTS-02).
 
+``list_auto_render_templates`` (REPORTS-03) finds the templates an inspection state change renders.
+
 Every function takes the tenant-bound connection from ``with_tenant`` and never creates its own
 (ADR 0002). RLS limits every statement to the caller's tenant (and, for snapshots and render jobs,
 to the principal's projects); reads skip soft-deleted rows. Writes are plain ``UPDATE``s: the
@@ -33,6 +35,7 @@ __all__ = [
     "insert_job",
     "insert_snapshot",
     "insert_template",
+    "list_auto_render_templates",
     "list_jobs",
     "list_templates",
     "lock",
@@ -93,6 +96,28 @@ async def get_published(conn: AsyncConnection, key: str, variant: str) -> Row | 
     )
     row = (await conn.execute(stmt)).mappings().first()
     return None if row is None else dict(row)
+
+
+async def list_auto_render_templates(
+    conn: AsyncConnection, *, record_type: str, state: str
+) -> list[Row]:
+    """``{key, variant}`` of the latest published version per ``(key, variant)`` of
+    ``record_type`` whose ``definition.autoRender.onStates`` holds ``state`` (REPORTS-03).
+
+    The latest version decides: a newer version without ``autoRender`` turns it off.
+    """
+    latest = (
+        select(t.c.key, t.c.variant, t.c.definition)
+        .where(t.c.record_type == record_type, t.c.status == "published", _live())
+        .order_by(t.c.key, t.c.variant, t.c.version.desc())
+        .distinct(t.c.key, t.c.variant)
+    )
+    rows = (await conn.execute(latest)).mappings()
+    return [
+        {"key": row["key"], "variant": row["variant"]}
+        for row in rows
+        if state in ((row["definition"] or {}).get("autoRender") or {}).get("onStates", [])
+    ]
 
 
 async def list_templates(

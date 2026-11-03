@@ -128,6 +128,11 @@ def to_si(value: float, display_unit: str) -> float:
     return _unit(display_unit).into_si(value)
 
 
+def si_unit(display_unit: str) -> str:
+    """The SI storage unit ``to_si`` converts ``display_unit`` into (``in`` → ``mm``)."""
+    return _unit(display_unit).si
+
+
 def round_trips(original: float, back: float) -> bool:
     """The TERMS-03 tolerance: 1e-9 relative, 1e-12 absolute near zero."""
     return math.isclose(back, original, rel_tol=REL_TOL, abs_tol=ABS_TOL)

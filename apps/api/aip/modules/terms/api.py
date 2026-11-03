@@ -8,7 +8,8 @@ the caller's ``with_tenant`` connection. Platform code reaches the same resolver
 
 ``format_message`` resolves a key and formats it as an ICU message; ``format_icu`` formats an
 already-resolved text with no database (the report render contract, REPORTS-01); ``display_system``,
-``to_display`` and ``to_si`` convert between SI storage and display units; ``template_environment``,
+``to_display`` and ``to_si`` convert between SI storage and display units (``si_unit`` names a
+unit's SI unit, REPORTS-03); ``template_environment``,
 ``template_scope`` and ``render_template`` give email and PDF templates the ``t`` and
 ``fmt_measure`` filters (TERMS-03).
 """
@@ -33,7 +34,15 @@ from .templating import (
     template_environment,
     template_scope,
 )
-from .units import Quantity, UnitSystem, UnknownUnitError, display_system, to_display, to_si
+from .units import (
+    Quantity,
+    UnitSystem,
+    UnknownUnitError,
+    display_system,
+    si_unit,
+    to_display,
+    to_si,
+)
 
 __all__ = [
     "MessageFormatError",
@@ -51,6 +60,7 @@ __all__ = [
     "register_filters",
     "render_template",
     "resolve",
+    "si_unit",
     "template_environment",
     "template_scope",
     "to_display",
