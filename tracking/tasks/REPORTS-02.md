@@ -16,7 +16,7 @@
 2. [`REPORTS-01.md`](REPORTS-01.md) (the render contract this task calls), [`UPLOADS-08.md`](UPLOADS-08.md) (`store_generated_file`, `get_stored_file`, `open_stored_file`), [`OPS-17.md`](OPS-17.md) (which role a job handler writes tenant tables with)
 3. [`docs/blueprint/modules/report_engine/README.md`](../../docs/blueprint/modules/report_engine/README.md), and for columns only [`data-model.md`](../../docs/blueprint/modules/report_engine/data-model.md) (`report_render_jobs`, `report_data_snapshots`)
 4. [`advice-security.md`](../../docs/blueprint/modules/report_engine/advice-security.md) (render with no network and no JavaScript)
-5. ADRs: [0002](../../docs/adr/0002-data-access-and-migrations.md) (append-only grants), [0003](../../docs/adr/0003-jobs-outbox-and-sidecar.md) (Procrastinate, atomic enqueue, outbox), [0016](../../docs/adr/0016-job-runner-semantics.md) (handler contract, idempotent handlers), [0025](../../docs/adr/0025-time-and-timezones.md) (local time only at presentation), [0030](../../docs/adr/0030-outbox-dispatch-semantics.md), [0036](../../docs/adr/0036-r1-module-decisions.md) (store a sha256 only; sealing is open, OPEN-QUESTIONS #47–#49)
+5. ADRs: [0002](../../docs/adr/0002-data-access-and-migrations.md) (append-only grants), [0003](../../docs/adr/0003-jobs-outbox-and-sidecar.md) (Procrastinate, atomic enqueue, outbox), [0016](../../docs/adr/0016-job-runner-semantics.md) (handler contract, idempotent handlers), [0025](../../docs/adr/0025-time-and-timezones.md) (local time only at presentation), [0030](../../docs/adr/0030-outbox-dispatch-semantics.md), [0036](../../docs/adr/0036-r1-module-decisions.md) (store a sha256 only; sealing decided by ADR 0039, after R1, OPEN-QUESTIONS #47–#49)
 6. Code: `apps/api/aip/platform/capabilities/protocols.py` (`PdfRenderer`), `adapters/gotenberg.py` (`GotenbergPdfRenderer`, `CONVERT_HTML_PATH`), `apps/api/aip/modules/ops/api.py` (`register`, `enqueue`, `JobView`), `apps/api/aip/modules/ops/registry.py` (handler contract), `apps/api/tests/platform/capabilities/test_gotenberg.py`, the `gotenberg` and `worker` services in `infra/docker-compose.yml`
 
 ## Spec
@@ -25,7 +25,8 @@ Render a report as a background job: freeze the record's data into an append-onl
 
 Out of scope: published records, numbering and supersession (REPORTS-06), the register page and authorised download
 (REPORTS-04), the inspection data and auto-render on approval (REPORTS-03), sealing, external signing and immutable
-storage (OPEN-QUESTIONS #47–#49; R1 records a sha256 only, ADR 0036 §5).
+storage (R1 records a sha256 only, ADR 0036 §5; decided since by ADR 0039: PAdES signing with a KMS key and S3
+Object Lock before the AWS go-live, and completed reports listed on their inspection, REPORTS-08).
 
 - **files**:
   - apps/api/aip/modules/report_engine/manifest.toml

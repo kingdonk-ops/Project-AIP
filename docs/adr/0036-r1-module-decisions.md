@@ -1,6 +1,6 @@
 # ADR 0036: R1 module decisions (PLAN-R1 gate)
 
-- **Status:** proposed (accepted at the PLAN-R1 phase-entry review)
+- **Status:** accepted (owner, 2026-11-03; applied since the PLAN-R1 phase-entry review)
 - **Date:** 2026-10-18
 - **Affects:** portal, assets, item_types, forms, inspections, eligibility, scope_work, issues, report_engine, data_io, terms, uploads; PLAN-R1 and every R1 task
 
@@ -83,6 +83,8 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
    publish the next version (adding the submit guards) through `ApprovalsApi.install_preset` (APPROVALS-08), as
    ISSUES-03 does for `issue.standard`. Instances stay pinned to the version they started on, which is harmless
    because no real inspections exist before INSPECTIONS-02.
+   *Amended 2026-11-03 (review 13 D4):* ADR 0041 had APPROVALS-10 publish the next inspection preset version (the
+   SiteSync rename). The later ADR wins: the approvals module may publish a host's preset version when an ADR says so.
 10. **`move` is an edit-level verb.** `asset.move` stays a separate code an admin can withhold, and ACCESS-07 adds
     `move` to the `edit` level of the ADR 0027 expansion so default roles that edit assets can reorganise the tree.
 11. **Calculated fields and repeating sections are in R1** (owner, 2026-10-18): FORMS-07 adds a forms-only
@@ -92,6 +94,17 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
     always sent when the access is not renewed (owner, 2026-10-18).
 13. **Everything left out of R1 is listed** in [`tracking/BACKLOG.md`](../../tracking/BACKLOG.md), with its source and
     the reason.
+
+## Owner acceptance (2026-11-03)
+
+The owner accepted this ADR after the merged-PR review of 2026-11-03 (docs/reviews/13) found R1 tasks building on it
+while it was still marked proposed. Two follow-ons:
+
+- Portal sign-in here (own username and password plus a second step, on the portal's own origin, session keyed by
+  `audience` in the shared `user_session` table) supersedes the portal row of ADR 0005's identity table (magic
+  link, separate session store).
+- Point 5 (reports hash-only until sealing is decided) is decided by ADR 0039: PAdES signing with a KMS-held key and
+  S3 Object Lock (governance) come before the AWS go-live; R1 on the Coolify demo stays hash-only.
 
 ## Consequences
 

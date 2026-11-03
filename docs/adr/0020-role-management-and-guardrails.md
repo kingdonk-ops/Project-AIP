@@ -24,6 +24,9 @@ that specification against earlier decisions found three points that need adjust
 3. **Platform operators have no standing right to change tenant roles** (ADR 0017). They set tenant defaults at
    provisioning, and may change a tenant's roles or run diagnostic audits only inside a customer-approved, time-boxed
    support-access grant (TENANCY-06), fully audited. The specification described this as a standing Super Admin power.
+   *Amended by ADR 0042 (2026-11-03):* an operator holding `platform.roles.manage` may also push the default role
+   template into existing tenants; the push re-seeds only uncustomised system roles and never changes a customised or
+   custom role or an assignment.
 4. **Custom roles** are created by cloning an existing role or from a blank role, and can be assigned tenant-wide or
    limited to a project, an organisation (business unit) or an asset subtree.
 5. **Permissions are atomic flags** declared by modules in their manifests and grouped by domain (inspections, issues

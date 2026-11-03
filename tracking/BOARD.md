@@ -59,7 +59,7 @@ REPORTS-02 (api). Portal add-on: IDENTITY-10 and ACCESS-04 are done, so PORTAL-0
 | 7 | [FORMS-04](tasks/FORMS-04.md) | web | FORMS-01 |
 | 8 | [ITEMTYPES-03](tasks/ITEMTYPES-03.md) | web | ITEMTYPES-02 |
 
-### Demo round 3 — inspections + report render (current — rows 1, 5 and 6 done; row 2 ready now)
+### Demo round 3 — inspections + report render (done — every row merged; REPORTS-03 PR #233 closed it)
 
 | Order | ID | Stream | Deps cleared by |
 |---|---|---|---|
@@ -101,7 +101,7 @@ portal → needs-my-action inbox → reviews inspection / releases hold point / 
 | P5 | [PORTAL-05](tasks/PORTAL-05.md) | web | PORTAL-03, REPORTS-04 — client reports in the portal |
 
 Optional portal polish (not required for the sign-off loop): PORTAL-07 (external-users admin), PORTAL-08 (access-expiry
-reminders), PORTAL-06 (witness attendance, needs PROJECTS-04).
+reminders), PORTAL-06 (witness bookings and notification, moved from INSPECTIONS-03 by the owner 2026-11-03; PROJECTS-04 is a soft dependency).
 
 ## P0
 
@@ -223,6 +223,19 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [DESIGN-16](tasks/DESIGN-16.md) | Mobile nav drawer behaves as a modal: focus trap, inert page, scroll lock | design | XS | DESIGN-08 | done | ClaudeK: PR #116; DESIGN-08 review |
 | [DESIGN-17](tasks/DESIGN-17.md) | ProjectAIP master brand: favicon, app icon, lockup A in the header and lockup C for the portal footer | design | S | DESIGN-14 | done | ClaudeK: claudeK/master-brand-client-portal-02cfee; owner brand files 2026-10-28 |
 
+### Review 13 follow-ups (merged-PR review, 2026-11-03)
+
+From [docs/reviews/13-merged-pr-review-2026-11-03.md](../docs/reviews/13-merged-pr-review-2026-11-03.md). B1 and B2 were resolved by accepting ADR 0042 and B3 by moving the witness notification to PORTAL-06 (owner, 2026-11-03). PORTAL-09 and REPORTS-07 go first (an unmet acceptance criterion and a report read gap).
+
+| ID | Title | Module | Size | Depends on | Status | Notes |
+|---|---|---|---|---|---|---|
+| [REPORTS-07](tasks/REPORTS-07.md) | Report access and error fixes: record-level view on read and download, create check on replay, client snapshot strips internal fields | report_engine | S | REPORTS-03, REPORTS-04 | todo | review 13 M1, L1 to L5 |
+| [REPORTS-08](tasks/REPORTS-08.md) | Completed inspection reports are locked and listed in their inspection's documents | report_engine | S | REPORTS-03, REPORTS-07 | todo | review 13 D3 (ADR 0039 #49); step 1 needs an owner decision on where the documents list lives |
+| [APPROVALS-14](tasks/APPROVALS-14.md) | Approval route completion enforces the target transition's comment rule | approvals | XS | APPROVALS-04 | todo | review 13 M2, L9, L10 |
+| [PORTAL-09](tasks/PORTAL-09.md) | Portal fixes: register denied state, no-store on every portal response, filter and axe tests | portal | XS | PORTAL-02, PORTAL-07 | todo | review 13 B4, L11, L12 |
+| [INSPECTIONS-11](tasks/INSPECTIONS-11.md) | ITP sign-off hardening: supervisor-only countersign, server-set signatory role, client refusal code, responses FK, supervisor edit | inspections | S | INSPECTIONS-03 | todo | review 13 M6, L6 to L8 (ADR 0010, ADR 0041 §6) |
+| [TESTING-14](tasks/TESTING-14.md) | Close review-13 test-proof gaps: real cross-tenant release flags, item-types axe at 390 px | testing | S | DESIGN-15, ITEMTYPES-03 | todo | review 13 M4, M7 |
+
 ### Wave 7
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
@@ -259,7 +272,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [APPROVALS-05](tasks/APPROVALS-05.md) | Inspection lifecycle preset + golden tests (needs AIP lifecycle spec) | approvals | M | APPROVALS-02, TERMS-01 | done | ClaudeK: PR #153 (merged 2026-10-28); branch claudeK/approvals-05-inspection-preset-04f48d; converted per ADR 0001; presets `inspection_standard` + `inspection_client_review` (project-scoped); golden cases **provisional** (blueprint-derived, OPEN-QUESTIONS #4: owner to confirm `confirmedBy`); e2e carried to TESTING-13 |
 | [UPLOADS-04](tasks/UPLOADS-04.md) | EXIF/GPS policy, thumbnails, per-file-type policy + quota counters | uploads | M | UPLOADS-02 | todo | **merges UPLOADS-05**; sandboxed derive (GPS strip + thumbnails) and the platform/tenant/project policy table with atomic quota reservation |
 | [IDENTITY-05](tasks/IDENTITY-05.md) | SCIM 2.0 server; deprovision revokes everything in one transaction | identity | M | ACCESS-01, ARCH-05, IDENTITY-03 | todo |  |
-| [PROJECTS-04](tasks/PROJECTS-04.md) | Work-type classification + project settings overrides | projects | M | PROJECTS-01, TERMS-02 | todo | convert to Python backend per ADR 0001 before starting; add the ADR 0010 addendum project settings `holdpoint_client_pin_only` (+ `agreement_ref`) and `client_signing_photo`, audited (ADR 0034); also `portal_access_days` (default 180, 1 to 400), `witness_notice_hours` and `witness_waiver_rule` (owner 2026-10-18, PORTAL-01/06/08), read through `ProjectsApi.get_setting` |
+| [PROJECTS-04](tasks/PROJECTS-04.md) | Work-type classification + project settings overrides | projects | M | PROJECTS-01, TERMS-02 | todo | convert to Python backend per ADR 0001 before starting; add the ADR 0010 addendum project settings `holdpoint_client_pin_only` (+ `agreement_ref`) and `client_signing_photo`, audited (ADR 0034); also `portal_access_days` (default 180, 1 to 400), `witness_notice_hours` and `witness_waiver_rule` (owner 2026-10-18, PORTAL-01/06/08), read through `ProjectsApi.get_setting`; acceptance must include PORTAL-01's `read_access_days` returning the project's value (review 13 M3) |
 | [PROJECTS-05](tasks/PROJECTS-05.md) | System sites are hidden and protected (owner decision) | projects | XS | PROJECTS-01 | done | ClaudeK: PR #58 |
 | [PROJECTS-06](tasks/PROJECTS-06.md) | Projects register on RegisterTable, sort direction and CSV export | projects | S | DESIGN-03, PROJECTS-02 | done | ClaudeK: PR #114; split from DESIGN-03 (2026-10-13) |
 | [TENANCY-05](tasks/TENANCY-05.md) | Tenant settings, modules and provisioning | tenancy | M | ENT-01, IDENTITY-04, TENANCY-01, TERMS-01 | todo | convert to Python backend per ADR 0001 before starting; invite the first admin via IDENTITY-04 `create_invite` (ADR 0005 rev 2); the tenant admin can edit the company display name shown in the header (DESIGN-14) |
@@ -321,8 +334,8 @@ Generated by PLAN-R1 (pass A, 2026-10-18) from ADR 0007 §4 and the module READM
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
 | [ACCESS-07](tasks/ACCESS-07.md) | Add the `move` verb to the edit level of the default role expansion (ADR 0027 amendment) | access | XS | PLAN-R1 | done | ClaudeK: PR #158 |
-| [ACCESS-08](tasks/ACCESS-08.md) | Policy cache hardening: expiry-bounded entries, deactivation bump, team delegation guard | access | S | ACCESS-04 | todo | found by the ACCESS-04 review (PR #163); step 3 needs an owner decision |
-| [ACCESS-09](tasks/ACCESS-09.md) | Operator default role template: edit the shipped access matrix, audit it and push it to tenants (ADR 0042) | access | M | ACCESS-02, ACCESS-07 | review | ClaudeK: PR #231; branch claudeK/access-09-default-role-template; owner request 2026-11-02; UI split to ACCESS-10 |
+| [ACCESS-08](tasks/ACCESS-08.md) | Policy cache hardening: expiry-bounded entries, deactivation bump, team delegation guard | access | S | ACCESS-04 | todo | found by the ACCESS-04 review (PR #163); step 3 needs an owner decision; review 13 adds: M5 is step 3 (move it up the order), also fix the cache docstrings that cite ADR 0039, add an ADR for the Redis policy cache, note IDENTITY-05 publishes `user.deactivated`, and assert Client Reviewer lacks `portal.user.invite` in `test_default_roles.py` (L13, L14, D7) |
+| [ACCESS-09](tasks/ACCESS-09.md) | Operator default role template: edit the shipped access matrix, audit it and push it to tenants (ADR 0042) | access | M | ACCESS-02, ACCESS-07 | done | ClaudeK: PR #231 (merged 2026-11-03; ADR 0042 accepted 2026-11-03); branch claudeK/access-09-default-role-template; owner request 2026-11-02; UI split to ACCESS-10 |
 | [ACCESS-10](tasks/ACCESS-10.md) | Operator console page for the default role template | access | M | ACCESS-09, OPS-12 | todo | split from ACCESS-09: needs the operator console (OPS-12, ADR 0017) |
 | [APPROVALS-08](tasks/APPROVALS-08.md) | Approvals interface for R1 modules: export the guard JSONLogic evaluator and a workflow preset installer | approvals | S | PLAN-R1 | done | PR #137 (merged 2026-10-26); unblocks FORMS-01 and ISSUES-01 |
 | [IDENTITY-09](tasks/IDENTITY-09.md) | Display-name lookup in the identity published interface | identity | XS | PLAN-R1 | done | ClaudeK: PR #152; `get_display_names(conn, user_ids)` in `identity.api`; bound tenant only, keeps deactivated/soft-deleted signers |
@@ -338,7 +351,7 @@ Generated by PLAN-R1 (pass A, 2026-10-18) from ADR 0007 §4 and the module READM
 |---|---|---|---|---|---|---|
 | [ASSETS-04](tasks/ASSETS-04.md) | Bulk add (name pattern, start number, repeats) and sibling reorder | assets | S | ASSETS-01 | todo | stub |
 | [ASSETS-07](tasks/ASSETS-07.md) | Asset-subtree scope: scope-bar picker and subtree predicates | assets | M | ACCESS-03, ASSETS-01, DESIGN-10 | todo | stub |
-| [PORTAL-01](tasks/PORTAL-01.md) | External portal users and grants: external user class, invitations with a named internal approver, grant provider | portal | M | ASSETS-01, PLAN-R1 | done | ClaudeK: PR #216; branch claudeK/portal-01-external-users-69a4ad; client portal in R1 (owner 2026-10-18); `portal_access_days` defaults to 180 until PROJECTS-04 ships `ProjectsApi.get_setting` |
+| [PORTAL-01](tasks/PORTAL-01.md) | External portal users and grants: external user class, invitations (no second approver, ADR 0036), grant provider | portal | M | ASSETS-01, PLAN-R1 | done | ClaudeK: PR #216; branch claudeK/portal-01-external-users-69a4ad; client portal in R1 (owner 2026-10-18); `portal_access_days` defaults to 180 until PROJECTS-04 ships `ProjectsApi.get_setting` (review 13 M3) |
 | [ITEMTYPES-02](tasks/ITEMTYPES-02.md) | Item-type schema versions (draft, publish, pin) and attribute validation in the published interface | item_types | M | ITEMTYPES-01 | done | ClaudeK: PR #151 (squash auto-merge on green); assets pin `item_type_version_id` |
 | [FORMS-01](tasks/FORMS-01.md) | Form templates and frozen revisions: JSON template contract, lint and publish freeze | forms | M | APPROVALS-08, ITEMTYPES-01 | done | PR #143 (merged 2026-10-27); unblocks FORMS-02 and INSPECTIONS-01 |
 | [REPORTS-02](tasks/REPORTS-02.md) | Render job: Gotenberg PDF in the worker, stored as an uploads stored_files row with a pinned data snapshot | report_engine | M | OPS-17, REPORTS-01, UPLOADS-08 | done | critical path; ClaudeK: PR #210; branch claudeK/reports-02-render-job; render job, pinned snapshot, sandboxed Gotenberg (worker-pdf) |
@@ -453,7 +466,8 @@ Generated by PLAN-R1 (pass A, 2026-10-18) from ADR 0007 §4 and the module READM
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [PORTAL-06](tasks/PORTAL-06.md) | Witness attendance: confirm or waive under the project's notice period and waiver rule | portal | S | PORTAL-04, PROJECTS-04 | todo | stub; notice period and waiver rule are project settings (owner 2026-10-18) |
+| [INSPECTIONS-12](tasks/INSPECTIONS-12.md) | Witness bookings on ITP steps: propose, reschedule, cancel, references, recipient hook and events (witness notification, part A) | inspections | M | INSPECTIONS-03, PORTAL-01 | todo | owner 2026-11-03: witness notification moved from INSPECTIONS-03 (ADR 0039 #43, review 13 B3); split from PORTAL-06; PROJECTS-04 soft (24 h fallback) |
+| [PORTAL-06](tasks/PORTAL-06.md) | Witness notification and attendance: email the client inspector, accept, reject or reschedule in the portal (part B) | portal | M | INSPECTIONS-12, PORTAL-03 | todo | spec written 2026-11-03; witness notification moved here from INSPECTIONS-03 (owner 2026-11-03, ADR 0039 #43); two PRs: Part A in inspections (bookings, references, staff API), Part B in portal (emails, client API, pages); PROJECTS-04 soft (24 h notice fallback); 7 open questions in the spec |
 
 ### R1 planning
 
