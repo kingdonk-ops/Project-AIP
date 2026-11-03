@@ -7,6 +7,7 @@ Repositories receive the tenant-bound connection from ``with_tenant`` and never 
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -120,6 +121,13 @@ _LIST_DECISIONS = text(f"""
 SELECT {_DECISION_COLUMNS} FROM workflow_decision_history
 WHERE instance_id = :instance_id
 ORDER BY seq
+""")
+
+_LAST_ENTERED = text("""
+SELECT created_at FROM workflow_decision_history
+WHERE instance_id = :instance_id AND to_state = :state AND status = 'applied'
+ORDER BY seq DESC
+LIMIT 1
 """)
 
 _INSERT_DECISION = text("""
@@ -247,6 +255,12 @@ async def last_decision(conn: AsyncConnection, instance_id: UUID) -> RowMapping 
 async def list_decisions(conn: AsyncConnection, instance_id: UUID) -> list[RowMapping]:
     params = {"instance_id": instance_id}
     return list((await conn.execute(_LIST_DECISIONS, params)).mappings().all())
+
+
+async def last_entered_at(conn: AsyncConnection, instance_id: UUID, state: str) -> datetime | None:
+    """When the instance's latest applied decision into ``state`` was recorded, else ``None``."""
+    params = {"instance_id": instance_id, "state": state}
+    return (await conn.execute(_LAST_ENTERED, params)).scalar_one_or_none()
 
 
 async def insert_decision(conn: AsyncConnection, entry: dict[str, Any]) -> None:

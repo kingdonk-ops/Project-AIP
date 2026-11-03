@@ -319,6 +319,23 @@ table = "inspections"
 ["GET /api/v1/inspections/{inspection_id}/signoffs"]
 table = "inspections"
 
+["GET /api/v1/inspections/{inspection_id}/acknowledgements"]
+table = "inspections"
+
+["POST /api/v1/inspections/{inspection_id}/report/acknowledgement"]
+table = "inspections"
+
+["DELETE /api/v1/inspections/{inspection_id}/report/acknowledgement"]
+table = "inspections"
+
+["POST /api/v1/inspections/{inspection_id}/sections/{sectionKey}/acknowledgement"]
+skip = true
+reason = "The last parameter is a section key, not a record id, so the probe cannot put tenant B's id there. INSPECTIONS-10's tenant test ticks and unticks a section of tenant A's inspection as tenant B and gets 404."
+
+["DELETE /api/v1/inspections/{inspection_id}/sections/{sectionKey}/acknowledgement"]
+skip = true
+reason = "The last parameter is a section key, not a record id, so the probe cannot put tenant B's id there. INSPECTIONS-10's tenant test ticks and unticks a section of tenant A's inspection as tenant B and gets 404."
+
 ["POST /api/v1/itp-steps/{step_id}/actions"]
 table = "itp_steps"
 body = '{"action": "ready"}'

@@ -5,7 +5,8 @@ and the things an inspection needs in ``kaefer-demo``.
 creates asset ``TK-101`` (``AssetsApi.create_asset``), projects ``KF-01`` and ``KF-02``, and uploads
 and publishes one coating template through the FORMS-01 routes. Grants come from a test grant
 provider, as in ``projects/tests/conftest.py``, playing the roles: supervisor, inspector, lead
-inspector and viewer. Everyone also holds ``approvals.view``, which the approvals transition service
+inspector and viewer; the inspector also answers and acknowledges (``inspection.respond``). Everyone
+also holds ``approvals.view``, which the approvals transition service
 checks before any lifecycle read or move. Every user has a tenant-scope role assignment, so the
 ACCESS-03 project-scope RLS shows them every project's inspections.
 
@@ -71,7 +72,12 @@ SUPERVISOR_GRANTS = {
     "approvals.inspection.assign",
     "approvals.inspection.approve",
 }
-INSPECTOR_GRANTS = {"inspection.view", "approvals.view", "approvals.inspection.execute"}
+INSPECTOR_GRANTS = {
+    "inspection.view",
+    "inspection.respond",
+    "approvals.view",
+    "approvals.inspection.execute",
+}
 LEAD_GRANTS = {"inspection.view", "approvals.view", "approvals.inspection.review"}
 VIEWER_GRANTS = {"inspection.view", "approvals.view"}
 EVERYTHING = {*FORMS, *ASSETS, *INSPECTIONS, *APPROVALS, *LIFECYCLE}
@@ -304,6 +310,33 @@ async def new_revision(
     revision_id = UUID(response.json()["id"])
     await publish(client, revision_id, headers)
     return revision_id
+
+
+# The answers that complete the conftest coating template, and its sections (INSPECTIONS-10).
+COATING_ANSWERS: tuple[tuple[str, Any], ...] = (("blast_standard", "sa2_5"),)
+COATING_SECTIONS: tuple[str, ...] = ("preparation", "coating")
+
+
+async def acknowledge(
+    client: httpx.AsyncClient,
+    inspection_id: str,
+    sections: Iterable[str] = COATING_SECTIONS,
+    answers: Iterable[tuple[str, Any]] = COATING_ANSWERS,
+    headers: dict[str, str] = INSPECTOR,
+) -> None:
+    """Answer, tick each section and then the report (INSPECTIONS-10), so a submit may pass."""
+    items = [
+        {"fieldKey": key, "value": value, "clientId": str(uuid.uuid4())} for key, value in answers
+    ]
+    base = f"/api/v1/inspections/{inspection_id}"
+    if items:
+        answered = await client.post(f"{base}/responses", json={"answers": items}, headers=headers)
+        assert answered.status_code == 200, answered.text
+    for key in sections:
+        ticked = await client.post(f"{base}/sections/{key}/acknowledgement", headers=headers)
+        assert ticked.status_code == 200, (key, ticked.text)
+    report = await client.post(f"{base}/report/acknowledgement", headers=headers)
+    assert report.status_code == 200, report.text
 
 
 @pytest.fixture

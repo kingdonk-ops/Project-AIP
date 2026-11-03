@@ -5,6 +5,8 @@
 # INSPECTIONS-02: append-only answers (`inspection.respond`), `inspection.answer_failed` v1.
 # INSPECTIONS-03: ITP steps and hash-chained sign-offs (`itp.*`), `itp_step.released` v1 and
 #   `itp_step.hold_changed` v1.
+# INSPECTIONS-10: section and report acknowledgements lock answers and gate submit,
+#   `inspection.section_acknowledged` v1 and `inspection.report_acknowledged` v1.
 id = "inspections"
 context = "inspections"
 depends_on = ["approvals", "assets", "forms", "projects", "access", "identity", "tenancy"]
@@ -46,6 +48,14 @@ version = 1
 
 [[events]]
 name = "inspection.state_changed"
+version = 1
+
+[[events]]
+name = "inspection.section_acknowledged"
+version = 1
+
+[[events]]
+name = "inspection.report_acknowledged"
 version = 1
 
 [[events]]

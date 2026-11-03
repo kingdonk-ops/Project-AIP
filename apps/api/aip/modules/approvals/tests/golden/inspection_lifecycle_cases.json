@@ -4,7 +4,7 @@
   "confirmedOn": "2026-10-30",
   "derivedFrom": "tracking/tasks/APPROVALS-09.md (appendix: the owner's status and action tables). Guarded and host actions (skip supervisor review, tablet Abort/Unlock/Update & Return to Pool, Reinspect, Supersede) are INSPECTIONS-09.",
   "pathsNote": "How each case reaches its start state from draft when run through TransitionService.",
-  "notes": "ADR 0041 §1 (APPROVALS-10, 2026-11-01): the tablet state and its actions are renamed from Go to SiteSync (in_progress_go → in_progress_sitesync, go_checkout → sitesync_checkout, check_in → sitesync_check_in). The owner-confirmed cases are otherwise unchanged.",
+  "notes": "ADR 0041 §1 (APPROVALS-10, 2026-11-01): the tablet state and its actions are renamed from Go to SiteSync (in_progress_go → in_progress_sitesync, go_checkout → sitesync_checkout, check_in → sitesync_check_in). The owner-confirmed cases are otherwise unchanged. ADR 0041 §5 (INSPECTIONS-10, 2026-11-03): submit_report (in_progress, in_progress_sitesync, inspector_review → performed, or client_review in the client variant) joins request_supervisor_review; each is guarded on record.hasSupervisorReview, so a record offers one of them.",
   "commentNote": "A case with \"comment\": false takes its actions without a comment; every other case sends one.",
   "paths": {
     "standard": {
@@ -621,6 +621,7 @@
       "expect": {
         "available": [
           "request_supervisor_review",
+          "submit_report",
           "sitesync_check_in",
           "request_clarification"
         ]
