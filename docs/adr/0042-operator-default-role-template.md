@@ -1,9 +1,10 @@
 # ADR 0042: The operator edits the default role template in a platform table that overrides the shipped matrix
 
-- **Status:** proposed
+- **Status:** accepted (owner, 2026-11-03)
 - **Date:** 2026-11-02
 - **Affects:** access (ACCESS-09, ACCESS-10; ACCESS-02 seeding), ops (`platform` permission namespace), tenancy
-  (TENANCY-05 provisioning); amends nothing in ADR 0020 or ADR 0027
+  (TENANCY-05 provisioning); amends ADR 0020 point 3 (see "Owner acceptance" below) and the AGENTS.md table hard
+  rule for these two global tables; amends nothing in ADR 0027
 
 ## Context
 
@@ -70,6 +71,21 @@ codes by verb. Tenant admins can already edit, clone, create and reset roles in 
 8. **Not now: per-tenant templates.** A tenant that needs other defaults customises its own roles (ADR 0020). A
    per-tenant template layer would add a third source of truth for little gain; revisit if operators need to
    provision groups of tenants (for example by market pack) with different defaults.
+
+## Owner acceptance (2026-11-03)
+
+The merged-PR review of 2026-11-03 found two places where this decision went beyond accepted rules. The owner
+accepted the ADR with both as explicit exceptions:
+
+1. **ADR 0020 point 3 is amended.** Besides setting defaults at provisioning, an operator holding
+   `platform.roles.manage` may push the default role template into existing tenants (point 5) without a
+   support-access grant. The push only re-seeds uncustomised system roles and reports `pending`/`excess` for
+   customised ones; it never changes a custom or customised role or an assignment. Any other change to a tenant's
+   roles still needs the TENANCY-06 grant.
+2. **Table hard-rule exception.** `default_role_level` and `default_role_level_change` are global platform tables:
+   no `tenant_id`, no RLS, a composite text key on `default_role_level`, and setting a cell back to its shipped level
+   deletes its row (the change table keeps the history). They are on the schema-guard allow-list for that reason.
+   This exception covers these two tables only.
 
 ## Consequences
 

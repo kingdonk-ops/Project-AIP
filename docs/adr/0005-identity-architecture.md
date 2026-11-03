@@ -18,7 +18,7 @@ already does these well. Keycloak has no native SCIM 2.0 server.
 | Staff via company SSO (Kaefer, Rio Tinto) | **Keycloak** brokers SAML/OIDC; IdP chosen by email domain (Keycloak Organizations) | App-issued opaque `__Host-` cookie, `user_session` row in Postgres + Redis cache |
 | Staff with email + password | **Keycloak**: password policy, brute-force protection, **MFA enforced** (TOTP or passkey/WebAuthn), reset emails | Same |
 | Field worker | **Backend**: device-bound key + PIN (PIN hashed with argon2-cffi), or single-use magic link (POST confirm) | Short shift session; device JWT (ES256) for sync |
-| Portal user (client, subcontractor) | **Backend**: magic link on the portal's own origin; passkey to counter-sign | Separate cookie and session store |
+| Portal user (client, subcontractor) | ~~**Backend**: magic link on the portal's own origin; passkey to counter-sign~~ **Superseded by ADR 0036 (2026-11-03):** own username and password plus a second step on the portal's own origin (IDENTITY-10, PORTAL-02) | ~~Separate cookie and session store~~ Separate `__Host-` cookie pair; session rows in `user_session` keyed by `audience` |
 | API client | **Backend**: OAuth2 client credentials | ES256 JWT, 15 min |
 
 - **Login flow:** the backend completes the OIDC code flow with authlib (PKCE), then issues its own session cookie.

@@ -79,6 +79,14 @@ applied. This unblocks ITEMTYPES-06.
 - A **third-party inspector** who is not a user in the system is not notified by it; QA notifies them outside the
   system as today.
 - Other systems (ITPpro and others) notify witnesses too; this is parity plus an audit record, not a differentiator.
+- *Owner, 2026-11-03:* INSPECTIONS-03 shipped the witness points without the notification; PORTAL-06 builds all of
+  it. When a witness schedule is proposed, the client inspector is emailed who requested it (person and company), what
+  is being inspected, and a link to the portal page where they accept, reject or reschedule it and see the associated
+  documents and codes. The notification and each response are recorded on the witness point.
+- *Owner, 2026-11-03, follow-up answers:* the client may waive a booked point ("proceed without me"), recorded as
+  a client sign-off; staff may waive when the client rejected or did not attend at the booked time; the notice
+  period is a project setting; hold points are bookable too; reminders are sent before the booked time; emails
+  show site time for R1 and the recipient's own time zone later (INSPECTIONS-12, PORTAL-06, PORTAL-10 to -12).
 
 ### #44 Qualifications: enforcement per type, fields per type
 
@@ -159,7 +167,7 @@ The system itself signs and verifies PDF reports and files; there is no DocuSign
 - ITEMTYPES-05, ITEMTYPES-06 and ISSUES-06 move from `blocked` to `todo`; their full specs follow these answers.
 - Inheritance and the migration preview stay after R1 ([BACKLOG.md](../../tracking/BACKLOG.md)); when they are pulled
   in, their tasks follow #38 and #39 above.
-- INSPECTIONS-03 and PORTAL-06 record the witness notification on the point; PROJECTS-04 already carries
+- PORTAL-06 records the witness notification on the point (moved from INSPECTIONS-03 by the owner, 2026-11-03); PROJECTS-04 already carries
   `witness_notice_hours`.
 - The item_types, inspections, issues and report_engine READMEs mark these questions answered.
 - ELIGIBILITY-01 adds `certificate_types.enforcement`; ELIGIBILITY-02 blocks only on `hard_stop` types. Per-type
