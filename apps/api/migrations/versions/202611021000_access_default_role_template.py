@@ -12,7 +12,7 @@ ACCESS-09 (ADR 0042): the operator's default role template.
 - ``access_set_default_role_level(...)``: the only write path to both tables (SECURITY DEFINER,
   EXECUTE to ``aip_app`` only). It moves one cell and writes its history row in the same call, so
   no runtime role can change the template without a history row, nor edit or forge history. The
-  ``platform.roles.manage``-gated operator API calls it; a reset (the shipped level) deletes the row.
+  ``platform.roles.manage``-gated operator API calls it; a reset (shipped level) deletes the row.
 
 The CHECKs repeat the service guardrails so a hand-written row cannot break them: the 11 system
 role codes, the six levels, Client Reviewer only ``none``/``view``/``approve`` (sign-off only,
