@@ -44,8 +44,12 @@
                 "item_type.manage",
                 "item_type.publish",
                 "item_type.view",
+                "itp.manage",
+                "itp.sign",
+                "itp.waive",
                 "ops.jobs.admin",
                 "platform.events.manage",
+                "platform.roles.manage",
                 "platform.tenants.manage",
                 "portal.grant.manage",
                 "portal.record.sign_off",
@@ -1608,6 +1612,42 @@
         "title": "CategoryUpdate",
         "type": "object"
       },
+      "CellChange": {
+        "additionalProperties": false,
+        "properties": {
+          "level": {
+            "enum": [
+              "none",
+              "view",
+              "create",
+              "edit",
+              "approve",
+              "admin"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "module": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Module",
+            "type": "string"
+          },
+          "role": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "module",
+          "role",
+          "level"
+        ],
+        "title": "CellChange",
+        "type": "object"
+      },
       "ContentTypeCreate": {
         "additionalProperties": false,
         "properties": {
@@ -2112,6 +2152,47 @@
           "createdAt"
         ],
         "title": "DecisionOut",
+        "type": "object"
+      },
+      "DefaultRoleTemplate": {
+        "additionalProperties": false,
+        "properties": {
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateCellOut"
+            },
+            "title": "Cells",
+            "type": "array"
+          },
+          "levels": {
+            "items": {
+              "enum": [
+                "none",
+                "view",
+                "create",
+                "edit",
+                "approve",
+                "admin"
+              ],
+              "type": "string"
+            },
+            "title": "Levels",
+            "type": "array"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "roles",
+          "levels",
+          "cells"
+        ],
+        "title": "DefaultRoleTemplate",
         "type": "object"
       },
       "DefinitionOut": {
@@ -4470,6 +4551,553 @@
           "items"
         ],
         "title": "ItemTypeVersionPage",
+        "type": "object"
+      },
+      "ItpStepActionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "ready",
+              "start",
+              "reopen"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "expectedSyncVersion": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedsyncversion"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "ItpStepActionIn",
+        "type": "object"
+      },
+      "ItpStepIn": {
+        "additionalProperties": false,
+        "description": "One step to set up; ``noticeHours`` (0 to 720) is for a witness point only.",
+        "properties": {
+          "acceptanceCriteria": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptancecriteria"
+          },
+          "blocksTaskId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blockstaskid"
+          },
+          "noticeHours": {
+            "anyOf": [
+              {
+                "maximum": 720.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Noticehours"
+          },
+          "pointType": {
+            "enum": [
+              "hold",
+              "witness",
+              "review",
+              "surveillance"
+            ],
+            "title": "Pointtype",
+            "type": "string"
+          },
+          "seq": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "taskId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taskid"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "title",
+          "pointType"
+        ],
+        "title": "ItpStepIn",
+        "type": "object"
+      },
+      "ItpStepList": {
+        "properties": {
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/ItpStepView"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "steps"
+        ],
+        "title": "ItpStepList",
+        "type": "object"
+      },
+      "ItpStepOut": {
+        "description": "One ITP step; ``held`` is true while an NCR (``holdFlagIssueId``) holds it.",
+        "properties": {
+          "acceptanceCriteria": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptancecriteria"
+          },
+          "assetId": {
+            "format": "uuid",
+            "title": "Assetid",
+            "type": "string"
+          },
+          "blocksTaskId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blockstaskid"
+          },
+          "childInspectionId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Childinspectionid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "held": {
+            "title": "Held",
+            "type": "boolean"
+          },
+          "holdFlagIssueId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holdflagissueid"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "inspectionId": {
+            "format": "uuid",
+            "title": "Inspectionid",
+            "type": "string"
+          },
+          "noticeHours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Noticehours"
+          },
+          "pointType": {
+            "enum": [
+              "hold",
+              "witness",
+              "review",
+              "surveillance"
+            ],
+            "title": "Pointtype",
+            "type": "string"
+          },
+          "readyAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readyat"
+          },
+          "releasedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Releasedat"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "ready",
+              "in_progress",
+              "released",
+              "waived",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "taskId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taskid"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "inspectionId",
+          "assetId",
+          "seq",
+          "title",
+          "pointType",
+          "acceptanceCriteria",
+          "taskId",
+          "blocksTaskId",
+          "childInspectionId",
+          "status",
+          "held",
+          "holdFlagIssueId",
+          "noticeHours",
+          "readyAt",
+          "releasedAt",
+          "syncVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "ItpStepOut",
+        "type": "object"
+      },
+      "ItpStepView": {
+        "description": "A step as the caller sees it: the actions and decisions it may take now, and the decision\na pending sign-off waits to be countersigned with.",
+        "properties": {
+          "acceptanceCriteria": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptancecriteria"
+          },
+          "assetId": {
+            "format": "uuid",
+            "title": "Assetid",
+            "type": "string"
+          },
+          "availableActions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Availableactions",
+            "type": "array"
+          },
+          "blocksTaskId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blockstaskid"
+          },
+          "childInspectionId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Childinspectionid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "held": {
+            "title": "Held",
+            "type": "boolean"
+          },
+          "holdFlagIssueId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holdflagissueid"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "inspectionId": {
+            "format": "uuid",
+            "title": "Inspectionid",
+            "type": "string"
+          },
+          "noticeHours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Noticehours"
+          },
+          "pendingCountersign": {
+            "anyOf": [
+              {
+                "enum": [
+                  "approve",
+                  "reject",
+                  "witnessed",
+                  "waived"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pendingcountersign"
+          },
+          "pointType": {
+            "enum": [
+              "hold",
+              "witness",
+              "review",
+              "surveillance"
+            ],
+            "title": "Pointtype",
+            "type": "string"
+          },
+          "readyAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readyat"
+          },
+          "releasedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Releasedat"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "ready",
+              "in_progress",
+              "released",
+              "waived",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "syncVersion": {
+            "title": "Syncversion",
+            "type": "integer"
+          },
+          "taskId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taskid"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "inspectionId",
+          "assetId",
+          "seq",
+          "title",
+          "pointType",
+          "acceptanceCriteria",
+          "taskId",
+          "blocksTaskId",
+          "childInspectionId",
+          "status",
+          "held",
+          "holdFlagIssueId",
+          "noticeHours",
+          "readyAt",
+          "releasedAt",
+          "syncVersion",
+          "createdAt",
+          "updatedAt",
+          "availableActions",
+          "pendingCountersign"
+        ],
+        "title": "ItpStepView",
+        "type": "object"
+      },
+      "ItpStepsIn": {
+        "additionalProperties": false,
+        "description": "``POST /inspections/{id}/itp-steps``: 1 to 200 steps.",
+        "properties": {
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/ItpStepIn"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "steps"
+        ],
+        "title": "ItpStepsIn",
         "type": "object"
       },
       "JobErrorBody": {
@@ -7454,8 +8082,12 @@
                 "item_type.manage",
                 "item_type.publish",
                 "item_type.view",
+                "itp.manage",
+                "itp.sign",
+                "itp.waive",
                 "ops.jobs.admin",
                 "platform.events.manage",
+                "platform.roles.manage",
                 "platform.tenants.manage",
                 "portal.grant.manage",
                 "portal.record.sign_off",
@@ -7607,8 +8239,12 @@
                 "item_type.manage",
                 "item_type.publish",
                 "item_type.view",
+                "itp.manage",
+                "itp.sign",
+                "itp.waive",
                 "ops.jobs.admin",
                 "platform.events.manage",
+                "platform.roles.manage",
                 "platform.tenants.manage",
                 "portal.grant.manage",
                 "portal.record.sign_off",
@@ -7727,8 +8363,12 @@
                     "item_type.manage",
                     "item_type.publish",
                     "item_type.view",
+                    "itp.manage",
+                    "itp.sign",
+                    "itp.waive",
                     "ops.jobs.admin",
                     "platform.events.manage",
+                    "platform.roles.manage",
                     "platform.tenants.manage",
                     "portal.grant.manage",
                     "portal.record.sign_off",
@@ -8435,6 +9075,277 @@
           "status"
         ],
         "title": "SessionStatus",
+        "type": "object"
+      },
+      "SignoffEntry": {
+        "properties": {
+          "actionCode": {
+            "title": "Actioncode",
+            "type": "string"
+          },
+          "assetId": {
+            "format": "uuid",
+            "title": "Assetid",
+            "type": "string"
+          },
+          "assuranceLevel": {
+            "title": "Assurancelevel",
+            "type": "integer"
+          },
+          "assuranceMethod": {
+            "title": "Assurancemethod",
+            "type": "string"
+          },
+          "authStrength": {
+            "title": "Authstrength",
+            "type": "string"
+          },
+          "authenticatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authenticatedat"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "contentHash": {
+            "title": "Contenthash",
+            "type": "string"
+          },
+          "countersignsId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Countersignsid"
+          },
+          "decision": {
+            "enum": [
+              "approve",
+              "reject",
+              "witnessed",
+              "waived"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "deviceId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deviceid"
+          },
+          "entryHash": {
+            "title": "Entryhash",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "inspectionId": {
+            "format": "uuid",
+            "title": "Inspectionid",
+            "type": "string"
+          },
+          "itpStepId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itpstepid"
+          },
+          "prevHash": {
+            "title": "Prevhash",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "signatoryRole": {
+            "title": "Signatoryrole",
+            "type": "string"
+          },
+          "signedAt": {
+            "format": "date-time",
+            "title": "Signedat",
+            "type": "string"
+          },
+          "signerUserId": {
+            "format": "uuid",
+            "title": "Signeruserid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "applied",
+              "pending_countersign"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "inspectionId",
+          "itpStepId",
+          "assetId",
+          "seq",
+          "signatoryRole",
+          "signerUserId",
+          "decision",
+          "actionCode",
+          "status",
+          "countersignsId",
+          "authStrength",
+          "assuranceLevel",
+          "assuranceMethod",
+          "authenticatedAt",
+          "deviceId",
+          "contentHash",
+          "prevHash",
+          "entryHash",
+          "comment",
+          "signedAt"
+        ],
+        "title": "SignoffEntry",
+        "type": "object"
+      },
+      "SignoffIn": {
+        "additionalProperties": false,
+        "description": "``POST /itp-steps/{stepId}/signoffs``; ``comment`` is required to waive or reject.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "decision": {
+            "enum": [
+              "approve",
+              "reject",
+              "witnessed",
+              "waived"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "expectedSyncVersion": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedsyncversion"
+          },
+          "signatoryRole": {
+            "enum": [
+              "inspector",
+              "supervisor",
+              "third_party"
+            ],
+            "title": "Signatoryrole",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "signatoryRole"
+        ],
+        "title": "SignoffIn",
+        "type": "object"
+      },
+      "SignoffList": {
+        "properties": {
+          "brokenAtSeq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brokenatseq"
+          },
+          "chainValid": {
+            "title": "Chainvalid",
+            "type": "boolean"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/SignoffEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries",
+          "chainValid"
+        ],
+        "title": "SignoffList",
+        "type": "object"
+      },
+      "SignoffOut": {
+        "description": "200 when the decision took effect, 202 when it waits for a countersign.",
+        "properties": {
+          "signoff": {
+            "$ref": "#/components/schemas/SignoffEntry"
+          },
+          "step": {
+            "$ref": "#/components/schemas/ItpStepOut"
+          }
+        },
+        "required": [
+          "step",
+          "signoff"
+        ],
+        "title": "SignoffOut",
         "type": "object"
       },
       "SignoffPolicyList": {
@@ -9173,6 +10084,47 @@
         "title": "SuspendIn",
         "type": "object"
       },
+      "SyncRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "tenantIds": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "maxItems": 1000,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenantids"
+          }
+        },
+        "title": "SyncRequest",
+        "type": "object"
+      },
+      "SyncResult": {
+        "additionalProperties": false,
+        "properties": {
+          "tenants": {
+            "items": {
+              "$ref": "#/components/schemas/TenantSyncOut"
+            },
+            "title": "Tenants",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tenants"
+        ],
+        "title": "SyncResult",
+        "type": "object"
+      },
       "TeamCreate": {
         "additionalProperties": false,
         "properties": {
@@ -9421,6 +10373,174 @@
         "title": "TeamUpdate",
         "type": "object"
       },
+      "TemplateCellOut": {
+        "additionalProperties": false,
+        "properties": {
+          "level": {
+            "enum": [
+              "none",
+              "view",
+              "create",
+              "edit",
+              "approve",
+              "admin"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "module": {
+            "title": "Module",
+            "type": "string"
+          },
+          "overridden": {
+            "title": "Overridden",
+            "type": "boolean"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "shippedLevel": {
+            "enum": [
+              "none",
+              "view",
+              "create",
+              "edit",
+              "approve",
+              "admin"
+            ],
+            "title": "Shippedlevel",
+            "type": "string"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          },
+          "updatedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedby"
+          }
+        },
+        "required": [
+          "module",
+          "role",
+          "level",
+          "shippedLevel",
+          "overridden",
+          "updatedBy",
+          "updatedAt"
+        ],
+        "title": "TemplateCellOut",
+        "type": "object"
+      },
+      "TemplateChangeList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateChangeOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TemplateChangeList",
+        "type": "object"
+      },
+      "TemplateChangeOut": {
+        "additionalProperties": false,
+        "properties": {
+          "changedAt": {
+            "format": "date-time",
+            "title": "Changedat",
+            "type": "string"
+          },
+          "changedBy": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changedby"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "levelAfter": {
+            "enum": [
+              "none",
+              "view",
+              "create",
+              "edit",
+              "approve",
+              "admin"
+            ],
+            "title": "Levelafter",
+            "type": "string"
+          },
+          "levelBefore": {
+            "enum": [
+              "none",
+              "view",
+              "create",
+              "edit",
+              "approve",
+              "admin"
+            ],
+            "title": "Levelbefore",
+            "type": "string"
+          },
+          "module": {
+            "title": "Module",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "module",
+          "role",
+          "levelBefore",
+          "levelAfter",
+          "changedBy",
+          "reason",
+          "changedAt"
+        ],
+        "title": "TemplateChangeOut",
+        "type": "object"
+      },
       "TemplateCreate": {
         "additionalProperties": false,
         "properties": {
@@ -9664,6 +10784,33 @@
         "title": "TemplatePage",
         "type": "object"
       },
+      "TemplatePatch": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/CellChange"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Changes",
+            "type": "array"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changes",
+          "reason"
+        ],
+        "title": "TemplatePatch",
+        "type": "object"
+      },
       "TemplateRecord": {
         "properties": {
           "code": {
@@ -9830,6 +10977,59 @@
           "detail"
         ],
         "title": "TenantErrorResponse",
+        "type": "object"
+      },
+      "TenantSyncOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Created",
+            "type": "array"
+          },
+          "excess": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Excess",
+            "type": "object"
+          },
+          "pending": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Pending",
+            "type": "object"
+          },
+          "tenantId": {
+            "format": "uuid",
+            "title": "Tenantid",
+            "type": "string"
+          },
+          "updated": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Updated",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tenantId",
+          "created",
+          "updated",
+          "pending",
+          "excess"
+        ],
+        "title": "TenantSyncOut",
         "type": "object"
       },
       "TenantView": {
@@ -16059,6 +17259,170 @@
         ]
       }
     },
+    "/api/v1/inspections/{inspection_id}/itp-steps": {
+      "get": {
+        "operationId": "inspections_itp_steps",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItpStepList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Itp Steps",
+        "tags": [
+          "inspections"
+        ]
+      },
+      "post": {
+        "operationId": "inspections_create_itp_steps",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItpStepsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItpStepList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "ITP_LOCKED, DUPLICATE_SEQ, ITP_NOT_IN_PROGRESS, INVALID_STEP_ACTION, BLOCKED_BY_HOLD or a stale expectedSyncVersion"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error or NOT_AN_ITP"
+          }
+        },
+        "summary": "Create Itp Steps",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
     "/api/v1/inspections/{inspection_id}/reinspect": {
       "post": {
         "operationId": "inspections_reinspect",
@@ -16384,6 +17748,79 @@
           }
         },
         "summary": "Get Response History",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
+    "/api/v1/inspections/{inspection_id}/signoffs": {
+      "get": {
+        "operationId": "inspections_signoffs",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignoffList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Signoffs",
         "tags": [
           "inspections"
         ]
@@ -17573,6 +19010,202 @@
         ]
       }
     },
+    "/api/v1/itp-steps/{step_id}/actions": {
+      "post": {
+        "operationId": "itp_steps_act",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Step Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItpStepActionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItpStepOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "ITP_LOCKED, DUPLICATE_SEQ, ITP_NOT_IN_PROGRESS, INVALID_STEP_ACTION, BLOCKED_BY_HOLD or a stale expectedSyncVersion"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error or NOT_AN_ITP"
+          }
+        },
+        "summary": "Act On Step",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
+    "/api/v1/itp-steps/{step_id}/signoffs": {
+      "post": {
+        "operationId": "itp_steps_sign",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Step Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignoffIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignoffOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignoffOut"
+                }
+              }
+            },
+            "description": "Recorded; waits for a countersign"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "INVALID_STEP_ACTION, BLOCKED_BY_HOLD, STEP_ON_HOLD, NOTICE_NOT_ELAPSED, COUNTERSIGN_PENDING, SELF_COUNTERSIGN or a stale expectedSyncVersion"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error or COMMENT_REQUIRED"
+          }
+        },
+        "summary": "Sign Step",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
     "/api/v1/jobs/mine": {
       "get": {
         "operationId": "jobs_list_mine",
@@ -17948,6 +19581,172 @@
         "summary": "Get My Tenant",
         "tags": [
           "tenancy"
+        ]
+      }
+    },
+    "/api/v1/platform/default-roles": {
+      "get": {
+        "operationId": "platform_get_default_role_template",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultRoleTemplate"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Template",
+        "tags": [
+          "platform"
+        ]
+      },
+      "patch": {
+        "operationId": "platform_patch_default_role_template",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplatePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateChangeList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Unknown role, module, level or tenant, or a guardrail refused it."
+          }
+        },
+        "summary": "Patch Template",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/default-roles/history": {
+      "get": {
+        "operationId": "platform_list_default_role_history",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Module"
+            }
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateChangeList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get History",
+        "tags": [
+          "platform"
+        ]
+      }
+    },
+    "/api/v1/platform/default-roles/sync": {
+      "post": {
+        "operationId": "platform_sync_default_roles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Unknown role, module, level or tenant, or a guardrail refused it."
+          }
+        },
+        "summary": "Sync Tenants",
+        "tags": [
+          "platform"
         ]
       }
     },

@@ -22,6 +22,16 @@ INSPECTIONS = [
     ("inspections.hold_point.sign", "inspections"),
 ]
 
+# The real inspections codes (INSPECTIONS-02, INSPECTIONS-03).
+ITP = [
+    ("inspection.view", "inspections"),
+    ("inspection.create", "inspections"),
+    ("inspection.respond", "inspections"),
+    ("itp.sign", "inspections"),
+    ("itp.manage", "inspections"),
+    ("itp.waive", "inspections"),
+]
+
 
 def test_expand_level_is_cumulative_and_keeps_order() -> None:
     verbs = ["read", "create", "update", "delete", "approve", "sign", "manage"]
@@ -43,9 +53,10 @@ def test_an_unknown_verb_needs_admin() -> None:
     assert expand_level("admin", ["purge"]) == ["purge"]
 
 
-def test_inspector_creates_inspections_but_cannot_approve() -> None:
+def test_inspector_signs_and_supervisor_creates_inspections() -> None:
     roles = default_permissions(INSPECTIONS)
-    assert roles["inspector"] == {"inspections.inspection.read", "inspections.inspection.create"}
+    assert "inspections.hold_point.sign" in roles["inspector"]
+    assert roles["supervisor"] == {"inspections.inspection.read", "inspections.inspection.create"}
     assert "inspections.inspection.approve" in roles["qaqc_manager"]
     assert "inspections.hold_point.sign" in roles["client_reviewer"]
     # Client Reviewer: read-only plus sign-off, never create or edit (owner, 2026-10-10).
@@ -57,10 +68,27 @@ def test_inspector_creates_inspections_but_cannot_approve() -> None:
     assert roles["auditor"] == {"inspections.inspection.read"}
 
 
+def test_itp_permissions_follow_the_quality_hierarchy() -> None:
+    # Owner, 2026-11-02: QA/QC Manager (lead inspector) sets up and waives ITP steps, the
+    # inspector signs them, the supervisor (trade lead) creates and answers but does not sign.
+    roles = default_permissions(ITP)
+    assert roles["qaqc_manager"] == {code for code, _ in ITP}
+    assert roles["inspector"] == {
+        "inspection.view",
+        "inspection.create",
+        "inspection.respond",
+        "itp.sign",
+    }
+    assert roles["supervisor"] == {"inspection.view", "inspection.create", "inspection.respond"}
+    assert "itp.manage" not in roles["project_manager"]
+    assert roles["client_reviewer"] == {"inspection.view", "itp.sign"}
+    assert roles["auditor"] == {"inspection.view"}
+
+
 def test_there_are_eleven_roles_and_every_matrix_row_has_a_level_for_each() -> None:
     assert len(ROLE_CODES) == 11
     assert all(len(levels) == 11 for levels in MATRIX.values())
-    assert MATRIX["inspections"][ROLE_CODES.index("inspector")] == "create"
+    assert MATRIX["inspections"][ROLE_CODES.index("inspector")] == "approve"
 
 
 def test_modules_without_catalogue_entries_are_skipped_with_a_log_line(

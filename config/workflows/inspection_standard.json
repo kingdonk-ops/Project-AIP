@@ -265,7 +265,16 @@
         "from": "assigned",
         "to": "supervisor_review",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.request_supervisor_review"
+        "labelKey": "workflow.inspection.action.request_supervisor_review",
+        "guard": {
+          "==": [
+            {
+              "var": "record.openStepCount"
+            },
+            0
+          ]
+        },
+        "guardMessageKey": "inspection.guard.not_ready_to_submit"
       },
       {
         "action": "request_clarification",
@@ -302,7 +311,16 @@
         "from": "in_progress",
         "to": "supervisor_review",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.request_supervisor_review"
+        "labelKey": "workflow.inspection.action.request_supervisor_review",
+        "guard": {
+          "==": [
+            {
+              "var": "record.openStepCount"
+            },
+            0
+          ]
+        },
+        "guardMessageKey": "inspection.guard.not_ready_to_submit"
       },
       {
         "action": "abort",
@@ -345,7 +363,16 @@
         "from": "in_progress_sitesync",
         "to": "supervisor_review",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.request_supervisor_review"
+        "labelKey": "workflow.inspection.action.request_supervisor_review",
+        "guard": {
+          "==": [
+            {
+              "var": "record.openStepCount"
+            },
+            0
+          ]
+        },
+        "guardMessageKey": "inspection.guard.not_ready_to_submit"
       },
       {
         "action": "sitesync_check_in",
@@ -367,7 +394,16 @@
         "from": "inspector_review",
         "to": "supervisor_review",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.request_supervisor_review"
+        "labelKey": "workflow.inspection.action.request_supervisor_review",
+        "guard": {
+          "==": [
+            {
+              "var": "record.openStepCount"
+            },
+            0
+          ]
+        },
+        "guardMessageKey": "inspection.guard.not_ready_to_submit"
       },
       {
         "action": "handover",
@@ -486,7 +522,16 @@
         "from": "rework_required",
         "to": "supervisor_review",
         "requiredPermission": "approvals.inspection.execute",
-        "labelKey": "workflow.inspection.action.request_supervisor_review"
+        "labelKey": "workflow.inspection.action.request_supervisor_review",
+        "guard": {
+          "==": [
+            {
+              "var": "record.openStepCount"
+            },
+            0
+          ]
+        },
+        "guardMessageKey": "inspection.guard.not_ready_to_submit"
       },
       {
         "action": "sitesync_checkout",

@@ -1198,6 +1198,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inspections/{inspection_id}/itp-steps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Itp Steps */
+        get: operations["inspections_itp_steps"];
+        put?: never;
+        /** Create Itp Steps */
+        post: operations["inspections_create_itp_steps"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/inspections/{inspection_id}/reinspect": {
         parameters: {
             query?: never;
@@ -1242,6 +1260,23 @@ export interface paths {
         };
         /** Get Response History */
         get: operations["inspections_response_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inspections/{inspection_id}/signoffs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Signoffs */
+        get: operations["inspections_signoffs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1415,6 +1450,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/itp-steps/{step_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Act On Step */
+        post: operations["itp_steps_act"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/itp-steps/{step_id}/signoffs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign Step */
+        post: operations["itp_steps_sign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/jobs/mine": {
         parameters: {
             query?: never;
@@ -1528,6 +1597,58 @@ export interface paths {
         get: operations["tenancy_get_my_tenant"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/default-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Template */
+        get: operations["platform_get_default_role_template"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Template */
+        patch: operations["platform_patch_default_role_template"];
+        trace?: never;
+    };
+    "/api/v1/platform/default-roles/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get History */
+        get: operations["platform_list_default_role_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/default-roles/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sync Tenants */
+        post: operations["platform_sync_default_roles"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2107,7 +2228,7 @@ export interface components {
          */
         AbilitiesResponse: {
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "itp.manage" | "itp.sign" | "itp.waive" | "ops.jobs.admin" | "platform.events.manage" | "platform.roles.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** AccessErrorBody */
         AccessErrorBody: {
@@ -2681,6 +2802,18 @@ export interface components {
             /** Syncversion */
             syncVersion: number;
         };
+        /** CellChange */
+        CellChange: {
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "none" | "view" | "create" | "edit" | "approve" | "admin";
+            /** Module */
+            module: string;
+            /** Role */
+            role: string;
+        };
         /** ContentTypeCreate */
         ContentTypeCreate: {
             /**
@@ -2874,6 +3007,15 @@ export interface components {
             status: "applied" | "pending_countersign";
             /** Tostate */
             toState: string;
+        };
+        /** DefaultRoleTemplate */
+        DefaultRoleTemplate: {
+            /** Cells */
+            cells: components["schemas"]["TemplateCellOut"][];
+            /** Levels */
+            levels: ("none" | "view" | "create" | "edit" | "approve" | "admin")[];
+            /** Roles */
+            roles: string[];
         };
         /** DefinitionOut */
         DefinitionOut: {
@@ -3811,6 +3953,187 @@ export interface components {
         ItemTypeVersionPage: {
             /** Items */
             items: components["schemas"]["ItemTypeVersionListItem"][];
+        };
+        /** ItpStepActionIn */
+        ItpStepActionIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "ready" | "start" | "reopen";
+            /** Expectedsyncversion */
+            expectedSyncVersion?: number | null;
+        };
+        /**
+         * ItpStepIn
+         * @description One step to set up; ``noticeHours`` (0 to 720) is for a witness point only.
+         */
+        ItpStepIn: {
+            /** Acceptancecriteria */
+            acceptanceCriteria?: string | null;
+            /** Blockstaskid */
+            blocksTaskId?: string | null;
+            /** Noticehours */
+            noticeHours?: number | null;
+            /**
+             * Pointtype
+             * @enum {string}
+             */
+            pointType: "hold" | "witness" | "review" | "surveillance";
+            /** Seq */
+            seq: number;
+            /** Taskid */
+            taskId?: string | null;
+            /** Title */
+            title: string;
+        };
+        /** ItpStepList */
+        ItpStepList: {
+            /** Steps */
+            steps: components["schemas"]["ItpStepView"][];
+        };
+        /**
+         * ItpStepOut
+         * @description One ITP step; ``held`` is true while an NCR (``holdFlagIssueId``) holds it.
+         */
+        ItpStepOut: {
+            /** Acceptancecriteria */
+            acceptanceCriteria: string | null;
+            /**
+             * Assetid
+             * Format: uuid
+             */
+            assetId: string;
+            /** Blockstaskid */
+            blocksTaskId: string | null;
+            /** Childinspectionid */
+            childInspectionId: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Held */
+            held: boolean;
+            /** Holdflagissueid */
+            holdFlagIssueId: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Inspectionid
+             * Format: uuid
+             */
+            inspectionId: string;
+            /** Noticehours */
+            noticeHours: number | null;
+            /**
+             * Pointtype
+             * @enum {string}
+             */
+            pointType: "hold" | "witness" | "review" | "surveillance";
+            /** Readyat */
+            readyAt: string | null;
+            /** Releasedat */
+            releasedAt: string | null;
+            /** Seq */
+            seq: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "ready" | "in_progress" | "released" | "waived" | "rejected";
+            /** Syncversion */
+            syncVersion: number;
+            /** Taskid */
+            taskId: string | null;
+            /** Title */
+            title: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /**
+         * ItpStepView
+         * @description A step as the caller sees it: the actions and decisions it may take now, and the decision
+         *     a pending sign-off waits to be countersigned with.
+         */
+        ItpStepView: {
+            /** Acceptancecriteria */
+            acceptanceCriteria: string | null;
+            /**
+             * Assetid
+             * Format: uuid
+             */
+            assetId: string;
+            /** Availableactions */
+            availableActions: string[];
+            /** Blockstaskid */
+            blocksTaskId: string | null;
+            /** Childinspectionid */
+            childInspectionId: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Held */
+            held: boolean;
+            /** Holdflagissueid */
+            holdFlagIssueId: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Inspectionid
+             * Format: uuid
+             */
+            inspectionId: string;
+            /** Noticehours */
+            noticeHours: number | null;
+            /** Pendingcountersign */
+            pendingCountersign: ("approve" | "reject" | "witnessed" | "waived") | null;
+            /**
+             * Pointtype
+             * @enum {string}
+             */
+            pointType: "hold" | "witness" | "review" | "surveillance";
+            /** Readyat */
+            readyAt: string | null;
+            /** Releasedat */
+            releasedAt: string | null;
+            /** Seq */
+            seq: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "ready" | "in_progress" | "released" | "waived" | "rejected";
+            /** Syncversion */
+            syncVersion: number;
+            /** Taskid */
+            taskId: string | null;
+            /** Title */
+            title: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /**
+         * ItpStepsIn
+         * @description ``POST /inspections/{id}/itp-steps``: 1 to 200 steps.
+         */
+        ItpStepsIn: {
+            /** Steps */
+            steps: components["schemas"]["ItpStepIn"][];
         };
         /**
          * JobErrorBody
@@ -4895,7 +5218,7 @@ export interface components {
             /** Name */
             name: string;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "itp.manage" | "itp.sign" | "itp.waive" | "ops.jobs.admin" | "platform.events.manage" | "platform.roles.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /** RoleList */
         RoleList: {
@@ -4920,7 +5243,7 @@ export interface components {
             /** Nametermkey */
             nameTermKey: string | null;
             /** Permissions */
-            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
+            permissions: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "itp.manage" | "itp.sign" | "itp.waive" | "ops.jobs.admin" | "platform.events.manage" | "platform.roles.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[];
         };
         /**
          * RoleUpdate
@@ -4932,7 +5255,7 @@ export interface components {
             /** Name */
             name?: string | null;
             /** Permissions */
-            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "ops.jobs.admin" | "platform.events.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
+            permissions?: ("access.matrix.export" | "access.role.manage" | "access.role.read" | "access.role_assignment.manage" | "access.role_assignment.read" | "access.team.manage" | "approvals.approve" | "approvals.design" | "approvals.inspection.approve" | "approvals.inspection.assign" | "approvals.inspection.client_approve" | "approvals.inspection.execute" | "approvals.inspection.retire" | "approvals.inspection.review" | "approvals.start" | "approvals.view" | "asset.create" | "asset.delete" | "asset.move" | "asset.update" | "asset.view" | "audit.activity.view" | "audit.log.read" | "form.manage" | "form.publish" | "form.view" | "identity.signoff_policy.manage" | "identity.signoff_policy.read" | "identity.user.manage" | "identity.user.read" | "inspection.create" | "inspection.respond" | "inspection.view" | "item_type.edit" | "item_type.manage" | "item_type.publish" | "item_type.view" | "itp.manage" | "itp.sign" | "itp.waive" | "ops.jobs.admin" | "platform.events.manage" | "platform.roles.manage" | "platform.tenants.manage" | "portal.grant.manage" | "portal.record.sign_off" | "portal.record.view" | "portal.record.witness" | "portal.report.download" | "portal.user.invite" | "portal.user.suspend" | "portal.user.view" | "project.archive" | "project.create" | "project.update" | "project.view" | "report.create" | "report.template.manage" | "report.template.view" | "report.view" | "site.manage" | "site.view" | "tenancy.organisation.manage" | "tenancy.organisation.read" | "tenancy.plan.read" | "tenant.flags.manage" | "terms.coverage.read" | "uploads.admin" | "uploads.create" | "uploads.view")[] | null;
         };
         /**
          * RouteOut
@@ -5186,6 +5509,109 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** SignoffEntry */
+        SignoffEntry: {
+            /** Actioncode */
+            actionCode: string;
+            /**
+             * Assetid
+             * Format: uuid
+             */
+            assetId: string;
+            /** Assurancelevel */
+            assuranceLevel: number;
+            /** Assurancemethod */
+            assuranceMethod: string;
+            /** Authstrength */
+            authStrength: string;
+            /** Authenticatedat */
+            authenticatedAt: string | null;
+            /** Comment */
+            comment: string | null;
+            /** Contenthash */
+            contentHash: string;
+            /** Countersignsid */
+            countersignsId: string | null;
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject" | "witnessed" | "waived";
+            /** Deviceid */
+            deviceId: string | null;
+            /** Entryhash */
+            entryHash: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Inspectionid
+             * Format: uuid
+             */
+            inspectionId: string;
+            /** Itpstepid */
+            itpStepId: string | null;
+            /** Prevhash */
+            prevHash: string;
+            /** Seq */
+            seq: number;
+            /** Signatoryrole */
+            signatoryRole: string;
+            /**
+             * Signedat
+             * Format: date-time
+             */
+            signedAt: string;
+            /**
+             * Signeruserid
+             * Format: uuid
+             */
+            signerUserId: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "applied" | "pending_countersign";
+        };
+        /**
+         * SignoffIn
+         * @description ``POST /itp-steps/{stepId}/signoffs``; ``comment`` is required to waive or reject.
+         */
+        SignoffIn: {
+            /** Comment */
+            comment?: string | null;
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject" | "witnessed" | "waived";
+            /** Expectedsyncversion */
+            expectedSyncVersion?: number | null;
+            /**
+             * Signatoryrole
+             * @enum {string}
+             */
+            signatoryRole: "inspector" | "supervisor" | "third_party";
+        };
+        /** SignoffList */
+        SignoffList: {
+            /** Brokenatseq */
+            brokenAtSeq?: number | null;
+            /** Chainvalid */
+            chainValid: boolean;
+            /** Entries */
+            entries: components["schemas"]["SignoffEntry"][];
+        };
+        /**
+         * SignoffOut
+         * @description 200 when the decision took effect, 202 when it waits for a countersign.
+         */
+        SignoffOut: {
+            signoff: components["schemas"]["SignoffEntry"];
+            step: components["schemas"]["ItpStepOut"];
+        };
         /** SignoffPolicyList */
         SignoffPolicyList: {
             /** Items */
@@ -5425,6 +5851,16 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /** SyncRequest */
+        SyncRequest: {
+            /** Tenantids */
+            tenantIds?: string[] | null;
+        };
+        /** SyncResult */
+        SyncResult: {
+            /** Tenants */
+            tenants: components["schemas"]["TenantSyncOut"][];
+        };
         /** TeamCreate */
         TeamCreate: {
             /** Name */
@@ -5511,6 +5947,65 @@ export interface components {
             organisationId?: string | null;
             /** Teamtype */
             teamType?: ("internal" | "subcontractor" | "client") | null;
+        };
+        /** TemplateCellOut */
+        TemplateCellOut: {
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "none" | "view" | "create" | "edit" | "approve" | "admin";
+            /** Module */
+            module: string;
+            /** Overridden */
+            overridden: boolean;
+            /** Role */
+            role: string;
+            /**
+             * Shippedlevel
+             * @enum {string}
+             */
+            shippedLevel: "none" | "view" | "create" | "edit" | "approve" | "admin";
+            /** Updatedat */
+            updatedAt: string | null;
+            /** Updatedby */
+            updatedBy: string | null;
+        };
+        /** TemplateChangeList */
+        TemplateChangeList: {
+            /** Items */
+            items: components["schemas"]["TemplateChangeOut"][];
+        };
+        /** TemplateChangeOut */
+        TemplateChangeOut: {
+            /**
+             * Changedat
+             * Format: date-time
+             */
+            changedAt: string;
+            /** Changedby */
+            changedBy: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Levelafter
+             * @enum {string}
+             */
+            levelAfter: "none" | "view" | "create" | "edit" | "approve" | "admin";
+            /**
+             * Levelbefore
+             * @enum {string}
+             */
+            levelBefore: "none" | "view" | "create" | "edit" | "approve" | "admin";
+            /** Module */
+            module: string;
+            /** Reason */
+            reason: string;
+            /** Role */
+            role: string;
         };
         /** TemplateCreate */
         TemplateCreate: {
@@ -5613,6 +6108,13 @@ export interface components {
             /** Items */
             items: components["schemas"]["TemplateListItem"][];
         };
+        /** TemplatePatch */
+        TemplatePatch: {
+            /** Changes */
+            changes: components["schemas"]["CellChange"][];
+            /** Reason */
+            reason: string;
+        };
         /** TemplateRecord */
         TemplateRecord: {
             /** Code */
@@ -5679,6 +6181,26 @@ export interface components {
          */
         TenantErrorResponse: {
             detail: components["schemas"]["TenantErrorBody"];
+        };
+        /** TenantSyncOut */
+        TenantSyncOut: {
+            /** Created */
+            created: string[];
+            /** Excess */
+            excess: {
+                [key: string]: string[];
+            };
+            /** Pending */
+            pending: {
+                [key: string]: string[];
+            };
+            /**
+             * Tenantid
+             * Format: uuid
+             */
+            tenantId: string;
+            /** Updated */
+            updated: string[];
         };
         /**
          * TenantView
@@ -9994,6 +10516,135 @@ export interface operations {
             };
         };
     };
+    inspections_itp_steps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inspection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItpStepList"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inspections_create_itp_steps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inspection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItpStepsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItpStepList"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description ITP_LOCKED, DUPLICATE_SEQ, ITP_NOT_IN_PROGRESS, INVALID_STEP_ACTION, BLOCKED_BY_HOLD or a stale expectedSyncVersion */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Validation error or NOT_AN_ITP */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+        };
+    };
     inspections_reinspect: {
         parameters: {
             query?: never;
@@ -10209,6 +10860,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResponseHistory"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inspections_signoffs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inspection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignoffList"];
                 };
             };
             /** @description Not signed in, or STEP_UP_REQUIRED */
@@ -11106,6 +11815,157 @@ export interface operations {
             };
         };
     };
+    itp_steps_act: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                step_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItpStepActionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItpStepOut"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description ITP_LOCKED, DUPLICATE_SEQ, ITP_NOT_IN_PROGRESS, INVALID_STEP_ACTION, BLOCKED_BY_HOLD or a stale expectedSyncVersion */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Validation error or NOT_AN_ITP */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+        };
+    };
+    itp_steps_sign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                step_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignoffIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignoffOut"];
+                };
+            };
+            /** @description Recorded; waits for a countersign */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignoffOut"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description INVALID_STEP_ACTION, BLOCKED_BY_HOLD, STEP_ON_HOLD, NOTICE_NOT_ELAPSED, COUNTERSIGN_PENDING, SELF_COUNTERSIGN or a stale expectedSyncVersion */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Validation error or COMMENT_REQUIRED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+        };
+    };
     jobs_list_mine: {
         parameters: {
             query?: {
@@ -11401,6 +12261,121 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TenantErrorResponse"];
                 };
+            };
+        };
+    };
+    platform_get_default_role_template: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefaultRoleTemplate"];
+                };
+            };
+        };
+    };
+    platform_patch_default_role_template: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplatePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateChangeList"];
+                };
+            };
+            /** @description Unknown role, module, level or tenant, or a guardrail refused it. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    platform_list_default_role_history: {
+        parameters: {
+            query?: {
+                module?: string | null;
+                role?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateChangeList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    platform_sync_default_roles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncResult"];
+                };
+            };
+            /** @description Unknown role, module, level or tenant, or a guardrail refused it. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

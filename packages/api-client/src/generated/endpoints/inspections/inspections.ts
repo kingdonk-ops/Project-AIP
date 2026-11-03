@@ -29,9 +29,16 @@ import type {
   InspectionPage,
   InspectionTransitionOut,
   InspectionsListParams,
+  ItpStepActionIn,
+  ItpStepList,
+  ItpStepOut,
+  ItpStepsIn,
   ResponseHistory,
   ResponsesIn,
   ResponsesOut,
+  SignoffIn,
+  SignoffList,
+  SignoffOut,
   TransitionBody
 } from '../../model';
 
@@ -592,7 +599,268 @@ export function useInspectionsHistory<TData = Awaited<ReturnType<typeof inspecti
 
 
 
-export type inspectionsReinspectResponse201 = {
+export type inspectionsItpStepsResponse200 = {
+  data: ItpStepList
+  status: 200
+}
+
+export type inspectionsItpStepsResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsItpStepsResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsItpStepsResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsItpStepsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type inspectionsItpStepsResponseSuccess = (inspectionsItpStepsResponse200) & {
+  headers: Headers;
+};
+export type inspectionsItpStepsResponseError = (inspectionsItpStepsResponse401 | inspectionsItpStepsResponse403 | inspectionsItpStepsResponse404 | inspectionsItpStepsResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsItpStepsResponse = (inspectionsItpStepsResponseSuccess | inspectionsItpStepsResponseError)
+
+export const getInspectionsItpStepsUrl = (inspectionId: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/itp-steps`
+}
+
+/**
+ * @summary Get Itp Steps
+ */
+export const inspectionsItpSteps = async (inspectionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsItpStepsResponse> => {
+
+  return apiFetch<inspectionsItpStepsResponse>(getInspectionsItpStepsUrl(inspectionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getInspectionsItpStepsQueryKey = (inspectionId: string,) => {
+    return [
+    `/api/v1/inspections/${inspectionId}/itp-steps`
+    ] as const;
+    }
+
+
+export const getInspectionsItpStepsQueryOptions = <TData = Awaited<ReturnType<typeof inspectionsItpSteps>>, TError = InspectionErrorBody | HTTPValidationError>(inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsItpSteps>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getInspectionsItpStepsQueryKey(inspectionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof inspectionsItpSteps>>> = ({ signal }) => inspectionsItpSteps(inspectionId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: inspectionId !== null && inspectionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof inspectionsItpSteps>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type InspectionsItpStepsQueryResult = NonNullable<Awaited<ReturnType<typeof inspectionsItpSteps>>>
+export type InspectionsItpStepsQueryError = InspectionErrorBody | HTTPValidationError
+
+
+export function useInspectionsItpSteps<TData = Awaited<ReturnType<typeof inspectionsItpSteps>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsItpSteps>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof inspectionsItpSteps>>,
+          TError,
+          Awaited<ReturnType<typeof inspectionsItpSteps>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInspectionsItpSteps<TData = Awaited<ReturnType<typeof inspectionsItpSteps>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsItpSteps>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof inspectionsItpSteps>>,
+          TError,
+          Awaited<ReturnType<typeof inspectionsItpSteps>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInspectionsItpSteps<TData = Awaited<ReturnType<typeof inspectionsItpSteps>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsItpSteps>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Itp Steps
+ */
+
+export function useInspectionsItpSteps<TData = Awaited<ReturnType<typeof inspectionsItpSteps>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsItpSteps>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getInspectionsItpStepsQueryOptions(inspectionId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type inspectionsCreateItpStepsResponse201 = {
+  data: ItpStepList
+  status: 201
+}
+
+export type inspectionsCreateItpStepsResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsCreateItpStepsResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsCreateItpStepsResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsCreateItpStepsResponse409 = {
+  data: InspectionErrorBody
+  status: 409
+}
+
+export type inspectionsCreateItpStepsResponse422 = {
+  data: InspectionErrorBody
+  status: 422
+}
+
+export type inspectionsCreateItpStepsResponseSuccess = (inspectionsCreateItpStepsResponse201) & {
+  headers: Headers;
+};
+export type inspectionsCreateItpStepsResponseError = (inspectionsCreateItpStepsResponse401 | inspectionsCreateItpStepsResponse403 | inspectionsCreateItpStepsResponse404 | inspectionsCreateItpStepsResponse409 | inspectionsCreateItpStepsResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsCreateItpStepsResponse = (inspectionsCreateItpStepsResponseSuccess | inspectionsCreateItpStepsResponseError)
+
+export const getInspectionsCreateItpStepsUrl = (inspectionId: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/itp-steps`
+}
+
+/**
+ * @summary Create Itp Steps
+ */
+export const inspectionsCreateItpSteps = async (inspectionId: string,
+    itpStepsIn: ItpStepsIn, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsCreateItpStepsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<inspectionsCreateItpStepsResponse>(getInspectionsCreateItpStepsUrl(inspectionId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(itpStepsIn)
+  }
+);}
+
+
+
+
+
+export const getInspectionsCreateItpStepsMutationKey = () => ['inspectionsCreateItpSteps'] as const;
+
+export const getInspectionsCreateItpStepsMutationOptions = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsCreateItpSteps>>, TError,InspectionsCreateItpStepsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inspectionsCreateItpSteps>>, TError,InspectionsCreateItpStepsMutationVariables, TContext> => {
+
+const mutationKey = getInspectionsCreateItpStepsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inspectionsCreateItpSteps>>, InspectionsCreateItpStepsMutationVariables> = (props) => {
+          const {inspectionId,data} = props ?? {};
+
+          return  inspectionsCreateItpSteps(inspectionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InspectionsCreateItpStepsMutationResult = NonNullable<Awaited<ReturnType<typeof inspectionsCreateItpSteps>>>
+    export type InspectionsCreateItpStepsMutationBody = ItpStepsIn
+    export type InspectionsCreateItpStepsMutationError = InspectionErrorBody
+    export type InspectionsCreateItpStepsMutationVariables = {inspectionId: string;data: ItpStepsIn}
+
+    /**
+ * @summary Create Itp Steps
+ */
+export const useInspectionsCreateItpSteps = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsCreateItpSteps>>, TError,InspectionsCreateItpStepsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inspectionsCreateItpSteps>>,
+        TError,
+        InspectionsCreateItpStepsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInspectionsCreateItpStepsMutationOptions(options), queryClient);
+    }
+    export type inspectionsReinspectResponse201 = {
   data: InspectionOut
   status: 201
 }
@@ -1107,6 +1375,140 @@ export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof 
 
 
 
+export type inspectionsSignoffsResponse200 = {
+  data: SignoffList
+  status: 200
+}
+
+export type inspectionsSignoffsResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsSignoffsResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsSignoffsResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsSignoffsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type inspectionsSignoffsResponseSuccess = (inspectionsSignoffsResponse200) & {
+  headers: Headers;
+};
+export type inspectionsSignoffsResponseError = (inspectionsSignoffsResponse401 | inspectionsSignoffsResponse403 | inspectionsSignoffsResponse404 | inspectionsSignoffsResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsSignoffsResponse = (inspectionsSignoffsResponseSuccess | inspectionsSignoffsResponseError)
+
+export const getInspectionsSignoffsUrl = (inspectionId: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/signoffs`
+}
+
+/**
+ * @summary Get Signoffs
+ */
+export const inspectionsSignoffs = async (inspectionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsSignoffsResponse> => {
+
+  return apiFetch<inspectionsSignoffsResponse>(getInspectionsSignoffsUrl(inspectionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getInspectionsSignoffsQueryKey = (inspectionId: string,) => {
+    return [
+    `/api/v1/inspections/${inspectionId}/signoffs`
+    ] as const;
+    }
+
+
+export const getInspectionsSignoffsQueryOptions = <TData = Awaited<ReturnType<typeof inspectionsSignoffs>>, TError = InspectionErrorBody | HTTPValidationError>(inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsSignoffs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getInspectionsSignoffsQueryKey(inspectionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof inspectionsSignoffs>>> = ({ signal }) => inspectionsSignoffs(inspectionId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: inspectionId !== null && inspectionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof inspectionsSignoffs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type InspectionsSignoffsQueryResult = NonNullable<Awaited<ReturnType<typeof inspectionsSignoffs>>>
+export type InspectionsSignoffsQueryError = InspectionErrorBody | HTTPValidationError
+
+
+export function useInspectionsSignoffs<TData = Awaited<ReturnType<typeof inspectionsSignoffs>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsSignoffs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof inspectionsSignoffs>>,
+          TError,
+          Awaited<ReturnType<typeof inspectionsSignoffs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInspectionsSignoffs<TData = Awaited<ReturnType<typeof inspectionsSignoffs>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsSignoffs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof inspectionsSignoffs>>,
+          TError,
+          Awaited<ReturnType<typeof inspectionsSignoffs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInspectionsSignoffs<TData = Awaited<ReturnType<typeof inspectionsSignoffs>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsSignoffs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Signoffs
+ */
+
+export function useInspectionsSignoffs<TData = Awaited<ReturnType<typeof inspectionsSignoffs>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsSignoffs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getInspectionsSignoffsQueryOptions(inspectionId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 export type inspectionsTransitionResponse200 = {
   data: InspectionTransitionOut
   status: 200
@@ -1238,4 +1640,263 @@ export const useInspectionsTransition = <TError = InspectionErrorBody,
         TContext
       > => {
       return useMutation(getInspectionsTransitionMutationOptions(options), queryClient);
+    }
+    export type itpStepsActResponse200 = {
+  data: ItpStepOut
+  status: 200
+}
+
+export type itpStepsActResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type itpStepsActResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type itpStepsActResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type itpStepsActResponse409 = {
+  data: InspectionErrorBody
+  status: 409
+}
+
+export type itpStepsActResponse422 = {
+  data: InspectionErrorBody
+  status: 422
+}
+
+export type itpStepsActResponseSuccess = (itpStepsActResponse200) & {
+  headers: Headers;
+};
+export type itpStepsActResponseError = (itpStepsActResponse401 | itpStepsActResponse403 | itpStepsActResponse404 | itpStepsActResponse409 | itpStepsActResponse422) & {
+  headers: Headers;
+};
+
+export type itpStepsActResponse = (itpStepsActResponseSuccess | itpStepsActResponseError)
+
+export const getItpStepsActUrl = (stepId: string,) => {
+
+
+
+
+  return `/api/v1/itp-steps/${stepId}/actions`
+}
+
+/**
+ * @summary Act On Step
+ */
+export const itpStepsAct = async (stepId: string,
+    itpStepActionIn: ItpStepActionIn, options?: Parameters<typeof apiFetch>[1]): Promise<itpStepsActResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<itpStepsActResponse>(getItpStepsActUrl(stepId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(itpStepActionIn)
+  }
+);}
+
+
+
+
+
+export const getItpStepsActMutationKey = () => ['itpStepsAct'] as const;
+
+export const getItpStepsActMutationOptions = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itpStepsAct>>, TError,ItpStepsActMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof itpStepsAct>>, TError,ItpStepsActMutationVariables, TContext> => {
+
+const mutationKey = getItpStepsActMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof itpStepsAct>>, ItpStepsActMutationVariables> = (props) => {
+          const {stepId,data} = props ?? {};
+
+          return  itpStepsAct(stepId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ItpStepsActMutationResult = NonNullable<Awaited<ReturnType<typeof itpStepsAct>>>
+    export type ItpStepsActMutationBody = ItpStepActionIn
+    export type ItpStepsActMutationError = InspectionErrorBody
+    export type ItpStepsActMutationVariables = {stepId: string;data: ItpStepActionIn}
+
+    /**
+ * @summary Act On Step
+ */
+export const useItpStepsAct = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itpStepsAct>>, TError,ItpStepsActMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof itpStepsAct>>,
+        TError,
+        ItpStepsActMutationVariables,
+        TContext
+      > => {
+      return useMutation(getItpStepsActMutationOptions(options), queryClient);
+    }
+    export type itpStepsSignResponse200 = {
+  data: SignoffOut
+  status: 200
+}
+
+export type itpStepsSignResponse202 = {
+  data: SignoffOut
+  status: 202
+}
+
+export type itpStepsSignResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type itpStepsSignResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type itpStepsSignResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type itpStepsSignResponse409 = {
+  data: InspectionErrorBody
+  status: 409
+}
+
+export type itpStepsSignResponse422 = {
+  data: InspectionErrorBody
+  status: 422
+}
+
+export type itpStepsSignResponseSuccess = (itpStepsSignResponse200 | itpStepsSignResponse202) & {
+  headers: Headers;
+};
+export type itpStepsSignResponseError = (itpStepsSignResponse401 | itpStepsSignResponse403 | itpStepsSignResponse404 | itpStepsSignResponse409 | itpStepsSignResponse422) & {
+  headers: Headers;
+};
+
+export type itpStepsSignResponse = (itpStepsSignResponseSuccess | itpStepsSignResponseError)
+
+export const getItpStepsSignUrl = (stepId: string,) => {
+
+
+
+
+  return `/api/v1/itp-steps/${stepId}/signoffs`
+}
+
+/**
+ * @summary Sign Step
+ */
+export const itpStepsSign = async (stepId: string,
+    signoffIn: SignoffIn, options?: Parameters<typeof apiFetch>[1]): Promise<itpStepsSignResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<itpStepsSignResponse>(getItpStepsSignUrl(stepId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(signoffIn)
+  }
+);}
+
+
+
+
+
+export const getItpStepsSignMutationKey = () => ['itpStepsSign'] as const;
+
+export const getItpStepsSignMutationOptions = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itpStepsSign>>, TError,ItpStepsSignMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof itpStepsSign>>, TError,ItpStepsSignMutationVariables, TContext> => {
+
+const mutationKey = getItpStepsSignMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof itpStepsSign>>, ItpStepsSignMutationVariables> = (props) => {
+          const {stepId,data} = props ?? {};
+
+          return  itpStepsSign(stepId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ItpStepsSignMutationResult = NonNullable<Awaited<ReturnType<typeof itpStepsSign>>>
+    export type ItpStepsSignMutationBody = SignoffIn
+    export type ItpStepsSignMutationError = InspectionErrorBody
+    export type ItpStepsSignMutationVariables = {stepId: string;data: SignoffIn}
+
+    /**
+ * @summary Sign Step
+ */
+export const useItpStepsSign = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itpStepsSign>>, TError,ItpStepsSignMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof itpStepsSign>>,
+        TError,
+        ItpStepsSignMutationVariables,
+        TContext
+      > => {
+      return useMutation(getItpStepsSignMutationOptions(options), queryClient);
     }

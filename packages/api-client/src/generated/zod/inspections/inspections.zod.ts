@@ -142,6 +142,97 @@ export const InspectionsHistoryResponse = zod.object({
 })
 
 /**
+ * @summary Get Itp Steps
+ */
+export const InspectionsItpStepsParams = zod.object({
+  "inspection_id": zod.uuid()
+})
+
+export const InspectionsItpStepsResponse = zod.object({
+  "steps": zod.array(zod.object({
+  "acceptanceCriteria": zod.union([zod.string(),zod.null()]),
+  "assetId": zod.uuid(),
+  "availableActions": zod.array(zod.string()),
+  "blocksTaskId": zod.union([zod.uuid(),zod.null()]),
+  "childInspectionId": zod.union([zod.uuid(),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "held": zod.boolean(),
+  "holdFlagIssueId": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "inspectionId": zod.uuid(),
+  "noticeHours": zod.union([zod.int(),zod.null()]),
+  "pendingCountersign": zod.union([zod.enum(['approve', 'reject', 'witnessed', 'waived']),zod.null()]),
+  "pointType": zod.enum(['hold', 'witness', 'review', 'surveillance']),
+  "readyAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "releasedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "seq": zod.int(),
+  "status": zod.enum(['pending', 'ready', 'in_progress', 'released', 'waived', 'rejected']),
+  "syncVersion": zod.int(),
+  "taskId": zod.union([zod.uuid(),zod.null()]),
+  "title": zod.string(),
+  "updatedAt": zod.iso.datetime({"offset":true})
+}).describe('A step as the caller sees it: the actions and decisions it may take now, and the decision\na pending sign-off waits to be countersigned with.'))
+})
+
+/**
+ * @summary Create Itp Steps
+ */
+export const InspectionsCreateItpStepsParams = zod.object({
+  "inspection_id": zod.uuid()
+})
+
+export const inspectionsCreateItpStepsBodyStepsItemAcceptanceCriteriaOneMax = 4000;
+
+export const inspectionsCreateItpStepsBodyStepsItemNoticeHoursOneMin = 0;
+export const inspectionsCreateItpStepsBodyStepsItemNoticeHoursOneMax = 720;
+
+export const inspectionsCreateItpStepsBodyStepsItemSeqMax = 10000;
+
+export const inspectionsCreateItpStepsBodyStepsItemTitleMax = 200;
+
+export const inspectionsCreateItpStepsBodyStepsMax = 200;
+
+
+
+export const InspectionsCreateItpStepsBody = zod.object({
+  "steps": zod.array(zod.object({
+  "acceptanceCriteria": zod.union([zod.string().max(inspectionsCreateItpStepsBodyStepsItemAcceptanceCriteriaOneMax),zod.null()]).optional(),
+  "blocksTaskId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "noticeHours": zod.union([zod.int().min(inspectionsCreateItpStepsBodyStepsItemNoticeHoursOneMin).max(inspectionsCreateItpStepsBodyStepsItemNoticeHoursOneMax),zod.null()]).optional(),
+  "pointType": zod.enum(['hold', 'witness', 'review', 'surveillance']),
+  "seq": zod.int().min(1).max(inspectionsCreateItpStepsBodyStepsItemSeqMax),
+  "taskId": zod.union([zod.uuid(),zod.null()]).optional(),
+  "title": zod.string().min(1).max(inspectionsCreateItpStepsBodyStepsItemTitleMax)
+}).describe('One step to set up; ``noticeHours`` (0 to 720) is for a witness point only.')).min(1).max(inspectionsCreateItpStepsBodyStepsMax)
+}).describe('``POST /inspections/{id}/itp-steps``: 1 to 200 steps.')
+
+export const InspectionsCreateItpStepsResponse = zod.object({
+  "steps": zod.array(zod.object({
+  "acceptanceCriteria": zod.union([zod.string(),zod.null()]),
+  "assetId": zod.uuid(),
+  "availableActions": zod.array(zod.string()),
+  "blocksTaskId": zod.union([zod.uuid(),zod.null()]),
+  "childInspectionId": zod.union([zod.uuid(),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "held": zod.boolean(),
+  "holdFlagIssueId": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "inspectionId": zod.uuid(),
+  "noticeHours": zod.union([zod.int(),zod.null()]),
+  "pendingCountersign": zod.union([zod.enum(['approve', 'reject', 'witnessed', 'waived']),zod.null()]),
+  "pointType": zod.enum(['hold', 'witness', 'review', 'surveillance']),
+  "readyAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "releasedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "seq": zod.int(),
+  "status": zod.enum(['pending', 'ready', 'in_progress', 'released', 'waived', 'rejected']),
+  "syncVersion": zod.int(),
+  "taskId": zod.union([zod.uuid(),zod.null()]),
+  "title": zod.string(),
+  "updatedAt": zod.iso.datetime({"offset":true})
+}).describe('A step as the caller sees it: the actions and decisions it may take now, and the decision\na pending sign-off waits to be countersigned with.'))
+})
+
+/**
  * @summary Reinspect
  */
 export const InspectionsReinspectParams = zod.object({
@@ -245,6 +336,41 @@ export const InspectionsResponseHistoryResponse = zod.object({
 }).describe('Every response for one field, oldest first.')
 
 /**
+ * @summary Get Signoffs
+ */
+export const InspectionsSignoffsParams = zod.object({
+  "inspection_id": zod.uuid()
+})
+
+export const InspectionsSignoffsResponse = zod.object({
+  "brokenAtSeq": zod.union([zod.int(),zod.null()]).optional(),
+  "chainValid": zod.boolean(),
+  "entries": zod.array(zod.object({
+  "actionCode": zod.string(),
+  "assetId": zod.uuid(),
+  "assuranceLevel": zod.int(),
+  "assuranceMethod": zod.string(),
+  "authStrength": zod.string(),
+  "authenticatedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "comment": zod.union([zod.string(),zod.null()]),
+  "contentHash": zod.string(),
+  "countersignsId": zod.union([zod.uuid(),zod.null()]),
+  "decision": zod.enum(['approve', 'reject', 'witnessed', 'waived']),
+  "deviceId": zod.union([zod.uuid(),zod.null()]),
+  "entryHash": zod.string(),
+  "id": zod.uuid(),
+  "inspectionId": zod.uuid(),
+  "itpStepId": zod.union([zod.uuid(),zod.null()]),
+  "prevHash": zod.string(),
+  "seq": zod.int(),
+  "signatoryRole": zod.string(),
+  "signedAt": zod.iso.datetime({"offset":true}),
+  "signerUserId": zod.uuid(),
+  "status": zod.enum(['applied', 'pending_countersign'])
+}))
+})
+
+/**
  * @summary Transition
  */
 export const InspectionsTransitionParams = zod.object({
@@ -311,4 +437,107 @@ export const InspectionsTransitionResponse = zod.object({
   "workflowInstanceId": zod.uuid()
 }).describe('The record plus its workflow: ``currentState`` is the instance\'s (the truth), and\n``instanceSyncVersion`` the value a transition may send as ``expectedSyncVersion``.')
 }).describe('200 when the transition took effect, 202 when it waits for a countersign.')
+
+/**
+ * @summary Act On Step
+ */
+export const ItpStepsActParams = zod.object({
+  "step_id": zod.uuid()
+})
+
+
+
+
+export const ItpStepsActBody = zod.object({
+  "action": zod.enum(['ready', 'start', 'reopen']),
+  "expectedSyncVersion": zod.union([zod.int().min(1),zod.null()]).optional()
+})
+
+export const ItpStepsActResponse = zod.object({
+  "acceptanceCriteria": zod.union([zod.string(),zod.null()]),
+  "assetId": zod.uuid(),
+  "blocksTaskId": zod.union([zod.uuid(),zod.null()]),
+  "childInspectionId": zod.union([zod.uuid(),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "held": zod.boolean(),
+  "holdFlagIssueId": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "inspectionId": zod.uuid(),
+  "noticeHours": zod.union([zod.int(),zod.null()]),
+  "pointType": zod.enum(['hold', 'witness', 'review', 'surveillance']),
+  "readyAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "releasedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "seq": zod.int(),
+  "status": zod.enum(['pending', 'ready', 'in_progress', 'released', 'waived', 'rejected']),
+  "syncVersion": zod.int(),
+  "taskId": zod.union([zod.uuid(),zod.null()]),
+  "title": zod.string(),
+  "updatedAt": zod.iso.datetime({"offset":true})
+}).describe('One ITP step; ``held`` is true while an NCR (``holdFlagIssueId``) holds it.')
+
+/**
+ * @summary Sign Step
+ */
+export const ItpStepsSignParams = zod.object({
+  "step_id": zod.uuid()
+})
+
+export const itpStepsSignBodyCommentOneMax = 2000;
+
+
+
+
+export const ItpStepsSignBody = zod.object({
+  "comment": zod.union([zod.string().max(itpStepsSignBodyCommentOneMax),zod.null()]).optional(),
+  "decision": zod.enum(['approve', 'reject', 'witnessed', 'waived']),
+  "expectedSyncVersion": zod.union([zod.int().min(1),zod.null()]).optional(),
+  "signatoryRole": zod.enum(['inspector', 'supervisor', 'third_party'])
+}).describe('``POST /itp-steps/{stepId}/signoffs``; ``comment`` is required to waive or reject.')
+
+export const ItpStepsSignResponse = zod.object({
+  "signoff": zod.object({
+  "actionCode": zod.string(),
+  "assetId": zod.uuid(),
+  "assuranceLevel": zod.int(),
+  "assuranceMethod": zod.string(),
+  "authStrength": zod.string(),
+  "authenticatedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "comment": zod.union([zod.string(),zod.null()]),
+  "contentHash": zod.string(),
+  "countersignsId": zod.union([zod.uuid(),zod.null()]),
+  "decision": zod.enum(['approve', 'reject', 'witnessed', 'waived']),
+  "deviceId": zod.union([zod.uuid(),zod.null()]),
+  "entryHash": zod.string(),
+  "id": zod.uuid(),
+  "inspectionId": zod.uuid(),
+  "itpStepId": zod.union([zod.uuid(),zod.null()]),
+  "prevHash": zod.string(),
+  "seq": zod.int(),
+  "signatoryRole": zod.string(),
+  "signedAt": zod.iso.datetime({"offset":true}),
+  "signerUserId": zod.uuid(),
+  "status": zod.enum(['applied', 'pending_countersign'])
+}),
+  "step": zod.object({
+  "acceptanceCriteria": zod.union([zod.string(),zod.null()]),
+  "assetId": zod.uuid(),
+  "blocksTaskId": zod.union([zod.uuid(),zod.null()]),
+  "childInspectionId": zod.union([zod.uuid(),zod.null()]),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "held": zod.boolean(),
+  "holdFlagIssueId": zod.union([zod.uuid(),zod.null()]),
+  "id": zod.uuid(),
+  "inspectionId": zod.uuid(),
+  "noticeHours": zod.union([zod.int(),zod.null()]),
+  "pointType": zod.enum(['hold', 'witness', 'review', 'surveillance']),
+  "readyAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "releasedAt": zod.union([zod.iso.datetime({"offset":true}),zod.null()]),
+  "seq": zod.int(),
+  "status": zod.enum(['pending', 'ready', 'in_progress', 'released', 'waived', 'rejected']),
+  "syncVersion": zod.int(),
+  "taskId": zod.union([zod.uuid(),zod.null()]),
+  "title": zod.string(),
+  "updatedAt": zod.iso.datetime({"offset":true})
+}).describe('One ITP step; ``held`` is true while an NCR (``holdFlagIssueId``) holds it.')
+}).describe('200 when the decision took effect, 202 when it waits for a countersign.')
 

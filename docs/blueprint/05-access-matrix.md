@@ -13,6 +13,12 @@
 > tenant data only through a customer-approved, time-boxed support-access grant (TENANCY-06). The 11 tenant
 > roles (ACCESS-02) are unaffected: Super Admin is not a tenant role.
 
+> **Shipped default and the operator template (hand-edited 2026-11-02, ADR 0042).** This table and `MATRIX` in
+> `apps/api/aip/modules/access/roles/default_roles.py` are the shipped default and change together. The platform
+> operator may move single cells at runtime (ACCESS-09, `platform.roles.manage`); those deviations live in the
+> `default_role_level` table, are listed with their shipped level by `GET /api/v1/platform/default-roles`, and are
+> not reflected here until the owner adopts them into the code and this table.
+
 
 - **access matrix**:
 
@@ -38,7 +44,7 @@
 | Scopes of work (RSW), disciplines & tasks | none | admin | approve | edit | view | edit | view | view | view | view | view | view | create |
 | Offline field app & sync | none | admin | view | view | view | create | create | create | none | none | create | none | none |
 | Form & template designer | none | admin | view | admin | edit | view | view | view | view | none | none | view | none |
-| Inspections, ITPs & hold points | none | admin | approve | approve | view | approve | create | create | view | approve | create | view | create |
+| Inspections, ITPs & hold points | none | admin | approve | admin | view | create | approve | create | view | approve | create | view | create |
 | Certificates, competency & calibration gate | none | admin | edit | approve | edit | edit | view | view | edit | view | create | view | create |
 | Issues, NCRs & corrective actions | none | admin | approve | approve | approve | approve | create | create | view | view | edit | view | create |
 | Punch list & defects liability | none | admin | approve | approve | view | edit | create | create | view | view | edit | view | none |

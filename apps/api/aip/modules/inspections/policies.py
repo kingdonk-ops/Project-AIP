@@ -12,6 +12,9 @@ from typing import Final
 
 __all__ = [
     "CREATE_PERMISSION",
+    "ITP_MANAGE_PERMISSION",
+    "ITP_SIGN_PERMISSION",
+    "ITP_WAIVE_PERMISSION",
     "RECORD_TYPE",
     "REINSPECTABLE_STATES",
     "RESPOND_PERMISSION",
@@ -29,6 +32,9 @@ VIEW_PERMISSION: Final = "inspection.view"
 CREATE_PERMISSION: Final = "inspection.create"
 RESPOND_PERMISSION: Final = "inspection.respond"
 REVIEW_EDIT_PERMISSION: Final = "approvals.inspection.review"  # "Edit Inspection during Review"
+ITP_MANAGE_PERMISSION: Final = "itp.manage"  # set up steps, mark a step ready (INSPECTIONS-03)
+ITP_SIGN_PERMISSION: Final = "itp.sign"  # start, reopen, release, witness, reject
+ITP_WAIVE_PERMISSION: Final = "itp.waive"  # waive a witness point after its notice period
 
 # APPROVALS-09: Performed is the lifecycle's done state (not terminal); a re-inspection is a new
 # inspection. Moving the original to Superseded is INSPECTIONS-09.

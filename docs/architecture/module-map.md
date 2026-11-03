@@ -15,7 +15,7 @@ Regenerate with `uv run python tools/gen_module_map.py`.
 | 6 | `ops` | platform | `tenancy` |
 | 7 | `identity` | identity | `ops`, `tenancy` |
 | 8 | `projects` | projects | `tenancy` |
-| 9 | `access` | identity | `identity`, `projects`, `tenancy` |
+| 9 | `access` | identity | `identity`, `ops`, `projects`, `tenancy` |
 | 10 | `approvals` | approvals | `access`, `identity`, `tenancy` |
 | 11 | `portal` | portal | `access`, `assets`, `audit`, `identity`, `projects`, `tenancy` |
 | 12 | `terms` | terms | none |
@@ -31,6 +31,7 @@ An arrow `a --> b` means module a depends on b.
 ```mermaid
 graph TD
     access --> identity
+    access --> ops
     access --> projects
     access --> tenancy
     approvals --> access

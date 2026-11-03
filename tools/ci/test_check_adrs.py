@@ -94,9 +94,9 @@ class IntegrationTests(unittest.TestCase):
         path = self.root / "docs" / "adr" / "0003-jobs-outbox-and-sidecar.md"
         text = path.read_text(encoding="utf-8")
         marker = "- **Date:**"
-        text = text.replace(marker, "- **Supersedes:** 0042\n" + marker, 1)
+        text = text.replace(marker, "- **Supersedes:** 9999\n" + marker, 1)
         path.write_text(text, encoding="utf-8")
-        self.assert_fails_with("0003 supersedes missing ADR 0042")
+        self.assert_fails_with("0003 supersedes missing ADR 9999")
 
     def test_missing_errata_marker(self) -> None:
         path = self.root / "docs" / "blueprint" / "01-decisions.md"

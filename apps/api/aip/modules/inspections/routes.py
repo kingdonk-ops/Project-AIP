@@ -19,6 +19,16 @@
 - ``GET /inspections/{id}/responses`` returns the current answers and their evaluation, and
   ``GET /inspections/{id}/responses/{fieldKey}/history`` every answer to one field, oldest first
   (``inspection.view``).
+- ``POST /inspections/{id}/itp-steps`` sets up ITP steps (``itp.manage``): 201 with every step;
+  422 ``NOT_AN_ITP``, 409 ``ITP_LOCKED`` once the ITP has started, 409 ``DUPLICATE_SEQ``.
+  ``GET`` lists them in ``seq`` order with ``availableActions`` for the caller
+  (``inspection.view``).
+- ``POST /itp-steps/{stepId}/actions`` takes ``ready`` (``itp.manage``), ``start`` or ``reopen``
+  (``itp.sign``); ``POST /itp-steps/{stepId}/signoffs`` records a decision (``itp.sign``,
+  ``itp.waive`` to waive): 200 applied, 202 waiting for a countersign, 401 ``STEP_UP_REQUIRED``.
+  A stale ``expectedSyncVersion`` is 409 with the current step.
+- ``GET /inspections/{id}/signoffs`` returns the sign-offs and ``chainValid`` (``inspection.view``)
+  (INSPECTIONS-03).
 
 Every route is ``authenticated()`` with an active tenant, and the service checks each permission
 against the inspection's project (ADR 0035 §6), deny by default. Another tenant's id is 404 before
@@ -35,6 +45,7 @@ from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
 from aip.modules.approvals.api import Actor, InstanceView
 from aip.modules.identity.api import Principal, SessionFacts, get_principal
 from aip.modules.inspections import repository as repo
+from aip.modules.inspections.itp import ItpService
 from aip.modules.inspections.responses import ResponseService
 from aip.modules.inspections.schemas import (
     FIELD_KEY_PATTERN,
@@ -49,9 +60,16 @@ from aip.modules.inspections.schemas import (
     InspectionOut,
     InspectionPage,
     InspectionTransitionOut,
+    ItpStepActionIn,
+    ItpStepList,
+    ItpStepOut,
+    ItpStepsIn,
     ResponseHistory,
     ResponsesIn,
     ResponsesOut,
+    SignoffIn,
+    SignoffList,
+    SignoffOut,
     TransitionBody,
 )
 from aip.modules.inspections.service import InspectionService, NewInspection
@@ -99,6 +117,26 @@ _RESPOND_ERRORS: dict[int | str, dict[str, Any]] = {
     },
 }
 
+_STEP_ERRORS: dict[int | str, dict[str, Any]] = {
+    **_ERRORS,
+    409: {
+        "model": InspectionErrorBody,
+        "description": "ITP_LOCKED, DUPLICATE_SEQ, ITP_NOT_IN_PROGRESS, INVALID_STEP_ACTION, "
+        "BLOCKED_BY_HOLD or a stale expectedSyncVersion",
+    },
+    422: {"model": InspectionErrorBody, "description": "Validation error or NOT_AN_ITP"},
+}
+_SIGNOFF_ERRORS: dict[int | str, dict[str, Any]] = {
+    **_ERRORS,
+    202: {"model": SignoffOut, "description": "Recorded; waits for a countersign"},
+    409: {
+        "model": InspectionErrorBody,
+        "description": "INVALID_STEP_ACTION, BLOCKED_BY_HOLD, STEP_ON_HOLD, NOTICE_NOT_ELAPSED, "
+        "COUNTERSIGN_PENDING, SELF_COUNTERSIGN or a stale expectedSyncVersion",
+    },
+    422: {"model": InspectionErrorBody, "description": "Validation error or COMMENT_REQUIRED"},
+}
+
 Limit = Annotated[int, Query(ge=1, le=200)]
 FieldKeyPath = Annotated[str, Path(alias="fieldKey", pattern=FIELD_KEY_PATTERN)]
 Cursor = Annotated[str | None, Query(max_length=1024)]
@@ -127,6 +165,11 @@ def _service(request: Request) -> InspectionService:
 def _responses(request: Request) -> ResponseService:
     policy: PolicyService = request.app.state.access_policy
     return ResponseService(policy)
+
+
+def _itp(request: Request) -> ItpService:
+    policy: PolicyService = request.app.state.access_policy
+    return ItpService(policy)
 
 
 def _detail(row: dict[str, Any], view: InstanceView) -> InspectionDetail:
@@ -326,5 +369,88 @@ async def get_response_history(
     return ResponseHistory(entries=entries)
 
 
+@inspections_router.post(
+    "/{inspection_id}/itp-steps",
+    operation_id="inspections_create_itp_steps",
+    response_model=ItpStepList,
+    status_code=status.HTTP_201_CREATED,
+    responses=_STEP_ERRORS,
+)
+async def create_itp_steps(
+    inspection_id: UUID, body: ItpStepsIn, request: Request, who: CurrentActor
+) -> ItpStepList:
+    async with with_tenant(get_context()) as conn:
+        steps = await _itp(request).create_steps(conn, who, inspection_id, body.steps)
+    return ItpStepList(steps=steps)
+
+
+@inspections_router.get(
+    "/{inspection_id}/itp-steps",
+    operation_id="inspections_itp_steps",
+    response_model=ItpStepList,
+    responses=_ERRORS,
+)
+async def get_itp_steps(inspection_id: UUID, request: Request, who: CurrentActor) -> ItpStepList:
+    async with with_tenant(get_context()) as conn:
+        steps = await _itp(request).list_steps(conn, who, inspection_id)
+    return ItpStepList(steps=steps)
+
+
+@inspections_router.get(
+    "/{inspection_id}/signoffs",
+    operation_id="inspections_signoffs",
+    response_model=SignoffList,
+    responses=_ERRORS,
+)
+async def get_signoffs(inspection_id: UUID, request: Request, who: CurrentActor) -> SignoffList:
+    async with with_tenant(get_context()) as conn:
+        return await _itp(request).signoffs(conn, who, inspection_id)
+
+
+itp_steps_router = APIRouter(
+    prefix="/itp-steps", tags=["inspections"], dependencies=[Depends(authenticated())]
+)
+
+
+@itp_steps_router.post(
+    "/{step_id}/actions",
+    operation_id="itp_steps_act",
+    response_model=ItpStepOut,
+    responses=_STEP_ERRORS,
+)
+async def act_on_step(
+    step_id: UUID, body: ItpStepActionIn, request: Request, who: CurrentActor
+) -> ItpStepOut:
+    async with with_tenant(get_context()) as conn:
+        return await _itp(request).act(
+            conn, who, step_id, body.action, expected_sync_version=body.expected_sync_version
+        )
+
+
+@itp_steps_router.post(
+    "/{step_id}/signoffs",
+    operation_id="itp_steps_sign",
+    response_model=SignoffOut,
+    responses=_SIGNOFF_ERRORS,
+)
+async def sign_step(
+    step_id: UUID, body: SignoffIn, request: Request, response: Response, who: CurrentActor
+) -> SignoffOut:
+    async with with_tenant(get_context()) as conn:
+        result = await _itp(request).sign(
+            conn,
+            who,
+            step_id,
+            body.decision,
+            body.signatory_role,
+            comment=body.comment,
+            expected_sync_version=body.expected_sync_version,
+        )
+    if not result.applied:
+        response.status_code = status.HTTP_202_ACCEPTED
+    return SignoffOut(step=result.step, signoff=result.signoff)
+
+
 router = APIRouter(dependencies=[Depends(require_active_tenant)])
 router.include_router(inspections_router)
+router.include_router(itp_steps_router)

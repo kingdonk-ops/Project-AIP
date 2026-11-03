@@ -145,6 +145,10 @@ GRANT INSERT(scheduled_at) ON TABLE public.procrastinate_jobs TO aip_app;
 -- Name: COLUMN procrastinate_jobs.task_name; Type: ACL; Schema: public
 GRANT INSERT(task_name) ON TABLE public.procrastinate_jobs TO aip_app;
 
+-- Name: FUNCTION access_set_default_role_level(p_module text, p_role text, p_level text, p_shipped text, p_actor uuid, p_reason text); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.access_set_default_role_level(p_module text, p_role text, p_level text, p_shipped text, p_actor uuid, p_reason text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.access_set_default_role_level(p_module text, p_role text, p_level text, p_shipped text, p_actor uuid, p_reason text) TO aip_app;
+
 -- Name: FUNCTION access_sync_permissions(p_catalogue jsonb); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.access_sync_permissions(p_catalogue jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.access_sync_permissions(p_catalogue jsonb) TO aip_app;
@@ -270,6 +274,14 @@ GRANT SELECT ON TABLE public.control_records TO aip_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.data_map_entries TO aip_app;
 GRANT SELECT ON TABLE public.data_map_entries TO aip_readonly;
 
+-- Name: TABLE default_role_level; Type: ACL; Schema: public
+GRANT SELECT ON TABLE public.default_role_level TO aip_app;
+GRANT SELECT ON TABLE public.default_role_level TO aip_readonly;
+
+-- Name: TABLE default_role_level_change; Type: ACL; Schema: public
+GRANT SELECT ON TABLE public.default_role_level_change TO aip_app;
+GRANT SELECT ON TABLE public.default_role_level_change TO aip_readonly;
+
 -- Name: TABLE deployment_regions; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.deployment_regions TO aip_app;
 GRANT SELECT ON TABLE public.deployment_regions TO aip_jobs;
@@ -304,6 +316,10 @@ GRANT SELECT ON TABLE public.inspection_current_responses TO aip_readonly;
 GRANT SELECT,INSERT ON TABLE public.inspection_responses TO aip_app;
 GRANT SELECT ON TABLE public.inspection_responses TO aip_readonly;
 
+-- Name: TABLE inspection_signoffs; Type: ACL; Schema: public
+GRANT SELECT,INSERT ON TABLE public.inspection_signoffs TO aip_app;
+GRANT SELECT ON TABLE public.inspection_signoffs TO aip_readonly;
+
 -- Name: TABLE inspections; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.inspections TO aip_app;
 GRANT SELECT ON TABLE public.inspections TO aip_readonly;
@@ -319,6 +335,10 @@ GRANT SELECT ON TABLE public.item_type_versions TO aip_readonly;
 -- Name: TABLE item_types; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.item_types TO aip_app;
 GRANT SELECT ON TABLE public.item_types TO aip_readonly;
+
+-- Name: TABLE itp_steps; Type: ACL; Schema: public
+GRANT SELECT,INSERT,UPDATE ON TABLE public.itp_steps TO aip_app;
+GRANT SELECT ON TABLE public.itp_steps TO aip_readonly;
 
 -- Name: TABLE job_events; Type: ACL; Schema: public
 GRANT SELECT,INSERT ON TABLE public.job_events TO aip_app;
@@ -601,6 +621,14 @@ ALTER TABLE ONLY public.control_records
 ALTER TABLE ONLY public.data_map_entries
     ADD CONSTRAINT pk_data_map_entries PRIMARY KEY (id);
 
+-- Name: default_role_level pk_default_role_level; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.default_role_level
+    ADD CONSTRAINT pk_default_role_level PRIMARY KEY (module_id, role_code);
+
+-- Name: default_role_level_change pk_default_role_level_change; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.default_role_level_change
+    ADD CONSTRAINT pk_default_role_level_change PRIMARY KEY (id);
+
 -- Name: deployment_regions pk_deployment_regions; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.deployment_regions
     ADD CONSTRAINT pk_deployment_regions PRIMARY KEY (code);
@@ -649,6 +677,14 @@ ALTER TABLE ONLY public.inspection_responses
 ALTER TABLE ONLY public.inspection_responses_default
     ADD CONSTRAINT inspection_responses_default_pkey PRIMARY KEY (id, created_at);
 
+-- Name: inspection_signoffs pk_inspection_signoffs; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.inspection_signoffs
+    ADD CONSTRAINT pk_inspection_signoffs PRIMARY KEY (id);
+
+-- Name: inspection_signoffs uq_inspection_signoffs_inspection_id_seq; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.inspection_signoffs
+    ADD CONSTRAINT uq_inspection_signoffs_inspection_id_seq UNIQUE (inspection_id, seq);
+
 -- Name: inspections pk_inspections; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.inspections
     ADD CONSTRAINT pk_inspections PRIMARY KEY (id);
@@ -680,6 +716,14 @@ ALTER TABLE ONLY public.item_types
 -- Name: item_types uq_item_types_id_tenant_id; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.item_types
     ADD CONSTRAINT uq_item_types_id_tenant_id UNIQUE (id, tenant_id);
+
+-- Name: itp_steps pk_itp_steps; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.itp_steps
+    ADD CONSTRAINT pk_itp_steps PRIMARY KEY (id);
+
+-- Name: itp_steps uq_itp_steps_id_tenant_id; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.itp_steps
+    ADD CONSTRAINT uq_itp_steps_id_tenant_id UNIQUE (id, tenant_id);
 
 -- Name: job_events pk_job_events; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
@@ -1094,6 +1138,18 @@ ALTER TABLE ONLY public.form_templates
 ALTER TABLE ONLY public.form_templates
     ADD CONSTRAINT fk_form_templates_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
+-- Name: inspection_signoffs fk_inspection_signoffs_inspection; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.inspection_signoffs
+    ADD CONSTRAINT fk_inspection_signoffs_inspection FOREIGN KEY (inspection_id, tenant_id) REFERENCES public.inspections(id, tenant_id);
+
+-- Name: inspection_signoffs fk_inspection_signoffs_itp_step; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.inspection_signoffs
+    ADD CONSTRAINT fk_inspection_signoffs_itp_step FOREIGN KEY (itp_step_id, tenant_id) REFERENCES public.itp_steps(id, tenant_id);
+
+-- Name: inspection_signoffs fk_inspection_signoffs_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.inspection_signoffs
+    ADD CONSTRAINT fk_inspection_signoffs_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+
 -- Name: inspections fk_inspections_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.inspections
     ADD CONSTRAINT fk_inspections_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
@@ -1113,6 +1169,18 @@ ALTER TABLE ONLY public.item_types
 -- Name: item_types fk_item_types_published_version; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.item_types
     ADD CONSTRAINT fk_item_types_published_version FOREIGN KEY (published_version_id, tenant_id) REFERENCES public.item_type_versions(id, tenant_id);
+
+-- Name: itp_steps fk_itp_steps_child_inspection; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.itp_steps
+    ADD CONSTRAINT fk_itp_steps_child_inspection FOREIGN KEY (child_inspection_id, tenant_id) REFERENCES public.inspections(id, tenant_id);
+
+-- Name: itp_steps fk_itp_steps_inspection; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.itp_steps
+    ADD CONSTRAINT fk_itp_steps_inspection FOREIGN KEY (inspection_id, tenant_id) REFERENCES public.inspections(id, tenant_id);
+
+-- Name: itp_steps fk_itp_steps_tenant_id_tenants; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.itp_steps
+    ADD CONSTRAINT fk_itp_steps_tenant_id_tenants FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
 -- Name: job_events fk_job_events_job_id_tenant_id_jobs; Type: FK CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.job_events
@@ -1337,6 +1405,51 @@ CREATE FUNCTION public.access_project_visible(p_project uuid) RETURNS boolean
       $$;
 
 ALTER FUNCTION public.access_project_visible(p_project uuid) OWNER TO aip_owner;
+
+-- Name: access_set_default_role_level(text, text, text, text, uuid, text); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.access_set_default_role_level(p_module text, p_role text, p_level text, p_shipped text, p_actor uuid, p_reason text) RETURNS SETOF public.default_role_level_change
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+    DECLARE
+      v_current text;
+      v_before text;
+    BEGIN
+      IF p_shipped IS NULL
+         OR p_shipped NOT IN ('none', 'view', 'create', 'edit', 'approve', 'admin') THEN
+        RAISE EXCEPTION 'access_set_default_role_level: invalid shipped level'
+          USING ERRCODE = '22023';
+      END IF;
+      IF p_reason IS NULL OR btrim(p_reason) = '' THEN
+        RAISE EXCEPTION 'access_set_default_role_level: a reason is required'
+          USING ERRCODE = '22023';
+      END IF;
+      PERFORM pg_advisory_xact_lock(hashtextextended('access.default_role_template', 0));
+      SELECT d.level INTO v_current
+        FROM public.default_role_level AS d
+        WHERE d.module_id = p_module AND d.role_code = p_role
+        FOR UPDATE;
+      v_before := COALESCE(v_current, p_shipped);
+      IF p_level = p_shipped THEN
+        DELETE FROM public.default_role_level AS d
+          WHERE d.module_id = p_module AND d.role_code = p_role;
+      ELSE
+        INSERT INTO public.default_role_level (module_id, role_code, level, updated_by)
+          VALUES (p_module, p_role, p_level, p_actor)
+          ON CONFLICT (module_id, role_code) DO UPDATE
+            SET level = excluded.level, updated_by = excluded.updated_by, updated_at = now();
+      END IF;
+      IF v_before IS DISTINCT FROM p_level THEN
+        RETURN QUERY
+          INSERT INTO public.default_role_level_change
+            (id, module_id, role_code, level_before, level_after, changed_by, reason)
+          VALUES (gen_random_uuid(), p_module, p_role, v_before, p_level, p_actor, p_reason)
+          RETURNING *;
+      END IF;
+    END;
+    $$;
+
+ALTER FUNCTION public.access_set_default_role_level(p_module text, p_role text, p_level text, p_shipped text, p_actor uuid, p_reason text) OWNER TO aip_owner;
 
 -- Name: access_settings_version_guard(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.access_settings_version_guard() RETURNS trigger
@@ -2558,6 +2671,9 @@ CREATE INDEX ix_data_map_entries_tenant_id ON public.data_map_entries USING btre
 -- Name: ix_data_map_entries_tenant_id_classification; Type: INDEX; Schema: public
 CREATE INDEX ix_data_map_entries_tenant_id_classification ON public.data_map_entries USING btree (tenant_id, classification);
 
+-- Name: ix_default_role_level_change_role_changed_at; Type: INDEX; Schema: public
+CREATE INDEX ix_default_role_level_change_role_changed_at ON public.default_role_level_change USING btree (role_code, changed_at);
+
 -- Name: ix_domain_events_aggregate_type_aggregate_id; Type: INDEX; Schema: public
 CREATE INDEX ix_domain_events_aggregate_type_aggregate_id ON public.domain_events USING btree (aggregate_type, aggregate_id);
 
@@ -2609,6 +2725,21 @@ CREATE INDEX ix_inspection_responses_current ON ONLY public.inspection_responses
 -- Name: ix_inspection_responses_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_inspection_responses_tenant_id ON ONLY public.inspection_responses USING btree (tenant_id);
 
+-- Name: ix_inspection_signoffs_itp_step_id; Type: INDEX; Schema: public
+CREATE INDEX ix_inspection_signoffs_itp_step_id ON public.inspection_signoffs USING btree (itp_step_id);
+
+-- Name: ix_inspection_signoffs_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_inspection_signoffs_tenant_id ON public.inspection_signoffs USING btree (tenant_id);
+
+-- Name: ix_inspection_signoffs_tenant_id_asset_id; Type: INDEX; Schema: public
+CREATE INDEX ix_inspection_signoffs_tenant_id_asset_id ON public.inspection_signoffs USING btree (tenant_id, asset_id);
+
+-- Name: ix_inspection_signoffs_tenant_id_inspection_id_signed_at; Type: INDEX; Schema: public
+CREATE INDEX ix_inspection_signoffs_tenant_id_inspection_id_signed_at ON public.inspection_signoffs USING btree (tenant_id, inspection_id, signed_at);
+
+-- Name: ix_inspection_signoffs_tenant_id_signer_user_id; Type: INDEX; Schema: public
+CREATE INDEX ix_inspection_signoffs_tenant_id_signer_user_id ON public.inspection_signoffs USING btree (tenant_id, signer_user_id);
+
 -- Name: ix_inspections_tenant_id; Type: INDEX; Schema: public
 CREATE INDEX ix_inspections_tenant_id ON public.inspections USING btree (tenant_id);
 
@@ -2638,6 +2769,18 @@ CREATE INDEX ix_item_types_tenant_id ON public.item_types USING btree (tenant_id
 
 -- Name: ix_item_types_tenant_id_category_id; Type: INDEX; Schema: public
 CREATE INDEX ix_item_types_tenant_id_category_id ON public.item_types USING btree (tenant_id, category_id);
+
+-- Name: ix_itp_steps_tenant_id; Type: INDEX; Schema: public
+CREATE INDEX ix_itp_steps_tenant_id ON public.itp_steps USING btree (tenant_id);
+
+-- Name: ix_itp_steps_tenant_id_asset_id; Type: INDEX; Schema: public
+CREATE INDEX ix_itp_steps_tenant_id_asset_id ON public.itp_steps USING btree (tenant_id, asset_id);
+
+-- Name: ix_itp_steps_tenant_id_blocks_task_id; Type: INDEX; Schema: public
+CREATE INDEX ix_itp_steps_tenant_id_blocks_task_id ON public.itp_steps USING btree (tenant_id, blocks_task_id) WHERE (point_type = 'hold'::text);
+
+-- Name: ix_itp_steps_tenant_id_task_id; Type: INDEX; Schema: public
+CREATE INDEX ix_itp_steps_tenant_id_task_id ON public.itp_steps USING btree (tenant_id, task_id);
 
 -- Name: ix_job_events_tenant_id_occurred_at; Type: INDEX; Schema: public
 CREATE INDEX ix_job_events_tenant_id_occurred_at ON public.job_events USING btree (tenant_id, occurred_at);
@@ -2990,6 +3133,9 @@ CREATE UNIQUE INDEX uq_item_type_versions_tenant_id_item_type_id_version ON publ
 -- Name: uq_item_types_tenant_id_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_item_types_tenant_id_key ON public.item_types USING btree (tenant_id, key) WHERE (deleted_at IS NULL);
 
+-- Name: uq_itp_steps_tenant_id_inspection_id_seq; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_itp_steps_tenant_id_inspection_id_seq ON public.itp_steps USING btree (tenant_id, inspection_id, seq) WHERE (deleted_at IS NULL);
+
 -- Name: uq_jobs_tenant_id_job_type_idempotency_key; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_jobs_tenant_id_job_type_idempotency_key ON public.jobs USING btree (tenant_id, job_type, idempotency_key) WHERE (idempotency_key IS NOT NULL);
 
@@ -3067,6 +3213,9 @@ CREATE UNIQUE INDEX ux_form_templates_client_generated_id ON public.form_templat
 
 -- Name: ux_inspections_client_generated_id; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_inspections_client_generated_id ON public.inspections USING btree (tenant_id, client_generated_id);
+
+-- Name: ux_itp_steps_client_generated_id; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX ux_itp_steps_client_generated_id ON public.itp_steps USING btree (tenant_id, client_generated_id);
 
 -- Name: ux_record_links_live; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX ux_record_links_live ON public.record_links USING btree (tenant_id, from_type, from_id, to_type, to_id, link_kind) WHERE (deleted_at IS NULL);
@@ -3221,6 +3370,9 @@ CREATE POLICY tenant_write ON public.glossary_entry USING (((tenant_id = (NULLIF
 -- Name: inspection_responses tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.inspection_responses USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
+-- Name: inspection_signoffs tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.inspection_signoffs USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
 -- Name: inspections project_scope; Type: POLICY; Schema: public
 CREATE POLICY project_scope ON public.inspections AS RESTRICTIVE TO aip_app USING (public.access_project_visible(project_id)) WITH CHECK (public.access_project_visible(project_id));
 
@@ -3235,6 +3387,9 @@ CREATE POLICY tenant_isolation ON public.item_type_versions USING ((tenant_id = 
 
 -- Name: item_types tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.item_types USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
+
+-- Name: itp_steps tenant_isolation; Type: POLICY; Schema: public
+CREATE POLICY tenant_isolation ON public.itp_steps USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
 
 -- Name: job_events tenant_isolation; Type: POLICY; Schema: public
 CREATE POLICY tenant_isolation ON public.job_events USING ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)) WITH CHECK ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid));
@@ -3464,6 +3619,9 @@ ALTER TABLE public.glossary_entry ENABLE ROW LEVEL SECURITY;
 -- Name: inspection_responses; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.inspection_responses ENABLE ROW LEVEL SECURITY;
 
+-- Name: inspection_signoffs; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.inspection_signoffs ENABLE ROW LEVEL SECURITY;
+
 -- Name: inspections; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.inspections ENABLE ROW LEVEL SECURITY;
 
@@ -3475,6 +3633,9 @@ ALTER TABLE public.item_type_versions ENABLE ROW LEVEL SECURITY;
 
 -- Name: item_types; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.item_types ENABLE ROW LEVEL SECURITY;
+
+-- Name: itp_steps; Type: ROW SECURITY; Schema: public
+ALTER TABLE public.itp_steps ENABLE ROW LEVEL SECURITY;
 
 -- Name: job_events; Type: ROW SECURITY; Schema: public
 ALTER TABLE public.job_events ENABLE ROW LEVEL SECURITY;
@@ -4025,6 +4186,43 @@ ALTER TABLE ONLY public.data_map_entries FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.data_map_entries OWNER TO aip_owner;
 
+-- Name: default_role_level; Type: TABLE; Schema: public
+CREATE TABLE public.default_role_level (
+    module_id text NOT NULL,
+    role_code text NOT NULL,
+    level text NOT NULL,
+    updated_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_default_role_level_admin_keeps_access CHECK (((NOT ((role_code = 'tenant_admin'::text) AND (module_id = 'access'::text))) OR (level = 'admin'::text))),
+    CONSTRAINT ck_default_role_level_level CHECK ((level = ANY (ARRAY['none'::text, 'view'::text, 'create'::text, 'edit'::text, 'approve'::text, 'admin'::text]))),
+    CONSTRAINT ck_default_role_level_module_id CHECK ((module_id ~ '^[a-z][a-z0-9_]*$'::text)),
+    CONSTRAINT ck_default_role_level_role_code CHECK ((role_code = ANY (ARRAY['tenant_admin'::text, 'project_manager'::text, 'qaqc_manager'::text, 'hse_officer'::text, 'supervisor'::text, 'inspector'::text, 'field_worker'::text, 'document_controller'::text, 'client_reviewer'::text, 'subcontractor'::text, 'auditor'::text]))),
+    CONSTRAINT ck_default_role_level_sign_off_only CHECK (((role_code <> 'client_reviewer'::text) OR (level = ANY (ARRAY['none'::text, 'view'::text, 'approve'::text]))))
+);
+
+ALTER TABLE public.default_role_level OWNER TO aip_owner;
+
+-- Name: default_role_level_change; Type: TABLE; Schema: public
+CREATE TABLE public.default_role_level_change (
+    id uuid NOT NULL,
+    module_id text NOT NULL,
+    role_code text NOT NULL,
+    level_before text NOT NULL,
+    level_after text NOT NULL,
+    changed_by uuid,
+    reason text NOT NULL,
+    changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_default_role_level_change_changed CHECK ((level_before <> level_after)),
+    CONSTRAINT ck_default_role_level_change_level_after CHECK ((level_after = ANY (ARRAY['none'::text, 'view'::text, 'create'::text, 'edit'::text, 'approve'::text, 'admin'::text]))),
+    CONSTRAINT ck_default_role_level_change_level_before CHECK ((level_before = ANY (ARRAY['none'::text, 'view'::text, 'create'::text, 'edit'::text, 'approve'::text, 'admin'::text]))),
+    CONSTRAINT ck_default_role_level_change_reason CHECK ((btrim(reason) <> ''::text)),
+    CONSTRAINT ck_default_role_level_change_role_code CHECK ((role_code = ANY (ARRAY['tenant_admin'::text, 'project_manager'::text, 'qaqc_manager'::text, 'hse_officer'::text, 'supervisor'::text, 'inspector'::text, 'field_worker'::text, 'document_controller'::text, 'client_reviewer'::text, 'subcontractor'::text, 'auditor'::text])))
+);
+
+ALTER TABLE public.default_role_level_change OWNER TO aip_owner;
+
 -- Name: deployment_regions; Type: TABLE; Schema: public
 CREATE TABLE public.deployment_regions (
     code text NOT NULL,
@@ -4225,6 +4423,48 @@ CREATE TABLE public.inspection_responses_default (
 
 ALTER TABLE public.inspection_responses_default OWNER TO aip_owner;
 
+-- Name: inspection_signoffs; Type: TABLE; Schema: public
+CREATE TABLE public.inspection_signoffs (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    inspection_id uuid NOT NULL,
+    itp_step_id uuid,
+    asset_id uuid NOT NULL,
+    seq integer NOT NULL,
+    signatory_role text NOT NULL,
+    signer_user_id uuid NOT NULL,
+    decision text NOT NULL,
+    action_code text NOT NULL,
+    status text NOT NULL,
+    countersigns_id uuid,
+    auth_strength text NOT NULL,
+    assurance_level smallint NOT NULL,
+    assurance_method text NOT NULL,
+    authenticated_at timestamp with time zone,
+    device_id uuid,
+    eligibility_result jsonb,
+    content_hash text NOT NULL,
+    prev_hash text NOT NULL,
+    entry_hash text NOT NULL,
+    comment text,
+    signed_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_inspection_signoffs_assurance_level CHECK ((assurance_level = ANY (ARRAY[1, 2]))),
+    CONSTRAINT ck_inspection_signoffs_auth_strength CHECK ((auth_strength = ANY (ARRAY['password'::text, 'mfa'::text, 'pin'::text]))),
+    CONSTRAINT ck_inspection_signoffs_comment CHECK (((comment IS NULL) OR (char_length(comment) <= 2000))),
+    CONSTRAINT ck_inspection_signoffs_content_hash CHECK ((content_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_inspection_signoffs_decision CHECK ((decision = ANY (ARRAY['approve'::text, 'reject'::text, 'witnessed'::text, 'waived'::text]))),
+    CONSTRAINT ck_inspection_signoffs_entry_hash CHECK ((entry_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_inspection_signoffs_prev_hash CHECK ((prev_hash ~ '^[0-9a-f]{64}$'::text)),
+    CONSTRAINT ck_inspection_signoffs_seq CHECK ((seq >= 1)),
+    CONSTRAINT ck_inspection_signoffs_signatory_role CHECK ((signatory_role = ANY (ARRAY['inspector'::text, 'supervisor'::text, 'third_party'::text]))),
+    CONSTRAINT ck_inspection_signoffs_status CHECK ((status = ANY (ARRAY['applied'::text, 'pending_countersign'::text])))
+);
+
+ALTER TABLE ONLY public.inspection_signoffs FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.inspection_signoffs OWNER TO aip_owner;
+
 -- Name: inspections; Type: TABLE; Schema: public
 CREATE TABLE public.inspections (
     id uuid NOT NULL,
@@ -4328,6 +4568,40 @@ CREATE TABLE public.item_types (
 ALTER TABLE ONLY public.item_types FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.item_types OWNER TO aip_owner;
+
+-- Name: itp_steps; Type: TABLE; Schema: public
+CREATE TABLE public.itp_steps (
+    id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    inspection_id uuid NOT NULL,
+    asset_id uuid NOT NULL,
+    seq integer NOT NULL,
+    title text NOT NULL,
+    point_type text NOT NULL,
+    acceptance_criteria text,
+    task_id uuid,
+    blocks_task_id uuid,
+    child_inspection_id uuid,
+    status text DEFAULT 'pending'::text NOT NULL,
+    hold_flag_issue_id uuid,
+    notice_hours integer,
+    ready_at timestamp with time zone,
+    released_at timestamp with time zone,
+    client_generated_id uuid,
+    sync_version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    CONSTRAINT ck_itp_steps_notice_hours CHECK (((notice_hours IS NULL) OR ((point_type = 'witness'::text) AND ((notice_hours >= 0) AND (notice_hours <= 720))))),
+    CONSTRAINT ck_itp_steps_point_type CHECK ((point_type = ANY (ARRAY['hold'::text, 'witness'::text, 'review'::text, 'surveillance'::text]))),
+    CONSTRAINT ck_itp_steps_seq CHECK ((seq >= 1)),
+    CONSTRAINT ck_itp_steps_status CHECK ((status = ANY (ARRAY['pending'::text, 'ready'::text, 'in_progress'::text, 'released'::text, 'waived'::text, 'rejected'::text]))),
+    CONSTRAINT ck_itp_steps_title CHECK (((char_length(title) >= 1) AND (char_length(title) <= 200)))
+);
+
+ALTER TABLE ONLY public.itp_steps FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.itp_steps OWNER TO aip_owner;
 
 -- Name: job_events; Type: TABLE; Schema: public
 CREATE TABLE public.job_events (
