@@ -13,6 +13,12 @@
 > tenant data only through a customer-approved, time-boxed support-access grant (TENANCY-06). The 11 tenant
 > roles (ACCESS-02) are unaffected: Super Admin is not a tenant role.
 
+> **Shipped default and the operator template (hand-edited 2026-11-02, ADR 0042).** This table and `MATRIX` in
+> `apps/api/aip/modules/access/roles/default_roles.py` are the shipped default and change together. The platform
+> operator may move single cells at runtime (ACCESS-09, `platform.roles.manage`); those deviations live in the
+> `default_role_level` table, are listed with their shipped level by `GET /api/v1/platform/default-roles`, and are
+> not reflected here until the owner adopts them into the code and this table.
+
 
 - **access matrix**:
 
