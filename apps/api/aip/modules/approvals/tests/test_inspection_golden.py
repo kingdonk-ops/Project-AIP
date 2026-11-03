@@ -154,7 +154,12 @@ def test_only_the_final_sign_offs_are_critical() -> None:
         for state in ("in_progress", "in_progress_sitesync", "inspector_review")
     }
     assert critical("standard") == {("supervisor_review", "mark_performed"), *submit_report}
-    assert critical("client_review") == {("client_review", "client_approve"), *submit_report}
+    # The client variant also submits from rework, reached through client review (owner 2026-11-03).
+    assert critical("client_review") == {
+        ("client_review", "client_approve"),
+        ("rework_required", "submit_report"),
+        *submit_report,
+    }
 
 
 COMMENTED = {

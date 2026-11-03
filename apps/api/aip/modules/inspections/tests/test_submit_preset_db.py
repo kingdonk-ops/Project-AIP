@@ -19,7 +19,17 @@ from tests.fixtures.postgres import TenantDb
 from aip.modules.approvals.api import ApprovalsApi
 from aip.platform.context import use_context
 
-from .conftest import INSPECTOR, INSPECTOR_ID, KF_01, VIEWER, ctx, signed, su_execute
+from .conftest import (
+    INSPECTOR,
+    INSPECTOR_ID,
+    KF_01,
+    LEAD_ID,
+    VIEWER,
+    GrantTable,
+    ctx,
+    signed,
+    su_execute,
+)
 from .test_acknowledgements_db import (
     INSPECTIONS,
     answer,
@@ -108,9 +118,13 @@ async def test_without_supervisor_review_the_doer_submits_the_report_as_a_sign_o
     assert history.json()["chainValid"] is True
 
 
-async def test_the_client_variant_submits_the_report_to_client_review(
-    client: httpx.AsyncClient, db: TenantDb
+CLIENT_ID = LEAD_ID  # plays the client reviewer here
+
+
+async def test_the_client_variant_submits_the_report_to_client_review_and_again_after_rework(
+    client: httpx.AsyncClient, db: TenantDb, grants: GrantTable
 ) -> None:
+    grants.by_user[CLIENT_ID] |= {"approvals.inspection.client_approve"}
     with use_context(ctx()):
         async with db.with_tenant(TENANT_A_ID) as conn:
             await ApprovalsApi().install_preset(conn, "inspection_standard")
@@ -120,3 +134,19 @@ async def test_the_client_variant_submits_the_report_to_client_review(
     done = await submit(client, inspection, "submit_report", signed_inspector())
     assert done.status_code == 200, done.text
     assert done.json()["inspection"]["currentState"] == "client_review"
+
+    # The client sends it back; the inspector reworks it and submits the report again from
+    # rework (owner 2026-11-03), never offered Request Supervisor Review.
+    reworked = await client.post(
+        f"{INSPECTIONS}/{inspection}/transition",
+        json={"action": "request_rework", "comment": "redo the DFT"},
+        headers=signed(CLIENT_ID),
+    )
+    assert reworked.status_code == 200, reworked.text
+    offered = await actions(client, inspection)
+    assert "request_supervisor_review" not in offered
+    assert offered["submit_report"]["allowed"] is False  # rework cleared the ticks
+    await complete_everything(client, inspection)
+    again = await submit(client, inspection, "submit_report", signed_inspector())
+    assert again.status_code == 200, again.text
+    assert again.json()["inspection"]["currentState"] == "client_review"

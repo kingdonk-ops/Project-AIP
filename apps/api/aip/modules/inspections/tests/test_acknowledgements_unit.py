@@ -66,6 +66,12 @@ SUBMIT_STATES = {
     },
     SUBMIT_REPORT: {"in_progress", "in_progress_sitesync", "inspector_review"},
 }
+# The client variant also submits the report from rework, which only its client review reaches
+# without supervisor review (owner, 2026-11-03).
+SUBMIT_REPORT_FROM = {
+    "inspection_standard": SUBMIT_STATES[SUBMIT_REPORT],
+    "inspection_client_review": SUBMIT_STATES[SUBMIT_REPORT] | {"rework_required"},
+}
 PRESETS = {p.key: p for p in list_presets()}
 SUBMIT_TO = {"inspection_standard": "performed", "inspection_client_review": "client_review"}
 
@@ -82,7 +88,8 @@ def passes(transition: dict[str, Any], **record: Any) -> bool:
 @pytest.mark.parametrize("preset", sorted(SUBMIT_TO))
 def test_each_preset_has_both_submits_from_the_owners_states(preset: str) -> None:
     found = submits(preset)
-    for action, states in SUBMIT_STATES.items():
+    expected = {**SUBMIT_STATES, SUBMIT_REPORT: SUBMIT_REPORT_FROM[preset]}
+    for action, states in expected.items():
         assert {t["from"] for t in found if t["action"] == action} == states
     for t in found:
         assert t["guardMessageKey"] == "inspection.guard.submit_not_ready"

@@ -767,6 +767,44 @@
         "guardMessageKey": "inspection.guard.submit_not_ready"
       },
       {
+        "action": "submit_report",
+        "from": "rework_required",
+        "to": "client_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.submit_report",
+        "critical": true,
+        "signoffAction": "inspection.submit_report",
+        "guard": {
+          "and": [
+            {
+              "==": [
+                {
+                  "var": "record.hasSupervisorReview"
+                },
+                false
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.reportAcknowledged"
+                },
+                true
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.openStepCount"
+                },
+                0
+              ]
+            }
+          ]
+        },
+        "guardMessageKey": "inspection.guard.submit_not_ready"
+      },
+      {
         "action": "sitesync_checkout",
         "from": "rework_required",
         "to": "in_progress_sitesync",
