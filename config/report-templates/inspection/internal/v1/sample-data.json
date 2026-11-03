@@ -1,0 +1,106 @@
+{
+  "inspection": {
+    "id": "0192f0a1-0000-7000-8000-00000000a001",
+    "kind": "inspection",
+    "state": "performed",
+    "createdAt": "2026-10-29T23:00:00Z"
+  },
+  "asset": {
+    "tagNumber": "P-1001",
+    "name": "Process line P-1001",
+    "internalTag": "AS-000123",
+    "location": ["Karratha compressor station", "Train 1"]
+  },
+  "project": {
+    "code": "KF-01",
+    "name": "Karratha compressor station",
+    "timezone": "Australia/Perth"
+  },
+  "form": {
+    "code": "coating-itr-min",
+    "revisionNo": 1,
+    "schemaHash": "3f5c0d9e8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d",
+    "sections": [
+      {
+        "key": "preparation",
+        "label": "Surface preparation",
+        "fields": [
+          {
+            "key": "surface_prepared",
+            "type": "boolean",
+            "label": "Surface prepared to standard",
+            "unit": null,
+            "required": false,
+            "failed": false,
+            "answer": true,
+            "respondedBy": "Ivy Inspector",
+            "respondedAt": "2026-10-30T01:10:00Z"
+          },
+          {
+            "key": "blast_standard",
+            "type": "dropdown",
+            "label": "Blast standard",
+            "unit": null,
+            "required": true,
+            "failed": false,
+            "answer": "Sa 2.5",
+            "respondedBy": "Ivy Inspector",
+            "respondedAt": "2026-10-30T01:11:00Z"
+          }
+        ]
+      },
+      {
+        "key": "coating",
+        "label": "Coating",
+        "fields": [
+          {
+            "key": "dft_avg",
+            "type": "measurement",
+            "label": "Average dry film thickness",
+            "unit": "mm",
+            "required": false,
+            "failed": true,
+            "answer": { "valueSi": 0.2, "unit": "mm" },
+            "respondedBy": "Ivy Inspector",
+            "respondedAt": "2026-10-30T01:20:00Z"
+          },
+          {
+            "key": "photos",
+            "type": "photo",
+            "label": "Coating photos",
+            "unit": null,
+            "required": false,
+            "failed": false,
+            "answer": [
+              { "fileId": "0192f0a1-0000-7000-8000-00000000f001", "asset": "logo.png" },
+              { "fileId": "0192f0a1-0000-7000-8000-00000000f002", "asset": "logo.png" }
+            ],
+            "respondedBy": "Ivy Inspector",
+            "respondedAt": "2026-10-30T01:25:00Z"
+          },
+          {
+            "key": "signature",
+            "type": "signature",
+            "label": "Inspector signature",
+            "unit": null,
+            "required": false,
+            "failed": false,
+            "answer": { "fileId": "0192f0a1-0000-7000-8000-00000000f003", "omitted": "unavailable" },
+            "respondedBy": "Ivy Inspector",
+            "respondedAt": "2026-10-30T01:30:00Z"
+          }
+        ]
+      }
+    ]
+  },
+  "summary": { "answered": 5, "failed": 1, "missingRequired": 0 },
+  "approval": { "approvedAt": "2026-10-30T03:00:00Z", "approvedBy": "Sam Supervisor" },
+  "report": {
+    "renderJobId": "0192f0a1-0000-7000-8000-00000000b001",
+    "issuedAt": "2026-10-30T03:00:05Z",
+    "templateVersion": 1,
+    "dataHash": "9e107d9d372bb6826bd81d3542a419d6e277d4d731479571562b82f74494341f"
+  },
+  "generatedAt": "2026-10-30T03:00:05Z",
+  "timeZone": "Australia/Perth"
+}

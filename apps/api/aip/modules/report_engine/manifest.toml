@@ -2,10 +2,20 @@
 id = "report_engine"
 context = "report_engine"
 # REPORTS-02: the render job reads a project (projects), pins and stores files (uploads) and
-# queues itself through the job registry (ops).
-depends_on = ["tenancy", "terms", "projects", "uploads", "ops"]
+# queues itself through the job registry (ops). REPORTS-03: the inspection report reads the
+# inspection, its asset, its form revision and the responders' display names.
+depends_on = [
+  "tenancy",
+  "terms",
+  "projects",
+  "uploads",
+  "ops",
+  "inspections",
+  "assets",
+  "forms",
+  "identity",
+]
 permission_namespaces = ["report"]
-subscribes = []
 settings = []
 term_keys = [
   "report.permission.template_view",
@@ -17,6 +27,41 @@ term_keys = [
   "report.render.status.succeeded",
   "report.render.status.failed",
   "report.template.project_summary",
+  "report.template.inspection_internal",
+  "report.template.inspection_client",
+  "report.inspection.title",
+  "report.inspection.project",
+  "report.inspection.tag_number",
+  "report.inspection.asset",
+  "report.inspection.internal_tag",
+  "report.inspection.location",
+  "report.inspection.summary.answered",
+  "report.inspection.summary.failed",
+  "report.inspection.summary.missing",
+  "report.inspection.column.item",
+  "report.inspection.column.answer",
+  "report.inspection.column.unit",
+  "report.inspection.column.result",
+  "report.inspection.column.responder",
+  "report.inspection.column.time",
+  "report.inspection.result.pass",
+  "report.inspection.result.fail",
+  "report.inspection.yes",
+  "report.inspection.no",
+  "report.inspection.not_answered",
+  "report.inspection.photos",
+  "report.inspection.photo_count",
+  "report.inspection.photo_caption",
+  "report.inspection.photo_omitted.not_an_image",
+  "report.inspection.photo_omitted.too_large",
+  "report.inspection.photo_omitted.too_many",
+  "report.inspection.photo_omitted.unavailable",
+  "report.inspection.signoff",
+  "report.inspection.approved_by",
+  "report.inspection.approved_at",
+  "report.inspection.not_approved",
+  "report.inspection.footer",
+  "report.inspection.schema_hash",
   "report.template.status.draft",
   "report.template.status.published",
   "report.template.status.retired",
@@ -99,4 +144,9 @@ version = 1
 # REPORTS-04: every PDF download through the API, for the audit trail.
 [[events]]
 name = "report.downloaded"
+version = 1
+
+# REPORTS-03: an inspection reaching an auto-render state (its approval) queues its reports.
+[[subscribes]]
+name = "inspection.state_changed"
 version = 1

@@ -31,6 +31,14 @@ class AssetsApi:
         count = await repo.child_count(conn, asset_id)
         return AssetOut.model_validate({**row, "child_count": count})
 
+    async def get_ancestor_names(self, conn: AsyncConnection, asset_id: UUID) -> list[str]:
+        """The live ancestors' names of ``asset_id``, root first, itself excluded (a report's
+        location line, REPORTS-03); ``[]`` when the asset is not live in this tenant."""
+        row = await repo.get_asset(conn, asset_id)
+        if row is None:
+            return []
+        return [str(a["name"]) for a in await repo.ancestors(conn, row["path"])]
+
     async def assert_asset_exists(self, conn: AsyncConnection, asset_id: UUID) -> None:
         """Raise ``NotFoundError`` (HTTP 404) unless the asset is live in this tenant."""
         if await repo.get_asset(conn, asset_id) is None:

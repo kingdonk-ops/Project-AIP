@@ -11,6 +11,8 @@ import base64
 import io
 import json
 import shutil
+import tempfile
+from functools import cache
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -39,9 +41,17 @@ TENANTS = (TENANT_A_ID, TENANT_B_ID)
 api = ReportTemplatesApi()
 
 
-async def _load(root: Path = ROOT) -> tuple[int, str, str]:
+@cache
+def _example_root() -> Path:
+    """``config/report-templates`` with only the example package (REPORTS-03 added others)."""
+    root = Path(tempfile.mkdtemp(prefix="report-templates-"))
+    shutil.copytree(EXAMPLE, root / "project-summary" / "internal" / "v1")
+    return root
+
+
+async def _load(root: Path | None = None) -> tuple[int, str, str]:
     out, err = io.StringIO(), io.StringIO()
-    status = await run(root, TENANTS, out=out, err=err)
+    status = await run(root or _example_root(), TENANTS, out=out, err=err)
     return status, out.getvalue(), err.getvalue()
 
 
