@@ -4,7 +4,8 @@ Real Postgres (``aip_app``, RLS on), the RustFS object store and, for the end-to
 Gotenberg (the STACK-02 fixtures; in CI the compose stack's). An inspection of FORMS-01's
 ``coating-itr-min`` form on asset ``P-1001`` is driven through the APPROVALS-09 v2
 ``inspection_standard`` preset: ``ready`` (supervisor) → ``inspect`` (inspector) → answers →
-``request_supervisor_review`` (inspector) → ``mark_performed`` (supervisor, a fresh aal 2 session).
+``request_supervisor_review`` (inspector, once every section and the report are ticked complete,
+INSPECTIONS-10) → ``mark_performed`` (supervisor, a fresh aal 2 session).
 ``performed`` is the approved, terminal state (ADR 0041 renamed v1's ``completed``). The outbox is
 dispatched in-process with the inspections and report_engine subscribers, and the ``pdf`` queue is
 drained in-process as in REPORTS-02.
@@ -269,6 +270,12 @@ async def _inspection_for_review(
         headers=INSPECTOR,
     )
     assert answered.status_code == 200, answered.text
+    # INSPECTIONS-10: every section and then the report are ticked complete before hand-in.
+    for path in ("sections/preparation", "sections/coating", "report"):
+        ticked = await client.post(
+            f"{INSPECTIONS}/{inspection_id}/{path}/acknowledgement", headers=INSPECTOR
+        )
+        assert ticked.status_code == 200, (path, ticked.text)
     await _move(client, inspection_id, "request_supervisor_review", INSPECTOR_ID)
     return inspection_id
 

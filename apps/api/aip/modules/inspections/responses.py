@@ -7,9 +7,14 @@ against the inspection's pinned form revision with the shared FORMS-02 evaluator
 copy of the rules here.
 
 ``ResponseService.submit`` runs in the caller's ``with_tenant`` transaction and locks the
-inspection row first, so writes per inspection are serialised: the ``clientId`` check is then
-exact (a partitioned table cannot carry a unique key, ADR 0031) and the ``clock_timestamp()`` taken
-after the lock orders every answer after the one it supersedes. Any 4xx writes nothing.
+inspection row first, so writes per inspection are serialised (with acknowledgements too): the
+``clientId`` check is then exact (a partitioned table cannot carry a unique key, ADR 0031) and the
+``clock_timestamp()`` taken after the lock orders every answer after the one it supersedes. Any
+4xx writes nothing.
+
+INSPECTIONS-10: in the respond states an answer for a field in a ticked section is 409
+``SECTION_LOCKED``, and any answer while the report is ticked 409 ``REPORT_LOCKED``; a supervisor
+editing during review is not blocked by ticks.
 """
 
 from __future__ import annotations
@@ -25,10 +30,12 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from aip.modules.approvals.api import Actor
 from aip.modules.forms.api import AnswerEvaluation, FormsApi, evaluate_answers
 from aip.modules.inspections import repository as repo
+from aip.modules.inspections.acknowledgements import assert_unlocked
 from aip.modules.inspections.events import INSPECTION_ANSWER_FAILED
 from aip.modules.inspections.policies import (
     RECORD_TYPE,
     RESPOND_PERMISSION,
+    RESPOND_STATES,
     REVIEW_EDIT_PERMISSION,
     VIEW_PERMISSION,
     emits_answer_failed,
@@ -42,7 +49,7 @@ from aip.modules.inspections.schemas import (
     ResponseEntry,
     ResponseResult,
 )
-from aip.modules.inspections.service import current_state
+from aip.modules.inspections.service import current_state, lock_lifecycle
 from aip.platform.access import PolicyService, Resource
 from aip.platform.context import new_request_id
 from aip.platform.db.errors import NotFoundError
@@ -164,8 +171,8 @@ class ResponseService:
 
     async def _assert_editable(
         self, conn: AsyncConnection, actor: Actor, row: dict[str, Any]
-    ) -> None:
-        """ADR 0041 §6: who may save answers in the instance's current state."""
+    ) -> str:
+        """ADR 0041 §6: who may save answers in the instance's current state; returns it."""
         state = await current_state(conn, row)
         needed = permissions_to_respond(state)
         if needed is None:
@@ -186,6 +193,7 @@ class ResponseService:
                     messageKey=MESSAGE_KEYS["REVIEW_PERMISSION_REQUIRED"],
                     state=state,
                 )
+        return state
 
     async def submit(
         self,
@@ -200,9 +208,10 @@ class ResponseService:
             raise NotFoundError(f"inspection {inspection_id} not found")
         resource = Resource(project_id=row["project_id"])
         await self._policy.assert_can(actor.principal, RESPOND_PERMISSION, resource)
-        await self._assert_editable(conn, actor, row)  # (b)
-        # INSPECTIONS-10 adds the section and report acknowledgement locks here, after the
-        # state rules and before anything is validated or written.
+        await lock_lifecycle(conn, row)  # (a2) a transition from any route waits for this write
+        state = await self._assert_editable(conn, actor, row)  # (b)
+        if state in RESPOND_STATES:  # (b1) INSPECTIONS-10; ticks never block a supervisor
+            await assert_unlocked(conn, row, [a.field_key for a in answers])
         _assert_no_duplicates(answers)  # (b2)
         now = await repo.clock_timestamp(conn)  # after the lock: later than any earlier answer
 

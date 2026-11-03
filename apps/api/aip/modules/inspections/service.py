@@ -1,5 +1,8 @@
 """Inspection use cases (INSPECTIONS-01): create, transition, re-inspect, read and list.
 
+INSPECTIONS-10: create copies the template's ``has_supervisor_review`` onto the inspection, and
+entering ``rework_required`` clears the acknowledgements in the same transaction (``_entered``).
+
 Every function takes the caller's ``with_tenant`` connection, so the inspection row, its workflow
 instance and its outbox events land in one transaction: any failure writes none of them. Other
 modules are reached only through their ``api.py`` (ADR 0004): assets and projects for existence,
@@ -38,6 +41,7 @@ from aip.modules.inspections.events import INSPECTION_CREATED, INSPECTION_STATE_
 from aip.modules.inspections.policies import (
     CREATE_PERMISSION,
     RECORD_TYPE,
+    REWORK_STATE,
     VIEW_PERMISSION,
     can_reinspect,
 )
@@ -54,6 +58,7 @@ __all__ = [
     "NewInspection",
     "Page",
     "current_state",
+    "lock_lifecycle",
     "sync_state",
 ]
 
@@ -162,11 +167,48 @@ async def current_state(conn: AsyncConnection, row: dict[str, Any]) -> str:
     return instance.current_state
 
 
-async def sync_state(conn: AsyncConnection, inspection_id: UUID, action: str) -> None:
+async def lock_lifecycle(conn: AsyncConnection, row: dict[str, Any]) -> None:
+    """Lock the inspection's workflow instance; call it after ``repo.lock_inspection``.
+
+    An answer or acknowledgement write holds it, so a transition through ``/api/v1/approvals``
+    (which locks only the instance) waits and its guard reads the committed facts, and the write
+    then sees the state the transition left (INSPECTIONS-10)."""
+    await _approvals.lock_instance(conn, row["workflow_instance_id"])
+
+
+async def _entered(
+    conn: AsyncConnection,
+    row: dict[str, Any],
+    to_state: str,
+    actor_id: UUID | None,
+    *,
+    in_transition: bool,
+) -> None:
+    """What entering ``to_state`` does beyond the cached state (INSPECTIONS-10: Request Rework
+    clears every acknowledgement made before it).
+
+    In the transition's own transaction every tick predates it. Followed later by the
+    subscriber, a tick made since the rework began stands."""
+    if to_state != REWORK_STATE or actor_id is None:
+        return  # without an actor to record, the lock rule alone keeps rework unlocked
+    # Imported here: acknowledgements imports ``current_state`` from this module.
+    from aip.modules.inspections.acknowledgements import clear_for_rework
+
+    if in_transition:
+        await clear_for_rework(conn, row, actor_id)
+        return
+    entered_at = await _approvals.state_entered_at(conn, row["workflow_instance_id"], to_state)
+    await clear_for_rework(conn, row, actor_id, entered_at=entered_at)
+
+
+async def sync_state(
+    conn: AsyncConnection, inspection_id: UUID, action: str, *, actor_id: UUID | None = None
+) -> None:
     """Bring the cached ``state`` up to the instance's, emitting ``inspection.state_changed`` once.
 
     For the ``workflow.transitioned`` subscriber: idempotent, and a no-op when the inspection is
     gone or its state already matches (a transition taken through this module's route).
+    ``actor_id`` is who took the transition; it records the rework clearing.
     """
     row = await repo.lock_inspection(conn, inspection_id)
     if row is None:
@@ -176,6 +218,7 @@ async def sync_state(conn: AsyncConnection, inspection_id: UUID, action: str) ->
         return
     await repo.set_state(conn, inspection_id, state)
     await _emit_state_changed(conn, row, state, action)
+    await _entered(conn, row, state, actor_id, in_transition=False)
 
 
 class InspectionService:
@@ -217,6 +260,9 @@ class InspectionService:
         if data.project_id is not None:
             await _projects.assert_project_exists(conn, data.project_id)
         revision = await _pin_revision(conn, data)  # (c)
+        template = await _forms.get_template(conn, data.template_id)
+        if template is None:  # the revision just resolved: its template is live
+            raise _error(422, "TEMPLATE_NOT_PUBLISHED")
 
         inspection_id = _new_id()
         # A savepoint: a create that loses a client_generated_id race drops the instance it
@@ -245,6 +291,8 @@ class InspectionService:
                     "state": instance.current_state,
                     "created_by": actor.principal.actor_id,
                     "client_generated_id": data.client_generated_id,
+                    # INSPECTIONS-10: fixed at create; a later template change never moves it.
+                    "has_supervisor_review": template.has_supervisor_review,
                 },
             )
         except BaseException:
@@ -302,6 +350,7 @@ class InspectionService:
             if to_state != row["state"]:
                 updated = await repo.set_state(conn, inspection_id, to_state)
                 await _emit_state_changed(conn, row, to_state, action)
+                await _entered(conn, row, to_state, actor.principal.actor_id, in_transition=True)
                 row = updated
         return row, result
 

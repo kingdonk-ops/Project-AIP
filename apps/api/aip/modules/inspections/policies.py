@@ -1,5 +1,6 @@
-"""Pure inspection rules: the permission codes, the re-inspect rule (INSPECTIONS-01), and who may
-save answers in which state plus when a failed answer is announced (INSPECTIONS-02, ADR 0041 §6).
+"""Pure inspection rules: the permission codes, the re-inspect rule (INSPECTIONS-01), who may
+save answers in which state plus when a failed answer is announced (INSPECTIONS-02, ADR 0041 §6),
+and which submit action a record offers (INSPECTIONS-10, ADR 0041 §5).
 
 Authorisation is evaluated only through the policy service and RLS, deny by default; the lifecycle
 permissions are the ``approvals.inspection.*`` codes the approvals transition service checks. No
@@ -21,9 +22,13 @@ __all__ = [
     "RESPOND_STATES",
     "REVIEW_EDIT_PERMISSION",
     "REVIEW_EDIT_STATES",
+    "REWORK_STATE",
+    "SUBMIT_REPORT",
+    "SUBMIT_TO_SUPERVISOR",
     "VIEW_PERMISSION",
     "can_reinspect",
     "emits_answer_failed",
+    "hidden_submit",
     "permissions_to_respond",
 ]
 
@@ -65,3 +70,17 @@ def emits_answer_failed(previous_failed: bool | None, failed: bool) -> bool:
     """Announce a failed answer only when it newly fails: the field had no answer (``None``) or
     its previous answer passed. Re-saving a failing value announces nothing."""
     return failed and previous_failed is not True
+
+
+# ADR 0041 §5: the two submit actions. The template's supervisor-review setting, copied onto the
+# inspection, decides which one the record offers; the presets guard each on
+# ``record.hasSupervisorReview``, and the record never shows the other one.
+SUBMIT_TO_SUPERVISOR: Final = "request_supervisor_review"
+SUBMIT_REPORT: Final = "submit_report"
+# ADR 0041 §6: Request Rework leads here, and entering it clears every acknowledgement.
+REWORK_STATE: Final = "rework_required"
+
+
+def hidden_submit(has_supervisor_review: bool) -> str:
+    """The submit action an inspection never offers: the one its setting rules out."""
+    return SUBMIT_REPORT if has_supervisor_review else SUBMIT_TO_SUPERVISOR

@@ -46,6 +46,7 @@ from .conftest import (
     VIEWER_ID,
     GrantTable,
     Setup,
+    acknowledge,
     count,
     ctx,
     principal_headers,
@@ -442,10 +443,11 @@ async def test_an_itp_with_open_steps_cannot_be_handed_in(
 
     await release_hold(client, itp)
     await waive_witness(client, db, itp)
+    await acknowledge(client, itp.id)  # the report is complete: only the open step blocks
     refused = await move(client, itp.id, "request_supervisor_review", INSPECTOR_ID)
     assert refused.status_code == 422, refused.text
     assert refused.json()["code"] == "GUARD_FAILED"
-    assert refused.json()["messageKey"] == "inspection.guard.not_ready_to_submit"
+    assert refused.json()["messageKey"] == "inspection.guard.submit_not_ready"
 
     await start(client, itp.steps[2])
     assert (await sign(client, itp.steps[2], "approve", signed(INSPECTOR_ID))).status_code == 200

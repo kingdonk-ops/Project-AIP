@@ -1,0 +1,43 @@
+{
+  "additionalProperties": false,
+  "description": "A section (``sectionKey`` set) or the report (``sectionKey`` null) was ticked complete.",
+  "properties": {
+    "actor": {
+      "format": "uuid",
+      "title": "Actor",
+      "type": "string"
+    },
+    "inspectionId": {
+      "format": "uuid",
+      "title": "Inspectionid",
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "section",
+        "report"
+      ],
+      "title": "Scope",
+      "type": "string"
+    },
+    "sectionKey": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Sectionkey"
+    }
+  },
+  "required": [
+    "inspectionId",
+    "scope",
+    "sectionKey",
+    "actor"
+  ],
+  "title": "InspectionAcknowledgedEvent",
+  "type": "object"
+}

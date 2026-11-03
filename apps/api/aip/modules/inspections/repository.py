@@ -1,11 +1,11 @@
-"""Data access for inspections (INSPECTIONS-01), their responses (INSPECTIONS-02) and ITP steps
-and sign-offs (INSPECTIONS-03).
+"""Data access for inspections (INSPECTIONS-01), their responses (INSPECTIONS-02), ITP steps and
+sign-offs (INSPECTIONS-03) and section and report acknowledgements (INSPECTIONS-10).
 
 Every function takes the tenant-bound connection from ``with_tenant`` and never creates its own
 (ADR 0002). RLS limits every statement to the caller's tenant (and, through the ACCESS-03
 project-scope policy, to projects the caller holds); reads skip soft-deleted rows.
-``inspection_responses`` and ``inspection_signoffs`` are append-only: there is an insert and
-reads, never an update or delete.
+``inspection_responses``, ``inspection_signoffs`` and ``inspection_acknowledgements`` are
+append-only: there is an insert and reads, never an update or delete.
 """
 
 from __future__ import annotations
@@ -20,6 +20,8 @@ from sqlalchemy import ColumnElement, and_, func, insert, select, tuple_, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.modules.inspections.tables import (
+    inspection_acknowledgements,
+    inspection_current_acknowledgements,
     inspection_current_responses,
     inspection_responses,
     inspection_signoffs,
@@ -31,13 +33,16 @@ from aip.platform.db.idempotency import IdempotentResult, create_idempotent
 __all__ = [
     "Filters",
     "Row",
+    "acknowledgement_history",
     "clock_timestamp",
+    "current_acknowledgements",
     "current_responses",
     "field_history",
     "find_by_client_generated_id",
     "find_by_client_id",
     "get_inspection",
     "get_step",
+    "insert_acknowledgement",
     "insert_inspection",
     "insert_response",
     "insert_signoff",
@@ -280,4 +285,31 @@ async def list_signoffs(conn: AsyncConnection, inspection_id: UUID) -> list[Row]
     """Every sign-off of the inspection in ``seq`` order."""
     t = inspection_signoffs
     stmt = select(t).where(t.c.inspection_id == inspection_id).order_by(t.c.seq)
+    return [dict(r) for r in (await conn.execute(stmt)).mappings()]
+
+
+# --- section and report acknowledgements (INSPECTIONS-10) ----------------------------------------
+
+
+async def insert_acknowledgement(conn: AsyncConnection, values: dict[str, Any]) -> Row:
+    stmt = (
+        insert(inspection_acknowledgements)
+        .values(**values)
+        .returning(*inspection_acknowledgements.c)
+    )
+    return dict((await conn.execute(stmt)).mappings().one())
+
+
+async def current_acknowledgements(conn: AsyncConnection, inspection_id: UUID) -> list[Row]:
+    """The latest row per scope (from the view): one per section ever acknowledged, and the
+    report's."""
+    v = inspection_current_acknowledgements
+    stmt = select(v).where(v.c.inspection_id == inspection_id)
+    return [dict(r) for r in (await conn.execute(stmt)).mappings()]
+
+
+async def acknowledgement_history(conn: AsyncConnection, inspection_id: UUID) -> list[Row]:
+    """Every acknowledgement row of the inspection, oldest first."""
+    t = inspection_acknowledgements
+    stmt = select(t).where(t.c.inspection_id == inspection_id).order_by(t.c.created_at, t.c.id)
     return [dict(r) for r in (await conn.execute(stmt)).mappings()]

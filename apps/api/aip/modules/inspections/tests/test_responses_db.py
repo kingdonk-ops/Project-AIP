@@ -38,6 +38,7 @@ from .conftest import (
     SUPERVISOR_ID,
     VIEWER,
     GrantTable,
+    acknowledge,
     count,
     create_asset,
     install_preset,
@@ -348,6 +349,7 @@ async def test_the_lifecycle_decides_who_may_answer(
     await move(client, inspection, "sitesync_check_in", INSPECTOR_ID)
     await answer_ok(client, inspection, item("coating_dft", 302))  # inspector_review
 
+    await acknowledge(client, inspection, ["coating"], [("surface_prep", "sa2_5")])
     await move(client, inspection, "request_supervisor_review", INSPECTOR_ID)
     inspector = await answer(client, inspection, item("coating_dft", 303))
     assert inspector.status_code == 403, inspector.text
@@ -360,6 +362,7 @@ async def test_the_lifecycle_decides_who_may_answer(
     await move(client, inspection, "request_rework", SUPERVISOR_ID, comment="redo the DFT")
     await answer_ok(client, inspection, item("coating_dft", 304))  # rework_required
 
+    await acknowledge(client, inspection, ["coating"], [])
     await move(client, inspection, "request_supervisor_review", INSPECTOR_ID)
     await move(client, inspection, "mark_performed", SUPERVISOR_ID)
     before = await responses(db)

@@ -105,6 +105,72 @@
         "title": "AccessErrorBody",
         "type": "object"
       },
+      "AcknowledgementIn": {
+        "additionalProperties": false,
+        "description": "The optional body of a tick or untick: nothing to send, and an unknown key is a 422.",
+        "properties": {},
+        "title": "AcknowledgementIn",
+        "type": "object"
+      },
+      "AcknowledgementState": {
+        "description": "Whether a section (or the report) is locked, and by whom and when it was ticked.",
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "locked"
+        ],
+        "title": "AcknowledgementState",
+        "type": "object"
+      },
+      "Acknowledgements": {
+        "description": "Every section of the pinned revision and the report: what is locked now.",
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/AcknowledgementState"
+          },
+          "sections": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AcknowledgementState"
+            },
+            "title": "Sections",
+            "type": "object"
+          }
+        },
+        "required": [
+          "sections",
+          "report"
+        ],
+        "title": "Acknowledgements",
+        "type": "object"
+      },
       "Ancestor": {
         "properties": {
           "id": {
@@ -3288,6 +3354,10 @@
             "title": "Currentstate",
             "type": "string"
           },
+          "hasSupervisorReview": {
+            "title": "Hassupervisorreview",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -3409,6 +3479,7 @@
           "syncVersion",
           "createdAt",
           "updatedAt",
+          "hasSupervisorReview",
           "currentState",
           "instanceSyncVersion",
           "pendingCountersign",
@@ -3502,6 +3573,10 @@
             "format": "uuid",
             "title": "Createdby",
             "type": "string"
+          },
+          "hasSupervisorReview": {
+            "title": "Hassupervisorreview",
+            "type": "boolean"
           },
           "id": {
             "format": "uuid",
@@ -3608,7 +3683,8 @@
           "clientGeneratedId",
           "syncVersion",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "hasSupervisorReview"
         ],
         "title": "InspectionOut",
         "type": "object"
@@ -17186,6 +17262,79 @@
         ]
       }
     },
+    "/api/v1/inspections/{inspection_id}/acknowledgements": {
+      "get": {
+        "operationId": "inspections_acknowledgements",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Acknowledgements"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Acknowledgements",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
     "/api/v1/inspections/{inspection_id}/history": {
       "get": {
         "operationId": "inspections_history",
@@ -17506,6 +17655,204 @@
         ]
       }
     },
+    "/api/v1/inspections/{inspection_id}/report/acknowledgement": {
+      "delete": {
+        "operationId": "inspections_unacknowledge_report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AcknowledgementIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Acknowledgements"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden, or NOT_ACKNOWLEDGER"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "INSPECTION_NOT_EDITABLE, SECTION_ALREADY_ACKNOWLEDGED, REPORT_ALREADY_ACKNOWLEDGED or REPORT_ACKNOWLEDGED"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, UNKNOWN_SECTION, SECTION_NOT_VISIBLE, SECTION_INCOMPLETE, SECTIONS_NOT_ACKNOWLEDGED or REPORT_INCOMPLETE"
+          }
+        },
+        "summary": "Unacknowledge Report",
+        "tags": [
+          "inspections"
+        ]
+      },
+      "post": {
+        "operationId": "inspections_acknowledge_report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AcknowledgementIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Acknowledgements"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden, or NOT_ACKNOWLEDGER"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "INSPECTION_NOT_EDITABLE, SECTION_ALREADY_ACKNOWLEDGED, REPORT_ALREADY_ACKNOWLEDGED or REPORT_ACKNOWLEDGED"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, UNKNOWN_SECTION, SECTION_NOT_VISIBLE, SECTION_INCOMPLETE, SECTIONS_NOT_ACKNOWLEDGED or REPORT_INCOMPLETE"
+          }
+        },
+        "summary": "Acknowledge Report",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
     "/api/v1/inspections/{inspection_id}/responses": {
       "get": {
         "operationId": "inspections_responses",
@@ -17748,6 +18095,224 @@
           }
         },
         "summary": "Get Response History",
+        "tags": [
+          "inspections"
+        ]
+      }
+    },
+    "/api/v1/inspections/{inspection_id}/sections/{sectionKey}/acknowledgement": {
+      "delete": {
+        "operationId": "inspections_unacknowledge_section",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sectionKey",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z][a-z0-9_]{0,62}$",
+              "title": "Sectionkey",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AcknowledgementIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Acknowledgements"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden, or NOT_ACKNOWLEDGER"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "INSPECTION_NOT_EDITABLE, SECTION_ALREADY_ACKNOWLEDGED, REPORT_ALREADY_ACKNOWLEDGED or REPORT_ACKNOWLEDGED"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, UNKNOWN_SECTION, SECTION_NOT_VISIBLE, SECTION_INCOMPLETE, SECTIONS_NOT_ACKNOWLEDGED or REPORT_INCOMPLETE"
+          }
+        },
+        "summary": "Unacknowledge Section",
+        "tags": [
+          "inspections"
+        ]
+      },
+      "post": {
+        "operationId": "inspections_acknowledge_section",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inspection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inspection Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sectionKey",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z][a-z0-9_]{0,62}$",
+              "title": "Sectionkey",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AcknowledgementIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Acknowledgements"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not signed in, or STEP_UP_REQUIRED"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden, or NOT_ACKNOWLEDGER"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "INSPECTION_NOT_EDITABLE, SECTION_ALREADY_ACKNOWLEDGED, REPORT_ALREADY_ACKNOWLEDGED or REPORT_ACKNOWLEDGED"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionErrorBody"
+                }
+              }
+            },
+            "description": "Validation error, UNKNOWN_SECTION, SECTION_NOT_VISIBLE, SECTION_INCOMPLETE, SECTIONS_NOT_ACKNOWLEDGED or REPORT_INCOMPLETE"
+          }
+        },
+        "summary": "Acknowledge Section",
         "tags": [
           "inspections"
         ]

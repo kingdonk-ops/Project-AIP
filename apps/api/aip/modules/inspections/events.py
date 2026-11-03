@@ -13,17 +13,21 @@
   sign-off's transaction. SCOPEWORK-03 unblocks the step's ``blocksTaskId`` from it.
 - ``itp_step.hold_changed`` v1 ``{stepId, inspectionId, issueId, held}`` (INSPECTIONS-03): an
   issues NCR placed or cleared its hold on a step.
+- ``inspection.section_acknowledged`` v1 and ``inspection.report_acknowledged`` v1 ``{inspectionId,
+  scope, sectionKey, actor}`` (INSPECTIONS-10): a section (``sectionKey`` set) or the whole report
+  (``sectionKey`` null) was ticked complete and its answers locked, in the tick's transaction.
 
 ``follow_workflow`` subscribes to approvals' ``workflow.transitioned`` v1: for an ``inspection``
 record whose cached ``state`` differs from its instance's ``current_state`` it updates the cache and
-emits ``inspection.state_changed``. A transition taken through this module's route has already done
+emits ``inspection.state_changed``; entering ``rework_required`` also clears the acknowledgements
+(INSPECTIONS-10). A transition taken through this module's route has already done
 both, so the subscriber finds the state equal and does nothing; a replayed event does nothing too.
 """
 
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Final
+from typing import Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -36,10 +40,13 @@ from aip.platform.events.subscribers import DomainEvent, subscriber
 __all__ = [
     "INSPECTION_ANSWER_FAILED",
     "INSPECTION_CREATED",
+    "INSPECTION_REPORT_ACKNOWLEDGED",
+    "INSPECTION_SECTION_ACKNOWLEDGED",
     "INSPECTION_STATE_CHANGED",
     "ITP_STEP_HOLD_CHANGED",
     "ITP_STEP_RELEASED",
     "WORKFLOW_TRANSITIONED",
+    "InspectionAcknowledgedEvent",
     "InspectionAnswerFailedEvent",
     "InspectionCreatedEvent",
     "InspectionStateChangedEvent",
@@ -50,6 +57,8 @@ __all__ = [
 
 INSPECTION_ANSWER_FAILED: Final = "inspection.answer_failed"
 INSPECTION_CREATED: Final = "inspection.created"
+INSPECTION_REPORT_ACKNOWLEDGED: Final = "inspection.report_acknowledged"
+INSPECTION_SECTION_ACKNOWLEDGED: Final = "inspection.section_acknowledged"
 INSPECTION_STATE_CHANGED: Final = "inspection.state_changed"
 ITP_STEP_HOLD_CHANGED: Final = "itp_step.hold_changed"
 ITP_STEP_RELEASED: Final = "itp_step.released"
@@ -115,8 +124,21 @@ class ItpStepHoldChangedEvent(BaseModel):
     held: bool
 
 
+class InspectionAcknowledgedEvent(BaseModel):
+    """A section (``sectionKey`` set) or the report (``sectionKey`` null) was ticked complete."""
+
+    model_config = _CONFIG
+
+    inspection_id: UUID
+    scope: Literal["section", "report"]
+    section_key: str | None
+    actor: UUID
+
+
 register_event(INSPECTION_ANSWER_FAILED, 1, InspectionAnswerFailedEvent, "inspections")
 register_event(INSPECTION_CREATED, 1, InspectionCreatedEvent, "inspections")
+register_event(INSPECTION_REPORT_ACKNOWLEDGED, 1, InspectionAcknowledgedEvent, "inspections")
+register_event(INSPECTION_SECTION_ACKNOWLEDGED, 1, InspectionAcknowledgedEvent, "inspections")
 register_event(INSPECTION_STATE_CHANGED, 1, InspectionStateChangedEvent, "inspections")
 register_event(ITP_STEP_HOLD_CHANGED, 1, ItpStepHoldChangedEvent, "inspections")
 register_event(ITP_STEP_RELEASED, 1, ItpStepReleasedEvent, "inspections")
@@ -129,4 +151,10 @@ async def follow_workflow(conn: AsyncConnection, event: DomainEvent) -> None:
     # Imported here: the service imports this module's event names.
     from aip.modules.inspections.service import sync_state
 
-    await sync_state(conn, UUID(str(event.payload["recordId"])), str(event.payload["action"]))
+    actor_id = event.payload.get("actorId")
+    await sync_state(
+        conn,
+        UUID(str(event.payload["recordId"])),
+        str(event.payload["action"]),
+        actor_id=None if actor_id is None else UUID(str(actor_id)),
+    )

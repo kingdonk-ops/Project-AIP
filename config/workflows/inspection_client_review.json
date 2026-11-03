@@ -271,14 +271,34 @@
         "requiredPermission": "approvals.inspection.execute",
         "labelKey": "workflow.inspection.action.request_supervisor_review",
         "guard": {
-          "==": [
+          "and": [
             {
-              "var": "record.openStepCount"
+              "==": [
+                {
+                  "var": "record.hasSupervisorReview"
+                },
+                true
+              ]
             },
-            0
+            {
+              "==": [
+                {
+                  "var": "record.reportAcknowledged"
+                },
+                true
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.openStepCount"
+                },
+                0
+              ]
+            }
           ]
         },
-        "guardMessageKey": "inspection.guard.not_ready_to_submit"
+        "guardMessageKey": "inspection.guard.submit_not_ready"
       },
       {
         "action": "request_clarification",
@@ -317,14 +337,72 @@
         "requiredPermission": "approvals.inspection.execute",
         "labelKey": "workflow.inspection.action.request_supervisor_review",
         "guard": {
-          "==": [
+          "and": [
             {
-              "var": "record.openStepCount"
+              "==": [
+                {
+                  "var": "record.hasSupervisorReview"
+                },
+                true
+              ]
             },
-            0
+            {
+              "==": [
+                {
+                  "var": "record.reportAcknowledged"
+                },
+                true
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.openStepCount"
+                },
+                0
+              ]
+            }
           ]
         },
-        "guardMessageKey": "inspection.guard.not_ready_to_submit"
+        "guardMessageKey": "inspection.guard.submit_not_ready"
+      },
+      {
+        "action": "submit_report",
+        "from": "in_progress",
+        "to": "client_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.submit_report",
+        "critical": true,
+        "signoffAction": "inspection.submit_report",
+        "guard": {
+          "and": [
+            {
+              "==": [
+                {
+                  "var": "record.hasSupervisorReview"
+                },
+                false
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.reportAcknowledged"
+                },
+                true
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.openStepCount"
+                },
+                0
+              ]
+            }
+          ]
+        },
+        "guardMessageKey": "inspection.guard.submit_not_ready"
       },
       {
         "action": "abort",
@@ -369,14 +447,72 @@
         "requiredPermission": "approvals.inspection.execute",
         "labelKey": "workflow.inspection.action.request_supervisor_review",
         "guard": {
-          "==": [
+          "and": [
             {
-              "var": "record.openStepCount"
+              "==": [
+                {
+                  "var": "record.hasSupervisorReview"
+                },
+                true
+              ]
             },
-            0
+            {
+              "==": [
+                {
+                  "var": "record.reportAcknowledged"
+                },
+                true
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.openStepCount"
+                },
+                0
+              ]
+            }
           ]
         },
-        "guardMessageKey": "inspection.guard.not_ready_to_submit"
+        "guardMessageKey": "inspection.guard.submit_not_ready"
+      },
+      {
+        "action": "submit_report",
+        "from": "in_progress_sitesync",
+        "to": "client_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.submit_report",
+        "critical": true,
+        "signoffAction": "inspection.submit_report",
+        "guard": {
+          "and": [
+            {
+              "==": [
+                {
+                  "var": "record.hasSupervisorReview"
+                },
+                false
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.reportAcknowledged"
+                },
+                true
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.openStepCount"
+                },
+                0
+              ]
+            }
+          ]
+        },
+        "guardMessageKey": "inspection.guard.submit_not_ready"
       },
       {
         "action": "sitesync_check_in",
@@ -400,14 +536,72 @@
         "requiredPermission": "approvals.inspection.execute",
         "labelKey": "workflow.inspection.action.request_supervisor_review",
         "guard": {
-          "==": [
+          "and": [
             {
-              "var": "record.openStepCount"
+              "==": [
+                {
+                  "var": "record.hasSupervisorReview"
+                },
+                true
+              ]
             },
-            0
+            {
+              "==": [
+                {
+                  "var": "record.reportAcknowledged"
+                },
+                true
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.openStepCount"
+                },
+                0
+              ]
+            }
           ]
         },
-        "guardMessageKey": "inspection.guard.not_ready_to_submit"
+        "guardMessageKey": "inspection.guard.submit_not_ready"
+      },
+      {
+        "action": "submit_report",
+        "from": "inspector_review",
+        "to": "client_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.submit_report",
+        "critical": true,
+        "signoffAction": "inspection.submit_report",
+        "guard": {
+          "and": [
+            {
+              "==": [
+                {
+                  "var": "record.hasSupervisorReview"
+                },
+                false
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.reportAcknowledged"
+                },
+                true
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.openStepCount"
+                },
+                0
+              ]
+            }
+          ]
+        },
+        "guardMessageKey": "inspection.guard.submit_not_ready"
       },
       {
         "action": "handover",
@@ -543,14 +737,72 @@
         "requiredPermission": "approvals.inspection.execute",
         "labelKey": "workflow.inspection.action.request_supervisor_review",
         "guard": {
-          "==": [
+          "and": [
             {
-              "var": "record.openStepCount"
+              "==": [
+                {
+                  "var": "record.hasSupervisorReview"
+                },
+                true
+              ]
             },
-            0
+            {
+              "==": [
+                {
+                  "var": "record.reportAcknowledged"
+                },
+                true
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.openStepCount"
+                },
+                0
+              ]
+            }
           ]
         },
-        "guardMessageKey": "inspection.guard.not_ready_to_submit"
+        "guardMessageKey": "inspection.guard.submit_not_ready"
+      },
+      {
+        "action": "submit_report",
+        "from": "rework_required",
+        "to": "client_review",
+        "requiredPermission": "approvals.inspection.execute",
+        "labelKey": "workflow.inspection.action.submit_report",
+        "critical": true,
+        "signoffAction": "inspection.submit_report",
+        "guard": {
+          "and": [
+            {
+              "==": [
+                {
+                  "var": "record.hasSupervisorReview"
+                },
+                false
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.reportAcknowledged"
+                },
+                true
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "record.openStepCount"
+                },
+                0
+              ]
+            }
+          ]
+        },
+        "guardMessageKey": "inspection.guard.submit_not_ready"
       },
       {
         "action": "sitesync_checkout",

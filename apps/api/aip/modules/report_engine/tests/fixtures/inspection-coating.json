@@ -16,7 +16,8 @@
     "clientGeneratedId": null,
     "syncVersion": 7,
     "createdAt": "2026-10-29T23:00:00Z",
-    "updatedAt": "2026-10-30T03:00:00Z"
+    "updatedAt": "2026-10-30T03:00:00Z",
+    "hasSupervisorReview": true
   },
   "asset": {
     "id": "0192f0a1-0000-7000-8000-00000000a501",

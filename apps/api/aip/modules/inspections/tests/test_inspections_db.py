@@ -3,8 +3,8 @@
 The app connects as ``aip_app`` (RLS on). Users come from the AUTH_TEST_STUB principal header;
 permissions from the ``grants`` fixture (see ``conftest``). The lifecycle is the APPROVALS-09 v2
 ``inspection_standard`` preset: ``ready`` (supervisor) → ``inspect`` (inspector) →
-``request_supervisor_review`` (inspector) → ``mark_performed`` (supervisor, critical: a fresh aal 2
-session).
+``request_supervisor_review`` (inspector, once the report is ticked complete: INSPECTIONS-10) →
+``mark_performed`` (supervisor, critical: a fresh aal 2 session).
 """
 
 from __future__ import annotations
@@ -43,6 +43,7 @@ from .conftest import (
     VIEWER_ID,
     GrantTable,
     Setup,
+    acknowledge,
     count,
     create_asset,
     new_revision,
@@ -98,6 +99,8 @@ async def drive(client: httpx.AsyncClient, inspection_id: str, steps: int) -> di
     """Take the first ``steps`` happy-path actions by role; return the last inspection."""
     last: dict[str, Any] = {}
     for action, user, _, _ in HAPPY_PATH[:steps]:
+        if action == "request_supervisor_review":
+            await acknowledge(client, inspection_id)
         response = await act(client, inspection_id, action, signed(user))
         assert response.status_code == 200, (action, response.text)
         last = response.json()["inspection"]
@@ -385,6 +388,8 @@ async def test_refused_transitions_pass_through_from_approvals(
 async def drive_from(client: httpx.AsyncClient, inspection_id: str, done: int) -> None:
     """Take the happy path's remaining steps up to supervisor review."""
     for action, user, _, _ in HAPPY_PATH[done:3]:
+        if action == "request_supervisor_review":
+            await acknowledge(client, inspection_id)
         response = await act(client, inspection_id, action, signed(user))
         assert response.status_code == 200, (action, response.text)
 

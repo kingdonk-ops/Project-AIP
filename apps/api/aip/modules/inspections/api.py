@@ -11,6 +11,9 @@ the project and the template's current published revision exactly as ``POST /ins
 ``get_current_responses`` (INSPECTIONS-02) is the current answer per field and their evaluation,
 the same shape as ``GET /inspections/{id}/responses``, for report_engine and issues.
 
+INSPECTIONS-10: ``get_acknowledgements`` is what is locked now, per section of the pinned revision
+and for the report, with who ticked it and when, so REPORTS-03 can show "completed by X at T".
+
 INSPECTIONS-03: ``get_itp_step`` and ``is_step_released`` let scope_work ask about a step without
 reading inspections tables (``is_step_released`` is true only for a released or waived step with
 no NCR hold, false for an unknown one). Issues puts an NCR hold on a step with ``place_hold`` and
@@ -27,17 +30,24 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from aip.modules.approvals.api import Actor
 from aip.modules.inspections import itp
 from aip.modules.inspections import repository as repo
+from aip.modules.inspections.acknowledgements import acknowledgements_of
 from aip.modules.inspections.itp import (
     HoldMismatchError,
     StepAlreadyHeldError,
     StepAlreadyReleasedError,
 )
 from aip.modules.inspections.responses import current_responses
-from aip.modules.inspections.schemas import CurrentResponses, InspectionOut, ItpStepOut
+from aip.modules.inspections.schemas import (
+    Acknowledgements,
+    CurrentResponses,
+    InspectionOut,
+    ItpStepOut,
+)
 from aip.modules.inspections.service import InspectionService, NewInspection, current_state
 from aip.platform.access import PolicyService
 
 __all__ = [
+    "Acknowledgements",
     "CurrentResponses",
     "HoldMismatchError",
     "InspectionOut",
@@ -98,6 +108,14 @@ class InspectionsApi:
         ``None``. No permission check."""
         row = await repo.get_inspection(conn, inspection_id)
         return None if row is None else await current_responses(conn, row)
+
+    async def get_acknowledgements(
+        self, conn: AsyncConnection, inspection_id: UUID
+    ) -> Acknowledgements | None:
+        """What is locked on the inspection visible on ``conn`` (per section and the report, with
+        who ticked it and when), or ``None``. No permission check."""
+        row = await repo.get_inspection(conn, inspection_id)
+        return None if row is None else await acknowledgements_of(conn, row)
 
     async def get_itp_step(self, conn: AsyncConnection, step_id: UUID) -> ItpStepOut | None:
         """The live ITP step visible on ``conn``, or ``None``. No permission check."""

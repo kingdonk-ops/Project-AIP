@@ -29,6 +29,18 @@
   A stale ``expectedSyncVersion`` is 409 with the current step.
 - ``GET /inspections/{id}/signoffs`` returns the sign-offs and ``chainValid`` (``inspection.view``)
   (INSPECTIONS-03).
+- ``POST`` and ``DELETE /inspections/{id}/sections/{sectionKey}/acknowledgement`` and
+  ``/inspections/{id}/report/acknowledgement`` tick and untick a section or the whole report
+  (``inspection.respond``): 200 with the acknowledgement state. 409 ``INSPECTION_NOT_EDITABLE``
+  outside the respond states, ``SECTION_ALREADY_ACKNOWLEDGED``, ``REPORT_ALREADY_ACKNOWLEDGED`` or
+  ``REPORT_ACKNOWLEDGED`` (a section untick while the report is ticked); 403 ``NOT_ACKNOWLEDGER``
+  for an untick by anyone but the ticker; 422 ``UNKNOWN_SECTION``, ``SECTION_NOT_VISIBLE``,
+  ``SECTION_INCOMPLETE`` / ``REPORT_INCOMPLETE`` (``missingRequired``, ``invalid``,
+  ``ruleFailures``) or ``SECTIONS_NOT_ACKNOWLEDGED`` (``sectionKeys``). ``GET
+  /inspections/{id}/acknowledgements`` returns the state (``inspection.view``) (INSPECTIONS-10).
+- ``availableTransitions`` never lists the submit action the inspection's
+  ``hasSupervisorReview`` rules out (``request_supervisor_review`` or ``submit_report``): the
+  engine lists a guarded-out transition as not allowed, so this module leaves it out.
 
 Every route is ``authenticated()`` with an active tenant, and the service checks each permission
 against the inspection's project (ADR 0035 §6), deny by default. Another tenant's id is 404 before
@@ -45,10 +57,14 @@ from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
 from aip.modules.approvals.api import Actor, InstanceView
 from aip.modules.identity.api import Principal, SessionFacts, get_principal
 from aip.modules.inspections import repository as repo
+from aip.modules.inspections.acknowledgements import AcknowledgementService
 from aip.modules.inspections.itp import ItpService
+from aip.modules.inspections.policies import hidden_submit
 from aip.modules.inspections.responses import ResponseService
 from aip.modules.inspections.schemas import (
     FIELD_KEY_PATTERN,
+    AcknowledgementIn,
+    Acknowledgements,
     CurrentResponses,
     InspectionAvailableTransition,
     InspectionCreate,
@@ -137,8 +153,24 @@ _SIGNOFF_ERRORS: dict[int | str, dict[str, Any]] = {
     422: {"model": InspectionErrorBody, "description": "Validation error or COMMENT_REQUIRED"},
 }
 
+_ACK_ERRORS: dict[int | str, dict[str, Any]] = {
+    **_ERRORS,
+    403: {"model": InspectionErrorBody, "description": "Forbidden, or NOT_ACKNOWLEDGER"},
+    409: {
+        "model": InspectionErrorBody,
+        "description": "INSPECTION_NOT_EDITABLE, SECTION_ALREADY_ACKNOWLEDGED, "
+        "REPORT_ALREADY_ACKNOWLEDGED or REPORT_ACKNOWLEDGED",
+    },
+    422: {
+        "model": InspectionErrorBody,
+        "description": "Validation error, UNKNOWN_SECTION, SECTION_NOT_VISIBLE, "
+        "SECTION_INCOMPLETE, SECTIONS_NOT_ACKNOWLEDGED or REPORT_INCOMPLETE",
+    },
+}
+
 Limit = Annotated[int, Query(ge=1, le=200)]
 FieldKeyPath = Annotated[str, Path(alias="fieldKey", pattern=FIELD_KEY_PATTERN)]
+SectionKeyPath = Annotated[str, Path(alias="sectionKey", pattern=FIELD_KEY_PATTERN)]
 Cursor = Annotated[str | None, Query(max_length=1024)]
 
 
@@ -172,8 +204,14 @@ def _itp(request: Request) -> ItpService:
     return ItpService(policy)
 
 
+def _acknowledgements(request: Request) -> AcknowledgementService:
+    policy: PolicyService = request.app.state.access_policy
+    return AcknowledgementService(policy)
+
+
 def _detail(row: dict[str, Any], view: InstanceView) -> InspectionDetail:
     instance = view.instance
+    hidden = hidden_submit(row["has_supervisor_review"])
     return InspectionDetail.model_validate(
         {
             **row,
@@ -191,6 +229,7 @@ def _detail(row: dict[str, Any], view: InstanceView) -> InspectionDetail:
                     reason_key=a.reason_key,
                 )
                 for a in view.available
+                if a.transition.action != hidden
             ],
         }
     )
@@ -405,6 +444,87 @@ async def get_itp_steps(inspection_id: UUID, request: Request, who: CurrentActor
 async def get_signoffs(inspection_id: UUID, request: Request, who: CurrentActor) -> SignoffList:
     async with with_tenant(get_context()) as conn:
         return await _itp(request).signoffs(conn, who, inspection_id)
+
+
+@inspections_router.get(
+    "/{inspection_id}/acknowledgements",
+    operation_id="inspections_acknowledgements",
+    response_model=Acknowledgements,
+    responses=_ERRORS,
+)
+async def get_acknowledgements(
+    inspection_id: UUID, request: Request, who: CurrentActor
+) -> Acknowledgements:
+    async with with_tenant(get_context()) as conn:
+        return await _acknowledgements(request).current(conn, who, inspection_id)
+
+
+@inspections_router.post(
+    "/{inspection_id}/sections/{sectionKey}/acknowledgement",
+    operation_id="inspections_acknowledge_section",
+    response_model=Acknowledgements,
+    responses=_ACK_ERRORS,
+)
+async def acknowledge_section(
+    inspection_id: UUID,
+    section_key: SectionKeyPath,
+    request: Request,
+    who: CurrentActor,
+    body: AcknowledgementIn | None = None,
+) -> Acknowledgements:
+    async with with_tenant(get_context()) as conn:
+        return await _acknowledgements(request).tick_section(conn, who, inspection_id, section_key)
+
+
+@inspections_router.delete(
+    "/{inspection_id}/sections/{sectionKey}/acknowledgement",
+    operation_id="inspections_unacknowledge_section",
+    response_model=Acknowledgements,
+    responses=_ACK_ERRORS,
+)
+async def unacknowledge_section(
+    inspection_id: UUID,
+    section_key: SectionKeyPath,
+    request: Request,
+    who: CurrentActor,
+    body: AcknowledgementIn | None = None,
+) -> Acknowledgements:
+    async with with_tenant(get_context()) as conn:
+        return await _acknowledgements(request).untick_section(
+            conn, who, inspection_id, section_key
+        )
+
+
+@inspections_router.post(
+    "/{inspection_id}/report/acknowledgement",
+    operation_id="inspections_acknowledge_report",
+    response_model=Acknowledgements,
+    responses=_ACK_ERRORS,
+)
+async def acknowledge_report(
+    inspection_id: UUID,
+    request: Request,
+    who: CurrentActor,
+    body: AcknowledgementIn | None = None,
+) -> Acknowledgements:
+    async with with_tenant(get_context()) as conn:
+        return await _acknowledgements(request).tick_report(conn, who, inspection_id)
+
+
+@inspections_router.delete(
+    "/{inspection_id}/report/acknowledgement",
+    operation_id="inspections_unacknowledge_report",
+    response_model=Acknowledgements,
+    responses=_ACK_ERRORS,
+)
+async def unacknowledge_report(
+    inspection_id: UUID,
+    request: Request,
+    who: CurrentActor,
+    body: AcknowledgementIn | None = None,
+) -> Acknowledgements:
+    async with with_tenant(get_context()) as conn:
+        return await _acknowledgements(request).untick_report(conn, who, inspection_id)
 
 
 itp_steps_router = APIRouter(
