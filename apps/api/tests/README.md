@@ -17,10 +17,10 @@ database is never mocked. All the plumbing lives in one module, `tests/fixtures/
 
 | Fixture | Gives you |
 |---|---|
-| `pg_superuser_url` (session) | the server's superuser URL; cleans up roles the session created |
+| `pg_superuser_url` (session) | the server's superuser URL; cleans up roles and the template the session created |
 | `empty_db` | a new empty database (`aip_test_<hex>`), dropped afterwards |
 | `bootstrapped_db` | `empty_db` after `db/bootstrap/00_cluster.sql` (roles, pgvector) |
-| `migrated_db` | `bootstrapped_db` migrated to head by `aip-db migrate` as `aip_owner` |
+| `migrated_db` | a new database at head: a copy of the session's template (`aip_tmpl_<hex>`), bootstrapped and migrated by `aip-db migrate` as `aip_owner` once per session. It is a different database from `empty_db` / `bootstrapped_db` |
 | `tenant_db` | a `TenantDb`: an `aip_app` engine (pool 2, no overflow) on `migrated_db` |
 | `owner_conn_for_seeding_only` | an `OwnerSeeder`: `ddl(sql)` and `insert(tenant, sql)` as `aip_owner` |
 
@@ -58,4 +58,8 @@ shared catalogs, and concurrent bootstraps used to fail with `tuple concurrently
 `FreshDb.bootstrap` therefore runs through `cluster_ddl`: a session advisory lock taken in the
 `postgres` database (advisory locks are per database, so a lock in the test database would not
 serialise two test databases), plus `retry_concurrent_update` for the rare writer outside the
-lock. `migrated_db` retries `aip-db migrate` the same way.
+lock. `FreshDb.migrate` (which builds the template) retries `aip-db migrate` the same way.
+
+Tests of the migrator itself (revisions, downgrades, partial upgrades) start from `empty_db` or
+`bootstrapped_db` and call `FreshDb.migrate()` or `aip_db(...)`, so the full migration path stays
+covered.

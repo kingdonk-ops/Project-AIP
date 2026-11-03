@@ -10,17 +10,21 @@ Server selection (``select_postgres_source``):
    reachable.
 3. Otherwise the tests are skipped locally and fail under CI (``CI`` is set).
 
-Every test gets its own database (``CREATE DATABASE ... TEMPLATE template0``) that is dropped
-afterwards; roles the session created are dropped at the end.
+Every test gets its own database that is dropped afterwards; roles the session created are
+dropped at the end. ``empty_db`` copies ``template0``. ``migrated_db`` copies a database the
+session migrated to head once (``migrated_template()``), so each test pays for a file copy
+instead of an ``aip-db migrate`` subprocess.
 
 The bootstrap gives every AIP role a throwaway test password (``ROLE_PASSWORDS``) through the
 ``aip.*_password`` settings, exactly as deployments do; nothing reads a password from a file.
 
 Layers, each building on the previous:
 
-* ``pg_superuser_url`` (session) -> ``empty_db`` -> ``bootstrapped_db`` -> ``migrated_db``: a
-  database at Alembic head, roles bootstrapped (``aip_owner`` migrates, ``aip_app`` is the
-  runtime role).
+* ``pg_superuser_url`` (session) -> ``empty_db`` -> ``bootstrapped_db``: an empty database after
+  the cluster bootstrap. Tests of the migrator itself start here.
+* ``pg_superuser_url`` -> ``migrated_db``: a database at Alembic head, roles bootstrapped
+  (``aip_owner`` migrates, ``aip_app`` is the runtime role). A copy of the session's template, so
+  it is not the same database as ``empty_db`` or ``bootstrapped_db`` in the same test.
 * ``tenant_db`` -> a ``TenantDb``: an ``aip_app`` engine on ``migrated_db`` plus ``with_tenant``.
   This is what tenant-data assertions use. ``assert_unprivileged_role`` fails the test if the
   engine's role is a superuser, owner or BYPASSRLS role.
@@ -87,6 +91,8 @@ _PASSWORD_SETTINGS = {
     READONLY: "aip.readonly_password",
     AUDIT_WRITER: "aip.audit_writer_password",
 }
+# superuser URL -> the database migrated to head that ``migrated_db`` copies (see migrated_template)
+_MIGRATED_TEMPLATES: dict[str, str] = {}
 
 
 def with_db(url: str, database: str, user: str | None = None, password: str | None = None) -> str:
@@ -219,7 +225,9 @@ def pg_superuser_url() -> Iterator[str]:
     with PostgresContainer(
         PG_IMAGE, username="postgres", password="postgres", dbname="postgres", driver=None
     ) as container:
-        yield container.get_connection_url()
+        url = container.get_connection_url()
+        yield url
+        _MIGRATED_TEMPLATES.pop(url, None)
 
 
 def _with_role_cleanup(url: str) -> Iterator[str]:
@@ -229,6 +237,7 @@ def _with_role_cleanup(url: str) -> Iterator[str]:
         r[0] for r in fetch(url, "SELECT rolname FROM pg_roles WHERE rolname = ANY($1)", roles)
     }
     yield url
+    _drop_migrated_template(url)  # aip_owner owns it
     for role in roles:
         if role not in existed:
             # It may still own (or be granted) something in a concurrent run: then leave it.
@@ -277,6 +286,10 @@ class FreshDb:
     def migrate(self) -> None:
         """Bootstrap the cluster, then ``aip-db migrate`` to head."""
         self.bootstrap()
+        self.migrate_to_head()
+
+    def migrate_to_head(self) -> None:
+        """``aip-db migrate`` to head, retrying a clash with another run on shared catalogs."""
         result = self.aip_db("migrate")
         for _ in range(4):  # the revisions also touch shared catalogs (roles, grants)
             if result.returncode == 0 or not is_concurrent_update_error(
@@ -313,14 +326,21 @@ class FreshDb:
         )
 
 
+@contextlib.contextmanager
+def _fresh_db(superuser_url: str, template: str, prefix: str = "aip_test") -> Iterator[FreshDb]:
+    """A new database copied from ``template``, dropped on exit."""
+    name = f"{prefix}_{uuid.uuid4().hex[:12]}"
+    execute(superuser_url, f'CREATE DATABASE "{name}" TEMPLATE "{template}"')
+    try:
+        yield FreshDb(name=name, superuser_url=with_db(superuser_url, name))
+    finally:
+        execute(superuser_url, f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
+
+
 @pytest.fixture
 def empty_db(pg_superuser_url: str) -> Iterator[FreshDb]:
-    name = f"aip_test_{uuid.uuid4().hex[:12]}"
-    execute(pg_superuser_url, f'CREATE DATABASE "{name}" TEMPLATE template0')
-    try:
-        yield FreshDb(name=name, superuser_url=with_db(pg_superuser_url, name))
-    finally:
-        execute(pg_superuser_url, f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
+    with _fresh_db(pg_superuser_url, "template0") as db:
+        yield db
 
 
 def aip_db_command(*args: str) -> list[str]:
@@ -349,17 +369,50 @@ def bootstrapped_db(empty_db: FreshDb) -> FreshDb:
     return empty_db
 
 
+def migrated_template(superuser_url: str) -> str:
+    """Name of a database bootstrapped and migrated to head once per server, never connected to.
+
+    ``migrated_db`` copies it. Cached in ``_MIGRATED_TEMPLATES`` rather than a session fixture
+    because module conftests re-export these fixtures by name, and a new name would have to be
+    added to every one of them. ``pg_superuser_url`` drops it at the end of the session.
+    """
+    name = _MIGRATED_TEMPLATES.get(superuser_url)
+    if name is not None:
+        return name
+    name = f"aip_tmpl_{uuid.uuid4().hex[:12]}"
+    execute(superuser_url, f'CREATE DATABASE "{name}" TEMPLATE template0')
+    try:
+        FreshDb(name=name, superuser_url=with_db(superuser_url, name)).migrate()
+        # CREATE DATABASE ... TEMPLATE fails while anyone is connected to the source, so refuse
+        # connections and end the one aip-db's backend may still be closing.
+        execute(superuser_url, f'ALTER DATABASE "{name}" WITH ALLOW_CONNECTIONS false')
+        execute(
+            superuser_url,
+            f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{name}'",
+        )
+    except BaseException:
+        execute(superuser_url, f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
+        raise
+    _MIGRATED_TEMPLATES[superuser_url] = name
+    return name
+
+
+def _drop_migrated_template(superuser_url: str) -> None:
+    name = _MIGRATED_TEMPLATES.pop(superuser_url, None)
+    if name is not None:
+        execute(superuser_url, f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
+
+
 @pytest.fixture
-def migrated_db(bootstrapped_db: FreshDb) -> FreshDb:
-    """A freshly bootstrapped database migrated to head with ``aip-db migrate`` (as aip_owner)."""
-    result = bootstrapped_db.aip_db("migrate")
-    for _ in range(4):  # revisions also touch shared catalogs; see cluster_ddl
-        if result.returncode == 0 or not is_concurrent_update_error(RuntimeError(result.stderr)):
-            break
-        time.sleep(0.2)
-        result = bootstrapped_db.aip_db("migrate")
-    assert result.returncode == 0, result.stderr
-    return bootstrapped_db
+def migrated_db(pg_superuser_url: str) -> Iterator[FreshDb]:
+    """A fresh database at head (as ``aip-db migrate`` leaves it, run as aip_owner).
+
+    A copy of ``migrated_template``. A copy keeps the schema and data but not the database's owner
+    or its CONNECT grants, so the bootstrap runs again to set those (it is idempotent).
+    """
+    with _fresh_db(pg_superuser_url, migrated_template(pg_superuser_url)) as db:
+        db.bootstrap()
+        yield db
 
 
 # --- the non-owner ``aip_app`` connection and the privilege guard ------------------------------
