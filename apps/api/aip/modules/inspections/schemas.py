@@ -1,5 +1,5 @@
-"""Pydantic request/response models for inspections (INSPECTIONS-01), responses (INSPECTIONS-02)
-and ITP steps and sign-offs (INSPECTIONS-03).
+"""Pydantic request/response models for inspections (INSPECTIONS-01), responses (INSPECTIONS-02),
+ITP steps and sign-offs (INSPECTIONS-03) and section and report acknowledgements (INSPECTIONS-10).
 
 JSON is camelCase (``assetId``, ``templateRevisionId``). Requests forbid unknown keys, so a client
 cannot send ``state``, ``source`` or ``sourceRefId`` (422): the server sets them. Responses carry
@@ -22,6 +22,9 @@ __all__ = [
     "FIELD_KEY_PATTERN",
     "KINDS",
     "SOURCES",
+    "AcknowledgementIn",
+    "AcknowledgementState",
+    "Acknowledgements",
     "AnswerIn",
     "AnswerOut",
     "AnswersEvaluation",
@@ -123,6 +126,7 @@ class InspectionOut(_Out):
     sync_version: int
     created_at: datetime
     updated_at: datetime
+    has_supervisor_review: bool
 
 
 class InspectionAvailableTransition(_Out):
@@ -374,3 +378,25 @@ class SignoffList(_Out):
     entries: list[SignoffEntry]
     chain_valid: bool
     broken_at_seq: int | None = None
+
+
+# --- section and report acknowledgements (INSPECTIONS-10) ----------------------------------------
+
+
+class AcknowledgementIn(_Model):
+    """The optional body of a tick or untick: nothing to send, and an unknown key is a 422."""
+
+
+class AcknowledgementState(_Out):
+    """Whether a section (or the report) is locked, and by whom and when it was ticked."""
+
+    locked: bool
+    by: UUID | None = None
+    at: datetime | None = None
+
+
+class Acknowledgements(_Out):
+    """Every section of the pinned revision and the report: what is locked now."""
+
+    sections: dict[str, AcknowledgementState]
+    report: AcknowledgementState

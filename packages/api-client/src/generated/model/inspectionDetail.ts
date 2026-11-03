@@ -14,6 +14,7 @@ export interface InspectionDetail {
   createdAt: string;
   createdBy: string;
   currentState: string;
+  hasSupervisorReview: boolean;
   id: string;
   instanceSyncVersion: number;
   itpParentId: string | null;

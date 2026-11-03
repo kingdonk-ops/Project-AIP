@@ -250,5 +250,53 @@
   "inspection.guard.not_ready_to_submit": {
     "text": "Release or waive every ITP step before handing in.",
     "description": "Guard message when Request Supervisor Review is refused because ITP steps are still open (openStepCount > 0) (INSPECTIONS-03)."
+  },
+  "inspection.error.unknown_section": {
+    "text": "That section is not part of this inspection's form.",
+    "description": "Error when a section acknowledgement names a section the pinned form revision does not have (INSPECTIONS-10, ADR 0041)."
+  },
+  "inspection.error.section_not_visible": {
+    "text": "That section is hidden by the answers given, so it does not need to be completed.",
+    "description": "Error when ticking a section the current answers hide (INSPECTIONS-10, ADR 0041 §3)."
+  },
+  "inspection.error.section_already_acknowledged": {
+    "text": "This section is already marked complete.",
+    "description": "Error when ticking a section that is already ticked (INSPECTIONS-10, ADR 0041 §3)."
+  },
+  "inspection.error.section_incomplete": {
+    "text": "This section can't be marked complete yet. Answer the required questions and fix the problems shown.",
+    "description": "Error when ticking a section whose answers are missing, invalid or break a section rule (INSPECTIONS-10, ADR 0041 §3)."
+  },
+  "inspection.error.not_acknowledger": {
+    "text": "Only the person who marked this complete can undo it.",
+    "description": "Error when someone other than the person who ticked a section or the report tries to untick it (INSPECTIONS-10, ADR 0041 §3)."
+  },
+  "inspection.error.report_acknowledged": {
+    "text": "Undo \"Report complete\" before changing a section.",
+    "description": "Error when unticking a section while the whole report is ticked (INSPECTIONS-10, ADR 0041 §4)."
+  },
+  "inspection.error.report_already_acknowledged": {
+    "text": "The report is already marked complete.",
+    "description": "Error when ticking the report when it is already ticked (INSPECTIONS-10, ADR 0041 §4)."
+  },
+  "inspection.error.sections_not_acknowledged": {
+    "text": "Mark every section complete before marking the report complete.",
+    "description": "Error when ticking the report while a visible section is not ticked (INSPECTIONS-10, ADR 0041 §4)."
+  },
+  "inspection.error.report_incomplete": {
+    "text": "The report can't be marked complete yet. Fix the problems shown.",
+    "description": "Error when ticking the report and the whole form's checks fail (INSPECTIONS-10, ADR 0041 §4)."
+  },
+  "inspection.error.section_locked": {
+    "text": "This section is marked complete, so its answers are locked.",
+    "description": "Error when saving an answer in a ticked section (INSPECTIONS-10, ADR 0041 §3, §6)."
+  },
+  "inspection.error.report_locked": {
+    "text": "The report is marked complete, so its answers are locked.",
+    "description": "Error when saving any answer while the report is ticked (INSPECTIONS-10, ADR 0041 §4, §6)."
+  },
+  "inspection.guard.submit_not_ready": {
+    "text": "Mark the report complete, and finish every ITP step, before submitting.",
+    "description": "Shown when Request Supervisor Review or Submit Report is not available: the report is not ticked complete or an ITP step is still open (INSPECTIONS-10, ADR 0041 §4, §5; INSPECTIONS-03)."
   }
 }

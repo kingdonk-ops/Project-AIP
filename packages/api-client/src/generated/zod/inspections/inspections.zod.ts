@@ -29,6 +29,7 @@ export const InspectionsListResponse = zod.object({
   "clientGeneratedId": zod.union([zod.uuid(),zod.null()]),
   "createdAt": zod.iso.datetime({"offset":true}),
   "createdBy": zod.uuid(),
+  "hasSupervisorReview": zod.boolean(),
   "id": zod.uuid(),
   "itpParentId": zod.union([zod.uuid(),zod.null()]),
   "kind": zod.enum(['inspection', 'itp', 'rfi']),
@@ -62,6 +63,7 @@ export const InspectionsCreateResponse = zod.object({
   "clientGeneratedId": zod.union([zod.uuid(),zod.null()]),
   "createdAt": zod.iso.datetime({"offset":true}),
   "createdBy": zod.uuid(),
+  "hasSupervisorReview": zod.boolean(),
   "id": zod.uuid(),
   "itpParentId": zod.union([zod.uuid(),zod.null()]),
   "kind": zod.enum(['inspection', 'itp', 'rfi']),
@@ -98,6 +100,7 @@ export const InspectionsGetResponse = zod.object({
   "createdAt": zod.iso.datetime({"offset":true}),
   "createdBy": zod.uuid(),
   "currentState": zod.string(),
+  "hasSupervisorReview": zod.boolean(),
   "id": zod.uuid(),
   "instanceSyncVersion": zod.int(),
   "itpParentId": zod.union([zod.uuid(),zod.null()]),
@@ -113,6 +116,26 @@ export const InspectionsGetResponse = zod.object({
   "updatedAt": zod.iso.datetime({"offset":true}),
   "workflowInstanceId": zod.uuid()
 }).describe('The record plus its workflow: ``currentState`` is the instance\'s (the truth), and\n``instanceSyncVersion`` the value a transition may send as ``expectedSyncVersion``.')
+
+/**
+ * @summary Get Acknowledgements
+ */
+export const InspectionsAcknowledgementsParams = zod.object({
+  "inspection_id": zod.uuid()
+})
+
+export const InspectionsAcknowledgementsResponse = zod.object({
+  "report": zod.object({
+  "at": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "by": zod.union([zod.uuid(),zod.null()]).optional(),
+  "locked": zod.boolean()
+}).describe('Whether a section (or the report) is locked, and by whom and when it was ticked.'),
+  "sections": zod.record(zod.string(), zod.object({
+  "at": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "by": zod.union([zod.uuid(),zod.null()]).optional(),
+  "locked": zod.boolean()
+}).describe('Whether a section (or the report) is locked, and by whom and when it was ticked.'))
+}).describe('Every section of the pinned revision and the report: what is locked now.')
 
 /**
  * @summary Get History
@@ -244,6 +267,7 @@ export const InspectionsReinspectResponse = zod.object({
   "clientGeneratedId": zod.union([zod.uuid(),zod.null()]),
   "createdAt": zod.iso.datetime({"offset":true}),
   "createdBy": zod.uuid(),
+  "hasSupervisorReview": zod.boolean(),
   "id": zod.uuid(),
   "itpParentId": zod.union([zod.uuid(),zod.null()]),
   "kind": zod.enum(['inspection', 'itp', 'rfi']),
@@ -257,6 +281,54 @@ export const InspectionsReinspectResponse = zod.object({
   "updatedAt": zod.iso.datetime({"offset":true}),
   "workflowInstanceId": zod.uuid()
 })
+
+/**
+ * @summary Unacknowledge Report
+ */
+export const InspectionsUnacknowledgeReportParams = zod.object({
+  "inspection_id": zod.uuid()
+})
+
+export const InspectionsUnacknowledgeReportBody = zod.union([zod.object({
+
+}).describe('The optional body of a tick or untick: nothing to send, and an unknown key is a 422.'),zod.null()])
+
+export const InspectionsUnacknowledgeReportResponse = zod.object({
+  "report": zod.object({
+  "at": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "by": zod.union([zod.uuid(),zod.null()]).optional(),
+  "locked": zod.boolean()
+}).describe('Whether a section (or the report) is locked, and by whom and when it was ticked.'),
+  "sections": zod.record(zod.string(), zod.object({
+  "at": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "by": zod.union([zod.uuid(),zod.null()]).optional(),
+  "locked": zod.boolean()
+}).describe('Whether a section (or the report) is locked, and by whom and when it was ticked.'))
+}).describe('Every section of the pinned revision and the report: what is locked now.')
+
+/**
+ * @summary Acknowledge Report
+ */
+export const InspectionsAcknowledgeReportParams = zod.object({
+  "inspection_id": zod.uuid()
+})
+
+export const InspectionsAcknowledgeReportBody = zod.union([zod.object({
+
+}).describe('The optional body of a tick or untick: nothing to send, and an unknown key is a 422.'),zod.null()])
+
+export const InspectionsAcknowledgeReportResponse = zod.object({
+  "report": zod.object({
+  "at": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "by": zod.union([zod.uuid(),zod.null()]).optional(),
+  "locked": zod.boolean()
+}).describe('Whether a section (or the report) is locked, and by whom and when it was ticked.'),
+  "sections": zod.record(zod.string(), zod.object({
+  "at": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "by": zod.union([zod.uuid(),zod.null()]).optional(),
+  "locked": zod.boolean()
+}).describe('Whether a section (or the report) is locked, and by whom and when it was ticked.'))
+}).describe('Every section of the pinned revision and the report: what is locked now.')
 
 /**
  * @summary Get Responses
@@ -334,6 +406,62 @@ export const InspectionsResponseHistoryResponse = zod.object({
   "value": zod.unknown()
 }))
 }).describe('Every response for one field, oldest first.')
+
+/**
+ * @summary Unacknowledge Section
+ */
+export const inspectionsUnacknowledgeSectionPathSectionKeyRegExp = new RegExp('^[a-z][a-z0-9_]{0,62}$');
+
+
+export const InspectionsUnacknowledgeSectionParams = zod.object({
+  "inspection_id": zod.uuid(),
+  "sectionKey": zod.string().regex(inspectionsUnacknowledgeSectionPathSectionKeyRegExp)
+})
+
+export const InspectionsUnacknowledgeSectionBody = zod.union([zod.object({
+
+}).describe('The optional body of a tick or untick: nothing to send, and an unknown key is a 422.'),zod.null()])
+
+export const InspectionsUnacknowledgeSectionResponse = zod.object({
+  "report": zod.object({
+  "at": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "by": zod.union([zod.uuid(),zod.null()]).optional(),
+  "locked": zod.boolean()
+}).describe('Whether a section (or the report) is locked, and by whom and when it was ticked.'),
+  "sections": zod.record(zod.string(), zod.object({
+  "at": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "by": zod.union([zod.uuid(),zod.null()]).optional(),
+  "locked": zod.boolean()
+}).describe('Whether a section (or the report) is locked, and by whom and when it was ticked.'))
+}).describe('Every section of the pinned revision and the report: what is locked now.')
+
+/**
+ * @summary Acknowledge Section
+ */
+export const inspectionsAcknowledgeSectionPathSectionKeyRegExp = new RegExp('^[a-z][a-z0-9_]{0,62}$');
+
+
+export const InspectionsAcknowledgeSectionParams = zod.object({
+  "inspection_id": zod.uuid(),
+  "sectionKey": zod.string().regex(inspectionsAcknowledgeSectionPathSectionKeyRegExp)
+})
+
+export const InspectionsAcknowledgeSectionBody = zod.union([zod.object({
+
+}).describe('The optional body of a tick or untick: nothing to send, and an unknown key is a 422.'),zod.null()])
+
+export const InspectionsAcknowledgeSectionResponse = zod.object({
+  "report": zod.object({
+  "at": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "by": zod.union([zod.uuid(),zod.null()]).optional(),
+  "locked": zod.boolean()
+}).describe('Whether a section (or the report) is locked, and by whom and when it was ticked.'),
+  "sections": zod.record(zod.string(), zod.object({
+  "at": zod.union([zod.iso.datetime({"offset":true}),zod.null()]).optional(),
+  "by": zod.union([zod.uuid(),zod.null()]).optional(),
+  "locked": zod.boolean()
+}).describe('Whether a section (or the report) is locked, and by whom and when it was ticked.'))
+}).describe('Every section of the pinned revision and the report: what is locked now.')
 
 /**
  * @summary Get Signoffs
@@ -421,6 +549,7 @@ export const InspectionsTransitionResponse = zod.object({
   "createdAt": zod.iso.datetime({"offset":true}),
   "createdBy": zod.uuid(),
   "currentState": zod.string(),
+  "hasSupervisorReview": zod.boolean(),
   "id": zod.uuid(),
   "instanceSyncVersion": zod.int(),
   "itpParentId": zod.union([zod.uuid(),zod.null()]),

@@ -19,6 +19,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AcknowledgementIn,
+  Acknowledgements,
   CurrentResponses,
   HTTPValidationError,
   InspectionCreate,
@@ -454,6 +456,140 @@ export function useInspectionsGet<TData = Awaited<ReturnType<typeof inspectionsG
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getInspectionsGetQueryOptions(inspectionId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type inspectionsAcknowledgementsResponse200 = {
+  data: Acknowledgements
+  status: 200
+}
+
+export type inspectionsAcknowledgementsResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsAcknowledgementsResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsAcknowledgementsResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsAcknowledgementsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type inspectionsAcknowledgementsResponseSuccess = (inspectionsAcknowledgementsResponse200) & {
+  headers: Headers;
+};
+export type inspectionsAcknowledgementsResponseError = (inspectionsAcknowledgementsResponse401 | inspectionsAcknowledgementsResponse403 | inspectionsAcknowledgementsResponse404 | inspectionsAcknowledgementsResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsAcknowledgementsResponse = (inspectionsAcknowledgementsResponseSuccess | inspectionsAcknowledgementsResponseError)
+
+export const getInspectionsAcknowledgementsUrl = (inspectionId: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/acknowledgements`
+}
+
+/**
+ * @summary Get Acknowledgements
+ */
+export const inspectionsAcknowledgements = async (inspectionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsAcknowledgementsResponse> => {
+
+  return apiFetch<inspectionsAcknowledgementsResponse>(getInspectionsAcknowledgementsUrl(inspectionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getInspectionsAcknowledgementsQueryKey = (inspectionId: string,) => {
+    return [
+    `/api/v1/inspections/${inspectionId}/acknowledgements`
+    ] as const;
+    }
+
+
+export const getInspectionsAcknowledgementsQueryOptions = <TData = Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError = InspectionErrorBody | HTTPValidationError>(inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getInspectionsAcknowledgementsQueryKey(inspectionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof inspectionsAcknowledgements>>> = ({ signal }) => inspectionsAcknowledgements(inspectionId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: inspectionId !== null && inspectionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type InspectionsAcknowledgementsQueryResult = NonNullable<Awaited<ReturnType<typeof inspectionsAcknowledgements>>>
+export type InspectionsAcknowledgementsQueryError = InspectionErrorBody | HTTPValidationError
+
+
+export function useInspectionsAcknowledgements<TData = Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof inspectionsAcknowledgements>>,
+          TError,
+          Awaited<ReturnType<typeof inspectionsAcknowledgements>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInspectionsAcknowledgements<TData = Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof inspectionsAcknowledgements>>,
+          TError,
+          Awaited<ReturnType<typeof inspectionsAcknowledgements>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInspectionsAcknowledgements<TData = Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Acknowledgements
+ */
+
+export function useInspectionsAcknowledgements<TData = Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError = InspectionErrorBody | HTTPValidationError>(
+ inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getInspectionsAcknowledgementsQueryOptions(inspectionId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -972,6 +1108,260 @@ export const useInspectionsReinspect = <TError = InspectionErrorBody,
       > => {
       return useMutation(getInspectionsReinspectMutationOptions(options), queryClient);
     }
+    export type inspectionsUnacknowledgeReportResponse200 = {
+  data: Acknowledgements
+  status: 200
+}
+
+export type inspectionsUnacknowledgeReportResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsUnacknowledgeReportResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsUnacknowledgeReportResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsUnacknowledgeReportResponse409 = {
+  data: InspectionErrorBody
+  status: 409
+}
+
+export type inspectionsUnacknowledgeReportResponse422 = {
+  data: InspectionErrorBody
+  status: 422
+}
+
+export type inspectionsUnacknowledgeReportResponseSuccess = (inspectionsUnacknowledgeReportResponse200) & {
+  headers: Headers;
+};
+export type inspectionsUnacknowledgeReportResponseError = (inspectionsUnacknowledgeReportResponse401 | inspectionsUnacknowledgeReportResponse403 | inspectionsUnacknowledgeReportResponse404 | inspectionsUnacknowledgeReportResponse409 | inspectionsUnacknowledgeReportResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsUnacknowledgeReportResponse = (inspectionsUnacknowledgeReportResponseSuccess | inspectionsUnacknowledgeReportResponseError)
+
+export const getInspectionsUnacknowledgeReportUrl = (inspectionId: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/report/acknowledgement`
+}
+
+/**
+ * @summary Unacknowledge Report
+ */
+export const inspectionsUnacknowledgeReport = async (inspectionId: string,
+    acknowledgementInNull?: AcknowledgementIn | null, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsUnacknowledgeReportResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<inspectionsUnacknowledgeReportResponse>(getInspectionsUnacknowledgeReportUrl(inspectionId),
+  {
+    ...options,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(acknowledgementInNull)
+  }
+);}
+
+
+
+
+
+export const getInspectionsUnacknowledgeReportMutationKey = () => ['inspectionsUnacknowledgeReport'] as const;
+
+export const getInspectionsUnacknowledgeReportMutationOptions = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsUnacknowledgeReport>>, TError,InspectionsUnacknowledgeReportMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inspectionsUnacknowledgeReport>>, TError,InspectionsUnacknowledgeReportMutationVariables, TContext> => {
+
+const mutationKey = getInspectionsUnacknowledgeReportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inspectionsUnacknowledgeReport>>, InspectionsUnacknowledgeReportMutationVariables> = (props) => {
+          const {inspectionId,data} = props ?? {};
+
+          return  inspectionsUnacknowledgeReport(inspectionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InspectionsUnacknowledgeReportMutationResult = NonNullable<Awaited<ReturnType<typeof inspectionsUnacknowledgeReport>>>
+    export type InspectionsUnacknowledgeReportMutationBody = AcknowledgementIn | null | undefined
+    export type InspectionsUnacknowledgeReportMutationError = InspectionErrorBody
+    export type InspectionsUnacknowledgeReportMutationVariables = {inspectionId: string;data?: AcknowledgementIn | null}
+
+    /**
+ * @summary Unacknowledge Report
+ */
+export const useInspectionsUnacknowledgeReport = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsUnacknowledgeReport>>, TError,InspectionsUnacknowledgeReportMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inspectionsUnacknowledgeReport>>,
+        TError,
+        InspectionsUnacknowledgeReportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInspectionsUnacknowledgeReportMutationOptions(options), queryClient);
+    }
+    export type inspectionsAcknowledgeReportResponse200 = {
+  data: Acknowledgements
+  status: 200
+}
+
+export type inspectionsAcknowledgeReportResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsAcknowledgeReportResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsAcknowledgeReportResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsAcknowledgeReportResponse409 = {
+  data: InspectionErrorBody
+  status: 409
+}
+
+export type inspectionsAcknowledgeReportResponse422 = {
+  data: InspectionErrorBody
+  status: 422
+}
+
+export type inspectionsAcknowledgeReportResponseSuccess = (inspectionsAcknowledgeReportResponse200) & {
+  headers: Headers;
+};
+export type inspectionsAcknowledgeReportResponseError = (inspectionsAcknowledgeReportResponse401 | inspectionsAcknowledgeReportResponse403 | inspectionsAcknowledgeReportResponse404 | inspectionsAcknowledgeReportResponse409 | inspectionsAcknowledgeReportResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsAcknowledgeReportResponse = (inspectionsAcknowledgeReportResponseSuccess | inspectionsAcknowledgeReportResponseError)
+
+export const getInspectionsAcknowledgeReportUrl = (inspectionId: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/report/acknowledgement`
+}
+
+/**
+ * @summary Acknowledge Report
+ */
+export const inspectionsAcknowledgeReport = async (inspectionId: string,
+    acknowledgementInNull?: AcknowledgementIn | null, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsAcknowledgeReportResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<inspectionsAcknowledgeReportResponse>(getInspectionsAcknowledgeReportUrl(inspectionId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(acknowledgementInNull)
+  }
+);}
+
+
+
+
+
+export const getInspectionsAcknowledgeReportMutationKey = () => ['inspectionsAcknowledgeReport'] as const;
+
+export const getInspectionsAcknowledgeReportMutationOptions = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsAcknowledgeReport>>, TError,InspectionsAcknowledgeReportMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inspectionsAcknowledgeReport>>, TError,InspectionsAcknowledgeReportMutationVariables, TContext> => {
+
+const mutationKey = getInspectionsAcknowledgeReportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inspectionsAcknowledgeReport>>, InspectionsAcknowledgeReportMutationVariables> = (props) => {
+          const {inspectionId,data} = props ?? {};
+
+          return  inspectionsAcknowledgeReport(inspectionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InspectionsAcknowledgeReportMutationResult = NonNullable<Awaited<ReturnType<typeof inspectionsAcknowledgeReport>>>
+    export type InspectionsAcknowledgeReportMutationBody = AcknowledgementIn | null | undefined
+    export type InspectionsAcknowledgeReportMutationError = InspectionErrorBody
+    export type InspectionsAcknowledgeReportMutationVariables = {inspectionId: string;data?: AcknowledgementIn | null}
+
+    /**
+ * @summary Acknowledge Report
+ */
+export const useInspectionsAcknowledgeReport = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsAcknowledgeReport>>, TError,InspectionsAcknowledgeReportMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inspectionsAcknowledgeReport>>,
+        TError,
+        InspectionsAcknowledgeReportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInspectionsAcknowledgeReportMutationOptions(options), queryClient);
+    }
     export type inspectionsResponsesResponse200 = {
   data: CurrentResponses
   status: 200
@@ -1375,7 +1765,265 @@ export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof 
 
 
 
-export type inspectionsSignoffsResponse200 = {
+export type inspectionsUnacknowledgeSectionResponse200 = {
+  data: Acknowledgements
+  status: 200
+}
+
+export type inspectionsUnacknowledgeSectionResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsUnacknowledgeSectionResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsUnacknowledgeSectionResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsUnacknowledgeSectionResponse409 = {
+  data: InspectionErrorBody
+  status: 409
+}
+
+export type inspectionsUnacknowledgeSectionResponse422 = {
+  data: InspectionErrorBody
+  status: 422
+}
+
+export type inspectionsUnacknowledgeSectionResponseSuccess = (inspectionsUnacknowledgeSectionResponse200) & {
+  headers: Headers;
+};
+export type inspectionsUnacknowledgeSectionResponseError = (inspectionsUnacknowledgeSectionResponse401 | inspectionsUnacknowledgeSectionResponse403 | inspectionsUnacknowledgeSectionResponse404 | inspectionsUnacknowledgeSectionResponse409 | inspectionsUnacknowledgeSectionResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsUnacknowledgeSectionResponse = (inspectionsUnacknowledgeSectionResponseSuccess | inspectionsUnacknowledgeSectionResponseError)
+
+export const getInspectionsUnacknowledgeSectionUrl = (inspectionId: string,
+    sectionKey: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/sections/${sectionKey}/acknowledgement`
+}
+
+/**
+ * @summary Unacknowledge Section
+ */
+export const inspectionsUnacknowledgeSection = async (inspectionId: string,
+    sectionKey: string,
+    acknowledgementInNull?: AcknowledgementIn | null, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsUnacknowledgeSectionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<inspectionsUnacknowledgeSectionResponse>(getInspectionsUnacknowledgeSectionUrl(inspectionId,sectionKey),
+  {
+    ...options,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(acknowledgementInNull)
+  }
+);}
+
+
+
+
+
+export const getInspectionsUnacknowledgeSectionMutationKey = () => ['inspectionsUnacknowledgeSection'] as const;
+
+export const getInspectionsUnacknowledgeSectionMutationOptions = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsUnacknowledgeSection>>, TError,InspectionsUnacknowledgeSectionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inspectionsUnacknowledgeSection>>, TError,InspectionsUnacknowledgeSectionMutationVariables, TContext> => {
+
+const mutationKey = getInspectionsUnacknowledgeSectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inspectionsUnacknowledgeSection>>, InspectionsUnacknowledgeSectionMutationVariables> = (props) => {
+          const {inspectionId,sectionKey,data} = props ?? {};
+
+          return  inspectionsUnacknowledgeSection(inspectionId,sectionKey,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InspectionsUnacknowledgeSectionMutationResult = NonNullable<Awaited<ReturnType<typeof inspectionsUnacknowledgeSection>>>
+    export type InspectionsUnacknowledgeSectionMutationBody = AcknowledgementIn | null | undefined
+    export type InspectionsUnacknowledgeSectionMutationError = InspectionErrorBody
+    export type InspectionsUnacknowledgeSectionMutationVariables = {inspectionId: string;sectionKey: string;data?: AcknowledgementIn | null}
+
+    /**
+ * @summary Unacknowledge Section
+ */
+export const useInspectionsUnacknowledgeSection = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsUnacknowledgeSection>>, TError,InspectionsUnacknowledgeSectionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inspectionsUnacknowledgeSection>>,
+        TError,
+        InspectionsUnacknowledgeSectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInspectionsUnacknowledgeSectionMutationOptions(options), queryClient);
+    }
+    export type inspectionsAcknowledgeSectionResponse200 = {
+  data: Acknowledgements
+  status: 200
+}
+
+export type inspectionsAcknowledgeSectionResponse401 = {
+  data: InspectionErrorBody
+  status: 401
+}
+
+export type inspectionsAcknowledgeSectionResponse403 = {
+  data: InspectionErrorBody
+  status: 403
+}
+
+export type inspectionsAcknowledgeSectionResponse404 = {
+  data: InspectionErrorBody
+  status: 404
+}
+
+export type inspectionsAcknowledgeSectionResponse409 = {
+  data: InspectionErrorBody
+  status: 409
+}
+
+export type inspectionsAcknowledgeSectionResponse422 = {
+  data: InspectionErrorBody
+  status: 422
+}
+
+export type inspectionsAcknowledgeSectionResponseSuccess = (inspectionsAcknowledgeSectionResponse200) & {
+  headers: Headers;
+};
+export type inspectionsAcknowledgeSectionResponseError = (inspectionsAcknowledgeSectionResponse401 | inspectionsAcknowledgeSectionResponse403 | inspectionsAcknowledgeSectionResponse404 | inspectionsAcknowledgeSectionResponse409 | inspectionsAcknowledgeSectionResponse422) & {
+  headers: Headers;
+};
+
+export type inspectionsAcknowledgeSectionResponse = (inspectionsAcknowledgeSectionResponseSuccess | inspectionsAcknowledgeSectionResponseError)
+
+export const getInspectionsAcknowledgeSectionUrl = (inspectionId: string,
+    sectionKey: string,) => {
+
+
+
+
+  return `/api/v1/inspections/${inspectionId}/sections/${sectionKey}/acknowledgement`
+}
+
+/**
+ * @summary Acknowledge Section
+ */
+export const inspectionsAcknowledgeSection = async (inspectionId: string,
+    sectionKey: string,
+    acknowledgementInNull?: AcknowledgementIn | null, options?: Parameters<typeof apiFetch>[1]): Promise<inspectionsAcknowledgeSectionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<inspectionsAcknowledgeSectionResponse>(getInspectionsAcknowledgeSectionUrl(inspectionId,sectionKey),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(acknowledgementInNull)
+  }
+);}
+
+
+
+
+
+export const getInspectionsAcknowledgeSectionMutationKey = () => ['inspectionsAcknowledgeSection'] as const;
+
+export const getInspectionsAcknowledgeSectionMutationOptions = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsAcknowledgeSection>>, TError,InspectionsAcknowledgeSectionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inspectionsAcknowledgeSection>>, TError,InspectionsAcknowledgeSectionMutationVariables, TContext> => {
+
+const mutationKey = getInspectionsAcknowledgeSectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inspectionsAcknowledgeSection>>, InspectionsAcknowledgeSectionMutationVariables> = (props) => {
+          const {inspectionId,sectionKey,data} = props ?? {};
+
+          return  inspectionsAcknowledgeSection(inspectionId,sectionKey,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InspectionsAcknowledgeSectionMutationResult = NonNullable<Awaited<ReturnType<typeof inspectionsAcknowledgeSection>>>
+    export type InspectionsAcknowledgeSectionMutationBody = AcknowledgementIn | null | undefined
+    export type InspectionsAcknowledgeSectionMutationError = InspectionErrorBody
+    export type InspectionsAcknowledgeSectionMutationVariables = {inspectionId: string;sectionKey: string;data?: AcknowledgementIn | null}
+
+    /**
+ * @summary Acknowledge Section
+ */
+export const useInspectionsAcknowledgeSection = <TError = InspectionErrorBody,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsAcknowledgeSection>>, TError,InspectionsAcknowledgeSectionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inspectionsAcknowledgeSection>>,
+        TError,
+        InspectionsAcknowledgeSectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInspectionsAcknowledgeSectionMutationOptions(options), queryClient);
+    }
+    export type inspectionsSignoffsResponse200 = {
   data: SignoffList
   status: 200
 }

@@ -7,6 +7,7 @@ export interface InspectionOut {
   clientGeneratedId: string | null;
   createdAt: string;
   createdBy: string;
+  hasSupervisorReview: boolean;
   id: string;
   itpParentId: string | null;
   kind: InspectionOutKind;

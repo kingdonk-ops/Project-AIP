@@ -3,10 +3,11 @@
 Every golden case runs here as it does through the evaluator in ``test_inspection_golden.py``.
 A test resolver and facts provider stand in for the inspections module's own (INSPECTIONS-01) for
 the ``inspection`` record type, so these cases need no inspection rows. The facts report an
-inspection with no open ITP steps, which passes the ``request_supervisor_review`` guard
-(INSPECTIONS-03); the inspections module tests the guard itself. The fixture grant table plays
-the roles: supervisor (assign, approve), inspector (execute), quality manager (retire) and client
-reviewer (client_approve).
+inspection with supervisor review, its report ticked complete and no open ITP steps, which
+passes the ``request_supervisor_review`` guard (INSPECTIONS-03, INSPECTIONS-10) and fails
+``submit_report``'s; the inspections module tests the guards themselves. The fixture grant table
+plays the roles: supervisor (assign, approve), inspector (execute), quality manager (retire) and
+client reviewer (client_approve).
 """
 
 from __future__ import annotations
@@ -83,8 +84,14 @@ class Inspections:
 
 
 async def ready_facts(conn: object, record_id: UUID) -> dict[str, Any]:
-    """An inspection whose ITP steps (if any) are all released."""
-    return {"openStepCount": 0, "heldStepCount": 0}
+    """An inspection with supervisor review whose report is ticked complete (INSPECTIONS-10) and
+    whose ITP steps (if any) are all released."""
+    return {
+        "openStepCount": 0,
+        "heldStepCount": 0,
+        "hasSupervisorReview": True,
+        "reportAcknowledged": True,
+    }
 
 
 @pytest.fixture(autouse=True)

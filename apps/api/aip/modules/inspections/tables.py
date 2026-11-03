@@ -1,7 +1,8 @@
-"""SQLAlchemy Core declarations for inspections (INSPECTIONS-01 to -03, ADR 0002).
+"""SQLAlchemy Core declarations for inspections (INSPECTIONS-01 to -03 and -10, ADR 0002).
 
 Created only by the Alembic revisions ``202610311800_inspections_core``,
-``202611011400_inspections_responses`` and ``202611011600_inspections_itp_signoffs``;
+``202611011400_inspections_responses``, ``202611011600_inspections_itp_signoffs`` and
+``202611031000_inspections_acknowledgements``;
 ``aip-db check-schema`` compares these declarations with the migrated database.
 
 - ``inspections`` is tenant-scoped with soft delete, FORCE ROW LEVEL SECURITY and the ACCESS-03
@@ -14,6 +15,8 @@ Created only by the Alembic revisions ``202610311800_inspections_core``,
   ``aip_app`` has no DELETE.
 - ``inspection_signoffs`` is append-only and hash-chained per inspection (not partitioned, ADR
   0031): ``aip_app`` has SELECT and INSERT only.
+- ``inspection_acknowledgements`` (INSPECTIONS-10) is append-only evidence like the responses; the
+  view ``inspection_current_acknowledgements`` is its latest row per scope (own ``MetaData``).
 """
 
 from __future__ import annotations
@@ -24,6 +27,8 @@ from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from aip.platform.db.metadata import metadata
 
 __all__ = [
+    "inspection_acknowledgements",
+    "inspection_current_acknowledgements",
     "inspection_current_responses",
     "inspection_responses",
     "inspection_signoffs",
@@ -52,6 +57,7 @@ inspections = Table(
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", TIMESTAMP(timezone=True), nullable=True),
+    Column("has_supervisor_review", Boolean, nullable=False, server_default=text("true")),
 )
 
 inspection_responses = Table(
@@ -145,4 +151,40 @@ inspection_signoffs = Table(
     Column("comment", Text, nullable=True),
     Column("signed_at", TIMESTAMP(timezone=True), nullable=False),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+)
+
+inspection_acknowledgements = Table(
+    "inspection_acknowledgements",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("tenant_id", UUID(as_uuid=True), nullable=False),
+    Column("inspection_id", UUID(as_uuid=True), nullable=False),
+    Column("scope", Text, nullable=False),
+    Column("section_key", Text, nullable=True),
+    Column("action", Text, nullable=False),
+    Column("actor", UUID(as_uuid=True), nullable=False),
+    Column("revision_id", UUID(as_uuid=True), nullable=False),
+    Column("acted_at", TIMESTAMP(timezone=True), nullable=False),
+    Column(
+        "created_at",
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        primary_key=True,
+        server_default=text("now()"),
+    ),
+)
+
+inspection_current_acknowledgements = Table(
+    "inspection_current_acknowledgements",
+    MetaData(),
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("tenant_id", UUID(as_uuid=True), nullable=False),
+    Column("inspection_id", UUID(as_uuid=True), nullable=False),
+    Column("scope", Text, nullable=False),
+    Column("section_key", Text, nullable=True),
+    Column("action", Text, nullable=False),
+    Column("actor", UUID(as_uuid=True), nullable=False),
+    Column("revision_id", UUID(as_uuid=True), nullable=False),
+    Column("acted_at", TIMESTAMP(timezone=True), nullable=False),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False),
 )

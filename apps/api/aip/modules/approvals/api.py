@@ -11,6 +11,10 @@ module supply the read-only ``record`` facts its record type's guards see, and
 ``register_record_resolver`` tells approvals which project a record belongs to (required before
 ``POST /approvals/instances`` accepts that record type).
 
+INSPECTIONS-10: ``state_entered_at`` is when an instance last entered a state (its latest applied
+decision into it), with no permission check, so a host can tell which of its own records predate
+that move (inspections clears acknowledgements older than the last Request Rework).
+
 APPROVALS-04: ``start_route``, ``decide``, ``route`` and ``pending_steps`` (the inbox query
 APPROVALS-06 uses) run approval routes with the same checks as the ``/api/v1/approvals`` routes.
 
@@ -20,10 +24,12 @@ TESTING-13: ``install_demo_records`` registers the dev and demo ``demo`` record 
 
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from aip.modules.approvals import repository as _repo
 from aip.modules.approvals.demo import install_demo_records
 from aip.modules.approvals.engine.evaluator import available_transitions as allowed_actions
 from aip.modules.approvals.errors import NoActiveDefinitionError
@@ -120,6 +126,13 @@ class ApprovalsApi:
         No permission check: for a host module that has already authorised the record's creation.
         """
         return await _instances.start_instance(conn, record_type, record_id, project_id)
+
+    async def state_entered_at(
+        self, conn: AsyncConnection, instance_id: UUID, state: str
+    ) -> datetime | None:
+        """When the instance last entered ``state`` (its latest applied decision into it), else
+        ``None``. No permission check: for a host module reading its own record's lifecycle."""
+        return await _repo.last_entered_at(conn, instance_id, state)
 
     async def get_active_definition(
         self, conn: AsyncConnection, record_type: str, project_id: UUID | None = None

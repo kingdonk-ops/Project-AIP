@@ -1181,6 +1181,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inspections/{inspection_id}/acknowledgements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Acknowledgements */
+        get: operations["inspections_acknowledgements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/inspections/{inspection_id}/history": {
         parameters: {
             query?: never;
@@ -1233,6 +1250,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inspections/{inspection_id}/report/acknowledgement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Acknowledge Report */
+        post: operations["inspections_acknowledge_report"];
+        /** Unacknowledge Report */
+        delete: operations["inspections_unacknowledge_report"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/inspections/{inspection_id}/responses": {
         parameters: {
             query?: never;
@@ -1263,6 +1298,24 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inspections/{inspection_id}/sections/{sectionKey}/acknowledgement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Acknowledge Section */
+        post: operations["inspections_acknowledge_section"];
+        /** Unacknowledge Section */
+        delete: operations["inspections_unacknowledge_section"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2234,6 +2287,34 @@ export interface components {
         AccessErrorBody: {
             /** Code */
             code: string;
+        };
+        /**
+         * AcknowledgementIn
+         * @description The optional body of a tick or untick: nothing to send, and an unknown key is a 422.
+         */
+        AcknowledgementIn: Record<string, never>;
+        /**
+         * AcknowledgementState
+         * @description Whether a section (or the report) is locked, and by whom and when it was ticked.
+         */
+        AcknowledgementState: {
+            /** At */
+            at?: string | null;
+            /** By */
+            by?: string | null;
+            /** Locked */
+            locked: boolean;
+        };
+        /**
+         * Acknowledgements
+         * @description Every section of the pinned revision and the report: what is locked now.
+         */
+        Acknowledgements: {
+            report: components["schemas"]["AcknowledgementState"];
+            /** Sections */
+            sections: {
+                [key: string]: components["schemas"]["AcknowledgementState"];
+            };
         };
         /** Ancestor */
         Ancestor: {
@@ -3451,6 +3532,8 @@ export interface components {
             createdBy: string;
             /** Currentstate */
             currentState: string;
+            /** Hassupervisorreview */
+            hasSupervisorReview: boolean;
             /**
              * Id
              * Format: uuid
@@ -3540,6 +3623,8 @@ export interface components {
              * Format: uuid
              */
             createdBy: string;
+            /** Hassupervisorreview */
+            hasSupervisorReview: boolean;
             /**
              * Id
              * Format: uuid
@@ -10458,6 +10543,64 @@ export interface operations {
             };
         };
     };
+    inspections_acknowledgements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inspection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Acknowledgements"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     inspections_history: {
         parameters: {
             query?: never;
@@ -10712,6 +10855,148 @@ export interface operations {
             };
         };
     };
+    inspections_acknowledge_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inspection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AcknowledgementIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Acknowledgements"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Forbidden, or NOT_ACKNOWLEDGER */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description INSPECTION_NOT_EDITABLE, SECTION_ALREADY_ACKNOWLEDGED, REPORT_ALREADY_ACKNOWLEDGED or REPORT_ACKNOWLEDGED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Validation error, UNKNOWN_SECTION, SECTION_NOT_VISIBLE, SECTION_INCOMPLETE, SECTIONS_NOT_ACKNOWLEDGED or REPORT_INCOMPLETE */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+        };
+    };
+    inspections_unacknowledge_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inspection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AcknowledgementIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Acknowledgements"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Forbidden, or NOT_ACKNOWLEDGER */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description INSPECTION_NOT_EDITABLE, SECTION_ALREADY_ACKNOWLEDGED, REPORT_ALREADY_ACKNOWLEDGED or REPORT_ACKNOWLEDGED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Validation error, UNKNOWN_SECTION, SECTION_NOT_VISIBLE, SECTION_INCOMPLETE, SECTIONS_NOT_ACKNOWLEDGED or REPORT_INCOMPLETE */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+        };
+    };
     inspections_responses: {
         parameters: {
             query?: never;
@@ -10896,6 +11181,150 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inspections_acknowledge_section: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inspection_id: string;
+                sectionKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AcknowledgementIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Acknowledgements"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Forbidden, or NOT_ACKNOWLEDGER */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description INSPECTION_NOT_EDITABLE, SECTION_ALREADY_ACKNOWLEDGED, REPORT_ALREADY_ACKNOWLEDGED or REPORT_ACKNOWLEDGED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Validation error, UNKNOWN_SECTION, SECTION_NOT_VISIBLE, SECTION_INCOMPLETE, SECTIONS_NOT_ACKNOWLEDGED or REPORT_INCOMPLETE */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+        };
+    };
+    inspections_unacknowledge_section: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inspection_id: string;
+                sectionKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AcknowledgementIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Acknowledgements"];
+                };
+            };
+            /** @description Not signed in, or STEP_UP_REQUIRED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Forbidden, or NOT_ACKNOWLEDGER */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description INSPECTION_NOT_EDITABLE, SECTION_ALREADY_ACKNOWLEDGED, REPORT_ALREADY_ACKNOWLEDGED or REPORT_ACKNOWLEDGED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
+                };
+            };
+            /** @description Validation error, UNKNOWN_SECTION, SECTION_NOT_VISIBLE, SECTION_INCOMPLETE, SECTIONS_NOT_ACKNOWLEDGED or REPORT_INCOMPLETE */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectionErrorBody"];
                 };
             };
         };

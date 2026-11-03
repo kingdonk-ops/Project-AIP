@@ -144,12 +144,17 @@ def test_client_review_exists_only_in_the_client_variant() -> None:
     assert client - standard == {"client_review"}
 
 
-def test_only_the_final_sign_off_is_critical() -> None:
+def test_only_the_final_sign_offs_are_critical() -> None:
     def critical(variant: str) -> set[tuple[str, str]]:
         return {(t.from_state, t.action) for t in preset_spec(variant).transitions if t.critical}
 
-    assert critical("standard") == {("supervisor_review", "mark_performed")}
-    assert critical("client_review") == {("client_review", "client_approve")}
+    # INSPECTIONS-10 (ADR 0041 §5): Submit Report is the doer's sign-off without supervisor review.
+    submit_report = {
+        (state, "submit_report")
+        for state in ("in_progress", "in_progress_sitesync", "inspector_review")
+    }
+    assert critical("standard") == {("supervisor_review", "mark_performed"), *submit_report}
+    assert critical("client_review") == {("client_review", "client_approve"), *submit_report}
 
 
 COMMENTED = {

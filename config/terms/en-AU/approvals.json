@@ -154,5 +154,9 @@
   "workflow.demo.guard.photos_not_clean": {
     "text": "Every photo must be clean before approval.",
     "description": "Why 'approve' is refused while the record's photos are not all clean, in the dev and demo `demo` workflow that the compose-stack journeys run (TESTING-13)."
+  },
+  "workflow.inspection.action.submit_report": {
+    "text": "Submit Report",
+    "description": "Button for the inspection workflow action 'submit_report' in the inspection_standard and inspection_client_review presets: the person who did the work submits a form that has no supervisor review (INSPECTIONS-10, ADR 0041 §5)."
   }
 }
