@@ -58,6 +58,7 @@ __all__ = [
     "NewInspection",
     "Page",
     "current_state",
+    "lock_lifecycle",
     "sync_state",
 ]
 
@@ -166,16 +167,36 @@ async def current_state(conn: AsyncConnection, row: dict[str, Any]) -> str:
     return instance.current_state
 
 
+async def lock_lifecycle(conn: AsyncConnection, row: dict[str, Any]) -> None:
+    """Lock the inspection's workflow instance; call it after ``repo.lock_inspection``.
+
+    An answer or acknowledgement write holds it, so a transition through ``/api/v1/approvals``
+    (which locks only the instance) waits and its guard reads the committed facts, and the write
+    then sees the state the transition left (INSPECTIONS-10)."""
+    await _approvals.lock_instance(conn, row["workflow_instance_id"])
+
+
 async def _entered(
-    conn: AsyncConnection, row: dict[str, Any], to_state: str, actor_id: UUID | None
+    conn: AsyncConnection,
+    row: dict[str, Any],
+    to_state: str,
+    actor_id: UUID | None,
+    *,
+    in_transition: bool,
 ) -> None:
     """What entering ``to_state`` does beyond the cached state (INSPECTIONS-10: Request Rework
-    clears every acknowledgement made before it)."""
+    clears every acknowledgement made before it).
+
+    In the transition's own transaction every tick predates it. Followed later by the
+    subscriber, a tick made since the rework began stands."""
     if to_state != REWORK_STATE or actor_id is None:
         return  # without an actor to record, the lock rule alone keeps rework unlocked
     # Imported here: acknowledgements imports ``current_state`` from this module.
     from aip.modules.inspections.acknowledgements import clear_for_rework
 
+    if in_transition:
+        await clear_for_rework(conn, row, actor_id)
+        return
     entered_at = await _approvals.state_entered_at(conn, row["workflow_instance_id"], to_state)
     await clear_for_rework(conn, row, actor_id, entered_at=entered_at)
 
@@ -197,7 +218,7 @@ async def sync_state(
         return
     await repo.set_state(conn, inspection_id, state)
     await _emit_state_changed(conn, row, state, action)
-    await _entered(conn, row, state, actor_id)
+    await _entered(conn, row, state, actor_id, in_transition=False)
 
 
 class InspectionService:
@@ -329,7 +350,7 @@ class InspectionService:
             if to_state != row["state"]:
                 updated = await repo.set_state(conn, inspection_id, to_state)
                 await _emit_state_changed(conn, row, to_state, action)
-                await _entered(conn, row, to_state, actor.principal.actor_id)
+                await _entered(conn, row, to_state, actor.principal.actor_id, in_transition=True)
                 row = updated
         return row, result
 

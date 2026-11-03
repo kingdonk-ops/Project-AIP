@@ -14,6 +14,8 @@ module supply the read-only ``record`` facts its record type's guards see, and
 INSPECTIONS-10: ``state_entered_at`` is when an instance last entered a state (its latest applied
 decision into it), with no permission check, so a host can tell which of its own records predate
 that move (inspections clears acknowledgements older than the last Request Rework).
+``lock_instance`` takes the instance's ``FOR UPDATE`` lock, the one every transition takes, so a
+host's write that a guard's facts depend on serialises with transitions from any route.
 
 APPROVALS-04: ``start_route``, ``decide``, ``route`` and ``pending_steps`` (the inbox query
 APPROVALS-06 uses) run approval routes with the same checks as the ``/api/v1/approvals`` routes.
@@ -126,6 +128,14 @@ class ApprovalsApi:
         No permission check: for a host module that has already authorised the record's creation.
         """
         return await _instances.start_instance(conn, record_type, record_id, project_id)
+
+    async def lock_instance(self, conn: AsyncConnection, instance_id: UUID) -> None:
+        """Lock the instance ``FOR UPDATE`` until the transaction ends (no permission check).
+
+        A host takes it after locking its own record (the order a host route's transition uses),
+        so a transition through ``/api/v1/approvals`` waits for the write and its guard reads the
+        committed facts."""
+        await _repo.get_instance_by_id(conn, instance_id, for_update=True)
 
     async def state_entered_at(
         self, conn: AsyncConnection, instance_id: UUID, state: str

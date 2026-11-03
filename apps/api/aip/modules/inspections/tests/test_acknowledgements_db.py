@@ -11,6 +11,7 @@ transitions themselves are in ``test_submit_preset_db.py``.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from typing import Any
@@ -18,12 +19,18 @@ from uuid import UUID
 
 import httpx
 import pytest
+from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from tests.conftest import BOB_ID, TENANT_A_ID, TENANT_B_ID
 from tests.fixtures.postgres import Outbox, TenantDb
 
+from aip.modules.approvals.api import Actor
+from aip.modules.identity.api import SessionFacts
+from aip.modules.inspections.acknowledgements import AcknowledgementService
 from aip.modules.inspections.api import InspectionsApi
+from aip.platform.access import AccessPrincipal
+from aip.platform.context import use_context
 from aip.platform.db.scope import run_as_system
 from aip.platform.events.dispatcher import DispatchSettings, dispatch_batch
 from aip.platform.events.subscribers import subscribers
@@ -42,6 +49,7 @@ from .conftest import (
     GrantTable,
     count,
     create_asset,
+    ctx,
     install_preset,
     publish,
     signed,
@@ -459,6 +467,40 @@ async def test_rework_through_approvals_is_unlocked_before_and_after_the_subscri
     assert found["sections"]["coating"]["locked"] is False
     await dispatch_all(outbox)  # a replay changes nothing
     assert len([h for h in await history(db, inspection) if h[2] == "cleared_by_rework"]) == 2
+
+
+async def test_a_submit_through_approvals_waits_for_an_untick_in_flight(
+    client: httpx.AsyncClient, app: FastAPI, db: TenantDb, inspection: str
+) -> None:
+    """The review's race: an untick holds the inspection and its instance, so a submit through
+    ``/api/v1/approvals`` (which locks only the instance) waits and its guard sees the untick."""
+    await complete_everything(client, inspection)
+    instance_id = (await client.get(f"{INSPECTIONS}/{inspection}", headers=VIEWER)).json()[
+        "workflowInstanceId"
+    ]
+    inspector = Actor(
+        principal=AccessPrincipal(tenant_id=TENANT_A_ID, actor_id=INSPECTOR_ID),
+        session=SessionFacts(aal=1, amr=("fed",), authenticated_at=None),
+    )
+    service = AcknowledgementService(app.state.access_policy)
+    with use_context(ctx(TENANT_A_ID, INSPECTOR_ID)):
+        # system: the project-scope policy shows the row; the service still checks the inspector
+        async with run_as_system(TENANT_A_ID, engine=db.engine) as conn:
+            await service.untick_report(conn, inspector, UUID(inspection))
+            submit = asyncio.create_task(
+                client.post(
+                    f"/api/v1/approvals/instances/{instance_id}/transition",
+                    json={"action": "request_supervisor_review"},
+                    headers=signed(INSPECTOR_ID),
+                )
+            )
+            await asyncio.sleep(1.0)
+            assert not submit.done()  # blocked on the instance lock until the untick commits
+    refused = await submit
+    assert refused.status_code == 422, refused.text
+    assert refused.json()["code"] == "GUARD_FAILED"
+    found = await client.get(f"{INSPECTIONS}/{inspection}", headers=VIEWER)
+    assert found.json()["currentState"] == "in_progress"
 
 
 # --- the database: append-only, partitions, RLS ---------------------------------------------------

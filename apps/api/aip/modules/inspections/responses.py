@@ -49,7 +49,7 @@ from aip.modules.inspections.schemas import (
     ResponseEntry,
     ResponseResult,
 )
-from aip.modules.inspections.service import current_state
+from aip.modules.inspections.service import current_state, lock_lifecycle
 from aip.platform.access import PolicyService, Resource
 from aip.platform.context import new_request_id
 from aip.platform.db.errors import NotFoundError
@@ -208,6 +208,7 @@ class ResponseService:
             raise NotFoundError(f"inspection {inspection_id} not found")
         resource = Resource(project_id=row["project_id"])
         await self._policy.assert_can(actor.principal, RESPOND_PERMISSION, resource)
+        await lock_lifecycle(conn, row)  # (a2) a transition from any route waits for this write
         state = await self._assert_editable(conn, actor, row)  # (b)
         if state in RESPOND_STATES:  # (b1) INSPECTIONS-10; ticks never block a supervisor
             await assert_unlocked(conn, row, [a.field_key for a in answers])

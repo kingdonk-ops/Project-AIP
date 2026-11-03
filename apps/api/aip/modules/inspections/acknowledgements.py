@@ -14,8 +14,9 @@ transaction when it goes through ``/api/v1/inspections``, else when ``sync_state
 handled the time rule alone keeps rework unlocked.
 
 Every ``AcknowledgementService`` call runs in the caller's ``with_tenant`` transaction and locks the
-inspection row ``FOR UPDATE`` first, so it serialises with answer writes and transitions taken
-through this module. Any 4xx writes nothing.
+inspection row ``FOR UPDATE`` and then its workflow instance (``lock_lifecycle``), so it serialises
+with answer writes and with transitions from either route: a submit through ``/api/v1/approvals``
+waits and its guard sees the committed ticks. Any 4xx writes nothing.
 """
 
 from __future__ import annotations
@@ -42,7 +43,7 @@ from aip.modules.inspections.policies import (
     VIEW_PERMISSION,
 )
 from aip.modules.inspections.schemas import Acknowledgements, AcknowledgementState
-from aip.modules.inspections.service import current_state
+from aip.modules.inspections.service import current_state, lock_lifecycle
 from aip.platform.access import PolicyService, Resource
 from aip.platform.context import new_request_id
 from aip.platform.db.errors import NotFoundError
@@ -258,6 +259,7 @@ class AcknowledgementService:
             raise NotFoundError(f"inspection {inspection_id} not found")
         resource = Resource(project_id=row["project_id"])
         await self._policy.assert_can(actor.principal, RESPOND_PERMISSION, resource)
+        await lock_lifecycle(conn, row)  # a submit from any route waits for this write
         state = await current_state(conn, row)
         if state not in RESPOND_STATES:  # from supervisor review on, nobody unticks anything
             raise _error(409, "INSPECTION_NOT_EDITABLE", state=state)
