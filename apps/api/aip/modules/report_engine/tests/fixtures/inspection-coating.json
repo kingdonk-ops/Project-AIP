@@ -1,0 +1,227 @@
+{
+  "_comment": "REPORTS-03: what the published interfaces return for one approved coating inspection (FORMS-01 coating-itr-min; remarks hidden by visibleIf; dft_avg failed; 2 photos).",
+  "inspection": {
+    "id": "0192f0a1-0000-7000-8000-00000000a001",
+    "assetId": "0192f0a1-0000-7000-8000-00000000a501",
+    "projectId": "0192f0a1-0000-7000-8000-00000000a601",
+    "templateId": "0192f0a1-0000-7000-8000-00000000a702",
+    "templateRevisionId": "0192f0a1-0000-7000-8000-00000000a701",
+    "kind": "inspection",
+    "source": "manual",
+    "sourceRefId": null,
+    "itpParentId": null,
+    "workflowInstanceId": "0192f0a1-0000-7000-8000-00000000a801",
+    "state": "performed",
+    "createdBy": "00000000-0000-4000-8000-0000000005e1",
+    "clientGeneratedId": null,
+    "syncVersion": 7,
+    "createdAt": "2026-10-29T23:00:00Z",
+    "updatedAt": "2026-10-30T03:00:00Z"
+  },
+  "asset": {
+    "id": "0192f0a1-0000-7000-8000-00000000a501",
+    "parentId": "0192f0a1-0000-7000-8000-00000000a502",
+    "path": "a.b.c",
+    "internalTag": "AS-000123",
+    "tagNumber": "P-1001",
+    "name": "Process line P-1001",
+    "sortOrder": 0,
+    "itemTypeId": null,
+    "itemTypeVersionId": null,
+    "attributes": {},
+    "createdBy": "00000000-0000-4000-8000-0000000005e1",
+    "syncVersion": 1,
+    "createdAt": "2026-10-29T23:00:00Z",
+    "updatedAt": "2026-10-29T23:00:00Z"
+  },
+  "location": [
+    "Karratha compressor station",
+    "Train 1"
+  ],
+  "project": {
+    "id": "0192f0a1-0000-7000-8000-00000000a601",
+    "code": "KF-01",
+    "name": "Karratha compressor station",
+    "status": "active",
+    "siteId": null,
+    "clientCompanyId": null,
+    "classificationId": null,
+    "templateId": null,
+    "region": null,
+    "timezone": "Australia/Perth",
+    "currency": null,
+    "closedAt": null,
+    "syncVersion": 1,
+    "createdAt": "2026-10-29T23:00:00Z",
+    "updatedAt": "2026-10-29T23:00:00Z"
+  },
+  "revision": {
+    "id": "0192f0a1-0000-7000-8000-00000000a701",
+    "template_id": "0192f0a1-0000-7000-8000-00000000a702",
+    "template_code": "coating-itr-min",
+    "kind": "inspection",
+    "revision_no": 1,
+    "status": "published",
+    "schema": {
+      "schemaVersion": 1,
+      "sections": [
+        {
+          "key": "preparation",
+          "label": "Surface preparation",
+          "fields": [
+            {
+              "key": "surface_prepared",
+              "type": "boolean",
+              "label": "Surface prepared to standard"
+            },
+            {
+              "key": "blast_standard",
+              "type": "dropdown",
+              "label": "Blast standard",
+              "required": true,
+              "options": [
+                {
+                  "value": "sa2_5",
+                  "label": "Sa 2.5"
+                },
+                {
+                  "value": "sa3",
+                  "label": "Sa 3"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "coating",
+          "label": "Coating",
+          "fields": [
+            {
+              "key": "dft_avg",
+              "type": "measurement",
+              "label": "Average dry film thickness",
+              "unit": "mm",
+              "failWhen": {
+                "<": [
+                  {
+                    "var": "answers.dft_avg.value"
+                  },
+                  0.25
+                ]
+              }
+            },
+            {
+              "key": "photos",
+              "type": "photo",
+              "label": "Coating photos"
+            },
+            {
+              "key": "remarks",
+              "type": "text",
+              "label": "Remarks",
+              "visibleIf": {
+                "==": [
+                  {
+                    "var": "answers.surface_prepared"
+                  },
+                  false
+                ]
+              }
+            },
+            {
+              "key": "signature",
+              "type": "signature",
+              "label": "Inspector signature"
+            }
+          ]
+        }
+      ]
+    },
+    "schema_hash": "3f5c0d9e8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d",
+    "evaluator_version": "1",
+    "published_at": "2026-10-29T23:00:00Z"
+  },
+  "responses": {
+    "answers": {
+      "surface_prepared": {
+        "value": true,
+        "failed": false,
+        "respondedBy": "00000000-0000-4000-8000-0000000005e2",
+        "respondedAt": "2026-10-30T01:10:00Z",
+        "responseId": "0192f0a1-0000-7000-8000-00000000c001"
+      },
+      "blast_standard": {
+        "value": "sa2_5",
+        "failed": false,
+        "respondedBy": "00000000-0000-4000-8000-0000000005e2",
+        "respondedAt": "2026-10-30T01:11:00Z",
+        "responseId": "0192f0a1-0000-7000-8000-00000000c002"
+      },
+      "dft_avg": {
+        "value": {
+          "value": 0.2,
+          "unit": "mm"
+        },
+        "failed": true,
+        "respondedBy": "00000000-0000-4000-8000-0000000005e2",
+        "respondedAt": "2026-10-30T01:20:00Z",
+        "responseId": "0192f0a1-0000-7000-8000-00000000c003"
+      },
+      "photos": {
+        "value": [
+          {
+            "fileId": "0192f0a1-0000-7000-8000-00000000f001"
+          },
+          {
+            "fileId": "0192f0a1-0000-7000-8000-00000000f002"
+          }
+        ],
+        "failed": false,
+        "respondedBy": "00000000-0000-4000-8000-0000000005e2",
+        "respondedAt": "2026-10-30T01:25:00Z",
+        "responseId": "0192f0a1-0000-7000-8000-00000000c004"
+      }
+    },
+    "evaluation": {
+      "visible": {
+        "preparation": true,
+        "coating": true,
+        "surface_prepared": true,
+        "blast_standard": true,
+        "dft_avg": true,
+        "photos": true,
+        "remarks": false,
+        "signature": true
+      },
+      "required": {
+        "surface_prepared": false,
+        "blast_standard": true,
+        "dft_avg": false,
+        "photos": false,
+        "remarks": false,
+        "signature": false
+      },
+      "missingRequired": [],
+      "failed": [
+        "dft_avg"
+      ]
+    }
+  },
+  "users": {
+    "00000000-0000-4000-8000-0000000005e2": "Ivy Inspector",
+    "00000000-0000-4000-8000-0000000005e1": "Sam Supervisor"
+  },
+  "files": {
+    "0192f0a1-0000-7000-8000-00000000f001": {
+      "contentType": "image/jpeg",
+      "sizeBytes": 182044
+    },
+    "0192f0a1-0000-7000-8000-00000000f002": {
+      "contentType": "image/png",
+      "sizeBytes": 95112
+    }
+  },
+  "labels": {
+    "coating.dft_average": "Average DFT (coating)"
+  }
+}

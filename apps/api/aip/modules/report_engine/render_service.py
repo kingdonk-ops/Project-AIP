@@ -46,6 +46,7 @@ from aip.modules.report_engine.providers import (
     call_provider,
     get_provider,
 )
+from aip.modules.report_engine.providers import inspection as inspection_provider
 from aip.modules.report_engine.providers import project as project_provider
 from aip.modules.report_engine.schemas import RenderJobPage, RenderJobView, TemplateRow
 from aip.modules.report_engine.service import TemplateService, decode_cursor, encode_cursor
@@ -71,6 +72,7 @@ MAX_LABEL: Final = 300
 Authorizer = Callable[[str, UUID | None], Awaitable[bool]]
 
 project_provider.install()
+inspection_provider.install()
 
 
 def _job_not_found(render_job_id: UUID) -> DomainError:

@@ -186,3 +186,24 @@ templates (no R1 row), hold-point sign-offs (INSPECTIONS-03 data; a later report
     - No Playwright journey: approval needs a supervisor session at assurance level 2 and a running `pdf` worker, and
       the integration test above drives the whole chain on real Postgres and Gotenberg. REPORTS-04 adds the browser
       journey that finds and downloads these reports, and REPORTS-05 pins the golden PDF on CUI data.
+
+## As built (2026-11-01)
+
+- **Trigger state is `performed`, not `completed`.** ADR 0041 (APPROVALS-09 v2 presets) renamed v1's `completed` to
+  `performed`; it is the approved, terminal state in both presets (`mark_performed` in `inspection_standard`,
+  `client_approve` in `inspection_client_review`). Both packages carry `autoRender: {"onStates": ["performed"]}`.
+- **`valueSi` for 0.2 mm is 0.2.** The terms module stores lengths in mm (TERMS-03: "SI storage" is mm, bar, degC),
+  so `to_si(0.2, "mm") = 0.2`; the spec's 0.0002 assumed metres. `answer.unit` is the SI unit `fmt_measure` takes
+  (new `terms.api.si_unit`); an unknown unit keeps `{value, unit, valueSi: null}`.
+- **Location line:** new `AssetsApi.get_ancestor_names(conn, asset_id)` (live ancestors' names, root first).
+- **Files:** a missing or not-clean file is a fourth omitted reason, `unavailable`, rather than an error, so one
+  deleted photo never blocks the report. Embedded entries are `{fileId, asset}` with the render job's asset name.
+- **Templates use the `| asset` filter form** (`{{ 'logo.png' | asset }}`): the record's `asset` key hides the
+  `asset()` global. The sample photos point at `logo.png` so the REPORTS-01 preview works without record files.
+  Page numbers are an `@page @bottom-right` counter (digits only, no label).
+- **Register label** for an inspection: `"<project code> <tag> <asset name>"`.
+- **Tests:** the tenant-b check delivers a synthetic `inspection.state_changed` to the subscriber in tenant B
+  (no report templates loaded there) instead of driving a second lifecycle; the integration test loads the en-AU
+  dictionary (`terms.loader.load`) so the PDF holds real labels. `test_templates_db.py` now loads a copy of
+  `config/report-templates` holding only the project-summary example, since the loader counts are exact.
+- Not built: who completed each section (ADR 0041 §3) waits for INSPECTIONS-10.

@@ -1,0 +1,150 @@
+/* REPORTS-03: inspection report (landscape A4). Fonts are the renderer's defaults. */
+@page {
+  @bottom-right {
+    content: counter(page) " / " counter(pages);
+    font-family: sans-serif;
+    font-size: 8pt;
+    color: #555555;
+  }
+}
+body {
+  font-family: sans-serif;
+  font-size: 9pt;
+  color: #1a1a1a;
+}
+.masthead {
+  display: flex;
+  align-items: flex-start;
+  gap: 8mm;
+  border-bottom: 0.5mm solid #c8102e;
+  padding-bottom: 3mm;
+  margin-bottom: 4mm;
+}
+.logo {
+  height: 12mm;
+}
+.title {
+  flex: 1;
+}
+h1 {
+  font-size: 15pt;
+  margin: 0 0 1mm 0;
+}
+h2 {
+  font-size: 11pt;
+  margin: 5mm 0 2mm 0;
+  break-after: avoid;
+}
+.project {
+  margin: 0;
+}
+.asset th,
+.facts th {
+  text-align: left;
+  font-weight: 600;
+  padding: 0.5mm 3mm 0.5mm 0;
+}
+.asset td,
+.facts td {
+  padding: 0.5mm 0;
+}
+.summary {
+  display: flex;
+  gap: 6mm;
+  margin-bottom: 2mm;
+}
+.count {
+  border: 0.2mm solid #d0d0d0;
+  border-radius: 1mm;
+  padding: 1.5mm 3mm;
+}
+.count .value {
+  font-size: 12pt;
+  font-weight: 700;
+}
+.count.failed {
+  border-color: #c8102e;
+  background: #fbe9eb;
+  color: #8a0b20;
+}
+.answers {
+  width: 100%;
+  border-collapse: collapse;
+}
+.answers thead {
+  display: table-header-group;
+}
+.answers tr {
+  break-inside: avoid;
+}
+.answers th,
+.answers td {
+  text-align: left;
+  vertical-align: top;
+  padding: 1.2mm 2mm;
+  border-bottom: 0.2mm solid #d0d0d0;
+}
+.answers th {
+  background: #f2f2f2;
+  font-weight: 600;
+}
+.answers .item {
+  width: 30%;
+}
+.answers .unit {
+  width: 7%;
+}
+.answers .result {
+  width: 8%;
+}
+.answers tr.failed td {
+  background: #fbe9eb;
+}
+.answers tr.failed .result {
+  color: #8a0b20;
+  font-weight: 700;
+}
+.muted {
+  color: #666666;
+}
+.signature {
+  max-height: 12mm;
+}
+.photos {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3mm;
+}
+.photo {
+  margin: 0;
+  break-inside: avoid;
+}
+.photo img {
+  width: 100%;
+  height: 45mm;
+  object-fit: contain;
+  border: 0.2mm solid #d0d0d0;
+}
+.photo .omitted {
+  height: 45mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 0.2mm dashed #a0a0a0;
+  color: #666666;
+}
+.photo figcaption {
+  font-size: 8pt;
+  margin-top: 1mm;
+}
+.signoff {
+  break-inside: avoid;
+}
+.footer {
+  margin-top: 6mm;
+  display: flex;
+  gap: 6mm;
+  font-size: 7.5pt;
+  color: #555555;
+}

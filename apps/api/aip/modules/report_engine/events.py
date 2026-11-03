@@ -12,6 +12,9 @@
   recordId, pdfSha256}``.
 
 The models are registered with the platform's event schemas when this module loads.
+
+Subscribed (REPORTS-03): ``inspection.state_changed`` v1 → ``auto_render`` queues the templates
+whose ``autoRender.onStates`` holds the inspection's new state.
 """
 
 from __future__ import annotations
@@ -21,8 +24,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from aip.platform.events import register_event
+from aip.platform.events.subscribers import DomainEvent, subscriber
 
 __all__ = [
     "REPORT_DOWNLOADED",
@@ -33,6 +38,7 @@ __all__ = [
     "RenderSucceeded",
     "ReportDownloaded",
     "TemplatePublished",
+    "render_on_inspection_state_changed",
 ]
 
 REPORT_TEMPLATE_PUBLISHED: Final = "report.template_published"
@@ -88,3 +94,11 @@ register_event(REPORT_TEMPLATE_PUBLISHED, 1, TemplatePublished, "report_engine")
 register_event(REPORT_RENDER_SUCCEEDED, 1, RenderSucceeded, "report_engine")
 register_event(REPORT_RENDER_FAILED, 1, RenderFailed, "report_engine")
 register_event(REPORT_DOWNLOADED, 1, ReportDownloaded, "report_engine")
+
+
+@subscriber("inspection.state_changed", 1)
+async def render_on_inspection_state_changed(conn: AsyncConnection, event: DomainEvent) -> None:
+    # Imported here: auto_render reaches the render job module, which imports this one.
+    from aip.modules.report_engine.auto_render import auto_render
+
+    await auto_render.on_inspection_state_changed(conn, event)

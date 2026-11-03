@@ -7,9 +7,10 @@ from an API upload (``{definition, body, css, sampleData, assets: {name: base64}
 same checks, in order, and stop at the first failure with a ``TemplatePackageError(code, path,
 detail)``:
 
-1. ``SCHEMA_INVALID``: the definition against the JSON Schema; ``fontLicences`` is required once a
-   ``font/woff2`` asset is declared; declared and supplied assets must match; body and stylesheet
-   size limits (256 KB and 128 KB);
+1. ``SCHEMA_INVALID``: the definition against the JSON Schema; ``autoRender`` (REPORTS-03) only for
+   a record type with an auto-render trigger (``AUTO_RENDER_RECORD_TYPES``); ``fontLicences`` is
+   required once a ``font/woff2`` asset is declared; declared and supplied assets must match; body
+   and stylesheet size limits (256 KB and 128 KB);
 2. ``ASSET_TOO_LARGE``: an asset over 1 MB, or all assets over 4 MB;
 3. ``ASSET_TYPE_MISMATCH``: an asset whose magic bytes do not match its declared type;
 4. ``TEMPLATE_SYNTAX``: the body does not parse as Jinja;
@@ -48,6 +49,7 @@ from aip.modules.report_engine.render import compile_body
 __all__ = [
     "ASSETS_MAX_BYTES",
     "ASSET_MAX_BYTES",
+    "AUTO_RENDER_RECORD_TYPES",
     "BODY_MAX_BYTES",
     "CONTRACT_PATH",
     "CSS_MAX_BYTES",
@@ -66,6 +68,8 @@ BODY_MAX_BYTES: Final = 256 * 1024
 CSS_MAX_BYTES: Final = 128 * 1024
 ASSET_MAX_BYTES: Final = 1024 * 1024
 ASSETS_MAX_BYTES: Final = 4 * 1024 * 1024
+# Record types whose state changes trigger auto-render (REPORTS-03: ``inspection.state_changed``).
+AUTO_RENDER_RECORD_TYPES: Final = frozenset({"inspection"})
 
 PACKAGE_ERROR_CODES: Final = (
     "SCHEMA_INVALID",
@@ -247,6 +251,10 @@ def _build(
     error = _schema_error(definition)
     if error is not None:
         raise error
+    if "autoRender" in definition and definition["recordType"] not in AUTO_RENDER_RECORD_TYPES:
+        raise TemplatePackageError(
+            "SCHEMA_INVALID", "autoRender", "this record type has no auto-render trigger"
+        )
     if not isinstance(sample_data, dict):
         raise TemplatePackageError("SCHEMA_INVALID", "sampleData", "must be a JSON object")
     if len(body.encode("utf-8")) > BODY_MAX_BYTES:
