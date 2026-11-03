@@ -34,7 +34,8 @@ Bring INSPECTIONS-02 and -03 in line with ADR 0010 and ADR 0041 §6 (tag: harden
     supervisor); a request may only narrow it (a supervisor signing as inspector). Claiming `supervisor` or
     `third_party` without the matching grant is 403.
   - 3. **Client sign-off refusal.** `signatoryRole: "client"` answers 422 `CLIENT_SIGNOFF_NOT_AVAILABLE` with an en-AU
-    term, until the portal builds client sign-off.
+    term. The one exception is the client's own waiver of a booked witness or hold point, which goes only through
+    INSPECTIONS-12's `waive_by_client` (owner 2026-11-03).
   - 4. **Responses FK (L7).** A forward-only migration adds the composite FK `inspection_responses (inspection_id,
     tenant_id) → inspections (id, tenant_id)`; DATABASE-09 made this work on partitioned append-only tables.
   - 5. **Supervisor edit (L8).** In `supervisor_review`, a user with `approvals.inspection.review` may save answers

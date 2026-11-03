@@ -108,13 +108,13 @@ it today; decide when OPS-12 issues operator principals (ACCESS-10).
 | ID | Covers | Size |
 |---|---|---|
 | [REPORTS-07](../../tracking/tasks/REPORTS-07.md) | M1, L1 to L5: record-level view check on list, get and download; create check on idempotent replay; 404 for a missing pinned file; client snapshot strips internal fields; embedded OFL font; test gaps | S |
-| [REPORTS-08](../../tracking/tasks/REPORTS-08.md) | D3: completed inspection reports added to their inspection's documents list (ADR 0039 #49) | S |
+| [REPORTS-08](../../tracking/tasks/REPORTS-08.md), [ASSETS-09](../../tracking/tasks/ASSETS-09.md), [INSPECTIONS-13](../../tracking/tasks/INSPECTIONS-13.md) | D3: owner 2026-11-03, documents are listed on the inspected asset: reports, inspections, standards, codes, qualifications (ELIGIBILITY-01 note) and material specs | S + M + S |
 | [APPROVALS-14](../../tracking/tasks/APPROVALS-14.md) | M2, L9, L10: route completion enforces the comment rule, checks before writes, missing term | XS |
 | [PORTAL-09](../../tracking/tasks/PORTAL-09.md) | B4, L11, L12: register denied state, `no-store` on every portal response, test gaps | XS |
 | [INSPECTIONS-11](../../tracking/tasks/INSPECTIONS-11.md) | M6, L6 to L8: supervisor-only countersign, server-derived signatory role, `CLIENT_SIGNOFF_NOT_AVAILABLE`, responses FK, supervisor edit per ADR 0041 §6 | S |
 | [TESTING-14](../../tracking/tasks/TESTING-14.md) | M4, M7: real cross-tenant release-flags e2e, ITEMTYPES-03 axe at 390 px | S |
 
-| [INSPECTIONS-12](../../tracking/tasks/INSPECTIONS-12.md) and [PORTAL-06](../../tracking/tasks/PORTAL-06.md) | B3: witness bookings, staff API and events (part A), then the client email and portal pages (part B); open owner questions in PORTAL-06 | M + M |
+| [INSPECTIONS-12](../../tracking/tasks/INSPECTIONS-12.md) and [PORTAL-06](../../tracking/tasks/PORTAL-06.md) | B3: witness bookings, staff API and events (part A), then the client email and portal pages (part B); owner answered PORTAL-06's questions 2026-11-03, adding PORTAL-10 (client waiver), PORTAL-11 (reminders), PORTAL-12 and IDENTITY-11 (recipient's time zone) | M + M |
 
 Existing tasks updated: **ACCESS-08** (M5, L13, L14, D7 notes),
 **PROJECTS-04** (M3: PORTAL-01 must read `portal_access_days` once `get_setting` ships).

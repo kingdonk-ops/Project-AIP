@@ -43,8 +43,9 @@ This task is part B. [INSPECTIONS-12](INSPECTIONS-12.md) (part A) builds the boo
 references, the recipient hook and the events, and must merge first. Its design decisions D1 to D10 apply here.
 
 **Out of scope:** the staff UI to propose a booking (INSPECTIONS-04 adds the button on the ITP steps view; this task
-ships the API and an e2e fixture route only); the client's own waiver "proceed without me" (open question 2);
-reminders before the scheduled time and "notice period ending" alerts (PORTAL-08-style follow-up, open question 6);
+ships the API and an e2e fixture route only); the client's own waiver "proceed without me" (owner 2026-11-03: yes,
+built by PORTAL-10 on the hook in D11); reminders before the scheduled time and "notice period ending" alerts
+(owner 2026-11-03: yes, PORTAL-11); emails in the recipient's own time zone (owner 2026-11-03: later, PORTAL-12);
 calendar (.ics) attachments (`EmailMessage` has no attachments yet); third-party inspectors who are not system users
 (ADR 0039: QA notifies them outside the system, recorded with `notify: "outside_system"`); witnessing the point
 itself and signing it in the portal (`witnessed` by a client signatory: INSPECTIONS-05 / PORTAL-04); the tzdata
@@ -185,23 +186,18 @@ recalculation job (ADR 0025 consequence; the cache is computed on write here); b
     - axe (serious/critical) on `/witness` and `/witness/$bookingId`, on both projects; the detail page fits a phone
       without horizontal scroll.
 
-## Open questions for the owner
+## Owner answers (2026-11-03)
 
-1. **Split.** Resolved 2026-11-03: Part A is its own row, INSPECTIONS-12 (the task linter allows one module and at
-   most size M per task).
-2. **Client waiver.** The blueprint lets the client "waive with notice" ("proceed without me"). That would be a
-   client sign-off on the point (ADR 0010 critical action, `itp.signoff`) and needs INSPECTIONS-05's client
-   signatory role. Default: out of this task; the client rejects with a reason and staff waive under D4. Add it later?
-3. **Waiver rule.** D4 (staff may waive an open booking only after its time, or once the client rejected) is how this
-   task applies `witness_waiver_rule`. Is that the rule you want as the default, and which other values should
-   PROJECTS-04 offer?
-4. **Default notice.** `witness_notice_hours` default 24 h until PROJECTS-04 ships, and the project value as a floor a
-   step may only lengthen (D3). Confirm 24 and floor-not-override.
-5. **Recipient's time zone.** No profile time-zone setting exists yet (ADR 0025 consequence), so the email shows the
-   site's time with its abbreviation and UTC, not the recipient's own zone. Acceptable for R1?
-6. **Reminders.** A reminder before the booked time and "notice period ending" alerts (blueprint) are not in this
-   task. Wanted in R1 as a follow-up task?
-7. **Hold points.** D2 lets hold points be booked and notified the same way. Confirm, or witness points only.
+1. **Split.** Part A is its own row, INSPECTIONS-12 (the task linter allows one module and at most size M per task).
+2. **Client waiver: yes.** The client may waive ("proceed without me"). It is a client sign-off (ADR 0010 critical
+   action); INSPECTIONS-12 D11 adds the hook and PORTAL-10 builds the portal side.
+3. **Waiver rule: both grounds.** Staff may waive an open booking when the client rejected it, or when the booked
+   time has passed and the client did not attend (INSPECTIONS-12 D4).
+4. **Notice period: a project setting.** `witness_notice_hours` from PROJECTS-04 (24 h until it ships); a step's
+   `notice_hours` no longer sets it (INSPECTIONS-12 D3).
+5. **Time zone: site time for R1.** Later the email and pages must show the recipient's own time zone (PORTAL-12).
+6. **Reminders: yes.** Reminders before the booked time and "notice period ending" alerts are PORTAL-11.
+7. **Hold points: yes.** Hold points are bookable and notified the same way (INSPECTIONS-12 D2).
 
 ## Dependencies
 

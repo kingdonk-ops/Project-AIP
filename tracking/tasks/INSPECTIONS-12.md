@@ -44,8 +44,9 @@ client's portal pages on top of it, and starts only after this merges. The desig
 shared by both tasks.
 
 **Out of scope:** the staff UI to propose a booking (INSPECTIONS-04 adds the button on the ITP steps view; this task
-ships the API and an e2e fixture route only); the client's own waiver "proceed without me" (open question 2);
-reminders before the scheduled time and "notice period ending" alerts (PORTAL-08-style follow-up, open question 6);
+ships the API and an e2e fixture route only); the client's own waiver "proceed without me" (owner 2026-11-03: yes,
+built by PORTAL-10 on the hook in D11); reminders before the scheduled time and "notice period ending" alerts
+(owner 2026-11-03: yes, PORTAL-11); emails in the recipient's own time zone (owner 2026-11-03: later, PORTAL-12);
 calendar (.ics) attachments (`EmailMessage` has no attachments yet); third-party inspectors who are not system users
 (ADR 0039: QA notifies them outside the system, recorded with `notify: "outside_system"`); witnessing the point
 itself and signing it in the portal (`witnessed` by a client signatory: INSPECTIONS-05 / PORTAL-04); the tzdata
@@ -58,10 +59,12 @@ recalculation job (ADR 0025 consequence; the cache is computed on write here); b
   `ready` (sets `ready_at`) in the same transaction, so the notice given and the booking line up. Re-notification on
   every reschedule (new `revision`) and on cancel. A released or waived step closes its open booking (`done`, no email).
 - **D2 — Point types.** `witness` and `hold` steps may be booked (`review` and `surveillance`: 422 `NOT_A_WITNESS_POINT`).
-  A hold point booking invites the client to attend the release; the release itself stays PORTAL-04's.
-- **D3 — Notice period.** Effective notice = `max(project witness_notice_hours, step.notice_hours or 0)`: the project
-  setting is the floor, a step may only lengthen it (ADR 0036 makes it a project setting; INSPECTIONS-03's per-step
-  `notice_hours` stays as an override that can only tighten). The value is snapshotted on the booking at each
+  A hold point booking invites the client to attend the release; the release itself stays PORTAL-04's. Owner
+  2026-11-03: hold points are bookable the same way.
+- **D3 — Notice period.** Owner 2026-11-03: the notice period is a project setting. Effective notice = the
+  project's `witness_notice_hours`; INSPECTIONS-03's per-step `notice_hours` no longer sets it (this task stops
+  reading it for bookings and the waiver clock; the column stays, forward-only, and its removal is left to a later
+  cleanup). The value is snapshotted on the booking at each
   revision. `witness_notice_hours` is read through `ProjectsApi.get_setting` when PROJECTS-04 ships it; until then
   every project uses `DEFAULT_WITNESS_NOTICE_HOURS = 24` (the same fallback pattern as PORTAL-01's
   `portal_access_days`), so PROJECTS-04 is not a hard dependency. A proposal or reschedule whose start is earlier
@@ -70,7 +73,9 @@ recalculation job (ADR 0025 consequence; the cache is computed on write here); b
   With a booking that is too early (the client may have accepted a time three days out). New rule in `itp_rules`:
   `waived` also needs, when the step has an open booking, either the booking `rejected` by the client or
   `now >= scheduled_start_utc` (the witness did not attend); otherwise 409 `BOOKING_OPEN`. Without a booking the old
-  rule holds unchanged. This is how the project's `witness_waiver_rule` is applied in R1 (open question 3).
+  rule holds unchanged. Owner 2026-11-03 confirmed both waiver grounds: staff may waive when the client rejected, or
+  when the booked time has passed and the client did not attend. The client may also waive it themselves (D11).
+  This is how the project's `witness_waiver_rule` is applied in R1.
 - **D5 — Recipients.** Every portal user who is `active` (signed in at least once, not suspended, identity user
   active) and holds a live grant with the `witness` action whose scope covers the step's asset (project-wide, or a
   subtree grant whose root is the asset or one of its ancestors). Invited users who have not signed in are not
@@ -92,12 +97,22 @@ recalculation job (ADR 0025 consequence; the cache is computed on write here); b
   zone, else the project's, else required in the body) + `scheduled_start_utc` (cache). A skipped or repeated local
   time needs `dstChoice: "earlier" | "later"` (422 `AMBIGUOUS_LOCAL_TIME` / `NONEXISTENT_LOCAL_TIME` otherwise). The
   email shows the site-zone time with its abbreviation and the IANA name, then UTC; the recipient has no stored zone
-  preference yet (open question 5). The portal page shows site time first and the viewer's local time second.
+  preference yet. Owner 2026-11-03: site time is acceptable for R1, and later the email must show the recipient's
+  own time zone (PORTAL-12, once a user time-zone preference exists). The portal page shows site time first and
+  the viewer's local time second.
 - **D10 — Documents and codes.** Nothing links documents to steps today, so Part A adds `itp_references` (ITP-wide or
-  per step): a kind (`drawing`, `specification`, `standard`, `procedure`, `other`), a code, a title, a revision and
+  per step): a kind (`drawing`, `specification`, `standard`, `code`, `material_spec`, `procedure`, `other`; owner
+  2026-11-03: codes and material specs are listed on the asset too, ASSETS-09), a code, a title, a revision and
   an optional clean stored file. The portal page also shows the ITP's number and title, its form template name and
   revision, the step's acceptance criteria and the asset tag and path. A file downloads only through UPLOADS-08
   (`open_stored_file`) and only with the grant's `download` action; without it the client sees the code and title.
+- **D11 — Client waiver hook (owner 2026-11-03).** The client may waive an open booking ("proceed without me").
+  That is a client sign-off on the point, so it is an ADR 0010 critical action. This task adds
+  `InspectionsApi.waive_by_client(conn, actor, booking_id, reason, expected_revision)`: it runs
+  `check_signoff_assurance` for the portal session, appends an `inspection_signoffs` row with `signatory_role:
+  "client"` and decision `waived` (the one client decision allowed; INSPECTIONS-11's `CLIENT_SIGNOFF_NOT_AVAILABLE`
+  still refuses every other client decision), closes the booking with a `waived_by_client` event and emits
+  `witness_booking.responded` with `responseKind: "waived"`. PORTAL-10 builds the portal side.
 
 ## Part A — inspections: bookings, references, staff API, events
 
@@ -143,7 +158,7 @@ recalculation job (ADR 0025 consequence; the cache is computed on write here); b
   - 2. `witness_time.py` (pure): `to_utc(local, zone, dst_choice) -> datetime` using `zoneinfo` (`fold=0` earlier,
     `fold=1` later), raising `AmbiguousLocalTime` / `NonexistentLocalTime` when no choice is given; `zone_for(site_tz,
     project_tz, body_zone)` (first non-null; an unknown IANA name → 422 `INVALID_TIME_ZONE`); `effective_notice_hours(
-    project_hours, step_hours) = max(project_hours, step_hours or 0)`.
+    project_hours) = project_hours` (24 until PROJECTS-04 ships the setting).
   - 3. `witness.py` `WitnessService` (each call in the caller's `with_tenant`; locks ITP, then step, then booking):
     - `propose(conn, actor, step_id, body)` (`itp.manage` on the ITP's project): checks in order 404 (step not
       visible) → 403 → 422 `NOT_A_WITNESS_POINT` → 409 `INVALID_STEP_ACTION` (step not `pending`/`ready`) → 409
@@ -203,7 +218,9 @@ recalculation job (ADR 0025 consequence; the cache is computed on write here); b
   - With no active client grant covering the asset, the proposal is refused with `NO_WITNESS_RECIPIENT` and the
     count of invited-not-signed-in clients, and nothing is written; `notify: "outside_system"` with a note succeeds,
     and its event carries `notifyMode: "outside_system"` so no portal email follows.
-  - Notice = the larger of the project setting (24 h until PROJECTS-04) and the step's `notice_hours`.
+  - Notice = the project's `witness_notice_hours` (24 h until PROJECTS-04); a step's `notice_hours` has no effect.
+  - `waive_by_client` with the required assurance waives the step, records a client sign-off and closes the booking;
+    without the assurance it is 401 `STEP_UP_REQUIRED` and nothing is written.
   - A rescheduled booking has a new revision and its earlier responses no longer set its status; a cancelled one
     accepts no response.
   - A witness step with an accepted booking cannot be waived before the booked time; after it, or once the client
@@ -211,14 +228,15 @@ recalculation job (ADR 0025 consequence; the cache is computed on write here); b
   - Booking events and references cannot be updated or deleted by `aip_app`; another tenant's step or booking is 404.
 - **tests (Part A)**:
   - **unit**:
-    - `effective_notice_hours(24, None) = 24`, `(24, 48) = 48`, `(48, 24) = 48`, `(0, None) = 0`.
+    - `effective_notice_hours(24) = 24`, `(48) = 48`, `(0) = 0`.
     - `to_utc(2026-11-10 09:00, "Australia/Perth") = 2026-11-10T01:00:00Z`; `2026-04-05 02:30` in
       `Australia/Sydney` without a choice → `AmbiguousLocalTime`, with `earlier` → `15:30Z` on the 4th, `later` →
       `16:30Z`; `2026-10-04 02:30` in `Australia/Sydney` → `NonexistentLocalTime`; `"AWST"` as a zone → invalid.
     - Waiver rule table: no booking, notice elapsed → `waived`; open `accepted` booking, notice elapsed, before
       start → `BOOKING_OPEN`; same after start → `waived`; `rejected` booking before start → `waived`.
   - **integration** (`test_witness_db.py`, testcontainers Postgres, `kaefer-demo` and `tenant-b`; the INSPECTIONS-03
-    fixture ITP `ITP-101` on `TK-101` in `KF-01` (zone `Australia/Perth`) with 1 hold, 2 witness `noticeHours: 48`,
+    fixture ITP `ITP-101` on `TK-101` in `KF-01` (zone `Australia/Perth`, a stub settings reader giving
+    `witness_notice_hours: 48`) with 1 hold, 2 witness `noticeHours: 12` (ignored),
     3 review; a stub recipient counter registered by the test returning `(1, 0)` unless stated):
     - Propose step 2 for now + 72 h → 201, step 2 `ready`, booking revision 1 `proposed`, `notice_hours = 48`, one
       `proposed` event, one `witness_booking.proposed` v1 outbox row whose payload has no name or email.
@@ -227,6 +245,9 @@ recalculation job (ADR 0025 consequence; the cache is computed on write here); b
       200 with the first booking.
     - Counter returns `(0, 2)` → 422 `NO_WITNESS_RECIPIENT` `invitedNotSignedIn: 2`; no booking, no event, no outbox
       row, step 2 still `pending`. `notify: "outside_system"` without a note → 422; with one → 201.
+    - Propose hold step 1 → 201 (hold points are bookable).
+    - `waive_by_client` on an open booking with aal2 → step `waived`, a `client` sign-off row whose hash chains,
+      booking `done` with `waived_by_client`; with aal1 → 401 `STEP_UP_REQUIRED`, nothing written.
     - Reschedule with `expectedRevision: 1` → revision 2; again with `1` → 409 `BOOKING_REVISED`; without reason →
       422 `COMMENT_REQUIRED`. Cancel → `cancelled`; `respond_witness` afterwards → 409 `BOOKING_CLOSED`.
     - `respond_witness` accept → `accepted`; reject without reason → 422; reschedule at now + 10 h → 422
@@ -243,7 +264,7 @@ recalculation job (ADR 0025 consequence; the cache is computed on write here); b
 
 ## Open questions for the owner
 
-See [PORTAL-06](PORTAL-06.md#open-questions-for-the-owner); D2, D3 and D4 here depend on questions 3, 4 and 7.
+All answered by the owner on 2026-11-03 (see [PORTAL-06](PORTAL-06.md#owner-answers-2026-11-03)).
 
 ## Dependencies
 

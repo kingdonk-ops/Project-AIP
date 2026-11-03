@@ -83,6 +83,10 @@ applied. This unblocks ITEMTYPES-06.
   it. When a witness schedule is proposed, the client inspector is emailed who requested it (person and company), what
   is being inspected, and a link to the portal page where they accept, reject or reschedule it and see the associated
   documents and codes. The notification and each response are recorded on the witness point.
+- *Owner, 2026-11-03, follow-up answers:* the client may waive a booked point ("proceed without me"), recorded as
+  a client sign-off; staff may waive when the client rejected or did not attend at the booked time; the notice
+  period is a project setting; hold points are bookable too; reminders are sent before the booked time; emails
+  show site time for R1 and the recipient's own time zone later (INSPECTIONS-12, PORTAL-06, PORTAL-10 to -12).
 
 ### #44 Qualifications: enforcement per type, fields per type
 
