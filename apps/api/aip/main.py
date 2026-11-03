@@ -40,7 +40,12 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
-from aip.modules.access.api import RoleGrantProvider, sync_catalogue
+from aip.modules.access.api import (
+    ROLES_MANAGE_PERMISSION,
+    RoleGrantProvider,
+    default_role_template_router,
+    sync_catalogue,
+)
 from aip.modules.approvals.api import install_demo_records, list_presets
 from aip.modules.identity.api import (
     PlatformPrincipalAdapter,
@@ -235,6 +240,10 @@ def create_app(
         # ARCH-07: before the catalogue, whose /{event_name} would match dead-letter.
         v1.include_router(create_dead_letter_router())
         v1.include_router(create_events_router(modules))  # /admin/platform/events
+    # ACCESS-09: the default role template API is access's, gated by platform.roles.manage, which
+    # ops declares; mount it only when both are in the module set.
+    if ROLES_MANAGE_PERMISSION in catalogue and any(m.id == "access" for m in modules):
+        v1.include_router(default_role_template_router)
     # ARCH-08: tenant feature flags. The nav reads them always; changing one needs
     # tenant.flags.manage, mounted only when tenancy (which declares it) is in the module set.
     v1.include_router(create_flags_router(manage=FLAGS_MANAGE_PERMISSION in catalogue))

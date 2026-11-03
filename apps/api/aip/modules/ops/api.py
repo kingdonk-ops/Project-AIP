@@ -5,6 +5,8 @@ connection from ``with_tenant`` (ADR 0002). OPS-02: ``register`` declares a job 
 handler in the one registry (handlers must be idempotent and run inside their tenant), and
 ``enqueue`` creates the job and defers it to Procrastinate in the caller's transaction.
 STACK-06: ``send_email`` queues a transactional email (the ``ops.send_email`` job).
+OPS-13: ``active_tenant_ids`` lists the active tenants' ids through ``ops_active_tenant_ids()``
+(ADR 0032); ACCESS-09's default-role sync uses it.
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ from .registry import (
     register,
     registered_types,
 )
+from .schedule import active_tenants as active_tenant_ids
 from .schemas import TERMINAL_STATUSES, JobEventView, JobStatus, JobView
 from .service import (
     ALLOWED_TRANSITIONS,
@@ -46,6 +49,7 @@ __all__ = [
     "JobStatus",
     "JobView",
     "UnknownJobType",
+    "active_tenant_ids",
     "create_job",
     "enqueue",
     "get_spec",

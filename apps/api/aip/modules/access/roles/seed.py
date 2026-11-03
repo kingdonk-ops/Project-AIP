@@ -7,7 +7,13 @@ role it upserts the role by code and, while the role is not customised (``custom
 syncs its permissions to the current catalogue. A customised role is left alone (fail closed): the
 catalogue codes its defaults would add are reported in ``SeedReport.pending`` so an admin can
 decide: only codes that joined the catalogue after the role was customised count, so a code the
-admin removed on purpose is not reported again. Deprecated codes a role still holds are never
+admin removed on purpose is not reported again.
+
+ACCESS-09 (ADR 0042): the defaults are the operator's template (``templates.effective_matrix``:
+the shipped ``MATRIX`` with the operator's moved cells). For a customised role, codes of a module
+whose template level for that role changed after the role was customised are reported too: the
+ones the new level would add in ``pending``, the ones it would take away in ``excess``. Neither is
+applied. Deprecated codes a role still holds are never
 dropped (ACCESS-01 carry-forward). A non-system role that uses a system code (possible only
 before the codes were reserved) is left alone and logged.
 """
@@ -25,6 +31,7 @@ from aip.modules.access.events import ROLE_CHANGED
 from aip.modules.access.repository import bump_access_version
 from aip.modules.access.roles import repository as repo
 from aip.modules.access.roles.default_roles import ROLE_CODES, default_permissions, role_name_key
+from aip.modules.access.roles.templates import effective_matrix, modules_changed_since
 from aip.platform.context import new_request_id
 from aip.platform.events import Aggregate, emit
 
@@ -38,6 +45,7 @@ class SeedReport:
     created: list[str] = field(default_factory=list[str])
     updated: list[str] = field(default_factory=list[str])
     pending: dict[str, list[str]] = field(default_factory=dict[str, list[str]])
+    excess: dict[str, list[str]] = field(default_factory=dict[str, list[str]])
 
     @property
     def changed(self) -> bool:
@@ -45,9 +53,10 @@ class SeedReport:
 
 
 async def default_role_permissions(conn: AsyncConnection) -> dict[str, frozenset[str]]:
-    """Each system role's default permissions over the live catalogue."""
+    """Each system role's default permissions over the live catalogue (operator template)."""
     return default_permissions(
-        (code, module) for code, module, _ in await repo.live_catalogue(conn)
+        ((code, module) for code, module, _ in await repo.live_catalogue(conn)),
+        await effective_matrix(conn),
     )
 
 
@@ -68,7 +77,8 @@ async def seed_default_roles(conn: AsyncConnection) -> SeedReport:
     """Upsert the system roles of the connection's tenant; safe to run any number of times."""
     await repo.lock_tenant_roles(conn)
     defaults = await default_role_permissions(conn)
-    live_codes = {code for code, _, _ in await repo.live_catalogue(conn)}
+    catalogue = await repo.live_catalogue(conn)
+    live_codes = {code for code, _, _ in catalogue}
     report = SeedReport()
     for code in ROLE_CODES:
         wanted = set(defaults[code])
@@ -93,8 +103,12 @@ async def seed_default_roles(conn: AsyncConnection) -> SeedReport:
         held = set(role["permissions"])
         if role["customised_at"] is not None:
             newer = await repo.codes_added_since(conn, role["customised_at"])
-            if missing := sorted((wanted - held) & newer):
+            moved = (await modules_changed_since(conn, role["customised_at"])).get(code, ())
+            retiered = {c for c, module, _ in catalogue if module in moved}
+            if missing := sorted((wanted - held) & (newer | retiered)):
                 report.pending[code] = missing
+            if extra := sorted((held - wanted) & retiered):
+                report.excess[code] = extra
             continue
         # Live codes the defaults no longer give are removed; deprecated ones are kept.
         stale_live = {c for c in held - wanted if c in live_codes}

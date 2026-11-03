@@ -46,6 +46,7 @@ export const RoleCreatePermissionsItem = {
   itpwaive: 'itp.waive',
   opsjobsadmin: 'ops.jobs.admin',
   platformeventsmanage: 'platform.events.manage',
+  platformrolesmanage: 'platform.roles.manage',
   platformtenantsmanage: 'platform.tenants.manage',
   portalgrantmanage: 'portal.grant.manage',
   portalrecordsign_off: 'portal.record.sign_off',

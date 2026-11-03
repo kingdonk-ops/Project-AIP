@@ -145,6 +145,10 @@ GRANT INSERT(scheduled_at) ON TABLE public.procrastinate_jobs TO aip_app;
 -- Name: COLUMN procrastinate_jobs.task_name; Type: ACL; Schema: public
 GRANT INSERT(task_name) ON TABLE public.procrastinate_jobs TO aip_app;
 
+-- Name: FUNCTION access_set_default_role_level(p_module text, p_role text, p_level text, p_shipped text, p_actor uuid, p_reason text); Type: ACL; Schema: public
+REVOKE ALL ON FUNCTION public.access_set_default_role_level(p_module text, p_role text, p_level text, p_shipped text, p_actor uuid, p_reason text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.access_set_default_role_level(p_module text, p_role text, p_level text, p_shipped text, p_actor uuid, p_reason text) TO aip_app;
+
 -- Name: FUNCTION access_sync_permissions(p_catalogue jsonb); Type: ACL; Schema: public
 REVOKE ALL ON FUNCTION public.access_sync_permissions(p_catalogue jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.access_sync_permissions(p_catalogue jsonb) TO aip_app;
@@ -269,6 +273,14 @@ GRANT SELECT ON TABLE public.control_records TO aip_readonly;
 -- Name: TABLE data_map_entries; Type: ACL; Schema: public
 GRANT SELECT,INSERT,UPDATE ON TABLE public.data_map_entries TO aip_app;
 GRANT SELECT ON TABLE public.data_map_entries TO aip_readonly;
+
+-- Name: TABLE default_role_level; Type: ACL; Schema: public
+GRANT SELECT ON TABLE public.default_role_level TO aip_app;
+GRANT SELECT ON TABLE public.default_role_level TO aip_readonly;
+
+-- Name: TABLE default_role_level_change; Type: ACL; Schema: public
+GRANT SELECT ON TABLE public.default_role_level_change TO aip_app;
+GRANT SELECT ON TABLE public.default_role_level_change TO aip_readonly;
 
 -- Name: TABLE deployment_regions; Type: ACL; Schema: public
 GRANT SELECT ON TABLE public.deployment_regions TO aip_app;
@@ -608,6 +620,14 @@ ALTER TABLE ONLY public.control_records
 -- Name: data_map_entries pk_data_map_entries; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.data_map_entries
     ADD CONSTRAINT pk_data_map_entries PRIMARY KEY (id);
+
+-- Name: default_role_level pk_default_role_level; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.default_role_level
+    ADD CONSTRAINT pk_default_role_level PRIMARY KEY (module_id, role_code);
+
+-- Name: default_role_level_change pk_default_role_level_change; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY public.default_role_level_change
+    ADD CONSTRAINT pk_default_role_level_change PRIMARY KEY (id);
 
 -- Name: deployment_regions pk_deployment_regions; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.deployment_regions
@@ -1385,6 +1405,51 @@ CREATE FUNCTION public.access_project_visible(p_project uuid) RETURNS boolean
       $$;
 
 ALTER FUNCTION public.access_project_visible(p_project uuid) OWNER TO aip_owner;
+
+-- Name: access_set_default_role_level(text, text, text, text, uuid, text); Type: FUNCTION; Schema: public
+CREATE FUNCTION public.access_set_default_role_level(p_module text, p_role text, p_level text, p_shipped text, p_actor uuid, p_reason text) RETURNS SETOF public.default_role_level_change
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+    DECLARE
+      v_current text;
+      v_before text;
+    BEGIN
+      IF p_shipped IS NULL
+         OR p_shipped NOT IN ('none', 'view', 'create', 'edit', 'approve', 'admin') THEN
+        RAISE EXCEPTION 'access_set_default_role_level: invalid shipped level'
+          USING ERRCODE = '22023';
+      END IF;
+      IF p_reason IS NULL OR btrim(p_reason) = '' THEN
+        RAISE EXCEPTION 'access_set_default_role_level: a reason is required'
+          USING ERRCODE = '22023';
+      END IF;
+      PERFORM pg_advisory_xact_lock(hashtextextended('access.default_role_template', 0));
+      SELECT d.level INTO v_current
+        FROM public.default_role_level AS d
+        WHERE d.module_id = p_module AND d.role_code = p_role
+        FOR UPDATE;
+      v_before := COALESCE(v_current, p_shipped);
+      IF p_level = p_shipped THEN
+        DELETE FROM public.default_role_level AS d
+          WHERE d.module_id = p_module AND d.role_code = p_role;
+      ELSE
+        INSERT INTO public.default_role_level (module_id, role_code, level, updated_by)
+          VALUES (p_module, p_role, p_level, p_actor)
+          ON CONFLICT (module_id, role_code) DO UPDATE
+            SET level = excluded.level, updated_by = excluded.updated_by, updated_at = now();
+      END IF;
+      IF v_before IS DISTINCT FROM p_level THEN
+        RETURN QUERY
+          INSERT INTO public.default_role_level_change
+            (id, module_id, role_code, level_before, level_after, changed_by, reason)
+          VALUES (gen_random_uuid(), p_module, p_role, v_before, p_level, p_actor, p_reason)
+          RETURNING *;
+      END IF;
+    END;
+    $$;
+
+ALTER FUNCTION public.access_set_default_role_level(p_module text, p_role text, p_level text, p_shipped text, p_actor uuid, p_reason text) OWNER TO aip_owner;
 
 -- Name: access_settings_version_guard(); Type: FUNCTION; Schema: public
 CREATE FUNCTION public.access_settings_version_guard() RETURNS trigger
@@ -2605,6 +2670,9 @@ CREATE INDEX ix_data_map_entries_tenant_id ON public.data_map_entries USING btre
 
 -- Name: ix_data_map_entries_tenant_id_classification; Type: INDEX; Schema: public
 CREATE INDEX ix_data_map_entries_tenant_id_classification ON public.data_map_entries USING btree (tenant_id, classification);
+
+-- Name: ix_default_role_level_change_role_changed_at; Type: INDEX; Schema: public
+CREATE INDEX ix_default_role_level_change_role_changed_at ON public.default_role_level_change USING btree (role_code, changed_at);
 
 -- Name: ix_domain_events_aggregate_type_aggregate_id; Type: INDEX; Schema: public
 CREATE INDEX ix_domain_events_aggregate_type_aggregate_id ON public.domain_events USING btree (aggregate_type, aggregate_id);
@@ -4117,6 +4185,43 @@ CREATE TABLE public.data_map_entries (
 ALTER TABLE ONLY public.data_map_entries FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE public.data_map_entries OWNER TO aip_owner;
+
+-- Name: default_role_level; Type: TABLE; Schema: public
+CREATE TABLE public.default_role_level (
+    module_id text NOT NULL,
+    role_code text NOT NULL,
+    level text NOT NULL,
+    updated_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_default_role_level_admin_keeps_access CHECK (((NOT ((role_code = 'tenant_admin'::text) AND (module_id = 'access'::text))) OR (level = 'admin'::text))),
+    CONSTRAINT ck_default_role_level_level CHECK ((level = ANY (ARRAY['none'::text, 'view'::text, 'create'::text, 'edit'::text, 'approve'::text, 'admin'::text]))),
+    CONSTRAINT ck_default_role_level_module_id CHECK ((module_id ~ '^[a-z][a-z0-9_]*$'::text)),
+    CONSTRAINT ck_default_role_level_role_code CHECK ((role_code = ANY (ARRAY['tenant_admin'::text, 'project_manager'::text, 'qaqc_manager'::text, 'hse_officer'::text, 'supervisor'::text, 'inspector'::text, 'field_worker'::text, 'document_controller'::text, 'client_reviewer'::text, 'subcontractor'::text, 'auditor'::text]))),
+    CONSTRAINT ck_default_role_level_sign_off_only CHECK (((role_code <> 'client_reviewer'::text) OR (level = ANY (ARRAY['none'::text, 'view'::text, 'approve'::text]))))
+);
+
+ALTER TABLE public.default_role_level OWNER TO aip_owner;
+
+-- Name: default_role_level_change; Type: TABLE; Schema: public
+CREATE TABLE public.default_role_level_change (
+    id uuid NOT NULL,
+    module_id text NOT NULL,
+    role_code text NOT NULL,
+    level_before text NOT NULL,
+    level_after text NOT NULL,
+    changed_by uuid,
+    reason text NOT NULL,
+    changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ck_default_role_level_change_changed CHECK ((level_before <> level_after)),
+    CONSTRAINT ck_default_role_level_change_level_after CHECK ((level_after = ANY (ARRAY['none'::text, 'view'::text, 'create'::text, 'edit'::text, 'approve'::text, 'admin'::text]))),
+    CONSTRAINT ck_default_role_level_change_level_before CHECK ((level_before = ANY (ARRAY['none'::text, 'view'::text, 'create'::text, 'edit'::text, 'approve'::text, 'admin'::text]))),
+    CONSTRAINT ck_default_role_level_change_reason CHECK ((btrim(reason) <> ''::text)),
+    CONSTRAINT ck_default_role_level_change_role_code CHECK ((role_code = ANY (ARRAY['tenant_admin'::text, 'project_manager'::text, 'qaqc_manager'::text, 'hse_officer'::text, 'supervisor'::text, 'inspector'::text, 'field_worker'::text, 'document_controller'::text, 'client_reviewer'::text, 'subcontractor'::text, 'auditor'::text])))
+);
+
+ALTER TABLE public.default_role_level_change OWNER TO aip_owner;
 
 -- Name: deployment_regions; Type: TABLE; Schema: public
 CREATE TABLE public.deployment_regions (
