@@ -48,6 +48,7 @@ export { FormField, type FormFieldProps, type FormFieldControlProps } from "./co
 export { Icon, iconNames, type IconName, type IconProps } from "./components/icon";
 export { Input, type InputProps } from "./components/input";
 export { Label, type LabelProps } from "./components/label";
+export { Panel, type PanelProps } from "./components/panel";
 export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "./components/select";
 export { Spinner, type SpinnerProps } from "./components/spinner";
 export { StatusChip, type StatusChipProps } from "./components/status-chip";

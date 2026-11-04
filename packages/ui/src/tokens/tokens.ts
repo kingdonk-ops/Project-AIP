@@ -25,6 +25,11 @@ export const colors = {
   "status-info": "#1d4ed8",
   "status-neutral": "#525252",
   "status-foreground": "#ffffff",
+  "status-success-subtle": "#ecfdf5",
+  "status-warning-subtle": "#fffbeb",
+  "status-danger-subtle": "#fef2f2",
+  "status-info-subtle": "#eff6ff",
+  "status-neutral-subtle": "#f5f5f5",
 } as const;
 
 export const fontSize = {

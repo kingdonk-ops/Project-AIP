@@ -138,7 +138,7 @@ export function FilterBar({ filters, query, onChange, translate, search = true }
         {search && (
           <div className="aip-register__filter">
             <Label htmlFor={searchId}>{translate("register.search")}</Label>
-            <Input id={searchId} type="search" value={text} onChange={(e) => onSearch(e.target.value)} />
+            <Input id={searchId} type="search" icon="search" value={text} onChange={(e) => onSearch(e.target.value)} />
           </div>
         )}
         {others.map(control)}
