@@ -8,7 +8,7 @@
 | Module | [`inspections`](../../docs/blueprint/modules/inspections/README.md) |
 | Phase | R1 |
 | Size | M |
-| Depends on | DESIGN-04, FORMS-03, INSPECTIONS-03, INSPECTIONS-10 |
+| Depends on | DESIGN-04, DESIGN-09, FORMS-03, INSPECTIONS-03, INSPECTIONS-10 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
@@ -26,7 +26,7 @@
    [0035](../../docs/adr/0035-transition-service-implementation.md) §3–5 (401 `STEP_UP_REQUIRED`, 202 countersign),
    [0036](../../docs/adr/0036-r1-module-decisions.md), [0041](../../docs/adr/0041-inspection-completion-locks-and-submit.md)
    (section and report ticks, guarded submit)
-5. Code: `apps/api/aip/modules/inspections/{routes,schemas,service,responses,itp,acknowledgements,policies}.py`,
+5. DESIGN-09 (panels, tinted chips; build the pages on it). Code: `apps/api/aip/modules/inspections/{routes,schemas,service,responses,itp,acknowledgements,policies}.py`,
    `apps/api/aip/modules/report_engine/providers/inspection.py` (how it already resolves asset, form and user labels),
    `packages/form-renderer/src/{FormRenderer,adapters}.tsx`, `packages/ui/src/patterns/{RecordDetail,WorkflowBar}.tsx`,
    `apps/web/src/features/reports/` and `apps/web/src/features/identity/step-up.ts`, `config/workflows/inspection_standard.json`
