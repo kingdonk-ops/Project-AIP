@@ -219,8 +219,13 @@ async def lock_job(conn: AsyncConnection, id: UUID) -> Row | None:
     return None if row is None else dict(row)
 
 
-async def find_job_by_idempotency_key(conn: AsyncConnection, key: str) -> Row | None:
-    stmt = _job_with_template_name().where(j.c.idempotency_key == key)
+async def find_job_by_idempotency_key(
+    conn: AsyncConnection, key: str, requested_by: UUID | None
+) -> Row | None:
+    """The job ``requested_by`` queued with ``key`` (another user's key never matches)."""
+    stmt = _job_with_template_name().where(
+        j.c.idempotency_key == key, j.c.requested_by.is_not_distinct_from(requested_by)
+    )
     row = (await conn.execute(stmt)).mappings().first()
     return None if row is None else dict(row)
 

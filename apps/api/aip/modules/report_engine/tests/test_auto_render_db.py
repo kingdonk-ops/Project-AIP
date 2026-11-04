@@ -352,6 +352,27 @@ def _pdf_text(pdf: bytes) -> str:
     return "\n".join(page.extract_text() for page in PdfReader(io.BytesIO(pdf)).pages)
 
 
+def _pdf_fonts(pdf: bytes) -> set[str]:
+    """The ``/BaseFont`` names on every page (an embedded subset is ``ABCDEF+Name``)."""
+    names: set[str] = set()
+    for page in PdfReader(io.BytesIO(pdf)).pages:
+        fonts = page.get("/Resources", {}).get_object().get("/Font", {}).get_object()
+        for ref in fonts.values():
+            names.add(str(ref.get_object()["/BaseFont"]))
+    return names
+
+
+async def _snapshot(db: TenantDb, render_job_id: UUID) -> dict[str, Any]:
+    rows = await su_fetch(
+        db,
+        "SELECT s.data FROM report_data_snapshots s JOIN report_render_jobs j"
+        " ON j.snapshot_id = s.id WHERE j.id = $1",
+        render_job_id,
+    )
+    data = rows[0][0]
+    return data if isinstance(data, dict) else json.loads(data)
+
+
 async def test_approval_renders_internal_and_client_reports_once(
     app: FastAPI,
     client: httpx.AsyncClient,
@@ -404,6 +425,23 @@ async def test_approval_renders_internal_and_client_reports_once(
     assert INSPECTOR_NAME not in client_text
     assert inspection_id not in client_text
 
+    # REPORTS-07: the client snapshot itself holds no internal field, and its PDF no internal tag.
+    internal_record = (await _snapshot(db, done["internal"]["id"]))["record"]
+    internal_tag = internal_record["asset"]["internalTag"]
+    assert internal_tag and internal_tag in internal_text
+    client_record = (await _snapshot(db, done["client"]["id"]))["record"]
+    assert "id" not in client_record["inspection"]
+    assert "internalTag" not in client_record["asset"]
+    assert "schemaHash" not in client_record["form"]
+    assert all("respondedBy" not in f for s in client_record["form"]["sections"] for f in s["fields"])
+    assert internal_tag not in client_text
+    assert INSPECTOR_NAME not in json.dumps(client_record) and internal_tag not in json.dumps(
+        client_record
+    )
+    # REPORTS-07: both PDFs embed IBM Plex Sans from the template package (ADR 0014).
+    for pdf in (internal, client_pdf):
+        assert any("IBMPlexSans" in name for name in _pdf_fonts(pdf)), _pdf_fonts(pdf)
+
     # Tenant B sees none of it.
     other = await client.get(f"{RENDERS}/{done['client']['id']}", headers=BOB)
     assert other.status_code == 404 and other.json()["code"] == "RENDER_JOB_NOT_FOUND"
@@ -417,10 +455,10 @@ async def test_a_newer_version_without_auto_render_turns_it_off(
     outbox: Outbox,  # noqa: F811
 ) -> None:
     world = await _world(client, db)
-    package = load_package(ROOT / "inspection" / "client" / "v1")
+    package = load_package(ROOT / "inspection" / "client" / "v2")
     definition = {k: v for k, v in package.definition.items() if k != "autoRender"}
     upload = {
-        "definition": {**definition, "version": 2},
+        "definition": {**definition, "version": 3},
         "body": package.body,
         "css": package.css,
         "sampleData": dict(package.sample_data),
@@ -528,13 +566,17 @@ async def test_a_manual_render_needs_inspection_view_and_has_no_approval(
     people.by_user[CAROL_ID] |= {"inspection.view"}
     accepted = await client.post(RENDERS, json=body, headers=CAROL)
     assert accepted.status_code == 202, accepted.text
-    rows = await su_fetch(
-        db,
-        "SELECT s.data FROM report_data_snapshots s JOIN report_render_jobs j"
-        " ON j.snapshot_id = s.id WHERE j.id = $1",
-        UUID(accepted.json()["id"]),
-    )
-    data = rows[0][0] if isinstance(rows[0][0], dict) else json.loads(rows[0][0])
+    job_id = accepted.json()["id"]
+    data = await _snapshot(db, UUID(job_id))
     assert data["record"]["approval"] == {}
     assert data["record"]["asset"]["tagNumber"] == "P-1001"
     assert accepted.json()["recordLabel"] == "KF-01 P-1001 Process line P-1001"
+
+    # REPORTS-07 (review 13 M1): report.view alone does not reveal an inspection report.
+    people.by_user[CAROL_ID] -= {"inspection.view"}
+    assert (await client.get(RENDERS, headers=CAROL)).json()["items"] == []
+    for url in (f"{RENDERS}/{job_id}", f"{RENDERS}/{job_id}/file"):
+        hidden = await client.get(url, headers=CAROL)
+        assert (hidden.status_code, hidden.json()["code"]) == (404, "RENDER_JOB_NOT_FOUND")
+    listed = await client.get(RENDERS, headers=ALICE)  # Alice holds inspection.view
+    assert job_id in [item["id"] for item in listed.json()["items"]]

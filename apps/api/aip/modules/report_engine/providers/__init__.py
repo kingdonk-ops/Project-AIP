@@ -5,14 +5,15 @@ type with the permission a user needs to see that record::
 
     register_provider("project", project_source, view_permission="project.view")
 
-A provider is ``async (conn, record_id, *, context) -> ReportSource``. It runs on the caller's
+A provider is ``async (conn, record_id, *, context, variant) -> ReportSource``. It runs on the caller's
 ``with_tenant`` connection (so RLS decides what it sees), reads the record through its owning
 module's published interface, and raises ``RecordNotFound`` for a missing record or another
 tenant's id. ``context`` is the trigger data (``{}`` for a manual render). ``data`` must be plain
 JSON (strings, numbers, booleans, lists, dicts) and hold no clock value: the snapshot hash is taken
 over it, so unchanged data gives the same hash. ``files`` lists ``{fileId, role}`` stored files the
 template may show; ``time_zone_hint`` is the record's IANA zone (``None`` falls back to UTC).
-``label`` (REPORTS-04) is the record's human label for the report register (a project gives
+``variant`` (REPORTS-07) is the requested template variant: anything but ``internal`` must leave
+internal-only fields out of ``data`` itself, not only out of the template. ``label`` (REPORTS-04) is the record's human label for the report register (a project gives
 ``"<code> <name>"``); it is kept on the render job, not in the snapshot.
 
 ``providers/project.py`` registers ``project``; REPORTS-03 adds ``inspection``.
@@ -104,7 +105,8 @@ async def call_provider(
     conn: AsyncConnection,
     record_id: UUID,
     *,
+    variant: str,
     context: Mapping[str, Any] | None = None,
 ) -> ReportSource:
-    """Run ``entry``'s provider for ``record_id`` (``context`` defaults to ``{}``)."""
-    return await entry.provider(conn, record_id, context=dict(context or {}))
+    """Run ``entry``'s provider for ``record_id`` and ``variant`` (``context`` defaults to ``{}``)."""
+    return await entry.provider(conn, record_id, context=dict(context or {}), variant=variant)

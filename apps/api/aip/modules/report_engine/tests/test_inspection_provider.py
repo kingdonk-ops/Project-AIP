@@ -108,10 +108,12 @@ class Fakes:
         )
 
 
-async def _provide(data: dict[str, Any], context: dict[str, Any] | None = None) -> ReportSource:
+async def _provide(
+    data: dict[str, Any], context: dict[str, Any] | None = None, variant: str = "internal"
+) -> ReportSource:
     provider = InspectionProvider(Fakes(data).deps())
     inspection_id = UUID(data["inspection"]["id"]) if data["inspection"] else UUID(int=1)
-    return await provider(CONN, inspection_id, context=context or {})
+    return await provider(CONN, inspection_id, context=context or {}, variant=variant)
 
 
 def _fields(source: ReportSource) -> dict[str, dict[str, Any]]:
@@ -183,7 +185,7 @@ async def test_a_label_key_is_resolved_into_display_text() -> None:
     fields[0]["labelKey"] = "coating.dft_average"
     fakes = Fakes(data)
     source = await InspectionProvider(fakes.deps())(
-        CONN, UUID(data["inspection"]["id"]), context={}
+        CONN, UUID(data["inspection"]["id"]), context={}, variant="internal"
     )
     assert _fields(source)["dft_avg"]["label"] == "Average DFT (coating)"
     assert fakes.label_requests == [["coating.dft_average"]]
@@ -227,3 +229,30 @@ async def test_an_unknown_inspection_is_record_not_found() -> None:
     data["inspection"] = None
     with pytest.raises(RecordNotFound):
         await _provide(data)
+
+
+@pytest.mark.parametrize("variant", ["client", "certificate"])
+async def test_a_non_internal_snapshot_holds_no_internal_field(variant: str) -> None:
+    """REPORTS-07 (review 13 L4): the record itself, not only the template, leaves them out."""
+    data = _fixture()
+    source = await _provide(data, {"approvedBy": SAM}, variant=variant)
+    record = source.data
+    assert "id" not in record["inspection"]
+    assert "internalTag" not in record["asset"]
+    assert "schemaHash" not in record["form"]
+    fields = list(_fields(source).values())
+    assert fields and all("respondedBy" not in f for f in fields)
+    dumped = json.dumps(record)
+    for internal_value in (
+        data["inspection"]["id"],
+        data["asset"]["internalTag"],
+        data["revision"]["schema_hash"],
+        "Ivy Inspector",
+    ):
+        assert internal_value not in dumped, internal_value
+    assert record["approval"]["approvedBy"] == "Sam Supervisor"  # the sign-off stays
+    assert record["asset"]["tagNumber"] == "P-1001"
+
+    internal = await _provide(data, {"approvedBy": SAM})
+    assert internal.data["asset"]["internalTag"] == data["asset"]["internalTag"]
+    assert source.label == internal.label  # the register label is not in the snapshot

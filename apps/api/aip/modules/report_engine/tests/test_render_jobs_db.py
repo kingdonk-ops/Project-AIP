@@ -29,7 +29,17 @@ from aip.modules.report_engine.template_package import load_package
 from aip.platform.context import RequestContext, use_context
 from aip.platform.db.migrator import repo_root
 
-from .conftest import ALICE, BOB, CAROL, DAVE, GrantTable, add_project, su_execute, su_fetch
+from .conftest import (
+    ALICE,
+    BOB,
+    CAROL,
+    CAROL_ID,
+    DAVE,
+    GrantTable,
+    add_project,
+    su_execute,
+    su_fetch,
+)
 
 RENDERS = "/api/v1/reports/renders"
 TEMPLATES = "/api/v1/reports/templates"
@@ -300,3 +310,101 @@ async def test_the_published_interface_queues_a_render_without_a_policy_check(
             assert await reports.get_render_job(conn, job.id) == job
             assert await reports.get_render_job(conn, uuid4()) is None
     assert await _counts(db) == (1, 1, 1, 1)
+
+
+# --- REPORTS-07 (review 13 M1, L1, L2) ----------------------------------------------------------
+
+
+async def test_reading_a_job_needs_the_records_view_permission(
+    app: FastAPI, client: httpx.AsyncClient, db: TenantDb, scope_users: GrantTable
+) -> None:
+    await _load()
+    project = await add_project(db)
+    job = (await client.post(RENDERS, json=_body(project), headers=ALICE)).json()
+
+    # Carol holds report.view and report.create but not project.view: the job is not revealed.
+    assert (await client.get(RENDERS, headers=CAROL)).json()["items"] == []
+    for url in (f"{RENDERS}/{job['id']}", f"{RENDERS}/{job['id']}/file"):
+        hidden = await client.get(url, headers=CAROL)
+        assert (hidden.status_code, hidden.json()["code"]) == (404, "RENDER_JOB_NOT_FOUND")
+    # Without report.view itself the answer stays 403.
+    assert (await client.get(f"{RENDERS}/{job['id']}", headers=DAVE)).status_code == 403
+
+    scope_users.by_user[CAROL_ID] |= {"project.view"}
+    assert [i["id"] for i in (await client.get(RENDERS, headers=CAROL)).json()["items"]] == [
+        job["id"]
+    ]
+    assert (await client.get(f"{RENDERS}/{job['id']}", headers=CAROL)).status_code == 200
+
+
+async def test_a_job_without_a_registered_provider_is_refused(
+    app: FastAPI, client: httpx.AsyncClient, db: TenantDb
+) -> None:
+    await _load()
+    project = await add_project(db)
+    job = (await client.post(RENDERS, json=_body(project), headers=ALICE)).json()
+    unregister_provider("project")
+    try:
+        assert (await client.get(RENDERS, headers=ALICE)).json()["items"] == []
+        for response in (
+            await client.get(f"{RENDERS}/{job['id']}", headers=ALICE),
+            await client.get(f"{RENDERS}/{job['id']}/file", headers=ALICE),
+            await client.post(f"{RENDERS}/{job['id']}/rerender", headers=ALICE),
+        ):
+            assert (response.status_code, response.json()["code"]) == (404, "RENDER_JOB_NOT_FOUND")
+    finally:
+        project_provider.install()
+    assert await _count(db, "report_render_jobs") == 1
+
+
+async def test_a_replayed_key_needs_create_and_belongs_to_its_requester(
+    app: FastAPI, client: httpx.AsyncClient, db: TenantDb, scope_users: GrantTable
+) -> None:
+    await _load()
+    project = await add_project(db)
+    first = await client.post(RENDERS, json=_body(project), headers={**ALICE, "Idempotency-Key": "k1"})
+    assert first.status_code == 202, first.text
+
+    scope_users.by_user[ALICE_ID] -= {"report.create"}
+    replay = await client.post(RENDERS, json=_body(project), headers={**ALICE, "Idempotency-Key": "k1"})
+    assert (replay.status_code, replay.json()) == (
+        403,
+        {"code": "FORBIDDEN", "permission": "report.create"},
+    )
+    scope_users.by_user[ALICE_ID] |= {"report.create"}
+    scope_users.by_user[ALICE_ID] -= {"project.view"}
+    replay = await client.post(RENDERS, json=_body(project), headers={**ALICE, "Idempotency-Key": "k1"})
+    assert (replay.status_code, replay.json()["permission"]) == (403, "project.view")
+
+    # The same key from another user is that user's own request, never Alice's job.
+    scope_users.by_user[CAROL_ID] |= {"project.view"}
+    carol = await client.post(RENDERS, json=_body(project), headers={**CAROL, "Idempotency-Key": "k1"})
+    assert carol.status_code == 202, carol.text
+    assert carol.json()["id"] != first.json()["id"]
+    assert carol.json()["requestedBy"] == str(CAROL_ID)
+    again = await client.post(RENDERS, json=_body(project), headers={**CAROL, "Idempotency-Key": "k1"})
+    assert again.json()["id"] == carol.json()["id"]
+    assert await _count(db, "report_render_jobs") == 2
+
+
+async def test_a_pinned_file_that_is_gone_is_404_and_writes_nothing(
+    app: FastAPI, client: httpx.AsyncClient, db: TenantDb
+) -> None:
+    await _load()
+    project = await add_project(db)
+    await _install(client, key="widget-card", record_type="widget")
+
+    async def widget(conn: Any, record_id: UUID, *, context: Any, variant: str) -> ReportSource:
+        del conn, context, variant
+        gone = SourceFile(file_id=uuid4(), role="photo:p1")  # deleted, or never stored
+        return ReportSource(project_id=project, record_version=1, data={}, files=(gone,))
+
+    register_provider("widget", widget, view_permission="project.view")
+    try:
+        response = await client.post(
+            RENDERS, json=_body(uuid4(), templateKey="widget-card", recordType="widget"), headers=ALICE
+        )
+    finally:
+        unregister_provider("widget")
+    assert (response.status_code, response.json()["code"]) == (404, "RECORD_NOT_FOUND")
+    assert await _counts(db) == (0, 0, 0, 0)
