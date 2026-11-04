@@ -51,7 +51,6 @@ from aip.modules.report_engine import repository as repo
 from aip.modules.report_engine.events import REPORT_DOWNLOADED, ReportDownloaded
 from aip.modules.report_engine.jobs import RENDER_JOB_TYPE
 from aip.modules.report_engine.providers import (
-    ProviderEntry,
     RecordNotFound,
     call_provider,
     get_provider,
@@ -231,12 +230,11 @@ class RenderService:
         first = await repo.get_job(conn, render_job_id)
         if first is None:
             raise _job_not_found(render_job_id)
-        entry: ProviderEntry | None = get_provider(first["record_type"])
-        if entry is None:
-            if authorize is not None:  # fail closed: no provider names the record permission
-                raise _job_not_found(render_job_id)
-        else:
-            await _require(authorize, (REPORT_CREATE, entry.view_permission), first["project_id"])
+        # ``report.create`` else 403; the record's view permission (or no provider) else 404, so
+        # the job is not revealed, as ``get`` does.
+        await _require(authorize, (REPORT_CREATE,), first["project_id"])
+        if not await _record_view(authorize, first["record_type"], first["project_id"]):
+            raise _job_not_found(render_job_id)
         template: TemplateRow | None = await self._templates.get(conn, first["template_id"])
         if template is None:
             raise DomainError(404, "TEMPLATE_NOT_FOUND")

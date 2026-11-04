@@ -77,7 +77,11 @@ Close the report_engine gaps the review found in REPORTS-02, -03 and -04 (tag: h
 - **Per-user key needs a migration.** `202611051000_report_engine_idempotency_per_user` replaces
   `UNIQUE (tenant_id, idempotency_key)` with a unique index on `(tenant_id, requested_by, idempotency_key)
   NULLS NOT DISTINCT WHERE idempotency_key IS NOT NULL`, so another user's same key queues their own job.
-- **Rerender fails closed too**: a job whose record type has no provider is 404 for an HTTP caller (it was allowed
-  on `report.create` alone).
+- **Rerender hides the job like `get`**: `report.create` missing is 403; the record's view permission missing, or
+  no provider for the record type, is 404 `RENDER_JOB_NOT_FOUND` (it was 403 naming the permission, and allowed on
+  `report.create` alone without a provider).
+- **Old client snapshots are not rewritten.** Snapshots are immutable, so client jobs rendered before this change
+  (and their rerenders, which reuse the pinned snapshot) still hold the four internal keys in storage; the v1 client
+  template never shows them.
 - **Pinning test (L3):** the v2 marker now replaces v1's project-code cell, so the test proves the v1 page (the
   code is present) and not only the v2 marker's absence.

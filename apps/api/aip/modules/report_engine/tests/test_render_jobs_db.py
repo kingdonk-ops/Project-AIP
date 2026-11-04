@@ -334,6 +334,8 @@ async def test_reading_a_job_needs_the_records_view_permission(
     for url in (f"{RENDERS}/{job['id']}", f"{RENDERS}/{job['id']}/file"):
         hidden = await client.get(url, headers=CAROL)
         assert (hidden.status_code, hidden.json()["code"]) == (404, "RENDER_JOB_NOT_FOUND")
+    rerun = await client.post(f"{RENDERS}/{job['id']}/rerender", headers=CAROL)
+    assert (rerun.status_code, rerun.json()["code"]) == (404, "RENDER_JOB_NOT_FOUND")
     # Without report.view itself the answer stays 403.
     assert (await client.get(f"{RENDERS}/{job['id']}", headers=DAVE)).status_code == 403
 
