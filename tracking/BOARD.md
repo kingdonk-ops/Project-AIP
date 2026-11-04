@@ -231,7 +231,7 @@ From [docs/reviews/13-merged-pr-review-2026-11-03.md](../docs/reviews/13-merged-
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [REPORTS-07](tasks/REPORTS-07.md) | Report access and error fixes: record-level view on read and download, create check on replay, client snapshot strips internal fields | report_engine | S | REPORTS-03, REPORTS-04 | todo | review 13 M1, L1 to L5 |
+| [REPORTS-07](tasks/REPORTS-07.md) | Report access and error fixes: record-level view on read and download, create check on replay, client snapshot strips internal fields | report_engine | S | REPORTS-03, REPORTS-04 | review | review 13 M1, L1 to L5; ClaudeK: branch claudeK/next-task-327f9a; inspection templates v2 (Plex embedded), v1 kept; migration 202611051000 (idempotency key per user) |
 | [REPORTS-08](tasks/REPORTS-08.md) | Completed inspection reports are locked and listed on the inspected asset's documents | report_engine | S | ASSETS-09, REPORTS-03, REPORTS-07 | todo | review 13 D3 (ADR 0039 #49); owner 2026-11-03: the list lives on the asset |
 | [ASSETS-09](tasks/ASSETS-09.md) | Asset documents list: reports, inspections, standards, codes, qualifications and material specs for an asset that has been or is being inspected | assets | M | ASSETS-05 | todo | owner 2026-11-03 (ADR 0039 #49); source registry, each owning module registers its documents |
 | [INSPECTIONS-13](tasks/INSPECTIONS-13.md) | Inspections and ITP references (standards, codes, material specs) as asset document sources | inspections | S | ASSETS-09, INSPECTIONS-12 | todo | owner 2026-11-03 |

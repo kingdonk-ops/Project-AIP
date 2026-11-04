@@ -17,6 +17,7 @@ task on the board generates the next phase's task files from its module docs.
 
 ## Log
 
+- 2026-11-05 · REPORTS-07 · PR pending · Reading a render job (list, get, download) now also needs the record type's view permission (404, fail closed without a provider); an idempotent replay checks `report.create` plus the record permission and the key is per requester (new unique index); a vanished pinned file is 404 `RECORD_NOT_FOUND`; the client inspection snapshot drops `inspection.id`, `internalTag`, `schemaHash` and `respondedBy`; inspection templates v2 embed IBM Plex Sans (v1 left as installed).
 - 2026-11-04 · DESIGN-09 · PR #237 · Off-white canvas with white bordered panels (RegisterTable in one `Panel`), tinted status chips (solid under high contrast), a leading search icon on inputs and the accent-fill rule; plus the Blade (URL-addressable slide-over with focus return), KpiStrip and WorkQueue patterns for DESIGN-12.
 - 2026-11-04 · DESIGN-09 (board) · — · Owner pulled DESIGN-09 (modernised surfaces) into the demo slice ahead of INSPECTIONS-04, which now depends on it, so the inspection pages are built on the new look.
 - 2026-11-04 · INSPECTIONS-04 (spec) · — · Stub replaced with a full M spec for the last core demo-slice task (register, create dialog, detail with workflow bar, autosaved answers, section/report ticks, history, plus labels, `can` and the pinned-form route on the API); ITP steps, sign-off chips and the report tab split to new INSPECTIONS-15, photo/signature capture to new INSPECTIONS-14 (owner 2026-11-04).

@@ -19,12 +19,19 @@ import pytest
 from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
-from tests.conftest import TENANT_A_ID, TENANT_B_ID
+from tests.conftest import ALICE_ID, TENANT_A_ID, TENANT_B_ID
 from tests.fixtures.postgres import TenantDb
 
 from aip.modules.report_engine import render_service as render_service_module
 from aip.modules.report_engine.api import ReportsApi
 from aip.modules.report_engine.loader import run
+from aip.modules.report_engine.providers import (
+    ReportSource,
+    SourceFile,
+    register_provider,
+    unregister_provider,
+)
+from aip.modules.report_engine.providers import project as project_provider
 from aip.modules.report_engine.template_package import load_package
 from aip.platform.context import RequestContext, use_context
 from aip.platform.db.migrator import repo_root

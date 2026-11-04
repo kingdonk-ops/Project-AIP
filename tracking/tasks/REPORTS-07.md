@@ -61,3 +61,23 @@ Close the report_engine gaps the review found in REPORTS-02, -03 and -04 (tag: h
     - the pinning test asserts the v1 marker is present as well as the v2 marker absent (L3)
   - **e2e**:
     - none (API only; the REPORTS-04 register e2e must still pass)
+
+## As built (2026-11-05)
+
+- **Font in v2, not v1.** The loader stops with `TEMPLATE_VERSION_CHANGED` when an installed version's content
+  changes, and the Coolify `report-templates-load` step (which the API waits on) would fail on every tenant that
+  already has v1. So `config/report-templates/inspection/{internal,client}/v2/` is v1 plus IBM Plex Sans 400 and
+  600 (woff2 from the Keycloak theme, `OFL.txt` beside each package, `fontLicences: ["OFL-1.1"]`) through
+  `@font-face`, `sans-serif` only as the fallback; v1 is unchanged. The highest published version wins, so new
+  renders and auto-renders use v2; old jobs stay pinned to v1. The client v2 sample data has the client snapshot
+  shape.
+- **Variant reaches the provider.** Providers now take `variant` (`call_provider(..., variant=template.variant)`);
+  the inspection provider leaves `inspection.id`, `asset.internalTag`, `form.schemaHash` and each field's
+  `respondedBy` out for any variant but `internal`. The approver's name stays (the client sign-off shows it).
+- **Per-user key needs a migration.** `202611051000_report_engine_idempotency_per_user` replaces
+  `UNIQUE (tenant_id, idempotency_key)` with a unique index on `(tenant_id, requested_by, idempotency_key)
+  NULLS NOT DISTINCT WHERE idempotency_key IS NOT NULL`, so another user's same key queues their own job.
+- **Rerender fails closed too**: a job whose record type has no provider is 404 for an HTTP caller (it was allowed
+  on `report.create` alone).
+- **Pinning test (L3):** the v2 marker now replaces v1's project-code cell, so the test proves the v1 page (the
+  code is present) and not only the v2 marker's absence.
