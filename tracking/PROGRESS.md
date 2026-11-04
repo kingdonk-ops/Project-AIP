@@ -17,7 +17,7 @@ task on the board generates the next phase's task files from its module docs.
 
 ## Log
 
-- 2026-11-04 · DESIGN-09 · PR (pending) · Off-white canvas with white bordered panels (RegisterTable in one `Panel`), tinted status chips (solid under high contrast), a leading search icon on inputs and the accent-fill rule; plus the Blade (URL-addressable slide-over with focus return), KpiStrip and WorkQueue patterns for DESIGN-12.
+- 2026-11-04 · DESIGN-09 · PR #237 · Off-white canvas with white bordered panels (RegisterTable in one `Panel`), tinted status chips (solid under high contrast), a leading search icon on inputs and the accent-fill rule; plus the Blade (URL-addressable slide-over with focus return), KpiStrip and WorkQueue patterns for DESIGN-12.
 - 2026-11-04 · DESIGN-09 (board) · — · Owner pulled DESIGN-09 (modernised surfaces) into the demo slice ahead of INSPECTIONS-04, which now depends on it, so the inspection pages are built on the new look.
 - 2026-11-04 · INSPECTIONS-04 (spec) · — · Stub replaced with a full M spec for the last core demo-slice task (register, create dialog, detail with workflow bar, autosaved answers, section/report ticks, history, plus labels, `can` and the pinned-form route on the API); ITP steps, sign-off chips and the report tab split to new INSPECTIONS-15, photo/signature capture to new INSPECTIONS-14 (owner 2026-11-04).
 - 2026-11-03 · REVIEW-13 · — · Merged-PR review of #158 to #233 against specs and ADRs (docs/reviews/13): owner accepted ADR 0042 (amends ADR 0020 point 3, two-table exception) and moved the witness notification from INSPECTIONS-03 to PORTAL-06 (ADR 0039 amended); fix tasks REPORTS-07, REPORTS-08, APPROVALS-14, PORTAL-09, INSPECTIONS-11, TESTING-14 added.
