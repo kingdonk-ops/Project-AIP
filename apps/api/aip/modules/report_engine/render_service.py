@@ -9,7 +9,8 @@
 (b) the published template of ``(template_key, variant)``, else 404 ``TEMPLATE_NOT_FOUND``; its
     ``record_type`` must be the requested one, else 422 ``TEMPLATE_RECORD_TYPE_MISMATCH``;
 (c) the record type's provider, else 422 ``UNKNOWN_RECORD_TYPE``; ``RecordNotFound`` from it is 404
-    ``RECORD_NOT_FOUND``, and so is a pinned file that ``build_snapshot`` cannot find. With an ``authorize`` callback (the HTTP route) the caller must then hold
+    ``RECORD_NOT_FOUND``, and so is a pinned file that ``build_snapshot`` cannot find. With an
+    ``authorize`` callback (the HTTP route) the caller must then hold
     ``report.create`` and the provider's view permission on the record's project, else 403 with
     nothing written; without one (``ReportsApi``, a system call) there is no policy check;
 (d) the snapshot (``snapshots.build_snapshot``), the ``queued`` render job pinned to the template

@@ -369,27 +369,37 @@ async def test_a_replayed_key_needs_create_and_belongs_to_its_requester(
 ) -> None:
     await _load()
     project = await add_project(db)
-    first = await client.post(RENDERS, json=_body(project), headers={**ALICE, "Idempotency-Key": "k1"})
+    first = await client.post(
+        RENDERS, json=_body(project), headers={**ALICE, "Idempotency-Key": "k1"}
+    )
     assert first.status_code == 202, first.text
 
     scope_users.by_user[ALICE_ID] -= {"report.create"}
-    replay = await client.post(RENDERS, json=_body(project), headers={**ALICE, "Idempotency-Key": "k1"})
+    replay = await client.post(
+        RENDERS, json=_body(project), headers={**ALICE, "Idempotency-Key": "k1"}
+    )
     assert (replay.status_code, replay.json()) == (
         403,
         {"code": "FORBIDDEN", "permission": "report.create"},
     )
     scope_users.by_user[ALICE_ID] |= {"report.create"}
     scope_users.by_user[ALICE_ID] -= {"project.view"}
-    replay = await client.post(RENDERS, json=_body(project), headers={**ALICE, "Idempotency-Key": "k1"})
+    replay = await client.post(
+        RENDERS, json=_body(project), headers={**ALICE, "Idempotency-Key": "k1"}
+    )
     assert (replay.status_code, replay.json()["permission"]) == (403, "project.view")
 
     # The same key from another user is that user's own request, never Alice's job.
     scope_users.by_user[CAROL_ID] |= {"project.view"}
-    carol = await client.post(RENDERS, json=_body(project), headers={**CAROL, "Idempotency-Key": "k1"})
+    carol = await client.post(
+        RENDERS, json=_body(project), headers={**CAROL, "Idempotency-Key": "k1"}
+    )
     assert carol.status_code == 202, carol.text
     assert carol.json()["id"] != first.json()["id"]
     assert carol.json()["requestedBy"] == str(CAROL_ID)
-    again = await client.post(RENDERS, json=_body(project), headers={**CAROL, "Idempotency-Key": "k1"})
+    again = await client.post(
+        RENDERS, json=_body(project), headers={**CAROL, "Idempotency-Key": "k1"}
+    )
     assert again.json()["id"] == carol.json()["id"]
     assert await _count(db, "report_render_jobs") == 2
 
@@ -409,7 +419,9 @@ async def test_a_pinned_file_that_is_gone_is_404_and_writes_nothing(
     register_provider("widget", widget, view_permission="project.view")
     try:
         response = await client.post(
-            RENDERS, json=_body(uuid4(), templateKey="widget-card", recordType="widget"), headers=ALICE
+            RENDERS,
+            json=_body(uuid4(), templateKey="widget-card", recordType="widget"),
+            headers=ALICE,
         )
     finally:
         unregister_provider("widget")

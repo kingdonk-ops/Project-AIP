@@ -433,7 +433,9 @@ async def test_approval_renders_internal_and_client_reports_once(
     assert "id" not in client_record["inspection"]
     assert "internalTag" not in client_record["asset"]
     assert "schemaHash" not in client_record["form"]
-    assert all("respondedBy" not in f for s in client_record["form"]["sections"] for f in s["fields"])
+    assert all(
+        "respondedBy" not in f for s in client_record["form"]["sections"] for f in s["fields"]
+    )
     assert internal_tag not in client_text
     assert INSPECTOR_NAME not in json.dumps(client_record) and internal_tag not in json.dumps(
         client_record
