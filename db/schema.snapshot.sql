@@ -861,10 +861,6 @@ ALTER TABLE ONLY public.report_render_jobs
 ALTER TABLE ONLY public.report_render_jobs
     ADD CONSTRAINT uq_report_render_jobs_id_tenant_id UNIQUE (id, tenant_id);
 
--- Name: report_render_jobs uq_report_render_jobs_tenant_id_idempotency_key; Type: CONSTRAINT; Schema: public
-ALTER TABLE ONLY public.report_render_jobs
-    ADD CONSTRAINT uq_report_render_jobs_tenant_id_idempotency_key UNIQUE (tenant_id, idempotency_key);
-
 -- Name: report_templates pk_report_templates; Type: CONSTRAINT; Schema: public
 ALTER TABLE ONLY public.report_templates
     ADD CONSTRAINT pk_report_templates PRIMARY KEY (id);
@@ -3181,6 +3177,9 @@ CREATE UNIQUE INDEX uq_portal_users_tenant_id_user_id ON public.portal_users USI
 
 -- Name: uq_projects_tenant_id_upper_code; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_projects_tenant_id_upper_code ON public.projects USING btree (tenant_id, upper(code)) WHERE (deleted_at IS NULL);
+
+-- Name: uq_report_render_jobs_tenant_id_requested_by_idempotency_key; Type: INDEX; Schema: public
+CREATE UNIQUE INDEX uq_report_render_jobs_tenant_id_requested_by_idempotency_key ON public.report_render_jobs USING btree (tenant_id, requested_by, idempotency_key) NULLS NOT DISTINCT WHERE (idempotency_key IS NOT NULL);
 
 -- Name: uq_role_assignment_live; Type: INDEX; Schema: public
 CREATE UNIQUE INDEX uq_role_assignment_live ON public.role_assignment USING btree (tenant_id, user_id, role_id, scope_type, COALESCE(project_id, '00000000-0000-0000-0000-000000000000'::uuid)) WHERE ((deleted_at IS NULL) AND (scope_type = ANY (ARRAY['tenant'::text, 'project'::text])));
