@@ -37,7 +37,8 @@ browser shows the released file); the report's photo pages (REPORTS later rows).
   - apps/api/aip/modules/inspections/tests/test_media_answers_db.py
   - config/terms/en-AU/inspections.json
   - packages/form-renderer/src/adapters.ts, fields (optional `name(fileId)` on `MediaAdapter`)
-  - apps/web/src/features/uploads/upload.ts (+ test): the first web client of the upload pipeline
+  - apps/web/src/features/inspections/upload.ts (+ test): the first web client of the upload pipeline (kept in this
+    module; moving it to a shared place is a later row once a second module needs it)
   - apps/web/src/features/inspections/adapters.ts, AnswersTab.tsx, SignaturePad.tsx
   - apps/web/src/features/inspections/__tests__/media.test.tsx
   - e2e/web/inspections-media-live.spec.ts
@@ -47,7 +48,7 @@ browser shows the released file); the report's photo pages (REPORTS later rows).
     `project_id` equal to the inspection's project (when the inspection has one). Otherwise 422 `ANSWER_INVALID` with
     `{path, code: "FILE_NOT_AVAILABLE"}` and nothing written (the batch rule). Never reveal whether a file exists in
     another tenant (same code).
-  - 2. **Upload helper** `apps/web/src/features/uploads/upload.ts`: `uploadFile(file, {projectId, purpose})` →
+  - 2. **Upload helper** `apps/web/src/features/inspections/upload.ts`: `uploadFile(file, {projectId, purpose})` →
     `uploads_create_session` (with sha256 computed in the browser), POST the form to the returned `url` with
     `fields`, `uploads_confirm_session`, then poll `uploads_session_status` (1 s, then backing off, 60 s cap) until
     `released` (→ `fileId`) or `rejected` (→ `reject_reason` as a term). Abortable.

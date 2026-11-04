@@ -1,14 +1,14 @@
 # INSPECTIONS-04 — Inspection register and detail pages with the form renderer
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
-<!-- hand-edited: full spec written 2026-11-04 (stub replaced); photo/signature capture split to INSPECTIONS-14 (owner 2026-11-04) -->
+<!-- hand-edited: full spec written 2026-11-04 (stub replaced); photo/signature capture split to INSPECTIONS-14 (owner 2026-11-04); ITP and report tabs split to INSPECTIONS-15 (task linter: size at most M) -->
 
 | Field | Value |
 |---|---|
 | Module | [`inspections`](../../docs/blueprint/modules/inspections/README.md) |
 | Phase | R1 |
-| Size | L |
-| Depends on | DESIGN-04, FORMS-03, INSPECTIONS-03, INSPECTIONS-10, REPORTS-04 |
+| Size | M |
+| Depends on | DESIGN-04, FORMS-03, INSPECTIONS-03, INSPECTIONS-10 |
 | Status | tracked in [BOARD.md](../BOARD.md) |
 
 ## Read before starting (and nothing else unless blocked)
@@ -35,15 +35,15 @@
 
 Give staff the inspection pages the demo slice drives end to end: a register at `/inspections`, a create dialog, and
 a detail page at `/inspections/:id` with the workflow bar, the answers rendered and saved through the FORMS-03
-renderer, the section and report tick boxes and guarded submit (INSPECTIONS-10), the ITP steps with sign-off chips
-(INSPECTIONS-03), the decision history and the generated report (tag: extend; AIP "Register", inspection detail and
+renderer, the section and report tick boxes and guarded submit (INSPECTIONS-10) and the decision history (tag: extend; AIP "Register", inspection detail and
 lifecycle, PRD inspections pages).
 
 The API already does the work (INSPECTIONS-01/02/03/10); this task adds only what the page cannot get today:
 human labels (asset, template, user names) and the pinned form for a viewer who has `inspection.view` but not the
 template catalogue's `form.view`, plus what the caller may do on this inspection's project.
 
-**Out of scope:** photo and signature capture and the server check that such an answer names a clean stored file
+**Out of scope:** the ITP tab (steps editor, step actions, sign-off chips) and the report tab (INSPECTIONS-15, which
+builds on this page and on the labels and `can` added here); photo and signature capture and the server check that such an answer names a clean stored file
 (INSPECTIONS-14: until then those fields render read-only with `forms.renderer.adapter_missing`, so demo templates
 must not make them required); the review queue `/inspections/review`, bulk actions, saved views and the board and
 calendar toggles; the ITP progress page `/itps/:id`; the booking button on witness steps (INSPECTIONS-12); the
@@ -66,11 +66,10 @@ API has it; a later row).
   - config/terms/en-AU/inspections.json
   - packages/api-client/** (regenerated)
   - packages/form-renderer/src/FormRenderer.tsx, FormSection.tsx, FormRenderer.test.tsx (`lockedSections` prop)
-  - apps/web/src/features/inspections/{nav.ts,search.ts,columns.tsx,states.ts,InspectionsRegister.tsx,CreateInspectionDialog.tsx,InspectionDetail.tsx,AnswersTab.tsx,AcknowledgementBar.tsx,TransitionDialog.tsx,ItpTab.tsx,ItpStepsEditor.tsx,SignoffChips.tsx,HistoryTab.tsx,ReportTab.tsx,adapters.ts,inspections.css}
-  - apps/web/src/features/inspections/__tests__/{register,detail,answers,itp}.test.tsx
+  - apps/web/src/features/inspections/{nav.ts,search.ts,columns.tsx,states.ts,InspectionsRegister.tsx,CreateInspectionDialog.tsx,InspectionDetail.tsx,AnswersTab.tsx,AcknowledgementBar.tsx,TransitionDialog.tsx,HistoryTab.tsx,adapters.ts,inspections.css}
+  - apps/web/src/features/inspections/__tests__/{register,detail,answers}.test.tsx
   - apps/web/src/routes/_app/inspections/{index.tsx,$inspectionId.tsx}
   - apps/web/src/router.ts
-  - apps/web/src/features/shell/dev/dev-session-stub.ts
   - e2e/web/inspections.spec.ts, e2e/web/inspections-live.spec.ts
 - **steps**:
   - 1. **Labels on reads** (`labels.py`, used by `service.py`, `responses.py`, `itp.py`, `acknowledgements.py`). One
@@ -102,7 +101,8 @@ API has it; a later row).
     unchanged. Export-list test unchanged (a prop, not an export).
   - 4. **Nav and routes.** Nav item `inspections` in section `quality` (ADR 0018), icon `check`, term
     `inspection.register.nav`, permission `inspection.view`. Routes `routes/_app/inspections/index.tsx` and
-    `$inspectionId.tsx`, registered in `router.ts`; the dev session stub grants the inspection permissions.
+    `$inspectionId.tsx`, registered in `router.ts`. The e2e stub session (`e2e/web/stub-session.ts`) supplies the
+    inspection permissions; the shell's dev stub is not changed here.
   - 5. **Register** `/inspections` (`InspectionsRegister.tsx`, copying the reports register): `RegisterTable`
     (`id="inspections"`) over the generated `useInspectionsList`, newest first, cursor paging, URL state through
     `decodeRegisterQuery` / `encodeRegisterQuery`: `state` and `kind` (quick select filters), `projectId`,
@@ -140,7 +140,8 @@ API has it; a later row).
       `inspection.transition.pending_countersign` while `pendingCountersign` is set; 401 `STEP_UP_REQUIRED` →
       `startStepUp` with the pending action, and on return `takePendingStepUp` replays it once; 409 stale → refetch
       and toast `inspection.error.stale`; 422 `GUARD_FAILED` → its `messageKey`; 403 → `ui.error.forbidden`.
-    - Tabs (`?tab=` in the URL, `RecordDetail`): `answers` (default), `itp` (only kind `itp`), `history`, `report`.
+    - Tabs (`?tab=` in the URL, `RecordDetail`): `answers` (default) and `history`; INSPECTIONS-15 adds `itp` and
+      `report`. The tab list is an array the page builds, so adding tabs is additive.
     - Another tenant's or a missing id → the page's not-found state (the API's 404), never the error state.
   - 8. **Answers tab** (`AnswersTab.tsx`, `AcknowledgementBar.tsx`): loads `GET .../form`, `GET .../responses` and
     `GET .../acknowledgements` in parallel and renders `FormRenderer` with the schema, the current values, mode
@@ -160,36 +161,12 @@ API has it; a later row).
     - **Report tick** at the end: "Report complete", enabled when every visible section is ticked; 422
       `SECTIONS_NOT_ACKNOWLEDGED` lists the sections. Once it is ticked the submit action appears in the workflow bar
       (the API's guard; the page does not compute it).
-  - 9. **ITP tab** (`ItpTab.tsx`, `ItpStepsEditor.tsx`, `SignoffChips.tsx`), from `GET .../itp-steps` and
-    `GET .../signoffs`:
-    - No steps and `can.manageItp` → the steps editor: rows of title, point type (`hold`, `witness`, `review`,
-      `surveillance`), acceptance criteria, notice hours; add, remove, move up/down; seq is the row order ×10. Save →
-      `POST .../itp-steps`; 409 `ITP_LOCKED` / `DUPLICATE_SEQ` and 422 show their terms. No steps and no
-      `manageItp` → `inspection.itp.no_steps`.
-    - Steps as an ordered list (`<ol>`), each with seq, title, point-type badge (`inspection.itp.point.<type>`),
-      status chip (`pending` neutral/clock, `ready` info/clock, `in_progress` info/loader, `released` success/check,
-      `waived` warning/minus, `rejected` danger/alert), a "Held" danger badge when `held`, acceptance criteria and
-      notice hours.
-    - Actions from the step's `availableActions` only: `ready`, `start`, `reopen` → `POST /itp-steps/<id>/actions`;
-      `approve`, `reject`, `witnessed`, `waived` → a sign dialog (signatory role select limited to `inspector`,
-      `supervisor`, `third_party`; comment, required for `reject` and `waived`) → `POST /itp-steps/<id>/signoffs`
-      with `expectedSyncVersion`. 202 → the step shows `pendingCountersign` as a pending chip; 401
-      `STEP_UP_REQUIRED` → step-up and replay as in step 7; 409 stale → refetch.
-    - **Sign-off chips** per step (and an inspection-level row for sign-offs without a step): signer name, role term,
-      decision term, assurance (`inspection.signoff.assurance.<level>` with `assuranceMethod` in the chip's
-      accessible description), local time; a `pending_countersign` entry is a warning chip "Awaiting countersign".
-      `chainValid: false` → a danger banner `inspection.signoff.chain_broken` naming `brokenAtSeq`.
-  - 10. **History tab** (`HistoryTab.tsx`): `GET .../history` as a list, newest first: action term, from → to state
+  - 9. **History tab** (`HistoryTab.tsx`): `GET .../history` as a list, newest first: action term, from → to state
     terms, `actorName`, `authStrength`, comment, local time; `chainValid: false` → the same danger banner style.
-  - 11. **Report tab** (`ReportTab.tsx`): `useReportsRendersList({recordType: "inspection", recordId})`; each job
-    shows its variant, status chip (the REPORTS-04 mapping) and, when `succeeded`, the same-origin download link
-    `/api/v1/reports/renders/<id>/file` with a name that says which variant. None yet → `inspection.report.none`
-    (rendered on `performed`, REPORTS-03). The tab is hidden without `report.view`.
-  - 12. **Terms** (`config/terms/en-AU/inspections.json`, manifest `term_keys`): `inspection.register.*` (nav,
+  - 10. **Terms** (`config/terms/en-AU/inspections.json`, manifest `term_keys`): `inspection.register.*` (nav,
     title, caption, filters, column headers, empty/loading/error/paging), `inspection.create.*`,
     `inspection.detail.*` (tabs, header labels), `inspection.save.*` (saving, saved, not saved, leave confirm),
-    `inspection.ack.*`, `inspection.itp.*` (point types, step statuses, actions, decisions, roles, editor),
-    `inspection.signoff.*`, `inspection.transition.*`, `inspection.report.none`, `inspection.error.stale`,
+    `inspection.ack.*`, `inspection.history.*`, `inspection.transition.*`, `inspection.error.stale`,
     `inspection.error.revision_not_found`; and `forms.renderer.section_locked` in `forms.json`. State and action
     labels reuse `workflow.inspection.state.*` and `workflow.inspection.action.*` (approvals.json).
 - **acceptance**:
@@ -201,9 +178,6 @@ API has it; a later row).
     autosave, invalid values show the server's errors and write nothing, and a ticked section cannot be edited.
   - Submit appears only once the sections and report are ticked (and no ITP step is open); the inspector sees why
     when it is not available; a critical action goes through step-up and completes after the round trip.
-  - On an ITP, a manager sets up steps once; a hold blocks later steps; releasing a hold records a sign-off chip with
-    the signer's name and assurance; a countersign-pending decision shows as pending.
-  - After `performed`, the report tab offers the generated PDFs.
   - Tenant B gets a 404 on every inspection route and the page shows not-found; no page shows another tenant's data.
 - **tests**:
   - **unit** (vitest, the reports register harness and `packages/form-renderer` tests):
@@ -219,8 +193,6 @@ API has it; a later row).
     - answers: edits are batched after 1.5 s into one POST with unique `clientId`s, a retry resends the same ids;
       422 errors land on the fields; read-only when neither `can.respond` nor `can.reviewEdit`; tick and untick
       requests; `SECTION_INCOMPLETE` lists the missing fields; untick disabled for a non-ticker.
-    - itp: editor builds `seq` from row order; actions shown only from `availableActions`; reject needs a comment;
-      chips show name, role, decision, assurance and a pending chip; chain-broken banner.
   - **integration** (pytest, real Postgres from Testcontainers, `kaefer-demo` and `tenant-b`, the INSPECTIONS-10
     fixtures):
     - `test_labels_db.py`: list and detail carry `assetLabel = "P-101 Feed pump"`, `templateCode`, `templateName`,
@@ -236,9 +208,9 @@ API has it; a later row).
     - `e2e/web/inspections.spec.ts` (stub session, `page.route` fakes like `reports.spec.ts`): register filters land
       in the URL and a copied URL reopens the view; create dialog posts once and navigates; answering a field
       autosaves one POST; ticking every section and the report reveals submit; `submit_report` answering 401
-      `STEP_UP_REQUIRED` navigates to the step-up start URL; ITP step release shows a sign-off chip; the 390 px
-      layout scrolls in its own regions; axe on the register, the answers tab (editable and read-only), the ITP tab
-      and the transition dialog → 0 serious/critical, on desktop Chromium, mobile Chrome and iPad WebKit.
+      `STEP_UP_REQUIRED` navigates to the step-up start URL; the 390 px
+      layout scrolls in its own regions; axe on the register, the answers tab (editable and read-only) and the
+      transition dialog → 0 serious/critical, on desktop Chromium, mobile Chrome and iPad WebKit.
     - `e2e/web/inspections-live.spec.ts` (`@skeleton`, compose stack): A creates an asset and publishes a two-section
       template through the API (no required photo or signature), creates an inspection from `/inspections`, takes
       `quick_inspect`, answers through the renderer, ticks both sections and the report, takes
