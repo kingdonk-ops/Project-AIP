@@ -44,5 +44,13 @@
   "ui.conflict.theirs": "Their version",
   "ui.conflict.keepMine": "Keep mine",
   "ui.conflict.keepTheirs": "Keep theirs",
-  "ui.conflict.merge": "Merge"
+  "ui.conflict.merge": "Merge",
+  "ui.blade.permalink": "Open full page",
+  "ui.kpi.restricted": "Restricted",
+  "ui.queue.overdue": "Overdue by {hours}h",
+  "ui.queue.overdueDays": "Overdue by {days}d",
+  "ui.queue.dueIn": "Due in {hours}h",
+  "ui.queue.dueInDays": "Due in {days}d",
+  "ui.queue.action": "{action} {item}",
+  "ui.queue.empty": "Nothing is waiting for you."
 }

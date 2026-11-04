@@ -26,7 +26,7 @@ Target slice: sign in → asset tree → publish a form → run an inspection (v
 → approve → **PDF report** (Scope B). Drop the uploads/reports branch for Scope A (on-screen core, no PDF).
 Critical path floor: `ASSETS-01 → FORMS-01 → FORMS-02 → APPROVALS-09 → INSPECTIONS-01 → INSPECTIONS-02 → REPORTS-03`.
 **Where it stands (2026-11-04):** rounds 1 to 3 are **done** (REPORTS-03, PR #233, closed round 3), and in round 4
-REPORTS-04 and INSPECTIONS-10 are merged. **Next:** DESIGN-09 (web, the modernised look; owner 2026-11-04), then INSPECTIONS-04 (spec written 2026-11-04),
+REPORTS-04 and INSPECTIONS-10 are merged. DESIGN-09 (the modernised look) is done (PR #237). **Next:** INSPECTIONS-04 (spec written 2026-11-04),
 then INSPECTIONS-15 (ITP steps and sign-off, report tab) and INSPECTIONS-14 (photos and signatures). Portal add-on: P1 to P3 PORTAL-02 are done; INSPECTIONS-05 is next.
 
 ### Demo round 1 — done
@@ -287,7 +287,7 @@ From [docs/reviews/13-merged-pr-review-2026-11-03.md](../docs/reviews/13-merged-
 | [AUDIT-03](tasks/AUDIT-03.md) | Chain verifier CLI + S3 Object Lock anchoring job | audit | M | AUDIT-01, OPS-02, OPS-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [AUDIT-04](tasks/AUDIT-04.md) | Activity/timeline API + project activity tab | audit | M | ACCESS-01, AUDIT-02, DESIGN-04, PROJECTS-07 | todo | convert to Python backend per ADR 0001 before starting  |
 | [OPS-15](tasks/OPS-15.md) | CloudWatch alarms, EventBridge schedules and secret-rotation Lambdas | ops | M | OPS-07, OPS-13, SECURITY-10 | todo | AWS readiness |
-| [DESIGN-09](tasks/DESIGN-09.md) | Modernized surfaces: canvas/panels/chips + blade, KPI strip, work-queue | design | M | DESIGN-04, DESIGN-08 | todo | **merges DESIGN-11**; UI modernization guide (docs/reviews/10); in the demo slice before INSPECTIONS-04 (owner 2026-11-04) |
+| [DESIGN-09](tasks/DESIGN-09.md) | Modernized surfaces: canvas/panels/chips + blade, KPI strip, work-queue | design | M | DESIGN-04, DESIGN-08 | done | ClaudeK: PR #237; branch claudeK/design-09-modern-surfaces; **merges DESIGN-11**; UI modernization guide (docs/reviews/10); in the demo slice before INSPECTIONS-04 (owner 2026-11-04) |
 | [DESIGN-05](tasks/DESIGN-05.md) | Tenant colours and user display preferences (colours, density, side panel or full page) + visual regression | design | L | DESIGN-03, DESIGN-04, DESIGN-09, ACCESS-01 | todo | convert to Python backend per ADR 0001 before starting; after DESIGN-09 so baselines are taken once on the new look; **merges DESIGN-13** (My display preferences: side panel or full page, user colour preset; owner request 2026-10-14) |
 | [DESIGN-10](tasks/DESIGN-10.md) | Scope bar as a breadcrumb (tenant › organisation › project › asset) | design | S | DESIGN-09, PROJECTS-03 | todo | UI modernization guide (docs/reviews/10) |
 

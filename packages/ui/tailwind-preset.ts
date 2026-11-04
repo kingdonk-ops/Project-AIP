@@ -25,9 +25,11 @@ export const aipPreset = {
         ...varMap(colors),
         surface: "var(--surface)",
         "surface-muted": "var(--surface-muted)",
+        canvas: "var(--canvas)",
         foreground: "var(--foreground)",
         "foreground-muted": "var(--foreground-muted)",
         border: "var(--border)",
+        "border-subtle": "var(--border-subtle)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],

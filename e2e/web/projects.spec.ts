@@ -82,6 +82,37 @@ test("a user without project.create sees the register without a Create button", 
   await expectNoBlockingAxe(page);
 });
 
+// DESIGN-09: the page sits on the off-white canvas and the register in one white panel with a 1px border;
+// status chips are tinted with the tone on the text, and the search field carries a leading icon.
+test("the register sits in a white bordered panel on the canvas, with tinted chips", async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "computed-style check on desktop Chromium only");
+  const page = await openRegister(browser, "/projects");
+  await expect(dataRows(page)).toHaveCount(5);
+  const canvas = "rgb(250, 250, 250)";
+  const background = await page.evaluate(() => ({
+    html: getComputedStyle(document.documentElement).backgroundColor,
+    main: getComputedStyle(document.querySelector("main") as Element).backgroundColor,
+  }));
+  expect(background).toEqual({ html: canvas, main: canvas });
+  const panel = page.locator('section.aip-panel[data-register="projects"]');
+  const box = await panel.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { width: s.borderTopWidth, style: s.borderTopStyle, background: s.backgroundColor };
+  });
+  expect(box).toEqual({ width: "1px", style: "solid", background: "rgb(255, 255, 255)" });
+  await expect(panel.getByRole("table")).toBeVisible();
+  const chip = await panel.locator(".aip-status-chip").first().evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { background: s.backgroundColor, color: s.color };
+  });
+  expect(chip.background).not.toBe(chip.color);
+  expect(chip.color).not.toBe("rgb(255, 255, 255)");
+  const search = page.getByRole("searchbox", { name: "Search" });
+  expect(await search.evaluate((el) => el.getBoundingClientRect().height)).toBe(32);
+  await expect(page.locator(".aip-input-wrap svg[aria-hidden='true']")).toHaveCount(1);
+  await expectNoBlockingAxe(page);
+});
+
 // DESIGN-08: at 390px the table scrolls inside its own region and the page never scrolls sideways.
 test("at 390px the register scrolls in its own region, with no horizontal page scroll", async ({ browser }) => {
   const page = await openRegister(browser, "/projects");

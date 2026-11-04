@@ -40,6 +40,7 @@ import {
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Button } from "../components/button";
 import { Checkbox } from "../components/checkbox";
+import { Panel } from "../components/panel";
 import { Spinner } from "../components/spinner";
 import { cn } from "../lib/cn";
 import { ColumnChooser, defaultColumns, localStorageColumnPrefs, type ColumnPrefsStore } from "./ColumnChooser";
@@ -220,7 +221,8 @@ export function RegisterTable<T extends RowData>({
   const someSelected = rows.some((r) => r.getIsSelected());
 
   return (
-    <div className="aip-register" data-register={id}>
+    // DESIGN-09: the filter bar, table and pager sit in one white panel on the canvas.
+    <Panel className="aip-register" data-register={id}>
       <div className="aip-register__toolbar">
         <FilterBar filters={filters} query={query} onChange={change} translate={tr} search={search} />
         <div className="aip-register__tools">
@@ -386,6 +388,6 @@ export function RegisterTable<T extends RowData>({
           {tr("register.next")}
         </Button>
       </nav>
-    </div>
+    </Panel>
   );
 }

@@ -48,6 +48,7 @@ export { FormField, type FormFieldProps, type FormFieldControlProps } from "./co
 export { Icon, iconNames, type IconName, type IconProps } from "./components/icon";
 export { Input, type InputProps } from "./components/input";
 export { Label, type LabelProps } from "./components/label";
+export { Panel, type PanelProps } from "./components/panel";
 export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "./components/select";
 export { Spinner, type SpinnerProps } from "./components/spinner";
 export { StatusChip, type StatusChipProps } from "./components/status-chip";
@@ -99,6 +100,27 @@ export {
   type RecordTab,
 } from "./patterns/RecordDetail";
 export { WorkflowBar, type WorkflowAction, type WorkflowBarProps, type WorkflowStep } from "./patterns/WorkflowBar";
+export {
+  BLADE_PARAM,
+  Blade,
+  readBladeParam,
+  useBladeParam,
+  writeBladeParam,
+  type BladeBanner,
+  type BladeProps,
+  type BladeStatus,
+} from "./patterns/Blade";
+export { KPI_MAX_TILES, KpiStrip, type KpiStripProps, type KpiTile } from "./patterns/KpiStrip";
+export {
+  QUEUE_MAX_ACTIONS,
+  WorkQueue,
+  dueTag,
+  type DueTag,
+  type WorkQueueAction,
+  type WorkQueueItem,
+  type WorkQueueProps,
+  type WorkQueueTab,
+} from "./patterns/WorkQueue";
 export { ConfirmProvider, confirm, useConfirm, type ConfirmOptions, type ConfirmProviderProps } from "./feedback/confirm";
 export {
   Toaster,

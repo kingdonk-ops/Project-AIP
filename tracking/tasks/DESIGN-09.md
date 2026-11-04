@@ -114,3 +114,31 @@ no backend. All text arrives as term keys or props.
     - vitest-axe on all three patterns (blade open) reports 0 violations.
   - **e2e**:
     - Covered through DESIGN-12's Home journey; no fixture page in apps/web.
+
+## Delivery notes (2026-11-04, branch `claudeK/design-09-modern-surfaces`)
+
+Judgement calls and deviations from the spec above:
+
+- **Chip border: none.** The tint alone separates a chip from the white panel and the canvas, so step A3's optional
+  border is left out. Under `[data-contrast="high"]` each tone keeps its solid fill with white text.
+- **Accent fills fixed (A5).** `Badge variant="accent"` is now accent text and a 1px accent outline on the surface;
+  the workflow bar's current step is marked by a 2px accent underline on `--surface-muted` instead of an accent
+  fill. A node test (`status-chip.css.test.ts`) fails if any rule other than the primary button and a checked
+  checkbox fills a background with `--accent`.
+- **Rail.** The shell rail moves from `--surface-muted` to `--surface` (white), as A1 says; otherwise it would
+  vanish into the canvas.
+- **Input icon.** `Input icon=…` wraps the field in `span.aip-input-wrap`; without an icon the markup is unchanged.
+- **Pattern CSS lives in `components.css`, not a new `patterns.css`:** `@aip/ui/styles.css` is a copy of
+  `components.css` (`scripts/copy-css.mjs`), and RecordDetail/WorkflowBar styles already sit there, so a separate
+  file would need a second import in every app.
+- **Blade URL state.** `readBladeParam` / `writeBladeParam` are pure helpers for pages that keep `?open=` in their
+  router's search; `useBladeParam()` does it over `window.history` (opening pushes an entry, so Back closes the
+  blade; closing goes back over that entry, or replaces the URL when the blade was opened from a link).
+- **Blade focus return.** Radix only restores focus to a `Dialog.Trigger`; a blade opens from a queue row or a URL,
+  so the Blade records the focused element in `onOpenAutoFocus` and focuses it again in `onCloseAutoFocus`.
+- **KpiStrip.** A restricted tile shows the shield icon and `ui.kpi.restricted`, and is never a toggle even if
+  `onSelect` is passed. Tones colour the number and icon only.
+- **WorkQueue.** Each row's main button holds the id and title (its accessible name); quick actions are named
+  "<action> <item id>" (`ui.queue.action`). Due tags use whole hours under 48 h and days after (`dueTag`, exported).
+- **Terms** (`config/terms/en-AU/ui.json`): `ui.blade.permalink`, `ui.kpi.restricted`, `ui.queue.overdue`,
+  `ui.queue.overdueDays`, `ui.queue.dueIn`, `ui.queue.dueInDays`, `ui.queue.action`, `ui.queue.empty`.

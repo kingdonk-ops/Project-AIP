@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { aipPreset } from "../../tailwind-preset";
-import { isAccessibleAccent } from "./contrast";
+import { MIN_TEXT_CONTRAST, contrastRatio, isAccessibleAccent } from "./contrast";
 import { colors, cssVar, density, fontSize, fonts, radii, rootTokens, spacing, statusTones } from "./tokens";
 
 const css = readFileSync(new URL("./tokens.css", import.meta.url), "utf8");
@@ -53,6 +53,23 @@ describe("design tokens", () => {
         expect(isAccessibleAccent(value), name).toBe(true);
       }
     }
+  });
+
+  it("gives each status tone a tint its full-strength colour reads on at 4.5:1 (DESIGN-09)", () => {
+    for (const tone of statusTones) {
+      const ratio = contrastRatio(colors[`status-${tone}`], colors[`status-${tone}-subtle`]);
+      expect(ratio, tone).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+    }
+  });
+
+  it("puts the page on a canvas, white in high contrast, with tints unused there (DESIGN-09)", () => {
+    expect(root["canvas"]).toBe("var(--neutral-50)");
+    expect(root["border-subtle"]).toBe("var(--neutral-200)");
+    expect(root["surface"]).toBe("var(--neutral-0)");
+    const high = block('[data-contrast="high"]');
+    expect(high["canvas"]).toBe("#ffffff");
+    expect(Object.keys(high).filter((name) => name.endsWith("-subtle"))).toEqual([]);
+    expect(css).toMatch(/html\s*\{[^}]*background:\s*var\(--canvas\)/);
   });
 
   it("self-hosts IBM Plex 400/500/600 and never references Google Fonts", () => {

@@ -102,7 +102,7 @@ body {
   grid-area: rail;
   width: 56px;
   border-right: 1px solid var(--border);
-  background: var(--surface-muted);
+  background: var(--surface);
 }
 .shell-rail__group {
   list-style: none;
@@ -167,6 +167,8 @@ body {
 .shell__main {
   flex: 1;
   padding: var(--space-4);
+  /* DESIGN-09: content sits on the off-white canvas; registers and panels are white on it */
+  background: var(--canvas);
 }
 .shell__main:focus {
   outline: none;
