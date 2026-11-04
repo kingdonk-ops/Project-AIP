@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { axeBlocking } from "../test/axe";
 import { Input } from "./input";
+import { Label } from "./label";
 
 describe("Input", () => {
   it("renders a text input with token styling", () => {
@@ -14,7 +15,7 @@ describe("Input", () => {
   it("renders a decorative leading icon and keeps the accessible name from its label", () => {
     const { container } = render(
       <>
-        <label htmlFor="q">Search</label>
+        <Label htmlFor="q">Search</Label>
         <Input id="q" type="search" icon="search" />
       </>,
     );

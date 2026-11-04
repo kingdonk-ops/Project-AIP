@@ -100,6 +100,27 @@ export {
   type RecordTab,
 } from "./patterns/RecordDetail";
 export { WorkflowBar, type WorkflowAction, type WorkflowBarProps, type WorkflowStep } from "./patterns/WorkflowBar";
+export {
+  BLADE_PARAM,
+  Blade,
+  readBladeParam,
+  useBladeParam,
+  writeBladeParam,
+  type BladeBanner,
+  type BladeProps,
+  type BladeStatus,
+} from "./patterns/Blade";
+export { KPI_MAX_TILES, KpiStrip, type KpiStripProps, type KpiTile } from "./patterns/KpiStrip";
+export {
+  QUEUE_MAX_ACTIONS,
+  WorkQueue,
+  dueTag,
+  type DueTag,
+  type WorkQueueAction,
+  type WorkQueueItem,
+  type WorkQueueProps,
+  type WorkQueueTab,
+} from "./patterns/WorkQueue";
 export { ConfirmProvider, confirm, useConfirm, type ConfirmOptions, type ConfirmProviderProps } from "./feedback/confirm";
 export {
   Toaster,
