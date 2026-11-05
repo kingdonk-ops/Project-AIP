@@ -186,6 +186,7 @@ reminders), PORTAL-06 (witness bookings and notification, moved from INSPECTIONS
 | [TESTING-09](tasks/TESTING-09.md) | Walking-skeleton e2e: two tenants, login, register, isolation (CI + Coolify demo) | testing | S | OPS-11, PROJECTS-02 | done | PR #67; owner: make `e2e-skeleton` a required check, add E2E_* secrets to coolify-demo |
 | [QA-1](tasks/QA-1.md) | Walking-skeleton: "Create project" link is ambiguous on an empty register | testing | XS | TESTING-09 | done | PR #71; the same locator fix also landed in #72 |
 | [QA-2](tasks/QA-2.md) | Flaky ops runner test: whole-table procrastinate_jobs count races the periodic job | ops | XS | DATABASE-05 | done | ClaudeK: PR #80 |
+| [QA-4](tasks/QA-4.md) | Coolify demo: project create is a 500 (bootstrapped admins have no scope row) | access | XS | ACCESS-03, TESTING-09 | review | ClaudeK: PR #239 |
 
 ### Wave 6
 
