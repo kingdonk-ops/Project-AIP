@@ -26,3 +26,6 @@ Found by FORMS-10 (2026-11-01): the extension must also apply to section `rules[
 `schemaVersion: 2`). Then add the FORMS-10 spec's `avg_dft_ok` example (`{">=":[{"/":[{"+":[dft_1,
 dft_2]},2]},250]}`; 300/300 passes, 200/250 fails) to `evaluate-v2.json` (or a v3 file). FORMS-10
 could only cover it with the arithmetic-free `dft_ok` rule.
+
+Designer (ADR 0043): add a "Calculated" palette entry and a formula property to the FORMS-11 designer, and the
+arithmetic operators to the FORMS-12 condition builder once both exist.

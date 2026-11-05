@@ -24,7 +24,8 @@ lost: the PLAN-P2 generator, or a later `PLAN-*` task, starts from this list.
 | Siloed deployment option for Enterprise | ADR 0008 D | Only on a contract, after R1 |
 | Sealed archive bundle and read-only archive viewer | ADR 0022 point 6 | After R1 and after TENANCY-07 |
 | Dedicated client app (ITP sign-off, scheduling, report coding) | ADR 0010 addendum part 2 | The R1 portal is its first version |
-| Form designer (three-pane builder, logic builder, print and mobile preview, test console) and its foundation (custom, react-jsonschema-form or SurveyJS) | forms README, ADR 0007 §4 | No designer in R1; templates are JSON |
+| ~~Form designer (three-pane builder, logic builder, print and mobile preview, test console) and its foundation (custom, react-jsonschema-form or SurveyJS)~~ | forms README, ADR 0007 §4 | **Pulled into R1 as FORMS-11 and FORMS-12** (owner 2026-11-05, ADR 0043: custom builder) |
+| Designer parts still deferred: print layout preview and report slot mapping, offline device preview, template approval workflow, section library in the designer, import assistant, form settings page, saved test cases | ADR 0043 point 5 | Not needed for the demo loop |
 | Asset-level hold flag and NCR escalation to variations or change orders | issues README | No variations module in R1 |
 | Glossary tooltips and search-query expansion with term aliases | TERMS-06 (original), ADR 0036 §6 | Waits for a search module |
 | Policy-free read of approvals history for host modules (so reports can print the whole decision chain) | REPORTS-03 author | R1 reports print the final approver from the event |
