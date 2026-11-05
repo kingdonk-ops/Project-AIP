@@ -2,7 +2,8 @@
 
 Keycloak's pages cannot import packages/ui, so the theme repeats the shared values. These tests fail
 when the two drift apart, when the theme loads a font from anywhere but its own resources, or when a
-font file it references is missing.
+font file it references is missing. DESIGN-18 adds the DESIGN-09 tokens (canvas, panel hairline,
+status tints) and the high-contrast values, which the theme applies under `prefers-contrast: more`.
 """
 
 import re
@@ -17,28 +18,72 @@ THEME_CSS = THEME / "resources" / "css" / "aip.css"
 
 # Theme property -> (token block selector, token name). The hover colour is the high-contrast
 # accent, the darker accent step the tokens already define.
+HIGH = '[data-contrast="high"]'
 SHARED = {
     "--aip-color-brand": (":root", "--accent"),
-    "--aip-color-brand-hover": ('[data-contrast="high"]', "--accent"),
+    "--aip-color-brand-hover": (HIGH, "--accent"),
     "--aip-color-on-brand": (":root", "--accent-foreground"),
-    "--aip-color-surface": (":root", "--surface-muted"),
+    "--aip-color-canvas": (":root", "--canvas"),
+    "--aip-color-panel": (":root", "--surface"),
     "--aip-color-text": (":root", "--foreground"),
     "--aip-color-text-muted": (":root", "--foreground-muted"),
     "--aip-color-border": (":root", "--border"),
+    "--aip-color-border-subtle": (":root", "--border-subtle"),
+    "--aip-color-border-strong": (":root", "--border-strong"),
     "--aip-color-danger": (":root", "--status-danger"),
+    "--aip-color-danger-subtle": (":root", "--status-danger-subtle"),
+    "--aip-color-warning": (":root", "--status-warning"),
+    "--aip-color-warning-subtle": (":root", "--status-warning-subtle"),
+    "--aip-color-success": (":root", "--status-success"),
+    "--aip-color-success-subtle": (":root", "--status-success-subtle"),
+    "--aip-color-info": (":root", "--status-info"),
+    "--aip-color-info-subtle": (":root", "--status-info-subtle"),
+    "--aip-radius-lg": (":root", "--radius-lg"),
+    "--aip-radius-md": (":root", "--radius-md"),
+}
+
+# DESIGN-18: the theme's `@media (prefers-contrast: more) { :root { ... } }` -> the app's
+# [data-contrast="high"] tokens (Keycloak's pages cannot read the app's contrast setting).
+SHARED_HIGH_CONTRAST = {
+    "--aip-color-brand": (HIGH, "--accent"),
+    "--aip-color-canvas": (HIGH, "--canvas"),
+    "--aip-color-text": (HIGH, "--foreground"),
+    "--aip-color-text-muted": (HIGH, "--foreground-muted"),
+    "--aip-color-border": (HIGH, "--border"),
+    "--aip-color-border-strong": (HIGH, "--border-strong"),
+    "--aip-color-danger": (HIGH, "--status-danger"),
+    "--aip-color-warning": (HIGH, "--status-warning"),
+    "--aip-color-success": (HIGH, "--status-success"),
+    "--aip-color-info": (HIGH, "--status-info"),
 }
 
 _DECL = re.compile(r"(--[\w-]+)\s*:\s*([^;]+);")
+_RULE = re.compile(r"([^{}]+)\{([^{}]*)\}")
+_MEDIA_MORE = re.compile(r"@media\s*\(prefers-contrast:\s*more\)\s*\{((?:[^{}]*\{[^{}]*\})*[^{}]*)\}")
+
+
+def _strip_comments(css: str) -> str:
+    return re.sub(r"/\*.*?\*/", "", css, flags=re.S)
 
 
 def _blocks(css: str) -> dict[str, dict[str, str]]:
-    """Custom properties per selector block (no nesting in these files; `@import` lines skipped)."""
-    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    """Custom properties per top-level selector block (`@media` blocks and `@import` lines skipped)."""
+    css = _MEDIA_MORE.sub("", _strip_comments(css))
     blocks: dict[str, dict[str, str]] = {}
-    for selector, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+    for selector, body in _RULE.findall(css):
         selector = selector.split(";")[-1].strip()
         blocks.setdefault(selector, {}).update(dict(_DECL.findall(body)))
     return blocks
+
+
+def _high_contrast_root(theme_css: str) -> dict[str, str]:
+    """The `:root` overrides inside the theme's `prefers-contrast: more` media blocks."""
+    props: dict[str, str] = {}
+    for body in _MEDIA_MORE.findall(_strip_comments(theme_css)):
+        for selector, block in _RULE.findall(body):
+            if selector.strip() == ":root":
+                props.update(dict(_DECL.findall(block)))
+    return props
 
 
 def _resolve(props: dict[str, str], value: str) -> str:
@@ -50,19 +95,58 @@ def _resolve(props: dict[str, str], value: str) -> str:
     return value.strip().lower()
 
 
-def shared_drift(tokens_css: str, theme_css: str) -> list[str]:
-    tokens, theme = _blocks(tokens_css), _blocks(theme_css)[":root"]
+def _drift(
+    tokens: dict[str, dict[str, str]], theme: dict[str, str], shared: dict[str, tuple[str, str]], where: str
+) -> list[str]:
     drift = []
-    for prop, (selector, token) in SHARED.items():
+    for prop, (selector, token) in shared.items():
         want = _resolve(tokens[":root"] | tokens[selector], tokens[selector][token])
         got = _resolve(theme, theme.get(prop, "missing"))
         if got != want:
-            drift.append(f"{prop} is {got}, but {selector} {token} is {want}")
+            drift.append(f"{where}{prop} is {got}, but {selector} {token} is {want}")
     return drift
+
+
+def shared_drift(tokens_css: str, theme_css: str) -> list[str]:
+    tokens, theme = _blocks(tokens_css), _blocks(theme_css)[":root"]
+    high = theme | _high_contrast_root(theme_css)
+    return _drift(tokens, theme, SHARED, "") + _drift(tokens, high, SHARED_HIGH_CONTRAST, "prefers-contrast: more ")
 
 
 def test_theme_colours_match_the_design_tokens() -> None:
     assert shared_drift(TOKENS.read_text("utf-8"), THEME_CSS.read_text("utf-8")) == []
+
+
+def test_drift_check_covers_the_design_09_tokens() -> None:
+    original = TOKENS.read_text("utf-8")
+    tokens = original.replace("--status-danger-subtle: #fef2f2;", "--status-danger-subtle: #fee2e2;", 1)
+    tokens = tokens.replace("--canvas: var(--neutral-50);", "--canvas: var(--neutral-100);", 1)
+    assert tokens.count("#fee2e2") == 1 and "--canvas: var(--neutral-100);" in tokens, "tokens moved: update this test"
+    assert shared_drift(tokens, THEME_CSS.read_text("utf-8")) == [
+        "--aip-color-canvas is #fafafa, but :root --canvas is #f5f5f5",
+        "--aip-color-danger-subtle is #fef2f2, but :root --status-danger-subtle is #fee2e2",
+    ]
+
+
+def test_drift_check_covers_the_high_contrast_values() -> None:
+    theme = THEME_CSS.read_text("utf-8")
+    assert _high_contrast_root(theme), "the theme has a prefers-contrast: more :root block"
+    changed = theme.replace("--aip-color-canvas: #ffffff; /* high-contrast --canvas */", "--aip-color-canvas: #fafafa;", 1)
+    assert changed != theme, "the high-contrast canvas moved: update this test"
+    assert shared_drift(TOKENS.read_text("utf-8"), changed) == [
+        'prefers-contrast: more --aip-color-canvas is #fafafa, but [data-contrast="high"] --canvas is #ffffff'
+    ]
+
+
+def test_accent_is_never_a_surface_fill_in_the_theme() -> None:
+    """DESIGN-09 step 5: the accent fills only the primary button, never a panel or alert."""
+    css = _MEDIA_MORE.sub("", _strip_comments(THEME_CSS.read_text("utf-8")))
+    fills = [
+        selector.strip()
+        for selector, body in _RULE.findall(css)
+        if re.search(r"background(-color)?\s*:\s*var\(--aip-color-brand", body)
+    ]
+    assert fills and all(".pf-m-primary" in f for f in fills), fills
 
 
 def test_drift_check_catches_a_token_changed_on_one_side() -> None:

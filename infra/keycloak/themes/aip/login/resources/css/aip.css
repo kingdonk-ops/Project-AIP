@@ -2,7 +2,12 @@
  * Keycloak's pages cannot import packages/ui, so the shared values repeat the @aip/ui tokens
  * (packages/ui/src/tokens/tokens.css). tools/tests/test_login_theme.py fails if they drift apart.
  * IBM Plex Sans is self-hosted from ../fonts (SIL OFL 1.1, licence in ../fonts/OFL.txt, ADR 0014),
- * copied from @fontsource/ibm-plex-sans 5.3.0, so no request leaves the Keycloak origin. */
+ * copied from @fontsource/ibm-plex-sans 5.3.0, so no request leaves the Keycloak origin.
+ * DESIGN-18 brings in the DESIGN-09 look: the card is a white panel with a hairline border and no
+ * shadow on the off-white canvas, alerts are tinted (tone text and icon on the tone's tint), and the
+ * accent stays on actions, focus and links, never a surface fill. Keycloak's pages cannot see the
+ * app's [data-contrast="high"] setting, so the high-contrast tokens apply under the OS
+ * `prefers-contrast: more` preference instead. */
 @font-face {
   font-family: "IBM Plex Sans";
   font-style: normal;
@@ -30,11 +35,23 @@
   --aip-color-brand: #0f766e; /* --accent */
   --aip-color-brand-hover: #0b5c55; /* the high-contrast --accent, one step darker */
   --aip-color-on-brand: #ffffff; /* --accent-foreground */
-  --aip-color-surface: #fafafa; /* --surface-muted */
+  --aip-color-canvas: #fafafa; /* --canvas */
+  --aip-color-panel: #ffffff; /* --surface */
   --aip-color-text: #171717; /* --foreground */
   --aip-color-text-muted: #525252; /* --foreground-muted */
   --aip-color-border: #d4d4d4; /* --border */
+  --aip-color-border-subtle: #e5e5e5; /* --border-subtle (decorative panel hairline only) */
+  --aip-color-border-strong: #737373; /* --border-strong (control borders, 3:1) */
   --aip-color-danger: #b91c1c; /* --status-danger */
+  --aip-color-danger-subtle: #fef2f2; /* --status-danger-subtle */
+  --aip-color-warning: #b45309; /* --status-warning */
+  --aip-color-warning-subtle: #fffbeb; /* --status-warning-subtle */
+  --aip-color-success: #15803d; /* --status-success */
+  --aip-color-success-subtle: #ecfdf5; /* --status-success-subtle */
+  --aip-color-info: #1d4ed8; /* --status-info */
+  --aip-color-info-subtle: #eff6ff; /* --status-info-subtle */
+  --aip-radius-lg: 8px; /* --radius-lg */
+  --aip-radius-md: 4px; /* --radius-md */
   --aip-font-family: "IBM Plex Sans", system-ui, sans-serif; /* --font-sans */
 
   --pf-v5-global--primary-color--100: var(--aip-color-brand);
@@ -50,10 +67,80 @@
   --pf-v5-global--FontFamily--heading: var(--aip-font-family);
 }
 
+/* High contrast (DESIGN-09 [data-contrast="high"] values; the drift test checks them). The canvas
+ * turns white, borders black, and alerts drop their tints for a 2px outline in the darker tone. */
+@media (prefers-contrast: more) {
+  :root {
+    --aip-color-brand: #0b5c55; /* high-contrast --accent */
+    --aip-color-canvas: #ffffff; /* high-contrast --canvas */
+    --aip-color-text: #000000; /* high-contrast --foreground */
+    --aip-color-text-muted: #171717; /* high-contrast --foreground-muted */
+    --aip-color-border: #000000; /* high-contrast --border */
+    --aip-color-border-strong: #000000; /* high-contrast --border-strong */
+    --aip-color-danger: #7f1d1d; /* high-contrast --status-danger */
+    --aip-color-warning: #7c2d12; /* high-contrast --status-warning */
+    --aip-color-success: #14532d; /* high-contrast --status-success */
+    --aip-color-info: #1e3a8a; /* high-contrast --status-info */
+  }
+}
+
+/* The page is the off-white canvas; the card is one white panel with a decorative hairline. */
+html,
+body,
 .pf-v5-c-login {
-  background: var(--aip-color-surface);
+  background: var(--aip-color-canvas);
+}
+.pf-v5-c-login {
   color: var(--aip-color-text);
   font-family: var(--aip-font-family);
+}
+.pf-v5-c-login__main {
+  background: var(--aip-color-panel);
+  border: 1px solid var(--aip-color-border-subtle);
+  border-radius: var(--aip-radius-lg);
+  box-shadow: none;
+}
+/* keycloak.v2 draws a 4px coloured bar on top of the card; a DESIGN-09 panel has only its hairline. */
+.pf-v5-c-login__main-header {
+  border-top: 0;
+}
+
+/* Controls keep the 3:1 border on all sides (DESIGN-09 step 2), the accent underline on focus;
+ * only panels use the subtle hairline. */
+.pf-v5-c-form-control {
+  --pf-v5-c-form-control--before--BorderTopColor: var(--aip-color-border-strong);
+  --pf-v5-c-form-control--before--BorderRightColor: var(--aip-color-border-strong);
+  --pf-v5-c-form-control--before--BorderLeftColor: var(--aip-color-border-strong);
+  --pf-v5-c-form-control--after--BorderBottomColor: var(--aip-color-border-strong);
+  --pf-v5-c-form-control--focus--after--BorderBottomColor: var(--aip-color-brand);
+  --pf-v5-c-form-control--hover--after--BorderBottomColor: var(--aip-color-brand);
+}
+
+/* Tinted alerts, as the app's status chips and notices: tone text and icon on the tone's tint. */
+.pf-v5-c-alert {
+  border: 0;
+  border-radius: var(--aip-radius-md);
+  box-shadow: none;
+}
+.pf-v5-c-alert::before {
+  display: none;
+}
+.pf-v5-c-alert.pf-m-danger { background: var(--aip-color-danger-subtle); color: var(--aip-color-danger); }
+.pf-v5-c-alert.pf-m-warning { background: var(--aip-color-warning-subtle); color: var(--aip-color-warning); }
+.pf-v5-c-alert.pf-m-success { background: var(--aip-color-success-subtle); color: var(--aip-color-success); }
+.pf-v5-c-alert.pf-m-info { background: var(--aip-color-info-subtle); color: var(--aip-color-info); }
+.pf-v5-c-alert .pf-v5-c-alert__icon,
+.pf-v5-c-alert .pf-v5-c-alert__title {
+  color: inherit;
+}
+@media (prefers-contrast: more) {
+  .pf-v5-c-alert.pf-m-danger,
+  .pf-v5-c-alert.pf-m-warning,
+  .pf-v5-c-alert.pf-m-success,
+  .pf-v5-c-alert.pf-m-info {
+    background: var(--aip-color-panel);
+    border: 2px solid currentColor;
+  }
 }
 
 .pf-v5-c-button.pf-m-primary {
@@ -64,7 +151,10 @@
   background-color: var(--aip-color-brand-hover);
 }
 
+/* keycloak.v2 forces the realm name to --pf-v5-global--Color--light-100 (white, !important), made for
+ * its dark backdrop; on the light canvas it would vanish, so point that variable at the brand text. */
 #kc-header-wrapper {
+  --pf-v5-global--Color--light-100: var(--aip-color-brand);
   font-family: var(--aip-font-family);
   font-weight: 600;
   letter-spacing: 0.02em;

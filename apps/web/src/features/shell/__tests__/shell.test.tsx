@@ -215,6 +215,28 @@ describe("login page", () => {
     expect(startLogin).toHaveBeenCalledWith("a@b.test", "/");
   });
 
+  it("puts the form in a Panel named by the heading, with a decorative leading icon (DESIGN-18)", () => {
+    const { container } = renderLogin(fakePort(null));
+    const panel = screen.getByRole("region", { name: "Sign in" });
+    expect(panel.tagName).toBe("SECTION");
+    expect(panel.classList.contains("aip-panel")).toBe(true);
+    expect(panel.querySelector("form")).not.toBeNull();
+    expect(container.querySelector(".aip-input-wrap svg")?.getAttribute("aria-hidden")).toBe("true");
+    expect(screen.getByLabelText("Work email").classList.contains("aip-input--with-icon")).toBe(true);
+  });
+
+  it.each([
+    [{ signed_out: 1 } as LoginSearch, "status", "info"],
+    [{ expired: 1 } as LoginSearch, "status", "info"],
+    [{ error: "failed" } as LoginSearch, "alert", "danger"],
+  ])("shows %o as a tinted %s notice in the %s tone, with its icon", async (search, role, tone) => {
+    const { container } = renderLogin(fakePort(null), search);
+    const notice = screen.getByRole(role);
+    expect(notice.classList.contains(`shell-login__notice--${tone}`)).toBe(true);
+    expect(notice.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+    expect(await blocking(container)).toEqual([]);
+  });
+
   it("shows the invited notice and passes axe", async () => {
     const { container } = renderLogin(fakePort(null), { invited: 1 });
     expect(screen.getByText("Sign in to finish setting up your account.")).toBeTruthy();

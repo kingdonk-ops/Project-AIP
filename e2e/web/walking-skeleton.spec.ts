@@ -172,4 +172,39 @@ test("@skeleton @staging the Keycloak sign-in page uses IBM Plex Sans and the te
     fonts.filter((f) => new URL(f).origin !== url.origin),
     "DESIGN-07: no font is requested from another host",
   ).toEqual([]);
+
+  // DESIGN-18: the DESIGN-09 surfaces — off-white canvas, the card a white panel with a 1px hairline
+  // and no shadow — and, under the OS high-contrast preference, a white canvas and the darker accent.
+  const look = () =>
+    page.evaluate(() => {
+      const card = getComputedStyle(document.querySelector(".pf-v5-c-login__main") as Element);
+      const button = document.querySelector(".pf-v5-c-button.pf-m-primary") as Element;
+      return {
+        canvas: getComputedStyle(document.querySelector(".pf-v5-c-login") as Element).backgroundColor,
+        card: { width: card.borderTopWidth, style: card.borderTopStyle, background: card.backgroundColor, shadow: card.boxShadow },
+        button: getComputedStyle(button).backgroundColor,
+      };
+    });
+  const card = { width: "1px", style: "solid", background: "rgb(255, 255, 255)", shadow: "none" };
+  expect(await look(), "DESIGN-18: canvas page, white hairline card, teal primary button").toEqual({
+    canvas: "rgb(250, 250, 250)",
+    card,
+    button: "rgb(15, 118, 110)",
+  });
+  const blocking = async (where: string) => {
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(
+      results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+      `DESIGN-18: no serious or critical axe violations on the Keycloak page (${where})`,
+    ).toEqual([]);
+  };
+  await blocking("default contrast");
+
+  await page.emulateMedia({ contrast: "more" });
+  expect(await look(), "DESIGN-18: prefers-contrast: more uses the high-contrast tokens").toEqual({
+    canvas: "rgb(255, 255, 255)",
+    card,
+    button: "rgb(11, 92, 85)",
+  });
+  await blocking("prefers-contrast: more");
 });

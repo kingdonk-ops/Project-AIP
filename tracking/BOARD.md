@@ -224,6 +224,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [DESIGN-15](tasks/DESIGN-15.md) | Nav items honour release flags (GET /settings/flags) and a Settings page to switch them (tenant.flags.manage) | design | S | ARCH-08, DESIGN-06 | done | ClaudeK: PR #214; review 11 L26 |
 | [DESIGN-16](tasks/DESIGN-16.md) | Mobile nav drawer behaves as a modal: focus trap, inert page, scroll lock | design | XS | DESIGN-08 | done | ClaudeK: PR #116; DESIGN-08 review |
 | [DESIGN-17](tasks/DESIGN-17.md) | ProjectAIP master brand: favicon, app icon, lockup A in the header and lockup C for the portal footer | design | S | DESIGN-14 | done | ClaudeK: claudeK/master-brand-client-portal-02cfee; owner brand files 2026-10-28 |
+| [DESIGN-18](tasks/DESIGN-18.md) | Sign-in surfaces follow DESIGN-09: web login Panel on the canvas, Keycloak theme tokens | design | S | DESIGN-07, DESIGN-09 | in-progress | ClaudeK: claudeK/optimistic-franklin-693928; found 2026-11-05 (owner asked whether the login matches DESIGN-09) |
 
 ### Review 13 follow-ups (merged-PR review, 2026-11-03)
 
