@@ -23,10 +23,7 @@
   gap: var(--space-2);
   max-height: calc(100vh - 8rem);
   overflow: auto;
-  padding: var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+  /* surface, border and radius come from .aip-panel (DESIGN-18) */
 }
 
 .assets-page__tree-title {
@@ -220,6 +217,11 @@
   display: grid;
   gap: var(--space-4);
   max-width: 100%;
+}
+
+/* DESIGN-18: the form sits in a panel as wide as the form itself. */
+.assets-form__panel {
+  max-width: 36rem;
 }
 
 .assets-form form {

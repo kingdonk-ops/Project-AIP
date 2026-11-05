@@ -41,6 +41,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Textarea,
   toast,
   type RecordTab,
   type RequestError,
@@ -544,7 +545,7 @@ function PublishDialog({ itemTypeId, draft, onClose, onIssues, onConflict }: Pub
         <DialogDescription>{t("item_types.editor.publish.body")}</DialogDescription>
         <form className="item-types-form" noValidate onSubmit={(e) => void submit(e)}>
           <Label htmlFor={summaryId}>{t("item_types.editor.publish.summary")}</Label>
-          <textarea id={summaryId} className="item-types-summary" rows={3} value={summary} onChange={(e) => setSummary(e.target.value)} />
+          <Textarea id={summaryId} rows={3} value={summary} onChange={(e) => setSummary(e.target.value)} />
           {formError ? (
             <p role="alert" className="aip-form-field__error">
               {formError}

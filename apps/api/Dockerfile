@@ -71,7 +71,10 @@ LABEL org.opencontainers.image.title="aip-api" \
 # curl is the container healthcheck (GET /api/v1/health/ready, OPS-04); libpq5 is psycopg's client
 # library (OPS-02). STACK-07: the Amazon RDS global CA bundle at a fixed path, the default
 # DB_SSLROOTCERT for DB_SSLMODE=verify-full (aip.platform.db.tls.RDS_CA_BUNDLE).
+# `apt-get upgrade` picks up Debian security fixes the base tag lags on (AGENTS.md scan order, step 2:
+# CVE-2026-109518 in apt 2.6.1, fixed in 2.6.2). Drop it once the python base ships the fix.
 RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
     && apt-get install -y --no-install-recommends curl libpq5 \
     && rm -rf /var/lib/apt/lists/* \
     && curl -fsSL --proto '=https' --tlsv1.2 \

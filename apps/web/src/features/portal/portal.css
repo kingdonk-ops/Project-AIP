@@ -39,8 +39,7 @@
   overflow-wrap: anywhere;
 }
 
-.portal-admin__select,
-.portal-admin__textarea {
+.portal-admin__select {
   width: 100%;
   min-height: 2.5rem;
   padding: var(--space-2);
@@ -51,8 +50,7 @@
   font: inherit;
 }
 
-.portal-admin__select:focus-visible,
-.portal-admin__textarea:focus-visible {
+.portal-admin__select:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
@@ -84,25 +82,6 @@
   justify-items: start;
   max-width: 100%;
   overflow-x: auto;
-}
-
-.portal-admin__table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-.portal-admin__table th,
-.portal-admin__table td {
-  padding: var(--space-2);
-  border-bottom: 1px solid var(--border);
-  text-align: left;
-  vertical-align: top;
-}
-
-.portal-admin__caption {
-  text-align: left;
-  color: var(--foreground-muted);
-  font-size: var(--text-sm);
 }
 
 .portal-admin__facts {

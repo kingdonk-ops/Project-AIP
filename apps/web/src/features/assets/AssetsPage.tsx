@@ -72,7 +72,8 @@ export function AssetsPage({ search, permissions, onSearchChange, onOpenAsset }:
   return (
     <div className="assets-page">
       {narrow ? null : (
-        <aside className="assets-page__tree" aria-labelledby="assets-tree-title">
+        // DESIGN-18: the tree keeps its complementary landmark and takes the Panel surface.
+        <aside className="aip-panel assets-page__tree" aria-labelledby="assets-tree-title">
           <h2 id="assets-tree-title" className="assets-page__tree-title">
             {t("assets.tree.title")}
           </h2>

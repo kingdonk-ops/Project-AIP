@@ -11,7 +11,7 @@ import {
   usePlatformGetEvent,
   type EventVersionDetail,
 } from "@aip/api-client";
-import { Button, confirm, ErrorState, LoadingState, toast } from "@aip/ui";
+import { Button, confirm, ErrorState, LoadingState, Panel, toast } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { t } from "../shell/t";
@@ -29,7 +29,7 @@ function VersionSection({
   const headingId = `event-version-${detail.version}`;
   const schemaId = `${headingId}-schema`;
   return (
-    <section className="platform-events__version" aria-labelledby={headingId}>
+    <Panel className="platform-events__version" aria-labelledby={headingId}>
       <div className="platform-events__version-header">
         <h2 id={headingId}>{t("arch.events.detail.version", { version: detail.version })}</h2>
         <EventStatusChip status={detail.status} />
@@ -60,7 +60,7 @@ function VersionSection({
       <pre className="platform-events__schema" aria-labelledby={schemaId}>
         <code>{JSON.stringify(detail.schema, null, 2)}</code>
       </pre>
-    </section>
+    </Panel>
   );
 }
 
