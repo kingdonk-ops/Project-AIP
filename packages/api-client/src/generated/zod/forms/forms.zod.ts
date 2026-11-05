@@ -61,10 +61,12 @@ export const formsRevisionsReplaceBodyChangeNoteOneMax = 2000;
 
 
 
+
 export const FormsRevisionsReplaceBody = zod.object({
   "changeNote": zod.union([zod.string().max(formsRevisionsReplaceBodyChangeNoteOneMax),zod.null()]).optional(),
+  "expectedSyncVersion": zod.union([zod.int().min(1),zod.null()]).optional(),
   "schema": zod.record(zod.string(), zod.unknown())
-})
+}).describe('Replace a draft\'s schema. ``expectedSyncVersion`` (the template\'s ``syncVersion``, as\npublish takes it) makes a stale save 409 ``VERSION_CONFLICT``; omitted, the save is not\nchecked (the FORMS-04 JSON upload). Every replace bumps the template\'s ``syncVersion``.')
 
 export const FormsRevisionsReplaceResponse = zod.object({
   "changeNote": zod.union([zod.string(),zod.null()]),

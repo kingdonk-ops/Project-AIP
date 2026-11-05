@@ -5249,10 +5249,17 @@ export interface components {
              */
             updatedAt: string;
         };
-        /** RevisionReplace */
+        /**
+         * RevisionReplace
+         * @description Replace a draft's schema. ``expectedSyncVersion`` (the template's ``syncVersion``, as
+         *     publish takes it) makes a stale save 409 ``VERSION_CONFLICT``; omitted, the save is not
+         *     checked (the FORMS-04 JSON upload). Every replace bumps the template's ``syncVersion``.
+         */
         RevisionReplace: {
             /** Changenote */
             changeNote?: string | null;
+            /** Expectedsyncversion */
+            expectedSyncVersion?: number | null;
             /** Schema */
             schema: {
                 [key: string]: unknown;
