@@ -2,7 +2,7 @@
 
 Keycloak's pages cannot import packages/ui, so the theme repeats the shared values. These tests fail
 when the two drift apart, when the theme loads a font from anywhere but its own resources, or when a
-font file it references is missing. DESIGN-18 adds the DESIGN-09 tokens (canvas, panel hairline,
+font file it references is missing. DESIGN-19 adds the DESIGN-09 tokens (canvas, panel hairline,
 status tints) and the high-contrast values, which the theme applies under `prefers-contrast: more`.
 """
 
@@ -42,7 +42,7 @@ SHARED = {
     "--aip-radius-md": (":root", "--radius-md"),
 }
 
-# DESIGN-18: the theme's `@media (prefers-contrast: more) { :root { ... } }` -> the app's
+# DESIGN-19: the theme's `@media (prefers-contrast: more) { :root { ... } }` -> the app's
 # [data-contrast="high"] tokens (Keycloak's pages cannot read the app's contrast setting).
 SHARED_HIGH_CONTRAST = {
     "--aip-color-brand": (HIGH, "--accent"),
@@ -51,6 +51,7 @@ SHARED_HIGH_CONTRAST = {
     "--aip-color-text-muted": (HIGH, "--foreground-muted"),
     "--aip-color-border": (HIGH, "--border"),
     "--aip-color-border-strong": (HIGH, "--border-strong"),
+    "--aip-color-border-subtle": (HIGH, "--border-subtle"),
     "--aip-color-danger": (HIGH, "--status-danger"),
     "--aip-color-warning": (HIGH, "--status-warning"),
     "--aip-color-success": (HIGH, "--status-success"),
@@ -100,7 +101,8 @@ def _drift(
 ) -> list[str]:
     drift = []
     for prop, (selector, token) in shared.items():
-        want = _resolve(tokens[":root"] | tokens[selector], tokens[selector][token])
+        merged = tokens[":root"] | tokens[selector]
+        want = _resolve(merged, merged[token])  # a token the block does not override inherits :root
         got = _resolve(theme, theme.get(prop, "missing"))
         if got != want:
             drift.append(f"{where}{prop} is {got}, but {selector} {token} is {want}")

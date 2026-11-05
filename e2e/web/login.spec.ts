@@ -25,7 +25,7 @@ test("preview serves the security headers with a strict CSP", async ({ request }
   expect(response.headers()["referrer-policy"]).toBe("strict-origin-when-cross-origin");
 });
 
-// DESIGN-18: the sign-in page follows DESIGN-09 — the form sits in one white Panel with a 1px hairline
+// DESIGN-19: the sign-in page follows DESIGN-09 — the form sits in one white Panel with a 1px hairline
 // on the off-white canvas, the notice is a tinted strip in the tone (danger for a failure), and the
 // email field carries a decorative leading icon. Under [data-contrast="high"] the canvas is white and
 // the notice drops its tint for a 2px outline. axe passes in both.

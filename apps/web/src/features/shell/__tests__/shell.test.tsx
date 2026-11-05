@@ -215,7 +215,7 @@ describe("login page", () => {
     expect(startLogin).toHaveBeenCalledWith("a@b.test", "/");
   });
 
-  it("puts the form in a Panel named by the heading, with a decorative leading icon (DESIGN-18)", () => {
+  it("puts the form in a Panel named by the heading, with a decorative leading icon (DESIGN-19)", () => {
     const { container } = renderLogin(fakePort(null));
     const panel = screen.getByRole("region", { name: "Sign in" });
     expect(panel.tagName).toBe("SECTION");

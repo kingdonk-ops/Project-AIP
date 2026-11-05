@@ -1,4 +1,4 @@
-# DESIGN-18 — Sign-in surfaces follow DESIGN-09: web login Panel on the canvas, Keycloak theme tokens
+# DESIGN-19 — Sign-in surfaces follow DESIGN-09: web login Panel on the canvas, Keycloak theme tokens
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
 

@@ -22,7 +22,7 @@ const FAILURE_KEYS = {
  * Sign-in entry. The SPA never collects a password, OTP or passkey: both the `sso` and `password`
  * answers redirect the browser to Keycloak (IDENTITY-01), whose themed pages collect credentials.
  * Failure wording is generic so it cannot be used to enumerate tenants or users.
- * DESIGN-18: the form sits in a white `Panel` on the off-white canvas, the notice is a tinted info or
+ * DESIGN-19: the form sits in a white `Panel` on the off-white canvas, the notice is a tinted info or
  * danger strip with its icon (solid outline in high contrast), and the email field has a decorative
  * leading icon, as DESIGN-09 does for the register search.
  */

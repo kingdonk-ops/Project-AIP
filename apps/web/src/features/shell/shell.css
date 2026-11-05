@@ -180,7 +180,7 @@ body {
   margin: var(--space-12) auto;
   padding: 0 var(--space-4);
 }
-/* DESIGN-18: the sign-in form is one white Panel on the off-white canvas (the html background, DESIGN-09). */
+/* DESIGN-19: the sign-in form is one white Panel on the off-white canvas (the html background, DESIGN-09). */
 .shell-login .shell-login__panel {
   display: flex;
   flex-direction: column;

@@ -3,7 +3,7 @@
  * (packages/ui/src/tokens/tokens.css). tools/tests/test_login_theme.py fails if they drift apart.
  * IBM Plex Sans is self-hosted from ../fonts (SIL OFL 1.1, licence in ../fonts/OFL.txt, ADR 0014),
  * copied from @fontsource/ibm-plex-sans 5.3.0, so no request leaves the Keycloak origin.
- * DESIGN-18 brings in the DESIGN-09 look: the card is a white panel with a hairline border and no
+ * DESIGN-19 brings in the DESIGN-09 look: the card is a white panel with a hairline border and no
  * shadow on the off-white canvas, alerts are tinted (tone text and icon on the tone's tint), and the
  * accent stays on actions, focus and links, never a surface fill. Keycloak's pages cannot see the
  * app's [data-contrast="high"] setting, so the high-contrast tokens apply under the OS
