@@ -205,6 +205,7 @@ export * from './meMembershipMembershipType';
 export * from './meResponse';
 export * from './meResponseAal';
 export * from './meTenant';
+export * from './meUpdate';
 export * from './meUser';
 export * from './meUserStatus';
 export * from './meUserUserClass';

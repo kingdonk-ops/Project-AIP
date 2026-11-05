@@ -248,6 +248,39 @@ export const IdentityGetMeResponse = zod.object({
   "email": zod.string(),
   "id": zod.uuid(),
   "status": zod.enum(['invited', 'active', 'deactivated']),
+  "timeZone": zod.union([zod.string(),zod.null()]).describe('Preferred IANA time zone (IDENTITY-11); null means use the device zone.'),
+  "userClass": zod.enum(['staff', 'field', 'portal'])
+})
+}).describe('The caller\'s own user, tenant and memberships. Never another tenant\'s data.')
+
+/**
+ * @summary Update Me
+ */
+export const IdentityUpdateMeBody = zod.object({
+  "timeZone": zod.union([zod.string(),zod.null()]).optional().describe('An IANA zone such as Australia/Perth, or null to clear the preference.')
+}).describe('``PATCH /api/v1/me``: the caller\'s own profile preferences. Omitted fields stay unchanged.')
+
+export const IdentityUpdateMeResponse = zod.object({
+  "aal": zod.union([zod.literal(1),zod.literal(2)]),
+  "amr": zod.array(zod.string()),
+  "memberships": zod.array(zod.object({
+  "id": zod.uuid(),
+  "membershipType": zod.enum(['member', 'client', 'subcontractor', 'guest']),
+  "organisationId": zod.union([zod.uuid(),zod.null()]),
+  "validFrom": zod.iso.date(),
+  "validTo": zod.union([zod.iso.date(),zod.null()])
+})),
+  "tenant": zod.object({
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "slug": zod.string()
+}),
+  "user": zod.object({
+  "displayName": zod.string(),
+  "email": zod.string(),
+  "id": zod.uuid(),
+  "status": zod.enum(['invited', 'active', 'deactivated']),
+  "timeZone": zod.union([zod.string(),zod.null()]).describe('Preferred IANA time zone (IDENTITY-11); null means use the device zone.'),
   "userClass": zod.enum(['staff', 'field', 'portal'])
 })
 }).describe('The caller\'s own user, tenant and memberships. Never another tenant\'s data.')

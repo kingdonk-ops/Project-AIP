@@ -91,6 +91,9 @@ class MeUser(_CamelModel):
     display_name: str
     user_class: Literal["staff", "field", "portal"]
     status: Literal["invited", "active", "deactivated"]
+    time_zone: str | None = Field(
+        description="Preferred IANA time zone (IDENTITY-11); null means use the device zone."
+    )
 
 
 class MeTenant(_CamelModel):
@@ -115,6 +118,15 @@ class MeResponse(_CamelModel):
     memberships: list[MeMembership]
     aal: Literal[1, 2]
     amr: list[str]
+
+
+class MeUpdate(_CamelModel):
+    """``PATCH /api/v1/me``: the caller's own profile preferences. Omitted fields stay unchanged."""
+
+    time_zone: str | None = Field(
+        default=None,
+        description="An IANA zone such as Australia/Perth, or null to clear the preference.",
+    )
 
 
 class AuthErrorBody(BaseModel):

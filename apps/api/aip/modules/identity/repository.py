@@ -114,6 +114,7 @@ class UserRow:
     deactivated_at: datetime | None = None
     last_login_at: datetime | None = None
     deleted_at: datetime | None = None
+    time_zone: str | None = None
 
     @property
     def deleted(self) -> bool:
@@ -145,6 +146,7 @@ _USER_COLUMNS = (
     app_user.c.deactivated_at,
     app_user.c.last_login_at,
     app_user.c.deleted_at,
+    app_user.c.time_zone,
 )
 
 
@@ -181,6 +183,22 @@ async def get_display_names(conn: AsyncConnection, user_ids: Iterable[UUID]) -> 
         app_user.c.tenant_id == _bound_tenant(), app_user.c.id.in_(ids)
     )
     return {row.id: row.display_name for row in await conn.execute(stmt)}
+
+
+async def get_time_zones(conn: AsyncConnection, user_ids: Iterable[UUID]) -> dict[UUID, str | None]:
+    """``{user id: preferred IANA zone or None}`` for the given users of the bound tenant.
+
+    IDENTITY-11 (ADR 0025): emails and pages show times in the recipient's zone, falling back to
+    the site's zone when the value is ``None``. Like ``get_display_names``, deactivated and
+    soft-deleted users are kept; ids of another tenant or unknown ids are left out.
+    """
+    ids = set(user_ids)
+    if not ids:
+        return {}
+    stmt = select(app_user.c.id, app_user.c.time_zone).where(
+        app_user.c.tenant_id == _bound_tenant(), app_user.c.id.in_(ids)
+    )
+    return {row.id: row.time_zone for row in await conn.execute(stmt)}
 
 
 async def find_by_email(conn: AsyncConnection, email: str) -> UserRow | None:

@@ -31,6 +31,11 @@ IDENTITY-10 (portal audience, for PORTAL-01/02): ``create_invite(..., user_class
 a local, ``client``-membership invite whose email links to the portal; ``Principal.audience``;
 ``Audience``, ``SESSION_COOKIES``, ``set_session_cookies`` and ``clear_session_cookies(response,
 audience=...)``; ``get_portal_login_handler`` (the portal callback's handler, overridable).
+
+IDENTITY-11 (ADR 0025): ``get_time_zones(conn, user_ids)`` maps user ids to their preferred IANA
+zone (``None`` = no preference) for emails and pages (PORTAL-12); ``set_time_zone`` (raises
+``InvalidTimeZoneError``) and ``is_known_time_zone`` let the portal set a client's own zone on
+its own route (portal sessions cannot reach ``/api/v1/me``, ADR 0036 choice 7).
 """
 
 from __future__ import annotations
@@ -65,6 +70,7 @@ from aip.modules.identity.repository import (
     ensure_invited_sso_user,
     find_by_email,
     get_display_names,
+    get_time_zones,
     get_user,
     list_users,
     mfa_enrolled_at,
@@ -72,6 +78,7 @@ from aip.modules.identity.repository import (
     set_user_status,
 )
 from aip.modules.identity.schemas import VerifiedExternalIdentity
+from aip.modules.identity.service import InvalidTimeZoneError, is_known_time_zone, set_time_zone
 from aip.modules.identity.sessions import (
     SESSION_COOKIES,
     Audience,
@@ -95,6 +102,7 @@ __all__ = [
     "Audience",
     "CreatedInvite",
     "ExternalLoginHandler",
+    "InvalidTimeZoneError",
     "InviteError",
     "JitLoginHandler",
     "ModuleApi",
@@ -121,8 +129,10 @@ __all__ = [
     "get_external_login_handler",
     "get_portal_login_handler",
     "get_principal",
+    "get_time_zones",
     "get_user",
     "install_session_errors",
+    "is_known_time_zone",
     "issue_session",
     "list_users",
     "mfa_enrolled_at",
@@ -133,6 +143,7 @@ __all__ = [
     "rotate_session",
     "session_resolver",
     "set_session_cookies",
+    "set_time_zone",
     "set_user_status",
     "step_up",
     "stub_principal_resolver",

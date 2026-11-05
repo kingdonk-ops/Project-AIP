@@ -1,6 +1,12 @@
 # IDENTITY-11 — User time-zone preference on the profile
 
 <!-- hand-written: tools/split_blueprint.py will not overwrite this file -->
+<!-- hand-edited: IDENTITY-11 build, portal sessions go to PORTAL-13 (ADR 0036 choice 7) -->
+
+> **Build note (2026-11-05).** Portal sessions cannot reach `/api/v1/me`: ADR 0036 choice 7 keeps them on the
+> `/api/v1/portal/` allow-list. So `/api/v1/me` serves staff sessions, identity publishes `set_time_zone` and
+> `get_time_zones` (module functions in `api.py`, like `get_display_names`), and the portal's own route is
+> [PORTAL-13](PORTAL-13.md).
 
 | Field | Value |
 |---|---|

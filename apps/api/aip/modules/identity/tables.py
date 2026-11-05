@@ -15,6 +15,9 @@ RLS; revoked, never deleted) and ``tenant_auth_policy`` (one row per tenant, FOR
 IDENTITY-04 (revision ``202610181000_identity_invites``): ``user_invite`` and ``signoff_policy``
 (tenant tables, FORCE RLS; revoked or soft-deleted, never deleted) and
 ``app_user.mfa_enrolled_at``.
+
+IDENTITY-11 (revision ``202611051100_identity_user_time_zone``): ``app_user.time_zone``, the
+user's preferred IANA zone (nullable).
 """
 
 from sqlalchemy import (
@@ -63,6 +66,7 @@ app_user = Table(
     Column("last_login_at", DateTime(timezone=True), nullable=True),
     Column("sync_version", Integer, nullable=False, server_default=text("1")),
     Column("mfa_enrolled_at", DateTime(timezone=True), nullable=True),
+    Column("time_zone", Text, nullable=True),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", DateTime(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", DateTime(timezone=True), nullable=True),
