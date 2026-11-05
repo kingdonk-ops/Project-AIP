@@ -31,7 +31,7 @@ panels. Presentation only: no behaviour, route, label or API change. The login p
     platform-events/EventDetailPage.tsx, assets/AssetsPage.tsx
   - apps/web/src/features/portal/PortalUserDetail.tsx, item_types/ContentTypeDetail.tsx, item_types/ItemTypeEditor.tsx
   - apps/web/src/features/forms/forms.css (drop the `#b42318` fallback)
-  - e2e/web/record-detail or project-detail spec, projects spec (canvas/panel assertion)
+  - e2e/web/panel.ts (new helper), project-detail.spec.ts, assets.spec.ts (canvas/panel assertion)
 - **steps**:
   - 1. **RecordDetail.** The tab list and tab panel sit in one `Panel`; the rail is a column of `Panel`s, one per
     section (comments, approvals, attachments), replacing the muted rail box. This covers project, template,
@@ -43,7 +43,10 @@ panels. Presentation only: no behaviour, route, label or API change. The login p
   - 4. **Clean-ups.** The portal-user grants table uses `@aip/ui` `Table`. Add `NativeSelect` and `Textarea` to
     `@aip/ui` (native elements with the `.aip-input` look: `--border-strong`, `--control-h`, focus ring) and use
     them for the raw `<select>`/`<textarea>` in ContentTypeDetail, ItemTypeEditor, PortalUserDetail and
-    ProjectCreateForm. `forms.css` uses `var(--status-danger)` with no hex fallback.
+    ProjectCreateForm (and ProjectEditForm, the same field). `forms.css` uses `var(--status-danger)` with no hex
+    fallback. The other dialogs' raw controls are DESIGN-19.
+  - 5. **High contrast.** `--canvas` is white there, so `[data-contrast="high"] .aip-panel` takes `--border` (black);
+    the `-subtle` tokens stay unset under high contrast, as DESIGN-09 requires.
 - **acceptance**:
   - Every page under `apps/web/src/routes/_app/` shows its content in white bordered panels on the canvas, in light
     and high contrast.
@@ -55,4 +58,5 @@ panels. Presentation only: no behaviour, route, label or API change. The login p
       label, and vitest-axe reports 0 violations.
   - **e2e**:
     - Desktop Chromium: project detail shows the tab panel in an element with a 1px solid border and a white
-      background on the canvas; the project create form sits in the same kind of panel. Existing journeys stay green.
+      background on the canvas, in light and high contrast; the asset create form sits in the same kind of panel
+      (the stub session has no `project.create`, so the project create form is covered by unit tests). Existing journeys stay green.
