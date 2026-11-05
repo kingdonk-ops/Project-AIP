@@ -1,0 +1,102 @@
+{# REPORTS-03: the client inspection report (landscape A4). Unlike the internal variant it has no responder
+   column, internal tag, form schema hash or ids. #}
+{# The record has an `asset` key, which hides the asset() function: use the `| asset` filter. #}
+{% macro answer_text(field) -%}
+  {%- set a = field.answer -%}
+  {%- if a is none -%}
+    <span class="muted">{{ t('report.inspection.not_answered') }}</span>
+  {%- elif field.type == 'measurement' -%}
+    {%- if a.valueSi is not none %}{{ fmt_measure(a.valueSi, a.unit) }}{% else %}{{ a.value }} {{ a.unit }}{% endif -%}
+  {%- elif field.type == 'boolean' -%}
+    {{ t('report.inspection.yes') if a else t('report.inspection.no') }}
+  {%- elif field.type == 'multi_select' -%}
+    {{ a | join(', ') }}
+  {%- elif field.type == 'photo' -%}
+    {{ t('report.inspection.photo_count', count=a | length) }}
+  {%- elif field.type == 'signature' -%}
+    {%- if a.asset is defined -%}
+      <img class="signature" src="{{ a.asset | asset }}" alt="{{ field.label }}">
+    {%- else -%}
+      <span class="muted">{{ t('report.inspection.photo_omitted.' ~ a.omitted) }}</span>
+    {%- endif -%}
+  {%- else -%}
+    {{ a }}
+  {%- endif -%}
+{%- endmacro %}
+<header class="masthead">
+  <img class="logo" src="{{ 'logo.png' | asset }}" alt="">
+  <div class="title">
+    <h1>{{ t('report.inspection.title') }}</h1>
+    {% if project %}<p class="project">{{ t('report.inspection.project') }}: {{ project.code }} {{ project.name }}</p>{% endif %}
+  </div>
+  <table class="asset">
+    <tr><th>{{ t('report.inspection.tag_number') }}</th><td>{{ asset.tagNumber or '' }}</td></tr>
+    <tr><th>{{ t('report.inspection.asset') }}</th><td>{{ asset.name }}</td></tr>
+    <tr><th>{{ t('report.inspection.location') }}</th><td>{{ asset.location | join(' / ') }}</td></tr>
+  </table>
+</header>
+<section class="summary">
+  <div class="count"><span class="value">{{ summary.answered }}</span> {{ t('report.inspection.summary.answered') }}</div>
+  <div class="count{% if summary.failed %} failed{% endif %}"><span class="value">{{ summary.failed }}</span> {{ t('report.inspection.summary.failed') }}</div>
+  <div class="count"><span class="value">{{ summary.missingRequired }}</span> {{ t('report.inspection.summary.missing') }}</div>
+</section>
+<main>
+  {% for section in form.sections %}
+  <h2>{{ section.label }}</h2>
+  <table class="answers">
+    <thead>
+      <tr>
+        <th class="item">{{ t('report.inspection.column.item') }}</th>
+        <th>{{ t('report.inspection.column.answer') }}</th>
+        <th class="unit">{{ t('report.inspection.column.unit') }}</th>
+        <th class="result">{{ t('report.inspection.column.result') }}</th>
+        <th>{{ t('report.inspection.column.time') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for field in section.fields %}
+      <tr{% if field.failed %} class="failed"{% endif %}>
+        <td class="item">{{ field.label }}</td>
+        <td>{{ answer_text(field) }}</td>
+        <td class="unit">{{ field.unit or '' }}</td>
+        <td class="result">{% if field.failed %}{{ t('report.inspection.result.fail') }}{% elif field.answer is not none %}{{ t('report.inspection.result.pass') }}{% endif %}</td>
+        <td>{{ fmt_datetime(field.respondedAt) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+
+  {% set photo_fields = form.sections | map(attribute='fields') | sum(start=[]) | selectattr('type', 'equalto', 'photo') | selectattr('answer') | list %}
+  {% if photo_fields %}
+  <h2>{{ t('report.inspection.photos') }}</h2>
+  <div class="photos">
+    {% for field in photo_fields %}{% for photo in field.answer %}
+    <figure class="photo">
+      {% if photo.asset is defined %}
+      <img src="{{ photo.asset | asset }}" alt="{{ field.label }}">
+      {% else %}
+      <div class="omitted">{{ t('report.inspection.photo_omitted.' ~ photo.omitted) }}</div>
+      {% endif %}
+      <figcaption>{{ t('report.inspection.photo_caption', label=field.label, n=loop.index, total=loop.length) }}</figcaption>
+    </figure>
+    {% endfor %}{% endfor %}
+  </div>
+  {% endif %}
+
+  <section class="signoff">
+    <h2>{{ t('report.inspection.signoff') }}</h2>
+    {% if approval.approvedAt is defined and approval.approvedAt %}
+    <table class="facts">
+      <tr><th>{{ t('report.inspection.approved_by') }}</th><td>{{ approval.approvedBy or '' }}</td></tr>
+      <tr><th>{{ t('report.inspection.approved_at') }}</th><td>{{ fmt_datetime(approval.approvedAt) }}</td></tr>
+    </table>
+    {% else %}
+    <p class="muted">{{ t('report.inspection.not_approved') }}</p>
+    {% endif %}
+  </section>
+</main>
+<footer class="footer">
+  <span>{{ t('report.inspection.footer', code=form.code, revision=form.revisionNo, version=report.templateVersion, hash=report.dataHash[:12]) }}</span>
+  <span>{{ t('report.label.generated_at', at=fmt_datetime(generatedAt)) }}</span>
+</footer>

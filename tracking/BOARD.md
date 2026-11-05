@@ -184,7 +184,7 @@ reminders), PORTAL-06 (witness bookings and notification, moved from INSPECTIONS
 | [TESTING-09](tasks/TESTING-09.md) | Walking-skeleton e2e: two tenants, login, register, isolation (CI + Coolify demo) | testing | S | OPS-11, PROJECTS-02 | done | PR #67; owner: make `e2e-skeleton` a required check, add E2E_* secrets to coolify-demo |
 | [QA-1](tasks/QA-1.md) | Walking-skeleton: "Create project" link is ambiguous on an empty register | testing | XS | TESTING-09 | done | PR #71; the same locator fix also landed in #72 |
 | [QA-2](tasks/QA-2.md) | Flaky ops runner test: whole-table procrastinate_jobs count races the periodic job | ops | XS | DATABASE-05 | done | ClaudeK: PR #80 |
-| [QA-4](tasks/QA-4.md) | Coolify demo: project create is a 500 (bootstrapped admins have no scope row) | access | XS | ACCESS-03, TESTING-09 | review | ClaudeK: branch claudeK/coolify-version-load-failure-5cd7de |
+| [QA-4](tasks/QA-4.md) | Coolify demo: project create is a 500 (bootstrapped admins have no scope row) | access | XS | ACCESS-03, TESTING-09 | review | ClaudeK: PR #239 |
 
 ### Wave 6
 
@@ -232,7 +232,7 @@ From [docs/reviews/13-merged-pr-review-2026-11-03.md](../docs/reviews/13-merged-
 
 | ID | Title | Module | Size | Depends on | Status | Notes |
 |---|---|---|---|---|---|---|
-| [REPORTS-07](tasks/REPORTS-07.md) | Report access and error fixes: record-level view on read and download, create check on replay, client snapshot strips internal fields | report_engine | S | REPORTS-03, REPORTS-04 | todo | review 13 M1, L1 to L5 |
+| [REPORTS-07](tasks/REPORTS-07.md) | Report access and error fixes: record-level view on read and download, create check on replay, client snapshot strips internal fields | report_engine | S | REPORTS-03, REPORTS-04 | done | review 13 M1, L1 to L5; ClaudeK: PR #238; branch claudeK/next-task-327f9a; inspection templates v2 (Plex embedded), v1 kept; migration 202611051000 (idempotency key per user) |
 | [REPORTS-08](tasks/REPORTS-08.md) | Completed inspection reports are locked and listed on the inspected asset's documents | report_engine | S | ASSETS-09, REPORTS-03, REPORTS-07 | todo | review 13 D3 (ADR 0039 #49); owner 2026-11-03: the list lives on the asset |
 | [ASSETS-09](tasks/ASSETS-09.md) | Asset documents list: reports, inspections, standards, codes, qualifications and material specs for an asset that has been or is being inspected | assets | M | ASSETS-05 | todo | owner 2026-11-03 (ADR 0039 #49); source registry, each owning module registers its documents |
 | [INSPECTIONS-13](tasks/INSPECTIONS-13.md) | Inspections and ITP references (standards, codes, material specs) as asset document sources | inspections | S | ASSETS-09, INSPECTIONS-12 | todo | owner 2026-11-03 |

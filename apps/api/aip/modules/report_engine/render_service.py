@@ -2,12 +2,15 @@
 
 ``RenderService`` runs in the caller's ``with_tenant`` transaction. ``request_render``:
 
-(a) a known ``idempotency_key`` returns the existing job (the ``UNIQUE`` index settles a race: on
-    a unique violation the row is read again and returned);
+(a) a known ``idempotency_key`` of the same requester (``requested_by``) returns the existing
+    job, after the same ``report.create`` and record view checks as a new request (REPORTS-07);
+    another user's key never finds it. The ``UNIQUE (tenant_id, requested_by, idempotency_key)``
+    index settles a race: on a unique violation the row is read again and returned;
 (b) the published template of ``(template_key, variant)``, else 404 ``TEMPLATE_NOT_FOUND``; its
     ``record_type`` must be the requested one, else 422 ``TEMPLATE_RECORD_TYPE_MISMATCH``;
 (c) the record type's provider, else 422 ``UNKNOWN_RECORD_TYPE``; ``RecordNotFound`` from it is 404
-    ``RECORD_NOT_FOUND``. With an ``authorize`` callback (the HTTP route) the caller must then hold
+    ``RECORD_NOT_FOUND``, and so is a pinned file that ``build_snapshot`` cannot find. With an
+    ``authorize`` callback (the HTTP route) the caller must then hold
     ``report.create`` and the provider's view permission on the record's project, else 403 with
     nothing written; without one (``ReportsApi``, a system call) there is no policy check;
 (d) the snapshot (``snapshots.build_snapshot``), the ``queued`` render job pinned to the template
@@ -23,6 +26,13 @@ characters) for the register, which ``list`` searches (``q``) and filters by ``s
 ``download`` reads a succeeded job's PDF through ``aip.modules.uploads.api.open_stored_file`` on
 the caller's connection (never a storage URL), checks the bytes against the job's ``pdf_sha256``
 and emits ``report.downloaded`` in the same transaction.
+
+REPORTS-07: reading a job (``get``, ``list``, ``download``) needs ``report.view`` **and** the record
+type's view permission (``get_provider(record_type).view_permission``) on the job's project, as
+requesting it does. Without ``report.view`` the answer is 403 as before; without the record
+permission ``get`` and ``download`` answer 404 ``RENDER_JOB_NOT_FOUND`` (the job is not revealed)
+and ``list`` leaves the row out. A job whose record type has no registered provider is refused the
+same way (fail closed); so is its rerender.
 """
 
 from __future__ import annotations
@@ -41,7 +51,6 @@ from aip.modules.report_engine import repository as repo
 from aip.modules.report_engine.events import REPORT_DOWNLOADED, ReportDownloaded
 from aip.modules.report_engine.jobs import RENDER_JOB_TYPE
 from aip.modules.report_engine.providers import (
-    ProviderEntry,
     RecordNotFound,
     call_provider,
     get_provider,
@@ -108,6 +117,26 @@ async def _require(
             raise Forbidden(code)
 
 
+async def _record_view(
+    authorize: Authorizer | None, record_type: str, project: UUID | None
+) -> bool:
+    """Whether the caller may see a ``record_type`` record on ``project`` (no provider: never)."""
+    if authorize is None:
+        return True
+    entry = get_provider(record_type)
+    return entry is not None and await authorize(entry.view_permission, project)
+
+
+async def _may_read(authorize: Authorizer | None, row: Mapping[str, Any]) -> bool:
+    """``report.view`` and the record's view permission on the job's project (``list``)."""
+    if authorize is None:
+        return True
+    project = row["project_id"]
+    return await authorize(REPORT_VIEW, project) and await _record_view(
+        authorize, row["record_type"], project
+    )
+
+
 class RenderService:
     """Stateless; every method runs on the caller's tenant-bound connection."""
 
@@ -129,9 +158,14 @@ class RenderService:
         authorize: Authorizer | None = None,
     ) -> RenderJobView:
         if idempotency_key is not None:
-            existing = await repo.find_job_by_idempotency_key(conn, idempotency_key)
+            existing = await repo.find_job_by_idempotency_key(conn, idempotency_key, requested_by)
             if existing is not None:
-                await _require(authorize, (REPORT_VIEW,), existing["project_id"])
+                known = get_provider(existing["record_type"])
+                if known is None:
+                    raise DomainError(422, "UNKNOWN_RECORD_TYPE")
+                await _require(
+                    authorize, (REPORT_CREATE, known.view_permission), existing["project_id"]
+                )
                 return RenderJobView.model_validate(existing)
 
         template = await self._templates.get_published(conn, template_key, variant)
@@ -143,14 +177,19 @@ class RenderService:
         if entry is None:
             raise DomainError(422, "UNKNOWN_RECORD_TYPE")
         try:
-            source = await call_provider(entry, conn, record_id, context=context)
+            source = await call_provider(
+                entry, conn, record_id, variant=template.variant, context=context
+            )
         except RecordNotFound:
             raise DomainError(404, "RECORD_NOT_FOUND") from None
         await _require(authorize, (REPORT_CREATE, entry.view_permission), source.project_id)
 
-        snapshot = await build_snapshot(
-            conn, template, source, record_id=record_id, created_by=requested_by
-        )
+        try:
+            snapshot = await build_snapshot(
+                conn, template, source, record_id=record_id, created_by=requested_by
+            )
+        except RecordNotFound:  # a pinned file is gone, out of scope or not clean
+            raise DomainError(404, "RECORD_NOT_FOUND") from None
         values = {
             "template_id": template.id,
             "template_key": template.key,
@@ -174,7 +213,7 @@ class RenderService:
         except IntegrityError as exc:  # a concurrent request with the same key won the race
             if getattr(exc.orig, "sqlstate", None) != _UNIQUE_VIOLATION:
                 raise
-            existing = await repo.find_job_by_idempotency_key(conn, idempotency_key)
+            existing = await repo.find_job_by_idempotency_key(conn, idempotency_key, requested_by)
             if existing is None:
                 raise
             return RenderJobView.model_validate(existing)
@@ -191,9 +230,11 @@ class RenderService:
         first = await repo.get_job(conn, render_job_id)
         if first is None:
             raise _job_not_found(render_job_id)
-        entry: ProviderEntry | None = get_provider(first["record_type"])
-        codes = (REPORT_CREATE,) if entry is None else (REPORT_CREATE, entry.view_permission)
-        await _require(authorize, codes, first["project_id"])
+        # ``report.create`` else 403; the record's view permission (or no provider) else 404, so
+        # the job is not revealed, as ``get`` does.
+        await _require(authorize, (REPORT_CREATE,), first["project_id"])
+        if not await _record_view(authorize, first["record_type"], first["project_id"]):
+            raise _job_not_found(render_job_id)
         template: TemplateRow | None = await self._templates.get(conn, first["template_id"])
         if template is None:
             raise DomainError(404, "TEMPLATE_NOT_FOUND")
@@ -223,10 +264,13 @@ class RenderService:
         *,
         authorize: Authorizer | None = None,
     ) -> RenderJobView:
+        """The job (``report.view``, else 403; the record's view permission, else 404)."""
         row = await repo.get_job(conn, render_job_id)
         if row is None:
             raise _job_not_found(render_job_id)
         await _require(authorize, (REPORT_VIEW,), row["project_id"])
+        if not await _record_view(authorize, row["record_type"], row["project_id"]):
+            raise _job_not_found(render_job_id)
         return RenderJobView.model_validate(row)
 
     async def find(self, conn: AsyncConnection, render_job_id: UUID) -> RenderJobView | None:
@@ -245,7 +289,7 @@ class RenderService:
         limit: int = 50,
         authorize: Authorizer | None = None,
     ) -> RenderJobPage:
-        """Newest first; jobs on a project the caller may not view are left out."""
+        """Newest first; jobs the caller may not read (``_may_read``) are left out."""
         before = None if cursor is None else decode_cursor(cursor)
         rows = await repo.list_jobs(
             conn,
@@ -258,11 +302,7 @@ class RenderService:
         )
         more = len(rows) > limit
         rows = rows[:limit]
-        visible = [
-            row
-            for row in rows
-            if authorize is None or await authorize(REPORT_VIEW, row["project_id"])
-        ]
+        visible = [row for row in rows if await _may_read(authorize, row)]
         return RenderJobPage(
             items=[RenderJobView.model_validate(row) for row in visible],
             next_cursor=encode_cursor(rows[-1]["id"]) if more else None,
@@ -275,7 +315,7 @@ class RenderService:
         *,
         authorize: Authorizer | None = None,
     ) -> ReportFile:
-        """A succeeded job's PDF (``report.view`` on its project); emits ``report.downloaded``."""
+        """A succeeded job's PDF (read as ``get`` checks it); emits ``report.downloaded``."""
         job = await self.get(conn, render_job_id, authorize=authorize)
         if job.status != "succeeded" or job.file_id is None or job.pdf_sha256 is None:
             raise DomainError(409, "REPORT_NOT_READY", detail=f"render job is {job.status}")
