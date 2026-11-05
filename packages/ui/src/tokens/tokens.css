@@ -120,8 +120,6 @@
   --foreground-muted: #171717;
   --border: #000000;
   --border-strong: #000000;
-  /* DESIGN-18: panels stay visible on the white high-contrast canvas */
-  --border-subtle: #000000;
   --accent: #0b5c55;
   --accent-foreground: #ffffff;
   --status-success: #14532d;

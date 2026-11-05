@@ -140,6 +140,10 @@
   padding: var(--space-4);
   min-width: 0;
 }
+/* DESIGN-18: on the white high-contrast canvas the panel edge takes the full-strength border. */
+[data-contrast="high"] .aip-panel {
+  border-color: var(--border);
+}
 /* DESIGN-18: stacked panels on a page keep their spacing without a wrapper. */
 .aip-panel + .aip-panel {
   margin-top: var(--space-4);
