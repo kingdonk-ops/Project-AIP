@@ -180,16 +180,42 @@ body {
   margin: var(--space-12) auto;
   padding: 0 var(--space-4);
 }
+/* DESIGN-19: the sign-in form is one white Panel on the off-white canvas (the html background, DESIGN-09). */
+.shell-login .shell-login__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+.shell-login__title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+}
 .shell-login form {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
+/* Tinted notice: tone text and icon on the tone's tint, never an accent fill. */
 .shell-login__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
   padding: var(--space-3);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface-muted);
+}
+.shell-login__notice-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.shell-login__notice--info { background: var(--status-info-subtle); color: var(--status-info); }
+.shell-login__notice--danger { background: var(--status-danger-subtle); color: var(--status-danger); }
+/* High contrast leaves the tints unused (DESIGN-09): white with a 2px outline in the tone. */
+[data-contrast="high"] .shell-login__notice {
+  background: var(--surface);
+  border: 2px solid currentColor;
 }
 
 @media (max-width: 767px) {
