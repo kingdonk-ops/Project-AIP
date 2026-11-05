@@ -3935,6 +3935,7 @@ CREATE TABLE public.app_user (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone,
     mfa_enrolled_at timestamp with time zone,
+    time_zone text,
     CONSTRAINT ck_app_user_deactivated_at CHECK (((status = 'deactivated'::text) = (deactivated_at IS NOT NULL))),
     CONSTRAINT ck_app_user_display_name CHECK (((btrim(display_name) <> ''::text) AND (length(display_name) <= 200))),
     CONSTRAINT ck_app_user_email CHECK ((email OPERATOR(public.~) '^[^@[:space:]]+@[^@[:space:]]+$'::public.citext)),
@@ -3942,6 +3943,7 @@ CREATE TABLE public.app_user (
     CONSTRAINT ck_app_user_idp_alias CHECK ((idp_alias <> ''::text)),
     CONSTRAINT ck_app_user_status CHECK ((status = ANY (ARRAY['invited'::text, 'active'::text, 'deactivated'::text]))),
     CONSTRAINT ck_app_user_sync_version CHECK ((sync_version >= 1)),
+    CONSTRAINT ck_app_user_time_zone CHECK (((time_zone IS NULL) OR (time_zone ~ '^[A-Za-z][A-Za-z0-9_+/-]{0,63}$'::text))),
     CONSTRAINT ck_app_user_user_class CHECK ((user_class = ANY (ARRAY['staff'::text, 'field'::text, 'portal'::text])))
 );
 

@@ -1602,7 +1602,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update Me */
+        patch: operations["identity_update_me"];
         trace?: never;
     };
     "/api/v1/me/sessions": {
@@ -4419,6 +4420,17 @@ export interface components {
             /** Slug */
             slug: string;
         };
+        /**
+         * MeUpdate
+         * @description ``PATCH /api/v1/me``: the caller's own profile preferences. Omitted fields stay unchanged.
+         */
+        MeUpdate: {
+            /**
+             * Timezone
+             * @description An IANA zone such as Australia/Perth, or null to clear the preference.
+             */
+            timeZone?: string | null;
+        };
         /** MeUser */
         MeUser: {
             /** Displayname */
@@ -4435,6 +4447,11 @@ export interface components {
              * @enum {string}
              */
             status: "invited" | "active" | "deactivated";
+            /**
+             * Timezone
+             * @description Preferred IANA time zone (IDENTITY-11); null means use the device zone.
+             */
+            timeZone: string | null;
             /**
              * Userclass
              * @enum {string}
@@ -12570,6 +12587,57 @@ export interface operations {
             };
             /** @description The tenant is suspended, offboarded or not ready. */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+        };
+    };
+    identity_update_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeUpdate"];
+            };
+        };
+        responses: {
+            /** @description The caller's own profile after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+            /** @description No authenticated principal, or the user is unknown or not active. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description The tenant is suspended, offboarded or not ready. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthErrorResponse"];
+                };
+            };
+            /** @description INVALID_TIME_ZONE: the name is not a known IANA time zone. */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

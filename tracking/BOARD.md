@@ -242,7 +242,7 @@ From [docs/reviews/13-merged-pr-review-2026-11-03.md](../docs/reviews/13-merged-
 | [PORTAL-10](tasks/PORTAL-10.md) | Client waives a booked witness or hold point in the portal ("proceed without me") | portal | S | PORTAL-06, INSPECTIONS-12 | todo | owner 2026-11-03; client sign-off, ADR 0010 critical (step-up) |
 | [PORTAL-11](tasks/PORTAL-11.md) | Witness booking reminders before the booked time and notice-period-ending alerts | portal | S | PORTAL-06 | todo | owner 2026-11-03 |
 | [PORTAL-12](tasks/PORTAL-12.md) | Witness emails and pages in the recipient's own time zone | portal | XS | PORTAL-06, IDENTITY-11 | todo | owner 2026-11-03: site time for R1, recipient's zone later |
-| [IDENTITY-11](tasks/IDENTITY-11.md) | User time-zone preference on the profile | identity | S | IDENTITY-10 | in-progress | ClaudeK: branch claudeK/identity-11-time-zone; ADR 0025 consequence; needed by PORTAL-12 |
+| [IDENTITY-11](tasks/IDENTITY-11.md) | User time-zone preference on the profile | identity | S | IDENTITY-10 | review | ClaudeK: branch claudeK/identity-11-time-zone; ADR 0025 consequence; needed by PORTAL-12 |
 | [PORTAL-13](tasks/PORTAL-13.md) | Portal client sets their own time zone on `/api/v1/portal/me` | portal | XS | IDENTITY-11, PORTAL-02 | todo | found by IDENTITY-11: ADR 0036 choice 7 keeps portal sessions off `/api/v1/me` |
 | [APPROVALS-14](tasks/APPROVALS-14.md) | Approval route completion enforces the target transition's comment rule | approvals | XS | APPROVALS-04 | todo | review 13 M2, L9, L10 |
 | [PORTAL-09](tasks/PORTAL-09.md) | Portal fixes: register denied state, no-store on every portal response, filter and axe tests | portal | XS | PORTAL-02, PORTAL-07 | todo | review 13 B4, L11, L12 |

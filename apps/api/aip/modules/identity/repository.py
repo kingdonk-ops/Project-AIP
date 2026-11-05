@@ -185,9 +185,7 @@ async def get_display_names(conn: AsyncConnection, user_ids: Iterable[UUID]) -> 
     return {row.id: row.display_name for row in await conn.execute(stmt)}
 
 
-async def get_time_zones(
-    conn: AsyncConnection, user_ids: Iterable[UUID]
-) -> dict[UUID, str | None]:
+async def get_time_zones(conn: AsyncConnection, user_ids: Iterable[UUID]) -> dict[UUID, str | None]:
     """``{user id: preferred IANA zone or None}`` for the given users of the bound tenant.
 
     IDENTITY-11 (ADR 0025): emails and pages show times in the recipient's zone, falling back to
