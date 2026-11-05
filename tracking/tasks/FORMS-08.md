@@ -21,3 +21,6 @@
 Add repeating sections and grid fields (rows of readings with per-row validation) to the template contract, the evaluator and the renderer, as the UTT thickness survey needs (tag: extend).
 
 Stub: full spec is written when its dependencies are merged (PLAN-R1 pass A).
+
+Designer (ADR 0043): add repeating sections and grid fields to the FORMS-11 palette and canvas (columns as a
+nested field list), with row validation in the FORMS-12 builder.

@@ -99,8 +99,15 @@ sprint; within a round, order by the critical path (ASSETS-01 and OPS-17 first).
 | 1 | REPORTS-03 | api | IDENTITY-09, INSPECTIONS-02, REPORTS-02 (PDF on approval) |
 | 2 | INSPECTIONS-04 | web | FORMS-03, INSPECTIONS-03, UPLOADS-08 (register/detail + renderer) |
 | 3 | REPORTS-04 | web | REPORTS-02 (report register + authorised download) |
+| 4 | FORMS-11 | web | DESIGN-09, FORMS-03, FORMS-04 (form designer; owner 2026-11-05, ADR 0043) |
+| 5 | FORMS-12 | web | FORMS-11 (designer logic builder + test console) |
 
-**Core slice total: ~21 tasks** (vs. ~90 for full R1). Scope A drops OPS-17's uploads/reports
+**Form designer (added 2026-11-05, owner; [ADR 0043](../docs/adr/0043-form-designer-in-r1.md)).** The demo's
+"publish a form template" step was a JSON upload (FORMS-04). FORMS-11 and FORMS-12 make it a visual designer. Both
+are web-only, touch only `apps/web/src/features/forms/` (plus one optional field on the replace-draft API), and run
+alongside INSPECTIONS-04, so they add no depth to the critical path.
+
+**Core slice total: ~23 tasks** (with the two designer tasks) (vs. ~90 for full R1). Scope A drops OPS-17's uploads/reports
 consumers, UPLOADS-02, UPLOADS-08, REPORTS-01/02/03/04 and IDENTITY-09 — about 7 fewer tasks and one
 whole chain branch.
 

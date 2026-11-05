@@ -45,7 +45,7 @@ are choices PLAN-R1 made to cut tasks; the phase-entry review accepts or changes
 - assets: the tree stays on ltree, not a closure table (settled by ADR 0002 and DATABASE-04 `aip.platform.db.ltree`, 2026-10-14).
 - assets: risk-based scheduling, P&ID linkage, label sheets, lineage merge/split and QR/RFID scanning are after R1; R1 is the tree and register (settled by ADR 0007 §4–5, 2026-10-10).
 - item_types: conditional and calculated attributes, when built, use JSONLogic with the approvals allow-list, never scripts (settled by ADR 0001 "Shared rules" and ADR 0035 §1, 2026-10-18).
-- forms: no designer in R1; templates are operator-authored JSON uploaded through the API, so the builder-foundation question (custom, react-jsonschema-form, SurveyJS) waits for the designer (settled by ADR 0007 §4, 2026-10-10).
+- forms: no designer in R1; templates are operator-authored JSON uploaded through the API, so the builder-foundation question (custom, react-jsonschema-form, SurveyJS) waits for the designer (settled by ADR 0007 §4, 2026-10-10). *Amended by [ADR 0043](0043-form-designer-in-r1.md) (2026-11-05): the form designer is in R1 (FORMS-11, FORMS-12) on a custom builder.*
 - forms: JSONLogic, not CEL, with one Python and one TypeScript evaluator proven on shared golden vectors in `packages/contracts/jsonlogic-vectors/` (settled by ADR 0001 and APPROVALS-02, 2026-10-18).
 - inspections: the lifecycle runs on the approvals engine (versioned definition, transition service, hash-chained decisions), not XState or a bespoke workflow table (settled by APPROVALS-01, APPROVALS-02 and APPROVALS-05).
 - eligibility: reminders run as Procrastinate jobs from the OPS-13 scheduler under the OPS-17 handler role (settled by ADR 0003, OPS-13 and OPS-17).
