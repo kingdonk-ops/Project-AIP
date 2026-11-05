@@ -96,6 +96,20 @@ describe("RecordDetail", () => {
     expect(screen.getByRole("tab", { name: "itp.tab.checks" }).getAttribute("aria-selected")).toBe("true");
   });
 
+  it("renders the tabs in one panel and each rail section as a labelled panel (DESIGN-18)", () => {
+    renderDetail();
+    const tablist = screen.getByRole("tablist", { name: "ui.record.tabs" });
+    const main = tablist.closest(".aip-panel");
+    expect(main?.className).toContain("aip-record__main");
+    expect(main?.contains(screen.getByRole("tabpanel", { name: "ui.record.tab.details" }))).toBe(true);
+    const rail = screen.getByRole("complementary", { name: "ui.record.rail" });
+    for (const name of ["ui.record.rail.comments", "ui.record.rail.approvals", "ui.record.rail.attachments"]) {
+      const region = within(rail).getByRole("region", { name });
+      expect(region.className).toContain("aip-panel");
+      expect(within(region).getByRole("heading", { level: 2, name })).toBeTruthy();
+    }
+  });
+
   it("the right rail collapses and the choice is kept for the session", async () => {
     const user = userEvent.setup();
     const first = renderDetail();

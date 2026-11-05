@@ -9,6 +9,7 @@
  */
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Button } from "../components/button";
+import { Panel } from "../components/panel";
 import type { IconName } from "../components/icon";
 import { StatusChip } from "../components/status-chip";
 import { cn } from "../lib/cn";
@@ -190,7 +191,8 @@ export function RecordDetail({
       </header>
       {workflow && <WorkflowBar {...workflow} translate={translate} />}
       <div className="aip-record__body">
-        <div className="aip-record__main">
+        {/* DESIGN-18: the tabs and the open tab sit in one white panel on the canvas. */}
+        <Panel className="aip-record__main">
           <div className="aip-record__tabs" role="tablist" aria-label={translate("ui.record.tabs")}>
             {tabs.map((t) => {
               const active = t.id === selected?.id;
@@ -230,18 +232,15 @@ export function RecordDetail({
               {t.id === selected?.id && t.content}
             </div>
           ))}
-        </div>
+        </Panel>
         {rail && (
           <aside id={railId} className="aip-record__rail" aria-label={translate("ui.record.rail")} hidden={!railOpen}>
             {railOpen &&
               railSlots.map(([slot, key]) =>
                 rail[slot] === undefined ? null : (
-                  <section key={slot} className="aip-record__rail-section" aria-labelledby={`${baseId}-rail-${slot}`}>
-                    <h2 id={`${baseId}-rail-${slot}`} className="aip-record__rail-title">
-                      {translate(key)}
-                    </h2>
+                  <Panel key={slot} className="aip-record__rail-section" heading={translate(key)}>
                     {rail[slot]}
-                  </section>
+                  </Panel>
                 ),
               )}
           </aside>

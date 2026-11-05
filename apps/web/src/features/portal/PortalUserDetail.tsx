@@ -35,6 +35,14 @@ import {
   FormField,
   LoadingState,
   RecordDetail,
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Textarea,
   toast,
   type RecordStatus,
   type RecordTab,
@@ -161,30 +169,30 @@ export function PortalUserDetail({ portalUserId, permissions }: PortalUserDetail
       {user.grants.length === 0 ? (
         <p>{t("portal.admin.grants_none")}</p>
       ) : (
-        <table className="portal-admin__table">
-          <caption className="portal-admin__caption">{t("portal.admin.grants_caption")}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{t("portal.admin.grant.project")}</th>
-              <th scope="col">{t("portal.admin.grant.asset")}</th>
-              <th scope="col">{t("portal.admin.grant.actions")}</th>
-              <th scope="col">{t("portal.admin.column.state")}</th>
-              <th scope="col">{t("portal.admin.column.expires")}</th>
-              {canManage ? <th scope="col">{t("portal.admin.column.manage")}</th> : null}
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableCaption>{t("portal.admin.grants_caption")}</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead scope="col">{t("portal.admin.grant.project")}</TableHead>
+              <TableHead scope="col">{t("portal.admin.grant.asset")}</TableHead>
+              <TableHead scope="col">{t("portal.admin.grant.actions")}</TableHead>
+              <TableHead scope="col">{t("portal.admin.column.state")}</TableHead>
+              <TableHead scope="col">{t("portal.admin.column.expires")}</TableHead>
+              {canManage ? <TableHead scope="col">{t("portal.admin.column.manage")}</TableHead> : null}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {user.grants.map((grant) => {
               const project = projectLabel(names, grant.projectId);
               return (
-                <tr key={grant.id} data-grant={grant.id}>
-                  <td>{project}</td>
-                  <td>{grant.assetId ? <span className="portal-admin__mono">{grant.assetId}</span> : t("portal.admin.grant.asset_whole")}</td>
-                  <td>{actionLabels(grant.actions)}</td>
-                  <td>
+                <TableRow key={grant.id} data-grant={grant.id}>
+                  <TableCell>{project}</TableCell>
+                  <TableCell>{grant.assetId ? <span className="portal-admin__mono">{grant.assetId}</span> : t("portal.admin.grant.asset_whole")}</TableCell>
+                  <TableCell>{actionLabels(grant.actions)}</TableCell>
+                  <TableCell>
                     <GrantStateChip state={grant.state} />
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="portal-admin__stack">
                       <time dateTime={grant.expiresAt}>{formatDate(grant.expiresAt)}</time>
                       <span className="portal-admin__meta">{t("portal.admin.grant.period", { days: grant.accessDays })}</span>
@@ -192,9 +200,9 @@ export function PortalUserDetail({ portalUserId, permissions }: PortalUserDetail
                         <span className="portal-admin__meta">{t("portal.admin.grant.renewed_on", { date: formatDate(grant.renewedAt) })}</span>
                       ) : null}
                     </span>
-                  </td>
+                  </TableCell>
                   {canManage ? (
-                    <td className="portal-admin__row-actions">
+                    <TableCell className="portal-admin__row-actions">
                       <Button
                         variant="secondary"
                         disabled={busy}
@@ -211,13 +219,13 @@ export function PortalUserDetail({ portalUserId, permissions }: PortalUserDetail
                       >
                         {t("portal.admin.revoke")}
                       </Button>
-                    </td>
+                    </TableCell>
                   ) : null}
-                </tr>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       )}
       {canManage ? (
         <Button variant="secondary" onClick={() => setAddOpen(true)}>
@@ -342,9 +350,8 @@ function SuspendDialog({ open, onOpenChange, onSubmit }: SuspendDialogProps) {
         <form noValidate onSubmit={submit}>
           <FormField label={t("portal.admin.suspend_reason")} {...(error ? { error } : {})}>
             {(control) => (
-              <textarea
+              <Textarea
                 {...control}
-                className="portal-admin__textarea"
                 rows={3}
                 maxLength={MAX_REASON}
                 value={reason}

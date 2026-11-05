@@ -7,6 +7,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { devBaseURL } from "../playwright.config";
+import { expectPanelOnCanvas } from "./panel";
 import { signInAsStub } from "./stub-session";
 
 test.use({ baseURL: process.env.E2E_DEV_URL ?? devBaseURL });
@@ -157,5 +158,16 @@ test("tenant B opening tenant A's project id sees the not-found state", async ({
   await page.goto(`/projects/${PROJECT_ID}`);
 
   await expect(page.getByText("Not found")).toBeVisible();
+  await expectNoBlockingAxe(page);
+});
+
+test("the detail tabs and their content sit in a white bordered panel on the canvas", async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "computed-style check on desktop Chromium only");
+  const page = await openAs(browser, "alice@kaefer.test", `/projects/${PROJECT_ID}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Line 592" })).toBeVisible();
+  const panel = page.locator(".aip-panel.aip-record__main");
+  await expect(panel.getByRole("tablist")).toBeVisible();
+  await expect(panel.getByRole("tabpanel")).toBeVisible();
+  await expectPanelOnCanvas(page, panel);
   await expectNoBlockingAxe(page);
 });

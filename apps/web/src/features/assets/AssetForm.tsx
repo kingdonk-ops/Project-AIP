@@ -17,7 +17,7 @@ import {
   type AssetDetail,
   type AssetOut,
 } from "@aip/api-client";
-import { Button, Combobox, ErrorState, FormField, Input, LoadingState, type RequestError } from "@aip/ui";
+import { Button, Combobox, ErrorState, FormField, Input, LoadingState, Panel, type RequestError } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -292,126 +292,128 @@ function AssetFormBody({ initial, parentId: initialParent, onCreated, onSaved, o
           {notice}
         </p>
       ) : null}
-      <form
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault();
-          void save(false);
-        }}
-      >
-        <FormField label={t("assets.form.required_label", { label: t("assets.field.name") })} hint={t("assets.form.name_hint")} {...errorProp("name")}>
-          {(control) => (
-            <Input
-              {...control}
-              ref={nameRef}
-              autoComplete="off"
-              maxLength={MAX_NAME}
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                clearError("name");
-              }}
-            />
-          )}
-        </FormField>
-        <FormField label={t("assets.field.tag_number")} hint={t("assets.form.tag_number_hint")} {...(tagError ? { error: tagError } : {})}>
-          {(control) => (
-            <Input
-              {...control}
-              autoComplete="off"
-              className="assets-form__mono"
-              value={tagNumber}
-              onChange={(e) => {
-                setTagNumber(e.target.value);
-                clearError("tagNumber");
-              }}
-            />
-          )}
-        </FormField>
-        {editing ? null : (
-          <FormField label={t("assets.field.parent")} hint={t("assets.form.parent_hint")} {...errorProp("parentId")}>
+      <Panel className="assets-form__panel">
+        <form
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            void save(false);
+          }}
+        >
+          <FormField label={t("assets.form.required_label", { label: t("assets.field.name") })} hint={t("assets.form.name_hint")} {...errorProp("name")}>
             {(control) => (
-              <ParentPicker
-                id={control.id}
-                label={t("assets.field.parent")}
-                value={parentId}
-                onChange={(value) => {
-                  setParentId(value);
-                  clearError("parentId");
+              <Input
+                {...control}
+                ref={nameRef}
+                autoComplete="off"
+                maxLength={MAX_NAME}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  clearError("name");
                 }}
-                topLevelLabel={t("assets.form.parent_none")}
-                placeholder={t("assets.form.parent_search")}
               />
             )}
           </FormField>
-        )}
-        <FormField label={t("assets.field.item_type")} hint={t("assets.form.item_type_hint")} {...errorProp("itemTypeId")}>
-          {(control) => (
-            <Combobox
-              id={control.id}
-              aria-label={t("assets.field.item_type")}
-              options={itemTypeOptions}
-              value={itemTypeId}
-              onValueChange={(value) => {
-                setItemTypeId(value);
-                setRaw({});
-                clearError("itemTypeId");
-              }}
-            />
-          )}
-        </FormField>
-        {editing && itemTypeId !== (initial.itemTypeId ?? "") && itemTypeId ? (
-          <p role="status" className="assets-form__warning">
-            {t("assets.form.item_type_changed")}
-          </p>
-        ) : null}
-
-        {itemTypeId ? (
-          <fieldset className="assets-form__attributes">
-            <legend>{t("assets.form.attributes_title")}</legend>
-            {versionReady ? (
-              <AttributeFields
-                definitions={definitions}
-                values={raw}
-                errors={attributeErrors}
-                onChange={(key: string, value: RawValue) => {
-                  setRaw((current) => ({ ...current, [key]: value }));
-                  clearError(`attributes.${key}`);
+          <FormField label={t("assets.field.tag_number")} hint={t("assets.form.tag_number_hint")} {...(tagError ? { error: tagError } : {})}>
+            {(control) => (
+              <Input
+                {...control}
+                autoComplete="off"
+                className="assets-form__mono"
+                value={tagNumber}
+                onChange={(e) => {
+                  setTagNumber(e.target.value);
+                  clearError("tagNumber");
                 }}
               />
-            ) : (
-              <p className="assets-form__note">{t("assets.form.attributes_loading")}</p>
             )}
-          </fieldset>
-        ) : null}
+          </FormField>
+          {editing ? null : (
+            <FormField label={t("assets.field.parent")} hint={t("assets.form.parent_hint")} {...errorProp("parentId")}>
+              {(control) => (
+                <ParentPicker
+                  id={control.id}
+                  label={t("assets.field.parent")}
+                  value={parentId}
+                  onChange={(value) => {
+                    setParentId(value);
+                    clearError("parentId");
+                  }}
+                  topLevelLabel={t("assets.form.parent_none")}
+                  placeholder={t("assets.form.parent_search")}
+                />
+              )}
+            </FormField>
+          )}
+          <FormField label={t("assets.field.item_type")} hint={t("assets.form.item_type_hint")} {...errorProp("itemTypeId")}>
+            {(control) => (
+              <Combobox
+                id={control.id}
+                aria-label={t("assets.field.item_type")}
+                options={itemTypeOptions}
+                value={itemTypeId}
+                onValueChange={(value) => {
+                  setItemTypeId(value);
+                  setRaw({});
+                  clearError("itemTypeId");
+                }}
+              />
+            )}
+          </FormField>
+          {editing && itemTypeId !== (initial.itemTypeId ?? "") && itemTypeId ? (
+            <p role="status" className="assets-form__warning">
+              {t("assets.form.item_type_changed")}
+            </p>
+          ) : null}
 
-        {conflict ? (
-          <div role="alert" className="assets-form__conflict">
-            <p>{t("assets.error.VERSION_CONFLICT")}</p>
-            <Button variant="secondary" onClick={onReload}>
-              {t("assets.form.reload")}
+          {itemTypeId ? (
+            <fieldset className="assets-form__attributes">
+              <legend>{t("assets.form.attributes_title")}</legend>
+              {versionReady ? (
+                <AttributeFields
+                  definitions={definitions}
+                  values={raw}
+                  errors={attributeErrors}
+                  onChange={(key: string, value: RawValue) => {
+                    setRaw((current) => ({ ...current, [key]: value }));
+                    clearError(`attributes.${key}`);
+                  }}
+                />
+              ) : (
+                <p className="assets-form__note">{t("assets.form.attributes_loading")}</p>
+              )}
+            </fieldset>
+          ) : null}
+
+          {conflict ? (
+            <div role="alert" className="assets-form__conflict">
+              <p>{t("assets.error.VERSION_CONFLICT")}</p>
+              <Button variant="secondary" onClick={onReload}>
+                {t("assets.form.reload")}
+              </Button>
+            </div>
+          ) : null}
+          {errors.form ? (
+            <p role="alert" className="aip-form-field__error">
+              {errors.form}
+            </p>
+          ) : null}
+          <div className="assets-form__actions">
+            <Button type="submit" disabled={saving || !versionReady}>
+              {saving ? t("assets.form.saving") : t("assets.form.save")}
+            </Button>
+            {editing ? null : (
+              <Button variant="secondary" disabled={saving || !versionReady} onClick={() => void save(true)}>
+                {t("assets.form.save_and_add")}
+              </Button>
+            )}
+            <Button variant="ghost" asChild>
+              <Link to="/assets">{t("assets.form.cancel")}</Link>
             </Button>
           </div>
-        ) : null}
-        {errors.form ? (
-          <p role="alert" className="aip-form-field__error">
-            {errors.form}
-          </p>
-        ) : null}
-        <div className="assets-form__actions">
-          <Button type="submit" disabled={saving || !versionReady}>
-            {saving ? t("assets.form.saving") : t("assets.form.save")}
-          </Button>
-          {editing ? null : (
-            <Button variant="secondary" disabled={saving || !versionReady} onClick={() => void save(true)}>
-              {t("assets.form.save_and_add")}
-            </Button>
-          )}
-          <Button variant="ghost" asChild>
-            <Link to="/assets">{t("assets.form.cancel")}</Link>
-          </Button>
-        </div>
-      </form>
+        </form>
+      </Panel>
     </section>
   );
 }

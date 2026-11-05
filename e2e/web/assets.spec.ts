@@ -6,6 +6,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { devBaseURL } from "../playwright.config";
+import { expectPanelOnCanvas } from "./panel";
 import { signInAsStub } from "./stub-session";
 
 test.use({ baseURL: process.env.E2E_DEV_URL ?? devBaseURL });
@@ -184,5 +185,15 @@ test("the create form offers the parent picked in the tree and passes axe", asyn
   await expect(page).toHaveURL(new RegExp(`/assets/new\\?parentId=${ids(1)}$`));
   await expect(page.getByRole("heading", { name: "Create asset", level: 1 })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Parent" })).toHaveValue("Site A");
+  await expectNoBlockingAxe(page, "create asset form");
+});
+
+test("the create form sits in a white bordered panel on the canvas", async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "computed-style check on desktop Chromium only");
+  const page = await openAssets(browser, "/assets/new");
+  await expect(page.getByRole("heading", { name: "Create asset", level: 1 })).toBeVisible();
+  const panel = page.locator(".aip-panel.assets-form__panel");
+  await expect(panel.locator("form")).toBeVisible();
+  await expectPanelOnCanvas(page, panel);
   await expectNoBlockingAxe(page, "create asset form");
 });

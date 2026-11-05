@@ -1,3 +1,4 @@
+import { Panel } from "@aip/ui";
 import { createRoute } from "@tanstack/react-router";
 import { ApiHealth } from "../../features/shell/ApiHealth";
 import { t } from "../../features/shell/t";
@@ -14,8 +15,10 @@ function HomePage() {
   return (
     <>
       <h1>{t("shell.home.title")}</h1>
-      <p>{t("shell.home.placeholder")}</p>
-      <ApiHealth />
+      <Panel>
+        <p>{t("shell.home.placeholder")}</p>
+        <ApiHealth />
+      </Panel>
     </>
   );
 }

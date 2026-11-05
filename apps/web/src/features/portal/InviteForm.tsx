@@ -11,7 +11,7 @@
  * return refills the form and offers to send it again (IDENTITY-04).
  */
 import { getPortalUsersListQueryKey, schemas, usePortalUsersInvite, type InviteIn } from "@aip/api-client";
-import { Button, FormField, Input } from "@aip/ui";
+import { Button, FormField, Input, Panel } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
@@ -196,55 +196,57 @@ export function InviteForm({ permissions, onInvited }: InviteFormProps) {
           </Button>
         </div>
       ) : null}
-      <form noValidate onSubmit={onSubmit}>
-        <FormField label={t("portal.admin.field.email")} {...errorOf("email")}>
-          {(control) => (
-            <Input {...control} type="email" autoComplete="off" value={state.email} onChange={(e) => set({ email: e.target.value })} />
-          )}
-        </FormField>
-        <FormField label={t("portal.admin.field.first_name")} {...errorOf("firstName")}>
-          {(control) => <Input {...control} value={state.firstName} onChange={(e) => set({ firstName: e.target.value })} />}
-        </FormField>
-        <FormField label={t("portal.admin.field.last_name")} {...errorOf("lastName")}>
-          {(control) => <Input {...control} value={state.lastName} onChange={(e) => set({ lastName: e.target.value })} />}
-        </FormField>
-        <FormField label={t("portal.admin.field.company")} {...errorOf("companyName")}>
-          {(control) => <Input {...control} value={state.companyName} onChange={(e) => set({ companyName: e.target.value })} />}
-        </FormField>
+      <Panel>
+        <form noValidate onSubmit={onSubmit}>
+          <FormField label={t("portal.admin.field.email")} {...errorOf("email")}>
+            {(control) => (
+              <Input {...control} type="email" autoComplete="off" value={state.email} onChange={(e) => set({ email: e.target.value })} />
+            )}
+          </FormField>
+          <FormField label={t("portal.admin.field.first_name")} {...errorOf("firstName")}>
+            {(control) => <Input {...control} value={state.firstName} onChange={(e) => set({ firstName: e.target.value })} />}
+          </FormField>
+          <FormField label={t("portal.admin.field.last_name")} {...errorOf("lastName")}>
+            {(control) => <Input {...control} value={state.lastName} onChange={(e) => set({ lastName: e.target.value })} />}
+          </FormField>
+          <FormField label={t("portal.admin.field.company")} {...errorOf("companyName")}>
+            {(control) => <Input {...control} value={state.companyName} onChange={(e) => set({ companyName: e.target.value })} />}
+          </FormField>
 
-        <h2 className="portal-admin__subtitle">{t("portal.admin.grants_title")}</h2>
-        <p className="portal-admin__meta">{t("portal.admin.grants_intro")}</p>
-        {state.grants.map((grant, index) => (
-          <GrantRow
-            key={grant.key}
-            index={index}
-            value={grant}
-            projects={projects}
-            onChange={(next) => setGrant(index, next)}
-            onRemove={state.grants.length > 1 ? () => set({ grants: state.grants.filter((_, i) => i !== index) }) : undefined}
-            errors={grantErrors[index]}
-          />
-        ))}
-        {state.grants.length < MAX_GRANTS ? (
-          <Button type="button" variant="secondary" onClick={() => set({ grants: [...state.grants, emptyGrant()] })}>
-            {t("portal.admin.grant.add")}
-          </Button>
-        ) : null}
+          <h2 className="portal-admin__subtitle">{t("portal.admin.grants_title")}</h2>
+          <p className="portal-admin__meta">{t("portal.admin.grants_intro")}</p>
+          {state.grants.map((grant, index) => (
+            <GrantRow
+              key={grant.key}
+              index={index}
+              value={grant}
+              projects={projects}
+              onChange={(next) => setGrant(index, next)}
+              onRemove={state.grants.length > 1 ? () => set({ grants: state.grants.filter((_, i) => i !== index) }) : undefined}
+              errors={grantErrors[index]}
+            />
+          ))}
+          {state.grants.length < MAX_GRANTS ? (
+            <Button type="button" variant="secondary" onClick={() => set({ grants: [...state.grants, emptyGrant()] })}>
+              {t("portal.admin.grant.add")}
+            </Button>
+          ) : null}
 
-        {formError ? (
-          <p role="alert" className="aip-form-field__error">
-            {formError}
-          </p>
-        ) : null}
-        <div className="portal-admin__actions">
-          <Button type="submit" disabled={invite.isPending}>
-            {invite.isPending ? t("portal.admin.invite_sending") : t("portal.admin.invite_submit")}
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link to="/admin/portal/users">{t("portal.admin.cancel")}</Link>
-          </Button>
-        </div>
-      </form>
+          {formError ? (
+            <p role="alert" className="aip-form-field__error">
+              {formError}
+            </p>
+          ) : null}
+          <div className="portal-admin__actions">
+            <Button type="submit" disabled={invite.isPending}>
+              {invite.isPending ? t("portal.admin.invite_sending") : t("portal.admin.invite_submit")}
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link to="/admin/portal/users">{t("portal.admin.cancel")}</Link>
+            </Button>
+          </div>
+        </form>
+      </Panel>
     </section>
   );
 }

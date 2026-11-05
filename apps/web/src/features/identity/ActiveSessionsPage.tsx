@@ -9,7 +9,7 @@ import {
   useIdentityListMySessions,
   type SessionOut,
 } from "@aip/api-client";
-import { Button, Spinner, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@aip/ui";
+import { Button, Panel, Spinner, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { t } from "../shell/t";
@@ -55,41 +55,43 @@ export function ActiveSessionsPage() {
       ) : list.isError || (list.data && list.data.status !== 200) ? (
         <p role="alert">{t("identity.sessions.error")}</p>
       ) : (
-        <Table>
-          <TableCaption>{t("identity.sessions.title")}</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead scope="col">{t("identity.sessions.device")}</TableHead>
-              <TableHead scope="col">{t("identity.sessions.ip")}</TableHead>
-              <TableHead scope="col">{t("identity.sessions.lastSeen")}</TableHead>
-              <TableHead scope="col">{t("identity.sessions.signedIn")}</TableHead>
-              <TableHead scope="col">{t("identity.sessions.actions")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sessions.map((s) => (
-              <TableRow key={s.id}>
-                <TableCell>
-                  {device(s)}
-                  {s.current && <strong>{` (${t("identity.sessions.current")})`}</strong>}
-                </TableCell>
-                <TableCell>{s.ip ?? "—"}</TableCell>
-                <TableCell>{when(s.lastSeenAt)}</TableCell>
-                <TableCell>{when(s.createdAt)}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="secondary"
-                    disabled={pending !== null}
-                    aria-label={t("identity.sessions.signOutLabel", { device: device(s) })}
-                    onClick={() => void signOut(s.id)}
-                  >
-                    {pending === s.id ? t("identity.sessions.signingOut") : t("identity.sessions.signOut")}
-                  </Button>
-                </TableCell>
+        <Panel>
+          <Table>
+            <TableCaption>{t("identity.sessions.title")}</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead scope="col">{t("identity.sessions.device")}</TableHead>
+                <TableHead scope="col">{t("identity.sessions.ip")}</TableHead>
+                <TableHead scope="col">{t("identity.sessions.lastSeen")}</TableHead>
+                <TableHead scope="col">{t("identity.sessions.signedIn")}</TableHead>
+                <TableHead scope="col">{t("identity.sessions.actions")}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {sessions.map((s) => (
+                <TableRow key={s.id}>
+                  <TableCell>
+                    {device(s)}
+                    {s.current && <strong>{` (${t("identity.sessions.current")})`}</strong>}
+                  </TableCell>
+                  <TableCell>{s.ip ?? "—"}</TableCell>
+                  <TableCell>{when(s.lastSeenAt)}</TableCell>
+                  <TableCell>{when(s.createdAt)}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="secondary"
+                      disabled={pending !== null}
+                      aria-label={t("identity.sessions.signOutLabel", { device: device(s) })}
+                      onClick={() => void signOut(s.id)}
+                    >
+                      {pending === s.id ? t("identity.sessions.signingOut") : t("identity.sessions.signOut")}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Panel>
       )}
     </section>
   );

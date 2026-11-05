@@ -5,7 +5,7 @@
  * Every label is a terminology key; plan, term and status codes map to `tenancy.plan.*` keys.
  */
 import { useTenancyPlanAndUsage, type LimitOut, type PlanAndUsage } from "@aip/api-client";
-import { Spinner, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@aip/ui";
+import { Panel, Spinner, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@aip/ui";
 import { t } from "../shell/t";
 
 function day(value: string): string {
@@ -40,8 +40,7 @@ function Summary({ plan }: { plan: PlanAndUsage }) {
     [t("tenancy.plan.contract"), plan.contractRef ?? t("tenancy.plan.not_set")],
   ];
   return (
-    <section aria-labelledby="plan-summary">
-      <h2 id="plan-summary">{t("tenancy.plan.summary")}</h2>
+    <Panel heading={t("tenancy.plan.summary")}>
       <dl className="aip-plan-summary">
         {rows.map(([label, value]) => (
           <div key={label}>
@@ -50,14 +49,13 @@ function Summary({ plan }: { plan: PlanAndUsage }) {
           </div>
         ))}
       </dl>
-    </section>
+    </Panel>
   );
 }
 
 function Limits({ plan }: { plan: PlanAndUsage }) {
   return (
-    <section aria-labelledby="plan-usage">
-      <h2 id="plan-usage">{t("tenancy.plan.usage")}</h2>
+    <Panel heading={t("tenancy.plan.usage")}>
       <p>
         {plan.usagePeriod ? t("tenancy.plan.usage_period", { period: month(plan.usagePeriod) }) : t("tenancy.plan.usage_none")}
       </p>
@@ -81,14 +79,13 @@ function Limits({ plan }: { plan: PlanAndUsage }) {
         </TableBody>
       </Table>
       {plan.dbEstimate && <p>{t("tenancy.plan.db_estimate", { method: plan.dbEstimate.method })}</p>}
-    </section>
+    </Panel>
   );
 }
 
 function Features({ plan }: { plan: PlanAndUsage }) {
   return (
-    <section aria-labelledby="plan-features">
-      <h2 id="plan-features">{t("tenancy.plan.features")}</h2>
+    <Panel heading={t("tenancy.plan.features")}>
       <Table>
         <TableCaption>{t("tenancy.plan.features")}</TableCaption>
         <TableHeader>
@@ -106,7 +103,7 @@ function Features({ plan }: { plan: PlanAndUsage }) {
           ))}
         </TableBody>
       </Table>
-    </section>
+    </Panel>
   );
 }
 
