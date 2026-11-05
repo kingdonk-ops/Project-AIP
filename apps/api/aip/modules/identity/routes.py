@@ -22,6 +22,10 @@ fresh second factor, the callback then rotates the session), the invite routes u
 ``/me`` checks, in order and failing closed: a principal (401), the tenant active (401/403, via
 tenancy's ``require_active_tenant``), then the user live and ``active`` in that tenant (401).
 
+IDENTITY-11: ``PATCH /api/v1/me`` (authenticated, staff and portal sessions alike) sets the
+caller's own ``timeZone`` (an IANA name, or null to clear); an unknown name is 422
+``INVALID_TIME_ZONE``. It runs the same checks as ``GET /me`` and answers the updated ``MeResponse``.
+
 IDENTITY-10: ``POST /api/v1/auth/portal/login/start`` and ``GET /api/v1/auth/portal/oidc/callback``
 (both public) sign clients in on the ``aip-portal`` client (``LoginService(audience="portal")``,
 ``portal_login_handler``); without ``PORTAL_OIDC_CLIENT_SECRET`` they answer 503
@@ -84,6 +88,7 @@ from aip.modules.identity.schemas import (
     MeMembership,
     MeResponse,
     MeTenant,
+    MeUpdate,
     MeUser,
     SessionList,
     SessionOut,
@@ -92,7 +97,12 @@ from aip.modules.identity.schemas import (
     SignoffPolicyUpdate,
     StepUpErrorResponse,
 )
-from aip.modules.identity.service import LoginRateLimiter, LoginService
+from aip.modules.identity.service import (
+    InvalidTimeZoneError,
+    LoginRateLimiter,
+    LoginService,
+    set_time_zone,
+)
 from aip.modules.identity.session_store import current_session, presented_audience
 from aip.modules.identity.sessions import (
     clear_session_cookies,
@@ -411,11 +421,66 @@ async def get_me(
     if tenant.id != principal.tenant_id:  # defence in depth: both come from the same resolver
         raise _not_authenticated()
     async with connect(principal.tenant_id) as conn:
-        user = await repo.get_user(conn, principal.user_id)
-        if user is None or user.tenant_id != principal.tenant_id or user.status != "active":
-            raise _not_authenticated()
-        memberships = await repo.list_memberships(conn, user.id)
+        me = await _load_me(conn, principal, tenant)
     response.headers["Cache-Control"] = "no-store"
+    return me
+
+
+@me_router.patch(
+    "/me",
+    dependencies=[Depends(authenticated())],
+    response_model=MeResponse,
+    responses={
+        200: {"description": "The caller's own profile after the change."},
+        401: {
+            "model": AuthErrorResponse,
+            "description": "No authenticated principal, or the user is unknown or not active.",
+        },
+        403: {
+            "model": AuthErrorResponse,
+            "description": "The tenant is suspended, offboarded or not ready.",
+        },
+        422: {
+            "model": AuthErrorResponse,
+            "description": "INVALID_TIME_ZONE: the name is not a known IANA time zone.",
+        },
+    },
+)
+async def update_me(
+    body: MeUpdate,
+    principal: Annotated[Principal, Depends(get_principal)],
+    tenant: Annotated[TenantView, Depends(require_active_tenant)],
+    connect: Annotated[TenantConnect, Depends(get_tenant_connect)],
+    response: Response,
+) -> MeResponse:
+    if tenant.id != principal.tenant_id:  # defence in depth: both come from the same resolver
+        raise _not_authenticated()
+    async with connect(principal.tenant_id) as conn:
+        await _load_me(conn, principal, tenant)  # the caller must be live and active first
+        if "time_zone" in body.model_fields_set:
+            try:
+                await set_time_zone(
+                    conn,
+                    tenant_id=principal.tenant_id,
+                    user_id=principal.user_id,
+                    time_zone=body.time_zone,
+                )
+            except InvalidTimeZoneError:
+                raise HTTPException(
+                    status_code=422,
+                    detail={"code": "INVALID_TIME_ZONE", "message": "unknown time zone"},
+                ) from None
+        me = await _load_me(conn, principal, tenant)
+    response.headers["Cache-Control"] = "no-store"
+    return me
+
+
+async def _load_me(conn: AsyncConnection, principal: Principal, tenant: TenantView) -> MeResponse:
+    """The ``/me`` body for the caller; 401 unless they are live and ``active`` in ``tenant``."""
+    user = await repo.get_user(conn, principal.user_id)
+    if user is None or user.tenant_id != principal.tenant_id or user.status != "active":
+        raise _not_authenticated()
+    memberships = await repo.list_memberships(conn, user.id)
     return MeResponse(
         user=MeUser(
             id=user.id,
@@ -423,6 +488,7 @@ async def get_me(
             display_name=user.display_name,
             user_class=user.user_class,
             status=user.status,
+            time_zone=user.time_zone,
         ),
         tenant=MeTenant(id=tenant.id, slug=tenant.slug, name=tenant.name),
         memberships=[

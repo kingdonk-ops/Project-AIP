@@ -19,5 +19,10 @@
   "identity.stepUp.confirm": "Confirm it is you",
   "identity.stepUp.retryPrompt": "You have confirmed it is you. Try the action again?",
   "identity.stepUp.retry": "Try again",
-  "identity.stepUp.dismiss": "Not now"
+  "identity.stepUp.dismiss": "Not now",
+  "identity.profile.timeZone": "Time zone",
+  "identity.profile.timeZoneHint": "Dates and times in emails and pages are shown in this zone.",
+  "identity.profile.timeZoneDevice": "Use this device's time zone",
+  "identity.profile.timeZoneInvalid": "Choose a time zone from the list.",
+  "identity.profile.timeZoneSaved": "Time zone saved."
 }
