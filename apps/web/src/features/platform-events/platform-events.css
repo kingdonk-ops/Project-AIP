@@ -4,9 +4,9 @@
   font-family: var(--font-mono);
 }
 
+/* DESIGN-18: each version is a Panel (.aip-panel gives the surface, border and spacing). */
 .platform-events__version {
-  border-top: 1px solid var(--border);
-  padding-block: var(--space-4);
+  margin-top: var(--space-4);
 }
 
 .platform-events__version-header {

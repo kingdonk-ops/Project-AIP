@@ -9,7 +9,7 @@ import {
   useIdentityListMySessions,
   type SessionOut,
 } from "@aip/api-client";
-import { Button, Spinner, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@aip/ui";
+import { Button, Panel, Spinner, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { t } from "../shell/t";
@@ -55,7 +55,8 @@ export function ActiveSessionsPage() {
       ) : list.isError || (list.data && list.data.status !== 200) ? (
         <p role="alert">{t("identity.sessions.error")}</p>
       ) : (
-        <Table>
+        <Panel>
+          <Table>
           <TableCaption>{t("identity.sessions.title")}</TableCaption>
           <TableHeader>
             <TableRow>
@@ -89,7 +90,8 @@ export function ActiveSessionsPage() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </Panel>
       )}
     </section>
   );

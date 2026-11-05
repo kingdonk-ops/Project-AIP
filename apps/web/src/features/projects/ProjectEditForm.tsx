@@ -15,7 +15,7 @@ import {
   type ProjectUpdate,
   type SiteOut,
 } from "@aip/api-client";
-import { Button, FormField, Input, toast } from "@aip/ui";
+import { Button, FormField, Input, NativeSelect, toast } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm, type FieldPath, type UseFormSetError } from "react-hook-form";
@@ -152,25 +152,25 @@ export function ProjectEditForm({ project, sites, permissions }: ProjectEditForm
       </FormField>
       <FormField label={t("projects.field.status")} {...errorOf("status")}>
         {(control) => (
-          <select {...control} className="projects-register__select" {...register("status")}>
+          <NativeSelect {...control} {...register("status")}>
             {PROJECT_STATUSES.map((value) => (
               <option key={value} value={value}>
                 {t(`projects.status.${value}`)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         )}
       </FormField>
       <FormField label={t("projects.field.site")} {...errorOf("siteId")}>
         {(control) => (
-          <select {...control} className="projects-register__select" {...register("siteId")}>
+          <NativeSelect {...control} {...register("siteId")}>
             <option value="">{t("projects.field.site_none")}</option>
             {sites.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         )}
       </FormField>
       <FormField label={t("projects.field.region")} hint={t("projects.field.region_hint")} {...errorOf("region")}>

@@ -100,6 +100,16 @@
   color: var(--foreground);
   font: inherit;
 }
+/* DESIGN-18: native select and textarea share the input look (--border-strong for 3:1, focus ring). */
+.aip-native-select {
+  appearance: auto;
+}
+.aip-textarea {
+  height: auto;
+  min-height: calc(var(--control-h) * 2);
+  padding: var(--space-2);
+  resize: vertical;
+}
 .aip-input[aria-invalid="true"] {
   border-color: var(--status-danger);
 }
@@ -129,6 +139,10 @@
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   min-width: 0;
+}
+/* DESIGN-18: stacked panels on a page keep their spacing without a wrapper. */
+.aip-panel + .aip-panel {
+  margin-top: var(--space-4);
 }
 .aip-panel__header {
   display: flex;
@@ -588,19 +602,11 @@ kbd {
 .aip-record__panel {
   padding-top: var(--space-4);
 }
+/* DESIGN-18: the rail is a column of panels, one per section, on the canvas. */
 .aip-record__rail:not([hidden]) {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  padding: var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-muted);
-}
-.aip-record__rail-title {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-md);
-  font-weight: var(--weight-semibold);
 }
 
 /* Workflow bar */

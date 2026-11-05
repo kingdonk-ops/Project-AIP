@@ -11,7 +11,7 @@
  * return refills the form and offers to send it again (IDENTITY-04).
  */
 import { getPortalUsersListQueryKey, schemas, usePortalUsersInvite, type InviteIn } from "@aip/api-client";
-import { Button, FormField, Input } from "@aip/ui";
+import { Button, FormField, Input, Panel } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
@@ -196,6 +196,7 @@ export function InviteForm({ permissions, onInvited }: InviteFormProps) {
           </Button>
         </div>
       ) : null}
+      <Panel>
       <form noValidate onSubmit={onSubmit}>
         <FormField label={t("portal.admin.field.email")} {...errorOf("email")}>
           {(control) => (
@@ -245,6 +246,7 @@ export function InviteForm({ permissions, onInvited }: InviteFormProps) {
           </Button>
         </div>
       </form>
+      </Panel>
     </section>
   );
 }

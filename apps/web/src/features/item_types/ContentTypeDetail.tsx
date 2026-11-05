@@ -21,6 +21,7 @@ import {
   iconNames,
   Input,
   LoadingState,
+  NativeSelect,
   RecordDetail,
   Table,
   TableBody,
@@ -201,13 +202,13 @@ function ContentTypeForm({ contentType, canManage, onReload }: { contentType: Co
       </FormField>
       <FormField label={t("item_types.content_type.field.icon")}>
         {(control) => (
-          <select {...control} className="item-types-select" value={icon} onChange={(e) => setIcon(e.target.value)}>
+          <NativeSelect {...control} value={icon} onChange={(e) => setIcon(e.target.value)}>
             {iconNames.map((n) => (
               <option key={n} value={n}>
                 {n}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         )}
       </FormField>
       <CheckField checked={showInNav} onChange={setShowInNav} label={t("item_types.content_type.field.show_in_nav")} />

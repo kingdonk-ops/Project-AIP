@@ -4,7 +4,7 @@
  * source of truth; the server's answers (409 code taken, 422 field errors) land on their inputs.
  */
 import { getProjectsListQueryKey, schemas, useProjectsCreate, useSitesList, type ProjectCreate } from "@aip/api-client";
-import { Button, FormField, Input } from "@aip/ui";
+import { Button, FormField, Input, NativeSelect, Panel } from "@aip/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -112,6 +112,7 @@ export function ProjectCreateForm({ permissions, onCreated }: ProjectCreateFormP
   return (
     <section className="projects-form" aria-labelledby="projects-create-title">
       <h1 id="projects-create-title">{t("projects.create.title")}</h1>
+      <Panel className="projects-form__panel">
       <form noValidate onSubmit={(e) => void onSubmit(e)}>
         <FormField label={t("projects.field.code")} hint={t("projects.field.code_hint")} {...errorOf("code")}>
           {(control) => <Input {...control} autoComplete="off" className="projects-register__mono" {...register("code")} />}
@@ -121,14 +122,14 @@ export function ProjectCreateForm({ permissions, onCreated }: ProjectCreateFormP
         </FormField>
         <FormField label={t("projects.field.site")} {...errorOf("siteId")}>
           {(control) => (
-            <select {...control} className="projects-register__select" {...register("siteId", { setValueAs: optional })}>
+            <NativeSelect {...control} {...register("siteId", { setValueAs: optional })}>
               <option value="">{t("projects.field.site_none")}</option>
               {siteItems.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           )}
         </FormField>
         <FormField label={t("projects.field.region")} hint={t("projects.field.region_hint")} {...errorOf("region")}>
@@ -154,6 +155,7 @@ export function ProjectCreateForm({ permissions, onCreated }: ProjectCreateFormP
           </Button>
         </div>
       </form>
+      </Panel>
     </section>
   );
 }

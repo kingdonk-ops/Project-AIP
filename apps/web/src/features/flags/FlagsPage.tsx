@@ -5,7 +5,7 @@
  * A successful change is written into the shell's flags query, so gated nav items follow at once.
  */
 import { usePlatformSetFlag, type FeatureFlag } from "@aip/api-client";
-import { Checkbox, ErrorState, Label, LoadingState, toast } from "@aip/ui";
+import { Checkbox, ErrorState, Label, LoadingState, Panel, toast } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FLAGS_MANAGE, storeFlag, useFeatureFlags } from "../shell/flags";
@@ -72,7 +72,9 @@ export function FlagsPage({ permissions }: { permissions: readonly string[] }) {
       {permissions.includes(FLAGS_MANAGE) ? (
         <>
           <p>{t("shell.flags.intro")}</p>
-          <FlagList />
+          <Panel>
+            <FlagList />
+          </Panel>
         </>
       ) : (
         <ErrorState error={{ status: 403 }} onRetry={() => window.location.reload()} translate={t} />

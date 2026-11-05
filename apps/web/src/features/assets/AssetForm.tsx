@@ -17,7 +17,7 @@ import {
   type AssetDetail,
   type AssetOut,
 } from "@aip/api-client";
-import { Button, Combobox, ErrorState, FormField, Input, LoadingState, type RequestError } from "@aip/ui";
+import { Button, Combobox, ErrorState, FormField, Input, LoadingState, Panel, type RequestError } from "@aip/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -292,6 +292,7 @@ function AssetFormBody({ initial, parentId: initialParent, onCreated, onSaved, o
           {notice}
         </p>
       ) : null}
+      <Panel className="assets-form__panel">
       <form
         noValidate
         onSubmit={(event) => {
@@ -412,6 +413,7 @@ function AssetFormBody({ initial, parentId: initialParent, onCreated, onSaved, o
           </Button>
         </div>
       </form>
+      </Panel>
     </section>
   );
 }

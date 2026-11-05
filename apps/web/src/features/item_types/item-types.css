@@ -28,8 +28,7 @@
   font-family: var(--font-mono);
 }
 
-.item-types-select,
-.item-types-summary {
+.item-types-select {
   min-height: 2.5rem;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border);
@@ -40,7 +39,6 @@
 }
 
 .item-types-select:focus-visible,
-.item-types-summary:focus-visible,
 .item-types-json__text:focus-visible,
 .item-types-json__issue:focus-visible {
   outline: 2px solid var(--focus-ring);
