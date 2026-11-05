@@ -225,6 +225,7 @@ From [docs/reviews/11-codebase-gap-review-2026-10-16.md](../docs/reviews/11-code
 | [DESIGN-15](tasks/DESIGN-15.md) | Nav items honour release flags (GET /settings/flags) and a Settings page to switch them (tenant.flags.manage) | design | S | ARCH-08, DESIGN-06 | done | ClaudeK: PR #214; review 11 L26 |
 | [DESIGN-16](tasks/DESIGN-16.md) | Mobile nav drawer behaves as a modal: focus trap, inert page, scroll lock | design | XS | DESIGN-08 | done | ClaudeK: PR #116; DESIGN-08 review |
 | [DESIGN-17](tasks/DESIGN-17.md) | ProjectAIP master brand: favicon, app icon, lockup A in the header and lockup C for the portal footer | design | S | DESIGN-14 | done | ClaudeK: claudeK/master-brand-client-portal-02cfee; owner brand files 2026-10-28 |
+| [DESIGN-19](tasks/DESIGN-19.md) | Sign-in surfaces follow DESIGN-09: web login Panel on the canvas, Keycloak theme tokens | design | S | DESIGN-07, DESIGN-09 | review | ClaudeK: PR #241; branch claudeK/optimistic-franklin-693928; found 2026-11-05 (owner asked whether the login matches DESIGN-09) |
 
 ### Review 13 follow-ups (merged-PR review, 2026-11-03)
 
@@ -290,7 +291,7 @@ From [docs/reviews/13-merged-pr-review-2026-11-03.md](../docs/reviews/13-merged-
 | [OPS-15](tasks/OPS-15.md) | CloudWatch alarms, EventBridge schedules and secret-rotation Lambdas | ops | M | OPS-07, OPS-13, SECURITY-10 | todo | AWS readiness |
 | [DESIGN-09](tasks/DESIGN-09.md) | Modernized surfaces: canvas/panels/chips + blade, KPI strip, work-queue | design | M | DESIGN-04, DESIGN-08 | done | ClaudeK: PR #237; branch claudeK/design-09-modern-surfaces; **merges DESIGN-11**; UI modernization guide (docs/reviews/10); in the demo slice before INSPECTIONS-04 (owner 2026-11-04) |
 | [DESIGN-18](tasks/DESIGN-18.md) | Every app page shows its content in panels on the canvas (record detail, forms, settings) | design | S | DESIGN-09 | review | ClaudeK: PR #240; branch claudeK/cool-dubinsky-766463; found by the DESIGN-09 page survey 2026-11-05 |
-| [DESIGN-19](tasks/DESIGN-19.md) | Remaining raw selects, textareas and tables use the @aip/ui controls (dialogs, form-template editors) | design | XS | DESIGN-18 | todo | found by DESIGN-18 2026-11-05 |
+| [DESIGN-20](tasks/DESIGN-20.md) | Remaining raw selects, textareas and tables use the @aip/ui controls (dialogs, form-template editors) | design | XS | DESIGN-18 | todo | found by DESIGN-18 2026-11-05 |
 | [DESIGN-05](tasks/DESIGN-05.md) | Tenant colours and user display preferences (colours, density, side panel or full page) + visual regression | design | L | DESIGN-03, DESIGN-04, DESIGN-09, ACCESS-01 | todo | convert to Python backend per ADR 0001 before starting; after DESIGN-09 so baselines are taken once on the new look; **merges DESIGN-13** (My display preferences: side panel or full page, user colour preset; owner request 2026-10-14) |
 | [DESIGN-10](tasks/DESIGN-10.md) | Scope bar as a breadcrumb (tenant › organisation › project › asset) | design | S | DESIGN-09, PROJECTS-03 | todo | UI modernization guide (docs/reviews/10) |
 

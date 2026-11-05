@@ -44,7 +44,7 @@ panels. Presentation only: no behaviour, route, label or API change. The login p
     `@aip/ui` (native elements with the `.aip-input` look: `--border-strong`, `--control-h`, focus ring) and use
     them for the raw `<select>`/`<textarea>` in ContentTypeDetail, ItemTypeEditor, PortalUserDetail and
     ProjectCreateForm (and ProjectEditForm, the same field). `forms.css` uses `var(--status-danger)` with no hex
-    fallback. The other dialogs' raw controls are DESIGN-19.
+    fallback. The other dialogs' raw controls are DESIGN-20.
   - 5. **High contrast.** `--canvas` is white there, so `[data-contrast="high"] .aip-panel` takes `--border` (black);
     the `-subtle` tokens stay unset under high contrast, as DESIGN-09 requires.
 - **acceptance**:
