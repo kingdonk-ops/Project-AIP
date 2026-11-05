@@ -6,6 +6,7 @@
   "exports": {
     "./permissions": "./src/permissions.generated.ts",
     "./field-types": "./field-types/field-types.json",
+    "./units": "./unit-vectors/units-v1.json",
     "./jsonlogic-vectors/*": "./jsonlogic-vectors/*"
   }
 }
