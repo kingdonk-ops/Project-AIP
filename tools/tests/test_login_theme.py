@@ -143,7 +143,9 @@ def test_drift_check_covers_the_high_contrast_values() -> None:
     theme = THEME_CSS.read_text("utf-8")
     assert _high_contrast_root(theme), "the theme has a prefers-contrast: more :root block"
     changed = theme.replace(
-        "--aip-color-canvas: #ffffff; /* high-contrast --canvas */", "--aip-color-canvas: #fafafa;", 1
+        "--aip-color-canvas: #ffffff; /* high-contrast --canvas */",
+        "--aip-color-canvas: #fafafa;",
+        1,
     )
     assert changed != theme, "the high-contrast canvas moved: update this test"
     assert shared_drift(TOKENS.read_text("utf-8"), changed) == [
