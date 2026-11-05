@@ -17,12 +17,12 @@
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint-plugin-boundaries": "^7.4.0",
-    "globals": "^17.13.0",
+    "eslint-plugin-boundaries": "^7.4.1",
+    "globals": "^17.14.0",
     "typescript-eslint": "^8.72.1"
   },
   "devDependencies": {
-    "eslint": "^10.13.0",
-    "vitest": "^5.0.5"
+    "eslint": "^10.14.0",
+    "vitest": "^5.1.0"
   }
 }
