@@ -102,8 +102,13 @@ class RevisionCreate(_In):
 
 
 class RevisionReplace(_In):
+    """Replace a draft's schema. ``expectedSyncVersion`` (the template's ``syncVersion``, as
+    publish takes it) makes a stale save 409 ``VERSION_CONFLICT``; omitted, the save is not
+    checked (the FORMS-04 JSON upload). Every replace bumps the template's ``syncVersion``."""
+
     schema_: SchemaObject = Field(alias="schema")
     change_note: ChangeNote | None = None
+    expected_sync_version: int | None = Field(default=None, ge=1)
 
 
 class PublishBody(_In):

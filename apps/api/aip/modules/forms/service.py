@@ -259,6 +259,17 @@ class FormsService:
                 raise NotFoundError(f"form revision {revision_id} not found")
             if revision["status"] != "draft":
                 raise DomainError(409, "REVISION_FROZEN")
+            # Lock the template and bump its sync_version: a designer that saved with an older
+            # version gets VERSION_CONFLICT instead of silently overwriting this save (FORMS-11).
+            template = await repo.lock_template(conn, revision["template_id"])
+            if template is None:
+                raise NotFoundError(f"form template {revision['template_id']} not found")
+            expected = (
+                template["sync_version"]
+                if body.expected_sync_version is None
+                else body.expected_sync_version
+            )
+            await repo.update_template(conn, template["id"], expected, {})
             patch: dict[str, Any] = {"schema": body.schema_}
             if "change_note" in body.model_fields_set:
                 patch["change_note"] = body.change_note
