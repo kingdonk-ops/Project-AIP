@@ -78,7 +78,7 @@ marked `blocked` on the board waits for its question; the others only shape late
 
 Also from the portal README: the identity approach for portal users is answered (username, password and second step via Keycloak, ADR 0010 addendum part 2, ADR 0036), and staging is answered by the R1 slice in ADR 0036.
 
-Settled (ADR 0036): assets ltree vs closure table (ltree, ADR 0002); assets phasing of risk-based scheduling and P&ID linkage (after R1, ADR 0007); item_types expression language (JSONLogic); forms builder foundation (no designer in R1); forms CEL vs JSONLogic (JSONLogic); inspections state machine (approvals engine, APPROVALS-01/02/05); eligibility reminder mechanism (Procrastinate, OPS-13, OPS-17); issues cost impact (not in R1).
+Settled (ADR 0036): assets ltree vs closure table (ltree, ADR 0002); assets phasing of risk-based scheduling and P&ID linkage (after R1, ADR 0007); item_types expression language (JSONLogic); forms builder foundation (custom builder, designer in R1 as FORMS-11/12, ADR 0043); forms CEL vs JSONLogic (JSONLogic); inspections state machine (approvals engine, APPROVALS-01/02/05); eligibility reminder mechanism (Procrastinate, OPS-13, OPS-17); issues cost impact (not in R1).
 
 ## Also waiting on the owner
 

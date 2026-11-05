@@ -61,7 +61,7 @@ Decisions and notes
 - All six scouted suggestions accepted.
 
 Open questions
-- Builder foundation: custom builder, react-jsonschema-form or SurveyJS Creator (commercial licence); not decided.
+- ~~Builder foundation: custom builder, react-jsonschema-form or SurveyJS Creator (commercial licence); not decided.~~ Decided by [ADR 0043](../../../adr/0043-form-designer-in-r1.md) (2026-11-05): custom builder over the FORMS-01 contract; the designer is in R1 as FORMS-11 and FORMS-12.
 - CEL versus JSONLogic: advisors name both; not chosen.
 
 ## Other files in this folder (read only if your task needs them)
