@@ -60,7 +60,9 @@ SHARED_HIGH_CONTRAST = {
 
 _DECL = re.compile(r"(--[\w-]+)\s*:\s*([^;]+);")
 _RULE = re.compile(r"([^{}]+)\{([^{}]*)\}")
-_MEDIA_MORE = re.compile(r"@media\s*\(prefers-contrast:\s*more\)\s*\{((?:[^{}]*\{[^{}]*\})*[^{}]*)\}")
+_MEDIA_MORE = re.compile(
+    r"@media\s*\(prefers-contrast:\s*more\)\s*\{((?:[^{}]*\{[^{}]*\})*[^{}]*)\}"
+)
 
 
 def _strip_comments(css: str) -> str:
@@ -68,7 +70,7 @@ def _strip_comments(css: str) -> str:
 
 
 def _blocks(css: str) -> dict[str, dict[str, str]]:
-    """Custom properties per top-level selector block (`@media` blocks and `@import` lines skipped)."""
+    """Custom properties per top-level selector block (skips `@media` blocks, `@import` lines)."""
     css = _MEDIA_MORE.sub("", _strip_comments(css))
     blocks: dict[str, dict[str, str]] = {}
     for selector, body in _RULE.findall(css):
@@ -97,7 +99,10 @@ def _resolve(props: dict[str, str], value: str) -> str:
 
 
 def _drift(
-    tokens: dict[str, dict[str, str]], theme: dict[str, str], shared: dict[str, tuple[str, str]], where: str
+    tokens: dict[str, dict[str, str]],
+    theme: dict[str, str],
+    shared: dict[str, tuple[str, str]],
+    where: str,
 ) -> list[str]:
     drift = []
     for prop, (selector, token) in shared.items():
@@ -112,7 +117,8 @@ def _drift(
 def shared_drift(tokens_css: str, theme_css: str) -> list[str]:
     tokens, theme = _blocks(tokens_css), _blocks(theme_css)[":root"]
     high = theme | _high_contrast_root(theme_css)
-    return _drift(tokens, theme, SHARED, "") + _drift(tokens, high, SHARED_HIGH_CONTRAST, "prefers-contrast: more ")
+    more = "prefers-contrast: more "
+    return _drift(tokens, theme, SHARED, "") + _drift(tokens, high, SHARED_HIGH_CONTRAST, more)
 
 
 def test_theme_colours_match_the_design_tokens() -> None:
@@ -121,9 +127,12 @@ def test_theme_colours_match_the_design_tokens() -> None:
 
 def test_drift_check_covers_the_design_09_tokens() -> None:
     original = TOKENS.read_text("utf-8")
-    tokens = original.replace("--status-danger-subtle: #fef2f2;", "--status-danger-subtle: #fee2e2;", 1)
+    tokens = original.replace(
+        "--status-danger-subtle: #fef2f2;", "--status-danger-subtle: #fee2e2;", 1
+    )
     tokens = tokens.replace("--canvas: var(--neutral-50);", "--canvas: var(--neutral-100);", 1)
-    assert tokens.count("#fee2e2") == 1 and "--canvas: var(--neutral-100);" in tokens, "tokens moved: update this test"
+    moved = tokens.count("#fee2e2") == 1 and "--canvas: var(--neutral-100);" in tokens
+    assert moved, "tokens moved: update this test"
     assert shared_drift(tokens, THEME_CSS.read_text("utf-8")) == [
         "--aip-color-canvas is #fafafa, but :root --canvas is #f5f5f5",
         "--aip-color-danger-subtle is #fef2f2, but :root --status-danger-subtle is #fee2e2",
@@ -133,10 +142,13 @@ def test_drift_check_covers_the_design_09_tokens() -> None:
 def test_drift_check_covers_the_high_contrast_values() -> None:
     theme = THEME_CSS.read_text("utf-8")
     assert _high_contrast_root(theme), "the theme has a prefers-contrast: more :root block"
-    changed = theme.replace("--aip-color-canvas: #ffffff; /* high-contrast --canvas */", "--aip-color-canvas: #fafafa;", 1)
+    changed = theme.replace(
+        "--aip-color-canvas: #ffffff; /* high-contrast --canvas */", "--aip-color-canvas: #fafafa;", 1
+    )
     assert changed != theme, "the high-contrast canvas moved: update this test"
     assert shared_drift(TOKENS.read_text("utf-8"), changed) == [
-        'prefers-contrast: more --aip-color-canvas is #fafafa, but [data-contrast="high"] --canvas is #ffffff'
+        "prefers-contrast: more --aip-color-canvas is #fafafa, "
+        'but [data-contrast="high"] --canvas is #ffffff'
     ]
 
 

@@ -63,3 +63,21 @@ the old flat look. Bring both in line.
       contrast, 32px input with icon, axe.
     - `walking-skeleton.spec.ts` (`@skeleton @staging`): the Keycloak page's canvas, card hairline and accent, then
       the same under `prefers-contrast: more`, and axe.
+
+## Delivery notes (2026-11-05, branch `claudeK/optimistic-franklin-693928`)
+
+- **ID.** Filed as DESIGN-18 first; that ID was already claimed by the "panels on non-register pages" branch
+  (`claudeK/cool-dubinsky-766463`), so this task is DESIGN-19.
+- **Login icon.** `Input icon="user"`: the field is the account identifier (`autocomplete="username"`) and the icon
+  set has no mail glyph; adding one to `packages/ui` for a single field was not worth widening the task.
+- **Panel name.** `Panel` only takes `h2`–`h4` headings, so the page keeps its `h1` inside the panel and names the
+  section with `aria-labelledby`.
+- **Keycloak 26.8.1 quirks found on a live container:** keycloak.v2 adds a 4px `--keycloak-card-top-color` bar on the
+  card header (removed: a DESIGN-09 panel has only its hairline), forces the realm name white with `!important`
+  for its old dark backdrop (now the brand text, via the variable it reads), and switches PatternFly to dark under
+  `prefers-color-scheme: dark`, which put dark fields inside the white card. The app has no dark mode, so the theme
+  sets `darkMode=false`. Form controls now use `--border-strong` on all four sides with the accent underline on focus.
+- **High contrast on Keycloak** follows the OS `prefers-contrast: more` (the app's `[data-contrast]` setting is not
+  visible there). The drift check maps the high-contrast `--border-subtle` too, inheriting `:root` while the tokens
+  leave it unset; if DESIGN-18 merges first with its black high-contrast hairline, add the same value to the theme's
+  `prefers-contrast: more` block.
