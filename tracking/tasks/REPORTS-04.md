@@ -138,3 +138,12 @@ requesting a render from the page (REPORTS-03 renders on approval).
       project-summary render through the API, waits for `succeeded`, finds it on `/reports/register` by searching the
       project code, clicks Download and gets a `%PDF` file whose sha256 is the row's `pdfSha256`; B gets a 404 for
       A's list item and download; axe on the register.
+
+## As-built note (REPORTS-07, 2026-11-05)
+
+Reading a render job needs more than `report.view` (review 13 M1). `GET /api/v1/reports/renders`, `GET /{id}` and
+`GET /{id}/file` require `report.view` **and** the source record type's view permission (`inspection.view` for an
+inspection report, `project.view` for a project summary) on the job's project, as requesting a render already did.
+Without `report.view` the answer is still 403; without the record permission `get` and the download answer 404
+`RENDER_JOB_NOT_FOUND` (the job is not revealed) and the list leaves the row out. A job whose record type has no
+registered provider is refused the same way.

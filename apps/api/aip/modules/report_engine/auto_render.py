@@ -114,7 +114,7 @@ class AutoRender:
                     )
             except DomainError as exc:
                 code = exc.code
-            except RecordNotFound:  # a pinned file vanished while the snapshot was built
+            except RecordNotFound:  # a renderer that does not map it (RenderService gives 404)
                 code = _RECORD_NOT_FOUND
             if code is not None:
                 logger.warning(

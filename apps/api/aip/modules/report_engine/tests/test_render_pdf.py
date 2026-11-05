@@ -36,6 +36,8 @@ RENDERS = "/api/v1/reports/renders"
 TEMPLATES = "/api/v1/reports/templates"
 ROOT = repo_root() / "config" / "report-templates"
 EXAMPLE = ROOT / "project-summary" / "internal" / "v1"
+V1_CELL = "<td>{{ project.code }}</td>"  # what ``_publish_v2(marker=...)`` replaces
+V1_MARKER = "KF-01"  # the project code: shown by v1 only once v2 replaces the cell
 
 pytestmark = pytest.mark.usefixtures("scope_users")
 
@@ -105,10 +107,16 @@ def _size(pdf: bytes) -> tuple[float, float]:
 
 
 async def _publish_v2(client: httpx.AsyncClient, **definition: Any) -> None:
-    """Upload and publish ``project-summary/internal`` v2 (a copy of v1, changed as asked)."""
+    """Upload and publish ``project-summary/internal`` v2 (a copy of v1, changed as asked).
+
+    With ``marker`` the v2 body shows it in place of the project code, so only a v1 page shows
+    ``V1_MARKER`` and only a v2 page shows the marker."""
     package = load_package(EXAMPLE)
     marker = definition.pop("marker", None)
-    body = package.body if marker is None else package.body + f"\n<p>{marker}</p>\n"
+    body = package.body
+    if marker is not None:
+        assert body.count(V1_CELL) == 1
+        body = body.replace(V1_CELL, f"<td>{marker}</td>")
     upload = {
         "definition": {**json.loads(json.dumps(package.definition)), "version": 2, **definition},
         "body": body,
@@ -176,7 +184,7 @@ async def test_the_pinned_version_renders_and_a_rerender_reproduces_it(
     done = await _get(client, job["id"])
     assert (done["status"], done["templateVersion"]) == ("succeeded", 1)
     text = _text(await _pdf(db, done["fileId"]))
-    assert "KF-01" in text and "MARKER-V2" not in text
+    assert V1_MARKER in text and "MARKER-V2" not in text  # v1 rendered, not v2 (review 13 L3)
 
     again = await client.post(f"{RENDERS}/{job['id']}/rerender", headers=ALICE)
     assert again.status_code == 202, again.text
@@ -188,7 +196,8 @@ async def test_the_pinned_version_renders_and_a_rerender_reproduces_it(
     redone = await _get(client, second["id"])
     assert redone["status"] == "succeeded", redone
     assert redone["htmlSha256"] == done["htmlSha256"]
-    assert "MARKER-V2" not in _text(await _pdf(db, redone["fileId"]))
+    again_text = _text(await _pdf(db, redone["fileId"]))
+    assert V1_MARKER in again_text and "MARKER-V2" not in again_text
 
 
 async def test_an_unreachable_renderer_fails_after_three_tries(

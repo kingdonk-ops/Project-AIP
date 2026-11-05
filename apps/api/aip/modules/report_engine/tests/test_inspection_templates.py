@@ -24,7 +24,9 @@ from aip.modules.report_engine.template_package import (
 from aip.platform.db.migrator import repo_root
 
 ROOT = repo_root() / "config" / "report-templates" / "inspection"
-INTERNAL, CLIENT = ROOT / "internal" / "v1", ROOT / "client" / "v1"
+# REPORTS-07: v2 (v1 plus the embedded IBM Plex Sans) is the latest; v1 stays as installed.
+INTERNAL, CLIENT = ROOT / "internal" / "v2", ROOT / "client" / "v2"
+PLEX_FONTS = {"ibm-plex-sans-latin-400-normal.woff2", "ibm-plex-sans-latin-600-normal.woff2"}
 EXAMPLE = repo_root() / "config" / "report-templates" / "project-summary" / "internal" / "v1"
 TERMS: dict[str, str] = json.loads(
     (repo_root() / "config" / "terms" / "en-AU" / "report_engine.json").read_text("utf-8")
@@ -48,13 +50,56 @@ def _render(package: TemplatePackage, data: dict[str, Any] | None = None) -> str
 @pytest.mark.parametrize("folder", [INTERNAL, CLIENT])
 def test_both_packages_load_landscape_and_auto_render_on_approval(folder: Path) -> None:
     package = load_package(folder)
-    assert (package.key, package.record_type, package.version) == ("inspection", "inspection", 1)
+    assert (package.key, package.record_type, package.version) == ("inspection", "inspection", 2)
     assert package.variant == folder.parent.name
     assert package.definition["orientation"] == "landscape"
     assert package.definition["paper"] == "A4"
     assert package.definition["marginsMm"] == {"top": 10, "right": 10, "bottom": 12, "left": 10}
     # ADR 0041: the approved, terminal inspection state is ``performed`` (v1 called it completed).
     assert package.definition["autoRender"] == {"onStates": ["performed"]}
+
+
+@pytest.mark.parametrize("folder", [INTERNAL, CLIENT])
+def test_both_packages_embed_ibm_plex_sans(folder: Path) -> None:
+    """REPORTS-07 (review 13 L5, ADR 0014): an OFL font from the package, ``sans-serif`` only as
+    the fallback, so the PDF does not depend on the renderer's fonts."""
+    package = load_package(folder)
+    fonts = {n for n, a in package.assets.items() if a.content_type == "font/woff2"}
+    assert fonts == PLEX_FONTS
+    assert package.definition["fontLicences"] == ["OFL-1.1"]
+    assert (folder / "OFL.txt").read_text("utf-8").startswith("Copyright")
+    css = package.css
+    assert css.count("@font-face") == 2
+    for name in PLEX_FONTS:
+        assert f"src: url({name})" in css
+    families = re.findall(r"font-family:\s*([^;]+);", css)
+    assert families and set(families) == {'"IBM Plex Sans"', '"IBM Plex Sans", sans-serif'}
+    document = render_html(
+        package,
+        dict(package.sample_data),
+        labels={key: TERMS[key] for key in package.term_keys},
+        locale="en-AU",
+        time_zone="Australia/Perth",
+        unit_system="metric",
+    )
+    assert set(document.assets) >= PLEX_FONTS  # sent to Gotenberg beside index.html
+    for name in PLEX_FONTS:
+        assert f"url({name})" in document.html
+
+
+@pytest.mark.parametrize("variant", ["internal", "client"])
+def test_v1_is_unchanged_so_installed_tenants_still_load(variant: str) -> None:
+    """A changed installed version stops the loader (``TEMPLATE_VERSION_CHANGED``)."""
+    v1 = load_package(ROOT / variant / "v1")
+    assert v1.version == 1 and "@font-face" not in v1.css
+    assert set(v1.assets) == {"logo.png"}
+
+
+def test_the_client_sample_data_has_the_client_snapshot_shape() -> None:
+    sample = load_package(CLIENT).sample_data
+    assert "id" not in sample["inspection"] and "internalTag" not in sample["asset"]
+    assert "schemaHash" not in sample["form"]
+    assert all("respondedBy" not in f for s in sample["form"]["sections"] for f in s["fields"])
 
 
 @pytest.mark.parametrize("folder", [INTERNAL, CLIENT])

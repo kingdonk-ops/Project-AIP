@@ -25,9 +25,9 @@ _projects = ProjectsApi()
 
 
 async def project_source(
-    conn: AsyncConnection, record_id: UUID, *, context: Mapping[str, Any]
+    conn: AsyncConnection, record_id: UUID, *, context: Mapping[str, Any], variant: str
 ) -> ReportSource:
-    del context  # a project report needs no trigger data
+    del context, variant  # a project report needs no trigger data and holds no internal field
     project = await _projects.get_project(conn, record_id)
     if project is None:
         raise RecordNotFound(f"project {record_id}")

@@ -28,6 +28,11 @@ render job's asset name), at most 40 per report in schema order. Anything else i
 omitted}`` with ``not_an_image``, ``too_large``, ``too_many`` or ``unavailable`` (the file is gone
 or not clean), shown with ``report.inspection.photo_omitted.<reason>``.
 
+REPORTS-07: for any variant but ``internal`` (the ``client`` one) the record itself leaves out
+``inspection.id``, ``asset.internalTag``, ``form.schemaHash`` and every field's ``respondedBy``, so
+the stored snapshot holds no internal data, whatever the template shows. The register label
+(kept on the job, not in the snapshot) is unchanged.
+
 ``context`` (the auto-render trigger) gives ``approvedAt`` (the event's time) and ``approvedBy``
 (its actor, shown as a display name); a manual render has an empty ``approval``. The register label
 is ``"<project code> <tag> <asset name>"``. Every read goes through ``InspectionDeps``, so the unit
@@ -73,6 +78,7 @@ __all__ = [
 ]
 
 INSPECTION_RECORD_TYPE: Final = "inspection"
+INTERNAL_VARIANT: Final = "internal"  # every other variant leaves internal fields out
 IMAGE_TYPES: Final = frozenset({"image/jpeg", "image/png", "image/webp"})
 IMAGE_MAX_BYTES: Final = 3 * 1024 * 1024
 MAX_IMAGES: Final = 40
@@ -225,9 +231,15 @@ class InspectionProvider:
         return self._deps
 
     async def __call__(
-        self, conn: AsyncConnection, record_id: UUID, *, context: Mapping[str, Any]
+        self,
+        conn: AsyncConnection,
+        record_id: UUID,
+        *,
+        context: Mapping[str, Any],
+        variant: str,
     ) -> ReportSource:
         d = self.deps
+        internal = variant == INTERNAL_VARIANT
         inspection = await d.get_inspection(conn, record_id)
         if inspection is None:
             raise RecordNotFound(f"inspection {record_id}")
@@ -247,7 +259,7 @@ class InspectionProvider:
         schema_sections: list[Mapping[str, Any]] = list(revision.schema.get("sections", []))
         labels = await d.resolve_labels(conn, _label_keys(schema_sections), inspection.project_id)
         approved_by = _as_uuid(context.get("approvedBy"))
-        users = {a.responded_by for a in responses.answers.values()}
+        users = {a.responded_by for a in responses.answers.values()} if internal else set()
         names = await d.get_display_names(
             conn, sorted(users | ({approved_by} if approved_by else set()), key=str)
         )
@@ -270,21 +282,23 @@ class InspectionProvider:
                 is_failed = key in failed
                 answered += current is not None
                 failed_count += is_failed
-                fields.append(
-                    {
-                        "key": key,
-                        "type": str(spec["type"]),
-                        "label": _text(spec, labels),
-                        "unit": spec.get("unit"),
-                        "required": bool(required.get(key, spec.get("required", False))),
-                        "failed": is_failed,
-                        "answer": None
-                        if current is None
-                        else await _answer(spec, current.value, labels, files),
-                        "respondedBy": None if current is None else names.get(current.responded_by),
-                        "respondedAt": None if current is None else _utc_z(current.responded_at),
-                    }
-                )
+                field: dict[str, Any] = {
+                    "key": key,
+                    "type": str(spec["type"]),
+                    "label": _text(spec, labels),
+                    "unit": spec.get("unit"),
+                    "required": bool(required.get(key, spec.get("required", False))),
+                    "failed": is_failed,
+                    "answer": None
+                    if current is None
+                    else await _answer(spec, current.value, labels, files),
+                    "respondedAt": None if current is None else _utc_z(current.responded_at),
+                }
+                if internal:
+                    field["respondedBy"] = (
+                        None if current is None else names.get(current.responded_by)
+                    )
+                fields.append(field)
             if fields:
                 sections.append(
                     {"key": str(section["key"]), "label": _text(section, labels), "fields": fields}
@@ -298,31 +312,35 @@ class InspectionProvider:
             }
         tag = asset.tag_number or asset.internal_tag
         label = " ".join(p for p in (project.code if project else None, tag, asset.name) if p)
+        record_part: dict[str, Any] = {
+            "kind": inspection.kind,
+            "state": inspection.state,
+            "createdAt": _utc_z(inspection.created_at),
+        }
+        asset_part: dict[str, Any] = {
+            "tagNumber": asset.tag_number,
+            "name": asset.name,
+            "location": await d.get_ancestor_names(conn, asset.id),
+        }
+        form_part: dict[str, Any] = {
+            "code": revision.template_code,
+            "revisionNo": revision.revision_no,
+            "sections": sections,
+        }
+        if internal:
+            record_part["id"] = str(inspection.id)
+            asset_part["internalTag"] = asset.internal_tag
+            form_part["schemaHash"] = revision.schema_hash
         return ReportSource(
             project_id=inspection.project_id,
             record_version=inspection.sync_version,
             data={
-                "inspection": {
-                    "id": str(inspection.id),
-                    "kind": inspection.kind,
-                    "state": inspection.state,
-                    "createdAt": _utc_z(inspection.created_at),
-                },
-                "asset": {
-                    "tagNumber": asset.tag_number,
-                    "name": asset.name,
-                    "internalTag": asset.internal_tag,
-                    "location": await d.get_ancestor_names(conn, asset.id),
-                },
+                "inspection": record_part,
+                "asset": asset_part,
                 "project": None
                 if project is None
                 else {"code": project.code, "name": project.name, "timezone": project.timezone},
-                "form": {
-                    "code": revision.template_code,
-                    "revisionNo": revision.revision_no,
-                    "schemaHash": revision.schema_hash,
-                    "sections": sections,
-                },
+                "form": form_part,
                 "summary": {
                     "answered": answered,
                     "failed": failed_count,
