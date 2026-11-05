@@ -55,6 +55,34 @@ async def test_bootstrap_creates_an_invited_sso_admin_once(db: TenantDb) -> None
     assert again == events and events[0][0] >= 1
 
 
+async def _scope_rows(db: TenantDb, email: str) -> list[tuple[object, ...]]:
+    return await su_fetch(
+        db,
+        "SELECT s.scope_kind, s.tenant_id FROM access_user_scope s"
+        " JOIN app_user u ON u.id = s.user_id WHERE u.email = $1",
+        email,
+    )
+
+
+async def test_bootstrap_restores_a_missing_scope_row(db: TenantDb) -> None:
+    # The Coolify demo's admins were bootstrapped before ACCESS-03, whose backfill copies nothing
+    # under RLS: their assignment had no access_user_scope row, so every project create was a 500.
+    await seed_roles(TENANT_A_ID)
+    await _bootstrap([(TENANT_A_ID, EMAIL, "kaefer-oidc")])
+    assert await _scope_rows(db, EMAIL) == [("tenant", TENANT_A_ID)]
+    await su_fetch(
+        db,
+        "DELETE FROM access_user_scope s USING app_user u"
+        " WHERE u.id = s.user_id AND u.email = $1 RETURNING 1",
+        EMAIL,
+    )
+    assert await _scope_rows(db, EMAIL) == []
+
+    assert await _bootstrap([(TENANT_A_ID, EMAIL, "kaefer-oidc")]) == 0  # "already held"
+    assert await _scope_rows(db, EMAIL) == [("tenant", TENANT_A_ID)]
+    assert len(await _holders(db, EMAIL)) == 1  # repaired, not assigned twice
+
+
 async def test_bootstrap_stays_inside_its_tenant(db: TenantDb) -> None:
     await seed_roles(TENANT_A_ID)
     await seed_roles(TENANT_B_ID)

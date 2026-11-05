@@ -36,6 +36,7 @@ __all__ = [
     "lock_tenant_roles",
     "member_teams",
     "privileged_codes",
+    "restore_missing_scope_rows",
     "role_code_for_id",
     "role_codes",
     "role_in_use",
@@ -383,6 +384,26 @@ async def has_live_tenant_assignment(conn: AsyncConnection, user_id: UUID, role_
         {"user": user_id, "role": role_id},
     )
     return row.first() is not None
+
+
+async def restore_missing_scope_rows(conn: AsyncConnection) -> int:
+    """Re-run the scope trigger for live tenant/project assignments that have no scope row.
+
+    ``access_user_scope`` is written only by ``trg_access_user_scope_sync``. Its backfill in
+    ``202610191000_access_scope_rls`` copies nothing under RLS, so an assignment made before that
+    revision (the Coolify demo's bootstrapped admins) has no scope row and its holder can neither
+    see nor create a project. Touching ``updated_at`` fires the trigger, which writes the row.
+    Returns how many assignments were touched.
+    """
+    result = await conn.execute(
+        text(
+            "UPDATE role_assignment ra SET updated_at = now()"
+            " WHERE ra.deleted_at IS NULL AND ra.scope_type IN ('tenant', 'project')"
+            " AND NOT EXISTS"
+            " (SELECT 1 FROM access_user_scope s WHERE s.role_assignment_id = ra.id)"
+        )
+    )
+    return result.rowcount
 
 
 _ASSIGNMENT_COLUMNS = (
