@@ -7,6 +7,12 @@ FROM python:3.12.15-slim-bookworm
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /usr/local/bin/uv
 
+# Debian security fixes the base tag lags on (AGENTS.md scan order, step 2: CVE-2026-109518 in apt
+# 2.6.1, fixed in 2.6.2). Drop it once the python base ships the fix.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
