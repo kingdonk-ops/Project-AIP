@@ -346,6 +346,10 @@ async def bootstrap_tenant_admin(
     their first sign-in) plus the assignment, emitted like any other. Runs on the caller's
     ``with_tenant`` connection inside a request context. Idempotent; ``True`` when it assigned.
     ``LookupError`` when the tenant has no ``tenant_admin`` role (run ``seed-roles`` first).
+
+    It also restores missing ``access_user_scope`` rows for the tenant's live assignments
+    (``repo.restore_missing_scope_rows``): a demo database whose admins were bootstrapped before
+    ACCESS-03 has none, and every project create there failed RLS with a 500.
     """
     await repo.lock_tenant_roles(conn)
     role = await repo.get_role_by_code(conn, TENANT_ADMIN)
@@ -354,6 +358,7 @@ async def bootstrap_tenant_admin(
     user_id = await ensure_invited_sso_user(
         conn, tenant_id=tenant_id, email=email, idp_alias=idp_alias
     )
+    await repo.restore_missing_scope_rows(conn)  # grants are unchanged: only the RLS mirror row
     if await repo.has_live_tenant_assignment(conn, user_id, role["id"]):
         return False
     assignment_id = _new_id()
