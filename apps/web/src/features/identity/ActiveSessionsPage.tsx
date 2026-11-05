@@ -57,39 +57,39 @@ export function ActiveSessionsPage() {
       ) : (
         <Panel>
           <Table>
-          <TableCaption>{t("identity.sessions.title")}</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead scope="col">{t("identity.sessions.device")}</TableHead>
-              <TableHead scope="col">{t("identity.sessions.ip")}</TableHead>
-              <TableHead scope="col">{t("identity.sessions.lastSeen")}</TableHead>
-              <TableHead scope="col">{t("identity.sessions.signedIn")}</TableHead>
-              <TableHead scope="col">{t("identity.sessions.actions")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sessions.map((s) => (
-              <TableRow key={s.id}>
-                <TableCell>
-                  {device(s)}
-                  {s.current && <strong>{` (${t("identity.sessions.current")})`}</strong>}
-                </TableCell>
-                <TableCell>{s.ip ?? "—"}</TableCell>
-                <TableCell>{when(s.lastSeenAt)}</TableCell>
-                <TableCell>{when(s.createdAt)}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="secondary"
-                    disabled={pending !== null}
-                    aria-label={t("identity.sessions.signOutLabel", { device: device(s) })}
-                    onClick={() => void signOut(s.id)}
-                  >
-                    {pending === s.id ? t("identity.sessions.signingOut") : t("identity.sessions.signOut")}
-                  </Button>
-                </TableCell>
+            <TableCaption>{t("identity.sessions.title")}</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead scope="col">{t("identity.sessions.device")}</TableHead>
+                <TableHead scope="col">{t("identity.sessions.ip")}</TableHead>
+                <TableHead scope="col">{t("identity.sessions.lastSeen")}</TableHead>
+                <TableHead scope="col">{t("identity.sessions.signedIn")}</TableHead>
+                <TableHead scope="col">{t("identity.sessions.actions")}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
+            </TableHeader>
+            <TableBody>
+              {sessions.map((s) => (
+                <TableRow key={s.id}>
+                  <TableCell>
+                    {device(s)}
+                    {s.current && <strong>{` (${t("identity.sessions.current")})`}</strong>}
+                  </TableCell>
+                  <TableCell>{s.ip ?? "—"}</TableCell>
+                  <TableCell>{when(s.lastSeenAt)}</TableCell>
+                  <TableCell>{when(s.createdAt)}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="secondary"
+                      disabled={pending !== null}
+                      aria-label={t("identity.sessions.signOutLabel", { device: device(s) })}
+                      onClick={() => void signOut(s.id)}
+                    >
+                      {pending === s.id ? t("identity.sessions.signingOut") : t("identity.sessions.signOut")}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
           </Table>
         </Panel>
       )}

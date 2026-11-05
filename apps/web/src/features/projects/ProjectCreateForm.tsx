@@ -113,48 +113,48 @@ export function ProjectCreateForm({ permissions, onCreated }: ProjectCreateFormP
     <section className="projects-form" aria-labelledby="projects-create-title">
       <h1 id="projects-create-title">{t("projects.create.title")}</h1>
       <Panel className="projects-form__panel">
-      <form noValidate onSubmit={(e) => void onSubmit(e)}>
-        <FormField label={t("projects.field.code")} hint={t("projects.field.code_hint")} {...errorOf("code")}>
-          {(control) => <Input {...control} autoComplete="off" className="projects-register__mono" {...register("code")} />}
-        </FormField>
-        <FormField label={t("projects.field.name")} {...errorOf("name")}>
-          {(control) => <Input {...control} {...register("name")} />}
-        </FormField>
-        <FormField label={t("projects.field.site")} {...errorOf("siteId")}>
-          {(control) => (
-            <NativeSelect {...control} {...register("siteId", { setValueAs: optional })}>
-              <option value="">{t("projects.field.site_none")}</option>
-              {siteItems.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </NativeSelect>
-          )}
-        </FormField>
-        <FormField label={t("projects.field.region")} hint={t("projects.field.region_hint")} {...errorOf("region")}>
-          {(control) => <Input {...control} {...register("region", { setValueAs: optional })} />}
-        </FormField>
-        <FormField label={t("projects.field.timezone")} hint={t("projects.field.timezone_hint")} {...errorOf("timezone")}>
-          {(control) => <Input {...control} {...register("timezone", { setValueAs: optional })} />}
-        </FormField>
-        <FormField label={t("projects.field.currency")} hint={t("projects.field.currency_hint")} {...errorOf("currency")}>
-          {(control) => <Input {...control} maxLength={3} {...register("currency", { setValueAs: optional })} />}
-        </FormField>
-        {formError ? (
-          <p role="alert" className="aip-form-field__error">
-            {formError}
-          </p>
-        ) : null}
-        <div className="projects-form__actions">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? t("projects.create.saving") : t("projects.create.submit")}
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link to="/projects">{t("projects.create.cancel")}</Link>
-          </Button>
-        </div>
-      </form>
+        <form noValidate onSubmit={(e) => void onSubmit(e)}>
+          <FormField label={t("projects.field.code")} hint={t("projects.field.code_hint")} {...errorOf("code")}>
+            {(control) => <Input {...control} autoComplete="off" className="projects-register__mono" {...register("code")} />}
+          </FormField>
+          <FormField label={t("projects.field.name")} {...errorOf("name")}>
+            {(control) => <Input {...control} {...register("name")} />}
+          </FormField>
+          <FormField label={t("projects.field.site")} {...errorOf("siteId")}>
+            {(control) => (
+              <NativeSelect {...control} {...register("siteId", { setValueAs: optional })}>
+                <option value="">{t("projects.field.site_none")}</option>
+                {siteItems.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </NativeSelect>
+            )}
+          </FormField>
+          <FormField label={t("projects.field.region")} hint={t("projects.field.region_hint")} {...errorOf("region")}>
+            {(control) => <Input {...control} {...register("region", { setValueAs: optional })} />}
+          </FormField>
+          <FormField label={t("projects.field.timezone")} hint={t("projects.field.timezone_hint")} {...errorOf("timezone")}>
+            {(control) => <Input {...control} {...register("timezone", { setValueAs: optional })} />}
+          </FormField>
+          <FormField label={t("projects.field.currency")} hint={t("projects.field.currency_hint")} {...errorOf("currency")}>
+            {(control) => <Input {...control} maxLength={3} {...register("currency", { setValueAs: optional })} />}
+          </FormField>
+          {formError ? (
+            <p role="alert" className="aip-form-field__error">
+              {formError}
+            </p>
+          ) : null}
+          <div className="projects-form__actions">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? t("projects.create.saving") : t("projects.create.submit")}
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link to="/projects">{t("projects.create.cancel")}</Link>
+            </Button>
+          </div>
+        </form>
       </Panel>
     </section>
   );
