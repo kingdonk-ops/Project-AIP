@@ -22,9 +22,10 @@ fresh second factor, the callback then rotates the session), the invite routes u
 ``/me`` checks, in order and failing closed: a principal (401), the tenant active (401/403, via
 tenancy's ``require_active_tenant``), then the user live and ``active`` in that tenant (401).
 
-IDENTITY-11: ``PATCH /api/v1/me`` (authenticated, staff and portal sessions alike) sets the
-caller's own ``timeZone`` (an IANA name, or null to clear); an unknown name is 422
-``INVALID_TIME_ZONE``. It runs the same checks as ``GET /me`` and answers the updated ``MeResponse``.
+IDENTITY-11: ``PATCH /api/v1/me`` (authenticated; portal sessions stay on ``/api/v1/portal/``,
+ADR 0036 choice 7, PORTAL-13) sets the caller's own ``timeZone`` (an IANA name, or null to
+clear); an unknown name is 422 ``INVALID_TIME_ZONE``. It runs the same checks as ``GET /me`` and
+answers the updated ``MeResponse``.
 
 IDENTITY-10: ``POST /api/v1/auth/portal/login/start`` and ``GET /api/v1/auth/portal/oidc/callback``
 (both public) sign clients in on the ``aip-portal`` client (``LoginService(audience="portal")``,
