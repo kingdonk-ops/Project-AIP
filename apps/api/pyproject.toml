@@ -37,7 +37,7 @@ aip-access = "aip.modules.access.roles.cli:main"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3",
+    "pytest>=9.2.0",
     "pytest-asyncio>=1.4.1",
     "httpx>=0.27",
     "ruff>=0.8",
