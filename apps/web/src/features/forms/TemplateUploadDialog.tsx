@@ -3,6 +3,9 @@
  * (file or pasted). `POST /forms/templates` saves it as draft v1. The server's lint issues (422
  * `TEMPLATE_INVALID`) are listed under the JSON and the text is kept; 409 `CODE_TAKEN` and
  * request-validation errors land on their fields.
+ *
+ * FORMS-11: "Start in designer" needs only the code, name and kind. It creates the template with a
+ * starter schema (one section holding one text field) and opens its v1 in the designer.
  */
 import { getFormsTemplatesListQueryKey, useFormsTemplatesCreate, type TemplateCreateKind } from "@aip/api-client";
 import { Button, Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, FormField, Input, toast } from "@aip/ui";
@@ -12,6 +15,7 @@ import { t } from "../shell/t";
 import { IssueList } from "./IssueList";
 import { lintIssues, requestIssues, type Issue } from "./issues";
 import { JsonInput } from "./JsonInput";
+import { starterSchema } from "./designer/model";
 import { parseTemplateJson, TEMPLATE_KINDS, type JsonError, type TemplateKind } from "./templateJson";
 
 const CODE_PATTERN = /^[a-z][a-z0-9-]{1,62}$/;
@@ -22,9 +26,11 @@ export interface TemplateUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (templateId: string) => void;
+  /** Open a template started with "Start in designer" (FORMS-11); without it the button is hidden. */
+  onStartDesigner?: (templateId: string) => void;
 }
 
-export function TemplateUploadDialog({ open, onOpenChange, onCreated }: TemplateUploadDialogProps) {
+export function TemplateUploadDialog({ open, onOpenChange, onCreated, onStartDesigner }: TemplateUploadDialogProps) {
   const queryClient = useQueryClient();
   const create = useFormsTemplatesCreate();
   const [code, setCode] = useState("");
@@ -72,11 +78,7 @@ export function TemplateUploadDialog({ open, onOpenChange, onCreated }: Template
     setKind(values.kind);
     setChangeNote(values.changeNote);
 
-    const errors: Partial<Record<FieldName, string>> = {};
-    if (!CODE_PATTERN.test(values.code)) errors.code = t("forms.templates.error.code");
-    if (values.name === "" || values.name.length > 200) errors.name = t("forms.templates.error.name");
-    setFieldErrors(errors);
-    if (Object.keys(errors).length) return;
+    if (!checkFields(values)) return;
 
     const response = await create.mutateAsync({
       data: {
@@ -95,7 +97,20 @@ export function TemplateUploadDialog({ open, onOpenChange, onCreated }: Template
       onCreated(response.data.template.id);
       return;
     }
-    const body = response.data as unknown;
+    failed(response);
+  }
+
+  function checkFields(values: { code: string; name: string }): boolean {
+    const errors: Partial<Record<FieldName, string>> = {};
+    if (!CODE_PATTERN.test(values.code)) errors.code = t("forms.templates.error.code");
+    if (values.name === "" || values.name.length > 200) errors.name = t("forms.templates.error.name");
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
+  /** A refused create: the code, lint issues, request-validation errors, or a general error. */
+  function failed(response: { status: number; data: unknown; headers: Headers }) {
+    const body = response.data;
     const errorCode = (body as { code?: unknown } | null)?.code;
     if (response.status === 409 && errorCode === "CODE_TAKEN") {
       setFieldErrors({ code: t("forms.templates.error.code_taken") });
@@ -124,6 +139,33 @@ export function TemplateUploadDialog({ open, onOpenChange, onCreated }: Template
           ? `${t("forms.templates.error.save")} ${t("forms.templates.error.request_id", { id })}`
           : t("forms.templates.error.save"),
     );
+  }
+
+  async function startInDesigner() {
+    if (!onStartDesigner) return;
+    setIssues([]);
+    setFormError(null);
+    setJsonError(null);
+    const values = { code: code.trim(), name: name.trim(), changeNote: changeNote.trim() };
+    if (!checkFields(values)) return;
+    const response = await create.mutateAsync({
+      data: {
+        code: values.code,
+        name: values.name,
+        kind: kind as TemplateCreateKind,
+        schema: starterSchema(t("forms.designer.starter.section"), t("forms.designer.starter.field")) as unknown as Record<string, unknown>,
+        ...(values.changeNote ? { changeNote: values.changeNote } : {}),
+      },
+    });
+    if (response.status === 201) {
+      await queryClient.invalidateQueries({ queryKey: getFormsTemplatesListQueryKey().slice(0, 1) });
+      toast.success("forms.templates.upload.started", { code: response.data.template.code });
+      reset();
+      onOpenChange(false);
+      onStartDesigner(response.data.template.id);
+      return;
+    }
+    failed(response);
   }
 
   return (
@@ -179,6 +221,14 @@ export function TemplateUploadDialog({ open, onOpenChange, onCreated }: Template
           <FormField label={t("forms.templates.field.change_note")}>
             {(control) => <Input {...control} value={changeNote} onChange={(e) => setChangeNote(e.target.value)} />}
           </FormField>
+          {onStartDesigner ? (
+            <div className="forms-form__actions">
+              <p className="forms-upload__start-hint">{t("forms.templates.upload.start_hint")}</p>
+              <Button type="button" variant="secondary" disabled={create.isPending} onClick={() => void startInDesigner()}>
+                {t("forms.templates.upload.start_designer")}
+              </Button>
+            </div>
+          ) : null}
           <JsonInput value={json} onChange={setJson} error={jsonError} />
           <IssueList issues={issues} />
           {formError ? (

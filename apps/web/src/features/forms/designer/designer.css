@@ -1,0 +1,302 @@
+/* FORMS-11: the form designer. Layout only; colours, borders and type come from @aip/ui tokens. */
+.dsg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  min-width: 0;
+}
+
+.dsg-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.dsg-toolbar__title,
+.dsg-toolbar__actions,
+.dsg-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.dsg-toolbar__heading {
+  margin: 0;
+  font-size: var(--text-lg, 1.125rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+  align-items: baseline;
+}
+
+.dsg-toolbar__state,
+.dsg-toolbar__reason,
+.dsg-palette__hint,
+.dsg-canvas__hint,
+.dsg-props__hint,
+.dsg-section__count {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.dsg-toolbar__state {
+  margin-inline-start: auto;
+}
+
+.dsg-switch {
+  gap: 0;
+}
+
+.dsg-panes {
+  display: grid;
+  grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr) minmax(16rem, 22rem);
+  gap: var(--space-4, 16px);
+  align-items: start;
+}
+
+.dsg-panes--read-only {
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
+}
+
+@media (max-width: 1023px) {
+  .dsg-panes,
+  .dsg-panes--read-only {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dsg-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  min-width: 0;
+}
+
+.dsg-pane--palette,
+.dsg-pane--properties {
+  position: sticky;
+  top: var(--space-4, 16px);
+}
+
+.dsg-palette__list,
+.dsg-fields,
+.dsg-options__list,
+.dsg-lint__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+}
+
+.dsg-palette__item {
+  width: 100%;
+  justify-content: flex-start;
+  touch-action: none;
+}
+
+.dsg-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+.dsg-section--selected,
+.dsg-row--selected {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.dsg-section__select,
+.dsg-row__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  min-height: 44px;
+  padding: var(--space-1, 4px) var(--space-2, 8px);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.dsg-row__main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dsg-section__select:focus-visible,
+.dsg-row__main:focus-visible,
+.dsg-handle:focus-visible,
+.dsg-lint__button:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--accent));
+  outline-offset: 2px;
+}
+
+.dsg-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--surface, #fff);
+}
+
+.dsg-row[data-dragging] {
+  opacity: 0.6;
+}
+
+.dsg-row__key {
+  color: var(--text-muted);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.dsg-handle {
+  min-width: 32px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.dsg-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2, 8px);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: var(--text-xs, 0.75rem);
+  line-height: 1.6;
+}
+
+.dsg-chip--logic {
+  border-style: dashed;
+}
+
+.dsg-chip--issues {
+  border-color: var(--status-danger);
+  color: var(--status-danger-text, var(--status-danger));
+}
+
+.dsg-section__drop {
+  min-height: var(--space-2, 8px);
+}
+
+.dsg-section__drop--over {
+  outline: 2px dashed var(--accent);
+}
+
+.dsg-section__empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) 0;
+}
+
+.dsg-section__empty p {
+  margin: 0;
+}
+
+.dsg-props {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+.dsg-props__heading,
+.dsg-props__subheading {
+  margin: 0;
+  font-size: var(--text-base, 1rem);
+}
+
+.dsg-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  min-height: 44px;
+}
+
+.dsg-options {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.dsg-options__legend {
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: var(--space-1, 4px);
+}
+
+.dsg-options__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-1, 4px);
+}
+
+.dsg-options__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: var(--space-1, 4px);
+}
+
+.dsg-logic__json,
+.dsg-json__pre {
+  margin: var(--space-1, 4px) 0 0;
+  padding: var(--space-2, 8px);
+  overflow-x: auto;
+  font-size: var(--text-sm, 0.875rem);
+  background: var(--canvas, transparent);
+  white-space: pre;
+}
+
+.dsg-lint__status {
+  margin: 0 0 var(--space-2, 8px);
+}
+
+.dsg-lint__item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+  align-items: baseline;
+}
+
+.dsg-lint__button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--link, var(--accent-text, inherit));
+  text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
+  min-height: 24px;
+}
+
+.dsg-lint__path,
+.dsg-lint__detail {
+  color: var(--text-muted);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.dsg-preview__frame {
+  margin-inline: auto;
+  width: 100%;
+}
+
+.dsg-preview__frame--phone {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-2, 8px);
+}

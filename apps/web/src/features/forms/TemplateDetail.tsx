@@ -175,6 +175,11 @@ export function TemplateDetail({ templateId, permissions, search, onSearchChange
       ) : null}
       {canManage && draft ? (
         <>
+          <Button asChild>
+            <Link to="/templates/$templateId/revisions/$rev/design" params={{ templateId: template.id, rev: String(draft.revisionNo) }}>
+              {t("forms.designer.open")}
+            </Link>
+          </Button>
           <Button variant="secondary" disabled={draftText === undefined} onClick={() => setDialog("replace")}>
             {t("forms.templates.draft.replace")}
           </Button>
@@ -208,6 +213,7 @@ export function TemplateDetail({ templateId, permissions, search, onSearchChange
             </div>
           </dl>
           <RevisionHistory
+            templateId={template.id}
             revisions={template.revisions}
             selectedNo={search.rev}
             onSelect={(rev) => onSearchChange({ ...search, rev })}
