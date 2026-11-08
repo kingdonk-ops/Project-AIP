@@ -10,6 +10,9 @@ No staff password, TOTP or WebAuthn code lives here: Keycloak does all of it.
 IDENTITY-02 adds ``create_local_user`` and ``change_email``, which keep a local account's email
 registered to its one tenant (``identity_register_email``).
 
+IDENTITY-11 adds ``set_time_zone``: the caller's preferred IANA zone on their profile (ADR 0025),
+checked against ``zoneinfo.available_timezones()`` (``InvalidTimeZoneError`` otherwise).
+
 IDENTITY-04 adds ``start_step_up``: the same authorize request with ``prompt=login``,
 ``max_age=0`` and ``acr_values=aal2`` (``step_up.build_step_up_url``), sealed with
 ``purpose='step_up'``. ``complete`` then returns the identity with its ``step_up`` state, and the
@@ -28,8 +31,10 @@ import hmac
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from functools import cache
 from typing import Any, Literal
 from uuid import UUID
+from zoneinfo import available_timezones
 
 from limits import RateLimitItem, parse
 from limits.aio.storage import MemoryStorage, RedisStorage, Storage
@@ -344,3 +349,46 @@ async def change_email(
     await repo.update_user(conn, user_id, email=email.strip())
     if not user.sso_managed:
         await repo.register_email(conn, email, tenant_id)
+
+
+# --- profile preferences (IDENTITY-11) ---------------------------------------------------------
+
+
+class InvalidTimeZoneError(ValueError):
+    """The name is not an IANA zone this server knows (abbreviations such as ``AWST`` are not)."""
+
+
+@cache
+def _known_time_zones() -> frozenset[str]:
+    return frozenset(available_timezones())
+
+
+def is_known_time_zone(name: str) -> bool:
+    """``True`` for an IANA zone name in this server's tzdata (exact, case-sensitive)."""
+    return name in _known_time_zones()
+
+
+async def set_time_zone(
+    conn: AsyncConnection, *, tenant_id: UUID, user_id: UUID, time_zone: str | None
+) -> None:
+    """Set (or clear, with ``None``) a live user's preferred zone and record ``profile.updated``.
+
+    ``InvalidTimeZoneError`` for an unknown name, before anything is written; ``NotFoundError``
+    when no live user ``user_id`` exists in the bound tenant. Setting the current value again
+    writes nothing.
+    """
+    if time_zone is not None and not is_known_time_zone(time_zone):
+        raise InvalidTimeZoneError("unknown time zone")
+    user = await repo.get_user(conn, user_id)
+    if user is None:
+        raise NotFoundError(f"app_user {user_id} not found")
+    if user.time_zone == time_zone:
+        return
+    await repo.update_user(conn, user_id, time_zone=time_zone)
+    await repo.record_auth_event(
+        conn,
+        tenant_id=tenant_id,
+        event_type="profile.updated",
+        user_id=user_id,
+        detail={"fields": ["time_zone"]},
+    )

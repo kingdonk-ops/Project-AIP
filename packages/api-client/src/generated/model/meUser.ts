@@ -7,5 +7,7 @@ export interface MeUser {
   email: string;
   id: string;
   status: MeUserStatus;
+  /** Preferred IANA time zone (IDENTITY-11); null means use the device zone. */
+  timeZone: string | null;
   userClass: MeUserUserClass;
 }

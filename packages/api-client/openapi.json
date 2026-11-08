@@ -5680,6 +5680,26 @@
         "title": "MeTenant",
         "type": "object"
       },
+      "MeUpdate": {
+        "additionalProperties": false,
+        "description": "``PATCH /api/v1/me``: the caller's own profile preferences. Omitted fields stay unchanged.",
+        "properties": {
+          "timeZone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "An IANA zone such as Australia/Perth, or null to clear the preference.",
+            "title": "Timezone"
+          }
+        },
+        "title": "MeUpdate",
+        "type": "object"
+      },
       "MeUser": {
         "additionalProperties": false,
         "properties": {
@@ -5705,6 +5725,18 @@
             "title": "Status",
             "type": "string"
           },
+          "timeZone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Preferred IANA time zone (IDENTITY-11); null means use the device zone.",
+            "title": "Timezone"
+          },
           "userClass": {
             "enum": [
               "staff",
@@ -5720,7 +5752,8 @@
           "email",
           "displayName",
           "userClass",
-          "status"
+          "status",
+          "timeZone"
         ],
         "title": "MeUser",
         "type": "object"
@@ -20029,6 +20062,65 @@
           }
         },
         "summary": "Get Me",
+        "tags": [
+          "identity"
+        ]
+      },
+      "patch": {
+        "operationId": "identity_update_me",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description": "The caller's own profile after the change."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "No authenticated principal, or the user is unknown or not active."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "The tenant is suspended, offboarded or not ready."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            },
+            "description": "INVALID_TIME_ZONE: the name is not a known IANA time zone."
+          }
+        },
+        "summary": "Update Me",
         "tags": [
           "identity"
         ]

@@ -95,6 +95,7 @@ async def test_me_returns_the_callers_own_user_tenant_and_memberships(
         "displayName": "Alice",
         "userClass": "staff",
         "status": "active",
+        "timeZone": None,
     }
     [membership] = body["memberships"]
     assert membership["membershipType"] == "member" and membership["validTo"] is None
