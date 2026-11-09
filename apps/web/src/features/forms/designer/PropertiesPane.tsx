@@ -8,7 +8,7 @@
  */
 import type { FieldType, FormField, FormSchema, FormSection } from "@aip/form-renderer";
 import { FormField as Field, Input, NativeSelect } from "@aip/ui";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { t } from "../../shell/t";
 import {
   changeFieldType,
@@ -49,7 +49,12 @@ export function unitLabel(unit: string): string {
 
 function KeyInput({ value, schema, readOnly, onRename }: { value: string; schema: FormSchema; readOnly: boolean; onRename: (to: string) => void }) {
   const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
+  // A new key from outside (another item selected, undo, label-follow) replaces the draft.
+  const [shown, setShown] = useState(value);
+  if (value !== shown) {
+    setShown(value);
+    setDraft(value);
+  }
   const error = keyError(schema, value, draft);
   return (
     <Field
@@ -88,9 +93,12 @@ function NumberInput({
   onChange: (value: number | undefined) => void;
 }) {
   const [draft, setDraft] = useState(value === undefined ? "" : String(value));
-  useEffect(() => {
-    setDraft((current) => (Number(current) === value && current.trim() !== "" ? current : value === undefined ? "" : String(value)));
-  }, [value]);
+  const [shown, setShown] = useState(value);
+  if (value !== shown) {
+    // A value from outside (undo, another field): show it unless the draft already means it.
+    setShown(value);
+    if (!(draft.trim() !== "" && Number(draft) === value)) setDraft(value === undefined ? "" : String(value));
+  }
   const invalid = draft.trim() !== "" && !Number.isFinite(Number(draft));
   return (
     <Field label={label} {...(invalid ? { error: t("forms.designer.prop.number_invalid") } : {})}>
@@ -181,7 +189,7 @@ function FieldProperties({ field, sectionKey, ...props }: PropertiesPaneProps & 
           </NativeSelect>
         )}
       </Field>
-      <div className="dsg-check">
+      <label className="dsg-check" htmlFor={requiredId}>
         <input
           id={requiredId}
           type="checkbox"
@@ -189,8 +197,8 @@ function FieldProperties({ field, sectionKey, ...props }: PropertiesPaneProps & 
           disabled={readOnly}
           onChange={(e) => edit(updateField(schema, field.key, { required: e.target.checked ? true : undefined }))}
         />
-        <label htmlFor={requiredId}>{t("forms.designer.prop.required")}</label>
-      </div>
+        {t("forms.designer.prop.required")}
+      </label>
       <Field label={t("forms.designer.prop.move_to")}>
         {(control) => (
           <NativeSelect

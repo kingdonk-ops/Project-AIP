@@ -60,24 +60,28 @@ function IssueCount({ count }: { count: number | undefined }) {
 
 function FieldRow({ field, ...props }: CanvasProps & { field: FormField }) {
   const { selection, counts, readOnly, onSelect, onRemove } = props;
-  const sortable = useSortable({ id: fieldId(field.key), disabled: readOnly, data: { kind: "field", key: field.key } });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: fieldId(field.key),
+    disabled: readOnly,
+    data: { kind: "field", key: field.key },
+  });
   const selected = selection?.kind === "field" && selection.key === field.key;
   const item = { kind: "field" as const, key: field.key };
   const logic = logicSet(field, FIELD_LOGIC_PROPS).length > 0;
   return (
     <li
-      ref={sortable.setNodeRef}
-      style={{ transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition }}
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
       className={selected ? "dsg-row dsg-row--selected" : "dsg-row"}
       data-field={field.key}
-      data-dragging={sortable.isDragging || undefined}
+      data-dragging={isDragging || undefined}
     >
       {readOnly ? null : (
         <button
           type="button"
           className="dsg-handle"
-          {...sortable.attributes}
-          {...sortable.listeners}
+          {...attributes}
+          {...listeners}
           aria-label={t("forms.designer.canvas.drag", { label: field.label || field.key })}
         >
           <span aria-hidden="true">{"⋮⋮"}</span>
@@ -118,8 +122,16 @@ function FieldRow({ field, ...props }: CanvasProps & { field: FormField }) {
 
 function SectionPanel({ section, ...props }: CanvasProps & { section: FormSection }) {
   const { selection, counts, readOnly, onSelect, onRemove, onAddField } = props;
-  const sortable = useSortable({ id: sectionId(section.key), disabled: readOnly, data: { kind: "section", key: section.key } });
-  const drop = useDroppable({ id: sectionDropId(section.key), disabled: readOnly, data: { kind: "section-end", key: section.key } });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: sectionId(section.key),
+    disabled: readOnly,
+    data: { kind: "section", key: section.key },
+  });
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: sectionDropId(section.key),
+    disabled: readOnly,
+    data: { kind: "section-end", key: section.key },
+  });
   const selected = selection?.kind === "section" && selection.key === section.key;
   const item = { kind: "section" as const, key: section.key };
   const logic = logicSet(section, SECTION_LOGIC_PROPS).length > 0;
@@ -147,8 +159,8 @@ function SectionPanel({ section, ...props }: CanvasProps & { section: FormSectio
           <button
             type="button"
             className="dsg-handle"
-            {...sortable.attributes}
-            {...sortable.listeners}
+            {...attributes}
+            {...listeners}
             aria-label={t("forms.designer.canvas.drag", { label: section.label || section.key })}
           >
             <span aria-hidden="true">{"⋮⋮"}</span>
@@ -169,8 +181,8 @@ function SectionPanel({ section, ...props }: CanvasProps & { section: FormSectio
 
   return (
     <Panel
-      ref={sortable.setNodeRef}
-      style={{ transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition }}
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
       heading={heading}
       headingLevel={3}
       actions={actions}
@@ -186,7 +198,7 @@ function SectionPanel({ section, ...props }: CanvasProps & { section: FormSectio
           </ul>
         ) : null}
       </SortableContext>
-      <div ref={drop.setNodeRef} className={drop.isOver ? "dsg-section__drop dsg-section__drop--over" : "dsg-section__drop"}>
+      <div ref={setDropRef} className={isOver ? "dsg-section__drop dsg-section__drop--over" : "dsg-section__drop"}>
         {section.fields.length === 0 ? (
           <div className="dsg-section__empty">
             <p>{t("forms.designer.canvas.empty_section")}</p>

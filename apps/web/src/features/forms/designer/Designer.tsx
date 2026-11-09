@@ -473,7 +473,7 @@ export function Designer({ template, revision, permissions, onBack, onOpenRevisi
       const issues = lintIssues(response.data);
       const request = issues.length ? issues : requestIssues(response.data);
       if (request.length) {
-        lint.report(request);
+        lint.report(request, sent);
         toast.error("forms.designer.save.invalid");
         return;
       }
@@ -510,7 +510,7 @@ export function Designer({ template, revision, permissions, onBack, onOpenRevisi
     }
     const issues = lintIssues(response.data);
     if (issues.length) {
-      lint.report(issues);
+      lint.report(issues, schema);
       return;
     }
     if ((response.status as number) === 409) {
@@ -541,11 +541,13 @@ export function Designer({ template, revision, permissions, onBack, onOpenRevisi
   // --- keyboard shortcuts ----------------------------------------------------------------------
 
   const shortcuts = useRef<{ save: () => void; undo: () => void; redo: () => void }>({ save: () => {}, undo: () => {}, redo: () => {} });
-  shortcuts.current = {
-    save: () => void save(),
-    undo: () => setHistory(undo),
-    redo: () => setHistory(redo),
-  };
+  useEffect(() => {
+    shortcuts.current = {
+      save: () => void save(),
+      undo: () => setHistory(undo),
+      redo: () => setHistory(redo),
+    };
+  });
   useEffect(() => {
     if (readOnly) return;
     const onKey = (event: KeyboardEvent) => {

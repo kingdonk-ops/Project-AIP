@@ -15,16 +15,17 @@ export const PALETTE_SECTION = "section";
 export const paletteId = (item: FieldType | typeof PALETTE_SECTION) => `palette:${item}`;
 
 function PaletteItem({ item, label, onAdd }: { item: FieldType | typeof PALETTE_SECTION; label: string; onAdd: () => void }) {
-  const draggable = useDraggable({ id: paletteId(item), data: { kind: "palette", item } });
+  const { setNodeRef, listeners } = useDraggable({ id: paletteId(item), data: { kind: "palette", item } });
+  const onPointerDown = listeners?.onPointerDown as PointerEventHandler<HTMLButtonElement> | undefined;
   return (
     <li>
       <Button
-        ref={draggable.setNodeRef}
+        ref={setNodeRef}
         type="button"
         variant="secondary"
         className="dsg-palette__item"
         data-palette={item}
-        onPointerDown={draggable.listeners?.onPointerDown as PointerEventHandler<HTMLButtonElement> | undefined}
+        onPointerDown={onPointerDown}
         onClick={onAdd}
       >
         {label}

@@ -272,7 +272,7 @@
   "forms.designer.preview.phone": "Phone",
   "forms.designer.preview.reset": "Reset answers",
   "forms.designer.preview.error": "The preview cannot show this template yet. Fix the issues first.",
-  "forms.designer.json.title": "Template JSON",
+  "forms.designer.json.title": "Schema as JSON",
   "forms.designer.json.apply": "Apply",
   "forms.designer.json.applied": "The JSON was applied. Undo reverts it.",
   "forms.designer.lint.title": "Issues",
