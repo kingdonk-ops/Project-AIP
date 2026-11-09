@@ -540,7 +540,7 @@ export function Designer({ template, revision, permissions, onBack, onOpenRevisi
 
   // --- keyboard shortcuts ----------------------------------------------------------------------
 
-  const shortcuts = useRef({ save, undo: () => {}, redo: () => {} });
+  const shortcuts = useRef<{ save: () => void; undo: () => void; redo: () => void }>({ save: () => {}, undo: () => {}, redo: () => {} });
   shortcuts.current = {
     save: () => void save(),
     undo: () => setHistory(undo),

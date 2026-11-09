@@ -6,6 +6,7 @@
  */
 import type { FieldType } from "@aip/form-renderer";
 import { useDraggable } from "@dnd-kit/core";
+import type { PointerEventHandler } from "react";
 import { Button } from "@aip/ui";
 import { t } from "../../shell/t";
 import { FORM_FIELD_TYPES } from "./model";
@@ -23,7 +24,7 @@ function PaletteItem({ item, label, onAdd }: { item: FieldType | typeof PALETTE_
         variant="secondary"
         className="dsg-palette__item"
         data-palette={item}
-        onPointerDown={draggable.listeners?.onPointerDown}
+        onPointerDown={draggable.listeners?.onPointerDown as PointerEventHandler<HTMLButtonElement> | undefined}
         onClick={onAdd}
       >
         {label}

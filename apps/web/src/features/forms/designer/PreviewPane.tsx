@@ -88,7 +88,8 @@ export function PreviewPane({ schema }: PreviewPaneProps) {
             schema={schema}
             answers={answers}
             onChange={(next) => setAnswers(next)}
-            mode="draft"
+            // "submit" checks required fields too; errors still wait until a field is touched.
+            mode="submit"
             t={t}
             adapters={adapters}
             showErrors="touched"

@@ -161,9 +161,12 @@ function insert<T>(items: readonly T[], at: number, item: T): T[] {
   return next;
 }
 
+/** A partial update in which `undefined` removes the property. */
+export type Patch<T> = { [K in keyof T]?: T[K] | undefined };
+
 /** Copy `item` with `patch` applied; a key set to `undefined` is removed. */
-function patched<T extends object>(item: T, patch: Partial<T>): T {
-  const next: Record<string, unknown> = { ...item };
+function patched<T extends object>(item: T, patch: Patch<T>): T {
+  const next: Record<string, unknown> = { ...(item as Record<string, unknown>) };
   for (const [key, value] of Object.entries(patch)) {
     if (value === undefined) delete next[key];
     else next[key] = value;
@@ -209,7 +212,7 @@ export function removeSection(schema: FormSchema, key: string): { schema: FormSc
   return { schema: { ...schema, sections: schema.sections.filter((s) => s.key !== key) }, referencedBy: [...referencedBy] };
 }
 
-export function updateSection(schema: FormSchema, key: string, patch: Partial<FormSection>): FormSchema {
+export function updateSection(schema: FormSchema, key: string, patch: Patch<FormSection>): FormSchema {
   if (!findSection(schema, key)) return schema;
   return mapSections(schema, (s) => (s.key === key ? patched(s, patch) : s));
 }
@@ -262,7 +265,7 @@ export function removeField(schema: FormSchema, key: string): { schema: FormSche
   return { schema: next, referencedBy };
 }
 
-export function updateField(schema: FormSchema, key: string, patch: Partial<FormField>): FormSchema {
+export function updateField(schema: FormSchema, key: string, patch: Patch<FormField>): FormSchema {
   if (!findField(schema, key)) return schema;
   return mapSections(schema, (s) =>
     s.fields.some((f) => f.key === key)
@@ -292,7 +295,7 @@ export function changeFieldType(
   const location = findField(schema, key);
   if (!location || location.field.type === type) return schema;
   const field = location.field;
-  const patch: Partial<FormField> = { type };
+  const patch: Patch<FormField> = { type };
   if (OPTION_TYPES.has(type)) {
     if (!field.options?.length) patch.options = defaultOptions(labels);
   } else patch.options = undefined;
