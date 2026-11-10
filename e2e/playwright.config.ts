@@ -55,6 +55,7 @@ const SKELETON = [
   "web/approvals-transition.spec.ts",
   // FORMS-04: the form template register and detail pages need the stack and real sign-in.
   "web/form-templates.spec.ts",
+  "web/form-designer.spec.ts", // FORMS-11: builds and publishes a template in the designer
   "web/item-types.spec.ts", // ITEMTYPES-03: needs both tenants signed in for real
   "web/assets-live.spec.ts", // ASSETS-03: creates assets and checks the other tenant for real
   "web/portal-auth.spec.ts", // PORTAL-02: the portal sign-in contract needs the stack and Keycloak
