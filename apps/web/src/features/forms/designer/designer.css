@@ -296,6 +296,7 @@
 }
 
 .dsg-preview__frame--phone {
+  box-sizing: border-box; /* the 375 px phone width includes the frame border and padding */
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md, 8px);
   padding: var(--space-2, 8px);
