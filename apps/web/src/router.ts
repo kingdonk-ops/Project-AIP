@@ -23,6 +23,7 @@ import { projectsNewRoute } from "./routes/_app/projects/new";
 import { reportsRegisterRoute } from "./routes/_app/reports/register";
 import { sitesIndexRoute } from "./routes/_app/sites/index";
 import { templateDetailRoute } from "./routes/_app/templates/$templateId";
+import { templateDesignerRoute } from "./routes/_app/templates/$templateId.revisions.$rev.design";
 import { templatesIndexRoute } from "./routes/_app/templates/index";
 import { billingRoute } from "./routes/_app/settings/billing";
 import { flagsRoute } from "./routes/_app/settings/flags";
@@ -74,7 +75,7 @@ const portalRoutes = [portalUsersRoute, portalUsersNewRoute, portalUserDetailRou
 
 export const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, flagsRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, ...itemTypesRoutes, ...assetsRoutes, reportsRegisterRoute, ...portalRoutes]),
+  appRoute.addChildren([homeRoute, projectsIndexRoute, projectsNewRoute, projectDetailRoute, sitesIndexRoute, sessionsRoute, billingRoute, flagsRoute, platformEventsRoute, platformDeadLetterRoute, platformEventDetailRoute, templatesIndexRoute, templateDetailRoute, templateDesignerRoute, ...itemTypesRoutes, ...assetsRoutes, reportsRegisterRoute, ...portalRoutes]),
   ...devRoutes,
 ]);
 

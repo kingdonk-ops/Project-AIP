@@ -5,6 +5,7 @@
  */
 import { useFormsRevisionsGet, type RevisionSummary } from "@aip/api-client";
 import { Button, ErrorState, LoadingState, type RequestError } from "@aip/ui";
+import { Link } from "@tanstack/react-router";
 import { t } from "../shell/t";
 import { LocalTime, RevisionStatusChip, revisionLabel } from "./columns";
 import { RevisionOutline } from "./RevisionOutline";
@@ -36,9 +37,11 @@ export interface RevisionHistoryProps {
   revisions: readonly RevisionSummary[];
   selectedNo: number | undefined;
   onSelect: (revisionNo: number) => void;
+  /** FORMS-11: with the template id, every revision links to its designer. */
+  templateId?: string;
 }
 
-export function RevisionHistory({ revisions, selectedNo, onSelect }: RevisionHistoryProps) {
+export function RevisionHistory({ revisions, selectedNo, onSelect, templateId }: RevisionHistoryProps) {
   const sorted = newestFirst(revisions);
   const selected = sorted.find((r) => r.revisionNo === selectedNo) ?? defaultRevision(revisions);
   return (
@@ -92,15 +95,26 @@ export function RevisionHistory({ revisions, selectedNo, onSelect }: RevisionHis
                     <LocalTime value={revision.createdAt} />
                   </td>
                   <td className="aip-table__cell">
-                    {current ? (
-                      <span className="forms-history__viewing">
-                        {t("forms.templates.history.viewing", { n: revision.revisionNo })}
-                      </span>
-                    ) : (
-                      <Button variant="ghost" onClick={() => onSelect(revision.revisionNo)}>
-                        {t("forms.templates.history.view", { n: revision.revisionNo })}
-                      </Button>
-                    )}
+                    <span className="forms-history__actions">
+                      {current ? (
+                        <span className="forms-history__viewing">
+                          {t("forms.templates.history.viewing", { n: revision.revisionNo })}
+                        </span>
+                      ) : (
+                        <Button variant="ghost" onClick={() => onSelect(revision.revisionNo)}>
+                          {t("forms.templates.history.view", { n: revision.revisionNo })}
+                        </Button>
+                      )}
+                      {templateId ? (
+                        <Link
+                          to="/templates/$templateId/revisions/$rev/design"
+                          params={{ templateId, rev: String(revision.revisionNo) }}
+                          className="forms-history__designer"
+                        >
+                          {t("forms.designer.view_in", { n: revision.revisionNo })}
+                        </Link>
+                      ) : null}
+                    </span>
                   </td>
                 </tr>
               );

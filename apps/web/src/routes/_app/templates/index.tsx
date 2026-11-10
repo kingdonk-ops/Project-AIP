@@ -22,6 +22,9 @@ function TemplatesIndexPage() {
       permissions={session.permissions}
       onQueryChange={(next) => void navigate({ search: toTemplatesSearch(next), replace: true })}
       onOpenTemplate={(templateId) => void navigate({ to: "/templates/$templateId", params: { templateId } })}
+      onDesignTemplate={(templateId) =>
+        void navigate({ to: "/templates/$templateId/revisions/$rev/design", params: { templateId, rev: "1" } })
+      }
     />
   );
 }

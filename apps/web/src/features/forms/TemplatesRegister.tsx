@@ -72,9 +72,11 @@ export interface TemplatesRegisterProps {
   permissions: readonly string[];
   onQueryChange: (next: RegisterQuery) => void;
   onOpenTemplate: (templateId: string) => void;
+  /** Open v1 of a template started in the designer (FORMS-11). */
+  onDesignTemplate?: (templateId: string) => void;
 }
 
-export function TemplatesRegister({ query, permissions, onQueryChange, onOpenTemplate }: TemplatesRegisterProps) {
+export function TemplatesRegister({ query, permissions, onQueryChange, onOpenTemplate, onDesignTemplate }: TemplatesRegisterProps) {
   const canManage = permissions.includes("form.manage");
   const [uploading, setUploading] = useState(false);
   const columns = useMemo(() => templateColumns(), []);
@@ -115,7 +117,12 @@ export function TemplatesRegister({ query, permissions, onQueryChange, onOpenTem
       />
 
       {canManage ? (
-        <TemplateUploadDialog open={uploading} onOpenChange={setUploading} onCreated={onOpenTemplate} />
+        <TemplateUploadDialog
+          open={uploading}
+          onOpenChange={setUploading}
+          onCreated={onOpenTemplate}
+          {...(onDesignTemplate ? { onStartDesigner: onDesignTemplate } : {})}
+        />
       ) : null}
     </section>
   );
