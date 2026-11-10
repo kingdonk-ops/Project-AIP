@@ -140,7 +140,7 @@ async function addFromPalette(page: Page, item: string, label: string) {
 
       // The template page: v1 published, the outline in the designed order.
       await expect(pageA).toHaveURL(/\/templates\/[0-9a-f-]{36}(\?|$)/);
-      await expect(pageA.getByRole("table", { name: "Revision history" }).getByText("Published")).toBeVisible();
+      await expect(pageA.getByRole("table", { name: "Revision history" }).locator("tbody").getByText("Published", { exact: true })).toBeVisible();
       const outline = pageA.getByRole("table", { name: "Fields in Section 1" });
       await expect(outline).toBeVisible();
       const keys = await outline.locator("tbody tr").evaluateAll((rows) => rows.map((row) => row.textContent ?? ""));
