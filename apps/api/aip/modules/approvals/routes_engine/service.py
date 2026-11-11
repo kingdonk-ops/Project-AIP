@@ -23,7 +23,8 @@ own rows, so another tenant's instance or template is 404.
   finishing decision takes the template's action through the transition service: every check
   (``check_route_completion``, including the action's ``requiresComment`` against the decision's
   comment) runs before the step is written, then ``complete_route`` writes, and it emits
-  ``approval.approved``/``approval.rejected`` and ``approval.completed``; any other appends a non-moving ``approve_step`` row and may activate the next group.
+  ``approval.approved``/``approval.rejected`` and ``approval.completed``; any other appends a non-moving
+  ``approve_step`` row and may activate the next group.
 - ``route`` (``approvals.view``) returns the latest round; ``pending_steps`` is the inbox query
   (APPROVALS-06): pending steps the actor is eligible for now, on instances they may view.
 """
