@@ -18,6 +18,7 @@ from tests.conftest import ALICE_ID, BOB_ID, TENANT_A_ID
 from tests.fixtures.postgres import TenantDb
 
 from aip.modules.approvals.api import ApprovalsApi
+from aip.modules.approvals.demo import demo_spec
 from aip.modules.approvals.tests.conftest import (
     ALICE,
     BOB,
@@ -28,6 +29,7 @@ from aip.modules.approvals.tests.conftest import (
     act,
     history,
     principal_headers,
+    publish,
     signed,
     su_execute,
     su_fetch,
@@ -492,3 +494,55 @@ async def test_the_inbox_lists_the_steps_an_actor_may_decide_now(
     assert await inbox(C1) == []
     assert await inbox(Q1) == [qa_id]
     assert await inbox(Q2) == []
+
+
+async def test_a_route_ending_in_a_comment_required_action_needs_the_last_comment(
+    client: httpx.AsyncClient, db: TenantDb, demo_records: DemoRecords
+) -> None:
+    """APPROVALS-14: the finishing decision's comment is the transition comment."""
+    v2 = demo_spec()
+    v2["states"].append({"code": "retired", "labelKey": "workflow.demo.state.retired"})
+    v2["transitions"].append(
+        {
+            "action": "retire",
+            "from": "submitted",
+            "to": "retired",
+            "requiredPermission": "approvals.inspection.approve",
+            "labelKey": "workflow.demo.action.retire",
+            "requiresComment": True,
+        }
+    )
+    await publish(db, v2)
+    instance, route = await started(
+        client, demo_records, [step(U1)], onApprovedAction="retire"
+    )
+    [only] = route["steps"]
+    before = await history(client, instance["id"], as_(U3))
+    sync_before = route["instance"]["syncVersion"]
+
+    for comment in (None, "   "):
+        refused = await decide(client, instance["id"], only["id"], "approve", as_(U1), comment)
+        assert refused.status_code == 422, refused.text
+        assert refused.json()["code"] == "COMMENT_REQUIRED"
+        assert refused.json()["messageKey"] == "approvals.comment.required"
+
+    steps = await get_steps(client, instance["id"])
+    assert [s["status"] for s in steps["steps"]] == ["pending"]
+    assert steps["instance"]["currentState"] == "submitted"
+    assert steps["instance"]["syncVersion"] == sync_before
+    assert steps["currentStepId"] == only["id"]
+    assert (await history(client, instance["id"], as_(U3)))["entries"] == before["entries"]
+    assert await events(db, instance["id"], "approval.approved") == []
+
+    response = await decide(
+        client, instance["id"], only["id"], "approve", as_(U1), "superseded by rev B"
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["outcome"] == "approved"
+    assert body["route"]["instance"]["currentState"] == "retired"
+    assert body["decision"]["action"] == "retire"
+    assert body["decision"]["comment"] == "superseded by rev B"
+    log = await history(client, instance["id"], as_(U3))
+    assert [e["action"] for e in log["entries"]] == ["submit", "retire"]
+    assert log["entries"][-1]["comment"] == "superseded by rev B"
