@@ -513,9 +513,7 @@ async def test_a_route_ending_in_a_comment_required_action_needs_the_last_commen
         }
     )
     await publish(db, v2)
-    instance, route = await started(
-        client, demo_records, [step(U1)], onApprovedAction="retire"
-    )
+    instance, route = await started(client, demo_records, [step(U1)], onApprovedAction="retire")
     [only] = route["steps"]
     before = await history(client, instance["id"], as_(U3))
     sync_before = route["instance"]["syncVersion"]
