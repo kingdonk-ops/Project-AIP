@@ -18,7 +18,6 @@ from tests.conftest import ALICE_ID, BOB_ID, TENANT_A_ID
 from tests.fixtures.postgres import TenantDb
 
 from aip.modules.approvals.api import ApprovalsApi
-from aip.modules.approvals.demo import demo_spec
 from aip.modules.approvals.tests.conftest import (
     ALICE,
     BOB,
@@ -34,6 +33,7 @@ from aip.modules.approvals.tests.conftest import (
     su_execute,
     su_fetch,
 )
+from aip.modules.approvals.tests.fixtures import demo_spec
 from aip.modules.approvals.transition import Actor
 from aip.modules.identity.api import SessionFacts
 from aip.platform.access import AccessPrincipal
@@ -501,14 +501,14 @@ async def test_a_route_ending_in_a_comment_required_action_needs_the_last_commen
 ) -> None:
     """APPROVALS-14: the finishing decision's comment is the transition comment."""
     v2 = demo_spec()
-    v2["states"].append({"code": "retired", "labelKey": "workflow.demo.state.retired"})
+    v2["states"].append({"code": "retired", "labelKey": "approvals.demo.state.retired"})
     v2["transitions"].append(
         {
             "action": "retire",
             "from": "submitted",
             "to": "retired",
-            "requiredPermission": "approvals.inspection.approve",
-            "labelKey": "workflow.demo.action.retire",
+            "requiredPermission": "approvals.demo.approve",
+            "labelKey": "approvals.demo.action.retire",
             "requiresComment": True,
         }
     )
