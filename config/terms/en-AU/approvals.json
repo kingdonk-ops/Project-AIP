@@ -158,5 +158,33 @@
   "workflow.inspection.action.submit_report": {
     "text": "Submit Report",
     "description": "Button for the inspection workflow action 'submit_report' in the inspection_standard and inspection_client_review presets: the person who did the work submits a form that has no supervisor review (INSPECTIONS-10, ADR 0041 §5)."
+  },
+  "approvals.guard.failed": {
+    "text": "This step's conditions are not met yet.",
+    "description": "Why a workflow action is refused when its guard is false and the transition names no guardMessageKey of its own (APPROVALS-02; 422 GUARD_FAILED and the availability hint)."
+  },
+  "approvals.guard.error": {
+    "text": "This action can't be checked right now. Try again shortly.",
+    "description": "Why a workflow action is refused when its guard's facts could not be read or evaluated; the check fails closed (APPROVALS-02; 422 GUARD_ERROR and the availability hint)."
+  },
+  "approvals.permission.denied": {
+    "text": "You don't have permission to take this action.",
+    "description": "Availability hint on a workflow action the caller lacks the transition's required permission for (APPROVALS-02)."
+  },
+  "approvals.countersign.pending": {
+    "text": "A decision is waiting for a countersignature.",
+    "description": "Availability hint on every other workflow action while a critical decision waits for a countersign (APPROVALS-02, ADR 0034)."
+  },
+  "approvals.countersign.self": {
+    "text": "Someone else must countersign your decision.",
+    "description": "Availability hint on the countersign action for the person who made the pending decision (APPROVALS-02, ADR 0034)."
+  },
+  "approvals.comment.required": {
+    "text": "Add a comment to continue.",
+    "description": "Why a workflow action or an approval step decision is refused without a comment: a transition marked requiresComment, a route rejection, or a route's finishing decision whose action needs one (APPROVALS-05, APPROVALS-04, APPROVALS-14; 422 COMMENT_REQUIRED)."
+  },
+  "approvals.route.pending": {
+    "text": "Waiting on the approval route.",
+    "description": "Why a route's own approve or reject action can't be taken directly while an approval route runs on the record (APPROVALS-04, ADR 0040; 409 ROUTE_PENDING and the availability hint)."
   }
 }

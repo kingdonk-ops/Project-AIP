@@ -31,11 +31,13 @@ decides.
 Approval routes (APPROVALS-04, ADR 0040): while a route runs on the instance, its
 ``on_approved_action`` and ``on_rejected_action`` are refused here (409 ``ROUTE_PENDING``), and
 any other transition that takes effect cancels the route (its open steps become ``skipped``).
-``complete_route`` is the route's own way in: the route's decisions stand in for the transition's
-``requiredPermission``, and steps (b), (c) and (e) to (h) run unchanged for the last decider,
-except that a ``countersign_required`` sign-off is 403 ``COUNTERSIGN_ASSURANCE_REQUIRED`` (route
-decisions are never countersigned). ``record_step_decision`` appends a non-moving row for every
-other step decision.
+``check_route_completion`` and ``complete_route`` are the route's own way in: the route's decisions
+stand in for the transition's ``requiredPermission``, and steps (b) to (h) run unchanged for the
+last decider (the finishing decision's comment is the transition comment, so a ``requiresComment``
+action needs one: 422 ``COMMENT_REQUIRED``, APPROVALS-14), except that a ``countersign_required``
+sign-off is 403 ``COUNTERSIGN_ASSURANCE_REQUIRED`` (route decisions are never countersigned). The
+route engine runs the checks before it writes any step, so a refusal never relies on rollback.
+``record_step_decision`` appends a non-moving row for every other step decision.
 """
 
 from __future__ import annotations
@@ -97,6 +99,7 @@ __all__ = [
     "Availability",
     "History",
     "InstanceView",
+    "RouteCompletion",
     "TransitionResult",
     "TransitionService",
 ]
@@ -164,6 +167,17 @@ class History:
     chain: ChainOk | ChainBroken
 
 
+@dataclass(frozen=True, slots=True)
+class RouteCompletion:
+    """Every check of a finishing route decision passed; ``complete_route`` writes it."""
+
+    definition: WorkflowDefinition
+    outcome: TransitionApplied
+    last: RowMapping | None
+    guard_result: dict[str, Any] | None
+    assurance: Assurance
+
+
 class _FactsError(Exception):
     """A guard context provider failed or returned something that is not JSON."""
 
@@ -193,6 +207,12 @@ def _json_facts(facts: object) -> dict[str, Any]:
         return json.loads(json.dumps(facts, default=_json_scalar, allow_nan=False))
     except (TypeError, ValueError) as exc:
         raise _FactsError(type(exc).__name__) from exc
+
+
+def _check_comment(t: TransitionSpec, comment: str | None) -> None:
+    """(d) A ``requiresComment`` transition needs a non-blank comment (APPROVALS-05)."""
+    if t.requires_comment and not (comment and comment.strip()):
+        raise DomainError(422, "COMMENT_REQUIRED", messageKey=COMMENT_REQUIRED_KEY)
 
 
 def _pending(last: RowMapping | None) -> RowMapping | None:
@@ -440,8 +460,7 @@ class TransitionService:
             raise DomainError(409, outcome.error)
         t = outcome.transition
         await self._policy.assert_can(actor.principal, t.required_permission, _resource(instance))
-        if t.requires_comment and not (comment and comment.strip()):
-            raise DomainError(422, "COMMENT_REQUIRED", messageKey=COMMENT_REQUIRED_KEY)
+        _check_comment(t, comment)
         last = await repo.last_decision(conn, instance_id)  # (d)
         pending = _pending(last)
         if pending is not None:
@@ -585,7 +604,7 @@ class TransitionService:
         """The definition version the instance is pinned to."""
         return definition_from_row(await repo.get_definition(conn, instance["definition_id"]))
 
-    async def complete_route(
+    async def check_route_completion(
         self,
         conn: AsyncConnection,
         actor: Actor,
@@ -593,49 +612,63 @@ class TransitionService:
         action: str,
         *,
         comment: str | None,
+    ) -> RouteCompletion:
+        """Steps (b) to (f) of ``transition`` for the finished route's ``action`` and its last
+        decider on the locked ``instance``; writes nothing. ``comment`` is the finishing
+        decision's comment, which ``complete_route`` records as the transition comment."""
+        definition = await self.pinned_definition(conn, instance)  # (b)
+        outcome = apply_transition(definition.spec, instance["current_state"], action)  # (c)
+        if isinstance(outcome, TransitionRejected):
+            raise DomainError(409, outcome.error)
+        t = outcome.transition
+        _check_comment(t, comment)  # (d)
+        last = await repo.last_decision(conn, instance["id"])
+        if _pending(last) is not None:
+            raise DomainError(409, "COUNTERSIGN_PENDING")
+        guard_result = await self._check_guard(conn, actor, instance, t)  # (e)
+        assurance, status = await self._signoff(conn, actor, t, None)  # (f)
+        if status != "applied":
+            raise DomainError(403, "COUNTERSIGN_ASSURANCE_REQUIRED")
+        return RouteCompletion(definition, outcome, last, guard_result, assurance)
+
+    async def complete_route(
+        self,
+        conn: AsyncConnection,
+        actor: Actor,
+        instance: RowMapping,
+        checked: RouteCompletion,
+        *,
+        comment: str | None,
         step_id: UUID,
         patch: dict[str, Any],
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Take the finished route's ``action`` for its last decider on the locked ``instance``.
-
-        Steps (b), (c) and (e) to (h) of ``transition``; ``patch`` (the route columns) is applied
-        with the state change. Returns the decision entry and the updated instance row.
-        """
+        """Steps (g) and (h) for a completion ``check_route_completion`` passed on the same
+        locked ``instance``; ``patch`` (the route columns) is applied with the state change.
+        Returns the decision entry and the updated instance row."""
         instance_id: UUID = instance["id"]
-        definition = await self.pinned_definition(conn, instance)
-        outcome = apply_transition(definition.spec, instance["current_state"], action)
-        if isinstance(outcome, TransitionRejected):
-            raise DomainError(409, outcome.error)
-        last = await repo.last_decision(conn, instance_id)
-        if _pending(last) is not None:
-            raise DomainError(409, "COUNTERSIGN_PENDING")
-        t = outcome.transition
-        guard_result = await self._check_guard(conn, actor, instance, t)
-        assurance, status = await self._signoff(conn, actor, t, None)
-        if status != "applied":
-            raise DomainError(403, "COUNTERSIGN_ASSURANCE_REQUIRED")
-        entry = await self._append_decision(
+        outcome = checked.outcome
+        entry = await self._append_decision(  # (g)
             conn,
             actor,
             instance_id,
-            last,
+            checked.last,
             from_state=outcome.from_state,
             to_state=outcome.to_state,
-            action=action,
+            action=outcome.transition.action,
             comment=comment,
-            guard_result=guard_result,
-            assurance=assurance,
-            status=status,
+            guard_result=checked.guard_result,
+            assurance=checked.assurance,
+            status="applied",
             step_id=step_id,
         )
-        updated = await update_with_version(
+        updated = await update_with_version(  # (h)
             conn,
             workflow_instances,
             instance_id,
             int(instance["sync_version"]),
             {**patch, "current_state": outcome.to_state},
         )
-        await self._emit_transitioned(conn, actor, instance, definition, outcome)
+        await self._emit_transitioned(conn, actor, instance, checked.definition, outcome)
         return entry, updated
 
     async def record_step_decision(

@@ -20,8 +20,9 @@ own rows, so another tenant's instance or template is 404.
   or skipped; 403 ``NOT_CURRENT_APPROVER`` while it waits or when the actor is not eligible now;
   403 ``SELF_APPROVAL_FORBIDDEN`` for the submitter unless the template allows it; 422
   ``COMMENT_REQUIRED`` for a reject without a comment. Then ``route_plan.next_action``: a
-  finishing decision takes the template's action through ``TransitionService.complete_route``
-  and emits ``approval.approved``/``approval.rejected`` and ``approval.completed``; any other
+  finishing decision takes the template's action through the transition service: every check
+  (``check_route_completion``, including the action's ``requiresComment`` against the decision's
+  comment) runs before the step is written, then ``complete_route`` writes, and it emits ``approval.approved``/``approval.rejected`` and ``approval.completed``; any other
   appends a non-moving ``approve_step`` row and may activate the next group.
 - ``route`` (``approvals.view``) returns the latest round; ``pending_steps`` is the inbox query
   (APPROVALS-06): pending steps the actor is eligible for now, on instances they may view.
@@ -316,18 +317,21 @@ class RoutesService:
             raise DomainError(422, "COMMENT_REQUIRED", messageKey=COMMENT_REQUIRED_KEY)
 
         plan = next_action(_plan(steps), step_id, decision)
-        await route_repo.decide_step(
-            conn, step_id, "approved" if decision == "approve" else "rejected", actor_id
-        )
+        step_status = "approved" if decision == "approve" else "rejected"
         if isinstance(plan, Complete):
-            await route_repo.skip_steps(conn, plan.skip)
+            # Every transition check runs before any write, so a refusal leaves nothing to undo.
             approved = plan.outcome == "approved"
             action = template["on_approved_action" if approved else "on_rejected_action"]
+            checked = await self._transitions.check_route_completion(
+                conn, actor, instance, action, comment=comment
+            )
+            await route_repo.decide_step(conn, step_id, step_status, actor_id)
+            await route_repo.skip_steps(conn, plan.skip)
             entry, updated = await self._transitions.complete_route(
                 conn,
                 actor,
                 instance,
-                action,
+                checked,
                 comment=comment,
                 step_id=step_id,
                 patch={"current_step_id": None},
@@ -339,6 +343,7 @@ class RoutesService:
                 outcome=plan.outcome,
             )
 
+        await route_repo.decide_step(conn, step_id, step_status, actor_id)
         activated: list[RowMapping] = []
         if isinstance(plan, Activate):
             activated = await route_repo.activate_group(conn, instance_id, route_round, plan.order)
