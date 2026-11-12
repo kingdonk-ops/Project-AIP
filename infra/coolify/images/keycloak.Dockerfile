@@ -7,13 +7,13 @@
 # dev ones: no user with a password (the mock-IdP users come from Coolify secrets at deploy time,
 # mock-idp-users.sh) and no default for a client secret. The entrypoint refuses to start when a
 # client secret is unset or a public dev value.
-FROM python:3.12.15-slim-bookworm AS realms
+FROM python:3.12.16-slim-bookworm AS realms
 
 COPY infra/keycloak/realm-aip.json infra/keycloak/realm-mock-idp.json \
      infra/keycloak/deployed_realms.py /src/
 RUN python3 /src/deployed_realms.py /out
 
-FROM quay.io/keycloak/keycloak:26.8.1
+FROM quay.io/keycloak/keycloak:26.8.2-2
 
 COPY --from=realms /out/realm-aip.json /out/realm-mock-idp.json /opt/keycloak/data/import/
 COPY infra/keycloak/themes/aip /opt/keycloak/themes/aip
