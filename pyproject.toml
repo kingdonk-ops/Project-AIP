@@ -4,12 +4,12 @@ members = ["apps/api"]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3",
+    "pytest>=9.2.0",
     "pytest-asyncio>=1.4.1",
     "httpx>=0.27",
-    "ruff>=0.17.3",
+    "ruff>=0.17.4",
     "pyright>=1.1.390",
-    "import-linter>=2.15",
+    "import-linter>=2.16",
 ]
 
 [tool.ruff]
