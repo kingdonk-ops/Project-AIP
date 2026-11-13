@@ -2,14 +2,14 @@
 import type { PortalUsersListStatus } from './portalUsersListStatus';
 
 export type PortalUsersListParams = {
-status?: PortalUsersListStatus;
-q?: string | null;
-cursor?: string | null;
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-projectId?: string | null;
-expiringWithinDays?: number | null;
+  status?: PortalUsersListStatus;
+  q?: string | null;
+  cursor?: string | null;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  projectId?: string | null;
+  expiringWithinDays?: number | null;
 };

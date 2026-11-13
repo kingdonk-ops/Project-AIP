@@ -3,14 +3,14 @@ import type { ProjectsListSort } from './projectsListSort';
 import type { ProjectsListStatusItem } from './projectsListStatusItem';
 
 export type ProjectsListParams = {
-/**
- * @minimum 1
- * @maximum 200
- */
-limit?: number;
-cursor?: string | null;
-sort?: ProjectsListSort;
-status?: ProjectsListStatusItem[];
-siteId?: string | null;
-q?: string | null;
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: number;
+  cursor?: string | null;
+  sort?: ProjectsListSort;
+  status?: ProjectsListStatusItem[];
+  siteId?: string | null;
+  q?: string | null;
 };

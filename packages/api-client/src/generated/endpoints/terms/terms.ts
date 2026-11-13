@@ -107,6 +107,7 @@ export type TermsCoverageQueryResult = NonNullable<Awaited<ReturnType<typeof ter
 export type TermsCoverageQueryError = unknown
 
 
+/** @summary Coverage */
 export function useTermsCoverage<TData = Awaited<ReturnType<typeof termsCoverage>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof termsCoverage>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -117,6 +118,7 @@ export function useTermsCoverage<TData = Awaited<ReturnType<typeof termsCoverage
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Coverage */
 export function useTermsCoverage<TData = Awaited<ReturnType<typeof termsCoverage>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof termsCoverage>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -127,14 +129,12 @@ export function useTermsCoverage<TData = Awaited<ReturnType<typeof termsCoverage
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Coverage */
 export function useTermsCoverage<TData = Awaited<ReturnType<typeof termsCoverage>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof termsCoverage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Coverage
- */
-
+/** @summary Coverage */
 export function useTermsCoverage<TData = Awaited<ReturnType<typeof termsCoverage>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof termsCoverage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient

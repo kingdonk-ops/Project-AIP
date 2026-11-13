@@ -2,16 +2,16 @@
 import type { AssetsListSort } from './assetsListSort';
 
 export type AssetsListParams = {
-/**
- * @minimum 1
- * @maximum 200
- */
-limit?: number;
-cursor?: string | null;
-sort?: AssetsListSort;
-parentId?: string | null;
-under?: string | null;
-q?: string | null;
-tagNumber?: string | null;
-itemTypeId?: string[] | null;
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: number;
+  cursor?: string | null;
+  sort?: AssetsListSort;
+  parentId?: string | null;
+  under?: string | null;
+  q?: string | null;
+  tagNumber?: string | null;
+  itemTypeId?: string[] | null;
 };

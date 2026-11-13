@@ -149,6 +149,7 @@ export type AccessGetMyAbilitiesQueryResult = NonNullable<Awaited<ReturnType<typ
 export type AccessGetMyAbilitiesQueryError = void | HTTPValidationError
 
 
+/** @summary Get My Abilities */
 export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof accessGetMyAbilities>>, TError = void | HTTPValidationError>(
  params: undefined |  AccessGetMyAbilitiesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessGetMyAbilities>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -159,6 +160,7 @@ export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof access
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get My Abilities */
 export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof accessGetMyAbilities>>, TError = void | HTTPValidationError>(
  params?: AccessGetMyAbilitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessGetMyAbilities>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -169,14 +171,12 @@ export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof access
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get My Abilities */
 export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof accessGetMyAbilities>>, TError = void | HTTPValidationError>(
  params?: AccessGetMyAbilitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessGetMyAbilities>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get My Abilities
- */
-
+/** @summary Get My Abilities */
 export function useAccessGetMyAbilities<TData = Awaited<ReturnType<typeof accessGetMyAbilities>>, TError = void | HTTPValidationError>(
  params?: AccessGetMyAbilitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessGetMyAbilities>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -275,6 +275,7 @@ export type AccessRoleAssignmentsListQueryResult = NonNullable<Awaited<ReturnTyp
 export type AccessRoleAssignmentsListQueryError = void
 
 
+/** @summary List Assignments */
 export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError = void>(
  params: undefined |  AccessRoleAssignmentsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -285,6 +286,7 @@ export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof a
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Assignments */
 export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError = void>(
  params?: AccessRoleAssignmentsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -295,14 +297,12 @@ export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof a
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Assignments */
 export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError = void>(
  params?: AccessRoleAssignmentsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Assignments
- */
-
+/** @summary List Assignments */
 export function useAccessRoleAssignmentsList<TData = Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError = void>(
  params?: AccessRoleAssignmentsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRoleAssignmentsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -433,9 +433,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessRoleAssignmentsCreateMutationError = AccessErrorBody | void
     export type AccessRoleAssignmentsCreateMutationVariables = {data: AssignmentCreate}
 
-    /**
- * @summary Create Assignment
- */
+    /** @summary Create Assignment */
 export const useAccessRoleAssignmentsCreate = <TError = AccessErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsCreate>>, TError,AccessRoleAssignmentsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -545,9 +543,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessRoleAssignmentsDeleteMutationError = AccessErrorBody | HTTPValidationError
     export type AccessRoleAssignmentsDeleteMutationVariables = {assignmentId: string}
 
-    /**
- * @summary Delete Assignment
- */
+    /** @summary Delete Assignment */
 export const useAccessRoleAssignmentsDelete = <TError = AccessErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRoleAssignmentsDelete>>, TError,AccessRoleAssignmentsDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -625,6 +621,7 @@ export type AccessRolesListQueryResult = NonNullable<Awaited<ReturnType<typeof a
 export type AccessRolesListQueryError = unknown
 
 
+/** @summary List Roles */
 export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRolesList>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRolesList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -635,6 +632,7 @@ export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRoles
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Roles */
 export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRolesList>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRolesList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -645,14 +643,12 @@ export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRoles
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Roles */
 export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRolesList>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRolesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Roles
- */
-
+/** @summary List Roles */
 export function useAccessRolesList<TData = Awaited<ReturnType<typeof accessRolesList>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessRolesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -783,9 +779,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessRolesCreateMutationError = AccessErrorBody | void
     export type AccessRolesCreateMutationVariables = {data: RoleCreate}
 
-    /**
- * @summary Create Role
- */
+    /** @summary Create Role */
 export const useAccessRolesCreate = <TError = AccessErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesCreate>>, TError,AccessRolesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -895,9 +889,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessRolesDeleteMutationError = AccessErrorBody | HTTPValidationError
     export type AccessRolesDeleteMutationVariables = {roleId: string}
 
-    /**
- * @summary Delete Role
- */
+    /** @summary Delete Role */
 export const useAccessRolesDelete = <TError = AccessErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesDelete>>, TError,AccessRolesDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1022,9 +1014,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessRolesUpdateMutationError = AccessErrorBody | void
     export type AccessRolesUpdateMutationVariables = {roleId: string;data: RoleUpdate}
 
-    /**
- * @summary Update Role
- */
+    /** @summary Update Role */
 export const useAccessRolesUpdate = <TError = AccessErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesUpdate>>, TError,AccessRolesUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1149,9 +1139,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessRolesCloneMutationError = AccessErrorBody | void
     export type AccessRolesCloneMutationVariables = {roleId: string;data: RoleClone}
 
-    /**
- * @summary Clone Role
- */
+    /** @summary Clone Role */
 export const useAccessRolesClone = <TError = AccessErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesClone>>, TError,AccessRolesCloneMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1261,9 +1249,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessRolesResetMutationError = AccessErrorBody | HTTPValidationError
     export type AccessRolesResetMutationVariables = {roleId: string}
 
-    /**
- * @summary Reset Role
- */
+    /** @summary Reset Role */
 export const useAccessRolesReset = <TError = AccessErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessRolesReset>>, TError,AccessRolesResetMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1370,6 +1356,7 @@ export type AccessTeamsListQueryResult = NonNullable<Awaited<ReturnType<typeof a
 export type AccessTeamsListQueryError = AccessErrorBody | void
 
 
+/** @summary List Teams */
 export function useAccessTeamsList<TData = Awaited<ReturnType<typeof accessTeamsList>>, TError = AccessErrorBody | void>(
  params: undefined |  AccessTeamsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamsList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1380,6 +1367,7 @@ export function useAccessTeamsList<TData = Awaited<ReturnType<typeof accessTeams
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Teams */
 export function useAccessTeamsList<TData = Awaited<ReturnType<typeof accessTeamsList>>, TError = AccessErrorBody | void>(
  params?: AccessTeamsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamsList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1390,14 +1378,12 @@ export function useAccessTeamsList<TData = Awaited<ReturnType<typeof accessTeams
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Teams */
 export function useAccessTeamsList<TData = Awaited<ReturnType<typeof accessTeamsList>>, TError = AccessErrorBody | void>(
  params?: AccessTeamsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Teams
- */
-
+/** @summary List Teams */
 export function useAccessTeamsList<TData = Awaited<ReturnType<typeof accessTeamsList>>, TError = AccessErrorBody | void>(
  params?: AccessTeamsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1523,9 +1509,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessTeamsCreateMutationError = AccessErrorBody | void
     export type AccessTeamsCreateMutationVariables = {data: TeamCreate}
 
-    /**
- * @summary Create Team
- */
+    /** @summary Create Team */
 export const useAccessTeamsCreate = <TError = AccessErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamsCreate>>, TError,AccessTeamsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1630,9 +1614,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessTeamsDeleteMutationError = AccessErrorBody | HTTPValidationError
     export type AccessTeamsDeleteMutationVariables = {teamId: string}
 
-    /**
- * @summary Delete Team
- */
+    /** @summary Delete Team */
 export const useAccessTeamsDelete = <TError = AccessErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamsDelete>>, TError,AccessTeamsDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1752,9 +1734,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessTeamsUpdateMutationError = AccessErrorBody | void
     export type AccessTeamsUpdateMutationVariables = {teamId: string;data: TeamUpdate}
 
-    /**
- * @summary Update Team
- */
+    /** @summary Update Team */
 export const useAccessTeamsUpdate = <TError = AccessErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamsUpdate>>, TError,AccessTeamsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1854,6 +1834,7 @@ export type AccessTeamMembersListQueryResult = NonNullable<Awaited<ReturnType<ty
 export type AccessTeamMembersListQueryError = AccessErrorBody | HTTPValidationError
 
 
+/** @summary List Members */
 export function useAccessTeamMembersList<TData = Awaited<ReturnType<typeof accessTeamMembersList>>, TError = AccessErrorBody | HTTPValidationError>(
  teamId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamMembersList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1864,6 +1845,7 @@ export function useAccessTeamMembersList<TData = Awaited<ReturnType<typeof acces
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Members */
 export function useAccessTeamMembersList<TData = Awaited<ReturnType<typeof accessTeamMembersList>>, TError = AccessErrorBody | HTTPValidationError>(
  teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamMembersList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1874,14 +1856,12 @@ export function useAccessTeamMembersList<TData = Awaited<ReturnType<typeof acces
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Members */
 export function useAccessTeamMembersList<TData = Awaited<ReturnType<typeof accessTeamMembersList>>, TError = AccessErrorBody | HTTPValidationError>(
  teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamMembersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Members
- */
-
+/** @summary List Members */
 export function useAccessTeamMembersList<TData = Awaited<ReturnType<typeof accessTeamMembersList>>, TError = AccessErrorBody | HTTPValidationError>(
  teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessTeamMembersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2008,9 +1988,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessTeamMembersAddMutationError = AccessErrorBody | void
     export type AccessTeamMembersAddMutationVariables = {teamId: string;data: MembersAdd}
 
-    /**
- * @summary Add Members
- */
+    /** @summary Add Members */
 export const useAccessTeamMembersAdd = <TError = AccessErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamMembersAdd>>, TError,AccessTeamMembersAddMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2117,9 +2095,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccessTeamMembersRemoveMutationError = AccessErrorBody | HTTPValidationError
     export type AccessTeamMembersRemoveMutationVariables = {teamId: string;userId: string}
 
-    /**
- * @summary Remove Member
- */
+    /** @summary Remove Member */
 export const useAccessTeamMembersRemove = <TError = AccessErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accessTeamMembersRemove>>, TError,AccessTeamMembersRemoveMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

@@ -143,6 +143,7 @@ export type AssetsListQueryResult = NonNullable<Awaited<ReturnType<typeof assets
 export type AssetsListQueryError = void
 
 
+/** @summary List Assets */
 export function useAssetsList<TData = Awaited<ReturnType<typeof assetsList>>, TError = void>(
  params: undefined |  AssetsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -153,6 +154,7 @@ export function useAssetsList<TData = Awaited<ReturnType<typeof assetsList>>, TE
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Assets */
 export function useAssetsList<TData = Awaited<ReturnType<typeof assetsList>>, TError = void>(
  params?: AssetsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -163,14 +165,12 @@ export function useAssetsList<TData = Awaited<ReturnType<typeof assetsList>>, TE
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Assets */
 export function useAssetsList<TData = Awaited<ReturnType<typeof assetsList>>, TError = void>(
  params?: AssetsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Assets
- */
-
+/** @summary List Assets */
 export function useAssetsList<TData = Awaited<ReturnType<typeof assetsList>>, TError = void>(
  params?: AssetsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -291,9 +291,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AssetsCreateMutationError = AssetErrorBody | void
     export type AssetsCreateMutationVariables = {data: AssetCreate}
 
-    /**
- * @summary Create Asset
- */
+    /** @summary Create Asset */
 export const useAssetsCreate = <TError = AssetErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assetsCreate>>, TError,AssetsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -387,6 +385,10 @@ export type AssetsExportQueryResult = NonNullable<Awaited<ReturnType<typeof asse
 export type AssetsExportQueryError = AssetErrorBody
 
 
+/**
+ * The same filters and sort as the list, as one CSV file (ASSETS-03, ADR 0033).
+ * @summary Export Assets
+ */
 export function useAssetsExport<TData = Awaited<ReturnType<typeof assetsExport>>, TError = AssetErrorBody>(
  params: undefined |  AssetsExportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsExport>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -397,6 +399,10 @@ export function useAssetsExport<TData = Awaited<ReturnType<typeof assetsExport>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The same filters and sort as the list, as one CSV file (ASSETS-03, ADR 0033).
+ * @summary Export Assets
+ */
 export function useAssetsExport<TData = Awaited<ReturnType<typeof assetsExport>>, TError = AssetErrorBody>(
  params?: AssetsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsExport>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -407,14 +413,18 @@ export function useAssetsExport<TData = Awaited<ReturnType<typeof assetsExport>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The same filters and sort as the list, as one CSV file (ASSETS-03, ADR 0033).
+ * @summary Export Assets
+ */
 export function useAssetsExport<TData = Awaited<ReturnType<typeof assetsExport>>, TError = AssetErrorBody>(
  params?: AssetsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsExport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * The same filters and sort as the list, as one CSV file (ASSETS-03, ADR 0033).
  * @summary Export Assets
  */
-
 export function useAssetsExport<TData = Awaited<ReturnType<typeof assetsExport>>, TError = AssetErrorBody>(
  params?: AssetsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsExport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -530,9 +540,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AssetsDeleteMutationError = AssetErrorBody | HTTPValidationError
     export type AssetsDeleteMutationVariables = {assetId: string;params: AssetsDeleteParams}
 
-    /**
- * @summary Delete Asset
- */
+    /** @summary Delete Asset */
 export const useAssetsDelete = <TError = AssetErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assetsDelete>>, TError,AssetsDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -622,6 +630,7 @@ export type AssetsGetQueryResult = NonNullable<Awaited<ReturnType<typeof assetsG
 export type AssetsGetQueryError = AssetErrorBody | HTTPValidationError
 
 
+/** @summary Get Asset */
 export function useAssetsGet<TData = Awaited<ReturnType<typeof assetsGet>>, TError = AssetErrorBody | HTTPValidationError>(
  assetId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -632,6 +641,7 @@ export function useAssetsGet<TData = Awaited<ReturnType<typeof assetsGet>>, TErr
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Asset */
 export function useAssetsGet<TData = Awaited<ReturnType<typeof assetsGet>>, TError = AssetErrorBody | HTTPValidationError>(
  assetId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -642,14 +652,12 @@ export function useAssetsGet<TData = Awaited<ReturnType<typeof assetsGet>>, TErr
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Asset */
 export function useAssetsGet<TData = Awaited<ReturnType<typeof assetsGet>>, TError = AssetErrorBody | HTTPValidationError>(
  assetId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Asset
- */
-
+/** @summary Get Asset */
 export function useAssetsGet<TData = Awaited<ReturnType<typeof assetsGet>>, TError = AssetErrorBody | HTTPValidationError>(
  assetId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assetsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -771,9 +779,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AssetsUpdateMutationError = AssetErrorBody | void
     export type AssetsUpdateMutationVariables = {assetId: string;data: AssetUpdate}
 
-    /**
- * @summary Update Asset
- */
+    /** @summary Update Asset */
 export const useAssetsUpdate = <TError = AssetErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assetsUpdate>>, TError,AssetsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -888,9 +894,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AssetsMoveMutationError = AssetErrorBody | void
     export type AssetsMoveMutationVariables = {assetId: string;data: AssetMove}
 
-    /**
- * @summary Move Asset
- */
+    /** @summary Move Asset */
 export const useAssetsMove = <TError = AssetErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assetsMove>>, TError,AssetsMoveMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

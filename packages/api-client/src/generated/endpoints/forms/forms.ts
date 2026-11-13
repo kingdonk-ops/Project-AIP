@@ -153,9 +153,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type FormsLintMutationError = HTTPValidationError
     export type FormsLintMutationVariables = {data: LintBody}
 
-    /**
- * @summary Lint Template
- */
+    /** @summary Lint Template */
 export const useFormsLint = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsLint>>, TError,FormsLintMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -255,9 +253,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type FormsRevisionsDiscardMutationError = FormErrorBody | HTTPValidationError
     export type FormsRevisionsDiscardMutationVariables = {revisionId: string}
 
-    /**
- * @summary Discard Revision
- */
+    /** @summary Discard Revision */
 export const useFormsRevisionsDiscard = <TError = FormErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsRevisionsDiscard>>, TError,FormsRevisionsDiscardMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -347,6 +343,7 @@ export type FormsRevisionsGetQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type FormsRevisionsGetQueryError = FormErrorBody | HTTPValidationError
 
 
+/** @summary Get Revision */
 export function useFormsRevisionsGet<TData = Awaited<ReturnType<typeof formsRevisionsGet>>, TError = FormErrorBody | HTTPValidationError>(
  revisionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsRevisionsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -357,6 +354,7 @@ export function useFormsRevisionsGet<TData = Awaited<ReturnType<typeof formsRevi
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Revision */
 export function useFormsRevisionsGet<TData = Awaited<ReturnType<typeof formsRevisionsGet>>, TError = FormErrorBody | HTTPValidationError>(
  revisionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsRevisionsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -367,14 +365,12 @@ export function useFormsRevisionsGet<TData = Awaited<ReturnType<typeof formsRevi
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Revision */
 export function useFormsRevisionsGet<TData = Awaited<ReturnType<typeof formsRevisionsGet>>, TError = FormErrorBody | HTTPValidationError>(
  revisionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsRevisionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Revision
- */
-
+/** @summary Get Revision */
 export function useFormsRevisionsGet<TData = Awaited<ReturnType<typeof formsRevisionsGet>>, TError = FormErrorBody | HTTPValidationError>(
  revisionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsRevisionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -496,9 +492,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type FormsRevisionsReplaceMutationError = FormErrorBody
     export type FormsRevisionsReplaceMutationVariables = {revisionId: string;data: RevisionReplace}
 
-    /**
- * @summary Replace Revision
- */
+    /** @summary Replace Revision */
 export const useFormsRevisionsReplace = <TError = FormErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsRevisionsReplace>>, TError,FormsRevisionsReplaceMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -608,9 +602,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type FormsRevisionsEvaluateMutationError = FormErrorBody
     export type FormsRevisionsEvaluateMutationVariables = {revisionId: string;data: EvaluateBody}
 
-    /**
- * @summary Evaluate Revision
- */
+    /** @summary Evaluate Revision */
 export const useFormsRevisionsEvaluate = <TError = FormErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsRevisionsEvaluate>>, TError,FormsRevisionsEvaluateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -725,9 +717,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type FormsRevisionsPublishMutationError = FormErrorBody
     export type FormsRevisionsPublishMutationVariables = {revisionId: string;data?: PublishBody | null}
 
-    /**
- * @summary Publish Revision
- */
+    /** @summary Publish Revision */
 export const useFormsRevisionsPublish = <TError = FormErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsRevisionsPublish>>, TError,FormsRevisionsPublishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -819,6 +809,7 @@ export type FormsTemplatesListQueryResult = NonNullable<Awaited<ReturnType<typeo
 export type FormsTemplatesListQueryError = HTTPValidationError
 
 
+/** @summary List Templates */
 export function useFormsTemplatesList<TData = Awaited<ReturnType<typeof formsTemplatesList>>, TError = HTTPValidationError>(
  params: undefined |  FormsTemplatesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsTemplatesList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -829,6 +820,7 @@ export function useFormsTemplatesList<TData = Awaited<ReturnType<typeof formsTem
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Templates */
 export function useFormsTemplatesList<TData = Awaited<ReturnType<typeof formsTemplatesList>>, TError = HTTPValidationError>(
  params?: FormsTemplatesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsTemplatesList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -839,14 +831,12 @@ export function useFormsTemplatesList<TData = Awaited<ReturnType<typeof formsTem
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Templates */
 export function useFormsTemplatesList<TData = Awaited<ReturnType<typeof formsTemplatesList>>, TError = HTTPValidationError>(
  params?: FormsTemplatesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsTemplatesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Templates
- */
-
+/** @summary List Templates */
 export function useFormsTemplatesList<TData = Awaited<ReturnType<typeof formsTemplatesList>>, TError = HTTPValidationError>(
  params?: FormsTemplatesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsTemplatesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -962,9 +952,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type FormsTemplatesCreateMutationError = FormErrorBody
     export type FormsTemplatesCreateMutationVariables = {data: TemplateCreate}
 
-    /**
- * @summary Create Template
- */
+    /** @summary Create Template */
 export const useFormsTemplatesCreate = <TError = FormErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsTemplatesCreate>>, TError,FormsTemplatesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1054,6 +1042,7 @@ export type FormsTemplatesGetQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type FormsTemplatesGetQueryError = FormErrorBody | HTTPValidationError
 
 
+/** @summary Get Template */
 export function useFormsTemplatesGet<TData = Awaited<ReturnType<typeof formsTemplatesGet>>, TError = FormErrorBody | HTTPValidationError>(
  templateId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsTemplatesGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1064,6 +1053,7 @@ export function useFormsTemplatesGet<TData = Awaited<ReturnType<typeof formsTemp
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Template */
 export function useFormsTemplatesGet<TData = Awaited<ReturnType<typeof formsTemplatesGet>>, TError = FormErrorBody | HTTPValidationError>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsTemplatesGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1074,14 +1064,12 @@ export function useFormsTemplatesGet<TData = Awaited<ReturnType<typeof formsTemp
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Template */
 export function useFormsTemplatesGet<TData = Awaited<ReturnType<typeof formsTemplatesGet>>, TError = FormErrorBody | HTTPValidationError>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Template
- */
-
+/** @summary Get Template */
 export function useFormsTemplatesGet<TData = Awaited<ReturnType<typeof formsTemplatesGet>>, TError = FormErrorBody | HTTPValidationError>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof formsTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1203,9 +1191,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type FormsTemplatesUpdateMutationError = FormErrorBody
     export type FormsTemplatesUpdateMutationVariables = {templateId: string;data: TemplateUpdate}
 
-    /**
- * @summary Update Template
- */
+    /** @summary Update Template */
 export const useFormsTemplatesUpdate = <TError = FormErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsTemplatesUpdate>>, TError,FormsTemplatesUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1320,9 +1306,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type FormsTemplatesAddRevisionMutationError = FormErrorBody
     export type FormsTemplatesAddRevisionMutationVariables = {templateId: string;data: RevisionCreate}
 
-    /**
- * @summary Create Revision
- */
+    /** @summary Create Revision */
 export const useFormsTemplatesAddRevision = <TError = FormErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof formsTemplatesAddRevision>>, TError,FormsTemplatesAddRevisionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

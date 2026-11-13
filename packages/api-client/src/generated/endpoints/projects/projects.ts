@@ -140,6 +140,7 @@ export type ProjectsListQueryResult = NonNullable<Awaited<ReturnType<typeof proj
 export type ProjectsListQueryError = void
 
 
+/** @summary List Projects */
 export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>, TError = void>(
  params: undefined |  ProjectsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -150,6 +151,7 @@ export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Projects */
 export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>, TError = void>(
  params?: ProjectsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -160,14 +162,12 @@ export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Projects */
 export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>, TError = void>(
  params?: ProjectsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Projects
- */
-
+/** @summary List Projects */
 export function useProjectsList<TData = Awaited<ReturnType<typeof projectsList>>, TError = void>(
  params?: ProjectsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -283,9 +283,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ProjectsCreateMutationError = ErrorBody | void
     export type ProjectsCreateMutationVariables = {data: ProjectCreate}
 
-    /**
- * @summary Create Project
- */
+    /** @summary Create Project */
 export const useProjectsCreate = <TError = ErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof projectsCreate>>, TError,ProjectsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -379,6 +377,10 @@ export type ProjectsExportQueryResult = NonNullable<Awaited<ReturnType<typeof pr
 export type ProjectsExportQueryError = ErrorBody
 
 
+/**
+ * The same filters and sort as the list, as one CSV file (PROJECTS-06, DESIGN-03).
+ * @summary Export Projects
+ */
 export function useProjectsExport<TData = Awaited<ReturnType<typeof projectsExport>>, TError = ErrorBody>(
  params: undefined |  ProjectsExportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsExport>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -389,6 +391,10 @@ export function useProjectsExport<TData = Awaited<ReturnType<typeof projectsExpo
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The same filters and sort as the list, as one CSV file (PROJECTS-06, DESIGN-03).
+ * @summary Export Projects
+ */
 export function useProjectsExport<TData = Awaited<ReturnType<typeof projectsExport>>, TError = ErrorBody>(
  params?: ProjectsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsExport>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -399,14 +405,18 @@ export function useProjectsExport<TData = Awaited<ReturnType<typeof projectsExpo
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The same filters and sort as the list, as one CSV file (PROJECTS-06, DESIGN-03).
+ * @summary Export Projects
+ */
 export function useProjectsExport<TData = Awaited<ReturnType<typeof projectsExport>>, TError = ErrorBody>(
  params?: ProjectsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsExport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * The same filters and sort as the list, as one CSV file (PROJECTS-06, DESIGN-03).
  * @summary Export Projects
  */
-
 export function useProjectsExport<TData = Awaited<ReturnType<typeof projectsExport>>, TError = ErrorBody>(
  params?: ProjectsExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsExport>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -503,6 +513,7 @@ export type ProjectsGetQueryResult = NonNullable<Awaited<ReturnType<typeof proje
 export type ProjectsGetQueryError = ErrorBody | HTTPValidationError
 
 
+/** @summary Get Project */
 export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, TError = ErrorBody | HTTPValidationError>(
  projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -513,6 +524,7 @@ export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Project */
 export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, TError = ErrorBody | HTTPValidationError>(
  projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -523,14 +535,12 @@ export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Project */
 export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, TError = ErrorBody | HTTPValidationError>(
  projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Project
- */
-
+/** @summary Get Project */
 export function useProjectsGet<TData = Awaited<ReturnType<typeof projectsGet>>, TError = ErrorBody | HTTPValidationError>(
  projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof projectsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -652,9 +662,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ProjectsUpdateMutationError = ErrorBody | void
     export type ProjectsUpdateMutationVariables = {projectId: string;data: ProjectUpdate}
 
-    /**
- * @summary Update Project
- */
+    /** @summary Update Project */
 export const useProjectsUpdate = <TError = ErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof projectsUpdate>>, TError,ProjectsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

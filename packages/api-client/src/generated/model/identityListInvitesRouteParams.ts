@@ -2,5 +2,5 @@
 import type { IdentityListInvitesRouteStatus } from './identityListInvitesRouteStatus';
 
 export type IdentityListInvitesRouteParams = {
-status?: IdentityListInvitesRouteStatus;
+  status?: IdentityListInvitesRouteStatus;
 };

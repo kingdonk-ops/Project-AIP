@@ -3,4 +3,4 @@
 /**
  * The optional body of a tick or untick: nothing to send, and an unknown key is a 422.
  */
-export interface AcknowledgementIn { [key: string]: unknown }
+export interface AcknowledgementIn { [key: string]: never }

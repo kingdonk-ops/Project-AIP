@@ -142,6 +142,7 @@ export type ReportsRendersListQueryResult = NonNullable<Awaited<ReturnType<typeo
 export type ReportsRendersListQueryError = ReportErrorBody
 
 
+/** @summary List Renders */
 export function useReportsRendersList<TData = Awaited<ReturnType<typeof reportsRendersList>>, TError = ReportErrorBody>(
  params: undefined |  ReportsRendersListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -152,6 +153,7 @@ export function useReportsRendersList<TData = Awaited<ReturnType<typeof reportsR
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Renders */
 export function useReportsRendersList<TData = Awaited<ReturnType<typeof reportsRendersList>>, TError = ReportErrorBody>(
  params?: ReportsRendersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -162,14 +164,12 @@ export function useReportsRendersList<TData = Awaited<ReturnType<typeof reportsR
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Renders */
 export function useReportsRendersList<TData = Awaited<ReturnType<typeof reportsRendersList>>, TError = ReportErrorBody>(
  params?: ReportsRendersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Renders
- */
-
+/** @summary List Renders */
 export function useReportsRendersList<TData = Awaited<ReturnType<typeof reportsRendersList>>, TError = ReportErrorBody>(
  params?: ReportsRendersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -290,9 +290,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReportsRendersCreateMutationError = ReportErrorBody
     export type ReportsRendersCreateMutationVariables = {data: RenderRequest}
 
-    /**
- * @summary Request Render
- */
+    /** @summary Request Render */
 export const useReportsRendersCreate = <TError = ReportErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsRendersCreate>>, TError,ReportsRendersCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -387,6 +385,7 @@ export type ReportsRendersGetQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type ReportsRendersGetQueryError = ReportErrorBody | HTTPValidationError
 
 
+/** @summary Get Render */
 export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRendersGet>>, TError = ReportErrorBody | HTTPValidationError>(
  renderJobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -397,6 +396,7 @@ export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRe
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Render */
 export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRendersGet>>, TError = ReportErrorBody | HTTPValidationError>(
  renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -407,14 +407,12 @@ export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRe
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Render */
 export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRendersGet>>, TError = ReportErrorBody | HTTPValidationError>(
  renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Render
- */
-
+/** @summary Get Render */
 export function useReportsRendersGet<TData = Awaited<ReturnType<typeof reportsRendersGet>>, TError = ReportErrorBody | HTTPValidationError>(
  renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -521,6 +519,7 @@ export type ReportsRendersFileQueryResult = NonNullable<Awaited<ReturnType<typeo
 export type ReportsRendersFileQueryError = ReportErrorBody | HTTPValidationError
 
 
+/** @summary Download Render */
 export function useReportsRendersFile<TData = Awaited<ReturnType<typeof reportsRendersFile>>, TError = ReportErrorBody | HTTPValidationError>(
  renderJobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersFile>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -531,6 +530,7 @@ export function useReportsRendersFile<TData = Awaited<ReturnType<typeof reportsR
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Download Render */
 export function useReportsRendersFile<TData = Awaited<ReturnType<typeof reportsRendersFile>>, TError = ReportErrorBody | HTTPValidationError>(
  renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersFile>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -541,14 +541,12 @@ export function useReportsRendersFile<TData = Awaited<ReturnType<typeof reportsR
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Download Render */
 export function useReportsRendersFile<TData = Awaited<ReturnType<typeof reportsRendersFile>>, TError = ReportErrorBody | HTTPValidationError>(
  renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersFile>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Download Render
- */
-
+/** @summary Download Render */
 export function useReportsRendersFile<TData = Awaited<ReturnType<typeof reportsRendersFile>>, TError = ReportErrorBody | HTTPValidationError>(
  renderJobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsRendersFile>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -655,9 +653,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReportsRendersRerenderMutationError = ReportErrorBody | HTTPValidationError
     export type ReportsRendersRerenderMutationVariables = {renderJobId: string}
 
-    /**
- * @summary Rerender
- */
+    /** @summary Rerender */
 export const useReportsRendersRerender = <TError = ReportErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsRendersRerender>>, TError,ReportsRendersRerenderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -749,6 +745,7 @@ export type ReportsTemplatesListQueryResult = NonNullable<Awaited<ReturnType<typ
 export type ReportsTemplatesListQueryError = ReportErrorBody
 
 
+/** @summary List Templates */
 export function useReportsTemplatesList<TData = Awaited<ReturnType<typeof reportsTemplatesList>>, TError = ReportErrorBody>(
  params: undefined |  ReportsTemplatesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsTemplatesList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -759,6 +756,7 @@ export function useReportsTemplatesList<TData = Awaited<ReturnType<typeof report
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Templates */
 export function useReportsTemplatesList<TData = Awaited<ReturnType<typeof reportsTemplatesList>>, TError = ReportErrorBody>(
  params?: ReportsTemplatesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsTemplatesList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -769,14 +767,12 @@ export function useReportsTemplatesList<TData = Awaited<ReturnType<typeof report
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Templates */
 export function useReportsTemplatesList<TData = Awaited<ReturnType<typeof reportsTemplatesList>>, TError = ReportErrorBody>(
  params?: ReportsTemplatesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsTemplatesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Templates
- */
-
+/** @summary List Templates */
 export function useReportsTemplatesList<TData = Awaited<ReturnType<typeof reportsTemplatesList>>, TError = ReportErrorBody>(
  params?: ReportsTemplatesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsTemplatesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -892,9 +888,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReportsTemplatesCreateMutationError = ReportErrorBody
     export type ReportsTemplatesCreateMutationVariables = {data: ReportTemplateUpload}
 
-    /**
- * @summary Create Template
- */
+    /** @summary Create Template */
 export const useReportsTemplatesCreate = <TError = ReportErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsTemplatesCreate>>, TError,ReportsTemplatesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -994,9 +988,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReportsTemplatesDeleteMutationError = ReportErrorBody | HTTPValidationError
     export type ReportsTemplatesDeleteMutationVariables = {templateId: string}
 
-    /**
- * @summary Delete Template
- */
+    /** @summary Delete Template */
 export const useReportsTemplatesDelete = <TError = ReportErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsTemplatesDelete>>, TError,ReportsTemplatesDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1086,6 +1078,7 @@ export type ReportsTemplatesGetQueryResult = NonNullable<Awaited<ReturnType<type
 export type ReportsTemplatesGetQueryError = ReportErrorBody | HTTPValidationError
 
 
+/** @summary Get Template */
 export function useReportsTemplatesGet<TData = Awaited<ReturnType<typeof reportsTemplatesGet>>, TError = ReportErrorBody | HTTPValidationError>(
  templateId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsTemplatesGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1096,6 +1089,7 @@ export function useReportsTemplatesGet<TData = Awaited<ReturnType<typeof reports
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Template */
 export function useReportsTemplatesGet<TData = Awaited<ReturnType<typeof reportsTemplatesGet>>, TError = ReportErrorBody | HTTPValidationError>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsTemplatesGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1106,14 +1100,12 @@ export function useReportsTemplatesGet<TData = Awaited<ReturnType<typeof reports
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Template */
 export function useReportsTemplatesGet<TData = Awaited<ReturnType<typeof reportsTemplatesGet>>, TError = ReportErrorBody | HTTPValidationError>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Template
- */
-
+/** @summary Get Template */
 export function useReportsTemplatesGet<TData = Awaited<ReturnType<typeof reportsTemplatesGet>>, TError = ReportErrorBody | HTTPValidationError>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reportsTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1215,9 +1207,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReportsTemplatesPreviewMutationError = ReportErrorBody
     export type ReportsTemplatesPreviewMutationVariables = {templateId: string}
 
-    /**
- * @summary Preview Template
- */
+    /** @summary Preview Template */
 export const useReportsTemplatesPreview = <TError = ReportErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsTemplatesPreview>>, TError,ReportsTemplatesPreviewMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1317,9 +1307,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReportsTemplatesPublishMutationError = ReportErrorBody | HTTPValidationError
     export type ReportsTemplatesPublishMutationVariables = {templateId: string}
 
-    /**
- * @summary Publish Template
- */
+    /** @summary Publish Template */
 export const useReportsTemplatesPublish = <TError = ReportErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsTemplatesPublish>>, TError,ReportsTemplatesPublishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1419,9 +1407,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReportsTemplatesRetireMutationError = ReportErrorBody | HTTPValidationError
     export type ReportsTemplatesRetireMutationVariables = {templateId: string}
 
-    /**
- * @summary Retire Template
- */
+    /** @summary Retire Template */
 export const useReportsTemplatesRetire = <TError = ReportErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsTemplatesRetire>>, TError,ReportsTemplatesRetireMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

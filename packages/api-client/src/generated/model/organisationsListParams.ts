@@ -3,6 +3,6 @@ import type { OrganisationsListStatusItem } from './organisationsListStatusItem'
 import type { OrganisationsListTypeItem } from './organisationsListTypeItem';
 
 export type OrganisationsListParams = {
-type?: OrganisationsListTypeItem[];
-status?: OrganisationsListStatusItem[];
+  type?: OrganisationsListTypeItem[];
+  status?: OrganisationsListStatusItem[];
 };

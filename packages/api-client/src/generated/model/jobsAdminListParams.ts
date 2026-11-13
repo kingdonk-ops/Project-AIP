@@ -2,16 +2,14 @@
 import type { JobStatus } from './jobStatus';
 
 export type JobsAdminListParams = {
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-/**
- * The last id of the previous page.
- */
-after?: string | null;
-status?: JobStatus[];
-jobType?: string | null;
-requestedBy?: string | null;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  /** The last id of the previous page. */
+  after?: string | null;
+  status?: JobStatus[];
+  jobType?: string | null;
+  requestedBy?: string | null;
 };

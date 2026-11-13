@@ -2,10 +2,10 @@
 import type { AssetsExportSort } from './assetsExportSort';
 
 export type AssetsExportParams = {
-sort?: AssetsExportSort;
-parentId?: string | null;
-under?: string | null;
-q?: string | null;
-tagNumber?: string | null;
-itemTypeId?: string[] | null;
+  sort?: AssetsExportSort;
+  parentId?: string | null;
+  under?: string | null;
+  q?: string | null;
+  tagNumber?: string | null;
+  itemTypeId?: string[] | null;
 };

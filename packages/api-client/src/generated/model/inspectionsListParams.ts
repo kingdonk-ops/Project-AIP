@@ -2,14 +2,14 @@
 import type { InspectionsListKind } from './inspectionsListKind';
 
 export type InspectionsListParams = {
-assetId?: string | null;
-projectId?: string | null;
-state?: string | null;
-kind?: InspectionsListKind;
-cursor?: string | null;
-/**
- * @minimum 1
- * @maximum 200
- */
-limit?: number;
+  assetId?: string | null;
+  projectId?: string | null;
+  state?: string | null;
+  kind?: InspectionsListKind;
+  cursor?: string | null;
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: number;
 };
