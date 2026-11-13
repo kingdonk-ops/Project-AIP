@@ -131,6 +131,7 @@ export type SitesListQueryResult = NonNullable<Awaited<ReturnType<typeof sitesLi
 export type SitesListQueryError = void
 
 
+/** @summary List Sites */
 export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TError = void>(
  params: undefined |  SitesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -141,6 +142,7 @@ export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TErr
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Sites */
 export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TError = void>(
  params?: SitesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -151,14 +153,12 @@ export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TErr
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Sites */
 export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TError = void>(
  params?: SitesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Sites
- */
-
+/** @summary List Sites */
 export function useSitesList<TData = Awaited<ReturnType<typeof sitesList>>, TError = void>(
  params?: SitesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -274,9 +274,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SitesCreateMutationError = ErrorBody | void
     export type SitesCreateMutationVariables = {data: SiteCreate}
 
-    /**
- * @summary Create Site
- */
+    /** @summary Create Site */
 export const useSitesCreate = <TError = ErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesCreate>>, TError,SitesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -376,9 +374,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SitesDeleteMutationError = ErrorBody | HTTPValidationError
     export type SitesDeleteMutationVariables = {siteId: string}
 
-    /**
- * @summary Delete Site
- */
+    /** @summary Delete Site */
 export const useSitesDelete = <TError = ErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesDelete>>, TError,SitesDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -468,6 +464,7 @@ export type SitesGetQueryResult = NonNullable<Awaited<ReturnType<typeof sitesGet
 export type SitesGetQueryError = ErrorBody | HTTPValidationError
 
 
+/** @summary Get Site */
 export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError = ErrorBody | HTTPValidationError>(
  siteId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -478,6 +475,7 @@ export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Site */
 export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError = ErrorBody | HTTPValidationError>(
  siteId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -488,14 +486,12 @@ export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Site */
 export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError = ErrorBody | HTTPValidationError>(
  siteId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Site
- */
-
+/** @summary Get Site */
 export function useSitesGet<TData = Awaited<ReturnType<typeof sitesGet>>, TError = ErrorBody | HTTPValidationError>(
  siteId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sitesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -617,9 +613,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SitesUpdateMutationError = ErrorBody | void
     export type SitesUpdateMutationVariables = {siteId: string;data: SiteUpdate}
 
-    /**
- * @summary Update Site
- */
+    /** @summary Update Site */
 export const useSitesUpdate = <TError = ErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sitesUpdate>>, TError,SitesUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

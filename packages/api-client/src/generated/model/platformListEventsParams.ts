@@ -2,7 +2,7 @@
 import type { PlatformListEventsStatus } from './platformListEventsStatus';
 
 export type PlatformListEventsParams = {
-module?: string | null;
-status?: PlatformListEventsStatus;
-version?: number | null;
+  module?: string | null;
+  status?: PlatformListEventsStatus;
+  version?: number | null;
 };

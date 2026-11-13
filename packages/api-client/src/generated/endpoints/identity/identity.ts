@@ -158,9 +158,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentityLoginStartMutationError = ErrorResponse
     export type IdentityLoginStartMutationVariables = {data: LoginStartRequest}
 
-    /**
- * @summary Login Start
- */
+    /** @summary Login Start */
 export const useIdentityLoginStart = <TError = ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityLoginStart>>, TError,IdentityLoginStartMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -245,6 +243,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
     /**
+ * Revoke the current session (the Keycloak SSO session ends through the queued job).
  * @summary Logout
  */
 export const useIdentityLogout = <TError = unknown,
@@ -336,9 +335,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentityBackchannelLogoutMutationError = ErrorResponse
 
 
-    /**
- * @summary Backchannel Logout
- */
+    /** @summary Backchannel Logout */
 export const useIdentityBackchannelLogout = <TError = ErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityBackchannelLogout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -428,6 +425,7 @@ export type IdentityOidcCallbackQueryResult = NonNullable<Awaited<ReturnType<typ
 export type IdentityOidcCallbackQueryError = ErrorResponse
 
 
+/** @summary Oidc Callback */
 export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identityOidcCallback>>, TError = ErrorResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityOidcCallback>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -438,6 +436,7 @@ export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identi
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Oidc Callback */
 export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identityOidcCallback>>, TError = ErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityOidcCallback>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -448,14 +447,12 @@ export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identi
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Oidc Callback */
 export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identityOidcCallback>>, TError = ErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityOidcCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Oidc Callback
- */
-
+/** @summary Oidc Callback */
 export function useIdentityOidcCallback<TData = Awaited<ReturnType<typeof identityOidcCallback>>, TError = ErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityOidcCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -578,6 +575,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentityPortalLoginStartMutationVariables = {data: LoginStartRequest}
 
     /**
+ * Start a client's sign-in on the portal (``aip-portal``, a second factor always asked).
  * @summary Portal Login Start
  */
 export const useIdentityPortalLoginStart = <TError = ErrorResponse,
@@ -675,6 +673,10 @@ export type IdentityPortalOidcCallbackQueryResult = NonNullable<Awaited<ReturnTy
 export type IdentityPortalOidcCallbackQueryError = ErrorResponse
 
 
+/**
+ * Finish a client's portal sign-in: a local ``portal`` account at aal 2, a portal session.
+ * @summary Portal Oidc Callback
+ */
 export function useIdentityPortalOidcCallback<TData = Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError = ErrorResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -685,6 +687,10 @@ export function useIdentityPortalOidcCallback<TData = Awaited<ReturnType<typeof 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Finish a client's portal sign-in: a local ``portal`` account at aal 2, a portal session.
+ * @summary Portal Oidc Callback
+ */
 export function useIdentityPortalOidcCallback<TData = Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError = ErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -695,14 +701,18 @@ export function useIdentityPortalOidcCallback<TData = Awaited<ReturnType<typeof 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Finish a client's portal sign-in: a local ``portal`` account at aal 2, a portal session.
+ * @summary Portal Oidc Callback
+ */
 export function useIdentityPortalOidcCallback<TData = Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError = ErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Finish a client's portal sign-in: a local ``portal`` account at aal 2, a portal session.
  * @summary Portal Oidc Callback
  */
-
 export function useIdentityPortalOidcCallback<TData = Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError = ErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityPortalOidcCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -804,6 +814,7 @@ export type IdentityStepUpStartQueryResult = NonNullable<Awaited<ReturnType<type
 export type IdentityStepUpStartQueryError = void | AuthErrorResponse | HTTPValidationError
 
 
+/** @summary Step Up Start */
 export function useIdentityStepUpStart<TData = Awaited<ReturnType<typeof identityStepUpStart>>, TError = void | AuthErrorResponse | HTTPValidationError>(
  params: undefined |  IdentityStepUpStartParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityStepUpStart>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -814,6 +825,7 @@ export function useIdentityStepUpStart<TData = Awaited<ReturnType<typeof identit
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Step Up Start */
 export function useIdentityStepUpStart<TData = Awaited<ReturnType<typeof identityStepUpStart>>, TError = void | AuthErrorResponse | HTTPValidationError>(
  params?: IdentityStepUpStartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityStepUpStart>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -824,14 +836,12 @@ export function useIdentityStepUpStart<TData = Awaited<ReturnType<typeof identit
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Step Up Start */
 export function useIdentityStepUpStart<TData = Awaited<ReturnType<typeof identityStepUpStart>>, TError = void | AuthErrorResponse | HTTPValidationError>(
  params?: IdentityStepUpStartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityStepUpStart>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Step Up Start
- */
-
+/** @summary Step Up Start */
 export function useIdentityStepUpStart<TData = Awaited<ReturnType<typeof identityStepUpStart>>, TError = void | AuthErrorResponse | HTTPValidationError>(
  params?: IdentityStepUpStartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityStepUpStart>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -940,6 +950,7 @@ export type IdentityListInvitesRouteQueryResult = NonNullable<Awaited<ReturnType
 export type IdentityListInvitesRouteQueryError = AuthErrorResponse | HTTPValidationError
 
 
+/** @summary List Invites Route */
 export function useIdentityListInvitesRoute<TData = Awaited<ReturnType<typeof identityListInvitesRoute>>, TError = AuthErrorResponse | HTTPValidationError>(
  params: undefined |  IdentityListInvitesRouteParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListInvitesRoute>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -950,6 +961,7 @@ export function useIdentityListInvitesRoute<TData = Awaited<ReturnType<typeof id
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Invites Route */
 export function useIdentityListInvitesRoute<TData = Awaited<ReturnType<typeof identityListInvitesRoute>>, TError = AuthErrorResponse | HTTPValidationError>(
  params?: IdentityListInvitesRouteParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListInvitesRoute>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -960,14 +972,12 @@ export function useIdentityListInvitesRoute<TData = Awaited<ReturnType<typeof id
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Invites Route */
 export function useIdentityListInvitesRoute<TData = Awaited<ReturnType<typeof identityListInvitesRoute>>, TError = AuthErrorResponse | HTTPValidationError>(
  params?: IdentityListInvitesRouteParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListInvitesRoute>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Invites Route
- */
-
+/** @summary List Invites Route */
 export function useIdentityListInvitesRoute<TData = Awaited<ReturnType<typeof identityListInvitesRoute>>, TError = AuthErrorResponse | HTTPValidationError>(
  params?: IdentityListInvitesRouteParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListInvitesRoute>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1098,9 +1108,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentityCreateInviteRouteMutationError = StepUpErrorResponse | AuthErrorResponse
     export type IdentityCreateInviteRouteMutationVariables = {data: InviteCreate}
 
-    /**
- * @summary Create Invite Route
- */
+    /** @summary Create Invite Route */
 export const useIdentityCreateInviteRoute = <TError = StepUpErrorResponse | AuthErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityCreateInviteRoute>>, TError,IdentityCreateInviteRouteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1210,9 +1218,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentityRevokeInviteRouteMutationError = StepUpErrorResponse | AuthErrorResponse | HTTPValidationError
     export type IdentityRevokeInviteRouteMutationVariables = {inviteId: string}
 
-    /**
- * @summary Revoke Invite Route
- */
+    /** @summary Revoke Invite Route */
 export const useIdentityRevokeInviteRoute = <TError = StepUpErrorResponse | AuthErrorResponse | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityRevokeInviteRoute>>, TError,IdentityRevokeInviteRouteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1322,9 +1328,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentityResendInviteRouteMutationError = StepUpErrorResponse | AuthErrorResponse | HTTPValidationError
     export type IdentityResendInviteRouteMutationVariables = {inviteId: string}
 
-    /**
- * @summary Resend Invite Route
- */
+    /** @summary Resend Invite Route */
 export const useIdentityResendInviteRoute = <TError = StepUpErrorResponse | AuthErrorResponse | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityResendInviteRoute>>, TError,IdentityResendInviteRouteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1414,6 +1418,7 @@ export type IdentityGetSignoffPolicyRouteQueryResult = NonNullable<Awaited<Retur
 export type IdentityGetSignoffPolicyRouteQueryError = AuthErrorResponse
 
 
+/** @summary Get Signoff Policy Route */
 export function useIdentityGetSignoffPolicyRoute<TData = Awaited<ReturnType<typeof identityGetSignoffPolicyRoute>>, TError = AuthErrorResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetSignoffPolicyRoute>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1424,6 +1429,7 @@ export function useIdentityGetSignoffPolicyRoute<TData = Awaited<ReturnType<type
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Signoff Policy Route */
 export function useIdentityGetSignoffPolicyRoute<TData = Awaited<ReturnType<typeof identityGetSignoffPolicyRoute>>, TError = AuthErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetSignoffPolicyRoute>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1434,14 +1440,12 @@ export function useIdentityGetSignoffPolicyRoute<TData = Awaited<ReturnType<type
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Signoff Policy Route */
 export function useIdentityGetSignoffPolicyRoute<TData = Awaited<ReturnType<typeof identityGetSignoffPolicyRoute>>, TError = AuthErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetSignoffPolicyRoute>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Signoff Policy Route
- */
-
+/** @summary Get Signoff Policy Route */
 export function useIdentityGetSignoffPolicyRoute<TData = Awaited<ReturnType<typeof identityGetSignoffPolicyRoute>>, TError = AuthErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetSignoffPolicyRoute>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1562,9 +1566,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentityPutSignoffPolicyRouteMutationError = StepUpErrorResponse | AuthErrorResponse | HTTPValidationError
     export type IdentityPutSignoffPolicyRouteMutationVariables = {data: SignoffPolicyUpdate}
 
-    /**
- * @summary Put Signoff Policy Route
- */
+    /** @summary Put Signoff Policy Route */
 export const useIdentityPutSignoffPolicyRoute = <TError = StepUpErrorResponse | AuthErrorResponse | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityPutSignoffPolicyRoute>>, TError,IdentityPutSignoffPolicyRouteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1674,9 +1676,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentityResetMfaRouteMutationError = StepUpErrorResponse | AuthErrorResponse | HTTPValidationError
     export type IdentityResetMfaRouteMutationVariables = {userId: string}
 
-    /**
- * @summary Reset Mfa Route
- */
+    /** @summary Reset Mfa Route */
 export const useIdentityResetMfaRoute = <TError = StepUpErrorResponse | AuthErrorResponse | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityResetMfaRoute>>, TError,IdentityResetMfaRouteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1766,6 +1766,7 @@ export type IdentityGetMeQueryResult = NonNullable<Awaited<ReturnType<typeof ide
 export type IdentityGetMeQueryError = AuthErrorResponse
 
 
+/** @summary Get Me */
 export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1776,6 +1777,7 @@ export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Me */
 export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1786,14 +1788,12 @@ export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Me */
 export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Me
- */
-
+/** @summary Get Me */
 export function useIdentityGetMe<TData = Awaited<ReturnType<typeof identityGetMe>>, TError = AuthErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityGetMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1914,9 +1914,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentityUpdateMeMutationError = AuthErrorResponse
     export type IdentityUpdateMeMutationVariables = {data: MeUpdate}
 
-    /**
- * @summary Update Me
- */
+    /** @summary Update Me */
 export const useIdentityUpdateMe = <TError = AuthErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityUpdateMe>>, TError,IdentityUpdateMeMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2001,6 +1999,7 @@ export type IdentityListMySessionsQueryResult = NonNullable<Awaited<ReturnType<t
 export type IdentityListMySessionsQueryError = AuthErrorResponse
 
 
+/** @summary List My Sessions */
 export function useIdentityListMySessions<TData = Awaited<ReturnType<typeof identityListMySessions>>, TError = AuthErrorResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListMySessions>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -2011,6 +2010,7 @@ export function useIdentityListMySessions<TData = Awaited<ReturnType<typeof iden
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List My Sessions */
 export function useIdentityListMySessions<TData = Awaited<ReturnType<typeof identityListMySessions>>, TError = AuthErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListMySessions>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -2021,14 +2021,12 @@ export function useIdentityListMySessions<TData = Awaited<ReturnType<typeof iden
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List My Sessions */
 export function useIdentityListMySessions<TData = Awaited<ReturnType<typeof identityListMySessions>>, TError = AuthErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListMySessions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List My Sessions
- */
-
+/** @summary List My Sessions */
 export function useIdentityListMySessions<TData = Awaited<ReturnType<typeof identityListMySessions>>, TError = AuthErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof identityListMySessions>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2135,9 +2133,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentityRevokeMySessionMutationError = AuthErrorResponse | HTTPValidationError
     export type IdentityRevokeMySessionMutationVariables = {sessionId: string}
 
-    /**
- * @summary Revoke My Session
- */
+    /** @summary Revoke My Session */
 export const useIdentityRevokeMySession = <TError = AuthErrorResponse | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identityRevokeMySession>>, TError,IdentityRevokeMySessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

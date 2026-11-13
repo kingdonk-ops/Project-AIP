@@ -153,6 +153,7 @@ export type PlatformListEventsQueryResult = NonNullable<Awaited<ReturnType<typeo
 export type PlatformListEventsQueryError = HTTPValidationError
 
 
+/** @summary List Events */
 export function usePlatformListEvents<TData = Awaited<ReturnType<typeof platformListEvents>>, TError = HTTPValidationError>(
  params: undefined |  PlatformListEventsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListEvents>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -163,6 +164,7 @@ export function usePlatformListEvents<TData = Awaited<ReturnType<typeof platform
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Events */
 export function usePlatformListEvents<TData = Awaited<ReturnType<typeof platformListEvents>>, TError = HTTPValidationError>(
  params?: PlatformListEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListEvents>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -173,14 +175,12 @@ export function usePlatformListEvents<TData = Awaited<ReturnType<typeof platform
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Events */
 export function usePlatformListEvents<TData = Awaited<ReturnType<typeof platformListEvents>>, TError = HTTPValidationError>(
  params?: PlatformListEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListEvents>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Events
- */
-
+/** @summary List Events */
 export function usePlatformListEvents<TData = Awaited<ReturnType<typeof platformListEvents>>, TError = HTTPValidationError>(
  params?: PlatformListEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListEvents>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -279,6 +279,7 @@ export type PlatformListDeadLettersQueryResult = NonNullable<Awaited<ReturnType<
 export type PlatformListDeadLettersQueryError = HTTPValidationError
 
 
+/** @summary List Dead Letters */
 export function usePlatformListDeadLetters<TData = Awaited<ReturnType<typeof platformListDeadLetters>>, TError = HTTPValidationError>(
  params: undefined |  PlatformListDeadLettersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDeadLetters>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -289,6 +290,7 @@ export function usePlatformListDeadLetters<TData = Awaited<ReturnType<typeof pla
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Dead Letters */
 export function usePlatformListDeadLetters<TData = Awaited<ReturnType<typeof platformListDeadLetters>>, TError = HTTPValidationError>(
  params?: PlatformListDeadLettersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDeadLetters>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -299,14 +301,12 @@ export function usePlatformListDeadLetters<TData = Awaited<ReturnType<typeof pla
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Dead Letters */
 export function usePlatformListDeadLetters<TData = Awaited<ReturnType<typeof platformListDeadLetters>>, TError = HTTPValidationError>(
  params?: PlatformListDeadLettersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDeadLetters>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Dead Letters
- */
-
+/** @summary List Dead Letters */
 export function usePlatformListDeadLetters<TData = Awaited<ReturnType<typeof platformListDeadLetters>>, TError = HTTPValidationError>(
  params?: PlatformListDeadLettersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDeadLetters>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -418,9 +418,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PlatformDiscardDeadLetterMutationError = HTTPValidationError
     export type PlatformDiscardDeadLetterMutationVariables = {eventId: string;data: DiscardRequest}
 
-    /**
- * @summary Discard Dead Letter
- */
+    /** @summary Discard Dead Letter */
 export const usePlatformDiscardDeadLetter = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformDiscardDeadLetter>>, TError,PlatformDiscardDeadLetterMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -510,9 +508,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PlatformRetryDeadLetterMutationError = HTTPValidationError
     export type PlatformRetryDeadLetterMutationVariables = {eventId: string}
 
-    /**
- * @summary Retry Dead Letter
- */
+    /** @summary Retry Dead Letter */
 export const usePlatformRetryDeadLetter = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformRetryDeadLetter>>, TError,PlatformRetryDeadLetterMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -597,6 +593,7 @@ export type PlatformGetEventQueryResult = NonNullable<Awaited<ReturnType<typeof 
 export type PlatformGetEventQueryError = HTTPValidationError
 
 
+/** @summary Get Event */
 export function usePlatformGetEvent<TData = Awaited<ReturnType<typeof platformGetEvent>>, TError = HTTPValidationError>(
  eventName: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetEvent>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -607,6 +604,7 @@ export function usePlatformGetEvent<TData = Awaited<ReturnType<typeof platformGe
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Event */
 export function usePlatformGetEvent<TData = Awaited<ReturnType<typeof platformGetEvent>>, TError = HTTPValidationError>(
  eventName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetEvent>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -617,14 +615,12 @@ export function usePlatformGetEvent<TData = Awaited<ReturnType<typeof platformGe
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Event */
 export function usePlatformGetEvent<TData = Awaited<ReturnType<typeof platformGetEvent>>, TError = HTTPValidationError>(
  eventName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetEvent>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Event
- */
-
+/** @summary Get Event */
 export function usePlatformGetEvent<TData = Awaited<ReturnType<typeof platformGetEvent>>, TError = HTTPValidationError>(
  eventName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetEvent>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -723,9 +719,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PlatformDeprecateEventVersionMutationError = HTTPValidationError
     export type PlatformDeprecateEventVersionMutationVariables = {eventName: string;version: number}
 
-    /**
- * @summary Deprecate Event Version
- */
+    /** @summary Deprecate Event Version */
 export const usePlatformDeprecateEventVersion = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformDeprecateEventVersion>>, TError,PlatformDeprecateEventVersionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -803,6 +797,7 @@ export type PlatformHealthQueryResult = NonNullable<Awaited<ReturnType<typeof pl
 export type PlatformHealthQueryError = unknown
 
 
+/** @summary Health */
 export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHealth>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformHealth>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -813,6 +808,7 @@ export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHeal
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Health */
 export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHealth>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformHealth>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -823,14 +819,12 @@ export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHeal
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Health */
 export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHealth>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformHealth>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Health
- */
-
+/** @summary Health */
 export function usePlatformHealth<TData = Awaited<ReturnType<typeof platformHealth>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformHealth>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -915,6 +909,7 @@ export type PlatformLiveQueryResult = NonNullable<Awaited<ReturnType<typeof plat
 export type PlatformLiveQueryError = unknown
 
 
+/** @summary Live */
 export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformLive>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -925,6 +920,7 @@ export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Live */
 export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformLive>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -935,14 +931,12 @@ export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Live */
 export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformLive>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Live
- */
-
+/** @summary Live */
 export function usePlatformLive<TData = Awaited<ReturnType<typeof platformLive>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformLive>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1034,6 +1028,7 @@ export type PlatformReadyQueryResult = NonNullable<Awaited<ReturnType<typeof pla
 export type PlatformReadyQueryError = void
 
 
+/** @summary Ready */
 export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady>>, TError = void>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformReady>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1044,6 +1039,7 @@ export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Ready */
 export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformReady>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1054,14 +1050,12 @@ export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Ready */
 export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformReady>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Ready
- */
-
+/** @summary Ready */
 export function usePlatformReady<TData = Awaited<ReturnType<typeof platformReady>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformReady>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1146,6 +1140,7 @@ export type PlatformGetDefaultRoleTemplateQueryResult = NonNullable<Awaited<Retu
 export type PlatformGetDefaultRoleTemplateQueryError = unknown
 
 
+/** @summary Get Template */
 export function usePlatformGetDefaultRoleTemplate<TData = Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1156,6 +1151,7 @@ export function usePlatformGetDefaultRoleTemplate<TData = Awaited<ReturnType<typ
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Template */
 export function usePlatformGetDefaultRoleTemplate<TData = Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1166,14 +1162,12 @@ export function usePlatformGetDefaultRoleTemplate<TData = Awaited<ReturnType<typ
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Template */
 export function usePlatformGetDefaultRoleTemplate<TData = Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Template
- */
-
+/** @summary Get Template */
 export function usePlatformGetDefaultRoleTemplate<TData = Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformGetDefaultRoleTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1284,9 +1278,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PlatformPatchDefaultRoleTemplateMutationError = void
     export type PlatformPatchDefaultRoleTemplateMutationVariables = {data: TemplatePatch}
 
-    /**
- * @summary Patch Template
- */
+    /** @summary Patch Template */
 export const usePlatformPatchDefaultRoleTemplate = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformPatchDefaultRoleTemplate>>, TError,PlatformPatchDefaultRoleTemplateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1378,6 +1370,7 @@ export type PlatformListDefaultRoleHistoryQueryResult = NonNullable<Awaited<Retu
 export type PlatformListDefaultRoleHistoryQueryError = HTTPValidationError
 
 
+/** @summary Get History */
 export function usePlatformListDefaultRoleHistory<TData = Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError = HTTPValidationError>(
  params: undefined |  PlatformListDefaultRoleHistoryParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1388,6 +1381,7 @@ export function usePlatformListDefaultRoleHistory<TData = Awaited<ReturnType<typ
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get History */
 export function usePlatformListDefaultRoleHistory<TData = Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError = HTTPValidationError>(
  params?: PlatformListDefaultRoleHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1398,14 +1392,12 @@ export function usePlatformListDefaultRoleHistory<TData = Awaited<ReturnType<typ
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get History */
 export function usePlatformListDefaultRoleHistory<TData = Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError = HTTPValidationError>(
  params?: PlatformListDefaultRoleHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get History
- */
-
+/** @summary Get History */
 export function usePlatformListDefaultRoleHistory<TData = Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError = HTTPValidationError>(
  params?: PlatformListDefaultRoleHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListDefaultRoleHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1516,9 +1508,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PlatformSyncDefaultRolesMutationError = void
     export type PlatformSyncDefaultRolesMutationVariables = {data: SyncRequest}
 
-    /**
- * @summary Sync Tenants
- */
+    /** @summary Sync Tenants */
 export const usePlatformSyncDefaultRoles = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformSyncDefaultRoles>>, TError,PlatformSyncDefaultRolesMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1596,6 +1586,7 @@ export type PlatformListModulesQueryResult = NonNullable<Awaited<ReturnType<type
 export type PlatformListModulesQueryError = unknown
 
 
+/** @summary List Modules */
 export function usePlatformListModules<TData = Awaited<ReturnType<typeof platformListModules>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListModules>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1606,6 +1597,7 @@ export function usePlatformListModules<TData = Awaited<ReturnType<typeof platfor
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Modules */
 export function usePlatformListModules<TData = Awaited<ReturnType<typeof platformListModules>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListModules>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1616,14 +1608,12 @@ export function usePlatformListModules<TData = Awaited<ReturnType<typeof platfor
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Modules */
 export function usePlatformListModules<TData = Awaited<ReturnType<typeof platformListModules>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListModules>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Modules
- */
-
+/** @summary List Modules */
 export function usePlatformListModules<TData = Awaited<ReturnType<typeof platformListModules>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListModules>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1740,9 +1730,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PlatformAddEntitlementOverrideMutationError = EntitlementErrorBody
     export type PlatformAddEntitlementOverrideMutationVariables = {tenantId: string;data: OverrideCreate}
 
-    /**
- * @summary Add Override
- */
+    /** @summary Add Override */
 export const usePlatformAddEntitlementOverride = <TError = EntitlementErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformAddEntitlementOverride>>, TError,PlatformAddEntitlementOverrideMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1848,9 +1836,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PlatformRemoveEntitlementOverrideMutationError = EntitlementErrorBody
     export type PlatformRemoveEntitlementOverrideMutationVariables = {tenantId: string;overrideId: string;params: PlatformRemoveEntitlementOverrideParams}
 
-    /**
- * @summary Remove Override
- */
+    /** @summary Remove Override */
 export const usePlatformRemoveEntitlementOverride = <TError = EntitlementErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformRemoveEntitlementOverride>>, TError,PlatformRemoveEntitlementOverrideMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1960,9 +1946,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PlatformPutTenantSubscriptionMutationError = EntitlementErrorBody
     export type PlatformPutTenantSubscriptionMutationVariables = {tenantId: string;data: SubscriptionPut}
 
-    /**
- * @summary Put Subscription
- */
+    /** @summary Put Subscription */
 export const usePlatformPutTenantSubscription = <TError = EntitlementErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformPutTenantSubscription>>, TError,PlatformPutTenantSubscriptionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2040,6 +2024,7 @@ export type PlatformVersionQueryResult = NonNullable<Awaited<ReturnType<typeof p
 export type PlatformVersionQueryError = unknown
 
 
+/** @summary Version */
 export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -2050,6 +2035,7 @@ export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVer
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Version */
 export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -2060,14 +2046,12 @@ export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVer
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Version */
 export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Version
- */
-
+/** @summary Version */
 export function usePlatformVersion<TData = Awaited<ReturnType<typeof platformVersion>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersion>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2152,6 +2136,7 @@ export type PlatformVersionDependenciesQueryResult = NonNullable<Awaited<ReturnT
 export type PlatformVersionDependenciesQueryError = unknown
 
 
+/** @summary Version Dependencies */
 export function usePlatformVersionDependencies<TData = Awaited<ReturnType<typeof platformVersionDependencies>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersionDependencies>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -2162,6 +2147,7 @@ export function usePlatformVersionDependencies<TData = Awaited<ReturnType<typeof
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Version Dependencies */
 export function usePlatformVersionDependencies<TData = Awaited<ReturnType<typeof platformVersionDependencies>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersionDependencies>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -2172,14 +2158,12 @@ export function usePlatformVersionDependencies<TData = Awaited<ReturnType<typeof
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Version Dependencies */
 export function usePlatformVersionDependencies<TData = Awaited<ReturnType<typeof platformVersionDependencies>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersionDependencies>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Version Dependencies
- */
-
+/** @summary Version Dependencies */
 export function usePlatformVersionDependencies<TData = Awaited<ReturnType<typeof platformVersionDependencies>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformVersionDependencies>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2264,6 +2248,7 @@ export type PlatformListFlagsQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type PlatformListFlagsQueryError = unknown
 
 
+/** @summary List Flags */
 export function usePlatformListFlags<TData = Awaited<ReturnType<typeof platformListFlags>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListFlags>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -2274,6 +2259,7 @@ export function usePlatformListFlags<TData = Awaited<ReturnType<typeof platformL
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Flags */
 export function usePlatformListFlags<TData = Awaited<ReturnType<typeof platformListFlags>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListFlags>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -2284,14 +2270,12 @@ export function usePlatformListFlags<TData = Awaited<ReturnType<typeof platformL
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Flags */
 export function usePlatformListFlags<TData = Awaited<ReturnType<typeof platformListFlags>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListFlags>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Flags
- */
-
+/** @summary List Flags */
 export function usePlatformListFlags<TData = Awaited<ReturnType<typeof platformListFlags>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof platformListFlags>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2403,9 +2387,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PlatformSetFlagMutationError = HTTPValidationError
     export type PlatformSetFlagMutationVariables = {flag: string;data: FeatureFlagPut}
 
-    /**
- * @summary Set Flag
- */
+    /** @summary Set Flag */
 export const usePlatformSetFlag = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof platformSetFlag>>, TError,PlatformSetFlagMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

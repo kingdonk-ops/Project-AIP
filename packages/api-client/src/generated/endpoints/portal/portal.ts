@@ -136,6 +136,11 @@ export type PortalUsersListQueryResult = NonNullable<Awaited<ReturnType<typeof p
 export type PortalUsersListQueryError = PortalErrorBody
 
 
+/**
+ * ``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+ * ``projectId``: users with an unrevoked grant on that project.
+ * @summary List Portal Users
+ */
 export function usePortalUsersList<TData = Awaited<ReturnType<typeof portalUsersList>>, TError = PortalErrorBody>(
  params: undefined |  PortalUsersListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalUsersList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -146,6 +151,11 @@ export function usePortalUsersList<TData = Awaited<ReturnType<typeof portalUsers
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * ``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+ * ``projectId``: users with an unrevoked grant on that project.
+ * @summary List Portal Users
+ */
 export function usePortalUsersList<TData = Awaited<ReturnType<typeof portalUsersList>>, TError = PortalErrorBody>(
  params?: PortalUsersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalUsersList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -156,14 +166,20 @@ export function usePortalUsersList<TData = Awaited<ReturnType<typeof portalUsers
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * ``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+ * ``projectId``: users with an unrevoked grant on that project.
+ * @summary List Portal Users
+ */
 export function usePortalUsersList<TData = Awaited<ReturnType<typeof portalUsersList>>, TError = PortalErrorBody>(
  params?: PortalUsersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalUsersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * ``expiringWithinDays``: users with a live grant ending within that many days (PORTAL-07);
+ * ``projectId``: users with an unrevoked grant on that project.
  * @summary List Portal Users
  */
-
 export function usePortalUsersList<TData = Awaited<ReturnType<typeof portalUsersList>>, TError = PortalErrorBody>(
  params?: PortalUsersListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalUsersList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -284,9 +300,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PortalUsersInviteMutationError = PortalErrorBody
     export type PortalUsersInviteMutationVariables = {data: InviteIn}
 
-    /**
- * @summary Invite Portal User
- */
+    /** @summary Invite Portal User */
 export const usePortalUsersInvite = <TError = PortalErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof portalUsersInvite>>, TError,PortalUsersInviteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -376,6 +390,7 @@ export type PortalUsersGetQueryResult = NonNullable<Awaited<ReturnType<typeof po
 export type PortalUsersGetQueryError = PortalErrorBody | HTTPValidationError
 
 
+/** @summary Get Portal User */
 export function usePortalUsersGet<TData = Awaited<ReturnType<typeof portalUsersGet>>, TError = PortalErrorBody | HTTPValidationError>(
  portalUserId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalUsersGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -386,6 +401,7 @@ export function usePortalUsersGet<TData = Awaited<ReturnType<typeof portalUsersG
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Portal User */
 export function usePortalUsersGet<TData = Awaited<ReturnType<typeof portalUsersGet>>, TError = PortalErrorBody | HTTPValidationError>(
  portalUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalUsersGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -396,14 +412,12 @@ export function usePortalUsersGet<TData = Awaited<ReturnType<typeof portalUsersG
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Portal User */
 export function usePortalUsersGet<TData = Awaited<ReturnType<typeof portalUsersGet>>, TError = PortalErrorBody | HTTPValidationError>(
  portalUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalUsersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Portal User
- */
-
+/** @summary Get Portal User */
 export function usePortalUsersGet<TData = Awaited<ReturnType<typeof portalUsersGet>>, TError = PortalErrorBody | HTTPValidationError>(
  portalUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalUsersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -525,9 +539,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PortalGrantsCreateMutationError = PortalErrorBody
     export type PortalGrantsCreateMutationVariables = {portalUserId: string;data: GrantIn}
 
-    /**
- * @summary Add Portal Grant
- */
+    /** @summary Add Portal Grant */
 export const usePortalGrantsCreate = <TError = PortalErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof portalGrantsCreate>>, TError,PortalGrantsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -624,9 +636,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PortalGrantsRevokeMutationError = PortalErrorBody | HTTPValidationError
     export type PortalGrantsRevokeMutationVariables = {portalUserId: string;grantId: string}
 
-    /**
- * @summary Revoke Portal Grant
- */
+    /** @summary Revoke Portal Grant */
 export const usePortalGrantsRevoke = <TError = PortalErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof portalGrantsRevoke>>, TError,PortalGrantsRevokeMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -728,9 +738,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PortalGrantsRenewMutationError = PortalErrorBody
     export type PortalGrantsRenewMutationVariables = {portalUserId: string;grantId: string}
 
-    /**
- * @summary Renew Portal Grant
- */
+    /** @summary Renew Portal Grant */
 export const usePortalGrantsRenew = <TError = PortalErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof portalGrantsRenew>>, TError,PortalGrantsRenewMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -830,9 +838,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PortalUsersReinstateMutationError = PortalErrorBody | HTTPValidationError
     export type PortalUsersReinstateMutationVariables = {portalUserId: string}
 
-    /**
- * @summary Reinstate Portal User
- */
+    /** @summary Reinstate Portal User */
 export const usePortalUsersReinstate = <TError = PortalErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof portalUsersReinstate>>, TError,PortalUsersReinstateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -947,9 +953,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PortalUsersSuspendMutationError = PortalErrorBody | HTTPValidationError
     export type PortalUsersSuspendMutationVariables = {portalUserId: string;data: SuspendIn}
 
-    /**
- * @summary Suspend Portal User
- */
+    /** @summary Suspend Portal User */
 export const usePortalUsersSuspend = <TError = PortalErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof portalUsersSuspend>>, TError,PortalUsersSuspendMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1046,6 +1050,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
     /**
+ * End this portal session and clear the portal cookies (never the staff ones).
  * @summary Portal Logout
  */
 export const usePortalLogout = <TError = PortalErrorBody,
@@ -1138,6 +1143,10 @@ export type PortalMeQueryResult = NonNullable<Awaited<ReturnType<typeof portalMe
 export type PortalMeQueryError = PortalErrorBody
 
 
+/**
+ * The signed-in client, its access status and the projects it may act on now.
+ * @summary Portal Me
+ */
 export function usePortalMe<TData = Awaited<ReturnType<typeof portalMe>>, TError = PortalErrorBody>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalMe>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1148,6 +1157,10 @@ export function usePortalMe<TData = Awaited<ReturnType<typeof portalMe>>, TError
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The signed-in client, its access status and the projects it may act on now.
+ * @summary Portal Me
+ */
 export function usePortalMe<TData = Awaited<ReturnType<typeof portalMe>>, TError = PortalErrorBody>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalMe>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1158,14 +1171,18 @@ export function usePortalMe<TData = Awaited<ReturnType<typeof portalMe>>, TError
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The signed-in client, its access status and the projects it may act on now.
+ * @summary Portal Me
+ */
 export function usePortalMe<TData = Awaited<ReturnType<typeof portalMe>>, TError = PortalErrorBody>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * The signed-in client, its access status and the projects it may act on now.
  * @summary Portal Me
  */
-
 export function usePortalMe<TData = Awaited<ReturnType<typeof portalMe>>, TError = PortalErrorBody>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalMe>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient

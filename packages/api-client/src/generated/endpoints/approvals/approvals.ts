@@ -157,9 +157,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ApprovalsInstallPresetMutationError = ApprovalsErrorBody | HTTPValidationError
     export type ApprovalsInstallPresetMutationVariables = {data: PresetInstall}
 
-    /**
- * @summary Install Preset
- */
+    /** @summary Install Preset */
 export const useApprovalsInstallPreset = <TError = ApprovalsErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsInstallPreset>>, TError,ApprovalsInstallPresetMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -278,9 +276,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ApprovalsStartInstanceMutationError = ApprovalsErrorBody
     export type ApprovalsStartInstanceMutationVariables = {data: InstanceStart}
 
-    /**
- * @summary Start Instance
- */
+    /** @summary Start Instance */
 export const useApprovalsStartInstance = <TError = ApprovalsErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsStartInstance>>, TError,ApprovalsStartInstanceMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -380,6 +376,7 @@ export type ApprovalsGetInstanceQueryResult = NonNullable<Awaited<ReturnType<typ
 export type ApprovalsGetInstanceQueryError = ApprovalsErrorBody | HTTPValidationError
 
 
+/** @summary Get Instance */
 export function useApprovalsGetInstance<TData = Awaited<ReturnType<typeof approvalsGetInstance>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetInstance>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -390,6 +387,7 @@ export function useApprovalsGetInstance<TData = Awaited<ReturnType<typeof approv
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Instance */
 export function useApprovalsGetInstance<TData = Awaited<ReturnType<typeof approvalsGetInstance>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetInstance>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -400,14 +398,12 @@ export function useApprovalsGetInstance<TData = Awaited<ReturnType<typeof approv
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Instance */
 export function useApprovalsGetInstance<TData = Awaited<ReturnType<typeof approvalsGetInstance>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetInstance>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Instance
- */
-
+/** @summary Get Instance */
 export function useApprovalsGetInstance<TData = Awaited<ReturnType<typeof approvalsGetInstance>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetInstance>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -539,9 +535,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ApprovalsDecideStepMutationError = ApprovalsErrorBody
     export type ApprovalsDecideStepMutationVariables = {instanceId: string;data: StepDecisionRequest}
 
-    /**
- * @summary Decide Step
- */
+    /** @summary Decide Step */
 export const useApprovalsDecideStep = <TError = ApprovalsErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsDecideStep>>, TError,ApprovalsDecideStepMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -641,6 +635,7 @@ export type ApprovalsGetHistoryQueryResult = NonNullable<Awaited<ReturnType<type
 export type ApprovalsGetHistoryQueryError = ApprovalsErrorBody | HTTPValidationError
 
 
+/** @summary Get History */
 export function useApprovalsGetHistory<TData = Awaited<ReturnType<typeof approvalsGetHistory>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetHistory>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -651,6 +646,7 @@ export function useApprovalsGetHistory<TData = Awaited<ReturnType<typeof approva
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get History */
 export function useApprovalsGetHistory<TData = Awaited<ReturnType<typeof approvalsGetHistory>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetHistory>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -661,14 +657,12 @@ export function useApprovalsGetHistory<TData = Awaited<ReturnType<typeof approva
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get History */
 export function useApprovalsGetHistory<TData = Awaited<ReturnType<typeof approvalsGetHistory>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get History
- */
-
+/** @summary Get History */
 export function useApprovalsGetHistory<TData = Awaited<ReturnType<typeof approvalsGetHistory>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -800,9 +794,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ApprovalsStartRouteMutationError = ApprovalsErrorBody
     export type ApprovalsStartRouteMutationVariables = {instanceId: string;data: RouteStart}
 
-    /**
- * @summary Start Route
- */
+    /** @summary Start Route */
 export const useApprovalsStartRoute = <TError = ApprovalsErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsStartRoute>>, TError,ApprovalsStartRouteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -902,6 +894,7 @@ export type ApprovalsGetStepsQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type ApprovalsGetStepsQueryError = ApprovalsErrorBody | HTTPValidationError
 
 
+/** @summary Get Steps */
 export function useApprovalsGetSteps<TData = Awaited<ReturnType<typeof approvalsGetSteps>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetSteps>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -912,6 +905,7 @@ export function useApprovalsGetSteps<TData = Awaited<ReturnType<typeof approvals
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Steps */
 export function useApprovalsGetSteps<TData = Awaited<ReturnType<typeof approvalsGetSteps>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetSteps>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -922,14 +916,12 @@ export function useApprovalsGetSteps<TData = Awaited<ReturnType<typeof approvals
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Steps */
 export function useApprovalsGetSteps<TData = Awaited<ReturnType<typeof approvalsGetSteps>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetSteps>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Steps
- */
-
+/** @summary Get Steps */
 export function useApprovalsGetSteps<TData = Awaited<ReturnType<typeof approvalsGetSteps>>, TError = ApprovalsErrorBody | HTTPValidationError>(
  instanceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsGetSteps>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1066,9 +1058,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ApprovalsTransitionMutationError = ApprovalsErrorBody
     export type ApprovalsTransitionMutationVariables = {instanceId: string;data: TransitionRequest}
 
-    /**
- * @summary Transition
- */
+    /** @summary Transition */
 export const useApprovalsTransition = <TError = ApprovalsErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsTransition>>, TError,ApprovalsTransitionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1146,6 +1136,7 @@ export type ApprovalsListPresetsQueryResult = NonNullable<Awaited<ReturnType<typ
 export type ApprovalsListPresetsQueryError = unknown
 
 
+/** @summary Get Presets */
 export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approvalsListPresets>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListPresets>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1156,6 +1147,7 @@ export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approv
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Presets */
 export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approvalsListPresets>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListPresets>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1166,14 +1158,12 @@ export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approv
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Presets */
 export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approvalsListPresets>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListPresets>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Presets
- */
-
+/** @summary Get Presets */
 export function useApprovalsListPresets<TData = Awaited<ReturnType<typeof approvalsListPresets>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListPresets>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1258,6 +1248,7 @@ export type ApprovalsListRouteTemplatesQueryResult = NonNullable<Awaited<ReturnT
 export type ApprovalsListRouteTemplatesQueryError = unknown
 
 
+/** @summary List Route Templates */
 export function useApprovalsListRouteTemplates<TData = Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1268,6 +1259,7 @@ export function useApprovalsListRouteTemplates<TData = Awaited<ReturnType<typeof
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Route Templates */
 export function useApprovalsListRouteTemplates<TData = Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1278,14 +1270,12 @@ export function useApprovalsListRouteTemplates<TData = Awaited<ReturnType<typeof
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Route Templates */
 export function useApprovalsListRouteTemplates<TData = Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Route Templates
- */
-
+/** @summary List Route Templates */
 export function useApprovalsListRouteTemplates<TData = Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof approvalsListRouteTemplates>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1396,9 +1386,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ApprovalsCreateRouteTemplateMutationError = ApprovalsErrorBody
     export type ApprovalsCreateRouteTemplateMutationVariables = {data: RouteTemplateCreate}
 
-    /**
- * @summary Create Route Template
- */
+    /** @summary Create Route Template */
 export const useApprovalsCreateRouteTemplate = <TError = ApprovalsErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvalsCreateRouteTemplate>>, TError,ApprovalsCreateRouteTemplateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

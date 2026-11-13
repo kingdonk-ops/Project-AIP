@@ -149,6 +149,7 @@ export type ItemTypesContentTypesListQueryResult = NonNullable<Awaited<ReturnTyp
 export type ItemTypesContentTypesListQueryError = HTTPValidationError
 
 
+/** @summary List Content Types */
 export function useItemTypesContentTypesList<TData = Awaited<ReturnType<typeof itemTypesContentTypesList>>, TError = HTTPValidationError>(
  params: undefined |  ItemTypesContentTypesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesContentTypesList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -159,6 +160,7 @@ export function useItemTypesContentTypesList<TData = Awaited<ReturnType<typeof i
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Content Types */
 export function useItemTypesContentTypesList<TData = Awaited<ReturnType<typeof itemTypesContentTypesList>>, TError = HTTPValidationError>(
  params?: ItemTypesContentTypesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesContentTypesList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -169,14 +171,12 @@ export function useItemTypesContentTypesList<TData = Awaited<ReturnType<typeof i
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Content Types */
 export function useItemTypesContentTypesList<TData = Awaited<ReturnType<typeof itemTypesContentTypesList>>, TError = HTTPValidationError>(
  params?: ItemTypesContentTypesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesContentTypesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Content Types
- */
-
+/** @summary List Content Types */
 export function useItemTypesContentTypesList<TData = Awaited<ReturnType<typeof itemTypesContentTypesList>>, TError = HTTPValidationError>(
  params?: ItemTypesContentTypesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesContentTypesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -292,9 +292,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesContentTypesCreateMutationError = ItemTypeErrorBody
     export type ItemTypesContentTypesCreateMutationVariables = {data: ContentTypeCreate}
 
-    /**
- * @summary Create Content Type
- */
+    /** @summary Create Content Type */
 export const useItemTypesContentTypesCreate = <TError = ItemTypeErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesContentTypesCreate>>, TError,ItemTypesContentTypesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -398,9 +396,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesContentTypesOrderMutationError = ItemTypeErrorBody
     export type ItemTypesContentTypesOrderMutationVariables = {data: ContentTypeOrder}
 
-    /**
- * @summary Order Content Types
- */
+    /** @summary Order Content Types */
 export const useItemTypesContentTypesOrder = <TError = ItemTypeErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesContentTypesOrder>>, TError,ItemTypesContentTypesOrderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -500,9 +496,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesContentTypesDeleteMutationError = ItemTypeErrorBody | HTTPValidationError
     export type ItemTypesContentTypesDeleteMutationVariables = {contentTypeId: string}
 
-    /**
- * @summary Delete Content Type
- */
+    /** @summary Delete Content Type */
 export const useItemTypesContentTypesDelete = <TError = ItemTypeErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesContentTypesDelete>>, TError,ItemTypesContentTypesDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -592,6 +586,7 @@ export type ItemTypesContentTypesGetQueryResult = NonNullable<Awaited<ReturnType
 export type ItemTypesContentTypesGetQueryError = ItemTypeErrorBody | HTTPValidationError
 
 
+/** @summary Get Content Type */
 export function useItemTypesContentTypesGet<TData = Awaited<ReturnType<typeof itemTypesContentTypesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  contentTypeId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesContentTypesGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -602,6 +597,7 @@ export function useItemTypesContentTypesGet<TData = Awaited<ReturnType<typeof it
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Content Type */
 export function useItemTypesContentTypesGet<TData = Awaited<ReturnType<typeof itemTypesContentTypesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  contentTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesContentTypesGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -612,14 +608,12 @@ export function useItemTypesContentTypesGet<TData = Awaited<ReturnType<typeof it
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Content Type */
 export function useItemTypesContentTypesGet<TData = Awaited<ReturnType<typeof itemTypesContentTypesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  contentTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesContentTypesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Content Type
- */
-
+/** @summary Get Content Type */
 export function useItemTypesContentTypesGet<TData = Awaited<ReturnType<typeof itemTypesContentTypesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  contentTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesContentTypesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -741,9 +735,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesContentTypesUpdateMutationError = ItemTypeErrorBody
     export type ItemTypesContentTypesUpdateMutationVariables = {contentTypeId: string;data: ContentTypeUpdate}
 
-    /**
- * @summary Update Content Type
- */
+    /** @summary Update Content Type */
 export const useItemTypesContentTypesUpdate = <TError = ItemTypeErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesContentTypesUpdate>>, TError,ItemTypesContentTypesUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -821,6 +813,7 @@ export type ItemTypesFieldTypesQueryResult = NonNullable<Awaited<ReturnType<type
 export type ItemTypesFieldTypesQueryError = unknown
 
 
+/** @summary Get Field Types */
 export function useItemTypesFieldTypes<TData = Awaited<ReturnType<typeof itemTypesFieldTypes>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesFieldTypes>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -831,6 +824,7 @@ export function useItemTypesFieldTypes<TData = Awaited<ReturnType<typeof itemTyp
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Field Types */
 export function useItemTypesFieldTypes<TData = Awaited<ReturnType<typeof itemTypesFieldTypes>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesFieldTypes>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -841,14 +835,12 @@ export function useItemTypesFieldTypes<TData = Awaited<ReturnType<typeof itemTyp
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Field Types */
 export function useItemTypesFieldTypes<TData = Awaited<ReturnType<typeof itemTypesFieldTypes>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesFieldTypes>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Field Types
- */
-
+/** @summary Get Field Types */
 export function useItemTypesFieldTypes<TData = Awaited<ReturnType<typeof itemTypesFieldTypes>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesFieldTypes>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -947,6 +939,7 @@ export type ItemTypesCategoriesListQueryResult = NonNullable<Awaited<ReturnType<
 export type ItemTypesCategoriesListQueryError = HTTPValidationError
 
 
+/** @summary List Categories */
 export function useItemTypesCategoriesList<TData = Awaited<ReturnType<typeof itemTypesCategoriesList>>, TError = HTTPValidationError>(
  params: ItemTypesCategoriesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesCategoriesList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -957,6 +950,7 @@ export function useItemTypesCategoriesList<TData = Awaited<ReturnType<typeof ite
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Categories */
 export function useItemTypesCategoriesList<TData = Awaited<ReturnType<typeof itemTypesCategoriesList>>, TError = HTTPValidationError>(
  params: ItemTypesCategoriesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesCategoriesList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -967,14 +961,12 @@ export function useItemTypesCategoriesList<TData = Awaited<ReturnType<typeof ite
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Categories */
 export function useItemTypesCategoriesList<TData = Awaited<ReturnType<typeof itemTypesCategoriesList>>, TError = HTTPValidationError>(
  params: ItemTypesCategoriesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesCategoriesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Categories
- */
-
+/** @summary List Categories */
 export function useItemTypesCategoriesList<TData = Awaited<ReturnType<typeof itemTypesCategoriesList>>, TError = HTTPValidationError>(
  params: ItemTypesCategoriesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesCategoriesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1095,9 +1087,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesCategoriesCreateMutationError = ItemTypeErrorBody
     export type ItemTypesCategoriesCreateMutationVariables = {data: CategoryCreate}
 
-    /**
- * @summary Create Category
- */
+    /** @summary Create Category */
 export const useItemTypesCategoriesCreate = <TError = ItemTypeErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesCategoriesCreate>>, TError,ItemTypesCategoriesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1197,9 +1187,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesCategoriesDeleteMutationError = ItemTypeErrorBody | HTTPValidationError
     export type ItemTypesCategoriesDeleteMutationVariables = {categoryId: string}
 
-    /**
- * @summary Delete Category
- */
+    /** @summary Delete Category */
 export const useItemTypesCategoriesDelete = <TError = ItemTypeErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesCategoriesDelete>>, TError,ItemTypesCategoriesDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1289,6 +1277,7 @@ export type ItemTypesCategoriesGetQueryResult = NonNullable<Awaited<ReturnType<t
 export type ItemTypesCategoriesGetQueryError = ItemTypeErrorBody | HTTPValidationError
 
 
+/** @summary Get Category */
 export function useItemTypesCategoriesGet<TData = Awaited<ReturnType<typeof itemTypesCategoriesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  categoryId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesCategoriesGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1299,6 +1288,7 @@ export function useItemTypesCategoriesGet<TData = Awaited<ReturnType<typeof item
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Category */
 export function useItemTypesCategoriesGet<TData = Awaited<ReturnType<typeof itemTypesCategoriesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  categoryId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesCategoriesGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1309,14 +1299,12 @@ export function useItemTypesCategoriesGet<TData = Awaited<ReturnType<typeof item
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Category */
 export function useItemTypesCategoriesGet<TData = Awaited<ReturnType<typeof itemTypesCategoriesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  categoryId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesCategoriesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Category
- */
-
+/** @summary Get Category */
 export function useItemTypesCategoriesGet<TData = Awaited<ReturnType<typeof itemTypesCategoriesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  categoryId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesCategoriesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1438,9 +1426,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesCategoriesUpdateMutationError = ItemTypeErrorBody
     export type ItemTypesCategoriesUpdateMutationVariables = {categoryId: string;data: CategoryUpdate}
 
-    /**
- * @summary Update Category
- */
+    /** @summary Update Category */
 export const useItemTypesCategoriesUpdate = <TError = ItemTypeErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesCategoriesUpdate>>, TError,ItemTypesCategoriesUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1532,6 +1518,7 @@ export type ItemTypesItemTypesListQueryResult = NonNullable<Awaited<ReturnType<t
 export type ItemTypesItemTypesListQueryError = HTTPValidationError
 
 
+/** @summary List Item Types */
 export function useItemTypesItemTypesList<TData = Awaited<ReturnType<typeof itemTypesItemTypesList>>, TError = HTTPValidationError>(
  params: undefined |  ItemTypesItemTypesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesItemTypesList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1542,6 +1529,7 @@ export function useItemTypesItemTypesList<TData = Awaited<ReturnType<typeof item
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Item Types */
 export function useItemTypesItemTypesList<TData = Awaited<ReturnType<typeof itemTypesItemTypesList>>, TError = HTTPValidationError>(
  params?: ItemTypesItemTypesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesItemTypesList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1552,14 +1540,12 @@ export function useItemTypesItemTypesList<TData = Awaited<ReturnType<typeof item
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Item Types */
 export function useItemTypesItemTypesList<TData = Awaited<ReturnType<typeof itemTypesItemTypesList>>, TError = HTTPValidationError>(
  params?: ItemTypesItemTypesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesItemTypesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Item Types
- */
-
+/** @summary List Item Types */
 export function useItemTypesItemTypesList<TData = Awaited<ReturnType<typeof itemTypesItemTypesList>>, TError = HTTPValidationError>(
  params?: ItemTypesItemTypesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesItemTypesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1680,9 +1666,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesItemTypesCreateMutationError = ItemTypeErrorBody
     export type ItemTypesItemTypesCreateMutationVariables = {data: ItemTypeCreate}
 
-    /**
- * @summary Create Item Type
- */
+    /** @summary Create Item Type */
 export const useItemTypesItemTypesCreate = <TError = ItemTypeErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesItemTypesCreate>>, TError,ItemTypesItemTypesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1782,9 +1766,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesItemTypesDeleteMutationError = ItemTypeErrorBody | HTTPValidationError
     export type ItemTypesItemTypesDeleteMutationVariables = {itemTypeId: string}
 
-    /**
- * @summary Delete Item Type
- */
+    /** @summary Delete Item Type */
 export const useItemTypesItemTypesDelete = <TError = ItemTypeErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesItemTypesDelete>>, TError,ItemTypesItemTypesDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1874,6 +1856,7 @@ export type ItemTypesItemTypesGetQueryResult = NonNullable<Awaited<ReturnType<ty
 export type ItemTypesItemTypesGetQueryError = ItemTypeErrorBody | HTTPValidationError
 
 
+/** @summary Get Item Type */
 export function useItemTypesItemTypesGet<TData = Awaited<ReturnType<typeof itemTypesItemTypesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesItemTypesGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1884,6 +1867,7 @@ export function useItemTypesItemTypesGet<TData = Awaited<ReturnType<typeof itemT
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Item Type */
 export function useItemTypesItemTypesGet<TData = Awaited<ReturnType<typeof itemTypesItemTypesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesItemTypesGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1894,14 +1878,12 @@ export function useItemTypesItemTypesGet<TData = Awaited<ReturnType<typeof itemT
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Item Type */
 export function useItemTypesItemTypesGet<TData = Awaited<ReturnType<typeof itemTypesItemTypesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesItemTypesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Item Type
- */
-
+/** @summary Get Item Type */
 export function useItemTypesItemTypesGet<TData = Awaited<ReturnType<typeof itemTypesItemTypesGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesItemTypesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2023,9 +2005,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesItemTypesUpdateMutationError = ItemTypeErrorBody
     export type ItemTypesItemTypesUpdateMutationVariables = {itemTypeId: string;data: ItemTypeUpdate}
 
-    /**
- * @summary Update Item Type
- */
+    /** @summary Update Item Type */
 export const useItemTypesItemTypesUpdate = <TError = ItemTypeErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesItemTypesUpdate>>, TError,ItemTypesItemTypesUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2115,6 +2095,7 @@ export type ItemTypesVersionsListQueryResult = NonNullable<Awaited<ReturnType<ty
 export type ItemTypesVersionsListQueryError = ItemTypeErrorBody | HTTPValidationError
 
 
+/** @summary List Versions */
 export function useItemTypesVersionsList<TData = Awaited<ReturnType<typeof itemTypesVersionsList>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -2125,6 +2106,7 @@ export function useItemTypesVersionsList<TData = Awaited<ReturnType<typeof itemT
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Versions */
 export function useItemTypesVersionsList<TData = Awaited<ReturnType<typeof itemTypesVersionsList>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -2135,14 +2117,12 @@ export function useItemTypesVersionsList<TData = Awaited<ReturnType<typeof itemT
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Versions */
 export function useItemTypesVersionsList<TData = Awaited<ReturnType<typeof itemTypesVersionsList>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Versions
- */
-
+/** @summary List Versions */
 export function useItemTypesVersionsList<TData = Awaited<ReturnType<typeof itemTypesVersionsList>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2249,9 +2229,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesVersionsCreateMutationError = ItemTypeErrorBody | HTTPValidationError
     export type ItemTypesVersionsCreateMutationVariables = {itemTypeId: string}
 
-    /**
- * @summary Create Version
- */
+    /** @summary Create Version */
 export const useItemTypesVersionsCreate = <TError = ItemTypeErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsCreate>>, TError,ItemTypesVersionsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2353,9 +2331,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesVersionsDeleteMutationError = ItemTypeErrorBody | HTTPValidationError
     export type ItemTypesVersionsDeleteMutationVariables = {itemTypeId: string;versionId: string}
 
-    /**
- * @summary Delete Version
- */
+    /** @summary Delete Version */
 export const useItemTypesVersionsDelete = <TError = ItemTypeErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsDelete>>, TError,ItemTypesVersionsDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2449,6 +2425,7 @@ export type ItemTypesVersionsGetQueryResult = NonNullable<Awaited<ReturnType<typ
 export type ItemTypesVersionsGetQueryError = ItemTypeErrorBody | HTTPValidationError
 
 
+/** @summary Get Version */
 export function useItemTypesVersionsGet<TData = Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string,
     versionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError, TData>> & Pick<
@@ -2460,6 +2437,7 @@ export function useItemTypesVersionsGet<TData = Awaited<ReturnType<typeof itemTy
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Version */
 export function useItemTypesVersionsGet<TData = Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string,
     versionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError, TData>> & Pick<
@@ -2471,15 +2449,13 @@ export function useItemTypesVersionsGet<TData = Awaited<ReturnType<typeof itemTy
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Version */
 export function useItemTypesVersionsGet<TData = Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string,
     versionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Version
- */
-
+/** @summary Get Version */
 export function useItemTypesVersionsGet<TData = Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError = ItemTypeErrorBody | HTTPValidationError>(
  itemTypeId: string,
     versionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof itemTypesVersionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
@@ -2604,9 +2580,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesVersionsUpdateMutationError = ItemTypeErrorBody
     export type ItemTypesVersionsUpdateMutationVariables = {itemTypeId: string;versionId: string;data: VersionUpdate}
 
-    /**
- * @summary Update Version
- */
+    /** @summary Update Version */
 export const useItemTypesVersionsUpdate = <TError = ItemTypeErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsUpdate>>, TError,ItemTypesVersionsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2723,9 +2697,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesVersionsPublishMutationError = ItemTypeErrorBody
     export type ItemTypesVersionsPublishMutationVariables = {itemTypeId: string;versionId: string;data: VersionPublish}
 
-    /**
- * @summary Publish Version
- */
+    /** @summary Publish Version */
 export const useItemTypesVersionsPublish = <TError = ItemTypeErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itemTypesVersionsPublish>>, TError,ItemTypesVersionsPublishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2839,6 +2811,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItemTypesVersionsValidateMutationVariables = {itemTypeId: string;versionId: string;data: AttributeValidateBody}
 
     /**
+ * Check sample attribute values against a published version (the editor and asset form).
  * @summary Validate Version Attributes
  */
 export const useItemTypesVersionsValidate = <TError = ItemTypeErrorBody | HTTPValidationError,

@@ -162,6 +162,7 @@ export type InspectionsListQueryResult = NonNullable<Awaited<ReturnType<typeof i
 export type InspectionsListQueryError = InspectionErrorBody
 
 
+/** @summary List Inspections */
 export function useInspectionsList<TData = Awaited<ReturnType<typeof inspectionsList>>, TError = InspectionErrorBody>(
  params: undefined |  InspectionsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -172,6 +173,7 @@ export function useInspectionsList<TData = Awaited<ReturnType<typeof inspections
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Inspections */
 export function useInspectionsList<TData = Awaited<ReturnType<typeof inspectionsList>>, TError = InspectionErrorBody>(
  params?: InspectionsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -182,14 +184,12 @@ export function useInspectionsList<TData = Awaited<ReturnType<typeof inspections
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Inspections */
 export function useInspectionsList<TData = Awaited<ReturnType<typeof inspectionsList>>, TError = InspectionErrorBody>(
  params?: InspectionsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Inspections
- */
-
+/** @summary List Inspections */
 export function useInspectionsList<TData = Awaited<ReturnType<typeof inspectionsList>>, TError = InspectionErrorBody>(
  params?: InspectionsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -320,9 +320,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InspectionsCreateMutationError = InspectionErrorBody
     export type InspectionsCreateMutationVariables = {data: InspectionCreate}
 
-    /**
- * @summary Create Inspection
- */
+    /** @summary Create Inspection */
 export const useInspectionsCreate = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsCreate>>, TError,InspectionsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -422,6 +420,7 @@ export type InspectionsGetQueryResult = NonNullable<Awaited<ReturnType<typeof in
 export type InspectionsGetQueryError = InspectionErrorBody | HTTPValidationError
 
 
+/** @summary Get Inspection */
 export function useInspectionsGet<TData = Awaited<ReturnType<typeof inspectionsGet>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -432,6 +431,7 @@ export function useInspectionsGet<TData = Awaited<ReturnType<typeof inspectionsG
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Inspection */
 export function useInspectionsGet<TData = Awaited<ReturnType<typeof inspectionsGet>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -442,14 +442,12 @@ export function useInspectionsGet<TData = Awaited<ReturnType<typeof inspectionsG
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Inspection */
 export function useInspectionsGet<TData = Awaited<ReturnType<typeof inspectionsGet>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Inspection
- */
-
+/** @summary Get Inspection */
 export function useInspectionsGet<TData = Awaited<ReturnType<typeof inspectionsGet>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -556,6 +554,7 @@ export type InspectionsAcknowledgementsQueryResult = NonNullable<Awaited<ReturnT
 export type InspectionsAcknowledgementsQueryError = InspectionErrorBody | HTTPValidationError
 
 
+/** @summary Get Acknowledgements */
 export function useInspectionsAcknowledgements<TData = Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -566,6 +565,7 @@ export function useInspectionsAcknowledgements<TData = Awaited<ReturnType<typeof
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Acknowledgements */
 export function useInspectionsAcknowledgements<TData = Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -576,14 +576,12 @@ export function useInspectionsAcknowledgements<TData = Awaited<ReturnType<typeof
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Acknowledgements */
 export function useInspectionsAcknowledgements<TData = Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Acknowledgements
- */
-
+/** @summary Get Acknowledgements */
 export function useInspectionsAcknowledgements<TData = Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsAcknowledgements>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -690,6 +688,7 @@ export type InspectionsHistoryQueryResult = NonNullable<Awaited<ReturnType<typeo
 export type InspectionsHistoryQueryError = InspectionErrorBody | HTTPValidationError
 
 
+/** @summary Get History */
 export function useInspectionsHistory<TData = Awaited<ReturnType<typeof inspectionsHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsHistory>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -700,6 +699,7 @@ export function useInspectionsHistory<TData = Awaited<ReturnType<typeof inspecti
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get History */
 export function useInspectionsHistory<TData = Awaited<ReturnType<typeof inspectionsHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsHistory>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -710,14 +710,12 @@ export function useInspectionsHistory<TData = Awaited<ReturnType<typeof inspecti
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get History */
 export function useInspectionsHistory<TData = Awaited<ReturnType<typeof inspectionsHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get History
- */
-
+/** @summary Get History */
 export function useInspectionsHistory<TData = Awaited<ReturnType<typeof inspectionsHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -824,6 +822,7 @@ export type InspectionsItpStepsQueryResult = NonNullable<Awaited<ReturnType<type
 export type InspectionsItpStepsQueryError = InspectionErrorBody | HTTPValidationError
 
 
+/** @summary Get Itp Steps */
 export function useInspectionsItpSteps<TData = Awaited<ReturnType<typeof inspectionsItpSteps>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsItpSteps>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -834,6 +833,7 @@ export function useInspectionsItpSteps<TData = Awaited<ReturnType<typeof inspect
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Itp Steps */
 export function useInspectionsItpSteps<TData = Awaited<ReturnType<typeof inspectionsItpSteps>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsItpSteps>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -844,14 +844,12 @@ export function useInspectionsItpSteps<TData = Awaited<ReturnType<typeof inspect
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Itp Steps */
 export function useInspectionsItpSteps<TData = Awaited<ReturnType<typeof inspectionsItpSteps>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsItpSteps>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Itp Steps
- */
-
+/** @summary Get Itp Steps */
 export function useInspectionsItpSteps<TData = Awaited<ReturnType<typeof inspectionsItpSteps>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsItpSteps>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -983,9 +981,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InspectionsCreateItpStepsMutationError = InspectionErrorBody
     export type InspectionsCreateItpStepsMutationVariables = {inspectionId: string;data: ItpStepsIn}
 
-    /**
- * @summary Create Itp Steps
- */
+    /** @summary Create Itp Steps */
 export const useInspectionsCreateItpSteps = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsCreateItpSteps>>, TError,InspectionsCreateItpStepsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1095,9 +1091,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InspectionsReinspectMutationError = InspectionErrorBody
     export type InspectionsReinspectMutationVariables = {inspectionId: string}
 
-    /**
- * @summary Reinspect
- */
+    /** @summary Reinspect */
 export const useInspectionsReinspect = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsReinspect>>, TError,InspectionsReinspectMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1222,9 +1216,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InspectionsUnacknowledgeReportMutationError = InspectionErrorBody
     export type InspectionsUnacknowledgeReportMutationVariables = {inspectionId: string;data?: AcknowledgementIn | null}
 
-    /**
- * @summary Unacknowledge Report
- */
+    /** @summary Unacknowledge Report */
 export const useInspectionsUnacknowledgeReport = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsUnacknowledgeReport>>, TError,InspectionsUnacknowledgeReportMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1349,9 +1341,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InspectionsAcknowledgeReportMutationError = InspectionErrorBody
     export type InspectionsAcknowledgeReportMutationVariables = {inspectionId: string;data?: AcknowledgementIn | null}
 
-    /**
- * @summary Acknowledge Report
- */
+    /** @summary Acknowledge Report */
 export const useInspectionsAcknowledgeReport = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsAcknowledgeReport>>, TError,InspectionsAcknowledgeReportMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1451,6 +1441,7 @@ export type InspectionsResponsesQueryResult = NonNullable<Awaited<ReturnType<typ
 export type InspectionsResponsesQueryError = InspectionErrorBody | HTTPValidationError
 
 
+/** @summary Get Responses */
 export function useInspectionsResponses<TData = Awaited<ReturnType<typeof inspectionsResponses>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponses>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1461,6 +1452,7 @@ export function useInspectionsResponses<TData = Awaited<ReturnType<typeof inspec
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Responses */
 export function useInspectionsResponses<TData = Awaited<ReturnType<typeof inspectionsResponses>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponses>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -1471,14 +1463,12 @@ export function useInspectionsResponses<TData = Awaited<ReturnType<typeof inspec
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Responses */
 export function useInspectionsResponses<TData = Awaited<ReturnType<typeof inspectionsResponses>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponses>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Responses
- */
-
+/** @summary Get Responses */
 export function useInspectionsResponses<TData = Awaited<ReturnType<typeof inspectionsResponses>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponses>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -1610,9 +1600,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InspectionsRespondMutationError = InspectionErrorBody
     export type InspectionsRespondMutationVariables = {inspectionId: string;data: ResponsesIn}
 
-    /**
- * @summary Respond
- */
+    /** @summary Respond */
 export const useInspectionsRespond = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsRespond>>, TError,InspectionsRespondMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -1716,6 +1704,7 @@ export type InspectionsResponseHistoryQueryResult = NonNullable<Awaited<ReturnTy
 export type InspectionsResponseHistoryQueryError = InspectionErrorBody | HTTPValidationError
 
 
+/** @summary Get Response History */
 export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string,
     fieldKey: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError, TData>> & Pick<
@@ -1727,6 +1716,7 @@ export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Response History */
 export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string,
     fieldKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError, TData>> & Pick<
@@ -1738,15 +1728,13 @@ export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Response History */
 export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string,
     fieldKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Response History
- */
-
+/** @summary Get Response History */
 export function useInspectionsResponseHistory<TData = Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string,
     fieldKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsResponseHistory>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
@@ -1881,9 +1869,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InspectionsUnacknowledgeSectionMutationError = InspectionErrorBody
     export type InspectionsUnacknowledgeSectionMutationVariables = {inspectionId: string;sectionKey: string;data?: AcknowledgementIn | null}
 
-    /**
- * @summary Unacknowledge Section
- */
+    /** @summary Unacknowledge Section */
 export const useInspectionsUnacknowledgeSection = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsUnacknowledgeSection>>, TError,InspectionsUnacknowledgeSectionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2010,9 +1996,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InspectionsAcknowledgeSectionMutationError = InspectionErrorBody
     export type InspectionsAcknowledgeSectionMutationVariables = {inspectionId: string;sectionKey: string;data?: AcknowledgementIn | null}
 
-    /**
- * @summary Acknowledge Section
- */
+    /** @summary Acknowledge Section */
 export const useInspectionsAcknowledgeSection = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsAcknowledgeSection>>, TError,InspectionsAcknowledgeSectionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2112,6 +2096,7 @@ export type InspectionsSignoffsQueryResult = NonNullable<Awaited<ReturnType<type
 export type InspectionsSignoffsQueryError = InspectionErrorBody | HTTPValidationError
 
 
+/** @summary Get Signoffs */
 export function useInspectionsSignoffs<TData = Awaited<ReturnType<typeof inspectionsSignoffs>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsSignoffs>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -2122,6 +2107,7 @@ export function useInspectionsSignoffs<TData = Awaited<ReturnType<typeof inspect
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Signoffs */
 export function useInspectionsSignoffs<TData = Awaited<ReturnType<typeof inspectionsSignoffs>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsSignoffs>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -2132,14 +2118,12 @@ export function useInspectionsSignoffs<TData = Awaited<ReturnType<typeof inspect
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Signoffs */
 export function useInspectionsSignoffs<TData = Awaited<ReturnType<typeof inspectionsSignoffs>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsSignoffs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Signoffs
- */
-
+/** @summary Get Signoffs */
 export function useInspectionsSignoffs<TData = Awaited<ReturnType<typeof inspectionsSignoffs>>, TError = InspectionErrorBody | HTTPValidationError>(
  inspectionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof inspectionsSignoffs>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2276,9 +2260,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InspectionsTransitionMutationError = InspectionErrorBody
     export type InspectionsTransitionMutationVariables = {inspectionId: string;data: TransitionBody}
 
-    /**
- * @summary Transition
- */
+    /** @summary Transition */
 export const useInspectionsTransition = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inspectionsTransition>>, TError,InspectionsTransitionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2403,9 +2385,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItpStepsActMutationError = InspectionErrorBody
     export type ItpStepsActMutationVariables = {stepId: string;data: ItpStepActionIn}
 
-    /**
- * @summary Act On Step
- */
+    /** @summary Act On Step */
 export const useItpStepsAct = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itpStepsAct>>, TError,ItpStepsActMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -2535,9 +2515,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ItpStepsSignMutationError = InspectionErrorBody
     export type ItpStepsSignMutationVariables = {stepId: string;data: SignoffIn}
 
-    /**
- * @summary Sign Step
- */
+    /** @summary Sign Step */
 export const useItpStepsSign = <TError = InspectionErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof itpStepsSign>>, TError,ItpStepsSignMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

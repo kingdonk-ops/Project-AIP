@@ -132,6 +132,7 @@ export type TenancyGetMyTenantQueryResult = NonNullable<Awaited<ReturnType<typeo
 export type TenancyGetMyTenantQueryError = TenantErrorResponse
 
 
+/** @summary Get My Tenant */
 export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError = TenantErrorResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -142,6 +143,7 @@ export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyG
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get My Tenant */
 export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError = TenantErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -152,14 +154,12 @@ export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyG
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get My Tenant */
 export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError = TenantErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get My Tenant
- */
-
+/** @summary Get My Tenant */
 export function useTenancyGetMyTenant<TData = Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError = TenantErrorResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyGetMyTenant>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -264,6 +264,7 @@ export type OrganisationsListQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type OrganisationsListQueryError = void
 
 
+/** @summary List Organisations */
 export function useOrganisationsList<TData = Awaited<ReturnType<typeof organisationsList>>, TError = void>(
  params: undefined |  OrganisationsListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof organisationsList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -274,6 +275,7 @@ export function useOrganisationsList<TData = Awaited<ReturnType<typeof organisat
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Organisations */
 export function useOrganisationsList<TData = Awaited<ReturnType<typeof organisationsList>>, TError = void>(
  params?: OrganisationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof organisationsList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -284,14 +286,12 @@ export function useOrganisationsList<TData = Awaited<ReturnType<typeof organisat
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Organisations */
 export function useOrganisationsList<TData = Awaited<ReturnType<typeof organisationsList>>, TError = void>(
  params?: OrganisationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof organisationsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Organisations
- */
-
+/** @summary List Organisations */
 export function useOrganisationsList<TData = Awaited<ReturnType<typeof organisationsList>>, TError = void>(
  params?: OrganisationsListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof organisationsList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -407,9 +407,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type OrganisationsCreateMutationError = OrganisationErrorBody | void
     export type OrganisationsCreateMutationVariables = {data: OrganisationCreate}
 
-    /**
- * @summary Create Organisation
- */
+    /** @summary Create Organisation */
 export const useOrganisationsCreate = <TError = OrganisationErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof organisationsCreate>>, TError,OrganisationsCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -499,6 +497,7 @@ export type OrganisationsGetQueryResult = NonNullable<Awaited<ReturnType<typeof 
 export type OrganisationsGetQueryError = OrganisationErrorBody | HTTPValidationError
 
 
+/** @summary Get Organisation */
 export function useOrganisationsGet<TData = Awaited<ReturnType<typeof organisationsGet>>, TError = OrganisationErrorBody | HTTPValidationError>(
  organisationId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof organisationsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -509,6 +508,7 @@ export function useOrganisationsGet<TData = Awaited<ReturnType<typeof organisati
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Organisation */
 export function useOrganisationsGet<TData = Awaited<ReturnType<typeof organisationsGet>>, TError = OrganisationErrorBody | HTTPValidationError>(
  organisationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof organisationsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -519,14 +519,12 @@ export function useOrganisationsGet<TData = Awaited<ReturnType<typeof organisati
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get Organisation */
 export function useOrganisationsGet<TData = Awaited<ReturnType<typeof organisationsGet>>, TError = OrganisationErrorBody | HTTPValidationError>(
  organisationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof organisationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Organisation
- */
-
+/** @summary Get Organisation */
 export function useOrganisationsGet<TData = Awaited<ReturnType<typeof organisationsGet>>, TError = OrganisationErrorBody | HTTPValidationError>(
  organisationId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof organisationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -648,9 +646,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type OrganisationsUpdateMutationError = OrganisationErrorBody | void
     export type OrganisationsUpdateMutationVariables = {organisationId: string;data: OrganisationUpdate}
 
-    /**
- * @summary Update Organisation
- */
+    /** @summary Update Organisation */
 export const useOrganisationsUpdate = <TError = OrganisationErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof organisationsUpdate>>, TError,OrganisationsUpdateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -728,6 +724,7 @@ export type TenancyPlanAndUsageQueryResult = NonNullable<Awaited<ReturnType<type
 export type TenancyPlanAndUsageQueryError = unknown
 
 
+/** @summary Plan And Usage */
 export function useTenancyPlanAndUsage<TData = Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError = unknown>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -738,6 +735,7 @@ export function useTenancyPlanAndUsage<TData = Awaited<ReturnType<typeof tenancy
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Plan And Usage */
 export function useTenancyPlanAndUsage<TData = Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -748,14 +746,12 @@ export function useTenancyPlanAndUsage<TData = Awaited<ReturnType<typeof tenancy
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Plan And Usage */
 export function useTenancyPlanAndUsage<TData = Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Plan And Usage
- */
-
+/** @summary Plan And Usage */
 export function useTenancyPlanAndUsage<TData = Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tenancyPlanAndUsage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient

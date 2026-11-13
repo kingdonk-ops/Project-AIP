@@ -138,6 +138,7 @@ export type JobsAdminListQueryResult = NonNullable<Awaited<ReturnType<typeof job
 export type JobsAdminListQueryError = HTTPValidationError
 
 
+/** @summary List Tenant Jobs */
 export function useJobsAdminList<TData = Awaited<ReturnType<typeof jobsAdminList>>, TError = HTTPValidationError>(
  params: undefined |  JobsAdminListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof jobsAdminList>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -148,6 +149,7 @@ export function useJobsAdminList<TData = Awaited<ReturnType<typeof jobsAdminList
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Tenant Jobs */
 export function useJobsAdminList<TData = Awaited<ReturnType<typeof jobsAdminList>>, TError = HTTPValidationError>(
  params?: JobsAdminListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof jobsAdminList>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -158,14 +160,12 @@ export function useJobsAdminList<TData = Awaited<ReturnType<typeof jobsAdminList
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List Tenant Jobs */
 export function useJobsAdminList<TData = Awaited<ReturnType<typeof jobsAdminList>>, TError = HTTPValidationError>(
  params?: JobsAdminListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof jobsAdminList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Tenant Jobs
- */
-
+/** @summary List Tenant Jobs */
 export function useJobsAdminList<TData = Awaited<ReturnType<typeof jobsAdminList>>, TError = HTTPValidationError>(
  params?: JobsAdminListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof jobsAdminList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -272,6 +272,7 @@ export type JobsListMineQueryResult = NonNullable<Awaited<ReturnType<typeof jobs
 export type JobsListMineQueryError = HTTPValidationError
 
 
+/** @summary List My Jobs */
 export function useJobsListMine<TData = Awaited<ReturnType<typeof jobsListMine>>, TError = HTTPValidationError>(
  params: undefined |  JobsListMineParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof jobsListMine>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -282,6 +283,7 @@ export function useJobsListMine<TData = Awaited<ReturnType<typeof jobsListMine>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List My Jobs */
 export function useJobsListMine<TData = Awaited<ReturnType<typeof jobsListMine>>, TError = HTTPValidationError>(
  params?: JobsListMineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof jobsListMine>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -292,14 +294,12 @@ export function useJobsListMine<TData = Awaited<ReturnType<typeof jobsListMine>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List My Jobs */
 export function useJobsListMine<TData = Awaited<ReturnType<typeof jobsListMine>>, TError = HTTPValidationError>(
  params?: JobsListMineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof jobsListMine>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List My Jobs
- */
-
+/** @summary List My Jobs */
 export function useJobsListMine<TData = Awaited<ReturnType<typeof jobsListMine>>, TError = HTTPValidationError>(
  params?: JobsListMineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof jobsListMine>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -411,9 +411,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type JobsCancelMutationError = void | JobErrorBody | HTTPValidationError
     export type JobsCancelMutationVariables = {jobId: string}
 
-    /**
- * @summary Cancel Job
- */
+    /** @summary Cancel Job */
 export const useJobsCancel = <TError = void | JobErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof jobsCancel>>, TError,JobsCancelMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -518,9 +516,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type JobsRetryMutationError = void | JobErrorBody | HTTPValidationError
     export type JobsRetryMutationVariables = {jobId: string}
 
-    /**
- * @summary Retry Job
- */
+    /** @summary Retry Job */
 export const useJobsRetry = <TError = void | JobErrorBody | HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof jobsRetry>>, TError,JobsRetryMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

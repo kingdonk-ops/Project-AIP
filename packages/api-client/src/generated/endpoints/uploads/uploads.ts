@@ -133,6 +133,7 @@ export type UploadsFileUrlQueryResult = NonNullable<Awaited<ReturnType<typeof up
 export type UploadsFileUrlQueryError = UploadErrorBody | HTTPValidationError
 
 
+/** @summary File Url */
 export function useUploadsFileUrl<TData = Awaited<ReturnType<typeof uploadsFileUrl>>, TError = UploadErrorBody | HTTPValidationError>(
  fileId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsFileUrl>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -143,6 +144,7 @@ export function useUploadsFileUrl<TData = Awaited<ReturnType<typeof uploadsFileU
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary File Url */
 export function useUploadsFileUrl<TData = Awaited<ReturnType<typeof uploadsFileUrl>>, TError = UploadErrorBody | HTTPValidationError>(
  fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsFileUrl>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -153,14 +155,12 @@ export function useUploadsFileUrl<TData = Awaited<ReturnType<typeof uploadsFileU
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary File Url */
 export function useUploadsFileUrl<TData = Awaited<ReturnType<typeof uploadsFileUrl>>, TError = UploadErrorBody | HTTPValidationError>(
  fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsFileUrl>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary File Url
- */
-
+/** @summary File Url */
 export function useUploadsFileUrl<TData = Awaited<ReturnType<typeof uploadsFileUrl>>, TError = UploadErrorBody | HTTPValidationError>(
  fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsFileUrl>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -291,9 +291,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UploadsCreateSessionMutationError = UploadErrorBody | void
     export type UploadsCreateSessionMutationVariables = {data: SessionCreate}
 
-    /**
- * @summary Create Session
- */
+    /** @summary Create Session */
 export const useUploadsCreateSession = <TError = UploadErrorBody | void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadsCreateSession>>, TError,UploadsCreateSessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -393,9 +391,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UploadsConfirmSessionMutationError = UploadErrorBody
     export type UploadsConfirmSessionMutationVariables = {sessionId: string}
 
-    /**
- * @summary Confirm Session
- */
+    /** @summary Confirm Session */
 export const useUploadsConfirmSession = <TError = UploadErrorBody,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadsConfirmSession>>, TError,UploadsConfirmSessionMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
@@ -485,6 +481,7 @@ export type UploadsSessionStatusQueryResult = NonNullable<Awaited<ReturnType<typ
 export type UploadsSessionStatusQueryError = UploadErrorBody | HTTPValidationError
 
 
+/** @summary Session Status */
 export function useUploadsSessionStatus<TData = Awaited<ReturnType<typeof uploadsSessionStatus>>, TError = UploadErrorBody | HTTPValidationError>(
  sessionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsSessionStatus>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -495,6 +492,7 @@ export function useUploadsSessionStatus<TData = Awaited<ReturnType<typeof upload
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Session Status */
 export function useUploadsSessionStatus<TData = Awaited<ReturnType<typeof uploadsSessionStatus>>, TError = UploadErrorBody | HTTPValidationError>(
  sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsSessionStatus>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -505,14 +503,12 @@ export function useUploadsSessionStatus<TData = Awaited<ReturnType<typeof upload
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Session Status */
 export function useUploadsSessionStatus<TData = Awaited<ReturnType<typeof uploadsSessionStatus>>, TError = UploadErrorBody | HTTPValidationError>(
  sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsSessionStatus>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Session Status
- */
-
+/** @summary Session Status */
 export function useUploadsSessionStatus<TData = Awaited<ReturnType<typeof uploadsSessionStatus>>, TError = UploadErrorBody | HTTPValidationError>(
  sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof uploadsSessionStatus>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient

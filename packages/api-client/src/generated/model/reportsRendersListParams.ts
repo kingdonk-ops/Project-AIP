@@ -2,17 +2,15 @@
 import type { ReportsRendersListStatusItem } from './reportsRendersListStatusItem';
 
 export type ReportsRendersListParams = {
-recordType?: string | null;
-recordId?: string | null;
-/**
- * @maxItems 4
- */
-status?: ReportsRendersListStatusItem[];
-q?: string | null;
-cursor?: string | null;
-/**
- * @minimum 1
- * @maximum 200
- */
-limit?: number;
+  recordType?: string | null;
+  recordId?: string | null;
+  /** @maxItems 4 */
+  status?: ReportsRendersListStatusItem[];
+  q?: string | null;
+  cursor?: string | null;
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: number;
 };
