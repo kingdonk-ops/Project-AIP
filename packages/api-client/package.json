@@ -19,7 +19,7 @@
     "@tanstack/react-query": "^5.107.1",
     "@types/react": "^19.3.0",
     "openapi-typescript": "^7.13.0",
-    "orval": "^8.47.0",
+    "orval": "^8.48.0",
     "react": "^19.3.1",
     "typescript": "~6.0.3"
   },
